@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as signalR from '@microsoft/signalr';
-import api from '../../../../../api/axios_config';
+import api, { getApiRootUrl } from '../../../../../api/axios_config';
 import { coworkLog } from '../../../../../core/cowork/utils/log';
 import type { Group } from '../useGroupDetail';
 
@@ -84,8 +84,7 @@ export const useGroupFeedbackSignalR = ({
             return;
         }
 
-        const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
-        const apiRoot = (apiBase.endsWith('/api') ? apiBase.slice(0, -4) : apiBase) || window.location.origin;
+        const apiRoot = getApiRootUrl();
         const hubUrl = `${apiRoot}/hubs/collaboration`;
         const newConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {

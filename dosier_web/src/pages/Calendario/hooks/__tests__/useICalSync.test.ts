@@ -19,8 +19,8 @@ function validarTokenIcal(token: string): boolean {
 
 describe("useICalSync — suscripción iCal", () => {
     it("genera la URL con protocolo webcal://", () => {
-        const url = generarUrlWebcal("http://192.168.7.239/dosier", "token1234567890abc");
-        expect(url).toContain("webcal://192.168.7.239/dosier/api/v1/calendario/feed.ics?token=token1234567890abc");
+        const url = generarUrlWebcal("http://sistema.local/dosier", "token1234567890abc");
+        expect(url).toBe("webcal://sistema.local/dosier/api/v1/calendario/feed.ics?token=token1234567890abc");
     });
 
     it("valida tokens de sincronización seguros", () => {

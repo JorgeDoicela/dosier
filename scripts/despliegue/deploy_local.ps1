@@ -83,18 +83,44 @@ function Check-Dependencies {
         $ok = $false
     }
 
-    # Verificar IIS y App Pool
+    # Verificar y auto-aprovisionar IIS, Application Pool y Aplicaciones vía appcmd.exe
     $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
-    if (Get-Command Get-WebAppPool -ErrorAction SilentlyContinue) {
-        if (Get-WebAppPool -Name $AppPoolName -ErrorAction SilentlyContinue) {
-            Write-Success "IIS App Pool '$AppPoolName' encontrado (vía cmdlet)."
+    if (Test-Path $appcmd) {
+        # 1. Asegurar App Pool dedicado para la API
+        $poolCheck = & $appcmd list apppool /name:$AppPoolName 2>&1
+        if (-not ($poolCheck -like "*$AppPoolName*")) {
+            Write-Step "⚙️" "Creando Application Pool '$AppPoolName' en IIS..."
+            & $appcmd add apppool /name:$AppPoolName /managedRuntimeVersion:"" /managedPipelineMode:Integrated 2>&1 | Out-Null
+            & $appcmd set apppool /apppool.name:$AppPoolName /startMode:AlwaysRunning 2>&1 | Out-Null
+            Write-Success "Application Pool '$AppPoolName' creado y configurado en modo 'No Managed Code'."
         } else {
-            Write-Host "  ⚠️ ADVERTENCIA: El App Pool '$AppPoolName' no existe en IIS." -ForegroundColor Yellow
+            Write-Success "IIS App Pool '$AppPoolName' verificado."
         }
-    } elseif (Test-Path $appcmd) {
-        Write-Success "IIS detectado (vía appcmd.exe)."
+
+        # 2. Asegurar Aplicación Frontend (/dosier) en Default Web Site
+        $dosierCheck = & $appcmd list app /site.name:"Default Web Site" /path:"/dosier" 2>&1
+        if (-not ($dosierCheck -like "*/dosier*")) {
+            Write-Step "🌐" "Creando Aplicación IIS '/dosier' (Frontend)..."
+            & $appcmd add app /site.name:"Default Web Site" /path:"/dosier" /physicalPath:$IisWebPath 2>&1 | Out-Null
+            Write-Success "Aplicación IIS '/dosier' registrada en Default Web Site."
+        } else {
+            Write-Success "Aplicación IIS '/dosier' verificada."
+        }
+
+        # 3. Asegurar Aplicación Backend (/apiDosier) en Default Web Site
+        $apiCheck = & $appcmd list app /site.name:"Default Web Site" /path:"/apiDosier" 2>&1
+        if (-not ($apiCheck -like "*/apiDosier*")) {
+            Write-Step "⚡" "Creando Aplicación IIS '/apiDosier' (Backend .NET API)..."
+            & $appcmd add app /site.name:"Default Web Site" /path:"/apiDosier" /physicalPath:$IisApiPath 2>&1 | Out-Null
+            & $appcmd set app "Default Web Site/apiDosier" /applicationPool:$AppPoolName 2>&1 | Out-Null
+            Write-Success "Aplicación IIS '/apiDosier' registrada con AppPool '$AppPoolName'."
+        } else {
+            # Asegurar que esté asignado al AppPool correcto
+            & $appcmd set app "Default Web Site/apiDosier" /applicationPool:$AppPoolName 2>&1 | Out-Null
+            Write-Success "Aplicación IIS '/apiDosier' verificada."
+        }
     } else {
-        Write-Host "  ⚠️ ADVERTENCIA: Módulos de IIS no cargados y appcmd.exe no encontrado. ¿Está habilitado IIS en Windows?" -ForegroundColor Yellow
+        Write-Host "  ⚠️ ADVERTENCIA: appcmd.exe no encontrado en '$appcmd'. ¿Está habilitado IIS en Windows?" -ForegroundColor Yellow
     }
 
     if (-not $ok) {
@@ -182,18 +208,12 @@ function Deploy-Backend {
         if ($LASTEXITCODE -ne 0) { throw "Error al compilar y publicar la API." }
 
         # Detener App Pool para evitar archivos bloqueados
-        $stoppedAppPool = $false
-        if (Get-Command Stop-WebAppPool -ErrorAction SilentlyContinue) {
-            Write-Step "🔄" "Deteniendo Application Pool '$AppPoolName' (vía cmdlet)..."
+        $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
+        if (Test-Path $appcmd) {
+            Write-Step "🔄" "Deteniendo Application Pool '$AppPoolName'..."
+            & $appcmd stop apppool /apppool.name:$AppPoolName 2>&1 | Out-Null
+        } elseif (Get-Command Stop-WebAppPool -ErrorAction SilentlyContinue) {
             Stop-WebAppPool -Name $AppPoolName -ErrorAction SilentlyContinue | Out-Null
-            $stoppedAppPool = $true
-        } else {
-            $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
-            if (Test-Path $appcmd) {
-                Write-Step "🔄" "Deteniendo Application Pool '$AppPoolName' (vía appcmd.exe)..."
-                & $appcmd stop apppool /apppool.name:$AppPoolName 2>&1 | Out-Null
-                $stoppedAppPool = $true
-            }
         }
 
         # Esperar a que se liberen los archivos de la API
@@ -259,9 +279,10 @@ function Deploy-Backend {
         }
 
         # Asegurar permisos de escritura/modificación para el App Pool (uploads, logs, temporales)
-        Write-Step "🔐" "Asegurando permisos NTFS para IIS AppPool y carpeta de uploads..."
-        icacls $IisApiPath /grant "IIS AppPool\${AppPoolName}:(OI)(CI)M" /T | Out-Null
-        icacls $IisApiPath /grant "IIS_IUSRS:(OI)(CI)M" /T | Out-Null
+        Write-Step "🔐" "Asegurando permisos NTFS para IIS_IUSRS y carpeta de uploads..."
+        icacls $IisApiPath /grant "IIS_IUSRS:(OI)(CI)M" /T 2>&1 | Out-Null
+        icacls $IisApiPath /grant "IUSR:(OI)(CI)RX" /T 2>&1 | Out-Null
+        icacls $IisApiPath /grant "IIS AppPool\${AppPoolName}:(OI)(CI)M" /T 2>&1 | Out-Null
 
         $elapsed = [Math]::Round(([DateTime]::Now - $startTime).TotalSeconds, 2)
         Write-Success "Backend desplegado con éxito en $elapsed segundos."
@@ -284,18 +305,13 @@ function Deploy-Backend {
             Start-Sleep -Seconds 2
         }
 
-        $startedAppPool = $false
-        if (Get-Command Start-WebAppPool -ErrorAction SilentlyContinue) {
-            Write-Step "🔄" "Re-iniciando Application Pool '$AppPoolName' (vía cmdlet)..."
+        # Reiniciar AppPool usando appcmd.exe de forma infalible
+        $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
+        if (Test-Path $appcmd) {
+            Write-Step "🔄" "Re-iniciando Application Pool '$AppPoolName'..."
+            & $appcmd start apppool /apppool.name:$AppPoolName 2>&1 | Out-Null
+        } elseif (Get-Command Start-WebAppPool -ErrorAction SilentlyContinue) {
             Start-WebAppPool -Name $AppPoolName -ErrorAction SilentlyContinue | Out-Null
-            $startedAppPool = $true
-        } else {
-            $appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
-            if (Test-Path $appcmd) {
-                Write-Step "🔄" "Re-iniciando Application Pool '$AppPoolName' (vía appcmd.exe)..."
-                & $appcmd start apppool /apppool.name:$AppPoolName 2>&1 | Out-Null
-                $startedAppPool = $true
-            }
         }
         Pop-Location
     }
