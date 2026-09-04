@@ -89,7 +89,7 @@ export const useRevisionTecnica = () => {
                 return;
             }
         }
-        navigate(`/investigacion/workspace/protocolo-investigacion/${projectUuid}`);
+        navigate(`/documentacion/workspace/protocolo-investigacion/${projectUuid}`);
     };
 
     return {

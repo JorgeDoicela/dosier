@@ -223,7 +223,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                 type="button"
                                                 onClick={() => {
                                                     const pId = projectUuid || documentUuid;
-                                                    if (pId) navigate(`/investigacion/revision-tecnica/${pId}`);
+                                                    if (pId) navigate(`/documentacion/revision-tecnica/${pId}`);
                                                 }}
                                                 className="w-full py-2 px-3 bg-text-main hover:bg-text-main/90 text-bg-deep rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                                             >

@@ -42,7 +42,7 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
     pinnedUuids,
     recentVisitsMap,
     onTogglePin,
-    basePath = '/investigacion',
+    basePath = '/documentacion',
     templateCode
 }) => {
     const targetTemplate = templateCode || 'PROTOCOLO_INVESTIGACION';

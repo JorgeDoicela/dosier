@@ -111,7 +111,7 @@ export const ConvocatoriaDetailPanel = ({
                                 selectedConvocatoria.proyectos.map((proyecto, idx) => (
                                     <Link
                                         key={idx}
-                                        to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', proyecto.uuid, '', '/investigacion')}
+                                        to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', proyecto.uuid, '', '/documentacion')}
                                         onClick={() => {
                                             setSelectedConvocatoria(null);
                                         }}

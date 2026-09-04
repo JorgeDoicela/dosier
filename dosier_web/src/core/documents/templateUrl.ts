@@ -9,7 +9,7 @@ export function slugToTemplateCode(slug: string): string {
 }
 
 export function buildWorkspacePath(templateCode: string, documentUuid: string, search = '', prefix?: string): string {
-    const resolvedPrefix = prefix ?? '/investigacion';
+    const resolvedPrefix = prefix ?? '/documentacion';
     return `${resolvedPrefix}/workspace/${templateCodeToSlug(templateCode)}/${documentUuid}${search}`;
 }
 

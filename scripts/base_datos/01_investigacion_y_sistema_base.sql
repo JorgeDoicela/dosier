@@ -1,11 +1,8 @@
 -- =============================================================================
---  ADVERTENCIA DE SEGURIDAD - AMBIENTE DE DESARROLLO
---  Este script está diseñado para el despliegue del módulo de INVESTIGACIÓN.
---  SOLO AFECTA A TABLAS CON PREFIJO 'doc_'.
---  NO MODIFICA, ELIMINA NI ALTERA TABLAS INSTITUCIONALES (periodos, carreras,
---  profesores, alumnos, etc.).
---  Uso: Instalación inicial o reinicio del módulo de investigación.
--- =============================================================================
+--  SISTEMA DOSIER - MÓDULO DE DOCUMENTACIÓN Y GESTIÓN ACADÉMICA
+--  Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
+--  Diseñado para el despliegue del módulo de DOCUMENTACIÓN.
+-- ====================================================================================
 
 USE sigafi_es;
 
@@ -61,7 +58,7 @@ DROP TABLE IF EXISTS
     doc_tipos_convocatoria,
     doc_grupos_carreras,
     doc_grupos_miembros,
-    doc_grupos_investigacion,
+    doc_grupos_documentales,
 
     -- Catálogos y Configuración adicionales
     doc_config_workflow,
@@ -75,12 +72,12 @@ DROP TABLE IF EXISTS
 -- SECCIÓN 1: CATÁLOGOS BASE
 -- #############################################################################
 
-CREATE TABLE doc_grupos_investigacion (
+CREATE TABLE doc_grupos_documentales (
     idGrupo              INT          AUTO_INCREMENT PRIMARY KEY,
     uuid                 VARCHAR(36)     NOT NULL UNIQUE,
     nombre               VARCHAR(255) NOT NULL,
     siglas               VARCHAR(50),
-    tipoGrupo            ENUM('Investigación', 'Semillero') NOT NULL DEFAULT 'Investigación',
+    tipoGrupo            ENUM('Documental', 'Comisión', 'Semillero') NOT NULL DEFAULT 'Documental',
     idCoordinador        INT(11) NULL,
     objetivoGeneral      TEXT,
     mision               TEXT,
@@ -105,7 +102,7 @@ CREATE TABLE doc_grupos_carreras (
     idGrupo   INT NOT NULL,
     idCarrera INT(11) NOT NULL,
     PRIMARY KEY (idGrupo, idCarrera),
-    FOREIGN KEY (idGrupo)   REFERENCES doc_grupos_investigacion(idGrupo) ON DELETE CASCADE,
+    FOREIGN KEY (idGrupo)   REFERENCES doc_grupos_documentales(idGrupo) ON DELETE CASCADE,
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera)              ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Vinculación de grupos con programas académicos';
 
@@ -113,13 +110,13 @@ CREATE TABLE doc_grupos_miembros (
     idGrupoMiembro INT          AUTO_INCREMENT PRIMARY KEY,
     idGrupo        INT          NOT NULL,
     idUsuario      INT(11)      NOT NULL,
-    rol            VARCHAR(100) COMMENT 'Director de Proyecto, Co-Investigador, Semillerista',
+    rol            VARCHAR(100) COMMENT 'Director de Proyecto, Co-Autor, Semillerista',
     activo         TINYINT(1)   DEFAULT 1,
     fechaInicio    DATE,
     fechaFin       DATE,
     motivoSalida   VARCHAR(255) NULL,
     telefonoContacto VARCHAR(20)  NULL,
-    FOREIGN KEY (idGrupo)    REFERENCES doc_grupos_investigacion(idGrupo) ON DELETE CASCADE,
+    FOREIGN KEY (idGrupo)    REFERENCES doc_grupos_documentales(idGrupo) ON DELETE CASCADE,
     FOREIGN KEY (idUsuario)  REFERENCES usuarios(idUsuario) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -194,7 +191,7 @@ CREATE TABLE doc_proyectos (
     fechaLimiteSubsanacion      DATE          NULL COMMENT 'Fecha límite fijada por el Administrador para subsanar observaciones del protocolo (Fase 1/2)',
 
     FOREIGN KEY (idConvocatoria) REFERENCES doc_convocatorias(idConvocatoria),
-    FOREIGN KEY (idGrupo)        REFERENCES doc_grupos_investigacion(idGrupo),
+    FOREIGN KEY (idGrupo)        REFERENCES doc_grupos_documentales(idGrupo),
 
     -- Extensiones CACES / SENESCYT
     hashActaAprobacion   TEXT NULL,
@@ -363,7 +360,7 @@ BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; E
 CREATE TRIGGER trg_doc_convocatorias_uuid BEFORE INSERT ON doc_convocatorias FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 -- Triggers adicionales para asegurar la generación de UUIDs en todo el esquema
-CREATE TRIGGER trg_doc_grupos_uuid BEFORE INSERT ON doc_grupos_investigacion FOR EACH ROW
+CREATE TRIGGER trg_doc_grupos_uuid BEFORE INSERT ON doc_grupos_documentales FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_proy_docadj_uuid BEFORE INSERT ON doc_proyectos_documentos_adjuntos FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
@@ -1143,9 +1140,9 @@ VALUES
 (
     UUID(),
     'Inicio del Período Académico 2025-2026 II',
-    'Apertura del segundo período académico. Los docentes deben registrar su distributivo y horas de investigación asignadas.',
+    'Apertura del segundo período académico. Los docentes deben registrar su distributivo y horas de gestión documental asignadas.',
     'Academico', '2025-10-01', NULL, 1,
-    NULL, 'DISTRIBUTIVO', '/investigacion', '#0891B2', 7, 1
+    NULL, 'DISTRIBUTIVO', '/documentacion', '#0891B2', 7, 1
 ),
 (
     UUID(),

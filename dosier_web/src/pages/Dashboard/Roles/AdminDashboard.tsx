@@ -119,11 +119,11 @@ export const AdminDashboard: React.FC = () => {
                 actions={
                     <>
                         <Link
-                            to="/investigacion"
+                            to="/documentacion"
                             className="btn-vercel-secondary flex-1 md:flex-none no-underline"
                         >
                             <Folder size={14} />
-                            <span>Investigación</span>
+                            <span>Documentación</span>
                         </Link>
                         <Link
                             to="/convocatorias"
@@ -246,7 +246,7 @@ export const AdminDashboard: React.FC = () => {
                                         const isInforme = item.tipo?.toLowerCase() === 'informe';
                                         const itemUrl = item.uuid && item.tipo?.toLowerCase() === 'proyecto'
                                             ? `/proyectos/${item.uuid}`
-                                            : '/investigacion';
+                                            : '/documentacion';
 
                                         return (
                                             <Link

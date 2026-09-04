@@ -18,18 +18,18 @@ namespace Dosier.Infrastructure.Common.Documents
         public static IEnumerable<DocumentTemplate> GetSeedTemplates()
         {
             // ══════════════════════════════════════════════════════════════
-            // ÁREA: INVESTIGACIÓN
+            // ÁREA: DOCUMENTACIÓN Y PORTAFOLIO
             // ══════════════════════════════════════════════════════════════
             // NOTA: El HTML de cada plantilla vive en su archivo .html correspondiente
             // bajo Templates/{Categoria}/{Nombre}.html. El TemplateFileLoader lo carga
             // automáticamente. El htmlContent aquí es solo un placeholder de arranque;
             // en producción el .html copiado al output tiene prioridad.
 
-            // 1. FORMATO PROYECTO DE INVESTIGACIÓN
+            // 1. FORMATO PROYECTO DOCUMENTAL
             yield return DocumentTemplate.Create(
                 code: ProyectoInvestigacionTemplate.CODE,
-                name: "1. Formato Proyecto de Investigación",
-                description: "Documento oficial para postulación de proyectos I+D+i. Versión de Producción Final v14.0.",
+                name: "1. Formato Proyecto Documental y Portafolio",
+                description: "Documento oficial para postulación de proyectos y portafolios institucionales. Versión de Producción Final v14.0.",
                 category: DocumentCategory.Protocolo,
                 htmlContent: "<!-- Cargado desde Templates/Investigacion/ProyectoInvestigacion.html -->",
                 requiresLopdp: true,
@@ -45,7 +45,7 @@ namespace Dosier.Infrastructure.Common.Documents
 
             yield return DocumentTemplate.Create(
                 code: ReporteAnaliticasTemplate.CODE,
-                name: "Reporte de Analíticas de Investigación e Innovación",
+                name: "Reporte de Analíticas y Portafolio Documental",
                 description: "Reporte directivo con indicadores KPI, cumplimiento CACES y portafolio de proyectos para acreditación institucional.",
                 category: DocumentCategory.ReporteAnaliticas,
                 htmlContent: "<!-- Cargado desde Templates/Investigacion/ReporteAnaliticas.html -->",

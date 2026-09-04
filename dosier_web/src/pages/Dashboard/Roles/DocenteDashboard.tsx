@@ -105,11 +105,11 @@ export const DocenteDashboard: React.FC = () => {
             <DashboardHeader
                 title={`Bienvenido, ${firstName}`}
                 subtitle="Gestiona tus proyectos, carga horaria y avances curriculares en un solo lugar."
-                roleName="Docente Investigador"
+                roleName="Docente / Gestor Documental"
                 actions={
                     <>
                         <Link
-                            to="/investigacion/mis-proyectos"
+                            to="/documentacion/mis-proyectos"
                             className="btn-vercel-secondary flex-1 md:flex-none no-underline"
                         >
                             <ClipboardList size={14} />
@@ -133,7 +133,7 @@ export const DocenteDashboard: React.FC = () => {
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
                                     <Briefcase size={14} className="text-text-dim" />
-                                    <span className="text-xs font-semibold text-text-dim uppercase tracking-wider">Mis Proyectos de Investigación</span>
+                                    <span className="text-xs font-semibold text-text-dim uppercase tracking-wider">Mis Proyectos Documentales</span>
                                 </div>
                                 <h3 className="text-xl font-semibold tracking-tight text-text-main mb-2">
                                     Resumen de Propuestas Académicas
@@ -180,7 +180,7 @@ export const DocenteDashboard: React.FC = () => {
 
                             <div className="flex justify-end border-t border-border-thin/50 pt-4 mt-2">
                                 <Link
-                                    to="/investigacion/mis-proyectos"
+                                    to="/documentacion/mis-proyectos"
                                     className="text-xs font-semibold text-brand hover:text-brand-hover inline-flex items-center gap-1.5 transition-all group no-underline"
                                 >
                                     <span>Ver todos los proyectos</span>
@@ -204,7 +204,7 @@ export const DocenteDashboard: React.FC = () => {
                                         </div>
                                         <h4 className="text-xs font-semibold text-text-main mb-1">Sin actividad reciente</h4>
                                         <p className="text-[11px] text-text-dim max-w-[280px] leading-relaxed">
-                                            Aquí aparecerán las actualizaciones y notificaciones sobre el avance de tus proyectos de investigación.
+                                            Aquí aparecerán las actualizaciones y notificaciones sobre el avance de tus proyectos documentales.
                                         </p>
                                     </div>
                                 ) : (
@@ -235,7 +235,7 @@ export const DocenteDashboard: React.FC = () => {
                                         const isInforme = item.tipo?.toLowerCase().includes('informe');
                                         const itemUrl = item.uuid && item.tipo?.toLowerCase().includes('proyecto')
                                             ? `/proyectos/${item.uuid}`
-                                            : '/investigacion/mis-proyectos';
+                                            : '/documentacion/mis-proyectos';
 
                                         return (
                                             <Link

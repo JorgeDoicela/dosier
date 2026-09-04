@@ -360,14 +360,14 @@ export const useRevisionTecnicaData = ({
                         });
                         addToast("Acción Revertida", `La aprobación ha sido cancelada. Proyecto en estado: ${originalState}`, "info");
                         window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                        navigate(`/investigacion/revision-tecnica/${projectUuid}`);
+                        navigate(`/documentacion/revision-tecnica/${projectUuid}`);
                     } catch (err) {
                         console.error("[Undo Approval] Failed:", err);
                         addToast("Error al Revertir", "No se pudo deshacer la aprobación del protocolo.", "error");
                     }
                 }
             );
-            navigate(`/investigacion/workspace/protocolo-investigacion/${projectUuid}`);
+            navigate(`/documentacion/workspace/protocolo-investigacion/${projectUuid}`);
             return true;
         } catch (err: any) {
             console.error(err);
@@ -436,14 +436,14 @@ export const useRevisionTecnicaData = ({
                         });
                         addToast("Acción Revertida", `La devolución ha sido cancelada. Proyecto en estado: ${originalState}`, "info");
                         window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                        navigate(`/investigacion/revision-tecnica/${projectUuid}`);
+                        navigate(`/documentacion/revision-tecnica/${projectUuid}`);
                     } catch (err) {
                         console.error("[Undo Return] Failed:", err);
                         addToast("Error al Revertir", "No se pudo deshacer la devolución del proyecto.", "error");
                     }
                 }
             );
-            navigate(`/investigacion/workspace/protocolo-investigacion/${projectUuid}`);
+            navigate(`/documentacion/workspace/protocolo-investigacion/${projectUuid}`);
             return true;
         } catch (err: any) {
             console.error(err);

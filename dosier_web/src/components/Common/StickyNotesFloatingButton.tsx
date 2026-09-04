@@ -13,10 +13,10 @@ interface StickyNotesFloatingButtonProps {
 
 /** Deriva un label corto de la pathname actual para mostrar como chip de contexto */
 const getContextoLabel = (pathname: string): { label: string; Icon: React.ComponentType<{ size?: number }> } | null => {
-    if (pathname.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', Icon: Folder };
-    if (pathname.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', Icon: Megaphone };
-    if (pathname.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', Icon: BarChart3 };
-    if (pathname.startsWith('/investigacion')) return { label: 'Investigación', Icon: FlaskConical };
+    if (pathname.startsWith('/documentacion/proyectos') || pathname.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', Icon: Folder };
+    if (pathname.startsWith('/documentacion/convocatorias') || pathname.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', Icon: Megaphone };
+    if (pathname.startsWith('/documentacion/monitoreo') || pathname.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', Icon: BarChart3 };
+    if (pathname.startsWith('/documentacion') || pathname.startsWith('/investigacion')) return { label: 'Documentación', Icon: FlaskConical };
     if (pathname.startsWith('/agenda')) return { label: 'Agenda', Icon: Calendar };
     if (pathname.startsWith('/analiticas')) return { label: 'Analíticas', Icon: TrendingUp };
     if (pathname.startsWith('/admin')) return { label: 'Admin', Icon: Settings };

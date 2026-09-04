@@ -32,10 +32,10 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
     const location = useLocation();
     const [asyncProtocoloSigned, setAsyncProtocoloSigned] = useState(false);
 
-    const isMisProyectos = location.pathname.startsWith('/investigacion/mis-proyectos');
+    const isMisProyectos = location.pathname.startsWith('/documentacion/mis-proyectos') || location.pathname.startsWith('/investigacion/mis-proyectos');
     const monitoringUrl = isMisProyectos
-        ? `/investigacion/mis-proyectos/monitoreo/${resolvedProjectUuid}`
-        : `/investigacion/monitoreo/${resolvedProjectUuid}`;
+        ? `/documentacion/mis-proyectos/monitoreo/${resolvedProjectUuid}`
+        : `/documentacion/monitoreo/${resolvedProjectUuid}`;
 
     const isDocValidlySigned = (doc: any): boolean => {
         if (!doc) return false;
@@ -104,7 +104,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                     </div>
                     <div className="mt-4">
                         <Link
-                            to={`/investigacion/revision-tecnica/${resolvedProjectUuid}`}
+                            to={`/documentacion/revision-tecnica/${resolvedProjectUuid}`}
                             className="w-full btn-brand py-2 px-3 text-[10px] rounded-md no-underline flex items-center justify-center gap-1.5"
                         >
                             <Shield size={12} />

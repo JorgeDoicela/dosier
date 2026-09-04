@@ -147,7 +147,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             isFirstRender.current = false;
             return;
         }
-        if (location.pathname === '/investigacion' || location.pathname === '/investigacion/mis-proyectos') {
+        if (location.pathname === '/documentacion' || location.pathname === '/documentacion/mis-proyectos' || location.pathname === '/investigacion' || location.pathname === '/investigacion/mis-proyectos') {
             fetchSidebarProjects();
         }
     }, [location.pathname, fetchSidebarProjects]);
@@ -180,13 +180,14 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         if (location.pathname.startsWith('/parametros-normativos')) {
             setIsParametrosOpen(true);
         }
-        if (location.pathname.startsWith('/investigacion/mis-proyectos')) {
+        if (location.pathname.startsWith('/documentacion/mis-proyectos') || location.pathname.startsWith('/investigacion/mis-proyectos')) {
             setIsMisProyectosOpen(true);
         }
         
-        const isInvestigacionRoute = (location.pathname.startsWith('/investigacion') && !location.pathname.startsWith('/investigacion/mis-proyectos')) ||
+        const isDocumentacionRoute = (location.pathname.startsWith('/documentacion') && !location.pathname.startsWith('/documentacion/mis-proyectos')) ||
+            (location.pathname.startsWith('/investigacion') && !location.pathname.startsWith('/investigacion/mis-proyectos')) ||
             (location.pathname.includes('/workspace/') && !location.pathname.includes('/mis-proyectos/'));
-        if (isInvestigacionRoute) {
+        if (isDocumentacionRoute) {
             setIsInvestigacionOpen(true);
         }
     }, [location.pathname]);
@@ -256,11 +257,11 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Tablero', icon: Home, path: '/dashboard', roles: ['ANY'], group: 1 },
         { name: 'Notificaciones', icon: Bell, path: '/notificaciones', roles: ['ANY'], group: 1 },
         { name: 'Calendario', icon: Calendar, path: '/calendario', roles: ['ANY'], group: 1 },
-        // ── Ciclo de investigación e innovación (inicio → postulación → revisión → evaluación) ──
-        { name: 'Investigación', icon: ClipboardList, path: '/investigacion', roles: ['DOSIER_ADMIN'], group: 1, hasChevron: true },
-        { name: 'Investigación', icon: ClipboardList, path: '/investigacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ESTUDIANTE'], group: 1, hasChevron: true },
+        // ── Ciclo documental y gestión académica (inicio → formulación → revisión → aprobación) ──
+        { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN'], group: 1, hasChevron: true },
+        { name: 'Documentación', icon: ClipboardList, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ESTUDIANTE'], group: 1, hasChevron: true },
         { name: 'Convocatorias', icon: PenTool, path: '/convocatorias', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], group: 1 },
-        { name: 'Grupos', icon: Award, path: '/grupos', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], group: 1 },
+        { name: 'Comités', icon: Award, path: '/grupos', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], group: 1 },
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN'], group: 2, hasChevron: true },
@@ -272,7 +273,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
     ];
 
     const menuItems = allMenuItems.filter(item => {
-        if (item.path === '/investigacion/mis-proyectos' && isAdmin) return false;
+        if ((item.path === '/documentacion/mis-proyectos' || item.path === '/investigacion/mis-proyectos') && isAdmin) return false;
 
         if (isAdmin) return true;
         if (item.permission) {

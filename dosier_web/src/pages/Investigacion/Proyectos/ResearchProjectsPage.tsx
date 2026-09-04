@@ -500,7 +500,7 @@ const ResearchProjectsPage = () => {
                                 className="bento-card group relative p-6 overflow-hidden flex flex-col justify-between"
                             >
                                 <Link
-                                    to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid, '', '/investigacion')}
+                                    to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid, '', '/documentacion')}
                                     className="absolute inset-0 z-10"
                                 />
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-brand-subtle rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />

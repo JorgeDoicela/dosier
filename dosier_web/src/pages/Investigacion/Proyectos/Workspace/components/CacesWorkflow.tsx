@@ -219,7 +219,7 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                         }
                                     } else if (phase.id === 'Enviado' && (isCurrent || isPast)) {
                                         if (isAdmin) {
-                                            navigate(`/investigacion/revision-tecnica/${resolvedProjectUuid}`);
+                                            navigate(`/documentacion/revision-tecnica/${resolvedProjectUuid}`);
                                         } else if (currentProject.status === 'En Corrección') {
                                             navigate(buildWorkspacePath(templateCode, resolvedProjectUuid, `?edit=${templateCodeToEditParam(templateCode)}`, urlPrefix));
                                         }
@@ -247,7 +247,7 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                 </div>
                                 <p className="text-xs text-text-dim mt-1.5 leading-relaxed font-normal">
                                     {phase.id === 'Borrador' && (
-                                        'Construcción colaborativa del protocolo de investigación por parte del equipo.'
+                                        'Construcción colaborativa del protocolo y expediente por parte del equipo.'
                                     )}
                                     {phase.id === 'Enviado' && (
                                         (currentProject.status === 'Prepropuesta' || currentProject.status === 'Prepropuesta Rechazada')
@@ -282,7 +282,7 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                     <div className="mt-4 animate-fade-in flex flex-col gap-2.5">
                                         {isAdmin ? (
                                             <Link
-                                                to={`/investigacion/revision-tecnica/${resolvedProjectUuid}`}
+                                                to={`/documentacion/revision-tecnica/${resolvedProjectUuid}`}
                                                 onClick={(e) => { e.stopPropagation(); }}
                                                 className={`w-full justify-center py-2.5 transition-all duration-300 font-semibold flex items-center gap-1.5 ${isCurrentActive
                                                     ? 'btn-vercel-primary shadow-[0_4px_12px_rgba(0,112,243,0.1)]'

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DOSIER — Tests: useSidebar.ts (lógica pura de navegación y estado)
  *
  * Valida la lógica del menú lateral del sistema:
@@ -17,7 +17,7 @@ interface MenuItem {
 
 const MENU_ITEMS_MOCK: MenuItem[] = [
     { id: "home", label: "Inicio", path: "/dashboard" },
-    { id: "convocatorias", label: "Convocatorias", path: "/investigacion/convocatorias", rolesRequeridos: ["ADMIN", "DOCENTE"] },
+    { id: "convocatorias", label: "Convocatorias", path: "/documentacion/convocatorias", rolesRequeridos: ["ADMIN", "DOCENTE"] },
     { id: "admin-users", label: "Gestión de Usuarios", path: "/admin/usuarios", rolesRequeridos: ["ADMIN"] },
     { id: "admin-config", label: "Configuración", path: "/admin/configuracion", rolesRequeridos: ["ADMIN"] },
 ];
@@ -59,10 +59,10 @@ describe("esRutaActiva — coincidencia de URL", () => {
     });
 
     it("retorna true si es subruta de la ruta target", () => {
-        expect(esRutaActiva("/investigacion/convocatorias/123", "/investigacion/convocatorias")).toBe(true);
+        expect(esRutaActiva("/documentacion/convocatorias/123", "/documentacion/convocatorias")).toBe(true);
     });
 
     it("retorna false para rutas distintas", () => {
-        expect(esRutaActiva("/admin/usuarios", "/investigacion/convocatorias")).toBe(false);
+        expect(esRutaActiva("/admin/usuarios", "/documentacion/convocatorias")).toBe(false);
     });
 });

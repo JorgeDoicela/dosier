@@ -201,7 +201,7 @@ export const resolveEventUrl = (ev: {
     }
 
     const projectUuid = ev.uuid_entidad_origen || ev.uuid;
-    const prefix = isAdmin ? '/investigacion' : '/investigacion/mis-proyectos';
+    const prefix = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
 
     // 2. Mapeo según el tipo de entidad de dominio
     switch (ev.tipo_entidad_origen) {

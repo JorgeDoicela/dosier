@@ -27,7 +27,7 @@ TRUNCATE TABLE doc_backup_logs;
 TRUNCATE TABLE doc_convocatorias;
 TRUNCATE TABLE doc_grupos_miembros;
 TRUNCATE TABLE doc_grupos_carreras;
-TRUNCATE TABLE doc_grupos_investigacion;
+TRUNCATE TABLE doc_grupos_documentales;
 TRUNCATE TABLE doc_usuarios_metadata;
  
 -- 1.5. Asegurar usuarios requeridos en tabla central
@@ -85,7 +85,7 @@ FROM (
 ) AS v
 WHERE NOT EXISTS (SELECT 1 FROM usuarios u WHERE CONVERT(u.idSigafi USING utf8mb4) = v.idSigafi);
  
--- 4. Poblar Metadatos y Consentimiento de Firma de Usuariosde Usuarios
+-- 4. Poblar Metadatos y Consentimiento de Firma de Usuarios
 INSERT INTO doc_usuarios_metadata (uuid, idUsuario, aceptoTerminosFirma, fechaConsentimientoFirma) VALUES
 (UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1), 1, '2025-01-10 09:00:00'),
 (UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802707511' LIMIT 1), 1, '2025-01-12 10:30:00'),
@@ -94,33 +94,33 @@ INSERT INTO doc_usuarios_metadata (uuid, idUsuario, aceptoTerminosFirma, fechaCo
 (UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1719134759' LIMIT 1), 1, '2025-02-18 09:00:00'),
 (UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1720477031' LIMIT 1), 1, '2025-02-20 09:30:00');
  
--- 5. Poblar Grupos de Investigación
-INSERT INTO doc_grupos_investigacion (idGrupo, uuid, nombre, siglas, tipoGrupo, idCoordinador, objetivoGeneral, mision, vision, resolucionAprobacion, fechaCreacion, categoriaConsolidacion, estado, activo) VALUES
-(1, 'a241b625-56b8-4160-a4ba-1f67865dded0', 'Grupo de Investigación en Ingeniería de Software y TI', 'GIIST', 'Investigación', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1),
- 'Fomentar el desarrollo tecnológico y la innovación en software en la región',
- 'Desarrollar soluciones de software con alto estándar de calidad',
- 'Ser referentes nacionales en desarrollo de software aplicado',
- 'RES-GIIST-2025-01', '2025-01-10', 'Consolidado', 'Aprobado', 1),
-(2, 'b11b1111-2222-3333-4444-555555555555', 'Grupo de Energías Renovables y Sostenibilidad Ambiental', 'GERSA', 'Investigación', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802707511' LIMIT 1),
- 'Desarrollar prototipos y soluciones tecnológicas en el ámbito energético',
- 'Investigar y aplicar fuentes de energía limpia en beneficio social',
+-- 5. Poblar Grupos Documentales
+INSERT INTO doc_grupos_documentales (idGrupo, uuid, nombre, siglas, tipoGrupo, idCoordinador, objetivoGeneral, mision, vision, resolucionAprobacion, fechaCreacion, categoriaConsolidacion, estado, activo) VALUES
+(1, 'a241b625-56b8-4160-a4ba-1f67865dded0', 'Comité de Documentación en Ingeniería de Software y TI', 'CDIST', 'Documental', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1),
+ 'Fomentar la estandarización documental y la innovación en software en la región',
+ 'Desarrollar soluciones y expedientes de software con alto estándar de calidad',
+ 'Ser referentes nacionales en documentación y desarrollo aplicado',
+ 'RES-CDIST-2025-01', '2025-01-10', 'Consolidado', 'Aprobado', 1),
+(2, 'b11b1111-2222-3333-4444-555555555555', 'Comité de Energías Renovables y Sostenibilidad Ambiental', 'CERSA', 'Documental', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802707511' LIMIT 1),
+ 'Desarrollar expedientes y soluciones tecnológicas en el ámbito energético',
+ 'Documentar y aplicar fuentes de energía limpia en beneficio social',
  'Liderar la transición energética desde la academia',
- 'RES-GERSA-2025-02', '2025-01-12', 'Consolidado', 'Aprobado', 1),
-(3, 'c11c1111-2222-3333-4444-555555555555', 'Semillero de Investigación en Innovación y Gestión Empresarial', 'SIGE', 'Semillero', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1),
- 'Capacitar a estudiantes en metodologías de investigación en el ámbito de negocios',
+ 'RES-CERSA-2025-02', '2025-01-12', 'Consolidado', 'Aprobado', 1),
+(3, 'c11c1111-2222-3333-4444-555555555555', 'Semillero Documental en Innovación y Gestión Empresarial', 'SIGE', 'Semillero', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1),
+ 'Capacitar a estudiantes en metodologías de documentación en el ámbito de negocios',
  'Formar semilleristas con visión crítica y emprendedora',
- 'Ser el principal semillero de ideas de negocio tecnológicas del IST',
+ 'Ser el principal semillero de ideas de negocio del IST',
  'RES-SIGE-2025-03', '2025-02-15', 'En Formación', 'Aprobado', 1),
-(4, 'd11d1111-2222-3333-4444-555555555555', 'Grupo de Investigación en Redes y Ciberseguridad Aplicada', 'GIRCA', 'Investigación', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1724649338' LIMIT 1),
- 'Investigar e implementar soluciones de ciberseguridad para infraestructuras críticas',
+(4, 'd11d1111-2222-3333-4444-555555555555', 'Comité Documental en Redes y Ciberseguridad Aplicada', 'CDIRCA', 'Documental', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1724649338' LIMIT 1),
+ 'Documentar e implementar soluciones de ciberseguridad para infraestructuras críticas',
  'Contribuir a la seguridad digital y la protección de datos en el entorno corporativo y académico',
- 'Consolidarse como un referente nacional en auditoría de ciberseguridad',
- 'RES-GIRCA-2025-04', '2025-03-01', 'En Formación', 'Aprobado', 1),
-(5, 'e11e1111-2222-3333-4444-555555555555', 'Grupo de Innovación en Gastronomía y Patrimonio Alimentario', 'GIGPA', 'Investigación', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1719322149' LIMIT 1),
- 'Investigar y registrar el patrimonio gastronómico tradicional de Pichincha y Ecuador',
- 'Rescatar técnicas ancestrales de cocina aplicando metodologías científicas de conservación',
- 'Ser la despensa de conocimiento y desarrollo de innovación culinaria del país',
- 'RES-GIGPA-2025-05', '2025-03-10', 'En Formación', 'Aprobado', 1);
+ 'Consolidarse como un referente nacional en auditoría de seguridad documental',
+ 'RES-CDIRCA-2025-04', '2025-03-01', 'En Formación', 'Aprobado', 1),
+(5, 'e11e1111-2222-3333-4444-555555555555', 'Comité de Documentación en Gastronomía y Patrimonio Alimentario', 'CDGPA', 'Documental', (SELECT idUsuario FROM usuarios WHERE idSigafi = '1719322149' LIMIT 1),
+ 'Documentar y registrar el patrimonio gastronómico tradicional de Pichincha y Ecuador',
+ 'Rescatar técnicas ancestrales de cocina aplicando metodologías de sistematización',
+ 'Ser el repositorio de conocimiento y desarrollo culinario del país',
+ 'RES-CDGPA-2025-05', '2025-03-10', 'En Formación', 'Aprobado', 1);
  
 -- Relaciones de Grupos con Carreras
 INSERT INTO doc_grupos_carreras (idGrupo, idCarrera) VALUES
@@ -135,25 +135,25 @@ INSERT INTO doc_grupos_carreras (idGrupo, idCarrera) VALUES
 -- Miembros de Grupos
 INSERT INTO doc_grupos_miembros (idGrupo, idUsuario, rol, activo, fechaInicio) VALUES
 (1, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1), 'Director de Proyecto', 1, '2025-01-10'),
-(1, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1724649338' LIMIT 1), 'Co-Investigador', 1, '2025-01-15'),
+(1, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1724649338' LIMIT 1), 'Co-Autor', 1, '2025-01-15'),
 (1, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1725555377' LIMIT 1), 'Semillerista', 1, '2025-01-20'),
 (2, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802707511' LIMIT 1), 'Director de Proyecto', 1, '2025-01-12'),
-(2, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802989226' LIMIT 1), 'Co-Investigador', 1, '2025-01-15'),
+(2, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802989226' LIMIT 1), 'Co-Autor', 1, '2025-01-15'),
 (2, (SELECT idUsuario FROM usuarios WHERE idSigafi = '0102598570' LIMIT 1), 'Semillerista', 1, '2025-01-22'),
 (3, (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1), 'Director de Proyecto', 1, '2025-02-15'),
-(3, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1719134759' LIMIT 1), 'Co-Investigador', 1, '2025-02-18'),
+(3, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1719134759' LIMIT 1), 'Co-Autor', 1, '2025-02-18'),
 (3, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1751325000' LIMIT 1), 'Semillerista', 1, '2025-02-20'),
 (4, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1724649338' LIMIT 1), 'Director de Proyecto', 1, '2025-03-01'),
-(4, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1), 'Co-Investigador', 1, '2025-03-05'),
+(4, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1), 'Co-Autor', 1, '2025-03-05'),
 (4, (SELECT idUsuario FROM usuarios WHERE idSigafi = '0103057584' LIMIT 1), 'Semillerista', 1, '2025-03-10'),
 (5, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1719322149' LIMIT 1), 'Director de Proyecto', 1, '2025-03-10'),
-(5, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1720477031' LIMIT 1), 'Co-Investigador', 1, '2025-03-12'),
+(5, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1720477031' LIMIT 1), 'Co-Autor', 1, '2025-03-12'),
 (5, (SELECT idUsuario FROM usuarios WHERE idSigafi = '0105057335' LIMIT 1), 'Semillerista', 1, '2025-03-15');
  
 -- 6. Poblar Convocatorias
 INSERT INTO doc_convocatorias (idConvocatoria, uuid, codigoConvocatoria, titulo, idPeriodo, fechaApertura, fechaCierre, anio, descripcion, urlBases, requisitosMinimos, idTipoConvocatoria, estado) VALUES
-(1, '84f8846c-c918-406b-a25e-336ff326e632', 'CONV-2025-I', 'Convocatoria Proyectos de Investigación y Desarrollo 2025-I', 'ABD2025', '2025-04-15', '2025-06-15', '2025', 'Convocatoria abierta para el desarrollo de proyectos aplicados de I+D en el IST Traversari', 'https://bases.traversari.edu.ec/2025-I', 'Poseer título de tercer nivel y pertenecer a un grupo de investigación', 1, 'Cerrada'),
-(2, '9fb183ea-e522-4828-98e3-841853ad76aa', 'CONV-2026-I', 'Convocatoria Proyectos de Innovación Tecnológica 2026-I', 'ABR2026', '2026-04-10', '2026-06-10', '2026', 'Enfoque en desarrollo de software, prototipos de hardware y transferencia tecnológica', 'https://bases.traversari.edu.ec/2026-I', 'Tener grupo de investigación registrado o semillero activo', 2, 'Abierta');
+(1, '84f8846c-c918-406b-a25e-336ff326e632', 'CONV-2025-I', 'Convocatoria Proyectos de Documentación y Desarrollo 2025-I', 'ABD2025', '2025-04-15', '2025-06-15', '2025', 'Convocatoria abierta para el desarrollo de proyectos y portafolios en el IST Traversari', 'https://bases.traversari.edu.ec/2025-I', 'Poseer título de tercer nivel y pertenecer a un comité documental', 1, 'Cerrada'),
+(2, '9fb183ea-e522-4828-98e3-841853ad76aa', 'CONV-2026-I', 'Convocatoria Proyectos de Innovación y Portafolio 2026-I', 'ABR2026', '2026-04-10', '2026-06-10', '2026', 'Enfoque en desarrollo de software, prototipos y transferencia documental', 'https://bases.traversari.edu.ec/2026-I', 'Tener comité documental registrado o semillero activo', 2, 'Abierta');
  
 -- 23. Poblar Consentimientos de LOPDP
 INSERT INTO doc_lopdp_consentimientos (uuid, idUsuario, versionPolitica, canal, fechaConsentimiento, ipDireccion, userAgent, firmaHash, estado) VALUES

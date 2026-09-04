@@ -339,7 +339,7 @@ CREATE TABLE doc_guias_ape (
     
     -- Secciones pedagógicas estructuradas
     fundamentosTeoricos     TEXT            NULL COMMENT 'Fundamentos, descripción y relación con conocimientos',
-    investigacionAutonoma   TEXT            NULL COMMENT 'Preguntas de investigación previa del estudiante',
+    investigacionAutonoma   TEXT            NULL COMMENT 'Preguntas de indagación y documentación previa del estudiante',
     metodologiaDidactica    TEXT            NULL,
     normasSeguridad         TEXT            NULL,
     habilidadesBlandas      TEXT            NULL COMMENT 'Destrezas socioemocionales CACES',

@@ -567,8 +567,8 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                     setFormData((prev: any) => ({ ...prev, Uuid: newUuid }));
                     if (!window.location.pathname.includes('/workspace/')) {
                         await api.patch(`/documents/instances/${newUuid}/metadata`, { ...cleanedData, Uuid: newUuid });
-                        const isMisProyectos = window.location.pathname.startsWith('/investigacion/mis-proyectos');
-                        const prefix = isMisProyectos ? '/investigacion/mis-proyectos' : '/investigacion';
+                        const isMisProyectos = window.location.pathname.startsWith('/documentacion/mis-proyectos') || window.location.pathname.startsWith('/investigacion/mis-proyectos');
+                        const prefix = isMisProyectos ? '/documentacion/mis-proyectos' : '/documentacion';
                         navigate(buildWorkspacePath(templateCode, newUuid, `?edit=${templateCodeToEditParam(templateCode)}`, prefix), { replace: true });
                         window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
                     }

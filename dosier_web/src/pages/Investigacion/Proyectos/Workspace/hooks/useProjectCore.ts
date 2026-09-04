@@ -37,8 +37,8 @@ export function useProjectCore() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const isMisProyectos = location.pathname.startsWith('/investigacion/mis-proyectos');
-    const urlPrefix = isMisProyectos ? '/investigacion/mis-proyectos' : '/investigacion';
+    const isMisProyectos = location.pathname.startsWith('/documentacion/mis-proyectos') || location.pathname.startsWith('/investigacion/mis-proyectos');
+    const urlPrefix = isMisProyectos ? '/documentacion/mis-proyectos' : '/documentacion';
 
     const queryParams = new URLSearchParams(location.search);
     const editParam = queryParams.get('edit');

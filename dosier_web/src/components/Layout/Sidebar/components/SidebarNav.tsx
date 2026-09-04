@@ -100,15 +100,15 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 }) => {
     const renderMenuItem = (item: MenuItem) => {
         const isActive = item === activeItem;
-        const isInvestigacion = item.name === 'Investigación';
+        const isDocumentacion = item.name === 'Documentación' || item.name === 'Investigación';
 
-        if (isInvestigacion) {
-            const isMenuOpen = item.path === '/investigacion' ? isInvestigacionOpen : isMisProyectosOpen;
+        if (isDocumentacion) {
+            const isMenuOpen = (item.path === '/documentacion' || item.path === '/investigacion') ? isInvestigacionOpen : isMisProyectosOpen;
 
             const toggleOpen = (e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (item.path === '/investigacion') {
+                if (item.path === '/documentacion' || item.path === '/investigacion') {
                     setIsInvestigacionOpen(!isInvestigacionOpen);
                 } else {
                     setIsMisProyectosOpen(!isMisProyectosOpen);
@@ -133,7 +133,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             to={targetBasePath}
                             onClick={(e) => {
                                 if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                                    if (item.name === 'Investigación') {
+                                    if (item.name === 'Documentación' || item.name === 'Investigación') {
                                         setIsInvestigacionOpen(true);
                                     } else {
                                         setIsMisProyectosOpen(true);
@@ -186,7 +186,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     <div className="flex flex-col gap-0.5 max-h-[340px] overflow-y-auto custom-scrollbar pr-1">
                                         {shownProjects.map((p) => {
                                             const tCode = (p.template_code || p.templateCode || 'PROTOCOLO_INVESTIGACION').toLowerCase().replace(/_/g, '-');
-                                            const basePath = item.path === '/investigacion' ? '/investigacion/workspace' : '/investigacion/mis-proyectos/workspace';
+                                            const basePath = item.path.includes('/mis-proyectos') ? '/documentacion/mis-proyectos/workspace' : '/documentacion/workspace';
                                             const projectPath = `${basePath}/${tCode}/${p.uuid}`;
 
                                             const isSubActive = location.pathname.includes(`/workspace/`) && location.pathname.includes(p.uuid);

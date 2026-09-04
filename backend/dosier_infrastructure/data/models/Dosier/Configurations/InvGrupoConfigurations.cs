@@ -8,13 +8,13 @@ public class DocGrupoInvestigacionConfiguration : IEntityTypeConfiguration<DocGr
     public void Configure(EntityTypeBuilder<DocGrupoInvestigacion> entity)
     {
         entity.HasKey(e => e.IdGrupo).HasName("PRIMARY");
-        entity.ToTable("doc_grupos_investigacion");
+        entity.ToTable("doc_grupos_documentales");
         entity.Property(e => e.IdGrupo).HasColumnName("idGrupo");
         entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
         entity.HasIndex(e => e.Uuid).IsUnique();
         entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(255).IsRequired();
         entity.Property(e => e.Siglas).HasColumnName("siglas").HasMaxLength(50);
-        entity.Property(e => e.TipoGrupo).HasColumnName("tipoGrupo").HasMaxLength(20).IsRequired().HasDefaultValue("Investigación");
+        entity.Property(e => e.TipoGrupo).HasColumnName("tipoGrupo").HasMaxLength(20).IsRequired().HasDefaultValue("Documental");
         entity.Property(e => e.IdCoordinador).HasColumnName("idCoordinador");
         entity.Property(e => e.ObjetivoGeneral).HasColumnName("objetivoGeneral").HasColumnType("text");
         entity.Property(e => e.Mision).HasColumnName("mision").HasColumnType("text");

@@ -62,8 +62,8 @@ export const MonitoringPage: React.FC = () => {
                     <p className="text-text-dim text-sm font-medium mb-6">
                         {error || 'No se pudo resolver la instancia del proyecto de investigación.'}
                     </p>
-                    <Link to="/investigacion" className="btn-vercel-primary py-3 w-full inline-block text-center no-underline">
-                        Volver a Investigaciones
+                    <Link to="/documentacion" className="btn-vercel-primary py-3 w-full inline-block text-center no-underline">
+                        Volver a Documentación
                     </Link>
                 </div>
             </div>

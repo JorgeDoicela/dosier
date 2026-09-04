@@ -144,7 +144,7 @@ const ResearcherRoute = ({ children }: { children: React.ReactNode }) => {
 
     // Si es Administrador, lo redirigimos a la consola institucional de administración
     if (isAdmin) {
-        return <Navigate to="/investigacion" replace />;
+        return <Navigate to="/documentacion" replace />;
     }
 
     return <>{children}</>;
@@ -161,20 +161,20 @@ const ConvocatoriaRoute = () => {
 const NavigateToProjectDetail = () => {
     const { projectUuid } = useParams();
     const { isAdmin } = useAuth();
-    const prefix = isAdmin ? '/investigacion' : '/investigacion/mis-proyectos';
+    const prefix = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={`${prefix}/monitoreo/${projectUuid}`} replace />;
 };
 
 const NavigateToWorkspaceDetail = () => {
     const { projectUuid } = useParams();
     const { isAdmin } = useAuth();
-    const prefix = isAdmin ? '/investigacion' : '/investigacion/mis-proyectos';
+    const prefix = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', projectUuid!, '', prefix)} replace />;
 };
 
 const NavigateToResearchProjects = () => {
     const { isAdmin } = useAuth();
-    const target = isAdmin ? '/investigacion' : '/investigacion/mis-proyectos';
+    const target = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={target} replace />;
 };
 
@@ -269,22 +269,30 @@ function App() {
                              <Route path="/admin/configuracion" element={<RedirectPreserveSearch to="/parametros-normativos" />} />
                              <Route path="/admin/lopdp" element={<Navigate to="/lopdp" replace />} />
                              <Route path="/admin/emails" element={<Navigate to="/emails" replace />} />
-                            <Route path="/proyectos/:projectUuid" element={<NavigateToProjectDetail />} />
-                            <Route path="/investigacion/proyectos" element={<NavigateToResearchProjects />} />
+                             <Route path="/proyectos/:projectUuid" element={<NavigateToProjectDetail />} />
+                            <Route path="/documentacion/proyectos" element={<NavigateToResearchProjects />} />
+                            <Route path="/investigacion/proyectos" element={<RedirectPreserveSearch to="/documentacion" />} />
                             <Route path="/investigacion/proyectos/workspace/:projectUuid" element={<NavigateToWorkspaceDetail />} />
                             <Route path="/lopdp/arco" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/lopdp/admin" element={<Navigate to="/lopdp" replace />} />
                             
                             {/* Supervision Context (Admin Only) */}
-                            <Route path="/investigacion" element={<AdminRoute><ResearchProjectsPage /></AdminRoute>} />
+                            <Route path="/documentacion" element={<AdminRoute><ResearchProjectsPage /></AdminRoute>} />
+                            <Route path="/documentacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
+                            <Route path="/documentacion/monitoreo/:projectUuid" element={<AdminRoute><MonitoringPage /></AdminRoute>} />
+                            <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
+
+                            {/* Retrocompatibilidad /investigacion */}
+                            <Route path="/investigacion" element={<RedirectPreserveSearch to="/documentacion" />} />
                             <Route path="/investigacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
                             <Route path="/investigacion/monitoreo/:projectUuid" element={<AdminRoute><MonitoringPage /></AdminRoute>} />
                             <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
                             
-                            {/* Researcher Context (Docentes, Estudiantes, Externos) */}
-                            <Route path="/investigacion/mis-proyectos" element={<ResearcherRoute><MyProjectsPage /></ResearcherRoute>} />
-                            <Route path="/investigacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
-                            <Route path="/investigacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoringPage /></ResearcherRoute>} />
+                            {/* Author / Docente Context */}
+                            <Route path="/documentacion/mis-proyectos" element={<ResearcherRoute><MyProjectsPage /></ResearcherRoute>} />
+                            <Route path="/documentacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
+                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoringPage /></ResearcherRoute>} />
+                            <Route path="/investigacion/mis-proyectos" element={<RedirectPreserveSearch to="/documentacion/mis-proyectos" />} />
                             
                             <Route path="/convocatorias" element={<ConvocatoriaRoute />} />
                             <Route path="/verificacion" element={<VerifyDocument />} />

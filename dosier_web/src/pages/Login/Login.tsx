@@ -100,7 +100,7 @@ const Login = ({ currentTheme = 'dark', toggleTheme }: LoginProps) => {
                 const isDocente = roles.includes('DOSIER_DOCENTE');
 
                 if (isAdmin) target = '/usuarios';
-                else if (isDocente) target = '/investigacion/mis-proyectos';
+                else if (isDocente) target = '/documentacion/mis-proyectos';
             }
 
             navigate(target, { replace: true });
@@ -167,7 +167,7 @@ const Login = ({ currentTheme = 'dark', toggleTheme }: LoginProps) => {
                 const isDocente = roles.includes('DOSIER_DOCENTE');
 
                 if (isAdmin) target = '/usuarios';
-                else if (isDocente) target = '/investigacion/mis-proyectos';
+                else if (isDocente) target = '/documentacion/mis-proyectos';
             }
 
             setShowMockModal(false);

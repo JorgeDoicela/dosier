@@ -393,7 +393,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
             setTimeout(() => {
                 window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                navigate('/investigacion/mis-proyectos', { replace: true });
+                navigate('/documentacion/mis-proyectos', { replace: true });
                 onClose();
             }, 800);
 

@@ -3526,7 +3526,7 @@ namespace dosier_infrastructure.Migrations
                     b.HasIndex("Uuid")
                         .IsUnique();
 
-                    b.ToTable("doc_grupos_investigacion", (string)null);
+                    b.ToTable("doc_grupos_documentales", (string)null);
                 });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocGrupoMiembro", b =>

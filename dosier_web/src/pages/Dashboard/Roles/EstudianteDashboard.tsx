@@ -160,7 +160,7 @@ export const EstudianteDashboard: React.FC = () => {
                                 <Star size={24} className="text-text-main/20 mb-2" />
                                 <p className="text-[10px] text-text-dim uppercase font-semibold">No tienes participaciones activas</p>
                                 <p className="text-[11px] text-text-dim mt-2 max-w-xs text-center">
-                                    Contacta con un docente investigador para unirte a un proyecto de investigación.
+                                    Contacta con un docente para unirte a un proyecto o comisión documental.
                                 </p>
                             </div>
                         ) : (
@@ -168,7 +168,7 @@ export const EstudianteDashboard: React.FC = () => {
                                 {colaboraciones.map(p => (
                                     <Link 
                                         key={p.uuid}
-                                        to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid, '', '/investigacion/mis-proyectos')}
+                                        to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid, '', '/documentacion/mis-proyectos')}
                                         className="p-3 rounded-lg border border-border-thin bg-surface flex justify-between items-center group cursor-pointer hover:border-border-hover transition-all"
                                     >
                                         <div className="min-w-0 flex-1 pr-2">

@@ -140,10 +140,10 @@ export const InboxView: React.FC<InboxViewProps> = ({
 
                         const matchesContext = !selectedFilterContext ? true : (() => {
                             const url = note.url_accion || '';
-                            if (selectedFilterContext === 'Proyectos') return url.startsWith('/investigacion/proyectos');
-                            if (selectedFilterContext === 'Convocatorias') return url.startsWith('/investigacion/convocatorias');
-                            if (selectedFilterContext === 'Monitoreo') return url.startsWith('/investigacion/monitoreo');
-                            if (selectedFilterContext === 'Investigacion') return url.startsWith('/investigacion') && !url.includes('/proyectos') && !url.includes('/convocatorias');
+                            if (selectedFilterContext === 'Proyectos') return url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos');
+                            if (selectedFilterContext === 'Convocatorias') return url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias');
+                            if (selectedFilterContext === 'Monitoreo') return url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo');
+                            if (selectedFilterContext === 'Investigacion' || selectedFilterContext === 'Documentacion') return (url.startsWith('/documentacion') || url.startsWith('/investigacion')) && !url.includes('/proyectos') && !url.includes('/convocatorias');
                             if (selectedFilterContext === 'Agenda') return url.startsWith('/agenda');
                             return false;
                         })();
@@ -188,10 +188,10 @@ export const InboxView: React.FC<InboxViewProps> = ({
 
                         const contextoChip = (() => {
                             const url = note.url_accion || '';
-                            if (url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                            if (url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
-                            if (url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                            if (url.startsWith('/investigacion')) return { label: 'Investigación', icon: BookOpen };
+                            if (url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
+                            if (url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
+                            if (url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
+                            if (url.startsWith('/documentacion') || url.startsWith('/investigacion')) return { label: 'Documentación', icon: BookOpen };
                             if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
                             if (url.startsWith('/analiticas')) return { label: 'Analíticas', icon: TrendingUp };
                             return null;
@@ -301,10 +301,10 @@ export const InboxView: React.FC<InboxViewProps> = ({
             {draggedNote && (() => {
                 const draggedContextoChip = (() => {
                     const url = draggedNote.url_accion || '';
-                    if (url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                    if (url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
-                    if (url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                    if (url.startsWith('/investigacion')) return { label: 'Investigación', icon: BookOpen };
+                    if (url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
+                    if (url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
+                    if (url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
+                    if (url.startsWith('/documentacion') || url.startsWith('/investigacion')) return { label: 'Documentación', icon: BookOpen };
                     if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
                     if (url.startsWith('/analiticas')) return { label: 'Analíticas', icon: TrendingUp };
                     return null;

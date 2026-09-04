@@ -27,11 +27,11 @@ const getPageTitle = (pathname: string): string => {
     if (pathname === '/usuarios') return 'Gestión de Usuarios';
     if (pathname === '/admin/documentos') return 'Ciclo de Vida Documental';
     if (pathname === '/auditoria') return 'Registro de auditoría';
-    if (pathname === '/grupos') return 'Grupos de Investigación';
+    if (pathname === '/grupos') return 'Comités y Grupos Documentales';
     if (pathname === '/parametros-normativos') return 'Parámetros';
-    if (pathname === '/investigacion') return 'Proyectos de investigación';
-    if (pathname === '/investigacion/mis-proyectos') return 'Mis Proyectos';
-    if (pathname.startsWith('/investigacion/monitoreo/')) return 'Monitoreo de Proyecto';
+    if (pathname === '/documentacion' || pathname === '/investigacion') return 'Portafolio y Documentación';
+    if (pathname === '/documentacion/mis-proyectos' || pathname === '/investigacion/mis-proyectos') return 'Mis Proyectos y Documentos';
+    if (pathname.startsWith('/documentacion/monitoreo/') || pathname.startsWith('/investigacion/monitoreo/')) return 'Monitoreo de Expediente';
     if (pathname === '/convocatorias') return 'Convocatorias';
     if (pathname === '/verificacion' || pathname.startsWith('/verificacion/')) return 'Verificación Documental';
     return '';

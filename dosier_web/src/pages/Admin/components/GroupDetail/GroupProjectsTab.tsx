@@ -56,7 +56,7 @@ export const GroupProjectsTab: React.FC<GroupProjectsTabProps> = ({ hook }) => {
                         }
                     };
 
-                    const workspaceLink = `/investigacion/workspace/protocolo-investigacion/${projectUuid}`;
+                    const workspaceLink = `/documentacion/workspace/protocolo-investigacion/${projectUuid}`;
 
                     return (
                         <div key={projectUuid || idx} className="bento-card static p-5 flex flex-col justify-between hover:border-border-hover hover:bg-surface-hover/10 transition-all duration-300 animate-fade-in">
