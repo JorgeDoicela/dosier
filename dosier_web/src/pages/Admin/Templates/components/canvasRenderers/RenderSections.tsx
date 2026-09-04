@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { ArrowUp, ArrowDown, Scissors, Pencil, Check, X, EyeOff, Plus, RotateCcw } from 'lucide-react';
+import { ArrowUp, ArrowDown, Scissors, Pencil, Check, X, EyeOff, Plus } from 'lucide-react';
 import type { ImpactCategory } from '../../types';
-import { DEFAULT_TECHNICAL_SUBSECTIONS, DEFAULT_IMPACT_CATEGORIES, DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS } from '../../types';
-import { getNormalizedColumns, getNormalizedCategories } from '../properties/ExpectedProductsProperties';
-
+import {
+    DEFAULT_TECHNICAL_SUBSECTIONS,
+    DEFAULT_IMPACT_CATEGORIES,
+    DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS,
+    getNormalizedColumns,
+    getNormalizedCategories
+} from '../../types';
 import { resolveHeaderColor, getContrastFg } from '../properties/SharedColorPicker';
 
 export const RenderProjectGeneralSection: React.FC<{

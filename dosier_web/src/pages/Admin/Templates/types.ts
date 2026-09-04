@@ -147,6 +147,34 @@ export const DEFAULT_IMPACT_CATEGORIES: ImpactCategory[] = [
     { id: 'imp_educativo', key: 'educativo', title: 'Metodológico / Educativo', placeholder: 'Impacto en la formación académica y metodologías de enseñanza...', enabled: true, colSpan: 2, scribanVariable: 'impacto.educativo', legacyKey: 'showEducativo' },
 ];
 
+export const DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS: TechnicalSubsection[] = [
+    { id: 'sec_rep_resumen', fieldKey: 'ResumenEjecutivo', numberPrefix: '1.1', title: 'RESUMEN EJECUTIVO', placeholder: 'Sintetizar los principales hallazgos...', requirementText: 'MÁXIMO 250 PALABRAS', enabled: true, colSpan: 2, variant: 'standard' },
+    { id: 'sec_rep_intro', fieldKey: 'Introduccion', numberPrefix: '1.2', title: 'INTRODUCCIÓN Y ANTECEDENTES', placeholder: 'Contextualizar el problema...', requirementText: 'DETALLAR CONTEXTO INSTITUCIONAL', enabled: true, colSpan: 2, variant: 'standard' },
+    { id: 'sec_rep_resultados', fieldKey: 'ResultadosAlcanzados', numberPrefix: '1.3', title: 'RESULTADOS ALCANZADOS', placeholder: 'Detallar los resultados...', requirementText: 'EVIDENCIAR CUMPLIMIENTO DE OBJETIVOS', enabled: true, colSpan: 2, variant: 'standard' },
+    { id: 'sec_rep_conclusiones', fieldKey: 'Conclusiones', numberPrefix: '1.4', title: 'CONCLUSIONES', placeholder: 'Conclusiones derivadas...', requirementText: 'MÍNIMO 3 CONCLUSIONES PRINCIPALES', enabled: true, colSpan: 2, variant: 'standard' },
+    { id: 'sec_rep_recomendaciones', fieldKey: 'Recomendaciones', numberPrefix: '1.5', title: 'RECOMENDACIONES', placeholder: 'Recomendaciones para el área...', requirementText: 'ORIENTADAS A LA SOSTENIBILIDAD', enabled: true, colSpan: 2, variant: 'standard' }
+];
+
+export const getNormalizedColumns = (cols?: any) => ({
+    showCategory: cols?.showCategory !== false,
+    showProduct: cols?.showProduct !== false,
+    showIndicator: cols?.showIndicator !== false,
+    showMeans: cols?.showMeans !== false,
+    showTarget: cols?.showTarget !== false,
+    showTrl: cols?.showTrl !== false,
+    ...cols
+});
+
+export const getNormalizedCategories = (cats?: any[]): any[] => {
+    if (Array.isArray(cats) && cats.length > 0) return cats;
+    return [
+        { id: 'cat_articulos', name: 'Artículos Científicos / Ponencias', enabled: true },
+        { id: 'cat_libros', name: 'Libros / Capítulos de Libro', enabled: true },
+        { id: 'cat_prototipos', name: 'Prototipos / Software / Modelos', enabled: true },
+        { id: 'cat_transferencia', name: 'Transferencia Tecnológica / Guías', enabled: true }
+    ];
+};
+
 export interface DocumentBlock {
     id: string;
     type: BlockType;
