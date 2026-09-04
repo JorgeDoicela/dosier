@@ -45,6 +45,17 @@ namespace dosier_api.Controllers
             return Ok(result);
         }
 
+        [HttpPost("desde-asignacion/{idAsignacion:int}")]
+        public async Task<IActionResult> CrearDesdeAsignacion(int idAsignacion)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized(new { message = "No se pudo identificar al docente autenticado." });
+
+            var result = await _peaService.CrearDesdeAsignacionAsync(idAsignacion, userId);
+            return CreatedAtAction(nameof(GetById), new { id = result.IdPea }, result);
+        }
+
         [HttpPatch("{id}/estado")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] CambiarEstadoRequest req)
         {

@@ -12,10 +12,38 @@ namespace dosier_api.Controllers;
 public class DocenteAsignaturasController : ControllerBase
 {
     private readonly IAsignaturasDocenteService _service;
+    private readonly IAcademicContextResolver _contextResolver;
 
-    public DocenteAsignaturasController(IAsignaturasDocenteService service)
+    public DocenteAsignaturasController(
+        IAsignaturasDocenteService service,
+        IAcademicContextResolver contextResolver)
     {
         _service = service;
+        _contextResolver = contextResolver;
+    }
+
+    /// <summary>
+    /// Resuelve el contexto curricular oficial de una asignacion docente.
+    /// Este contexto es compartido por PEA, silabo y guias y sus datos son de solo lectura.
+    /// </summary>
+    [HttpGet("contexto/{idAsignacion:int}")]
+    public async Task<IActionResult> GetContextoAcademico(int idAsignacion, CancellationToken cancellationToken)
+    {
+        var idProfesor = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                         ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(idProfesor))
+            return Unauthorized(new { message = "No se pudo identificar la cedula del docente en el token." });
+
+        var context = await _contextResolver.ResolveByAssignmentAsync(
+            idAsignacion,
+            idProfesor,
+            cancellationToken);
+
+        if (context == null)
+            return NotFound(new { message = "No se encontro una asignacion institucional valida para el docente." });
+
+        return Ok(context);
     }
 
     /// <summary>

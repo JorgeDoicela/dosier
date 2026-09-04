@@ -1,0 +1,111 @@
+{
+  "input": "C:\\Users\\DESARROLLADOR\\Desktop\\Varios\\Tesis\\Tema tesis.docx",
+  "fonts_by_char_count": {
+    "Times New Roman": 3975,
+    "Arial": 1
+  },
+  "direct_run_formatting_runs": 78,
+  "direct_paragraph_formatting_paragraphs": 40,
+  "heading_like_paragraphs_not_heading_style": [
+    {
+      "para_index": 1,
+      "text": "SOLICITUD PARA APROBACION DEL TEMA DE TITULACION",
+      "style": "Normal"
+    },
+    {
+      "para_index": 25,
+      "text": "Objetivo general ",
+      "style": "Normal"
+    },
+    {
+      "para_index": 28,
+      "text": "Objetivos espec\u00edficos ",
+      "style": "List Paragraph"
+    },
+    {
+      "para_index": 32,
+      "text": "Justificaci\u00f3n",
+      "style": "Normal"
+    },
+    {
+      "para_index": 33,
+      "text": "5.1. Justificaci\u00f3n Pedag\u00f3gica y de Dise\u00f1o Curricular",
+      "style": "Normal"
+    },
+    {
+      "para_index": 35,
+      "text": "5.2. Justificaci\u00f3n de Procesos y Colaboraci\u00f3n en Tiempo Real",
+      "style": "Normal"
+    },
+    {
+      "para_index": 37,
+      "text": "5.3. Justificaci\u00f3n T\u00e9cnica y de Desarrollo de Software",
+      "style": "Normal"
+    },
+    {
+      "para_index": 43,
+      "text": "5.4. Beneficiarios e Impacto",
+      "style": "Normal"
+    }
+  ],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "SOLICITUD PARA APROBACION DEL TEMA DE TITULACION",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "text": "Quito D.M. 03 de 07 de 2026",
+        "style": "Normal"
+      },
+      {
+        "para_index": 9,
+        "text": "Yo Doicela Molina Jorge Ismael estudiante del ISTPET de la carrera de Desarrollo de software de cuarto nivel, paralelo A",
+        "style": "Normal"
+      },
+      {
+        "para_index": 10,
+        "text": "Tema:",
+        "style": "Normal"
+      },
+      {
+        "para_index": 11,
+        "text": "Sistema web para la gesti\u00f3n de documentaci\u00f3n institucional docente del ISTPET.",
+        "style": "Normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 1,
+        "run_text": "SOLICITUD PARA APROBACION DEL TEMA DE TITULACION",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": "Quito D.M.",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": " ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": "03",
+        "style": "Normal"
+      },
+      {
+        "para_index": 2,
+        "run_text": " de ",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

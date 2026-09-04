@@ -174,6 +174,7 @@ builder.Services.AddSingleton<dosier_application.Common.IAppUrlService, dosier_i
 builder.Services.AddScoped<dosier_infrastructure.Security.IFirmaElectronicaService, dosier_infrastructure.Security.FirmaElectronicaService>();
 builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 builder.Services.AddScoped<dosier_application.Academico.IAsignaturasDocenteService, dosier_infrastructure.Academico.AsignaturasDocenteService>();
+builder.Services.AddScoped<dosier_application.Academico.IAcademicContextResolver, dosier_infrastructure.Academico.AcademicContextResolver>();
 
 // DOSIER Firma
 builder.Services.AddSingleton<SignatureHashService>();

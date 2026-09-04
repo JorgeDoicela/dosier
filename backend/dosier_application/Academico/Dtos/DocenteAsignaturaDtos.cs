@@ -34,6 +34,10 @@ public class DocenteAsignaturaDto
     public string? NombreNivel { get; set; }
     public string Paralelo { get; set; } = null!;
 
+    public int IdMalla { get; set; }
+    public int IdDetalleMalla { get; set; }
+    public string FuenteMalla { get; set; } = null!;
+
     // Distribución horaria y curricular
     public int HorasTotales { get; set; }
     public decimal HorasDocencia { get; set; }
@@ -50,6 +54,7 @@ public class DocenteAsignaturaDto
     public string EstadoSilabo { get; set; } = "NoIniciado";
     public int TotalGuiasApe { get; set; } = 0;
     public string EstadoGuiaEstudio { get; set; } = "NoIniciado";
+    public List<string> AdvertenciasContexto { get; set; } = new();
 }
 
 public class CurriculoAsignaturaDetalleDto
@@ -81,4 +86,41 @@ public class PrerrequisitoItemDto
     public int IdAsignatura { get; set; }
     public string? Codigo { get; set; }
     public string? Asignatura { get; set; }
+}
+
+/// <summary>
+/// Contexto academico oficial que comparten PEA, silabo y guias.
+/// Los valores curriculares proceden de SIGAFI y no deben editarse desde DOSIER.
+/// </summary>
+public class AcademicContextDto
+{
+    public int IdAsignacion { get; set; }
+    public string IdProfesor { get; set; } = null!;
+    public string IdPeriodo { get; set; } = null!;
+    public int IdCarrera { get; set; }
+    public string? NombreCarrera { get; set; }
+    public string? CodigoCarrera { get; set; }
+    public int IdMalla { get; set; }
+    public string? DescripcionMalla { get; set; }
+    public int IdDetalleMalla { get; set; }
+    public int IdAsignatura { get; set; }
+    public string? CodigoAsignatura { get; set; }
+    public string? NombreAsignatura { get; set; }
+    public int IdNivel { get; set; }
+    public string? NombreNivel { get; set; }
+    public int IdModalidad { get; set; }
+    public string? NombreModalidad { get; set; }
+    public int IdSeccion { get; set; }
+    public string? NombreSeccion { get; set; }
+    public string Paralelo { get; set; } = null!;
+    public int HorasTotales { get; set; }
+    public decimal HorasDocencia { get; set; }
+    public decimal HorasPracticoExperimental { get; set; }
+    public decimal HorasAutonomo { get; set; }
+    public int Creditos { get; set; }
+    public string? UnidadOrganizacionCurricular { get; set; }
+    public bool ModalidadAutorizada { get; set; }
+    public string FuenteMalla { get; set; } = null!;
+    public List<PrerrequisitoItemDto> Prerrequisitos { get; set; } = new();
+    public List<string> Advertencias { get; set; } = new();
 }

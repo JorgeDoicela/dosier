@@ -13,6 +13,14 @@ namespace dosier_application.Curriculum.Dtos
         public string NombreAsignatura { get; set; } = string.Empty;
         public string? CodigoAsignatura { get; set; }
         public string IdPeriodo { get; set; } = string.Empty;
+        public int? IdAsignacion { get; set; }
+        public int? IdMalla { get; set; }
+        public int? IdDetalleMalla { get; set; }
+        public int? IdNivel { get; set; }
+        public int? IdModalidad { get; set; }
+        public int? IdSeccion { get; set; }
+        public string? Paralelo { get; set; }
+        public string? FuenteMalla { get; set; }
         public string? IdDocenteElaborador { get; set; }
         public string? NombreDocenteElaborador { get; set; }
         public string Modalidad { get; set; } = "Presencial";

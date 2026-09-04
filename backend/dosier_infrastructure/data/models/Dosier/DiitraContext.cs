@@ -142,10 +142,13 @@ public partial class DosierContext : DbContext
     public virtual DbSet<Curso>                Cursos             { get; set; }  // cursos
     public virtual DbSet<Asignatura>           Asignaturas        { get; set; }  // asignaturas
     public virtual DbSet<Malla>                Mallas             { get; set; }  // mallas
+    public virtual DbSet<MallaPeriodo>         MallasPeriodos     { get; set; }  // mallas_periodos
     public virtual DbSet<DetalleMalla>         DetalleMallas      { get; set; }  // detallemallas
     public virtual DbSet<Prerequisito>         Prerequisitos      { get; set; }  // prerequisitos
     public virtual DbSet<TipoAsignatura>       TiposAsignatura    { get; set; }  // tipos_asignatura
     public virtual DbSet<Modalidad>            Modalidades        { get; set; }  // modalidades
+    public virtual DbSet<ModalidadCarrera>     ModalidadesCarreras{ get; set; }  // modalidades_carreras
+    public virtual DbSet<Seccion>              Secciones          { get; set; }  // secciones
     public virtual DbSet<Parcial>              Parciales          { get; set; }  // parciales
     public virtual DbSet<ParcialModalidadFecha>ParcialesModalidadesFechas { get; set; } // parciales_modalidades_fechas
 

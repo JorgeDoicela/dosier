@@ -7,16 +7,68 @@ using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
 using dosier_domain.Curriculum.Entities;
 using dosier_infrastructure.data.models;
+using dosier_application.Academico;
+using System.Text.Json;
 
 namespace dosier_infrastructure.Curriculum
 {
     public class PeaService : IPeaService
     {
         private readonly DosierContext _context;
+        private readonly IAcademicContextResolver _academicContextResolver;
 
-        public PeaService(DosierContext context)
+        public PeaService(DosierContext context, IAcademicContextResolver academicContextResolver)
         {
             _context = context;
+            _academicContextResolver = academicContextResolver;
+        }
+
+        public async Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)
+        {
+            var academicContext = await _academicContextResolver.ResolveByAssignmentAsync(idAsignacion, idProfesor)
+                ?? throw new KeyNotFoundException("No se encontro una asignacion academica valida para crear el PEA.");
+
+            var existing = await _context.DocPeas
+                .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                .Include(p => p.ResultadosAprendizaje)
+                .Include(p => p.ActividadesPracticas)
+                .Include(p => p.Bibliografias)
+                .FirstOrDefaultAsync(p => p.IdAsignacion == idAsignacion && p.Activo);
+            if (existing != null)
+                return await MapToDtoAsync(existing);
+
+            var entity = new DocPea
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdAsignacion = academicContext.IdAsignacion,
+                IdMalla = academicContext.IdMalla,
+                IdDetalleMalla = academicContext.IdDetalleMalla,
+                IdCarrera = academicContext.IdCarrera,
+                IdAsignatura = academicContext.IdAsignatura,
+                IdPeriodo = academicContext.IdPeriodo,
+                IdNivel = academicContext.IdNivel,
+                IdModalidad = academicContext.IdModalidad,
+                IdSeccion = academicContext.IdSeccion,
+                Paralelo = academicContext.Paralelo,
+                FuenteMalla = academicContext.FuenteMalla,
+                SnapshotCurricularJson = JsonSerializer.Serialize(academicContext),
+                IdDocenteElaborador = academicContext.IdProfesor,
+                Modalidad = academicContext.NombreModalidad ?? "Sin modalidad",
+                UnidadOrganizacion = academicContext.UnidadOrganizacionCurricular,
+                SemestreNivel = academicContext.NombreNivel,
+                TotalHorasAsignatura = academicContext.HorasTotales,
+                Creditos = academicContext.Creditos,
+                HorasContactoDocente = decimal.ToInt32(academicContext.HorasDocencia),
+                HorasPracticoExperimental = decimal.ToInt32(academicContext.HorasPracticoExperimental),
+                HorasAutonomo = decimal.ToInt32(academicContext.HorasAutonomo),
+                Estado = "Borrador",
+                Version = 1,
+                Activo = true
+            };
+
+            _context.DocPeas.Add(entity);
+            await _context.SaveChangesAsync();
+            return await MapToDtoAsync(entity);
         }
 
         public async Task<PeaDto?> GetByIdAsync(int idPea)
@@ -60,13 +112,17 @@ namespace dosier_infrastructure.Curriculum
                     ?? throw new KeyNotFoundException($"No se encontró el PEA con id {dto.IdPea}");
 
                 entity.Modalidad = dto.Modalidad;
-                entity.UnidadOrganizacion = dto.UnidadOrganizacion;
-                entity.SemestreNivel = dto.SemestreNivel;
-                entity.TotalHorasAsignatura = dto.TotalHorasAsignatura;
-                entity.Creditos = dto.Creditos;
-                entity.HorasContactoDocente = dto.HorasContactoDocente;
-                entity.HorasPracticoExperimental = dto.HorasPracticoExperimental;
-                entity.HorasAutonomo = dto.HorasAutonomo;
+                if (entity.IdAsignacion == null)
+                {
+                    // Compatibilidad temporal con borradores creados antes de la integracion SIGAFI.
+                    entity.UnidadOrganizacion = dto.UnidadOrganizacion;
+                    entity.SemestreNivel = dto.SemestreNivel;
+                    entity.TotalHorasAsignatura = dto.TotalHorasAsignatura;
+                    entity.Creditos = dto.Creditos;
+                    entity.HorasContactoDocente = dto.HorasContactoDocente;
+                    entity.HorasPracticoExperimental = dto.HorasPracticoExperimental;
+                    entity.HorasAutonomo = dto.HorasAutonomo;
+                }
                 entity.ObjetivoAsignatura = dto.ObjetivoAsignatura;
                 entity.MetodologiaEnsenanza = dto.MetodologiaEnsenanza;
                 entity.RecursosDidacticos = dto.RecursosDidacticos;
@@ -224,6 +280,14 @@ namespace dosier_infrastructure.Curriculum
                 NombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura",
                 CodigoAsignatura = asignatura?.Codigo,
                 IdPeriodo = pea.IdPeriodo,
+                IdAsignacion = pea.IdAsignacion,
+                IdMalla = pea.IdMalla,
+                IdDetalleMalla = pea.IdDetalleMalla,
+                IdNivel = pea.IdNivel,
+                IdModalidad = pea.IdModalidad,
+                IdSeccion = pea.IdSeccion,
+                Paralelo = pea.Paralelo,
+                FuenteMalla = pea.FuenteMalla,
                 IdDocenteElaborador = pea.IdDocenteElaborador,
                 NombreDocenteElaborador = docente != null ? $"{docente.Nombres} {docente.Apellidos}".Trim() : null,
                 Modalidad = pea.Modalidad,

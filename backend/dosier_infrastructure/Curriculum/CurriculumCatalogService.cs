@@ -42,7 +42,8 @@ namespace dosier_infrastructure.Curriculum
         {
             string periodoActivo = idPeriodo ?? await ObtenerPeriodoActivoAsync();
 
-            var queryCarreras = _context.Carreras.AsNoTracking().Where(c => c.Activa == true || c.Activa == null);
+            var queryCarreras = _context.Carreras.AsNoTracking()
+                .Where(c => c.EsInstituto == 1 && (c.Activa == true || c.Activa == null));
 
             if (!string.IsNullOrEmpty(idProfesor))
             {
@@ -88,7 +89,10 @@ namespace dosier_infrastructure.Curriculum
         {
             string periodoActivo = idPeriodo ?? await ObtenerPeriodoActivoAsync();
 
-            var carreraObj = await _context.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == idCarrera);
+            var carreraObj = await _context.Carreras.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.IdCarrera == idCarrera && c.EsInstituto == 1);
+            if (carreraObj == null)
+                return new List<DocenteAsignaturaMallaDto>();
             string nombreCarrera = carreraObj?.Carrera1 ?? "Carrera";
 
             var mallaActiva = await _context.Mallas

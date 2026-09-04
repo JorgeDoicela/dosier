@@ -10,6 +10,15 @@ namespace dosier_domain.Curriculum.Entities
         public int IdCarrera { get; set; }
         public int IdAsignatura { get; set; }
         public string IdPeriodo { get; set; } = string.Empty;
+        public int? IdAsignacion { get; set; }
+        public int? IdMalla { get; set; }
+        public int? IdDetalleMalla { get; set; }
+        public int? IdNivel { get; set; }
+        public int? IdModalidad { get; set; }
+        public int? IdSeccion { get; set; }
+        public string? Paralelo { get; set; }
+        public string? FuenteMalla { get; set; }
+        public string? SnapshotCurricularJson { get; set; }
         public string? IdDocenteElaborador { get; set; }
         public string Modalidad { get; set; } = "Presencial";
         public string? UnidadOrganizacion { get; set; }

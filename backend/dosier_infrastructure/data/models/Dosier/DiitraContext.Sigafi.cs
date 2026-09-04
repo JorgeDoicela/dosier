@@ -524,6 +524,15 @@ public partial class DosierContext
             entity.Ignore(e => e.DetalleMallas);
         });
 
+        modelBuilder.Entity<MallaPeriodo>(entity =>
+        {
+            entity.HasKey(e => new { e.IdPeriodo, e.IdNivel, e.IdMalla }).HasName("PRIMARY");
+            entity.ToTable("mallas_periodos");
+            entity.Property(e => e.IdPeriodo).HasMaxLength(7).HasColumnName("idPeriodo");
+            entity.Property(e => e.IdNivel).HasColumnName("idNivel");
+            entity.Property(e => e.IdMalla).HasColumnName("idMalla");
+        });
+
         modelBuilder.Entity<DetalleMalla>(entity =>
         {
             entity.HasKey(e => e.IdDetalleMalla).HasName("PRIMARY");
@@ -577,6 +586,25 @@ public partial class DosierContext
             entity.Property(e => e.Modalidad1).HasMaxLength(100).HasColumnName("modalidad");
             entity.Property(e => e.Sufijo).HasMaxLength(1).HasColumnName("sufijo");
             entity.Property(e => e.ModalidadImpresion).HasMaxLength(30).HasColumnName("modalidadImpresion");
+        });
+
+        modelBuilder.Entity<ModalidadCarrera>(entity =>
+        {
+            entity.HasKey(e => e.IdModalidadCarrera).HasName("PRIMARY");
+            entity.ToTable("modalidades_carreras");
+            entity.Property(e => e.IdModalidadCarrera).HasColumnName("idModalidadCarrera");
+            entity.Property(e => e.IdCarrera).HasColumnName("idCarrera");
+            entity.Property(e => e.IdModalidad).HasColumnName("idModalidad");
+            entity.Property(e => e.EsActivo).HasColumnName("esActivo");
+        });
+
+        modelBuilder.Entity<Seccion>(entity =>
+        {
+            entity.HasKey(e => e.IdSeccion).HasName("PRIMARY");
+            entity.ToTable("secciones");
+            entity.Property(e => e.IdSeccion).HasColumnName("idSeccion");
+            entity.Property(e => e.Nombre).HasMaxLength(30).HasColumnName("seccion");
+            entity.Property(e => e.Sufijo).HasMaxLength(1).IsFixedLength().HasColumnName("sufijo");
         });
 
         modelBuilder.Entity<Parcial>(entity =>

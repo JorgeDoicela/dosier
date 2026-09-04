@@ -78,137 +78,134 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
         if (!asignaciones.Any())
             return new List<DocenteAsignaturaDto>();
 
-        // 2. Extraer IDs para consultas en lote (Batch lookup)
         var asignaturaIds = asignaciones.Select(a => a.IdAsignatura).Distinct().ToList();
         var nivelIds = asignaciones.Select(a => a.IdNivel).Distinct().ToList();
         var modalidadIds = asignaciones.Select(a => a.IdModalidad).Distinct().ToList();
 
-        var asignaturasMap = await _context.Asignaturas
-            .AsNoTracking()
+        var asignaturasMap = await _context.Asignaturas.AsNoTracking()
             .Where(a => asignaturaIds.Contains(a.IdAsignatura))
             .ToDictionaryAsync(a => a.IdAsignatura);
-
-        var cursosMap = await _context.Cursos
-            .AsNoTracking()
+        var cursosMap = await _context.Cursos.AsNoTracking()
             .Where(c => nivelIds.Contains(c.IdNivel))
             .ToDictionaryAsync(c => c.IdNivel);
-
         var carreraIds = cursosMap.Values.Select(c => c.IdCarrera).Distinct().ToList();
-        var carrerasMap = await _context.Carreras
-            .AsNoTracking()
-            .Where(c => carreraIds.Contains(c.IdCarrera))
+        var carrerasMap = await _context.Carreras.AsNoTracking()
+            .Where(c => carreraIds.Contains(c.IdCarrera) && c.EsInstituto == 1)
             .ToDictionaryAsync(c => c.IdCarrera);
-
-        var modalidadesMap = await _context.Modalidades
-            .AsNoTracking()
+        var modalidadesMap = await _context.Modalidades.AsNoTracking()
             .Where(m => modalidadIds.Contains(m.IdModalidad))
             .ToDictionaryAsync(m => m.IdModalidad);
 
-        var periodo = await _context.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == idPeriodo);
-
-        // 3. Mallas y detalles curriculares
-        var mallasActivas = await _context.Mallas
-            .AsNoTracking()
+        var mallasPeriodo = await (
+            from mp in _context.MallasPeriodos.AsNoTracking()
+            join m in _context.Mallas.AsNoTracking() on mp.IdMalla equals m.IdMalla
+            where mp.IdPeriodo == idPeriodo
+                  && nivelIds.Contains(mp.IdNivel)
+                  && carreraIds.Contains(m.IdCarrera)
+            select new { mp.IdNivel, mp.IdMalla, m.IdCarrera })
+            .ToListAsync();
+        var mallasActivas = await _context.Mallas.AsNoTracking()
             .Where(m => carreraIds.Contains(m.IdCarrera) && m.Activa == true)
             .ToListAsync();
-        var mallaIds = mallasActivas.Select(m => m.IdMalla).ToList();
-
-        var detallesMalla = await _context.DetalleMallas
-            .AsNoTracking()
-            .Where(d => mallaIds.Contains(d.IdMalla) && asignaturaIds.Contains(d.IdAsignatura) && d.Anulada != true)
+        var mallaIds = mallasPeriodo.Select(m => m.IdMalla)
+            .Concat(mallasActivas.Select(m => m.IdMalla))
+            .Distinct()
+            .ToList();
+        var mallasRelevantes = await _context.Mallas.AsNoTracking()
+            .Where(m => mallaIds.Contains(m.IdMalla))
             .ToListAsync();
-
-        var tipoAsignaturaIds = detallesMalla.Select(d => d.IdTipoAsignatura).Distinct().ToList();
-        var tiposAsignaturaMap = await _context.TiposAsignatura
-            .AsNoTracking()
-            .Where(t => tipoAsignaturaIds.Contains(t.IdTipoAsignatura))
+        var detallesMalla = await _context.DetalleMallas.AsNoTracking()
+            .Where(d => mallaIds.Contains(d.IdMalla)
+                        && asignaturaIds.Contains(d.IdAsignatura)
+                        && d.Anulada != true)
+            .ToListAsync();
+        var tiposAsignaturaIds = detallesMalla.Select(d => d.IdTipoAsignatura).Distinct().ToList();
+        var tiposAsignaturaMap = await _context.TiposAsignatura.AsNoTracking()
+            .Where(t => tiposAsignaturaIds.Contains(t.IdTipoAsignatura))
             .ToDictionaryAsync(t => t.IdTipoAsignatura);
-
-        // Prerrequisitos de los detalles encontrados
-        var detalleMallaIds = detallesMalla.Select(d => d.IdDetalleMalla).ToList();
-        var prerequisitos = await _context.Prerequisitos
-            .AsNoTracking()
-            .Where(p => detalleMallaIds.Contains(p.IdDetalleMalla) && p.Activa == 1)
+        var detalleIds = detallesMalla.Select(d => d.IdDetalleMalla).ToList();
+        var prerequisitos = await _context.Prerequisitos.AsNoTracking()
+            .Where(p => detalleIds.Contains(p.IdDetalleMalla) && p.Activa == 1)
             .ToListAsync();
+        var prerequisitoIds = prerequisitos.Select(p => p.IdAsignatura).Distinct().ToList();
+        var prerequisitoNombres = await _context.Asignaturas.AsNoTracking()
+            .Where(a => prerequisitoIds.Contains(a.IdAsignatura))
+            .ToDictionaryAsync(a => a.IdAsignatura, a => a.Asignatura1 ?? a.Codigo ?? string.Empty);
 
-        var prerequisitoAsignaturaIds = prerequisitos.Select(p => p.IdAsignatura).Distinct().ToList();
-        var prerequisitoNombresMap = await _context.Asignaturas
-            .AsNoTracking()
-            .Where(a => prerequisitoAsignaturaIds.Contains(a.IdAsignatura))
-            .ToDictionaryAsync(a => a.IdAsignatura, a => a.Asignatura1 ?? a.Codigo ?? "");
-
-        // 4. Mapear resultados finales
+        var periodo = await _context.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == idPeriodo);
         var result = new List<DocenteAsignaturaDto>();
 
         foreach (var asig in asignaciones)
         {
-            asignaturasMap.TryGetValue(asig.IdAsignatura, out var objAsignatura);
-            cursosMap.TryGetValue(asig.IdNivel, out var objCurso);
-            
-            Carrera? objCarrera = null;
-            if (objCurso != null)
-                carrerasMap.TryGetValue(objCurso.IdCarrera, out objCarrera);
+            if (!cursosMap.TryGetValue(asig.IdNivel, out var curso)
+                || !carrerasMap.TryGetValue(curso.IdCarrera, out var carrera)
+                || !asignaturasMap.TryGetValue(asig.IdAsignatura, out var asignatura))
+                continue;
 
-            modalidadesMap.TryGetValue(asig.IdModalidad, out var objModalidad);
+            modalidadesMap.TryGetValue(asig.IdModalidad, out var modalidad);
+            var mallaPeriodo = mallasPeriodo.FirstOrDefault(m =>
+                m.IdNivel == asig.IdNivel && m.IdCarrera == carrera.IdCarrera);
+            var malla = mallaPeriodo == null
+                ? mallasActivas.FirstOrDefault(m => m.IdCarrera == carrera.IdCarrera)
+                : mallasRelevantes.FirstOrDefault(m => m.IdMalla == mallaPeriodo.IdMalla);
+            if (malla == null)
+                continue;
 
-            // Buscar detalle curricular en la malla activa de la carrera
-            var idCarreraActual = objCurso?.IdCarrera ?? 0;
-            var mallaActiva = mallasActivas.FirstOrDefault(m => m.IdCarrera == idCarreraActual);
-            var detalle = detallesMalla.FirstOrDefault(d => d.IdAsignatura == asig.IdAsignatura && (mallaActiva == null || d.IdMalla == mallaActiva.IdMalla));
+            var detalle = detallesMalla.FirstOrDefault(d =>
+                d.IdMalla == malla.IdMalla && d.IdAsignatura == asig.IdAsignatura);
+            if (detalle == null)
+                continue;
 
-            var horasTotales = detalle?.Horas ?? (int)(asig.NumeroHoras ?? 0);
-            var horasDocencia = (decimal)(detalle?.HorasDocente ?? (int)(asig.NumeroHoras ?? 0));
-            var horasApe = detalle?.HorasPracticoExperimental ?? asig.HorasPracticoExperimental ?? 0m;
-            var horasAutonomo = Math.Max(0m, (decimal)horasTotales - (horasDocencia + horasApe));
-            var creditos = detalle?.Creditos ?? 0;
-
-            string? unidadOrg = null;
-            if (detalle != null && tiposAsignaturaMap.TryGetValue(detalle.IdTipoAsignatura, out var objTipo))
-            {
-                unidadOrg = objTipo.TipoAsignatura1;
-            }
-
-            var prereqList = new List<string>();
-            if (detalle != null)
-            {
-                var prereqIds = prerequisitos.Where(p => p.IdDetalleMalla == detalle.IdDetalleMalla).Select(p => p.IdAsignatura);
-                foreach (var pId in prereqIds)
-                {
-                    if (prerequisitoNombresMap.TryGetValue(pId, out var nom))
-                        prereqList.Add(nom);
-                }
-            }
+            tiposAsignaturaMap.TryGetValue(detalle.IdTipoAsignatura, out var tipoAsignatura);
+            var horasTotales = detalle.Horas ?? 0;
+            var horasDocencia = (decimal)(detalle.HorasDocente ?? 0);
+            var horasApe = detalle.HorasPracticoExperimental ?? 0m;
+            var prereqList = prerequisitos
+                .Where(p => p.IdDetalleMalla == detalle.IdDetalleMalla)
+                .Select(p => prerequisitoNombres.GetValueOrDefault(p.IdAsignatura))
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Cast<string>()
+                .ToList();
+            var source = mallaPeriodo == null ? "malla_activa_fallback" : "mallas_periodos";
+            var warnings = mallaPeriodo == null
+                ? new List<string> { "SIGAFI no tiene una malla asociada al periodo y nivel; se uso la malla activa de la carrera." }
+                : new List<string>();
 
             result.Add(new DocenteAsignaturaDto
             {
                 IdAsignacion = asig.IdAsignacion,
-                IdAsignatura = asig.IdAsignatura,
-                CodigoAsignatura = objAsignatura?.Codigo,
-                NombreAsignatura = objAsignatura?.Asignatura1,
+                IdAsignatura = asignatura.IdAsignatura,
+                CodigoAsignatura = asignatura.Codigo,
+                NombreAsignatura = asignatura.Asignatura1,
 
-                IdCarrera = idCarreraActual,
-                CodigoCarrera = objCarrera?.CodigoCases,
-                NombreCarrera = objCarrera?.Carrera1,
-                AliasCarrera = objCarrera?.AliasCarrera,
+                IdCarrera = carrera.IdCarrera,
+                CodigoCarrera = carrera.CodigoCases,
+                NombreCarrera = carrera.Carrera1,
+                AliasCarrera = carrera.AliasCarrera,
 
                 IdPeriodo = asig.IdPeriodo,
                 DetallePeriodo = periodo?.Detalle,
 
                 IdModalidad = asig.IdModalidad,
-                NombreModalidad = objModalidad?.ModalidadImpresion ?? objModalidad?.Modalidad1,
+                NombreModalidad = modalidad?.ModalidadImpresion ?? modalidad?.Modalidad1,
 
                 IdNivel = asig.IdNivel,
-                NombreNivel = objCurso?.Nivel ?? $"Nivel {asig.IdNivel}",
+                NombreNivel = curso.Nivel ?? $"Nivel {asig.IdNivel}",
                 Paralelo = asig.Paralelo,
+
+                IdMalla = malla.IdMalla,
+                IdDetalleMalla = detalle.IdDetalleMalla,
+                FuenteMalla = source,
 
                 HorasTotales = horasTotales,
                 HorasDocencia = horasDocencia,
                 HorasPracticoExperimental = horasApe,
-                HorasAutonomo = horasAutonomo,
-                Creditos = creditos,
-                UnidadOrganizacionCurricular = unidadOrg,
+                HorasAutonomo = Math.Max(0m, horasTotales - horasDocencia - horasApe),
+                Creditos = detalle.Creditos ?? 0,
+                UnidadOrganizacionCurricular = tipoAsignatura?.TipoAsignatura1,
 
                 Prerrequisitos = prereqList,
+                AdvertenciasContexto = warnings,
 
                 // Estados iniciales para la tesis
                 EstadoPea = "NoIniciado",
@@ -226,7 +223,9 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
         var asignatura = await _context.Asignaturas.AsNoTracking().FirstOrDefaultAsync(a => a.IdAsignatura == idAsignatura);
         if (asignatura == null) return null;
 
-        var carrera = await _context.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == idCarrera);
+        var carrera = await _context.Carreras.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.IdCarrera == idCarrera && c.EsInstituto == 1);
+        if (carrera == null) return null;
         var mallaActiva = await _context.Mallas.AsNoTracking().FirstOrDefaultAsync(m => m.IdCarrera == idCarrera && m.Activa == true);
 
         DetalleMalla? detalle = null;
