@@ -18,25 +18,7 @@ namespace dosier_api.Controllers
             _context = context;
         }
 
-        [HttpGet("tipo-evidencia")]
-        public async Task<IActionResult> GetTiposEvidencia()
-        {
-            var data = await _context.DocCatTipoEvidencias
-                .Where(t => t.Activo == true)
-                .OrderBy(t => t.Nombre)
-                .ToListAsync();
-            return Ok(data);
-        }
 
-        [HttpGet("entidades-externas")]
-        public async Task<IActionResult> GetEntidadesExternas()
-        {
-            var data = await _context.DocEntidadesExternas
-                .Where(e => e.Activo == true)
-                .OrderBy(e => e.RazonSocial)
-                .ToListAsync();
-            return Ok(data);
-        }
 
         [HttpGet("config-general")]
         public async Task<IActionResult> GetConfigGeneral([FromQuery] string? prefix = null)
@@ -180,23 +162,6 @@ namespace dosier_api.Controllers
             return Ok(estados);
         }
 
-        // --- Objetivos de Desarrollo Sostenible (ODS) ---
-        [HttpGet("ods")]
-        public async Task<IActionResult> GetOds()
-        {
-            var data = await _context.DocOds
-                .Include(o => o.IdEjeNavigation)
-                .OrderBy(o => o.NumeroOds)
-                .Select(o => new {
-                    idOds = o.IdOds,
-                    numeroOds = o.NumeroOds,
-                    titulo = o.Titulo,
-                    idEje = o.IdEje,
-                    eje = o.IdEjeNavigation != null ? o.IdEjeNavigation.Nombre : ""
-                })
-                .ToListAsync();
-            return Ok(data);
-        }
     }
 }
 

@@ -119,7 +119,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             {
                 ["PROTOCOLO_INVESTIGACION"]       = "Investigacion/ProyectoInvestigacion.html",
                 ["REPORTE_ANALITICAS"]            = "Investigacion/ReporteAnaliticas.html",
-                ["PROPUESTA_GRUPO_INVESTIGACION"] = "Investigacion/PropuestaGrupoInvestigacion.html",
             };
 
             if (map.TryGetValue(templateCode, out var relativePath))

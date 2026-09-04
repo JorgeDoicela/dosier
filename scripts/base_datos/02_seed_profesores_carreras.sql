@@ -30,8 +30,9 @@ SET @periodoActivoId = (
 -- Mostrar el periodo autodetectado para confirmar en consola
 SELECT CONCAT('PERIODO ACTIVO DETECTADO EN EL SISTEMA: ', IFNULL(@periodoActivoId, 'NINGUNO')) AS Info;
 
--- 2. Vincular dinámicamente a todos los docentes activos con horas de investigación en dicho periodo.
+-- 2. Vincular dinámicamente a todos los docentes activos en dicho periodo.
 --    Se distribuyen sus carreras según el dígito final de su cédula/ID.
+--    Aplica a todos los docentes ordinarios y de cátedra del periodo.
 INSERT INTO profesores_carreras_periodos (idPeriodo, idProfesor, idCarrera, esActivo, sonTodas)
 SELECT 
     @periodoActivoId AS idPeriodo,
@@ -47,12 +48,6 @@ SELECT
     0 AS sonTodas
 FROM profesores p
 WHERE p.activo = 1
-  AND EXISTS (
-      SELECT 1 FROM profesores_actividades pa 
-      WHERE pa.idProfesor = p.idProfesor 
-        AND pa.idSubcategoria = (SELECT idSubcategoria FROM subcategorias_actividades WHERE Subcategoria = 'INVESTIGACION' LIMIT 1) 
-        AND pa.idPeriodo = @periodoActivoId
-  )
 ON DUPLICATE KEY UPDATE 
     esActivo = 1;
 
@@ -60,7 +55,7 @@ ON DUPLICATE KEY UPDATE
 --    por si cambias de periodo en la interfaz y deseas que sigan vinculados
 INSERT INTO profesores_carreras_periodos (idPeriodo, idProfesor, idCarrera, esActivo, sonTodas)
 SELECT 
-    pa.idPeriodo,
+    per.idPeriodo,
     p.idProfesor,
     CASE (ASCII(RIGHT(p.idProfesor, 1)) % 5)
         WHEN 0 THEN (SELECT idCarrera FROM carreras WHERE aliasCarrera = 'SOF' LIMIT 1)
@@ -72,10 +67,8 @@ SELECT
     1 AS esActivo,
     0 AS sonTodas
 FROM profesores p
-JOIN profesores_actividades pa ON pa.idProfesor = p.idProfesor
+CROSS JOIN (SELECT idPeriodo FROM periodos WHERE idPeriodo <> @periodoActivoId) per
 WHERE p.activo = 1
-  AND pa.idSubcategoria = (SELECT idSubcategoria FROM subcategorias_actividades WHERE Subcategoria = 'INVESTIGACION' LIMIT 1)
-  AND pa.idPeriodo <> @periodoActivoId
 ON DUPLICATE KEY UPDATE 
     esActivo = 1;
 

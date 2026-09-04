@@ -101,18 +101,11 @@ namespace dosier_infrastructure.Research.Subservices
                 project.IdConvocatoria = null;
             }
 
-            project.IdObjetivoPnd = (dto.IdObjetivoPnd.HasValue && dto.IdObjetivoPnd.Value > 0) ? dto.IdObjetivoPnd.Value : null;
             return null;
         }
 
         public async Task SyncProgramAndTypesAsync(DocProyecto project, ProyectoDto dto)
         {
-            // Entidad Aliada & TRL
-            project.IdEntidadAliada = (dto.IdEntidadAliada.HasValue && dto.IdEntidadAliada.Value > 0) ? dto.IdEntidadAliada.Value : null;
-            project.TrlInicial = (sbyte?)(dto.TrlInicial ?? 1);
-            project.TrlActual = (sbyte?)(dto.TrlActual ?? 1);
-            project.TrlMeta = (sbyte?)(dto.TrlMeta ?? 1);
-
             project.MetadataCacesJson = System.Text.Json.JsonSerializer.Serialize(dto);
             project.FechaModificacion = DateTime.Now;
             await Task.CompletedTask;

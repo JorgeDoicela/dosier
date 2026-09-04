@@ -15,6 +15,5 @@ public interface IConvocatoriaService
     Task<bool> PurgeAsync(string uuid, string? userIdRef = null);
     Task<IEnumerable<PeriodoDto>> GetActivePeriodsAsync();
     Task<IEnumerable<object>> GetCatalogosTiposAsync();
-    Task<IEnumerable<object>> GetCatalogosAgendasAsync();
     Task<IEnumerable<object>> GetCatalogosLineasAsync();
 }

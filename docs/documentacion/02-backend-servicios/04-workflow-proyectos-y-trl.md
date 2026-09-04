@@ -1,8 +1,8 @@
-# Ciclo de Vida de Proyectos, Workflow y Seguimiento TRL
+# Ciclo de Vida de Proyectos, Workflow y Seguimiento Institucional
 
 ## 1. Visión General del Módulo de Investigación
 
-El módulo de gestión de investigación constituye el núcleo operativo de DOSIER. Administra la totalidad del ciclo de vida de los proyectos de I+D+i, desde la publicación de la convocatoria pública hasta el seguimiento del Nivel de Madurez Tecnológica (TRL 1-9), el control presupuestario y la entrega de informes de avance.
+El módulo de gestión de investigación constituye el núcleo operativo de DOSIER. Administra la totalidad del ciclo de vida de los proyectos de I+D+i, desde la publicación de la convocatoria pública hasta el control presupuestario y la entrega de informes de avance.
 
 ---
 
@@ -17,7 +17,7 @@ graph TD
     ValTecnica -->|Aprobado para Evaluación| Evaluation["3. Evaluación por Pares\n(PeerReviewWorkflowService)"]
     Evaluation -->|Rechazado / Reajuste| Borrador
     Evaluation -->|Dictamen Favorable| Aprobacion["4. Aprobación y Resolución\n(State Locking Activado)"]
-    Aprobacion -->|Asignación de Fondos| Ejecucion["5. En Ejecución (TRL 1-9)\n(ProjectExpenses / InformesAvance)"]
+    Aprobacion -->|Asignación de Fondos| Ejecucion["5. En Ejecución\n(ProjectExpenses / InformesAvance)"]
     Ejecucion -->|Entregables Completados| Cierre["6. Cierre Técnico y Financiero\n(Certificado e Integración CACES)"]
 ```
 
@@ -25,7 +25,6 @@ graph TD
 Guiado paso a paso para la redacción de la propuesta de investigación. Almacena borradores parciales y ejecuta validaciones en tiempo real sobre:
 * Alineación con líneas y sublíneas de investigación institucionales.
 * Mapeo obligatorio con las áreas del conocimiento UNESCO.
-* Vinculación con los Objetivos del Plan Nacional de Desarrollo (PND) y ODS de la ONU.
 
 ### 2.2. Bloqueo de Estado (*State Locking*)
 Una vez que la propuesta es enviada a validación o evaluación por pares, el `WorkflowEngineService` activa el bloqueo de edición. Cualquier intento de mutación sobre la propuesta principal es rechazado automáticamente hasta que se emita un dictamen formal.
@@ -54,26 +53,12 @@ La incorporación, salida o sustitución de un miembro durante la ejecución req
 
 ---
 
-## 4. Seguimiento de Niveles de Madurez Tecnológica (TRL 1-9)
+## 4. Control Presupuestario e Informes de Avance
 
-DOSIER integra la escala de TRL (Technology Readiness Level) para medir la evolución de los proyectos de desarrollo tecnológico e innovación.
-
-| Nivel TRL | Fase de Desarrollo | Evidencia Requerida en DOSIER |
-| :--- | :--- | :--- |
-| **TRL 1 - 3** | Investigación Básica y Formulación del Concepto | Estado del arte, publicaciones y validación analítica de laboratorio. |
-| **TRL 4 - 6** | Validación en Entorno de Laboratorio / Relevante | Prototipo alfa funcional, componentes probados y pruebas de concepto. |
-| **TRL 7 - 9** | Demostración en Entorno Real y Despliegue | Prototipo beta/final operando en entorno operativo real y transferencia. |
-
-El controlador `ResearchProductsController` registra los productos tecnológicos generados (patentes, registros de software, prototipos) asociándolos al nivel TRL correspondiente.
-
----
-
-## 5. Control Presupuestario e Informes de Avance
-
-### 5.1. Control de Gastos (`ProjectExpensesService`)
+### 4.1. Control de Gastos (`ProjectExpensesService`)
 Administra la ejecución financiera del proyecto dividida por partidas presupuestarias (equipamiento, insumos, publicaciones, viáticos). El servicio impide la sobreejecución de rubros y valida los respaldos digitales de cada comprobante.
 
-### 5.2. Informes de Avance (`InformesAvanceController` / `InformeAvanceService`)
+### 4.2. Informes de Avance (`InformesAvanceController` / `InformeAvanceService`)
 Durante la fase de ejecución, los directores de proyecto deben presentar informes periódicos de avance técnico y financiero. El servicio coordina:
 * Carga de entregables y evidencias fotográficas/documentales.
 * Evaluación del cumplimiento del cronograma de actividades.

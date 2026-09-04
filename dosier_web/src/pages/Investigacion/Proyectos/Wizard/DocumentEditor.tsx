@@ -42,7 +42,7 @@ const PROTOCOLO_STRING_FIELDS: ReadonlyArray<string> = [
     'CampoAmplio', 'CampoEspecifico', 'CampoDetallado', 'Carrera', 'PeriodoConvocatoria',
     'TiempoEjecucion', 'DirectorProyecto', 'FechaPresentacion', 'FechaInicioEstimada',
     'FechaFinEstimada', 'Periodo', 'FechaInicio', 'FechaFin', 'Antecedentes',
-    'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'Ods', 'MarcoTeorico',
+    'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'MarcoTeorico',
     'Metodologia', 'Evaluacion', 'FuenteFinanciamiento', 'NombreOtraFuente',
     'NombreDirectorFirma', 'CargoDirectorFirma', 'NombreCoordinadorFirma',
     'CargoCoordinadorFirma', 'MetadataCacesJson',
@@ -114,6 +114,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
     const [templateConfig, setTemplateConfig] = useState<any>(null);
     const [docInstanceData, setDocInstanceData] = useState<any>(null);
     const [resolvedUuid, setResolvedUuid] = useState<string | null>(null);
+    const [isInstanceSigned, setIsInstanceSigned] = useState(false);
 
     // Catálogos institucionales (agnóstico por plantilla)
     const [carreras, setCarreras] = useState<any[]>([]);
@@ -279,10 +280,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             groups={groups}
             customCatalogs={customCatalogs}
             onClose={onClose}
-            readOnly={readOnly}
-            readOnlyReason={readOnlyReason}
+            readOnly={readOnly || isInstanceSigned}
+            readOnlyReason={readOnly ? readOnlyReason : (isInstanceSigned ? 'El documento ya ha sido firmado digitalmente y se encuentra en modo de sólo lectura.' : undefined)}
             projectStatus={projectStatus}
-            canSign={canSign}
+            canSign={canSign && !isInstanceSigned}
         />
     );
 };
@@ -739,7 +740,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                             onAddNecesario={() => addItem('RecursosNecesarios', { Descripcion: '', Cantidad: '1', CostoUnitario: 0, CostoTotal: 0 })}
                             onRemoveNecesario={(i: number) => removeItem('RecursosNecesarios', i)}
                             onUpdateNecesario={(i: number, f: string, v: any) => updateItem('RecursosNecesarios', i, f, v)}
-                            onAddProducto={() => addItem('ProductosEsperados', { categoria: '', tipo: '', titulo: '', requiere_senadi: false, registro_senadi: '', trl: '', indicador: '', medio_verificacion: '', cantidad: '1', plazo: '' })}
+                            onAddProducto={() => addItem('ProductosEsperados', { categoria: '', tipo: '', titulo: '', indicador: '', medio_verificacion: '', cantidad: '1', plazo: '' })}
                             onRemoveProducto={(i: number) => removeItem('ProductosEsperados', i)}
                             onUpdateProducto={(i: number, f: string, v: any) => updateItem('ProductosEsperados', i, f, v)}
                             onUpdateImpacto={(t: string, v: any) => updateField('Impacto', (prev: any) => ({ ...(prev || {}), [t.toLowerCase()]: v }))}

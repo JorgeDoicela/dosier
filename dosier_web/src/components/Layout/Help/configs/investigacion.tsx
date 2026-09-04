@@ -94,7 +94,7 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
     icon: <BookOpen size={24} className="text-brand" />,
     title: "Mis Proyectos de Investigación",
     summary: "Gestión centralizada, edición de protocolos y seguimiento del ciclo de vida de los proyectos postulados.",
-    description: "Tablero principal para la administración de todas las propuestas enviadas y proyectos activos. Muestra tarjetas con métricas en tiempo real sobre el porcentaje de ejecución presupuestaria, estados de revisión técnica, nivel de madurez tecnológica (TRL) y accesos directos al editor interactivo del protocolo institucional.",
+    description: "Tablero principal para la administración de todas las propuestas enviadas y proyectos activos. Muestra tarjetas con métricas en tiempo real sobre el porcentaje de ejecución presupuestaria, estados de revisión técnica y accesos directos al editor interactivo del protocolo institucional.",
     steps: [
         {
             title: "Listado interactivo de proyectos y estado de dictamen",
@@ -107,8 +107,8 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
             highlight: 'content-bottom'
         },
         {
-            title: "Seguimiento presupuestario y madurez TRL",
-            description: "Monitorea la barra de progreso financiero y el indicador de TRL estimado para comprobar que tu proyecto avanza de acuerdo a los plazos previstos en la planificación inicial.",
+            title: "Seguimiento presupuestario y de entregables",
+            description: "Monitorea la barra de progreso financiero y los entregables para comprobar que tu proyecto avanza de acuerdo a los plazos previstos en la planificación inicial.",
             highlight: 'content-bottom'
         }
     ],
@@ -199,7 +199,6 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
                     {/* Footer */}
                     <div className="border-t border-border-thin/40 pt-1 mt-1.5 flex justify-between items-center text-[4px] text-text-dim">
                         <span>4/15/2026</span>
-                        <span className="text-warning">TRL 5/6</span>
                         <span className="px-0.5 rounded bg-success/15 text-success border border-success/35 font-bold">85.5/100</span>
                     </div>
                 </div>
@@ -259,7 +258,6 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
                     {/* Footer */}
                     <div className="border-t border-border-thin/40 pt-1 mt-1.5 flex justify-between items-center text-[4px] text-text-dim">
                         <span>4/15/2026</span>
-                        <span className="text-warning">TRL 2/4</span>
                         <span className="px-0.5 rounded bg-success/15 text-success border border-success/35 font-bold">78/100</span>
                     </div>
                 </div>

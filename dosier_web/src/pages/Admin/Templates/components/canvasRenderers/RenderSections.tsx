@@ -320,10 +320,9 @@ export const RenderProjectTechnicalSection: React.FC<{
             if (c.showObjetivoGeneral !== false) subs.push({ key: 'obj_gen', title: 'GENERAL', colSpan: 1 });
             if (c.showObjetivosEspecificos !== false) subs.push({ key: 'obj_esp', title: 'ESPECÍFICOS', colSpan: 1 });
         }
-        if (c.showOds !== false) subs.push({ key: 'ods', numberPrefix: '3.5', title: 'Objetivos de Desarrollo Sostenible (Alineación)', colSpan: 2 });
-        if (c.showMarcoTeorico !== false) subs.push({ key: 'marco_teorico', numberPrefix: '3.6', title: 'Marco Teórico', colSpan: 2 });
-        if (c.showMetodologia !== false) subs.push({ key: 'metodologia', numberPrefix: '3.7', title: 'Metodología', colSpan: 2 });
-        if (c.showEvaluacion !== false) subs.push({ key: 'evaluacion', numberPrefix: '3.8', title: 'Evaluación y Monitoreo', colSpan: 2 });
+        if (c.showMarcoTeorico !== false) subs.push({ key: 'marco_teorico', numberPrefix: '3.5', title: 'Marco Teórico', colSpan: 2 });
+        if (c.showMetodologia !== false) subs.push({ key: 'metodologia', numberPrefix: '3.6', title: 'Metodología', colSpan: 2 });
+        if (c.showEvaluacion !== false) subs.push({ key: 'evaluacion', numberPrefix: '3.7', title: 'Evaluación y Monitoreo', colSpan: 2 });
     }
 
     const renderDirectControlsPill = (sub: any, isFirst: boolean, isLast: boolean) => (

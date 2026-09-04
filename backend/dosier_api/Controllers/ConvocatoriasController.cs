@@ -47,12 +47,6 @@ public class ConvocatoriasController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("catalogos/agendas")]
-    public async Task<IActionResult> GetCatalogosAgendas()
-    {
-        var result = await _convocatoriaService.GetCatalogosAgendasAsync();
-        return Ok(result);
-    }
 
 
     [HttpGet("catalogos/lineas")]

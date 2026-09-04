@@ -29,13 +29,8 @@ namespace Dosier.Application.Research.Dtos
         public int TotalProductos { get; set; }
         public int TotalInformes { get; set; }
         public int InformesAprobados { get; set; }
-        // TRL para innovación
-        public int? TrlActual { get; set; }
-        public int? TrlMeta { get; set; }
         // Soporte CACES
         public int TotalEstudiantes { get; set; }
-        public string? EntidadAliada { get; set; }
-        public string? ObjetivoPnd { get; set; }
         public string? ConvocatoriaCodigo { get; set; }
         public string? DirectorNombre { get; set; }
         public string? TemplateCode { get; set; }

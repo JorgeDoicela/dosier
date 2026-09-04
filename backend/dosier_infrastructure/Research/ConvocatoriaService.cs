@@ -708,13 +708,6 @@ public class ConvocatoriaService : IConvocatoriaService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<object>> GetCatalogosAgendasAsync()
-    {
-        return await _context.DocAgendasZonales
-            .Select(a => new { id = a.IdAgendaZonal, nombre = a.Nombre })
-            .ToListAsync();
-    }
-
     public async Task<IEnumerable<object>> GetCatalogosLineasAsync()
     {
         return await Task.FromResult(Array.Empty<object>());

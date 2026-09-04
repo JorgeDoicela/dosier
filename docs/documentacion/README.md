@@ -26,7 +26,7 @@ Este directorio constituye la fuente centralizada de conocimiento técnico y fun
 * [01. Especificación de API REST y Enlace de Datos](./02-backend-servicios/01-especificacion-api-rest.md): Catálogo de los 23 controladores de la API, rutas HTTP y políticas de casing (`lower_snake_case` vs `camelCase` vs `PascalCase`).
 * [02. Arquitectura de Autenticación, SSO y Control de Acceso (RBAC)](./02-backend-servicios/02-autenticacion-sso-y-rbac.md): Autenticación JWT Bearer, hashing BCrypt, SSO Microsoft 365 / Entra ID, Magic Links y permisos RBAC.
 * [03. Gobernanza de Datos, Protección LOPDP y Bitácora de Auditoría](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md): Cumplimiento LOPDP, derechos ARCO, bitácora inmutable `audit_logs` y Soft Delete.
-* [04. Ciclo de Vida de Proyectos, Workflow y Seguimiento TRL](./02-backend-servicios/04-workflow-proyectos-y-trl.md): Transiciones de estados, *State Locking*, formulación asistida, equipos y niveles TRL 1-9.
+* [04. Ciclo de Vida de Proyectos, Workflow y Seguimiento Institucional](./02-backend-servicios/04-workflow-proyectos-y-trl.md): Transiciones de estados, *State Locking*, formulación asistida, equipos y control presupuestario.
 
 ### Sección 03: Motores Especializados
 * [01. Motor de Generación Documental PDF e Integridad Forense](./03-motores-especializados/01-motor-documental-pdf.md): Pipeline `DocumentEngine`, plantillas Handlebars/Scriban, iText 9 y códigos QR.

@@ -61,11 +61,6 @@ namespace dosier_infrastructure.Research.Subservices
                     TieneGrupoInvestigacion = project.TieneGrupo,
                     IdGrupo = project.IdGrupo,
                     IdConvocatoria = project.IdConvocatoria,
-                    IdObjetivoPnd = project.IdObjetivoPnd,
-                    IdEntidadAliada = project.IdEntidadAliada,
-                    TrlInicial = project.TrlInicial,
-                    TrlActual = project.TrlActual,
-                    TrlMeta = project.TrlMeta,
                     Estado = project.Estado
                 };
                 beforeJson = System.Text.Json.JsonSerializer.Serialize(beforeState);
@@ -204,8 +199,6 @@ namespace dosier_infrastructure.Research.Subservices
                 .Include(p => p.DocObjetivosProyecto)
                 .Include(p => p.DocCronogramas)
                 .Include(p => p.DocBibliografiasProyecto)
-                .Include(p => p.DocImpactosProyecto)
-                .Include(p => p.MatrizMarcoLogico)
                 .FirstOrDefaultAsync(p => p.Uuid == uuid);
 
             if (project == null)
@@ -231,8 +224,6 @@ namespace dosier_infrastructure.Research.Subservices
                 _context.DocObjetivosProyecto.RemoveRange(project.DocObjetivosProyecto);
                 _context.DocCronogramas.RemoveRange(project.DocCronogramas);
                 _context.DocBibliografiasProyecto.RemoveRange(project.DocBibliografiasProyecto);
-                _context.DocImpactosProyecto.RemoveRange(project.DocImpactosProyecto);
-                _context.DocProyectosMml.RemoveRange(project.MatrizMarcoLogico);
 
                 var trazabilidadLogs = await _context.DocTrazabilidadProyectos
                     .Where(t => t.IdProyecto == project.IdProyecto)

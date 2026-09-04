@@ -13,36 +13,10 @@ SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
 -- =============================================================================
--- LIMPIEZA PREVIA (Tablas, Vistas y Triggers exclusivos del módulo 'doc_')
+-- LIMPIEZA PREVIA (Tablas y Vistas exclusivas del módulo 'doc_')
 -- =============================================================================
 
 DROP VIEW IF EXISTS v_doc_calendario_eventos;
-
-DROP TRIGGER IF EXISTS trg_doc_proyectos_uuid;
-DROP TRIGGER IF EXISTS trg_doc_convocatorias_uuid;
-DROP TRIGGER IF EXISTS trg_doc_lineas_uuid;
-DROP TRIGGER IF EXISTS trg_doc_cronograma_uuid;
-DROP TRIGGER IF EXISTS trg_doc_biblio_uuid;
-DROP TRIGGER IF EXISTS trg_doc_infinforme_uuid;
-DROP TRIGGER IF EXISTS trg_doc_evidencia_uuid;
-DROP TRIGGER IF EXISTS trg_doc_revisiones_uuid;
-DROP TRIGGER IF EXISTS trg_doc_evid_cat_uuid;
-DROP TRIGGER IF EXISTS trg_doc_ent_ext_uuid;
-DROP TRIGGER IF EXISTS trg_doc_grupos_uuid;
-DROP TRIGGER IF EXISTS trg_doc_pnd_obj_uuid;
-DROP TRIGGER IF EXISTS trg_doc_proy_docadj_uuid;
-DROP TRIGGER IF EXISTS trg_doc_trazabilidad_uuid;
-DROP TRIGGER IF EXISTS trg_doc_notif_uuid;
-DROP TRIGGER IF EXISTS trg_doc_tokens_uuid;
-DROP TRIGGER IF EXISTS trg_doc_usermeta_uuid;
-DROP TRIGGER IF EXISTS trg_doc_proy_ext_uuid;
-DROP TRIGGER IF EXISTS trg_doc_lopdp_consentimientos_uuid;
-DROP TRIGGER IF EXISTS trg_doc_lopdp_auditoria_uuid;
-DROP TRIGGER IF EXISTS trg_doc_backup_logs_uuid;
-DROP TRIGGER IF EXISTS trg_doc_email_tpl_uuid;
-DROP TRIGGER IF EXISTS trg_doc_email_hist_uuid;
-DROP TRIGGER IF EXISTS trg_doc_ical_token_uuid;
-DROP TRIGGER IF EXISTS trg_doc_cal_norm_uuid;
 
 DROP TABLE IF EXISTS
     -- Grupo K (Seguridad y Notificaciones)
@@ -76,30 +50,20 @@ DROP TABLE IF EXISTS
     -- Núcleo V3 (Secciones 1-9)
     doc_bibliografia_proyecto,
     doc_cronograma,
-    doc_impactos_proyecto,
-    doc_cat_impactos,
-    doc_proyectos_ods,
-    doc_ods,
-    doc_ods_ejes,
     doc_objetivos_proyecto,
     doc_proyecto_extensiones,
     doc_proyecto_participantes,
     doc_proyectos_carreras,
     doc_trazabilidad_proyectos,
     doc_proyectos_documentos_adjuntos,
-    doc_proyectos_mml,
     doc_proyectos,
     doc_convocatorias,
-    doc_agendas_zonales,
     doc_tipos_convocatoria,
     doc_grupos_carreras,
     doc_grupos_miembros,
     doc_grupos_investigacion,
-    doc_pnd_objetivos,
 
     -- Catálogos y Configuración adicionales
-    doc_cat_tipo_evidencia,
-    doc_entidades_externas,
     doc_config_workflow,
 
     -- Módulo Calendario (orden inverso por FK)
@@ -110,32 +74,6 @@ DROP TABLE IF EXISTS
 -- #############################################################################
 -- SECCIÓN 1: CATÁLOGOS BASE
 -- #############################################################################
-
-
-
--- NÚCLEO PROFESIONAL: CATÁLOGO DE EVIDENCIAS
-CREATE TABLE doc_cat_tipo_evidencia (
-    idTipoEvidencia  INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid             VARCHAR(36)     NOT NULL UNIQUE,
-    nombre           VARCHAR(100) NOT NULL,
-    descripcion      VARCHAR(255),
-    extensiones      VARCHAR(50)  DEFAULT 'pdf,jpg,png,zip',
-    activo           TINYINT(1)   DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- NÚCLEO PROFESIONAL: ENTIDADES EXTERNAS (Empresas y Aliados)
-CREATE TABLE doc_entidades_externas (
-    idEntidad        INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid             VARCHAR(36)     NOT NULL UNIQUE,
-    ruc              VARCHAR(13)  UNIQUE,
-    razonSocial      VARCHAR(255) NOT NULL,
-    tipo             ENUM('Pública', 'Privada', 'ONG', 'Académica') DEFAULT 'Privada',
-    sector           VARCHAR(100) COMMENT 'Ej: Software, Manufactura, Agrícola',
-    contactoNombre   VARCHAR(150),
-    contactoEmail    VARCHAR(150),
-    activo           TINYINT(1)   DEFAULT 1,
-    fechaRegistro    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE doc_grupos_investigacion (
     idGrupo              INT          AUTO_INCREMENT PRIMARY KEY,
@@ -162,19 +100,6 @@ CREATE TABLE doc_grupos_investigacion (
     FOREIGN KEY (idCoordinador) REFERENCES usuarios(idUsuario) ON DELETE SET NULL,
     FOREIGN KEY (eliminadoPorUsuarioId) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_pnd_objetivos (
-    idObjetivoPnd   INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid            VARCHAR(36)     NOT NULL UNIQUE,
-    codigo          VARCHAR(20)  NOT NULL UNIQUE,
-    nombre          VARCHAR(255) NOT NULL,
-    descripcion     TEXT,
-    activo          TINYINT(1)   DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Catálogo del Plan Nacional de Desarrollo (SENESCYT)';
-
--- Los objetivos del Plan Nacional de Desarrollo se insertan en la sección de datos semilla al final.
-
-
 
 CREATE TABLE doc_grupos_carreras (
     idGrupo   INT NOT NULL,
@@ -209,14 +134,6 @@ CREATE TABLE doc_tipos_convocatoria (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Los tipos de convocatoria se insertan en la sección de datos semilla al final.
-
-CREATE TABLE doc_agendas_zonales (
-    idAgendaZonal INT AUTO_INCREMENT PRIMARY KEY,
-    nombre        VARCHAR(150) NOT NULL,
-    descripcion   VARCHAR(255)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Las agendas zonales se insertan en la sección de datos semilla al final.
 
 CREATE TABLE doc_convocatorias (
     idConvocatoria     INT           AUTO_INCREMENT PRIMARY KEY,
@@ -264,30 +181,20 @@ CREATE TABLE doc_proyectos (
     -- NO requiere alterar esta tabla ni redesplegar el backend.
     estado                VARCHAR(50)   NOT NULL DEFAULT 'Borrador' COMMENT 'Estado del ciclo de vida. Valores válidos definidos en doc_config_workflow.',
     puntajeEvaluacion     DECIMAL(5,2)  NULL,
-    idObjetivoPnd         INT           NULL COMMENT 'Vínculo con el Plan Nacional de Desarrollo',
     activo                TINYINT(1)    DEFAULT 1,
     eliminado             TINYINT(1)    DEFAULT 0,
     fechaEliminacion      TIMESTAMP     NULL,
     eliminadoPorUsuarioId INT(11)       NULL,
     fechaRegistro         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     fechaModificacion     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    -- NÚCLEO DE INNOVACIÓN Y VINCULACIÓN PRODUCTIVA
-    idEntidadAliada      INT           NULL COMMENT 'Empresa o Institución Co-ejecutora',
-    trlInicial           TINYINT       DEFAULT 1 COMMENT 'Technology Readiness Level Inicial (1-9)',
-    trlActual            TINYINT       DEFAULT 1 COMMENT 'Technology Readiness Level Actual (1-9)',
-    trlMeta              TINYINT       DEFAULT 1 COMMENT 'Technology Readiness Level Meta (1-9)',
-    autoExtendDeadlines  TINYINT(1)    DEFAULT 0,
-    autoExtendDays       INT           DEFAULT 7,
+    autoExtendDeadlines   TINYINT(1)    DEFAULT 0,
+    autoExtendDays        INT           DEFAULT 7,
 
     -- GESTIÓN Y CONTROL DE PLAZOS INSTITUCIONALES (DEADLINES)
     fechaLimiteSubsanacion      DATE          NULL COMMENT 'Fecha límite fijada por el Administrador para subsanar observaciones del protocolo (Fase 1/2)',
 
-
     FOREIGN KEY (idConvocatoria) REFERENCES doc_convocatorias(idConvocatoria),
     FOREIGN KEY (idGrupo)        REFERENCES doc_grupos_investigacion(idGrupo),
-    FOREIGN KEY (idObjetivoPnd)  REFERENCES doc_pnd_objetivos(idObjetivoPnd),
-    FOREIGN KEY (idEntidadAliada) REFERENCES doc_entidades_externas(idEntidad),
 
     -- Extensiones CACES / SENESCYT
     hashActaAprobacion   TEXT NULL,
@@ -296,18 +203,6 @@ CREATE TABLE doc_proyectos (
     metadataCacesJson    JSON          NULL COMMENT 'Snapshot de indicadores para acreditación',
     FOREIGN KEY (firmadoPor) REFERENCES usuarios(idUsuario) ON DELETE SET NULL,
     FOREIGN KEY (eliminadoPorUsuarioId) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Matriz de Marco Lógico (MML) - Requisito SENESCYT
-CREATE TABLE doc_proyectos_mml (
-    idMml           INT          AUTO_INCREMENT PRIMARY KEY,
-    idProyecto      INT          NOT NULL,
-    nivel           ENUM('Fin','Propósito','Componente','Actividad') NOT NULL,
-    resumenNarrativo TEXT        NOT NULL,
-    indicadores     TEXT         NULL,
-    mediosVerificacion TEXT      NULL,
-    supuestos       TEXT         NULL,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Documentos Adjuntos del Proyecto (Checklist de Postulación)
@@ -414,46 +309,6 @@ CREATE TABLE doc_objetivos_proyecto (
     FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE doc_ods_ejes (
-    idEje   INT         AUTO_INCREMENT PRIMARY KEY,
-    nombre  VARCHAR(50) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_ods (
-    idOds     INT          AUTO_INCREMENT PRIMARY KEY,
-    idEje     INT          NOT NULL,
-    numeroOds INT          NOT NULL UNIQUE,
-    titulo    VARCHAR(255) NOT NULL,
-    FOREIGN KEY (idEje) REFERENCES doc_ods_ejes(idEje)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_proyectos_ods (
-    idProyectoOds         INT  AUTO_INCREMENT PRIMARY KEY,
-    idProyecto            INT  NOT NULL,
-    idOds                 INT  NOT NULL,
-    objetivoEspecificoODS TEXT NOT NULL,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idOds)      REFERENCES doc_ods(idOds)            ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
--- SECCIÓN 6: IMPACTOS
--- #############################################################################
-
-CREATE TABLE doc_cat_impactos (
-    idCatImpacto  INT          AUTO_INCREMENT PRIMARY KEY,
-    nombre        VARCHAR(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_impactos_proyecto (
-    idImpactoProyecto INT  AUTO_INCREMENT PRIMARY KEY,
-    idProyecto        INT  NOT NULL,
-    idCatImpacto      INT  NOT NULL,
-    descripcion       TEXT NOT NULL,
-    FOREIGN KEY (idProyecto)   REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idCatImpacto) REFERENCES doc_cat_impactos(idCatImpacto) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- #############################################################################
 -- SECCIÓN 7: CRONOGRAMA MODERNO
 -- #############################################################################
@@ -510,39 +365,11 @@ BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; E
 -- Triggers adicionales para asegurar la generación de UUIDs en todo el esquema
 CREATE TRIGGER trg_doc_grupos_uuid BEFORE INSERT ON doc_grupos_investigacion FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-CREATE TRIGGER trg_doc_pnd_obj_uuid BEFORE INSERT ON doc_pnd_objetivos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_proy_docadj_uuid BEFORE INSERT ON doc_proyectos_documentos_adjuntos FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_trazabilidad_uuid BEFORE INSERT ON doc_trazabilidad_proyectos FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 DELIMITER ;
-
--- #############################################################################
--- #############################################################################
--- MILESTONE: DATOS SEMILLA Y CONFIGURACIÓN BÁSICA (Núcleo V3)
--- #############################################################################
--- #############################################################################
-
-
-
--- Ejes ODS (5 Ps de la Agenda 2030)
-INSERT INTO doc_ods_ejes (nombre) VALUES
-('Personas'), ('Planeta'), ('Prosperidad'), ('Paz'), ('Alianzas');
-
--- 17 ODS
-INSERT INTO doc_ods (idEje, numeroOds, titulo) VALUES
-(1,1,  'Fin de la pobreza'), (1,2,  'Hambre cero'), (1,3,  'Salud y bienestar'),
-(1,4,  'Educación de calidad'), (1,5,  'Igualdad de género'), (2,6,  'Agua limpia y saneamiento'),
-(3,7,  'Energía asequible y no contaminante'), (3,8,  'Trabajo decente y crecimiento económico'),
-(3,9,  'Industria, innovación e infraestructura'), (3,10, 'Reducción de las desigualdades'),
-(2,11, 'Ciudades y comunidades sostenibles'), (2,12, 'Producción y consumo responsables'),
-(2,13, 'Acción por el clima'), (2,14, 'Vida submarina'), (2,15, 'Vida de ecosistemas terrestres'),
-(4,16, 'Paz, justicia e instituciones sólidas'), (5,17, 'Alianzas para lograr los objetivos');
-
--- Categorías de impacto
-INSERT INTO doc_cat_impactos (nombre) VALUES
-('Social'), ('Científico'), ('Económico'), ('Político'), ('Ambiental'), ('Otro');
 
 -- Índices básicos del núcleo V3
 -- Índices básicos del núcleo V3 (Se omiten los índices sobre claves foráneas que InnoDB crea automáticamente)
@@ -723,15 +550,12 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- SECCIÓN: CATÁLOGOS INICIALES (SEED DATA)
 -- ============================================================
 
--- Limpieza de catálogos para evitar duplicados en re-ejecución (excluyendo ODS y tipos de investigación para conservar sus semillas completas)
+-- Limpieza de catálogos para evitar duplicados en re-ejecución
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
-TRUNCATE TABLE doc_agendas_zonales;
 TRUNCATE TABLE doc_tipos_convocatoria;
-TRUNCATE TABLE doc_cat_tipo_evidencia;
 TRUNCATE TABLE doc_config_general;
-TRUNCATE TABLE doc_pnd_objetivos;
 
 SET SQL_SAFE_UPDATES = 1;
 SET FOREIGN_KEY_CHECKS = 1;
@@ -739,48 +563,22 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 1. Tipos de Convocatoria
 INSERT INTO doc_tipos_convocatoria (nombre, descripcion) VALUES
 ('Investigación Aplicada', 'Desarrollo de prototipos y soluciones técnicas'),
-('Innovación y Transferencia Tecnológica', 'Proyectos orientados a prototipos TRL 4-7, registro SENADI y transferencia a la industria'),
+('Innovación y Transferencia Tecnológica', 'Proyectos orientados a prototipos, registro de propiedad intelectual y transferencia a la industria'),
 ('Retos de Innovación Abierta', 'Desafíos técnicos formulados por empresas o GADs locales'),
 ('Semilleros', 'Iniciación a la investigación con estudiantes'),
 ('Vinculación e Investigación', 'Proyectos integrados con la comunidad');
 
--- 11. Catálogo de Evidencias
-INSERT INTO doc_cat_tipo_evidencia (uuid, nombre, descripcion) VALUES
-(UUID(), 'Fotografía de Prototipo', 'Evidencia visual de avance tecnológico'),
-(UUID(), 'Acta de Entrega-Recepción', 'Documento legal de vinculación externa'),
-(UUID(), 'Certificado SENADI', 'Registro de propiedad intelectual'),
-(UUID(), 'Lista de Asistencia', 'Evidencia de eventos o validación de campo'),
-(UUID(), 'Factura / Comprobante', 'Evidencia de ejecución presupuestaria');
-
 -- Configuración General Semilla
 INSERT INTO doc_config_general (Clave, Valor, Descripcion) VALUES
-('PeerReview.AutoExtendDeadlines',    'false',              'Indica si se deben extender los plazos de manera automática'),
-('PeerReview.AutoExtendDays',         '7',                  'Días de prórroga automática al expirar plazo'),
 ('Backup.AutoSchedule',               '0 2 * * *',          'Frecuencia en formato CRON para el respaldo automático (Ej: todos los días a las 2:00 AM)'),
 ('Backup.RetentionDays',              '30',                 'Cantidad de días que se conservarán las copias de seguridad locales'),
 ('Backup.CloudBackupEnabled',         'false',              'Indica si se deben subir los respaldos a la nube configurada'),
 ('Backup.DestinationPath',            'C:\\dosier_backups\\', 'Ruta local donde se almacenarán temporal o permanentemente los respaldos'),
--- ADAPTABILIDAD SIGAFI: Cambia el id de subcategoría sin recompilar el backend.
--- Si SIGAFI actualiza su estructura, solo actualizar este valor aquí.
--- WorkflowEngineService y CatalogsController deben leer esta clave en lugar del fallback = 7.
-('Sigafi.InvestigacionSubcategoriaId', '7',                 'ID de la subcategoría de INVESTIGACIÓN en la tabla subcategorias_actividades de SIGAFI. Actualizar si SIGAFI reorganiza su catálogo.'),
-('Sigafi.InvestigacionSubcategoriaNombre', 'INVESTIGACION', 'Nombre de búsqueda alternativo de la subcategoría de investigación en SIGAFI (usado si el ID cambia)'),
-('Caces.TrlMinimoInnovacion',          '5',                 'TRL mínimo para que un proyecto cuente como innovación en los indicadores CACES (E3.INNO). Cambiar si el CACES actualiza el umbral.'),
 ('Caces.AñoModelo',                    '2024',              'Año del modelo de evaluación CACES vigente.'),
 ('Workflow.EstadosEditables',          'Borrador,En Corrección', 'Lista CSV de estados en los que un proyecto puede ser editado por su director.'),
 ('Caces.RangosEvaluacion',           '[{"label":"Insatisfactorio","max":50,"badgeClass":"text-error bg-error/10 border-error/20"},{"label":"Poco Satisfactorio","max":70,"badgeClass":"text-warning bg-warning/10 border-warning/20"},{"label":"Satisfactorio","max":90,"badgeClass":"text-info bg-info/10 border-info/20"},{"label":"Excelente","max":100,"badgeClass":"text-success bg-success/10 border-success/20"}]', 'Rangos cualitativos y estilos visuales de calificación del CACES.'),
 ('DocumentMaintenance.RetentionDays', '1825',              'Cantidad de días de retención legal para evidencias físicas de proyectos de investigación del CACES (por defecto 5 años / 1825 días).'),
 ('Theme.GlobalConfigJson', '{"colors":{"primary":"#222c57","secondary":"#c4a857","text":"#1a1a1a","tableHeaderBg":"#222c57","tableHeaderColor":"#ffffff","accent":"#9ad3de"},"typography":{"fontFamily":"\'Calibri\', \'Open Sans\', Arial, sans-serif","baseSize":"10pt","lineHeight":"1.4"},"layout":{"marginTop":"3cm","marginBottom":"2cm","marginLeft":"2cm","marginRight":"2cm","landscapeMarginTop":"1.8cm","landscapeMarginLeft":"1.2cm"},"brand":{"showCoverPage":true,"logoScale":"100%"}}', 'Diseño y branding global institucional (colores, márgenes, tipografía).');
-
-
-
--- 9. Objetivos del Plan Nacional de Desarrollo (Ecuador 2024-2025)
-INSERT INTO doc_pnd_objetivos (uuid, codigo, nombre, descripcion) VALUES
-(UUID(), 'PND-OBJ-1', 'Productividad y Competitividad', 'Incrementar la productividad y competitividad en los sectores agrícola, industrial y de servicios.'),
-(UUID(), 'PND-OBJ-2', 'Desarrollo Tecnológico', 'Fomentar la generación de conocimiento, el desarrollo científico y la innovación tecnológica.'),
-(UUID(), 'PND-OBJ-3', 'Educación de Calidad', 'Garantizar el acceso, permanencia y calidad de la educación superior tecnológica.'),
-(UUID(), 'PND-OBJ-4', 'Gestión Ambiental', 'Promover la gestión integral de los recursos naturales y la adaptación al cambio climático.'),
-(UUID(), 'PND-OBJ-5', 'Empleo y Emprendimiento', 'Fomentar la generación de empleo digno y el fortalecimiento del ecosistema emprendedor.');
 
 -- #############################################################################
 -- SECCIÓN: DOSIER Document Engine — Plantillas y Auditoría Documental
@@ -995,9 +793,9 @@ VALUES
 ('En Ejecución',     'Finalizado',      'DOSIER_ADMIN',   1,                   0,                       1,             'Finalizado',     '#059669', 1),
 ('En Ejecución',     'Inconcluso',      'DOSIER_ADMIN',   1,                   0,                       1,             'Inconcluso',     '#6B7280', 1),
 -- Anulación desde cualquier estado pre-ejecución
-('Borrador',         'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1),
-('Enviado',          'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1),
-('En Revisión',      'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1);
+('Borrador',         'Anulado',         'DOSIER_ADMIN',   1,                   0,                       1,             'Anulado',        '#94A3B8', 1),
+('Enviado',          'Anulado',         'DOSIER_ADMIN',   1,                   0,                       1,             'Anulado',        '#94A3B8', 1),
+('En Revisión',      'Anulado',         'DOSIER_ADMIN',   1,                   0,                       1,             'Anulado',        '#94A3B8', 1);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- DOSIER CoWork — Coordinación Team Pulse & Colaboración Premium
@@ -1071,145 +869,7 @@ DELIMITER ;
 -- SEMILLAS: MOTOR DE CORREOS PERSONALIZADO (DOSIER)
 -- =============================================================================
 
--- Plantilla: Nueva Convocatoria Abierta
-INSERT INTO doc_email_templates (uuid, codigo, nombre, descripcion, asunto, cuerpoHtml, activo) VALUES
-(
-    UUID(),
-    'NUEVA_CONVOCATORIA',
-    'Apertura de Nueva Convocatoria de Proyectos',
-    'Notificación a docentes sobre el lanzamiento de una nueva convocatoria oficial para postulación de proyectos.',
-    'DOSIER: Apertura de Convocatoria Oficial - [[convocatoria_titulo]]',
-    '<div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Oxygen, Ubuntu, Cantarell, \'Open Sans\', \'Helvetica Neue\', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #ffffff;">
-        <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px;">
-            <h1 style="color: #000000; font-size: 20px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: -0.05em;">DOSIER</h1>
-            <p style="color: #666666; font-size: 11px; font-weight: 500; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.15em;">Sistema de Portafolio Docente ISTPET</p>
-        </div>
-
-        <h2 style="color: #111111; font-size: 16px; font-weight: 600; line-height: 1.4; margin-top: 0;">Estimado/a Docente Investigador/a,</h2>
-
-        <p style="color: #444444; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-            Nos complace informar que el Departamento de Investigación e Innovación ha abierto oficialmente la convocatoria <strong>[[convocatoria_titulo]]</strong> para el periodo académico vigente. Le invitamos a postular sus propuestas de investigación aplicada e innovación tecnológica.
-        </p>
-
-        <div style="background-color: #fafafa; border: 1px solid #eaeaea; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
-            <h3 style="color: #111111; font-size: 13px; font-weight: 700; margin-top: 0; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Información de la Convocatoria</h3>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; color: #333333;">
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600; width: 150px;">Código:</td><td style="padding: 8px 0;">[[convocatoria_codigo]]</td></tr>
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Título:</td><td style="padding: 8px 0;">[[convocatoria_titulo]]</td></tr>
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Fecha de Apertura:</td><td style="padding: 8px 0;">[[convocatoria_apertura]]</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Fecha de Cierre:</td><td style="padding: 8px 0; color: #d9534f; font-weight: 700;">[[convocatoria_cierre]]</td></tr>
-            </table>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 30px;">
-            <a href="[[sistema_url]]/investigacion/convocatorias" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 13px; font-weight: 600; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Postular Propuesta</a>
-        </div>
-
-        <p style="color: #666666; font-size: 12px; line-height: 1.6; margin-bottom: 24px;">
-            Las propuestas y toda la documentación requerida (protocolo y cronograma Gantt) deben ser cargadas antes de la fecha de cierre.
-        </p>
-
-        <div style="border-top: 1px solid #eaeaea; padding-top: 16px; text-align: center; font-size: 11px; color: #888888; line-height: 1.5;">
-            <p style="margin: 0 0 4px 0;">DOSIER — [[institucion_nombre]]</p>
-            <p style="margin: 0 0 12px 0;">Quito, Ecuador</p>
-            <p style="margin: 0; font-size: 10px; color: #aaaaaa;">Este es un correo automático generado por el sistema. Por favor no responda directamente.</p>
-        </div>
-    </div>',
-    1
-);
-
--- Plantilla 3: Proyecto Postulado con Éxito
-INSERT INTO doc_email_templates (uuid, codigo, nombre, descripcion, asunto, cuerpoHtml, activo) VALUES
-(
-    UUID(),
-    'PROYECTO_POSTULADO',
-    'Confirmación de Postulación de Proyecto',
-    'Acuse de recibo enviado al docente director cuando finaliza la postulación digital de su protocolo.',
-    'DOSIER: Postulación de Proyecto Recibida - [[proyecto_titulo]]',
-    '<div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Oxygen, Ubuntu, Cantarell, \'Open Sans\', \'Helvetica Neue\', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #ffffff;">
-        <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px;">
-            <h1 style="color: #000000; font-size: 20px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: -0.05em;">DOSIER</h1>
-            <p style="color: #666666; font-size: 11px; font-weight: 500; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.15em;">Sistema de Portafolio Docente ISTPET</p>
-        </div>
-
-        <h2 style="color: #111111; font-size: 16px; font-weight: 600; line-height: 1.4; margin-top: 0;">Estimado/a [[proyecto_director]],</h2>
-
-        <p style="color: #444444; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-            Confirmamos que su propuesta titulada <strong>[[proyecto_titulo]]</strong> ha sido postulada exitosamente en el sistema DOSIER. El proyecto ha sido registrado con el estado <strong>[[proyecto_estado]]</strong> y entra formalmente al flujo de revisión técnica institucional.
-        </p>
-
-        <div style="background-color: #fafafa; border: 1px solid #eaeaea; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
-            <h3 style="color: #111111; font-size: 13px; font-weight: 700; margin-top: 0; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Resumen del Registro</h3>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; color: #333333;">
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600; width: 120px;">Código Temporal:</td><td style="padding: 8px 0;">[[proyecto_codigo]]</td></tr>
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Título:</td><td style="padding: 8px 0;">[[proyecto_titulo]]</td></tr>
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Línea:</td><td style="padding: 8px 0;">[[linea_investigacion]]</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Director:</td><td style="padding: 8px 0;">[[proyecto_director]]</td></tr>
-            </table>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 30px;">
-            <a href="[[proyecto_workspace_url]]" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 13px; font-weight: 600; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Ver Workspace del Proyecto</a>
-        </div>
-
-        <p style="color: #666666; font-size: 12px; line-height: 1.6; margin-bottom: 24px;">
-            Adjunto a este correo encontrará la Ficha del Protocolo de Investigación generada de forma automatizada por el sistema para sus archivos. Se le notificará tan pronto como concluya la revisión técnica institucional.
-        </p>
-
-        <div style="border-top: 1px solid #eaeaea; padding-top: 16px; text-align: center; font-size: 11px; color: #888888; line-height: 1.5;">
-            <p style="margin: 0 0 4px 0;">DOSIER — [[institucion_nombre]]</p>
-            <p style="margin: 0 0 12px 0;">Quito, Ecuador</p>
-            <p style="margin: 0; font-size: 10px; color: #aaaaaa;">Este es un correo automático generado por el sistema. Por favor no responda directamente.</p>
-        </div>
-    </div>',
-    1
-);
-
--- Plantilla 6: Alerta de Vencimiento de Hito de Cronograma (Autómata Scheduler)
-INSERT INTO doc_email_templates (uuid, codigo, nombre, descripcion, asunto, cuerpoHtml, activo) VALUES
-(
-    UUID(),
-    'ALERTA_HITO_VENCIMIENTO',
-    'Alerta de Vencimiento de Hito de Cronograma',
-    'Recordatorio automatizado enviado al docente director cuando se acerca la fecha límite de entrega de evidencias en su cronograma Gantt.',
-    'DOSIER Alerta: Vencimiento de Hito Próximo - [[nombre_hito]]',
-    '<div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Oxygen, Ubuntu, Cantarell, \'Open Sans\', \'Helvetica Neue\', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #ffffff;">
-        <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px;">
-            <h1 style="color: #d9534f; font-size: 20px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: -0.05em;">DOSIER ALERTA</h1>
-            <p style="color: #666666; font-size: 11px; font-weight: 500; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.15em;">Sistema de Portafolio Docente ISTPET</p>
-        </div>
-
-        <h2 style="color: #111111; font-size: 16px; font-weight: 600; line-height: 1.4; margin-top: 0;">Estimado/a Docente Director/a,</h2>
-
-        <p style="color: #444444; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-            Le recordamos que de acuerdo al cronograma Gantt aprobado para su proyecto, se aproxima el vencimiento de una actividad crítica que requiere la entrega de evidencias documentales (CACES Compliance).
-        </p>
-
-        <div style="background-color: #fdf7f7; border: 1px solid #eed3d2; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
-            <h3 style="color: #a94442; font-size: 13px; font-weight: 700; margin-top: 0; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Detalles del Hito Próximo a Vencer</h3>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse; color: #333333;">
-                <tr style="border-bottom: 1px solid #eed3d2;"><td style="padding: 8px 0; font-weight: 600; width: 140px; color: #a94442;">Hito/Tarea:</td><td style="padding: 8px 0; font-weight: 600;">[[nombre_hito]]</td></tr>
-                <tr style="border-bottom: 1px solid #eed3d2;"><td style="padding: 8px 0; font-weight: 600; color: #a94442;">Proyecto:</td><td style="padding: 8px 0;">[[proyecto_titulo]]</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600; color: #a94442;">Fecha Límite:</td><td style="padding: 8px 0; color: #d9534f; font-weight: 700;">[[fecha_limite]]</td></tr>
-            </table>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 30px;">
-            <a href="[[sistema_url]]/investigacion/proyectos/workspace" style="display: inline-block; background-color: #d9534f; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 13px; font-weight: 600; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Subir Evidencias / Informe</a>
-        </div>
-
-        <p style="color: #666666; font-size: 12px; line-height: 1.6; margin-bottom: 24px;">
-            Evite retrasos que comprometan el cumplimiento del proyecto. Si requiere reprogramar este hito por causas justificadas, por favor solicite una extensión al Director de Investigación en el portal CoWork.
-        </p>
-
-        <div style="border-top: 1px solid #eaeaea; padding-top: 16px; text-align: center; font-size: 11px; color: #888888; line-height: 1.5;">
-            <p style="margin: 0 0 4px 0;">DOSIER — [[institucion_nombre]]</p>
-            <p style="margin: 0 0 12px 0;">Quito, Ecuador</p>
-            <p style="margin: 0; font-size: 10px; color: #aaaaaa;">Este es un correo automático generado por el sistema. Por favor no responda directamente.</p>
-        </div>
-    </div>',
-    1
-);
+-- (Plantillas personalizadas administrables desde el panel de administración)
 
 -- #############################################################################
 -- MÓDULO: CALENDARIO INTEGRADO DOSIER
@@ -1513,11 +1173,11 @@ CREATE INDEX idx_cal_nota_bandeja ON doc_calendario_eventos_normativos(creadoPor
 -- ATENCIÓN: ESTE BLOQUE DEBE IR SIEMPRE AL FINAL ABSOLUTO DEL SCRIPT SQL.
 -- Registra la migración inicial de EF Core para que no intente recrear las tablas.
 -- =================================================================================
-CREATE TABLE IF NOT EXISTS `__EFMigrationsHistory` (
-    `MigrationId` varchar(150) NOT NULL,
-    `ProductVersion` varchar(32) NOT NULL,
-    PRIMARY KEY (`MigrationId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET @table_exists = (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '__EFMigrationsHistory');
+SET @sql_create_ef = IF(@table_exists = 0, 'CREATE TABLE `__EFMigrationsHistory` (`MigrationId` varchar(150) NOT NULL, `ProductVersion` varchar(32) NOT NULL, PRIMARY KEY (`MigrationId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4', 'SELECT 1');
+PREPARE stmt_ef FROM @sql_create_ef;
+EXECUTE stmt_ef;
+DEALLOCATE PREPARE stmt_ef;
 
 INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
 SELECT '20260720202138_InitialCreate', '9.0.0'

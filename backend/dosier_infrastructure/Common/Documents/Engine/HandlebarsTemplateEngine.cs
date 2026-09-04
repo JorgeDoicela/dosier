@@ -311,8 +311,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             SyncKeyAlias("MarcoTeorico", "marco_teorico");
             SyncKeyAlias("Metodologia", "metodologia");
             SyncKeyAlias("Evaluacion", "evaluacion");
-            SyncKeyAlias("ObjetivosDesarrolloSostenible", "objetivos_desarrollo_sostenible");
-            SyncKeyAlias("ods", "objetivos_desarrollo_sostenible");
             SyncKeyAlias("Cronograma", "cronograma");
             SyncKeyAlias("FechaInicio", "fecha_inicio");
             SyncKeyAlias("FechaFin", "fecha_fin");
@@ -437,22 +435,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 }
             }
 
-            // Mapear alias de Objetivos de Desarrollo Sostenible (ods) para plantillas oficiales
-            var ods1 = dict.TryGetValue("objetivos_desarrollo_sostenible", out var v1) ? v1?.ToString() : null;
-            var ods2 = dict.TryGetValue("ods", out var v2) ? v2?.ToString() : null;
-            var ods3 = dict.TryGetValue("ObjetivosDesarrolloSostenible", out var v3) ? v3?.ToString() : null;
-            var ods4 = dict.TryGetValue("ODS", out var v4) ? v4?.ToString() : null;
-            var finalOds = !string.IsNullOrWhiteSpace(ods1) ? ods1 
-                         : (!string.IsNullOrWhiteSpace(ods2) ? ods2 
-                         : (!string.IsNullOrWhiteSpace(ods3) ? ods3 : ods4));
-
-            if (!string.IsNullOrWhiteSpace(finalOds))
-            {
-                dict["ods"] = finalOds;
-                dict["ODS"] = finalOds;
-                dict["objetivos_desarrollo_sostenible"] = finalOds;
-                dict["ObjetivosDesarrolloSostenible"] = finalOds;
-            }
 
             // Variables globales del sistema (siempre disponibles en cualquier plantilla)
             var ecuadorCulture = new CultureInfo("es-EC");

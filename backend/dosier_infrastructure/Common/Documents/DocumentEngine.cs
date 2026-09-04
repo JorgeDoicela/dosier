@@ -228,14 +228,6 @@ namespace Dosier.Infrastructure.Common.Documents
                                 dataDict[pascalKey] = valToUse;
                                 dataDict[snakeKey] = valToUse;
 
-                                if (key.Equals("ObjetivosDesarrolloSostenible", StringComparison.OrdinalIgnoreCase) || key.Equals("ods", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    dataDict["ods"] = valToUse;
-                                    dataDict["ODS"] = valToUse;
-                                    dataDict["objetivos_desarrollo_sostenible"] = valToUse;
-                                    dataDict["ObjetivosDesarrolloSostenible"] = valToUse;
-                                }
-
                                 if (key.StartsWith("field_", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var upperField = "FIELD_" + key.Substring(6);

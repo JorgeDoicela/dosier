@@ -89,11 +89,6 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                             }`}>
                                                 {selectedProj.estado}
                                             </span>
-                                            {selectedProj.entidadAliada && (
-                                                <span className="text-[8px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded uppercase">
-                                                    Co-Ejecutor
-                                                </span>
-                                            )}
                                         </div>
                                         <h3 className="text-base font-semibold text-text-main leading-snug">
                                             {selectedProj.titulo}
@@ -106,7 +101,7 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                 </div>
 
                                 {/* Fila Detalle KPIs */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-bg-deep/20 border border-border-thin/40 rounded-2xl select-none">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-bg-deep/20 border border-border-thin/40 rounded-2xl select-none">
                                     <div>
                                         <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Gasto Ejecutado</span>
                                         <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{formatCurrency(selectedProj.presupuestoEjecutado || 0)}</span>
@@ -116,12 +111,8 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                         <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.totalEstudiantes || 0} estudiantes</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Productos Científicos</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Productos Registrados</span>
                                         <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.totalProductos || 0} registrados</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Nivel TRL Actual</span>
-                                        <span className="text-xs font-bold font-mono text-purple-400 block mt-0.5">TRL {selectedProj.trlActual || 1} / meta: TRL {selectedProj.trlMeta || 9}</span>
                                     </div>
                                 </div>
 
@@ -165,19 +156,13 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                         <div className="space-y-0.5">
                                             <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Línea de Investigación</span>
                                             <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.lineaInvestigacion || 'General'}>
-                                                {selectedProj.lineaInvestigacion || 'Línea de Investigación General / Institucional'}
+                                                {selectedProj.lineaInvestigacion || 'Línea General / Institucional'}
                                             </p>
                                         </div>
                                         <div className="space-y-0.5">
                                             <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Convocatoria de Origen</span>
                                             <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.convocatoriaTitulo || 'General'}>
                                                 {selectedProj.convocatoriaTitulo || 'Sin convocatoria asignada'}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Vinculación Plan Nacional (PND)</span>
-                                            <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.objetivoPnd || 'No requerido'}>
-                                                {selectedProj.objetivoPnd || 'No requerido para este tipo de proyecto'}
                                             </p>
                                         </div>
                                     </div>

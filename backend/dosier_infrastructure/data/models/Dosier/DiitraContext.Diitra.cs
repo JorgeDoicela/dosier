@@ -9,13 +9,6 @@ public partial class DosierContext
     {
         // Catálogos e información maestra
         modelBuilder.ApplyConfiguration(new DocTipoConvocatoriaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocAgendaZonalConfiguration());
-        modelBuilder.ApplyConfiguration(new DocOdsEjeConfiguration());
-        modelBuilder.ApplyConfiguration(new DocOdsConfiguration());
-        modelBuilder.ApplyConfiguration(new DocCatImpactoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocCatTipoEvidenciaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocEntidadExternaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocPndObjetivoConfiguration());
 
         // Ciclo de vida de Proyectos
         modelBuilder.ApplyConfiguration(new DocProyectoConfiguration());
@@ -23,11 +16,8 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocProyectoCarreraConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoParticipanteConfiguration());
         modelBuilder.ApplyConfiguration(new DocObjetivoProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocProyectoOdsConfiguration());
-        modelBuilder.ApplyConfiguration(new DocImpactoProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocCronogramaConfiguration());
         modelBuilder.ApplyConfiguration(new DocBibliografiaProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocProyectoMmlConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoDocumentoAdjuntoConfiguration());
 
         // Convocatorias

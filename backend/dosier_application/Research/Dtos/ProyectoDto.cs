@@ -19,13 +19,6 @@ namespace Dosier.Application.Research.Dtos
         public int? IdConvocatoria { get; set; }
         public string? ConvocatoriaTitulo { get; set; }
         public int? IdCarrera { get; set; }
-        public int? IdObjetivoPnd { get; set; }
-
-        // --- Núcleo de Innovación y Vinculación 2026 ---
-        public int? IdEntidadAliada { get; set; }
-        public int? TrlInicial { get; set; } = 1;
-        public int? TrlActual { get; set; } = 1;
-        public int? TrlMeta { get; set; } = 1;
 
         // ─────────────────────────────────────────────────────────────────────────
         // SECCIÓN 1: IDENTIFICACIÓN DEL PROYECTO (Formato oficial SENESCYT/ISTPET)
@@ -219,20 +212,10 @@ namespace Dosier.Application.Research.Dtos
         public decimal? PuntajeEvaluacion { get; set; }
 
         // --- Compliance ---
-        public List<MmlRowDto>? MatrizMarcoLogico { get; set; }
         public List<DocumentoAdjuntoDto>? DocumentosAdjuntos { get; set; }
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public Dictionary<string, object>? ExtensionData { get; set; }
-    }
-
-    public class MmlRowDto
-    {
-        public string? Nivel { get; set; }
-        public string? Resumen { get; set; }
-        public string? Indicadores { get; set; }
-        public string? Medios { get; set; }
-        public string? Supuestos { get; set; }
     }
 
     public class DocumentoAdjuntoDto

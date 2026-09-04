@@ -770,7 +770,6 @@ namespace Dosier.Infrastructure.Common.Documents
                                     MergeField(merged, "Carrera", projectDetail.Carrera);
                                     MergeField(merged, "IdCarrera", projectDetail.IdCarrera);
                                     MergeField(merged, "IdConvocatoria", projectDetail.IdConvocatoria);
-                                    MergeField(merged, "IdObjetivoPnd", projectDetail.IdObjetivoPnd);
                                     MergeField(merged, "Programa", projectDetail.Programa);
                                     MergeField(merged, "DirectorProyecto", projectDetail.DirectorProyecto);
                                     MergeField(merged, "TipoInvestigacion", projectDetail.TipoInvestigacion);

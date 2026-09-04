@@ -9,10 +9,3 @@ public partial class DocTipoConvocatoria
     public string Nombre { get; set; } = null!;
     public string? Descripcion { get; set; }
 }
-
-public partial class DocAgendaZonal
-{
-    public int IdAgendaZonal { get; set; }
-    public string Nombre { get; set; } = null!;
-    public string? Descripcion { get; set; }
-}

@@ -105,7 +105,7 @@ sequenceDiagram
 
 El ciclo de vida de los proyectos de investigación se administra a través del `WorkflowEngineService`. Las transiciones entre estados están sujetas a reglas de validación.
 
-$$\text{Borrador} \xrightarrow[\text{Técnica}]{\text{Validación}} \text{Evaluación por Pares} \xrightarrow[\text{Comité}]{\text{Aprobación}} \text{Ejecución (TRL 1-9)} \xrightarrow[\text{Final}]{\text{Informe}} \text{Cierre}$$
+$$\text{Borrador} \xrightarrow[\text{Técnica}]{\text{Validación}} \text{Evaluación por Pares} \xrightarrow[\text{Comité}]{\text{Aprobación}} \text{Ejecución} \xrightarrow[\text{Final}]{\text{Informe}} \text{Cierre}$$
 
 ### Mecanismo de State Locking
 Cuando un proyecto avanza a etapas de evaluación por pares o aprobación final, el orquestador activa un bloqueo de escritura (*State Locking*). Las peticiones HTTP que intenten modificar campos del formulario principal durante estos estados son rechazadas por los controladores y servicios de infraestructura.

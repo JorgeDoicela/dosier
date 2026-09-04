@@ -60,7 +60,7 @@ Las evaluaciones se procesan mediante rúbricas cuantitativas compuestas por cri
 
 | Criterio de Evaluación | Ponderación (%) | Descripción |
 | :--- | :--- | :--- |
-| **Rigor Metodológico y Coherencia** | 30% | Claridad del problema, objetivos, hipótesis y diseño de la investigación. |
-| **Impacto y Pertinencia Institucional** | 25% | Vinculación con las líneas de investigación, PND y beneficio para el ISTT. |
+| **Rigor Metodológico y Coherencia** | 30% | Claridad del problema, objetivos, justificación y diseño metodológico. |
+| **Impacto y Pertinencia Institucional** | 25% | Vinculación con las líneas de investigación institucionales y beneficio para el instituto. |
 | **Viabilidad Técnica y Presupuestaria** | 25% | Relación costo-beneficio, cronograma de actividades y entregables. |
-| **Nivel de Innovación y TRL** | 20% | Grado de novedad tecnológica y potencial de transferencia. |
+| **Nivel de Innovación y Transferencia** | 20% | Grado de novedad técnica, aplicación práctica y potencial de transferencia. |

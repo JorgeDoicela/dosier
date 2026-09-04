@@ -25,25 +25,17 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocGrupoInvestigacion> DocGruposInvestigacion { get; set; }
     public virtual DbSet<DocGrupoMiembro>       DocGruposMiembros       { get; set; }
     public virtual DbSet<DocTipoConvocatoria>   DocTiposConvocatoria   { get; set; }
-    public virtual DbSet<DocAgendaZonal>        DocAgendasZonales      { get; set; }
     public virtual DbSet<DocConvocatoria>       DocConvocatorias       { get; set; }
     public virtual DbSet<DocProyecto>           DocProyectos           { get; set; }
     public virtual DbSet<DocProyectoCarrera>    DocProyectosCarreras    { get; set; }
     public virtual DbSet<DocProyectoParticipante> DocProyectoParticipantes { get; set; }
     public virtual DbSet<DocObjetivoProyecto>   DocObjetivosProyecto   { get; set; }
-    public virtual DbSet<DocOdsEje>             DocOdsEjes             { get; set; }
-    public virtual DbSet<DocOds>                DocOds                 { get; set; }
-    public virtual DbSet<DocProyectoOds>        DocProyectosOds        { get; set; }
-    public virtual DbSet<DocCatImpacto>         DocCatImpactos         { get; set; }
-    public virtual DbSet<DocImpactoProyecto>    DocImpactosProyecto    { get; set; }
     public virtual DbSet<DocCronograma>         DocCronogramas         { get; set; }
     public virtual DbSet<DocBibliografiaProyecto> DocBibliografiasProyecto { get; set; }
     public virtual DbSet<DocTrazabilidadProyecto> DocTrazabilidadProyectos { get; set; }
     public virtual DbSet<DocConfigWorkflow> DocConfigWorkflows { get; set; }
     public virtual DbSet<DocDocumentoSeccionMetadata> DocDocumentosSeccionesMetadata { get; set; }
     public virtual DbSet<DocCollaborationComment> DocCollaborationComments { get; set; }
-    public virtual DbSet<DocPndObjetivo>               DocPndObjetivos              { get; set; }
-    public virtual DbSet<DocProyectoMml>               DocProyectosMml               { get; set; }
     public virtual DbSet<DocProyectoDocumentoAdjunto>  DocProyectosDocumentosAdjuntos { get; set; }
 
     // --- Sistema y Seguridad ---
@@ -60,8 +52,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocConfigGeneral>    DocConfigsGenerales    { get; set; }
     public virtual DbSet<DocBackupLog>        DocBackupLogs          { get; set; }
 
-    public virtual DbSet<DocCatTipoEvidencia>  DocCatTipoEvidencias   { get; set; }
-    public virtual DbSet<DocEntidadExterna>    DocEntidadesExternas   { get; set; }
     public virtual DbSet<DocProyectoExtension> DocProyectoExtensions { get; set; }
 
     // --- Módulo Calendario ---

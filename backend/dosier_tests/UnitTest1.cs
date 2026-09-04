@@ -379,12 +379,6 @@ public class UnitTest1
             var objetivos = context.Set<DocObjetivoProyecto>().Where(o => o.IdProyecto == project.IdProyecto);
             context.Set<DocObjetivoProyecto>().RemoveRange(objetivos);
 
-            var mml = context.Set<DocProyectoMml>().Where(m => m.IdProyecto == project.IdProyecto);
-            context.Set<DocProyectoMml>().RemoveRange(mml);
-
-            var impactos = context.Set<DocImpactoProyecto>().Where(i => i.IdProyecto == project.IdProyecto);
-            context.Set<DocImpactoProyecto>().RemoveRange(impactos);
-
             var bibliografia = context.Set<DocBibliografiaProyecto>().Where(b => b.IdProyecto == project.IdProyecto);
             context.Set<DocBibliografiaProyecto>().RemoveRange(bibliografia);
 

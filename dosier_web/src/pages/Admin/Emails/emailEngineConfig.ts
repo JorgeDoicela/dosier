@@ -45,26 +45,9 @@ export const TOKEN_LABELS: Record<string, { label: string; hint?: string }> = {
 };
 
 /** Contexto recomendado por tipo de comunicación */
-export const TEMPLATE_RECOMMENDED_CONTEXT: Record<string, { entityType: string; hint: string }> = {
-    NUEVA_CONVOCATORIA: { entityType: 'Convocatoria', hint: 'Seleccione la convocatoria que se está abriendo.' },
-    PROYECTO_POSTULADO: { entityType: 'Proyecto', hint: 'Seleccione el proyecto postulado.' },
-    ALERTA_HITO_VENCIMIENTO: { entityType: 'Proyecto', hint: 'Seleccione el proyecto cuyo hito está por vencer.' }
-};
+export const TEMPLATE_RECOMMENDED_CONTEXT: Record<string, { entityType: string; hint: string }> = {};
 
-export const SUBJECT_VARIANTS: Record<string, SubjectVariant[]> = {
-    NUEVA_CONVOCATORIA: [
-        { id: 'default', label: 'Apertura oficial', asunto: 'DOSIER: Apertura de Convocatoria Oficial - [[convocatoria_titulo]]' },
-        { id: 'recordatorio', label: 'Recordatorio de cierre', asunto: 'DOSIER: Recordatorio — Cierre de convocatoria [[convocatoria_codigo]]' }
-    ],
-    PROYECTO_POSTULADO: [
-        { id: 'default', label: 'Confirmación de recepción', asunto: 'DOSIER: Postulación de Proyecto Recibida - [[proyecto_titulo]]' },
-        { id: 'formal', label: 'Acuse formal', asunto: 'DOSIER: Acuse de Recibo — Protocolo [[proyecto_codigo]]' }
-    ],
-    ALERTA_HITO_VENCIMIENTO: [
-        { id: 'default', label: 'Alerta de hito', asunto: 'DOSIER Alerta: Vencimiento de Hito Próximo - [[nombre_hito]]' },
-        { id: 'urgente', label: 'Alerta urgente', asunto: 'DOSIER [URGENTE]: Hito vence pronto — [[nombre_hito]]' }
-    ]
-};
+export const SUBJECT_VARIANTS: Record<string, SubjectVariant[]> = {};
 
 export function getSubjectVariants(template: EmailTemplate): SubjectVariant[] {
     const variants = SUBJECT_VARIANTS[template.codigo];

@@ -366,14 +366,6 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             </div>
                             {renderHtml(docSnapshot.Metodologia || docSnapshot.MarcoTeorico, 'No registrada')}
                         </div>
-
-                        {/* OBJETIVOS DE DESARROLLO SOSTENIBLE (ODS) */}
-                        {docSnapshot.ObjetivosDesarrolloSostenible && (
-                            <div className="p-4 rounded-xl border border-border-thin bg-surface space-y-2">
-                                <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Alineación con ODS</span>
-                                {renderHtml(docSnapshot.ObjetivosDesarrolloSostenible, 'No registrados')}
-                            </div>
-                        )}
                     </div>
                 </div>
             )}

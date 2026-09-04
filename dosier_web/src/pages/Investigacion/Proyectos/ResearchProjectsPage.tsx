@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '../../../components/Common/PageHeader';
 import {
     ClipboardList, Plus, ArrowRight, Calendar, AlertCircle,
-    Loader2, Search, BarChart3, Zap, Target, BookOpen, Trash2, User, Pin
+    Loader2, Search, BarChart3, Target, BookOpen, Trash2, User, Pin
 } from 'lucide-react';
 import api from '../../../api/axios_config';
 import { CreateProjectModal } from '../../../components/DOSIER/CreateProjectModal';
@@ -37,8 +37,6 @@ export interface ProyectoResumen {
     total_productos: number;
     total_informes: number;
     informes_aprobados: number;
-    trl_actual?: number;
-    trl_meta?: number;
     director_nombre?: string;
     carrera?: string;
 }
@@ -645,12 +643,6 @@ const ResearchProjectsPage = () => {
                                                 : '—'}
                                         </span>
                                     </div>
-                                    {p.trl_actual != null && (
-                                        <div className="flex items-center gap-1">
-                                            <Zap size={10} className="text-warning" />
-                                            <span className="font-mono font-medium">TRL {p.trl_actual}/{p.trl_meta ?? '—'}</span>
-                                        </div>
-                                    )}
                                     {p.puntaje_evaluacion != null && (
                                         <div className="flex items-center gap-1">
                                             <BarChart3 size={10} className="text-success" />

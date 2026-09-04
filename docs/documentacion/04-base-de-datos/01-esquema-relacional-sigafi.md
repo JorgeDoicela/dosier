@@ -40,7 +40,6 @@ erDiagram
         string title
         string state
         decimal total_budget
-        int trl_level
         datetime created_at_utc
     }
 
@@ -69,7 +68,7 @@ erDiagram
 
 ### 3.1. Dominio de Investigación y Proyectos
 
-* **`doc_proyectos` (`Projects`):** Almacena la entidad principal de las propuestas de investigación (código, título, resumen, línea de investigación, presupuesto total, estado del workflow y nivel TRL).
+* **`doc_proyectos` (`Projects`):** Almacena la entidad principal de las propuestas de investigación (código, título, resumen, línea de investigación, presupuesto total y estado del workflow).
 * **`doc_proyecto_miembros` (`ProjectTeam`):** Relación N:M entre usuarios y proyectos, especificando el rol dentro del equipo (Director, Co-Investigador, Ayudante), porcentaje de dedicación horaria y estado de adscripción.
 * **`doc_proyecto_cambios_equipo` (`ProjectTeamChange`):** Registro de solicitudes formales de adscripción o salida de miembros durante la ejecución del proyecto.
 * **`doc_informes_avance` (`InformesAvance`):** Registro de informes periódicos de cumplimiento técnico/financiero y entregables.

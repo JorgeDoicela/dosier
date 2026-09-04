@@ -50,10 +50,9 @@ Las llamadas dirigidas al endpoint de parches de instancias documentales (`/docu
 | `SignaturesController` | `/api/signatures` | Criptografía | Registro de firmas electrónicas, certificados PKCS#12 y sellos de tiempo. |
 | `ConvocatoriasController` | `/api/convocatorias` | Investigación | Convocatorias públicas institucionales y fondos concursables. |
 | `InformesAvanceController` | `/api/informes-avance` | Investigación | Seguimiento de entregables técnicos/financieros e informes de avance. |
-| `ResearchProductsController` | `/api/research-products` | Investigación | Registro de productos científicos (artículos, patentes, software, TRL 1-9). |
+| `ResearchProductsController` | `/api/research-products` | Investigación | Registro de productos científicos (artículos, patentes, software y prototipos). |
 | `GroupsController` | `/api/groups` | Investigación | Grupos de investigación, líneas, sublíneas de adscripción y miembros. |
 | `CatalogsController` | `/api/catalogs` | Catálogos | Catálogos de áreas UNESCO, carreras SIGAFI y tipos de proyectos. |
-| `PndController` | `/api/pnd` | Catálogos | Objetivos del Plan Nacional de Desarrollo y ODS de la ONU. |
 | `LopdpController` | `/api/lopdp` | Gobernanza | Gestión de derechos ARCO, consentimientos informados y anonimización. |
 | `NotificationsController` | `/api/notifications` | Comunicación | Notificaciones in-app, marcas de lectura y suscripciones WebPush VAPID. |
 | `EmailEngineController` | `/api/email-engine` | Comunicación | Envío de correos transaccionales con layout HTML institucional. |

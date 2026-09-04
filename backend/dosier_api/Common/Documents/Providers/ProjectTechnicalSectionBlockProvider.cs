@@ -40,12 +40,6 @@ namespace dosier_api.Controllers
                         addedCount++;
                     }
                 }
-
-                // Asegurar compatibilidad para ODS si ObjetivosDesarrolloSostenible está presente
-                if (schemaDict.ContainsKey("ObjetivosDesarrolloSostenible") && !schemaDict.ContainsKey("Ods"))
-                {
-                    schemaDict["Ods"] = "";
-                }
             }
 
             if (addedCount == 0)
@@ -56,12 +50,10 @@ namespace dosier_api.Controllers
                 schemaDict["Justificacion"] = "";
                 schemaDict["ObjetivoGeneral"] = "";
                 schemaDict["ObjetivosEspecificos"] = "";
-                schemaDict["ObjetivosDesarrolloSostenible"] = "";
-                schemaDict["Ods"] = "";
                 schemaDict["MarcoTeorico"] = "";
                 schemaDict["Metodologia"] = "";
                 schemaDict["Evaluacion"] = "";
-                addedCount = 8;
+                addedCount = 7;
             }
 
             premiumFieldsCount += addedCount;
@@ -130,7 +122,6 @@ namespace dosier_api.Controllers
                     if (IsEnabled("showJustificacion")) completionList.Add("Justificacion");
                     if (IsEnabled("showObjetivoGeneral")) completionList.Add("ObjetivoGeneral");
                     if (IsEnabled("showObjetivosEspecificos")) completionList.Add("ObjetivosEspecificos");
-                    if (IsEnabled("showOds")) completionList.Add("Ods");
                     if (IsEnabled("showMarcoTeorico")) completionList.Add("MarcoTeorico");
                     if (IsEnabled("showMetodologia")) completionList.Add("Metodologia");
                     if (IsEnabled("showEvaluacion")) completionList.Add("Evaluacion");

@@ -90,10 +90,9 @@ const RESEARCH_TECHNICAL_SUBSECTIONS: TechnicalSubsection[] = [
     { id: 'sec_banner_objetivos', fieldKey: 'BannerObjetivos', numberPrefix: '3.4', title: 'OBJETIVOS', placeholder: '', requirementText: '', enabled: true, colSpan: 2, variant: 'banner_gold', hasContent: false, isGroupHeader: true },
     { id: 'sec_objetivo_general', fieldKey: 'ObjetivoGeneral', numberPrefix: '', title: 'GENERAL', placeholder: 'Formular el objetivo general...', requirementText: 'VERBO EN INFINITIVO + ¿QUÉ? + ¿CÓMO? + ¿PARA QUÉ?', enabled: true, colSpan: 1, variant: 'banner_navy', hasContent: true, parentId: 'sec_banner_objetivos' },
     { id: 'sec_objetivos_especificos', fieldKey: 'ObjetivosEspecificos', numberPrefix: '', title: 'ESPECÍFICOS', placeholder: '1. Desarrollar...\n2. Implementar...', requirementText: 'INFINITIVO + ACCIÓN ESPECÍFICA + MEDIO O METODOLOGÍA + PROPÓSITO', enabled: true, colSpan: 1, variant: 'banner_navy', hasContent: true, parentId: 'sec_banner_objetivos' },
-    { id: 'sec_ods', fieldKey: 'ObjetivosDesarrolloSostenible', numberPrefix: '3.5', title: 'OBJETIVOS DE DESARROLLO SOSTENIBLE', placeholder: 'Los objetivos de desarrollo sostenible de la ONU son 17...', requirementText: 'Alineación con Objetivos de Desarrollo Sostenible ONU', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_marco_teorico', fieldKey: 'MarcoTeorico', numberPrefix: '3.6', title: 'MARCO TEÓRICO', placeholder: 'Describir los conceptos clave...', requirementText: 'EL TEXTO MÁXIMO DEBE ABARCAR DOS PÁGINAS, CITAR USANDO NORMAS APA 7MA EDICIÓN', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_metodologia', fieldKey: 'Metodologia', numberPrefix: '3.7', title: 'METODOLOGÍA', placeholder: 'Describir el enfoque metodológico...', requirementText: 'DETALLAR EN MÍNIMO 2 PÁRRAFOS DE 5 LÍNEAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_evaluacion', fieldKey: 'Evaluacion', numberPrefix: '3.8', title: 'EVALUACIÓN', placeholder: 'Describir los criterios e indicadores...', requirementText: 'DETALLAR EN MÍNIMO 2 PÁRRAFOS DE 5 LÍNEAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true }
+    { id: 'sec_marco_teorico', fieldKey: 'MarcoTeorico', numberPrefix: '3.5', title: 'MARCO TEÓRICO', placeholder: 'Describir los conceptos clave...', requirementText: 'EL TEXTO MÁXIMO DEBE ABARCAR DOS PÁGINAS, CITAR USANDO NORMAS APA 7MA EDICIÓN', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
+    { id: 'sec_metodologia', fieldKey: 'Metodologia', numberPrefix: '3.6', title: 'METODOLOGÍA', placeholder: 'Describir el enfoque metodológico...', requirementText: 'DETALLAR EN MÍNIMO 2 PÁRRAFOS DE 5 LÍNEAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
+    { id: 'sec_evaluacion', fieldKey: 'Evaluacion', numberPrefix: '3.7', title: 'EVALUACIÓN', placeholder: 'Describir los criterios e indicadores...', requirementText: 'DETALLAR EN MÍNIMO 2 PÁRRAFOS DE 5 LÍNEAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true }
 ];
 
 /**
@@ -104,7 +103,6 @@ export function generateDefaultBlocksForTemplate(
     _fullData?: any
 ): DocumentBlock[] {
     const code = template.code.toUpperCase();
-    const category = template.category;
 
     // ─────────────────────────────────────────────────────────────────────────
     // 1. ESTRATEGIAS PARA PLANTILLAS INSTITUCIONALES CONOCIDAS
@@ -202,92 +200,7 @@ export function generateDefaultBlocksForTemplate(
     }
 
 
-    // H. PROPUESTA DE GRUPO DE INVESTIGACIÓN
-    if (code === 'PROPUESTA_GRUPO_INVESTIGACION' || code.includes('GRUPO') && !code.includes('CERTIFICADO') || category === 40 || category === 44) {
-        return [
-            createBaseCoverBlock('PROPUESTA DE CREACIÓN DE GRUPO DE INVESTIGACIÓN', { colorTitle: 'navy' }),
-            {
-                id: 'block-title-1',
-                type: 'title' as BlockType,
-                title: '1. DATOS GENERALES DEL GRUPO DE INVESTIGACIÓN',
-                isActive: true,
-                config: { text: '1. DATOS GENERALES DEL GRUPO DE INVESTIGACIÓN', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
-            },
-            {
-                id: 'block-table-datos',
-                type: 'advanced_table' as BlockType,
-                title: 'Ficha de Identificación del Grupo',
-                isActive: true,
-                config: {
-                    headers: ['Parámetro Institucional', 'Detalle de la Propuesta'],
-                    rows: [
-                        { cells: ['Nombre Oficial del Grupo', '{{nombre_grupo}}'] },
-                        { cells: ['Siglas / Acrónimo', '{{siglas}}'] },
-                        { cells: ['Tipo de Grupo', '{{tipo_grupo}}'] },
-                        { cells: ['Docente Coordinador / Líder', '{{coordinador_nombre}} (C.I. {{coordinador_cedula}} | Email: {{coordinador_email}} | Tel: {{coordinador_telefono}})'] },
-                        { cells: ['Dominio Académico Vinculado', '{{dominio_nombre}}'] },
-                        { cells: ['Líneas de Investigación', '{{lineas_investigacion}}'] },
-                        { cells: ['Carreras Vinculadas', '{{carreras_vinculadas}}'] },
-                        { cells: ['Categoría de Consolidación', '{{categoria_consolidacion}}'] },
-                        { cells: ['Fecha de Presentación', '{{fecha_presentacion}}'] }
-                    ],
-                    headerColor: 'navy',
-                    borderStyle: 'solid'
-                }
-            },
-            {
-                id: 'block-title-2',
-                type: 'title' as BlockType,
-                title: '2. IDENTIDAD ESTRATÉGICA Y PROPÓSITO',
-                isActive: true,
-                config: { text: '2. IDENTIDAD ESTRATÉGICA Y PROPÓSITO', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
-            },
-            {
-                id: 'block-mision-vision',
-                type: 'two_column' as BlockType,
-                title: 'Misión y Visión',
-                isActive: true,
-                config: {
-                    leftTitle: 'MISIÓN DEL GRUPO',
-                    leftContent: '{{mision}}',
-                    rightTitle: 'VISIÓN DEL GRUPO',
-                    rightContent: '{{vision}}'
-                }
-            },
-            {
-                id: 'block-title-3',
-                type: 'title' as BlockType,
-                title: '3. OBJETIVO GENERAL DEL GRUPO',
-                isActive: true,
-                config: { text: '3. OBJETIVO GENERAL DEL GRUPO', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
-            },
-            {
-                id: 'block-objetivo',
-                type: 'rich_text' as BlockType,
-                title: 'Objetivo General',
-                isActive: true,
-                config: { text: '<p>{{objetivo_general}}</p>' }
-            },
-            {
-                id: 'block-pagebreak-1',
-                type: 'page_break' as BlockType,
-                title: 'Salto de Página',
-                isActive: true,
-                config: {}
-            },
-            {
-                id: 'block-title-4',
-                type: 'title' as BlockType,
-                title: '4. EQUIPO DE INVESTIGADORES Y SEMILLERISTAS',
-                isActive: true,
-                config: { text: '4. EQUIPO DE INVESTIGADORES Y SEMILLERISTAS', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
-            },
-            createBaseSignaturesBlock([
-                { label: 'Docente Coordinador del Grupo', name: '{{coordinador_nombre}}', role: 'Coordinador / Líder' },
-                { label: 'Dirección de Investigación (DOSIER)', name: 'DOSIER - ISTPET', role: 'Revisión y Registro Institucional' }
-            ])
-        ];
-    }
+
 
     // ─────────────────────────────────────────────────────────────────────────
     // 2. FÁBRICA INTELIGENTE EXTENSIBLE (FALLBACK POR CATEGORÍA DE NEGOCIO)

@@ -31,19 +31,12 @@ public class DocProyectoConfiguration : IEntityTypeConfiguration<DocProyecto>
         entity.Property(e => e.EliminadoPorUsuarioId).HasColumnName("eliminadoPorUsuarioId");
         entity.Property(e => e.FechaRegistro).HasColumnName("fechaRegistro").HasDefaultValueSql("CURRENT_TIMESTAMP");
         entity.Property(e => e.FechaModificacion).HasColumnName("fechaModificacion").HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAddOrUpdate();
-        entity.Property(e => e.IdObjetivoPnd).HasColumnName("idObjetivoPnd");
-        entity.Property(e => e.IdEntidadAliada).HasColumnName("idEntidadAliada");
-        entity.Property(e => e.TrlInicial).HasColumnName("trlInicial");
-        entity.Property(e => e.TrlActual).HasColumnName("trlActual");
-        entity.Property(e => e.TrlMeta).HasColumnName("trlMeta");
         entity.Property(e => e.AutoExtendDeadlines).HasColumnName("autoExtendDeadlines").HasColumnType("tinyint(1)").HasDefaultValue(false);
         entity.Property(e => e.AutoExtendDays).HasColumnName("autoExtendDays").HasColumnType("int").HasDefaultValue(7);
         entity.Property(e => e.FechaLimiteSubsanacion).HasColumnName("fechaLimiteSubsanacion");
 
-        entity.HasOne(d => d.IdObjetivoPndNavigation).WithMany(p => p.DocProyectos).HasForeignKey(d => d.IdObjetivoPnd).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_proy_pnd_obj");
         entity.HasOne(d => d.IdConvocatoriaNavigation).WithMany(p => p.Proyectos).HasForeignKey(d => d.IdConvocatoria).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_proy_conv");
         entity.HasOne(d => d.IdGrupoNavigation).WithMany(p => p.DocProyectos).HasForeignKey(d => d.IdGrupo).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_proy_grupo");
-        entity.HasOne(d => d.IdEntidadAliadaNavigation).WithMany(p => p.DocProyectos).HasForeignKey(d => d.IdEntidadAliada).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_proy_entidad_aliada");
     }
 }
 
@@ -128,38 +121,6 @@ public class DocObjetivoProyectoConfiguration : IEntityTypeConfiguration<DocObje
     }
 }
 
-public class DocProyectoOdsConfiguration : IEntityTypeConfiguration<DocProyectoOds>
-{
-    public void Configure(EntityTypeBuilder<DocProyectoOds> entity)
-    {
-        entity.HasKey(e => e.IdProyectoOds).HasName("PRIMARY");
-        entity.ToTable("doc_proyectos_ods");
-        entity.Property(e => e.IdProyectoOds).HasColumnName("idProyectoOds");
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.IdOds).HasColumnName("idOds");
-        entity.Property(e => e.ObjetivoEspecificoODS).HasColumnName("objetivoEspecificoODS").HasColumnType("text").IsRequired();
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocProyectosOds).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_pods_proyecto");
-        entity.HasOne(d => d.IdOdsNavigation).WithMany(p => p.DocProyectosOds).HasForeignKey(d => d.IdOds).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_pods_ods");
-    }
-}
-
-public class DocImpactoProyectoConfiguration : IEntityTypeConfiguration<DocImpactoProyecto>
-{
-    public void Configure(EntityTypeBuilder<DocImpactoProyecto> entity)
-    {
-        entity.HasKey(e => e.IdImpactoProyecto).HasName("PRIMARY");
-        entity.ToTable("doc_impactos_proyecto");
-        entity.Property(e => e.IdImpactoProyecto).HasColumnName("idImpactoProyecto");
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.IdCatImpacto).HasColumnName("idCatImpacto");
-        entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasColumnType("text").IsRequired();
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocImpactosProyecto).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_imp_proyecto");
-        entity.HasOne(d => d.IdCatImpactoNavigation).WithMany(p => p.DocImpactosProyecto).HasForeignKey(d => d.IdCatImpacto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_imp_categoria");
-    }
-}
-
 public class DocCronogramaConfiguration : IEntityTypeConfiguration<DocCronograma>
 {
     public void Configure(EntityTypeBuilder<DocCronograma> entity)
@@ -207,24 +168,6 @@ public class DocBibliografiaProyectoConfiguration : IEntityTypeConfiguration<Doc
         entity.Property(e => e.Url).HasColumnName("url").HasMaxLength(512);
 
         entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocBibliografiasProyecto).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_bib_proyecto");
-    }
-}
-
-public class DocProyectoMmlConfiguration : IEntityTypeConfiguration<DocProyectoMml>
-{
-    public void Configure(EntityTypeBuilder<DocProyectoMml> entity)
-    {
-        entity.HasKey(e => e.IdMml).HasName("PRIMARY");
-        entity.ToTable("doc_proyectos_mml");
-        entity.Property(e => e.IdMml).HasColumnName("idMml");
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.Nivel).HasColumnName("nivel").HasMaxLength(20).IsRequired();
-        entity.Property(e => e.ResumenNarrativo).HasColumnName("resumenNarrativo").HasColumnType("text").IsRequired();
-        entity.Property(e => e.Indicadores).HasColumnName("indicadores").HasColumnType("text");
-        entity.Property(e => e.MediosVerificacion).HasColumnName("mediosVerificacion").HasColumnType("text");
-        entity.Property(e => e.Supuestos).HasColumnName("supuestos").HasColumnType("text");
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.MatrizMarcoLogico).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_mml_proyecto");
     }
 }
 

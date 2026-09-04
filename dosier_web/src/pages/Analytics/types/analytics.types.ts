@@ -19,11 +19,7 @@ export interface ProyectoResumen {
     totalProductos: number;
     totalInformes: number;
     informesAprobados: number;
-    trlActual: number | null;
-    trlMeta: number | null;
     totalEstudiantes?: number;
-    entidadAliada?: string | null;
-    objetivoPnd?: string | null;
     convocatoriaCodigo?: string | null;
 }
 

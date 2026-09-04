@@ -120,12 +120,6 @@ namespace dosier_api.Controllers
                     .OrderByDescending(x => x.proyectos)
                     .ToList();
 
-                var pndAligned = filteredList.Count(p => !string.IsNullOrEmpty(p.ObjetivoPnd));
-                var pndPct = filteredList.Count > 0 ? Math.Round((double)pndAligned / filteredList.Count * 100, 1) : 0;
-                var pndUmbralC = 80.0;
-                var pndUmbralP = 50.0;
-                var pndStatus = pndPct >= pndUmbralC ? "CUMPLIDO" : pndPct >= pndUmbralP ? "EN PROCESO" : "ALERTA";
-
                 var totalProd = filteredList.Sum(p => p.TotalProductos);
                 var researchers = stats.TotalInvestigadoresActivos > 0 ? stats.TotalInvestigadoresActivos : stats.MisProyectosActivos;
                 var prodRate = researchers > 0 ? (double)totalProd / researchers : 0;
@@ -136,22 +130,6 @@ namespace dosier_api.Controllers
                 var prodUmbralP = 50.0;
                 var prodStatus = prodPct >= prodUmbralC ? "CUMPLIDO" : prodPct >= prodUmbralP ? "EN PROCESO" : "ALERTA";
 
-                var trlMinimo = 5;
-                var trlConfigRaw = await _context.DocConfigsGenerales
-                    .Where(c => c.Clave == "Caces.TrlMinimoInnovacion")
-                    .Select(c => c.Valor)
-                    .FirstOrDefaultAsync();
-                if (int.TryParse(trlConfigRaw, out var trlVal))
-                {
-                    trlMinimo = trlVal;
-                }
-                var withTrlOrPartner = filteredList.Count(p => (p.TrlActual.HasValue && p.TrlActual >= trlMinimo) || !string.IsNullOrEmpty(p.EntidadAliada));
-                var innovPct = filteredList.Count > 0 ? Math.Round((double)withTrlOrPartner / filteredList.Count * 100, 1) : 0;
-                var innovUmbralC = 15.0;
-                var innovUmbralP = 7.5;
-                var innovStatus = innovPct >= innovUmbralC ? "CUMPLIDO" : innovPct >= innovUmbralP ? "EN PROCESO" : "ALERTA";
-                innovPct = Math.Min(innovPct, 100);
-
                 var withStudents = filteredList.Count(p => p.TotalEstudiantes > 0);
                 var studPct = filteredList.Count > 0 ? Math.Round((double)withStudents / filteredList.Count * 100, 1) : 0;
                 var studUmbralC = 30.0;
@@ -161,9 +139,7 @@ namespace dosier_api.Controllers
 
                 var indicadoresCaces = new List<object>
                 {
-                    new { codigo = "E1.PLAN", nombre = "Alineación PND y POA", descripcion = "Proyectos alineados al Plan Nacional de Desarrollo", progreso = (double)pndPct, meta = $"≥{pndUmbralC}%", estado = pndStatus, badge_class = pndStatus == "CUMPLIDO" ? "badge-success" : pndStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = pndStatus == "CUMPLIDO" ? "green" : pndStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{pndAligned} de {filteredList.Count} proyectos alineados" },
-                    new { codigo = "E2.PROD", nombre = "Producción Científica del Claustro", descripcion = $"Tasa de publicaciones: {prodRate:F1}/investigador (meta: {prodReferencia:F1})", progreso = (double)prodPct, meta = $"≥{prodReferencia:F1} pub/invest.", estado = prodStatus, badge_class = prodStatus == "CUMPLIDO" ? "badge-success" : prodStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = prodStatus == "CUMPLIDO" ? "green" : prodStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{totalProd} productos de {researchers} investigadores" },
-                    new { codigo = "E3.INNO", nombre = "Innovación y Transferencia Tecnológica", descripcion = $"Proyectos con TRL≥{trlMinimo} o entidad aliada", progreso = (double)innovPct, meta = $"≥{innovUmbralC}%", estado = innovStatus, badge_class = innovStatus == "CUMPLIDO" ? "badge-success" : innovStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = innovStatus == "CUMPLIDO" ? "green" : innovStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{withTrlOrPartner} de {filteredList.Count} proyectos innovadores" },
+                    new { codigo = "E2.PROD", nombre = "Producción Académica y Científica", descripcion = $"Tasa de publicaciones: {prodRate:F1}/docente (meta: {prodReferencia:F1})", progreso = (double)prodPct, meta = $"≥{prodReferencia:F1} pub/doc.", estado = prodStatus, badge_class = prodStatus == "CUMPLIDO" ? "badge-success" : prodStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = prodStatus == "CUMPLIDO" ? "green" : prodStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{totalProd} productos de {researchers} docentes" },
                     new { codigo = "E4.STUD", nombre = "Vinculación Formativa (Semilleros)", descripcion = "Proyectos con participación estudiantil", progreso = (double)studPct, meta = $"≥{studUmbralC}%", estado = studStatus, badge_class = studStatus == "CUMPLIDO" ? "badge-success" : studStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = studStatus == "CUMPLIDO" ? "green" : studStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{withStudents} de {filteredList.Count} proyectos con estudiantes" }
                 };
 
@@ -187,8 +163,7 @@ namespace dosier_api.Controllers
                         estudiantes = p.TotalEstudiantes,
                         productos = p.TotalProductos,
                         estado = p.Estado ?? "Sin estado",
-                        estado_badge = badge,
-                        entidad_aliada = p.EntidadAliada
+                        estado_badge = badge
                     };
                 }).ToList();
 

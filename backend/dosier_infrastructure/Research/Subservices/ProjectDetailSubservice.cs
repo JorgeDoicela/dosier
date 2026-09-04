@@ -131,8 +131,6 @@ namespace dosier_infrastructure.Research.Subservices
                 .Include(p => p.DocObjetivosProyecto)
                 .Include(p => p.DocCronogramas)
                 .Include(p => p.DocBibliografiasProyecto)
-                .Include(p => p.DocImpactosProyecto)
-                .Include(p => p.MatrizMarcoLogico)
                 .FirstOrDefaultAsync(p => p.Uuid == canonicalUuid);
 
             if (p == null) return null;
@@ -452,13 +450,9 @@ namespace dosier_infrastructure.Research.Subservices
                     dto.Carrera = carreraObj.Carrera1;
                 }
             }
-            dto.IdObjetivoPnd = p.IdObjetivoPnd;
             dto.Titulo = p.Titulo;
             dto.TiempoEjecucion = p.TiempoEjecucion;
             dto.TieneGrupoInvestigacion = p.TieneGrupo;
-            dto.TrlInicial = (int?)p.TrlInicial;
-            dto.TrlActual = (int?)p.TrlActual;
-            dto.TrlMeta = (int?)p.TrlMeta;
             dto.PuntajeEvaluacion = p.PuntajeEvaluacion;
 
 
@@ -507,15 +501,6 @@ namespace dosier_infrastructure.Research.Subservices
                 .Select(o => o.Descripcion)
                 .ToList();
             dto.ProductosEsperados = new List<ProductoEsperadoDto>();
-            dto.Impacto = new ImpactoProyectoDto
-            {
-                Social = p.DocImpactosProyecto.FirstOrDefault(i => i.IdCatImpacto == 1)?.Descripcion,
-                Cientifico = p.DocImpactosProyecto.FirstOrDefault(i => i.IdCatImpacto == 2)?.Descripcion,
-                Economico = p.DocImpactosProyecto.FirstOrDefault(i => i.IdCatImpacto == 3)?.Descripcion,
-                Politico = p.DocImpactosProyecto.FirstOrDefault(i => i.IdCatImpacto == 4)?.Descripcion,
-                Ambiental = p.DocImpactosProyecto.FirstOrDefault(i => i.IdCatImpacto == 5)?.Descripcion,
-                Otro = p.DocImpactosProyecto.FirstOrDefault(i => i.IdCatImpacto == 6)?.Descripcion
-            };
             var specificObjetivoIds = p.DocObjetivosProyecto
                 .Where(o => !o.EsGeneral)
                 .OrderBy(o => o.Orden)
@@ -537,14 +522,6 @@ namespace dosier_infrastructure.Research.Subservices
                 Semanas = ProjectHelper.GetSemanasCalculadas(p.FechaInicio, p.FechaFin, c.FechaInicioPrevista, c.FechaFinPrevista)
             }).ToList();
             dto.Bibliografia = p.DocBibliografiasProyecto.Select(b => b.CitaApa).ToList();
-            dto.MatrizMarcoLogico = p.MatrizMarcoLogico.Select(m => new MmlRowDto
-            {
-                Nivel = m.Nivel,
-                Resumen = m.ResumenNarrativo,
-                Indicadores = m.Indicadores,
-                Medios = m.MediosVerificacion,
-                Supuestos = m.Supuestos
-            }).ToList();
 
             return dto;
         }
