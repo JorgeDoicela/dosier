@@ -1,6 +1,6 @@
 # DOSIER - Sistema Integral de Portafolio Docente y Acreditación Curricular
 
-**DOSIER** es una plataforma de software diseñada para la formulación, co-redacción en tiempo real, validación matemática de horas y acreditación oficial de portafolios docentes en el **Instituto Superior Tecnológico Traversari (ISTPET)**. El sistema integra el macro-currículo institucional con la base de datos `sigafi_es`, garantizando el cumplimiento estricto del marco normativo **CACES 2026**, el Reglamento de Régimen Académico (RRA) del CES y la firma digital PKCS#12 (.p12) / FirmaEC.
+**DOSIER** es una plataforma de software diseñada para la formulación, co-redacción en tiempo real, validación matemática de horas y acreditación oficial de portafolios docentes en el **Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET)**. El sistema integra el macro-currículo institucional con la base de datos `sigafi_es`, garantizando el cumplimiento estricto del marco normativo **CACES 2026**, el Reglamento de Régimen Académico (RRA) del CES y la firma digital PKCS#12 (.p12) / FirmaEC.
 
 ---
 
@@ -37,7 +37,7 @@ La plataforma implementa un modelo desacoplado compuesto por un backend API REST
 
 ## 3. Componentes y Motores Especializados
 
-1. **Motor Documental PDF (`DocumentEngine`):** Renderizado de plantillas HTML (`Handlebars.Net` / `Scriban`), membretes oficiales y generación vectorial con **iText 7 / pdfHTML**.
+1. **Motor Documental PDF (`DocumentEngine`):** Renderizado de plantillas HTML (`Handlebars.Net` / `Scriban`), membretes oficiales y generación vectorial con **iText 9**.
 2. **Resiliencia Forense e Inmutabilidad:** Congelamiento de datos en punto de emisión (`data_snapshot_json`), hash criptográfico **SHA-256** y códigos QR para verificación pública descentralizada.
 3. **Co-Redacción en Tiempo Real (CoWork):** Sincronización multi-docente concurrente basada en **CRDT (Yjs)** sobre **SignalR WebSockets** con persistencia incremental y bloqueo de secciones.
 4. **Firma Electrónica Oficial:** Sellado criptográfico PKCS#12 (`.p12`) / FirmaEC con estampado visual de rúbrica y sellos de tiempo UTC.
@@ -58,14 +58,25 @@ dosier/
 ├── dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Geist Design)
 │   ├── public/                  # Assets, logos vectoriales y webp
 │   └── src/                     # Páginas, Landing, Editor Colaborativo y Componentes
-├── Tesis/                       # Requerimientos y formatos oficiales de portafolio
+├── docs/
+│   ├── documentacion/           # Documentación técnica y arquitectónica completa
+│   └── tesis/                   # Memoria académica, formatos oficiales y hoja de ruta
 └── scripts/
     └── base_datos/              # Scripts SQL de inicialización y sincronización
 ```
 
 ---
 
-## 5. Configuración y Ejecución Local
+## 5. Documentación de Tesis y Formatos Oficiales
+
+Toda la fundamentación académica y especificación de formatos oficiales se encuentra organizada en `docs/tesis/`:
+* [Tema y Planteamiento de Tesis](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/docs/tesis/tema_tesis.md)
+* [Contexto, Arquitectura y Hoja de Ruta](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/docs/tesis/contexto_y_hoja_de_ruta.md)
+* [Formatos Oficiales del ISTPET (PEA, Sílabo, Guías APE y Guía de Estudio)](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/docs/tesis/documentos_oficiales_a_realizar.md/)
+
+---
+
+## 6. Configuración y Ejecución Local
 
 ### Puertos de Desarrollo:
 * **Frontend Web:** `http://localhost:3010/`
@@ -89,4 +100,4 @@ dosier/
 
 ---
 
-DOSIER Architecture | Instituto Superior Tecnológico Traversari (ISTPET) | Quito, Ecuador
+DOSIER Architecture | Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET) | Quito, Ecuador

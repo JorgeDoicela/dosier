@@ -1,34 +1,34 @@
-# Motor de Evaluación por Pares Ciegos
+# Motor de Revisión y Validación Curricular por Pares / Comisiones
 
 ## 1. Visión General del Subsistema
 
-El motor de evaluación por pares ciegos (`PeerReview`) gestiona el proceso confidencial de dictamen técnico sobre las propuestas de investigación presentadas en las convocatorias del ISTT.
+El motor de revisión y validación curricular (`PeerReview`) gestiona el proceso técnico y confidencial de dictamen sobre la calidad de los **Programas de Estudio de la Asignatura (PEA)**, **Sílabos (19 semanas)** y **Guías APE** previo a su aprobación oficial en el ISTPET.
 
-El subsistema aplica el principio de **doble ciego** (*Double-Blind Peer Review*): los evaluadores no conocen la identidad de los autores del proyecto, y los autores no conocen la identidad de los evaluadores asignados.
+El subsistema permite revisiones ciegas o colegiadas por parte de comisiones académicas de área/carrera, garantizando que la planificación cumpla con el modelo pedagógico del ISTPET y las normativas del CES y CACES.
 
 ---
 
-## 2. Flujo de Evaluación por Pares Ciegos
+## 2. Flujo de Revisión Curricular
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Admin as Dirección de Investigación
+    participant Coord as Coordinación de Carrera / Comisión
     participant Portal as PeerReviewPortalService
     participant Anon as Anonymizer Filter
-    participant Evaluator as Evaluador Par (Interno / Externo)
+    participant Evaluator as Docente Revisor / Par Académico
     participant Engine as PeerReviewWorkflowService
 
-    Admin->>Portal: Asignar propuesta a evaluador
-    Portal->>Anon: Solicitar versión anonimizada del documento
-    Anon->>Anon: Remover nombres, correos, adscripciones y metadatos
-    Anon-->>Portal: Retornar Payload / PDF Blind Mode
-    Portal->>Evaluator: Notificar asignación (Magic Link / Enlace Restringido)
-    Evaluator->>Portal: Acceder al portal de evaluación ciega
-    Evaluator->>Portal: Llenar rúbrica cuantitativa y cualitativa
-    Evaluator->>Engine: Enviar dictamen final (Aprobado / Reajuste / Rechazado)
-    Engine->>Engine: Calcular puntaje ponderado y consolidar evaluación
-    Engine-->>Admin: Consolidado listo para comisión académica
+    Coord->>Portal: Asignar PEA / Sílabo a comisión o par revisor
+    Portal->>Anon: Solicitar versión curricular (modo ciego o colegiado)
+    Anon->>Anon: Filtrar metadatos y presentar estructura curricular
+    Anon-->>Portal: Retornar Payload de Planificación
+    Portal->>Evaluator: Notificar asignación para dictamen curricular
+    Evaluator->>Portal: Acceder al portal de revisión de la asignatura
+    Evaluator->>Portal: Evaluar rúbrica curricular y registrar observaciones
+    Evaluator->>Engine: Enviar dictamen (Aprobado / Con Observaciones / No Aprobado)
+    Engine->>Engine: Consolidar dictamen y actualizar estado del documento
+    Engine-->>Coord: Notificar resultado a Coordinación y Docentes Autores
 ```
 
 ---
@@ -36,31 +36,30 @@ sequenceDiagram
 ## 3. Componentes del Sub-sistema
 
 ### 3.1. `PeerReviewAdminService`
-Servicio de administración que permite a la Dirección de Investigación:
-* Gestionar el catálogo de evaluadores pares (internos y externos).
-* Registrar las áreas de especialidad del evaluador conforme al árbol UNESCO.
-* Monitorear el estado de las revisiones asignadas y los plazos de entrega.
+Servicio de administración que permite a la Coordinación de Carrera y Vicerrectorado:
+* Gestionar el cuerpo docente evaluador y comisiones de revisión por área de conocimiento.
+* Monitorear los plazos de entrega y revisión de sílabos antes del inicio del período académico.
 
 ### 3.2. `PeerReviewPortalService`
-Servicio encargado de renderizar la vista de evaluación para los pares ciegos:
-* Filtra la información del proyecto eliminando cualquier identificador personal o institucional.
-* Proporciona la interfaz para la calificación de la propuesta en base a rubros predefinidos.
+Servicio encargado de renderizar la vista de revisión curricular:
+* Presenta la matriz de alineación: Objetivos de Carrera $\to$ Resultados de Aprendizaje $\to$ Contenidos $\to$ Prácticas APE $\to$ Mecanismos de Evaluación.
+* Proporciona la interfaz para emitir observaciones puntuales por sección y registrar la calificación de la rúbrica.
 
 ### 3.3. `PeerReviewWorkflowService`
-Controlador del estado del dictamen:
-* Consolida las calificaciones de múltiples evaluadores sobre una misma propuesta.
-* Aplica la fórmula de ponderación cuantitativa para determinar si el proyecto supera la nota mínima de aprobación.
-* Gestiona los estados de revisión (`ASIGNADO`, `EN_PROCESO`, `DICTAMINADO`, `RECHAZADO`).
+Controlador del ciclo de vida del dictamen:
+* Consolida las revisiones de los miembros de la comisión curricular.
+* Actualiza el estado del documento (`EN_REVISION`, `OBSERVADO`, `APROBADO_COMISION`, `VALIDADO_CARRERA`).
+* Dispara notificaciones a los docentes autores cuando se requieren ajustes en el contenido o la distribución de horas.
 
 ---
 
-## 4. Estructura de Rúbrica de Evaluación
+## 4. Estructura de Rúbrica de Validación Curricular
 
-Las evaluaciones se procesan mediante rúbricas cuantitativas compuestas por criterios ponderados:
+Las revisiones curriculares se evalúan mediante criterios pedagógicos y normativos:
 
-| Criterio de Evaluación | Ponderación (%) | Descripción |
+| Criterio Curricular | Ponderación (%) | Descripción |
 | :--- | :--- | :--- |
-| **Rigor Metodológico y Coherencia** | 30% | Claridad del problema, objetivos, justificación y diseño metodológico. |
-| **Impacto y Pertinencia Institucional** | 25% | Vinculación con las líneas de investigación institucionales y beneficio para el instituto. |
-| **Viabilidad Técnica y Presupuestaria** | 25% | Relación costo-beneficio, cronograma de actividades y entregables. |
-| **Nivel de Innovación y Transferencia** | 20% | Grado de novedad técnica, aplicación práctica y potencial de transferencia. |
+| **Alineación de Resultados de Aprendizaje** | 30% | Coherencia entre los objetivos del PEA, resultados de la asignatura y perfil de egreso. |
+| **Consistencia Horaria y Planificación (19 Sem.)** | 30% | Distribución exacta de horas (CD, APE, Autónomo) y dosificación de contenidos semanales. |
+| **Calidad de Guías Prácticas (APE)** | 20% | Pertinencia de las prácticas planificadas, recursos requeridos y rúbricas de evaluación. |
+| **Actualización Bibliográfica** | 20% | Vigencia de la bibliografía básica y complementaria, libros físicos y recursos virtuales. |

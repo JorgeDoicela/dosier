@@ -136,16 +136,55 @@ namespace dosier_infrastructure.Research
 
                 var cedulaTrim = inv.Cedula.Trim();
                 var persona = await _authService.GetOrProvisionUserByCedulaAsync(cedulaTrim);
-                if (persona == null || persona.TablaSigafi == "alumno") continue;
+                if (persona == null) continue;
                 if (inv.Activo == false) continue;
 
+                var sigafiIdNormalizado = (persona.IdSigafi ?? "").Trim();
+                bool isStudent = persona.TablaSigafi == "alumno" ||
+                                 inv.Rol?.Contains("Semillerista", StringComparison.OrdinalIgnoreCase) == true ||
+                                 inv.Rol?.Contains("Estudiante", StringComparison.OrdinalIgnoreCase) == true ||
+                                 inv.Rol?.Contains("Colaborador", StringComparison.OrdinalIgnoreCase) == true;
+
+                if (isStudent)
+                {
+                    // Regla Institucional: En equipos ad-hoc (no grupos), los estudiantes deben estar matriculados en el período actual
+                    if (!isAssociativeRequested)
+                    {
+                        var isEnrolled = await _context.Matriculas.AsNoTracking()
+                            .AnyAsync(m => m.IdAlumno == sigafiIdNormalizado &&
+                                           m.IdPeriodo == currentPeriod.IdPeriodo &&
+                                           m.Valida == 1 &&
+                                           (m.Retirado == null || m.Retirado == false));
+
+                        if (!isEnrolled)
+                        {
+                            return new SyncResult
+                            {
+                                Success = false,
+                                Message = $"El estudiante {persona.Nombre} (C.I. {persona.IdSigafi}) no registra matrícula activa en el período académico vigente ({currentPeriod.Detalle ?? currentPeriod.IdPeriodo}). Solo pueden participar estudiantes matriculados."
+                            };
+                        }
+                    }
+                    continue;
+                }
+
+                // Docente:
                 decimal proposedHours = inv.HorasSemanales ?? 0;
 
-                var sigafiIdNormalizado = (persona.IdSigafi ?? "").Trim();
                 var availableHours = await _context.ProfesoresActividades
                     .Where(pa => pa.IdProfesor == sigafiIdNormalizado && pa.IdSubcategoria == researchSubcatId && pa.IdPeriodo == currentPeriod.IdPeriodo)
                     .Select(pa => pa.HorasSemana)
                     .FirstOrDefaultAsync() ?? 0;
+
+                // Regla Institucional: En equipos ad-hoc, los docentes deben tener horas de investigación/documentación asignadas en el período actual
+                if (!isAssociativeRequested && availableHours <= 0)
+                {
+                    return new SyncResult
+                    {
+                        Success = false,
+                        Message = $"El docente {persona.Nombre} (C.I. {persona.IdSigafi}) no tiene horas asignadas en su distributivo académico para el período activo ({currentPeriod.Detalle ?? currentPeriod.IdPeriodo})."
+                    };
+                }
 
                 var otherProjectsHours = await _context.DocProyectoParticipantes
                     .Where(pp => pp.TipoParticipante == "Docente" &&
@@ -162,7 +201,7 @@ namespace dosier_infrastructure.Research
                     return new SyncResult
                     {
                         Success = false,
-                        Message = $"El docente {persona.Nombre} (C.I. {persona.IdSigafi}) excede el límite de carga horaria de investigación para el período académico activo. Horas disponibles en distributivo: {availableHours}h. Horas asignadas en otros proyectos: {otherProjectsHours}h. Horas propuestas en este proyecto: {proposedHours}h. Total: {totalProposedHours}h."
+                        Message = $"El docente {persona.Nombre} (C.I. {persona.IdSigafi}) excede el límite de carga horaria para el período académico activo. Horas disponibles en distributivo: {availableHours}h. Horas asignadas en otros proyectos: {otherProjectsHours}h. Horas propuestas en este proyecto: {proposedHours}h. Total: {totalProposedHours}h."
                     };
                 }
             }

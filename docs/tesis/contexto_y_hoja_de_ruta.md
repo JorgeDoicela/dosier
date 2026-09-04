@@ -1,15 +1,14 @@
-# DOSIER - Sistema Web de Gestión de Documentación Institucional Docente (ISTPET)
+# DOSIER - Contexto, Arquitectura y Hoja de Ruta de la Tesis de Grado
 
-> **Documento de Contexto, Arquitectura y Hoja de Ruta para la Tesis de Grado**  
 > **Institución:** Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET) — Quito, Ecuador  
 > **Sistema:** Plataforma Clean Architecture DOSIER  
-> **Repositorio Independiente:** `c:\Users\DESARROLLADOR\Desktop\Proyectos\dosier`
+> **Tema:** Sistema web para la gestión de documentación institucional docente del ISTPET  
 
 ---
 
 ## 1. Visión General del Proyecto
 
-**DOSIER** es un sistema web concebido para la gestión, co-redacción colaborativa y formalización de la documentación académica docente por períodos en el ISTPET. Automatiza la redacción del **Programa de Estudio de la Asignatura (PEA)**, **Planes Analíticos (Sílabos)**, **Guías Práctico-Experimentales (APE)** y **Guías de Estudio**, garantizando el cumplimiento matemático de las mallas curriculares vigentes y generando reportes oficiales listos para auditorías de acreditación del **CACES**.
+**DOSIER** es un sistema web concebido para la gestión, co-redacción colaborativa y formalización de la documentación académica docente por períodos en el ISTPET. Automatiza la redacción del **Programa de Estudio de la Asignatura (PEA)**, **Planes Analíticos (Sílabos de 19 semanas)**, **Guías Práctico-Experimentales (APE)** y **Guías de Estudio**, garantizando el cumplimiento matemático de las mallas curriculares vigentes y generando reportes oficiales listos para auditorías de acreditación del **CACES**.
 
 ### 1.1. Objetivos de la Tesis
 
@@ -33,7 +32,7 @@
 
 ## 3. Arquitectura del Sistema
 
-DOSIER cuenta con una arquitectura de alta disponibilidad y motores especializados probados en producción:
+DOSIER cuenta con una arquitectura de alta disponibilidad y motores especializados:
 
 ```mermaid
 graph TD
@@ -44,22 +43,20 @@ graph TD
     UI <-->|SignalR WebSockets / Yjs| CW[Motor CoWork en Tiempo Real]
     UI <-->|REST API JSON snake_case| API
     API --> CW
-    API --> DE[Motor Documental PDF: Handlebars + iText 7]
+    API --> DE[Motor Documental PDF: Handlebars + iText 9]
     DE --> QR[QR Vectorial + Hash SHA-256 + Sello Forense]
     API --> DB
 ```
 
 ### 3.1. Motores Activos
 1. **Motor CoWork (`SignalRDriver` + `Yjs` + `<CoWorkField>`):** Permite a múltiples docentes editar el mismo PEA o Sílabo al mismo tiempo sin sobrescribirse.
-2. **Motor Documental PDF (`DocumentEngine`):** Renderiza plantillas HTML oficiales con Handlebars.Net y genera PDFs vectoriales con iText 7.
+2. **Motor Documental PDF (`DocumentEngine`):** Renderiza plantillas HTML oficiales con Handlebars.Net / Scriban y genera PDFs vectoriales con iText 9.
 3. **Inmutabilidad Forense:** Cada documento aprobado genera un snapshot JSON (`data_snapshot_json`), un hash inmutable SHA-256 y un código QR de verificación pública sin login.
 4. **Conexión Institucional (`sigafi_es`):** Conectado directamente a las tablas institucionales (`malla`, `detalle_malla`, `prerequisito`, `parcial`, `profesor`, `asignatura`).
 
 ---
 
 ## 4. Jerarquía de Roles y Flujo de Aprobación
-
-DOSIER implementa la jerarquía académica institucional:
 
 ```mermaid
 stateDiagram-v2

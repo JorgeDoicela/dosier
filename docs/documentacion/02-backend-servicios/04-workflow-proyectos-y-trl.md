@@ -1,65 +1,67 @@
-# Ciclo de Vida de Proyectos, Workflow y Seguimiento Institucional
+# Ciclo de Vida Curricular, Workflow y Portafolio Docente
 
-## 1. Visión General del Módulo de Investigación
+## 1. Visión General del Módulo Curricular
 
-El módulo de gestión de investigación constituye el núcleo operativo de DOSIER. Administra la totalidad del ciclo de vida de los proyectos de I+D+i, desde la publicación de la convocatoria pública hasta el control presupuestario y la entrega de informes de avance.
+El módulo de gestión curricular constituye el núcleo operativo de **DOSIER**. Administra la totalidad del ciclo de vida de la planificación docente institucional en el ISTPET:
+1. **Programa de Estudio de la Asignatura (PEA)**
+2. **Plan Analítico o Sílabo (19 Semanas)**
+3. **Guías de Prácticas de Aprendizaje Práctico-Experimental (Guías APE)**
+4. **Guía de Estudio Institucional**
 
 ---
 
-## 2. Máquina de Estados y Workflow del Proyecto
+## 2. Máquina de Estados y Workflow Curricular
 
-El avance de un proyecto a través de sus fases está regulado por el `WorkflowEngineService` y orquestado por el `ProjectOrchestrator`.
+El avance de un documento o expediente docente a través de sus fases está regulado por el `WorkflowEngineService` y orquestado por el `ProjectOrchestrator` / `IDocumentInstanceService`.
 
 ```mermaid
 graph TD
-    Borrador["1. Borrador / Formulación\n(ProjectWizardService)"] -->|Envío a Revisión| ValTecnica["2. Validación Técnica\n(Dirección de Investigación)"]
-    ValTecnica -->|Observaciones| Borrador
-    ValTecnica -->|Aprobado para Evaluación| Evaluation["3. Evaluación por Pares\n(PeerReviewWorkflowService)"]
-    Evaluation -->|Rechazado / Reajuste| Borrador
-    Evaluation -->|Dictamen Favorable| Aprobacion["4. Aprobación y Resolución\n(State Locking Activado)"]
-    Aprobacion -->|Asignación de Fondos| Ejecucion["5. En Ejecución\n(ProjectExpenses / InformesAvance)"]
-    Ejecucion -->|Entregables Completados| Cierre["6. Cierre Técnico y Financiero\n(Certificado e Integración CACES)"]
+    Borrador["1. Borrador / Co-Redacción\n(CoWork Hub + Sockets Yjs)"] -->|Envío a Revisión| ValTecnica["2. Revisión Curricular y Horaria\n(Coordinador de Carrera / Comisión)"]
+    ValTecnica -->|Observaciones / Reajuste| Borrador
+    ValTecnica -->|Aprobación Curricular| FirmaDocente["3. Firma Digital de Autores\n(Docentes Titulares)"]
+    FirmaDocente -->|Firma Digital de Autoridad| Aprobacion["4. Aprobado y Sellado Oficial\n(State Locking + QR + Hash SHA-256)"]
+    Aprobacion -->|Integración por Período| Portafolio["5. Portafolio Docente Digital\n(Evidencias Acreditación CACES)"]
+    Portafolio -->|Nuevo Período Académico| Duplicacion["6. Herencia y Duplicación Controlada\n(80% Ahorro de Esfuerzo Manual)"]
 ```
 
-### 2.1. Formulación Asistida (`ProjectWizardService`)
-Guiado paso a paso para la redacción de la propuesta de investigación. Almacena borradores parciales y ejecuta validaciones en tiempo real sobre:
-* Alineación con líneas y sublíneas de investigación institucionales.
-* Mapeo obligatorio con las áreas del conocimiento UNESCO.
+### 2.1. Validación Matemática de Horas y Créditos
+Durante la formulación y revisión del Sílabo y PEA, el sistema valida en tiempo real:
+* La correspondencia exacta de horas de **Docencia**, **Práctico-Experimental (APE)** y **Trabajo Autónomo** con la Malla Curricular vigente en SIGAFI.
+* La distribución de las **19 semanas académicas** del ciclo formativo institucional.
+* El cálculo automático y coherente de créditos académicos bajo el Reglamento de Régimen Académico (RRA).
 
 ### 2.2. Bloqueo de Estado (*State Locking*)
-Una vez que la propuesta es enviada a validación o evaluación por pares, el `WorkflowEngineService` activa el bloqueo de edición. Cualquier intento de mutación sobre la propuesta principal es rechazado automáticamente hasta que se emita un dictamen formal.
+Una vez que el documento es enviado a revisión curricular o completado con las firmas de los docentes, el `WorkflowEngineService` activa el bloqueo de edición (*State Locking*). Cualquier intento de modificación es rechazado automáticamente para garantizar la inmutabilidad de la evidencia ante auditorías del CACES.
 
 ---
 
-## 3. Gestión de Equipos de Investigación y Solicitud de Cambios
+## 3. Gestión de Co-Redacción y Equipos Docentes
 
-La conformación del equipo de proyecto y sus modificaciones están gestionadas por tres servicios especializados:
+La conformación del equipo docente responsable de una asignatura o módulo está gestionada por servicios especializados:
 
 ```mermaid
 graph LR
-    TeamService[ProjectTeamService] -->|Asignación Inicial| TeamMembers[Miembros del Equipo]
-    ChangeService[ProjectTeamChangeService] -->|Solicitud de Cambio| ApprovalFlow[Flujo de Aprobación Institucional]
-    ApprovalFlow -->|Aprobado| SyncService[ProjectTeamSyncService]
-    SyncService -->|Actualización Atómica| TeamMembers
+    TeamService[ProjectTeamService] -->|Asignación por Materia| TeamMembers[Docentes Titulares / Co-Autores]
+    GroupService[GroupsQueryService] -->|Adscripción a Comité| Comites[Comités y Grupos Documentales]
+    SyncService[ProjectTeamSyncService] -->|Sincronización Atómica| TeamMembers
 ```
 
-### 3.1. Roles dentro del Equipo
-* **Director / Investigador Principal (IP):** Responsable técnico y administrativo del proyecto.
-* **Co-Investigador:** Docente colaborador en la ejecución de actividades.
-* **Estudiante Técnico / Ayudante de Investigación:** Estudiante adscrito para soporte técnico.
-
-### 3.2. Flujo de Cambio de Integrantes (`ProjectTeamChangeService`)
-La incorporación, salida o sustitución de un miembro durante la ejecución requiere la creación de una solicitud formal de cambio. El servicio valida la justificación académica, procesa las firmas de conformidad y actualiza atómicamente la adscripción mediante `ProjectTeamSyncService`.
+### 3.1. Roles dentro del Equipo Curricular
+* **Docente Titular / Responsable:** Docente a cargo de la asignatura o área de conocimiento.
+* **Co-Autor / Docente Paralelo:** Docente que imparte la misma materia en otra sección/jornada y colabora concurrentemente en el Sílabo.
+* **Coordinador de Carrera / Revisor:** Encargado de verificar la congruencia curricular y metodológica.
+* **Estudiante Colaborador:** Participante de apoyo formativo en el diseño de guías prácticas.
 
 ---
 
-## 4. Control Presupuestario e Informes de Avance
+## 4. Portafolio Docente y Acreditación Institucional
 
-### 4.1. Control de Gastos (`ProjectExpensesService`)
-Administra la ejecución financiera del proyecto dividida por partidas presupuestarias (equipamiento, insumos, publicaciones, viáticos). El servicio impide la sobreejecución de rubros y valida los respaldos digitales de cada comprobante.
+### 4.1. Conformación del Portafolio Digital
+Al culminar el período académico, DOSIER compila automáticamente el expediente docente digital compuesto por:
+* PEA aprobado y firmado digitalmente.
+* Sílabo de 19 semanas con rúbricas y cronograma validado.
+* Guías APE vinculadas a las horas prácticas declaradas.
+* Guías de Estudio oficiales en formato institucional ISTPET.
 
-### 4.2. Informes de Avance (`InformesAvanceController` / `InformeAvanceService`)
-Durante la fase de ejecución, los directores de proyecto deben presentar informes periódicos de avance técnico y financiero. El servicio coordina:
-* Carga de entregables y evidencias fotográficas/documentales.
-* Evaluación del cumplimiento del cronograma de actividades.
-* Emisión del certificado de avance para la liberación de desembolsos.
+### 4.2. Herencia y Transición entre Períodos Académicos
+Para evitar la digitación redundante al inicio de cada nuevo ciclo, los docentes pueden duplicar un documento previamente validado del período anterior, heredando los contenidos transversales y permitiendo únicamente los ajustes contextuales pertinentes.

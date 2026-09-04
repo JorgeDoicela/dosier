@@ -2,9 +2,15 @@
 
 ## 1. Resumen Ejecutivo y Alcance del Sistema
 
-DOSIER (Sistema de Portafolio Docente ISTPET) es la plataforma tecnológica institucional encargada de gestionar el ciclo de vida de los proyectos de investigación, desarrollo tecnológico e innovación en el Instituto Superior Tecnológico Traversari (ISTT).
+**DOSIER** (*Sistema Web para la Gestión de Documentación Institucional Docente del ISTPET*) es la plataforma tecnológica institucional encargada de gestionar el ciclo de vida, co-redacción y validación de la planificación curricular docente en el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET) de Quito.
 
-El sistema está diseñado bajo criterios de auditoría, trazabilidad e inmutabilidad documental, respondiendo a los requerimientos de acreditación del Consejo de Aseguramiento de la Calidad de la Educación Superior (CACES) para el marco regulatorio 2026, así como al Reglamento de Régimen Académico (RRA), la Ley Orgánica de Educación Superior (LOES) y la Ley Orgánica de Protección de Datos Personales (LOPDP) de la República del Ecuador.
+El sistema resuelve la problemática de la manualidad y desarticulación en la elaboración de los cuatro documentos docentes oficiales de la institución:
+1. **Programa de Estudio de la Asignatura (PEA)** — Nivel Macro-Curricular.
+2. **Plan Analítico o Sílabo (19 Semanas)** — Nivel Meso-Curricular.
+3. **Guía de Prácticas de Aprendizaje Práctico-Experimental (Guías APE)** — Nivel Micro-Curricular.
+4. **Guía de Estudio Institucional** — Material pedagógico de acompañamiento al estudiante.
+
+El sistema está diseñado bajo estrictos criterios de integridad matemática (correspondencia de horas en los componentes de docencia, práctico-experimental y autónomo vs. malla curricular vigente), inmutabilidad forense (SHA-256), trazabilidad, firma digital y acreditación institucional ante el CACES, bajo el marco de la LOES, el Reglamento de Régimen Académico (RRA) y la LOPDP.
 
 ---
 
@@ -15,13 +21,13 @@ La solución adopta un modelo desacoplado basado en una aplicación de página �
 ```mermaid
 graph TD
     subgraph CapaPresentacion [Capa de Presentacion / Exposicion]
-        WebClient["React 18 SPA (dosier_web)\nVite + TypeScript + Axios"]
-        MobileClient["App Movil Docente (dosier_mobile)\nReact Native / Flutter"]
+        WebClient["React 18 SPA (dosier_web)\nVite + TypeScript + Geist Design"]
+        MobileClient["App Movil Docente (dosier_mobile)\nReact Native / Expo"]
     end
 
     subgraph CapaBackend [Backend API Gateway .NET 8.0]
         APIGateway["ASP.NET Core Web API (dosier_api)\nJWT Auth / SnakeCase Serializer / Swagger"]
-        AppCore["Capa de Aplicacion (dosier_application)\nCasos de Uso / Validaciones / DTOs"]
+        AppCore["Capa de Aplicacion (dosier_application)\nCasos de Uso / Validaciones Curriculares / DTOs"]
         DomainCore["Capa de Dominio (dosier_domain)\nEntidades / Value Objects / Reglas de Negocio"]
         InfraCore["Capa de Infraestructura (dosier_infrastructure)\nEF Core 9 / Pomelo MySQL / Repositorios"]
     end
@@ -29,10 +35,10 @@ graph TD
     subgraph CapaPersistencia [Capa de Persistencia e Integracion]
         MySQLDB[(MariaDB / MySQL 8.0\nBase 'sigafi_es' :3306)]
         MailSMTP["Servidor SMTP / Push Notification Drivers"]
-        ExternalSIGAFI[("Sistema Academico SIGAFI")]
+        ExternalSIGAFI[("Malla y Registro Academico SIGAFI")]
     end
 
-    WebClient -->|HTTP REST / WebSockets| APIGateway
+    WebClient -->|HTTP REST / WebSockets Yjs| APIGateway
     MobileClient -->|HTTP REST| APIGateway
 
     APIGateway --> AppCore
@@ -55,25 +61,25 @@ El diagrama de contexto ilustra los actores principales que interactúan con DOS
 
 ```mermaid
 graph TD
-    Docente["Docente Investigador / Director de Proyecto"]
-    Evaluador["Evaluador Par Ciego (Interno / Externo)"]
-    Admin["Direccion de Investigacion (Admin / Auditor)"]
-    AuditorCACES["Auditor CACES / Publico (Verificación QR)"]
+    Docente["Docente Titular / Co-Redactor de Asignatura"]
+    Comision["Coordinador de Carrera / Comisión Curricular"]
+    Admin["Vicerrectorado Académico / Admin Curricular"]
+    AuditorCACES["Auditor CACES / Verificación Pública (QR)"]
 
-    subgraph DOSIERSystem ["Plataforma DOSIER"]
-        CoreSystem["DOSIER Core Platform\n(API REST + Engines + Frontend Web/Mobile)"]
+    subgraph DOSIERSystem ["Plataforma DOSIER ISTPET"]
+        CoreSystem["DOSIER Core Platform\n(API REST + CoWork Hub + Engines + Frontend Web/Mobile)"]
     end
 
-    SIGAFI[("Sistema Academico SIGAFI")]
+    SIGAFI[("Malla y Asignaturas SIGAFI")]
     SMTPService["Servidor de Correo SMTP / Push Notifications"]
 
-    Docente -->|Formulacion de proyectos, avances e informes| CoreSystem
-    Evaluador -->|Evaluacion cuantitativa y cualitativa ciega| CoreSystem
-    Admin -->|Gestion de convocatorias, presupuestos y resoluciones| CoreSystem
-    AuditorCACES -->|Verificación publica de autenticidad via QR| CoreSystem
+    Docente -->|Co-redacción de PEAs, Sílabos 19 semanas y Guías APE| CoreSystem
+    Comision -->|Revisión técnica, cotejo de horas y aprobación de planes| CoreSystem
+    Admin -->|Gestión de períodos académicos, mallas y comisiones| CoreSystem
+    AuditorCACES -->|Verificación pública de autenticidad curricular via QR| CoreSystem
 
-    CoreSystem -->|Consulta de docentes y carreras| SIGAFI
-    CoreSystem -->|Envio de alertas, notificaciones y Magic Links| SMTPService
+    CoreSystem -->|Validación de horas, créditos y asignaturas de malla| SIGAFI
+    CoreSystem -->|Envío de alertas de vencimiento, notificaciones y Magic Links| SMTPService
 ```
 
 ### Nivel 2: Diagrama de Contenedores

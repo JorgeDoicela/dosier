@@ -4,7 +4,7 @@
 
 La capa de persistencia de DOSIER utiliza el motor de base de datos **MariaDB 10.5+ / MySQL 8.0+** sobre el esquema de base de datos **`sigafi_es`** (expuesto en el puerto por defecto `3306`).
 
-El mapeo objeto-relacional (ORM) es administrado por **Entity Framework Core 9.0** a través del conector `Pomelo.EntityFrameworkCore.MySql`. La base de datos almacena las entidades del dominio de investigación, la estructura de usuarios y permisos, el motor documental, la bitácora de auditoría inmutable y las tablas de sincronización colaborativa.
+El mapeo objeto-relacional (ORM) es administrado por **Entity Framework Core 9.0** a través del conector `Pomelo.EntityFrameworkCore.MySql`. La base de datos almacena las entidades del dominio curricular docente (PEA, Sílabos de 19 semanas, Guías APE, Guías de Estudio), la estructura de usuarios y permisos, el motor documental, la bitácora de auditoría inmutable y las tablas de sincronización colaborativa CoWork.
 
 ---
 
@@ -12,7 +12,7 @@ El mapeo objeto-relacional (ORM) es administrado por **Entity Framework Core 9.0
 
 ```mermaid
 erDiagram
-    USERS ||--o{ PROJECT_TEAM : pertenece
+    USERS ||--o{ PROJECT_TEAM : docente_asignado
     USERS ||--o{ AUDIT_LOGS : genera
     USERS ||--o{ DOCUMENT_SIGNATURES : firma
 
@@ -20,7 +20,7 @@ erDiagram
     PROJECTS ||--o{ DOCUMENT_INSTANCES : vincula
     PROJECTS ||--o{ INFORMES_AVANCE : genera
 
-    DOCUMENT_TEMPLATES ||--o{ DOCUMENT_INSTANCES : instacia
+    DOCUMENT_TEMPLATES ||--o{ DOCUMENT_INSTANCES : instancia
     DOCUMENT_INSTANCES ||--o{ COWORK_DOCUMENTOS : sincroniza
     DOCUMENT_INSTANCES ||--o{ DOCUMENT_SIGNATURES : contiene
 
@@ -35,17 +35,17 @@ erDiagram
 
     PROJECTS {
         string uuid PK
-        string code
-        string title
-        string state
-        decimal total_budget
+        string code "Código Asignatura / Plan"
+        string title "Nombre Asignatura / Cátedra"
+        string state "Estado Curricular"
+        decimal total_budget "Horas Totales / Créditos"
         datetime created_at_utc
     }
 
     DOCUMENT_INSTANCES {
         string uuid PK
-        string template_code FK
-        string entity_type
+        string template_code FK "PEA, SILABO_19SEM, GUIA_APE, GUIA_ESTUDIO"
+        string entity_type "ASIGNATURA / PERIODO"
         string entity_uuid
         longtext data_snapshot_json
         string sha256_hash
@@ -55,7 +55,7 @@ erDiagram
     COWORK_DOCUMENTOS {
         bigint id PK
         string entidad_uuid FK
-        string campo_nombre
+        string campo_nombre "Sección Sílabo / PEA"
         longtext content_html
         datetime updated_at_utc
     }
@@ -65,25 +65,25 @@ erDiagram
 
 ## 3. Tablas Clave del Sistema
 
-### 3.1. Dominio de Investigación y Proyectos
+### 3.1. Dominio Curricular y Gestión Docente
 
-* **`doc_proyectos` (`Projects`):** Almacena la entidad principal de las propuestas de investigación (código, título, resumen, línea de investigación, presupuesto total y estado del workflow).
-* **`doc_proyecto_miembros` (`ProjectTeam`):** Relación N:M entre usuarios y proyectos, especificando el rol dentro del equipo (Director, Co-Investigador, Ayudante), porcentaje de dedicación horaria y estado de adscripción.
-* **`doc_proyecto_cambios_equipo` (`ProjectTeamChange`):** Registro de solicitudes formales de adscripción o salida de miembros durante la ejecución del proyecto.
-* **`doc_informes_avance` (`InformesAvance`):** Registro de informes periódicos de cumplimiento técnico/financiero y entregables.
+* **`doc_proyectos` (`Projects`):** Almacena la entidad principal de planificación curricular de la asignatura (código de materia, nombre de asignatura, nivel, período académico, horas totales y estado del workflow curricular).
+* **`doc_proyecto_miembros` (`ProjectTeam`):** Relación N:M entre docentes y asignaturas/cátedras, especificando el rol (Docente Autor Principal, Co-Docente Cátedra, Revisor de Comisión Curricular), porcentaje de dedicación y estado de asignación.
+* **`doc_proyecto_cambios_equipo` (`ProjectTeamChange`):** Registro de solicitudes formales de reasignación de docentes de cátedra durante el período académico.
+* **`doc_informes_avance` (`InformesAvance`):** Registro de informes de cumplimiento de avance curricular (corte de parcial 1, parcial 2 y portafolio docente de fin de período).
 
 ### 3.2. Dominio Documental y Forense
 
-* **`document_templates` (`DocumentTemplate`):** Registro de plantillas de documentos (código de plantilla, versión, marcado HTML base, esquema de metadatos JSON y estado de activación).
-* **`document_instances` (`DocumentInstance`):** Registro de cada documento instanciado (UUID, tipo de entidad vinculada, snapshot `data_snapshot_json`, hash SHA-256, código de trazabilidad QR y estado).
-* **`doc_cowork_documentos` (`DocCoworkDocumento`):** Tabla de edición colaborativa que guarda el marcado HTML resultante de las secciones editadas en tiempo real mediante Yjs.
-* **`document_signatures` (`DocumentSignature`):** Bitácora de firmas electrónicas aplicadas a una instancia documental (firmante, rol, hash SHA-256 y timestamp UTC).
+* **`document_templates` (`DocumentTemplate`):** Registro de plantillas curriculares oficiales del ISTPET (PEA, Sílabo de 19 semanas, Guía APE, Guía de Estudio Institucional), con su marcado HTML base y esquema de metadatos JSON.
+* **`document_instances` (`DocumentInstance`):** Registro inmutable de cada documento curricular emitido (UUID, asignatura vinculada, snapshot JSON `data_snapshot_json`, hash criptográfico SHA-256, código QR de verificación CACES y estado).
+* **`doc_cowork_documentos` (`DocCoworkDocumento`):** Tabla de edición colaborativa que guarda el marcado HTML resultante de las secciones curriculares co-redactadas en tiempo real mediante Yjs.
+* **`document_signatures` (`DocumentSignature`):** Bitácora de firmas electrónicas aplicadas al documento oficial (docentes autores, comisión académica, coordinador de carrera, vicerrectorado).
 
 ### 3.3. Dominio de Seguridad y Gobernanza
 
 * **`users` (`User`):** Catálogo de usuarios institucionales (UUID, cédula, nombres, apellidos, correo institucional, password_hash BCrypt).
-* **`roles` / `permissions` / `role_permissions`:** Estructura RBAC para asignación de roles y permisos de grano fino.
-* **`audit_logs` (`AuditLog`):** Tabla inmutable que registra cada operación `INSERT`, `UPDATE` o `DELETE` con snapshots en JSON del estado anterior y posterior de los datos.
+* **`roles` / `permissions` / `role_permissions`:** Estructura RBAC para asignación de roles curriculares (`SuperAdmin`, `Vicerrectorado`, `CoordinadorCarrera`, `ComisionCurricular`, `Docente`).
+* **`audit_logs` (`AuditLog`):** Tabla inmutable que registra cada operación `INSERT`, `UPDATE` o `DELETE` con snapshots en JSON del estado anterior y posterior de la planificación curricular.
 * **`lopdp_consents` / `lopdp_arco_requests`:** Registro de consentimientos informados y atención a solicitudes de derechos ARCO.
 
 ---
@@ -99,4 +99,4 @@ erDiagram
 3. **Estrategia de Índices:**
    * Índices B-Tree únicos sobre `uuid`, `code` y `email`.
    * Índices compuestos en `document_instances(entity_uuid, entity_type)` para optimizar las consultas del orquestador documental.
-   * Índices en `audit_logs(entity_uuid, timestamp_utc)` para la generación de trazas de auditoría.
+   * Índices en `audit_logs(entity_uuid, timestamp_utc)` para la generación de trazas de auditoría de portafolio docente.

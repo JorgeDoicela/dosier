@@ -23,7 +23,7 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
         scriptMode: 'scriban',
         scriptVariable: '',
         options: [],
-        catalogUrl: '/api/catalogs/carreras',
+        catalogUrl: '/api/catalogs/programas',
         catalogLabelKey: 'nombre',
         catalogValueKey: 'nombre',
         placeholder: '',
@@ -36,9 +36,10 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
     const [showAdvancedPdfOptions, setShowAdvancedPdfOptions] = useState(false);
 
     const SYSTEM_CATALOGS = [
-        { label: 'Carreras Institucionales', url: '/api/catalogs/carreras' },
-        { label: 'Asignaturas de Malla', url: '/api/catalogs/asignaturas' },
-        { label: 'Períodos Académicos', url: '/api/catalogs/periodos' },
+        { label: 'Programas de Investigación', url: '/api/catalogs/programas' },
+        { label: 'Carreras / Unidades Académicas', url: '/api/catalogs/carreras' },
+        { label: 'Grupos de Investigación Aprobados', url: '/api/catalogs/grupos-investigacion' },
+        { label: 'Convocatorias Vigentes', url: '/api/catalogs/convocatorias' },
         { label: 'Otro (Ingresar Endpoint de API personalizado...)', url: 'custom' },
     ];
 
@@ -72,7 +73,7 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
             scriptMode: 'scriban',
             scriptVariable: '',
             options: [],
-            catalogUrl: '/api/catalogs/carreras',
+            catalogUrl: '/api/catalogs/programas',
             catalogLabelKey: 'nombre',
             catalogValueKey: 'nombre',
             placeholder: '',
@@ -147,7 +148,7 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
             scriptMode: 'scriban',
             scriptVariable: '',
             options: [],
-            catalogUrl: '/api/catalogs/carreras',
+            catalogUrl: '/api/catalogs/programas',
             catalogLabelKey: 'nombre',
             catalogValueKey: 'nombre',
             placeholder: '',
@@ -196,15 +197,15 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
 
     const CORE_ITEMS = [
         { key: 'showTitulo', labelKey: 'customLabel_showTitulo', scribanKey: 'customScriban_showTitulo', variantKey: 'variant_showTitulo', reqKey: 'req_showTitulo', defaultLabel: 'Nombre del Proyecto', defaultScriban: 'titulo', desc: 'Campo de texto en mayúsculas para el tema.' },
-        { key: 'showDirector', labelKey: 'customLabel_showDirector', scribanKey: 'customScriban_showDirector', variantKey: 'variant_showDirector', reqKey: 'req_showDirector', defaultLabel: 'Director del Proyecto', defaultScriban: 'director_proyecto', desc: 'Campo para ingresar el nombre del director.' },
-        { key: 'showCarrera', labelKey: 'customLabel_showCarrera', scribanKey: 'customScriban_showCarrera', variantKey: 'variant_showCarrera', reqKey: 'req_showCarrera', defaultLabel: 'Carrera / Unidad Académica', defaultScriban: 'carrera', desc: 'Selector de la carrera vinculada del docente.' },
-        { key: 'showConvocatoria', labelKey: 'customLabel_showConvocatoria', scribanKey: 'customScriban_showConvocatoria', variantKey: 'variant_showConvocatoria', reqKey: 'req_showConvocatoria', defaultLabel: 'Convocatoria Activa', defaultScriban: 'convocatoria', desc: 'Selector de los plazos y convocatorias vigentes.' },
         { key: 'showPrograma', labelKey: 'customLabel_showPrograma', scribanKey: 'customScriban_showPrograma', variantKey: 'variant_showPrograma', reqKey: 'req_showPrograma', defaultLabel: 'Programa de Investigación', defaultScriban: 'programa', desc: 'Campo de texto/catálogo para clasificar el programa.' },
         { key: 'showGrupo', labelKey: 'customLabel_showGrupo', scribanKey: 'customScriban_showGrupo', variantKey: 'variant_showGrupo', reqKey: 'req_showGrupo', defaultLabel: 'Grupo de Investigación', defaultScriban: 'grupo_investigacion', desc: 'Selectores de grupos aprobados con cascada a Dominio y Línea.' },
         { key: 'showLinea', labelKey: 'customLabel_showLinea', scribanKey: 'customScriban_showLinea', variantKey: 'variant_showLinea', reqKey: 'req_showLinea', defaultLabel: 'Línea de Investigación', defaultScriban: 'linea_investigacion', desc: 'Dominios científicos, líneas y sublíneas.' },
         { key: 'showTipo', labelKey: 'customLabel_showTipo', scribanKey: 'customScriban_showTipo', variantKey: 'variant_showTipo', reqKey: 'req_showTipo', defaultLabel: 'Tipo de Investigación', defaultScriban: 'tipo_investigacion', desc: 'Investigación básica, aplicada o experimental.' },
-        { key: 'showCaces', labelKey: 'customLabel_showCaces', scribanKey: 'customScriban_showCaces', variantKey: 'variant_showCaces', reqKey: 'req_showCaces', defaultLabel: 'Campo Detallado CACES', defaultScriban: 'campo_detallado', desc: 'Clasificación de campo amplio, específico y detallado.' },
-        { key: 'showFechas', labelKey: 'customLabel_showFechas', scribanKey: 'customScriban_showFechas', variantKey: 'variant_showFechas', reqKey: 'req_showFechas', defaultLabel: 'Fechas y Plazos', defaultScriban: 'fechas', desc: 'Campos de fechas de presentación, inicio y fin.' },
+        { key: 'showCaces', labelKey: 'customLabel_showCaces', scribanKey: 'customScriban_showCaces', variantKey: 'variant_showCaces', reqKey: 'req_showCaces', defaultLabel: 'Clasificación UNESCO / CACES', defaultScriban: 'campo_detallado', desc: 'Clasificación de campo amplio, específico y detallado.' },
+        { key: 'showCarrera', labelKey: 'customLabel_showCarrera', scribanKey: 'customScriban_showCarrera', variantKey: 'variant_showCarrera', reqKey: 'req_showCarrera', defaultLabel: 'Carrera / Unidad Académica', defaultScriban: 'carrera', desc: 'Selector de la carrera vinculada del docente.' },
+        { key: 'showDirector', labelKey: 'customLabel_showDirector', scribanKey: 'customScriban_showDirector', variantKey: 'variant_showDirector', reqKey: 'req_showDirector', defaultLabel: 'Director del Proyecto', defaultScriban: 'director_proyecto', desc: 'Campo para ingresar el nombre del director.' },
+        { key: 'showConvocatoria', labelKey: 'customLabel_showConvocatoria', scribanKey: 'customScriban_showConvocatoria', variantKey: 'variant_showConvocatoria', reqKey: 'req_showConvocatoria', defaultLabel: 'Convocatoria Activa', defaultScriban: 'convocatoria', desc: 'Selector de los plazos y convocatorias vigentes.' },
+        { key: 'showFechas', labelKey: 'customLabel_showFechas', scribanKey: 'customScriban_showFechas', variantKey: 'variant_showFechas', reqKey: 'req_showFechas', defaultLabel: 'Periodo, Tiempo y Fechas', defaultScriban: 'fechas', desc: 'Periodo de convocatoria, tiempo de ejecución y fechas previstas.' },
     ];
 
     return (
@@ -283,9 +284,31 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
                         return idxA - idxB;
                     });
 
+                    const handleMoveCoreItem = (itemKey: string, direction: 'up' | 'down') => {
+                        const allKeys = [...CORE_ITEMS.map(c => c.key), ...customFields.map(f => f.fieldKey || (f as any).id)];
+                        const currentOrder = fieldsOrder.length > 0
+                            ? fieldsOrder.filter(k => allKeys.includes(k))
+                            : [...allKeys];
+
+                        allKeys.forEach(k => {
+                            if (!currentOrder.includes(k)) currentOrder.push(k);
+                        });
+
+                        const index = currentOrder.indexOf(itemKey);
+                        if (index === -1) return;
+                        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+                        if (targetIndex < 0 || targetIndex >= currentOrder.length) return;
+
+                        const updated = [...currentOrder];
+                        const [moved] = updated.splice(index, 1);
+                        updated.splice(targetIndex, 0, moved);
+
+                        onUpdateConfig(block.id, 'fieldsOrder', updated);
+                    };
+
                     return (
                         <div className="space-y-1.5 max-h-[420px] overflow-y-auto pt-1 pr-1 pl-0.5 custom-scrollbar">
-                            {sortedCoreItems.map((item) => {
+                            {sortedCoreItems.map((item, idx) => {
                                 const isChecked = (config as any)[item.key] !== false;
                                 const customLabel = (config as any)[item.labelKey] || item.defaultLabel;
                                 const customScriban = (config as any)[item.scribanKey] || item.defaultScriban;
@@ -319,7 +342,7 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
                                                     <div className="flex items-center gap-1.5 flex-wrap">
                                                         <span className="text-xs font-bold text-text-main truncate block">{customLabel}</span>
                                                         {customVariant === 'banner_gold' && (
-                                                            <span className="badge-vercel-warning text-[8px] px-1 py-0.2">Dorado</span>
+                                                             <span className="badge-vercel-warning text-[8px] px-1 py-0.2">Dorado</span>
                                                         )}
                                                         {customVariant === 'banner_navy' && (
                                                             <span className="badge-vercel-info text-[8px] px-1 py-0.2">Azul</span>
@@ -335,8 +358,26 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
                                             <div className="flex items-center gap-0.5 shrink-0">
                                                 <button
                                                     type="button"
+                                                    disabled={idx === 0}
+                                                    onClick={() => handleMoveCoreItem(item.key, 'up')}
+                                                    className="p-1 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover disabled:opacity-20 transition-colors cursor-pointer"
+                                                    title="Mover arriba"
+                                                >
+                                                    <ChevronUp className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={idx === sortedCoreItems.length - 1}
+                                                    onClick={() => handleMoveCoreItem(item.key, 'down')}
+                                                    className="p-1 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover disabled:opacity-20 transition-colors cursor-pointer"
+                                                    title="Mover abajo"
+                                                >
+                                                    <ChevronDown className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
                                                     onClick={() => setEditingCoreKey(isEditingThis ? null : item.key)}
-                                                    className={`p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors ${isEditingThis ? 'text-text-main bg-surface-hover font-bold' : ''}`}
+                                                    className={`p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer ${isEditingThis ? 'text-text-main bg-surface-hover font-bold' : ''}`}
                                                     title="Personalizar campo"
                                                 >
                                                     <Pencil className="w-3.5 h-3.5" />
@@ -459,7 +500,7 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
 
                 {(() => {
                     const isPresetCatalog = SYSTEM_CATALOGS.some(cat => cat.url === newField.catalogUrl);
-                    const selectedCatalogMode = isPresetCatalog ? (newField.catalogUrl || '/api/catalogs/carreras') : 'custom';
+                    const selectedCatalogMode = isPresetCatalog ? (newField.catalogUrl || '/api/catalogs/programas') : 'custom';
 
                     const renderForm = () => (
                         <div className="p-3.5 border border-border-hover rounded-xl bg-surface shadow-md space-y-3 animate-fade-in my-1.5 text-xs">
@@ -673,6 +714,24 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
                                             </div>
 
                                             <div className="flex items-center gap-0.5 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    disabled={idx === 0}
+                                                    onClick={() => handleMoveField(idx, 'up')}
+                                                    className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors disabled:opacity-20 disabled:pointer-events-none"
+                                                    title="Mover arriba"
+                                                >
+                                                    <ChevronUp className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={idx === customFields.length - 1}
+                                                    onClick={() => handleMoveField(idx, 'down')}
+                                                    className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors disabled:opacity-20 disabled:pointer-events-none"
+                                                    title="Mover abajo"
+                                                >
+                                                    <ChevronDown className="w-3.5 h-3.5" />
+                                                </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleStartEdit(idx)}

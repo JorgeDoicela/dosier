@@ -1,46 +1,48 @@
-# Catálogos Institucionales y Normativa Ecuador
+# Catálogos Institucionales y Normativa Curricular Ecuador (CES / CACES / SENESCYT)
 
 ## 1. Visión General de Catálogos
 
-El subsistema de catálogos (`CatalogsController` / `PndController`) provee las estructuras de clasificación normalizadas necesarias para garantizar que las propuestas de investigación del ISTT cumplan con los marcos normativos del CACES, la SENESCYT y las clasificaciones internacionales de I+D+i.
+El subsistema de catálogos (`CatalogsController`) provee las estructuras de clasificación normalizadas necesarias para garantizar que la planificación curricular y la documentación docente del ISTPET cumplan con los marcos normativos del CACES, el CES (Reglamento de Régimen Académico) y las mallas aprobadas en SIGAFI.
 
 ---
 
-## 2. Clasificación Áreas del Conocimiento UNESCO
+## 2. Campos de Formación Curricular (CES / RRA)
 
-DOSIER implementa el árbol estandarizado de áreas del conocimiento de la UNESCO, estructurado en tres niveles jerárquicos:
+DOSIER estructura las asignaturas conforme a los campos de formación vigentes en la Educación Superior del Ecuador:
 
 ```mermaid
 graph TD
-    GrandArea["1. Gran Área (ej. 06 Tecnologías de la Información y Comunicación)"]
-    GrandArea --> SpecificArea["2. Área Específica (ej. 061 Tecnologías de la Información)"]
-    SpecificArea --> DetailedArea["3. Área Detallada (ej. 0612 Diseño y Administración de Redes)"]
+    GrandArea["Campos de Formación Curricular (CES)"]
+    GrandArea --> FT["1. Fundamentos Teóricos"]
+    GrandArea --> PP["2. Praxis Profesional (Prácticas y Laboratorios)"]
+    GrandArea --> EM["3. Epistemología y Metodología de la Investigación"]
+    GrandArea --> IS["4. Integración de Saberes, Contextos y Cultura"]
+    GrandArea --> CL["5. Comunicación y Lenguajes"]
 ```
 
 ### Propósito en el Sistema
-* **Formulación de Proyectos:** Cada propuesta debe vincularse obligatoriamente a una subárea detallada UNESCO.
-* **Asignación de Evaluadores Pares:** El `PeerReviewAdminService` utiliza este catálogo para cruzar las áreas de especialidad del evaluador con el área del proyecto, garantizando idoneidad técnica en el dictamen.
+* **Formulación de PEA y Sílabos:** Cada asignatura está tipificada según su campo de formación, lo cual determina la carga de horas de Docencia (CD), Aprendizaje Práctico-Experimental (APE) y Trabajo Autónomo (TA).
+* **Validación de Créditos:** El sistema valida que la sumatoria de horas cumpla con la equivalencia de créditos académicos (1 crédito = 48 horas de trabajo total del estudiante).
 
 ---
 
----
-
-## 3. Catálogos Internos e Integración SIGAFI
+## 3. Catálogos Académicos e Integración con Mallas SIGAFI
 
 ```mermaid
 graph LR
-    SIGAFI[("Sistema Académico SIGAFI")] -->|Sincronización| SeedScript[seed_profesores_carreras.sql]
-    SeedScript --> LocalDB[("Base 'sigafi_es'\nCatálogos Locales")]
+    SIGAFI[("Sistema de Gestión Académica SIGAFI")] -->|Mallas y Docentes| SeedScript[seed_profesores_carreras.sql]
+    SeedScript --> LocalDB[("Base 'sigafi_es'\nCatálogos Curriculares")]
 
-    LocalDB --> Careers[Carreras / Coordinaciones]
-    LocalDB --> ResearchLines[Líneas y Sublíneas de Investigación]
-    LocalDB --> GroupCatalogs[Grupos de Investigación Reconocidos]
+    LocalDB --> Careers[Carreras / Coordinaciones de Carrera]
+    LocalDB --> Periods[Períodos Académicos Ordinarios PAO]
+    LocalDB --> Subjects[Mallas, Asignaturas, Prerrequisitos y Correquisitos]
+    LocalDB --> Teachers[Plantilla Docente y Perfiles Profesionales]
 ```
 
-### 3.1. Carreras y Docentes (SIGAFI)
-* **Tablas:** `cat_carreras`, `cat_docentes_perfiles`.
-* **Sincronización:** Mantiene la relación de carreras acreditadas en el ISTT y la plantilla docente activa con sus títulos académicos registrados en SENESCYT.
+### 3.1. Carreras y Mallas Curriculares (SIGAFI)
+* **Tablas:** `cat_carreras`, `cat_mallas_curriculares`, `cat_asignaturas`.
+* **Sincronización:** Mantiene la relación de carreras técnicas y tecnológicas del ISTPET, los niveles formativos, las asignaturas, sus prerrequisitos y correquisitos.
 
-### 3.2. Líneas y Sublíneas de Investigación ISTT
-* **Tabla:** `cat_lineas_investigacion`.
-* **Estructura:** Áreas prioritarias aprobadas por el Órgano Colegiado Superior (OCS) del instituto para la asignación de presupuestos institucionales.
+### 3.2. Períodos Académicos y Cátedras
+* **Tablas:** `cat_periodos_academicos`, `cat_asignacion_docente`.
+* **Estructura:** Permite instanciar y duplicar los Sílabos y PEAs entre períodos académicos, heredando la estructura base aprobada y asignando a los docentes responsables de cada cátedra.

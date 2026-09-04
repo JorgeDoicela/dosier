@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using dosier_application.Research.Dtos;
 using dosier_infrastructure.data.models;
 
@@ -7,8 +9,22 @@ namespace dosier_infrastructure.Research
 {
     public static class GroupsHelper
     {
-        public static GroupDto MapToDto(DosierContext context, DocGrupoInvestigacion g)
+        public static GroupDto MapToDto(DosierContext context, DocGrupoInvestigacion g, Dictionary<string, string>? phonesDict = null)
         {
+            string telefono = g.TelefonoCoordinador ?? string.Empty;
+            if (string.IsNullOrEmpty(telefono) && g.IdCoordinadorNavigation?.TablaSigafi == "profesor" && !string.IsNullOrEmpty(g.IdCoordinadorNavigation?.IdSigafi))
+            {
+                var cedula = g.IdCoordinadorNavigation.IdSigafi.Trim();
+                if (phonesDict != null && phonesDict.TryGetValue(cedula, out var ph))
+                {
+                    telefono = ph;
+                }
+                else
+                {
+                    telefono = GetUserPhoneFromCatalog(context, cedula, "profesor");
+                }
+            }
+
             return new GroupDto
             {
                 IdGrupo = g.IdGrupo,
@@ -30,9 +46,7 @@ namespace dosier_infrastructure.Research
                 Estado = g.Estado,
                 LinkWhatsapp = g.LinkWhatsapp,
                 FotoUrl = g.FotoUrl,
-                TelefonoCoordinador = !string.IsNullOrEmpty(g.TelefonoCoordinador)
-                    ? g.TelefonoCoordinador
-                    : GetUserPhoneFromCatalog(context, g.IdCoordinadorNavigation?.IdSigafi, g.IdCoordinadorNavigation?.TablaSigafi),
+                TelefonoCoordinador = telefono,
                 LineasIds = new List<int>(),
                 CarrerasIds = g.IdCarreras.Select(c => c.IdCarrera).ToList(),
                 LineasNombres = new List<string>(),
@@ -51,12 +65,12 @@ namespace dosier_infrastructure.Research
             string phone = string.Empty;
             if (tablaSigafi == "profesor")
             {
-                var prof = context.Profesores.FirstOrDefault(p => p.IdProfesor == sigafiTrim);
+                var prof = context.Profesores.AsNoTracking().FirstOrDefault(p => p.IdProfesor == sigafiTrim);
                 phone = prof != null ? (prof.Celular ?? prof.Telefono ?? string.Empty) : string.Empty;
             }
             else if (tablaSigafi == "alumno")
             {
-                var alum = context.Alumnos.FirstOrDefault(a => a.IdAlumno == sigafiTrim);
+                var alum = context.Alumnos.AsNoTracking().FirstOrDefault(a => a.IdAlumno == sigafiTrim);
                 phone = alum != null ? (alum.Celular ?? alum.Telefono ?? string.Empty) : string.Empty;
             }
 

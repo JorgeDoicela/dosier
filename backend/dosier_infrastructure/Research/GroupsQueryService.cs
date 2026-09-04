@@ -21,6 +21,7 @@ namespace dosier_infrastructure.Research
         public async Task<IEnumerable<GroupDto>> GetAllAsync(string? search = null, string? userSigafiId = null, bool isAdmin = false, string? memberCedula = null)
         {
             var query = _context.DocGruposInvestigacion
+                .AsNoTracking()
                 .Include(g => g.IdCoordinadorNavigation)
                 .Include(g => g.IdCarreras)
                 .Include(g => g.DocGruposMiembros)
@@ -50,9 +51,33 @@ namespace dosier_infrastructure.Research
 
             var groups = await query.ToListAsync();
 
+            // Precargar teléfonos de coordinadores que falten en lote (1 sola consulta SQL)
+            var neededProfCedulas = groups
+                .Where(g => string.IsNullOrEmpty(g.TelefonoCoordinador) && g.IdCoordinadorNavigation?.TablaSigafi == "profesor" && !string.IsNullOrEmpty(g.IdCoordinadorNavigation?.IdSigafi))
+                .Select(g => g.IdCoordinadorNavigation!.IdSigafi.Trim())
+                .Distinct()
+                .ToList();
+
+            var phonesDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (neededProfCedulas.Any())
+            {
+                var profs = await _context.Profesores
+                    .AsNoTracking()
+                    .Where(p => neededProfCedulas.Contains(p.IdProfesor))
+                    .Select(p => new { p.IdProfesor, Phone = p.Celular ?? p.Telefono ?? "" })
+                    .ToListAsync();
+
+                foreach (var p in profs)
+                {
+                    var ph = (p.Phone ?? "").Trim();
+                    if (ph.Length == 9 && ph.StartsWith("9")) ph = "0" + ph;
+                    phonesDict[p.IdProfesor.Trim()] = ph;
+                }
+            }
+
             return groups.Select(g => 
             {
-                var dto = GroupsHelper.MapToDto(_context, g);
+                var dto = GroupsHelper.MapToDto(_context, g, phonesDict);
                 dto.CarrerasIds = g.IdCarreras.Select(c => c.IdCarrera).ToList();
                 return dto;
             }).ToList();
