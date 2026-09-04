@@ -14,7 +14,6 @@ export const renderTrazabilidadObservation = (observationText: string) => {
         { key: 'carrera', label: 'Carrera / Unidad', text: parsed.carrera },
         { key: 'titulo', label: 'Tema / Título', text: parsed.titulo },
         { key: 'descripcion', label: 'Descripción / Justificación', text: parsed.descripcion },
-        { key: 'presupuesto', label: 'Presupuesto Estimado', text: parsed.presupuesto },
     ].filter(item => Boolean(item.text));
 
     // Si solo hay observación general simple sin campos específicos

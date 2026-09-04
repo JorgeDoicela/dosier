@@ -153,17 +153,6 @@ export function generateDefaultBlocksForTemplate(
                 }
             },
             {
-                id: 'block-budget',
-                type: 'project_budget_section' as BlockType,
-                title: '4. RECURSOS, COSTO Y FINANCIAMIENTO',
-                isActive: true,
-                config: {
-                    showRecursosDisponibles: true,
-                    showRecursosNecesarios: true,
-                    showFinanciamiento: true
-                }
-            },
-            {
                 id: 'block-impacts',
                 type: 'impacts' as BlockType,
                 title: '6. IMPACTO DEL PROYECTO',
@@ -369,17 +358,6 @@ export function generateDefaultBlocksForTemplate(
             isActive: true,
             config: {
                 technicalSections: RESEARCH_TECHNICAL_SUBSECTIONS
-            }
-        },
-        {
-            id: 'block-budg-auto',
-            type: 'project_budget_section' as BlockType,
-            title: '5. RECURSOS Y FINANCIAMIENTO',
-            isActive: true,
-            config: {
-                showRecursosDisponibles: true,
-                showRecursosNecesarios: true,
-                showFinanciamiento: true
             }
         },
         createBaseSignaturesBlock([

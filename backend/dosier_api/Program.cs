@@ -255,7 +255,6 @@ builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectAc
 builder.Services.AddScoped<Dosier.Application.Research.IProjectQueryService, ProjectQueryService>();
 builder.Services.AddScoped<Dosier.Application.Research.IProjectOrchestrator, ProjectOrchestrator>();
 builder.Services.AddScoped<Dosier.Application.Research.IProjectSigningService, dosier_infrastructure.Research.ProjectSigningService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectExpensesService, dosier_infrastructure.Research.ProjectExpensesService>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationService, dosier_infrastructure.Common.Notifications.NotificationService>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.EmailMasterLayoutRenderer>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.IEmailTemplateService, dosier_infrastructure.Common.Notifications.EmailTemplateService>();

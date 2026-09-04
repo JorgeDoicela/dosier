@@ -45,11 +45,6 @@ namespace dosier_infrastructure.Research.Subservices
             stats.Prototipos = 0;
             stats.Ponencias = 0;
 
-            stats.PresupuestoTotalAsignado = await _context.DocPresupuestoItems
-                .SumAsync(i => (decimal?)(i.ValorUnitario * i.Cantidad)) ?? 0;
-            stats.PresupuestoTotalEjecutado = await _context.DocProyectos
-                .SumAsync(p => p.ValorEjecucion ?? 0);
-
             stats.TotalInvestigadoresActivos = await _context.DocProyectoParticipantes
                 .Where(pp => pp.Activo != false && pp.IdProyectoNavigation!.Estado != "Borrador" && pp.IdProyectoNavigation.Estado != "Rechazado" && pp.IdProyectoNavigation.Estado != "Anulado")
                 .Select(pp => pp.IdUsuario)

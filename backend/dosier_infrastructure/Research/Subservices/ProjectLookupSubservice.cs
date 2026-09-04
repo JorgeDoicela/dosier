@@ -77,10 +77,6 @@ namespace dosier_infrastructure.Research.Subservices
                     Estado = p.Estado,
                     LineaInvestigacion = null,
                     Carrera = p.DocProyectosCarreras.Select(pc => pc.IdCarreraNavigation.Carrera1).FirstOrDefault(),
-                    PresupuestoTotal = p.DocPresupuestoItems.Any()
-                        ? p.DocPresupuestoItems.Sum(i => (decimal?)i.ValorUnitario * (decimal?)i.Cantidad)
-                        : p.PresupuestoEstimado,
-                    PresupuestoEjecutado = p.ValorEjecucion,
                     PuntajeEvaluacion = p.PuntajeEvaluacion,
                     FechaRegistro = p.FechaRegistro,
                     FechaModificacion = p.FechaModificacion,
@@ -156,10 +152,6 @@ namespace dosier_infrastructure.Research.Subservices
                     Estado = p.Estado,
                     LineaInvestigacion = null,
                     Carrera = p.DocProyectosCarreras.Select(pc => pc.IdCarreraNavigation.Carrera1).FirstOrDefault(),
-                    PresupuestoTotal = p.DocPresupuestoItems.Any()
-                        ? p.DocPresupuestoItems.Sum(i => (decimal?)i.ValorUnitario * (decimal?)i.Cantidad)
-                        : p.PresupuestoEstimado,
-                    PresupuestoEjecutado = p.ValorEjecucion,
                     PuntajeEvaluacion = p.PuntajeEvaluacion,
                     FechaRegistro = p.FechaRegistro,
                     FechaModificacion = p.FechaModificacion,

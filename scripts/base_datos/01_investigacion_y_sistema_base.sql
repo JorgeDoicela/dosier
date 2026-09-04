@@ -25,11 +25,9 @@ DROP TRIGGER IF EXISTS trg_doc_cronograma_uuid;
 DROP TRIGGER IF EXISTS trg_doc_biblio_uuid;
 DROP TRIGGER IF EXISTS trg_doc_infinforme_uuid;
 DROP TRIGGER IF EXISTS trg_doc_evidencia_uuid;
-DROP TRIGGER IF EXISTS trg_doc_gasto_uuid;
 DROP TRIGGER IF EXISTS trg_doc_revisiones_uuid;
 DROP TRIGGER IF EXISTS trg_doc_evid_cat_uuid;
 DROP TRIGGER IF EXISTS trg_doc_ent_ext_uuid;
-DROP TRIGGER IF EXISTS trg_doc_transferencias_uuid;
 DROP TRIGGER IF EXISTS trg_doc_grupos_uuid;
 DROP TRIGGER IF EXISTS trg_doc_pnd_obj_uuid;
 DROP TRIGGER IF EXISTS trg_doc_proy_docadj_uuid;
@@ -76,8 +74,6 @@ DROP TABLE IF EXISTS
     doc_cowork_documentos,
 
     -- Núcleo V3 (Secciones 1-9)
-    doc_transferencias,
-    doc_gastos,
     doc_evidencias,
     doc_informes_avance,
     doc_bibliografia_proyecto,
@@ -87,9 +83,6 @@ DROP TABLE IF EXISTS
     doc_proyectos_ods,
     doc_ods,
     doc_ods_ejes,
-    doc_financiamientos,
-    doc_presupuesto_items,
-    doc_recursos_disponibles,
     doc_objetivos_proyecto,
     doc_proyecto_extensiones,
     doc_proyecto_participantes,
@@ -273,8 +266,6 @@ CREATE TABLE doc_proyectos (
     -- NO requiere alterar esta tabla ni redesplegar el backend.
     estado                VARCHAR(50)   NOT NULL DEFAULT 'Borrador' COMMENT 'Estado del ciclo de vida. Valores válidos definidos en doc_config_workflow.',
     puntajeEvaluacion     DECIMAL(5,2)  NULL,
-    valorEjecucion        DECIMAL(12,2) DEFAULT 0.00,
-    presupuesto_estimado  DECIMAL(12,2) DEFAULT 0.00 COMMENT 'Presupuesto inicial estimado ingresado en la prepropuesta',
     idObjetivoPnd         INT           NULL COMMENT 'Vínculo con el Plan Nacional de Desarrollo',
     activo                TINYINT(1)    DEFAULT 1,
     eliminado             TINYINT(1)    DEFAULT 0,
@@ -448,42 +439,6 @@ CREATE TABLE doc_proyectos_ods (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- #############################################################################
--- SECCIÓN 4: RECURSOS Y FINANCIAMIENTO
--- #############################################################################
-
-CREATE TABLE doc_recursos_disponibles (
-    idRecurso     INT           AUTO_INCREMENT PRIMARY KEY,
-    idProyecto    INT           NOT NULL,
-    detalle       TEXT          NOT NULL,
-    cantidad      DECIMAL(10,2) NOT NULL DEFAULT 1,
-    fuente        VARCHAR(255),
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_presupuesto_items (
-    idItem        INT           AUTO_INCREMENT PRIMARY KEY,
-    idProyecto    INT           NOT NULL,
-    categoria     VARCHAR(100)  NOT NULL,
-    idPartida     VARCHAR(50)   NULL COMMENT 'Código de partida presupuestaria institucional',
-    detalle       TEXT          NOT NULL,
-    cantidad      DECIMAL(10,2) NOT NULL DEFAULT 1,
-    valorUnitario DECIMAL(12,2) NOT NULL,
-    valorTotal    DECIMAL(12,2) GENERATED ALWAYS AS (cantidad * valorUnitario) STORED,
-    esGastoCapital TINYINT(1)   DEFAULT 0 COMMENT 'Diferenciación para reportes SENESCYT',
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_financiamientos (
-    idFinanciamiento INT           AUTO_INCREMENT PRIMARY KEY,
-    idProyecto       INT           NOT NULL,
-    esIstpet         TINYINT(1)    DEFAULT 0,
-    nombreEmpresa    VARCHAR(255),
-    otrasFuentes     TINYINT(1)    DEFAULT 0,
-    monto            DECIMAL(12,2) NULL,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
 -- SECCIÓN 6: IMPACTOS
 -- #############################################################################
 
@@ -567,7 +522,7 @@ CREATE TABLE doc_informes_avance (
     FOREIGN KEY (validadoPor) REFERENCES usuarios(idUsuario)      ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Evidencias del Informe (Fotos, Listas, Facturas)
+-- Evidencias del Informe (Fotos, Listas, Documentos)
 CREATE TABLE doc_evidencias (
     idEvidencia    INT           AUTO_INCREMENT PRIMARY KEY,
     uuid           VARCHAR(36)      NOT NULL UNIQUE,
@@ -581,40 +536,6 @@ CREATE TABLE doc_evidencias (
     FOREIGN KEY (idTipoEvidencia) REFERENCES doc_cat_tipo_evidencia(idTipoEvidencia)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Libro Diario de Gastos (Monitoreo Presupuestario)
-CREATE TABLE doc_gastos (
-    idGasto        INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid           VARCHAR(36)      NOT NULL UNIQUE,
-    idProyecto     INT           NOT NULL,
-    idItem         INT           NOT NULL, -- Referencia al ítem del presupuesto (§4)
-    monto          DECIMAL(12,2) NOT NULL,
-    fechaGasto     DATE          NOT NULL,
-    numeroFactura  VARCHAR(100),
-    descripcion    TEXT,
-    idEvidencia    INT           NULL, -- Vinculación con la foto de la factura
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idItem)     REFERENCES doc_presupuesto_items(idItem) ON DELETE RESTRICT,
-    FOREIGN KEY (idEvidencia) REFERENCES doc_evidencias(idEvidencia)  ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Transferencia Tecnológica y Convenios (CTT / CACES)
-CREATE TABLE doc_transferencias (
-    idTransferencia INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid            VARCHAR(36)  NOT NULL UNIQUE,
-    idProyecto      INT          NOT NULL,
-    idProducto      INT          NULL COMMENT 'Activo tecnológico o producto específico transferido',
-    entidadReceptora VARCHAR(255) NOT NULL,
-    rucEntidad      VARCHAR(13)  NULL,
-    numeroConvenio  VARCHAR(100),
-    fechaConvenio   DATE,
-    modalidad       ENUM('Licencia', 'Cesion', 'ConvenioCooperacion', 'AsistenciaTecnica', 'Donacion') DEFAULT 'ConvenioCooperacion',
-    valorMonetario  DECIMAL(12,2) DEFAULT 0.00,
-    beneficiariosDirectos INT    DEFAULT 0 COMMENT 'Métrica auditada por el CACES',
-    urlActaFirmada  VARCHAR(512) NULL COMMENT 'Acta de entrega-recepción con firma electrónica',
-    descripcion     TEXT,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- #############################################################################
 -- TRIGGERS PARA UUID
 -- #############################################################################
@@ -625,8 +546,6 @@ BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; E
 CREATE TRIGGER trg_doc_convocatorias_uuid BEFORE INSERT ON doc_convocatorias FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 -- Triggers adicionales para asegurar la generación de UUIDs en todo el esquema
-CREATE TRIGGER trg_doc_transferencias_uuid BEFORE INSERT ON doc_transferencias FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_grupos_uuid BEFORE INSERT ON doc_grupos_investigacion FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_pnd_obj_uuid BEFORE INSERT ON doc_pnd_objetivos FOR EACH ROW
@@ -1081,10 +1000,6 @@ CREATE TABLE doc_config_workflow (
         COMMENT '1 si los proyectos en estadoDestino consumen horas del distributivo docente SIGAFI',
     permiteInformesAvance   TINYINT(1)    NOT NULL DEFAULT 0
         COMMENT '1 si se pueden crear Informes de Avance cuando el proyecto está en estadoDestino',
-    permiteRegistroEgresos  TINYINT(1)    NOT NULL DEFAULT 0
-        COMMENT '1 si se pueden registrar gastos/egresos cuando el proyecto está en estadoDestino',
-    permiteGastosCapital    TINYINT(1)    NOT NULL DEFAULT 0
-        COMMENT '1 si se permiten gastos de capital (bienes) en estadoDestino',
     esEstadoFinal           TINYINT(1)    NOT NULL DEFAULT 0
         COMMENT '1 si estadoDestino es un estado terminal (sin más transiciones salvo excepción)',
 
@@ -1101,30 +1016,29 @@ CREATE TABLE doc_config_workflow (
 -- SEED: Ciclo de vida completo del proyecto CACES
 -- contabilizaCargaHoraria: 1 para estados activos (bloquea horas en SIGAFI)
 -- permiteInformesAvance:   1 solo en 'En Ejecución'
--- permiteRegistroEgresos:  1 solo en 'En Ejecución'
 -- esEstadoFinal:           1 para Finalizado, Rechazado, Anulado, Inconcluso
 -- =============================================================================
---                                                                          contabiliza  permiteInf  permiteEgr  permCap  esFinal   etiqueta              color
+--                                                                          contabiliza  permiteInf  esFinal   etiqueta              color
 INSERT INTO doc_config_workflow
-    (estadoOrigen,    estadoDestino,    rolRequerido,   requiereObservacion, contabilizaCargaHoraria, permiteInformesAvance, permiteRegistroEgresos, permiteGastosCapital, esEstadoFinal, etiquetaUi,      colorHex, activo)
+    (estadoOrigen,    estadoDestino,    rolRequerido,   requiereObservacion, contabilizaCargaHoraria, permiteInformesAvance, esEstadoFinal, etiquetaUi,      colorHex, activo)
 VALUES
 -- Flujo principal de postulación
-('Borrador',         'Enviado',         NULL,             0,                   0,                       0,                     0,                      0,                    0,             'Enviado',        '#3B82F6', 1),
-('Enviado',          'En Revisión',     'DOSIER_ADMIN',   0,                   1,                       0,                     0,                      0,                    0,             'En Revisión',    '#F59E0B', 1),
-('Enviado',          'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    0,             'En Corrección',  '#F97316', 1),
-('En Revisión',      'Aprobado',        'DOSIER_ADMIN',   1,                   1,                       0,                     0,                      0,                    0,             'Aprobado',       '#10B981', 1),
-('En Revisión',      'Rechazado',       'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    1,             'Rechazado',      '#EF4444', 1),
-('En Revisión',      'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    0,             'En Corrección',  '#F97316', 1),
-('En Corrección',    'Enviado',         NULL,             0,                   0,                       0,                     0,                      0,                    0,             'Enviado',        '#3B82F6', 1),
+('Borrador',         'Enviado',         NULL,             0,                   0,                       0,                     0,             'Enviado',        '#3B82F6', 1),
+('Enviado',          'En Revisión',     'DOSIER_ADMIN',   0,                   1,                       0,                     0,             'En Revisión',    '#F59E0B', 1),
+('Enviado',          'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,                     0,             'En Corrección',  '#F97316', 1),
+('En Revisión',      'Aprobado',        'DOSIER_ADMIN',   1,                   1,                       0,                     0,             'Aprobado',       '#10B981', 1),
+('En Revisión',      'Rechazado',       'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Rechazado',      '#EF4444', 1),
+('En Revisión',      'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,                     0,             'En Corrección',  '#F97316', 1),
+('En Corrección',    'Enviado',         NULL,             0,                   0,                       0,                     0,             'Enviado',        '#3B82F6', 1),
 -- Paso a ejecución
-('Aprobado',         'En Ejecución',    'DOSIER_ADMIN',   0,                   1,                       1,                     1,                      1,                    0,             'En Ejecución',   '#8B5CF6', 1),
+('Aprobado',         'En Ejecución',    'DOSIER_ADMIN',   0,                   1,                       1,                     0,             'En Ejecución',   '#8B5CF6', 1),
 -- Cierre del proyecto
-('En Ejecución',     'Finalizado',      'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    1,             'Finalizado',     '#059669', 1),
-('En Ejecución',     'Inconcluso',      'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    1,             'Inconcluso',     '#6B7280', 1),
+('En Ejecución',     'Finalizado',      'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Finalizado',     '#059669', 1),
+('En Ejecución',     'Inconcluso',      'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Inconcluso',     '#6B7280', 1),
 -- Anulación desde cualquier estado pre-ejecución
-('Borrador',         'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    1,             'Anulado',        '#94A3B8', 1),
-('Enviado',          'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    1,             'Anulado',        '#94A3B8', 1),
-('En Revisión',      'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     0,                      0,                    1,             'Anulado',        '#94A3B8', 1);
+('Borrador',         'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1),
+('Enviado',          'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1),
+('En Revisión',      'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1);
 
 -- ═══════════════════════════════════════════════════════════════════
 -- DOSIER CoWork — Coordinación Team Pulse & Colaboración Premium
@@ -1134,7 +1048,7 @@ VALUES
 CREATE TABLE doc_documentos_secciones_metadata (
     idMetadata          INT           AUTO_INCREMENT PRIMARY KEY,
     instanceUuid        VARCHAR(100)  NOT NULL COMMENT 'UUID de la instancia del documento',
-    sectionName         VARCHAR(100)  NOT NULL COMMENT 'Nombre de la sección (ej: resumen, presupuesto)',
+    sectionName         VARCHAR(100)  NOT NULL COMMENT 'Nombre de la sección (ej: resumen, metodologia)',
     status              VARCHAR(50)   NOT NULL DEFAULT 'Borrador' COMMENT 'Borrador, Revisión, Aprobado',
     lastUserUuid        VARCHAR(36)   NULL,
     lastUserName        VARCHAR(255)  NULL,
@@ -1224,8 +1138,7 @@ INSERT INTO doc_email_templates (uuid, codigo, nombre, descripcion, asunto, cuer
                 <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600; width: 150px;">Código:</td><td style="padding: 8px 0;">[[convocatoria_codigo]]</td></tr>
                 <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Título:</td><td style="padding: 8px 0;">[[convocatoria_titulo]]</td></tr>
                 <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Fecha de Apertura:</td><td style="padding: 8px 0;">[[convocatoria_apertura]]</td></tr>
-                <tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 8px 0; font-weight: 600;">Fecha de Cierre:</td><td style="padding: 8px 0; color: #d9534f; font-weight: 700;">[[convocatoria_cierre]]</td></tr>
-                <tr><td style="padding: 8px 0; font-weight: 600;">Monto Máx. Proyecto:</td><td style="padding: 8px 0;">[[convocatoria_monto_maximo]]</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: 600;">Fecha de Cierre:</td><td style="padding: 8px 0; color: #d9534f; font-weight: 700;">[[convocatoria_cierre]]</td></tr>
             </table>
         </div>
 
@@ -1234,7 +1147,7 @@ INSERT INTO doc_email_templates (uuid, codigo, nombre, descripcion, asunto, cuer
         </div>
 
         <p style="color: #666666; font-size: 12px; line-height: 1.6; margin-bottom: 24px;">
-            Las propuestas y toda la documentación requerida (protocolo, cronograma Gantt y presupuesto estructurado) deben ser cargadas antes de la fecha de cierre.
+            Las propuestas y toda la documentación requerida (protocolo y cronograma Gantt) deben ser cargadas antes de la fecha de cierre.
         </p>
 
         <div style="border-top: 1px solid #eaeaea; padding-top: 16px; text-align: center; font-size: 11px; color: #888888; line-height: 1.5;">

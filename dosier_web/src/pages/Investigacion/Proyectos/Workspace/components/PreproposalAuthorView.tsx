@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import WorkspaceHeader from './WorkspaceHeader';
 import { ProjectTraceabilitySection } from './ProjectTraceabilitySection';
 import { ObservationConnectors } from './ObservationConnectors';
-import { parseObservation, formatCurrency } from '../hooks/usePreproposalState';
+import { parseObservation } from '../hooks/usePreproposalState';
 
 interface PreproposalAuthorViewProps {
     currentProject: any;
@@ -13,13 +13,11 @@ interface PreproposalAuthorViewProps {
     setEditTitulo: (val: string) => void;
     editDescripcion: string;
     setEditDescripcion: (val: string) => void;
-    editPresupuesto: string;
-    setEditPresupuesto: (val: string) => void;
     docenteCarreras?: any[];
     editIdCarrera?: number;
     setEditIdCarrera?: (val: number) => void;
     isSavingPreproposal: boolean;
-    handleGuardarYReenviar: (titulo: string, descripcion: string, presupuesto: string, idCarrera?: number) => Promise<void>;
+    handleGuardarYReenviar: (titulo: string, descripcion: string, idCarrera?: number) => Promise<void>;
     trazabilidad: any[];
     isLoadingTrazabilidad: boolean;
 }
@@ -32,8 +30,6 @@ export const PreproposalAuthorView: React.FC<PreproposalAuthorViewProps> = ({
     setEditTitulo,
     editDescripcion,
     setEditDescripcion,
-    editPresupuesto,
-    setEditPresupuesto,
     docenteCarreras,
     editIdCarrera,
     setEditIdCarrera,
@@ -236,67 +232,13 @@ export const PreproposalAuthorView: React.FC<PreproposalAuthorViewProps> = ({
                                     </div>
                                 )}
                             </div>
-
-                            <div
-                                className="space-y-2"
-                                onMouseEnter={() => setHoveredField('presupuesto')}
-                                onMouseLeave={() => setHoveredField(null)}
-                            >
-                                <div
-                                    className="flex justify-between items-center cursor-default"
-                                    data-field-anchor="presupuesto"
-                                >
-                                    <label className="text-[10px] font-bold text-text-dim uppercase tracking-widest ml-1">Presupuesto Estimado (USD)</label>
-                                    {parsedObs.presupuesto && (
-                                        <span className={`text-[9px] font-bold uppercase tracking-wider transition-all duration-200 px-2 py-0.5 rounded ${activeField === 'presupuesto'
-                                            ? 'bg-error/10 border border-error/25 text-error shadow-sm'
-                                            : 'text-error border border-transparent'
-                                            }`}>
-                                            Observado
-                                        </span>
-                                    )}
-                                </div>
-                                {currentProject.status === 'Prepropuesta' || !currentProject.puedeEditar ? (
-                                    <div className={`input-vercel bg-bg-deep font-mono font-bold select-none ${parsedObs.presupuesto ? 'border-error/40 ring-1 ring-error/20' : ''}`}>
-                                        ${Number(currentProject.presupuesto || 0).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2 w-full">
-                                        <div className="relative flex items-center">
-                                            <span className="absolute left-3 text-xs font-bold text-text-dim/60 select-none">$</span>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0.01"
-                                                value={editPresupuesto}
-                                                onChange={(e) => setEditPresupuesto(e.target.value)}
-                                                onFocus={() => setFocusedField('presupuesto')}
-                                                onBlur={() => setFocusedField(null)}
-                                                placeholder="15000.00"
-                                                className={`input-vercel !pl-7 !font-bold !text-xs ${parsedObs.presupuesto ? 'border-error/40 ring-1 ring-error/20 shadow-sm' : ''}`}
-                                                required
-                                            />
-                                        </div>
-                                        {editPresupuesto && !isNaN(parseFloat(editPresupuesto)) && parseFloat(editPresupuesto) > 0 && (
-                                            <div className="text-[11px] font-medium text-text-dim/90 ml-1 mt-1.5 p-2 bg-bg-deep/80 border border-border-thin rounded animate-fade-in w-fit">
-                                                <span>Valor: {formatCurrency(editPresupuesto)} USD</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                {parsedObs.presupuesto && (
-                                    <div className="mt-1.5 text-xs text-error font-medium ml-1">
-                                        <span className="font-bold">Observación:</span> {parsedObs.presupuesto}
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
                         {currentProject.status === 'Prepropuesta Rechazada' && currentProject.puedeEditar && (
                             <div className="pt-4 border-t border-border flex justify-end">
                                 <button
-                                    onClick={() => handleGuardarYReenviar(editTitulo, editDescripcion, editPresupuesto, editIdCarrera)}
-                                    disabled={isSavingPreproposal || !editDescripcion.trim() || !editTitulo.trim() || !editPresupuesto.trim()}
+                                    onClick={() => handleGuardarYReenviar(editTitulo, editDescripcion, editIdCarrera)}
+                                    disabled={isSavingPreproposal || !editDescripcion.trim() || !editTitulo.trim()}
                                     className="btn-vercel-primary py-2.5 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isSavingPreproposal ? "Guardando..." : "Corregir y Reenviar Prepropuesta"}
@@ -354,7 +296,6 @@ export const PreproposalAuthorView: React.FC<PreproposalAuthorViewProps> = ({
                                         { key: 'carrera', label: 'Carrera / Unidad', text: parsedObs.carrera },
                                         { key: 'titulo', label: 'Tema / Título', text: parsedObs.titulo },
                                         { key: 'descripcion', label: 'Descripción / Justificación', text: parsedObs.descripcion },
-                                        { key: 'presupuesto', label: 'Presupuesto Estimado', text: parsedObs.presupuesto },
                                     ].filter(item => Boolean(item.text));
 
                                     if (specificList.length === 0) return null;

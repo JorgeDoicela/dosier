@@ -11,21 +11,19 @@ interface PreproposalAdminViewProps {
     urlPrefix: string;
     feedbackMode: 'general' | 'secciones';
     setFeedbackMode: (mode: 'general' | 'secciones') => void;
-    activeSectionTab: 'carrera' | 'titulo' | 'descripcion' | 'presupuesto';
-    setActiveSectionTab: (tab: 'carrera' | 'titulo' | 'descripcion' | 'presupuesto') => void;
+    activeSectionTab: 'carrera' | 'titulo' | 'descripcion';
+    setActiveSectionTab: (tab: 'carrera' | 'titulo' | 'descripcion') => void;
     adminObservation: string;
     setAdminObservation: (val: string) => void;
     sectionObservations: {
         carrera: string;
         titulo: string;
         descripcion: string;
-        presupuesto: string;
     };
     setSectionObservations: React.Dispatch<React.SetStateAction<{
         carrera: string;
         titulo: string;
         descripcion: string;
-        presupuesto: string;
     }>>;
     isSubmittingAdminReview: boolean;
     handleAdminAprobarPrepropuesta: () => Promise<void>;
@@ -59,7 +57,7 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
     const isEvaluating = currentProject.status === 'Prepropuesta';
     const activeField = hoveredField || (isEvaluating && feedbackMode === 'secciones' ? activeSectionTab : null);
 
-    const focusObservationInput = useCallback((mode: 'general' | 'secciones', tab?: 'carrera' | 'titulo' | 'descripcion' | 'presupuesto') => {
+    const focusObservationInput = useCallback((mode: 'general' | 'secciones', tab?: 'carrera' | 'titulo' | 'descripcion') => {
         setFeedbackMode(mode);
         if (tab) setActiveSectionTab(tab);
         setTimeout(() => {
@@ -306,56 +304,6 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                                     </div>
                                 )}
                             </div>
-
-                            {/* Presupuesto Estimado (USD) */}
-                            <div
-                                onClick={isEvaluating ? (e) => {
-                                    e.stopPropagation();
-                                    focusObservationInput('secciones', 'presupuesto');
-                                } : undefined}
-                                onMouseEnter={() => setHoveredField('presupuesto')}
-                                onMouseLeave={() => setHoveredField(null)}
-                                className={`space-y-2 ${isEvaluating ? 'group cursor-pointer' : ''}`}
-                            >
-                                <div
-                                    className="flex justify-between items-center cursor-default"
-                                    data-field-anchor="presupuesto"
-                                >
-                                    <label className={`text-[10px] font-bold uppercase tracking-widest ml-1 ${isEvaluating ? 'text-text-dim cursor-pointer transition-colors group-hover:text-text-main' : 'text-text-dim'}`}>
-                                        Presupuesto Estimado (USD)
-                                    </label>
-                                    {isEvaluating && feedbackMode === 'secciones' && activeSectionTab === 'presupuesto' && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                                    )}
-                                    {!isEvaluating && parsedObs.presupuesto && (
-                                        <span className={`text-[9px] font-bold uppercase tracking-wider transition-all duration-200 px-2 py-0.5 rounded ${activeField === 'presupuesto'
-                                            ? 'bg-error/10 border border-error/25 text-error shadow-sm'
-                                            : 'text-error border border-transparent'
-                                            }`}>
-                                            Observado
-                                        </span>
-                                    )}
-                                </div>
-                                <div className={`input-vercel bg-bg-deep font-mono font-bold transition-all duration-250 ${isEvaluating
-                                    ? (feedbackMode === 'general' || (feedbackMode === 'secciones' && activeSectionTab === 'presupuesto')
-                                        ? 'border-text-main ring-2 ring-text-main shadow-md !opacity-100'
-                                        : 'opacity-85 group-hover:border-border')
-                                    : (!parsedObs.presupuesto ? 'border-border-thin opacity-85' : 'border-error/30 bg-error/[0.01] opacity-90')
-                                    }`}>
-                                    ${Number(currentProject.presupuesto).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                                </div>
-                                {isEvaluating && previousObsParsed?.presupuesto && (
-                                    <div className="text-[10px] text-text-dim leading-relaxed pl-1 pt-0.5">
-                                        <span className="font-semibold text-text-main text-[9.5px] uppercase tracking-wider mr-1.5">
-                                            Observación anterior:
-                                        </span>
-                                        <span className="italic">
-                                            &ldquo;{previousObsParsed.presupuesto}&rdquo;
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
                         </div>
                     </div>
                 </div>
@@ -438,14 +386,6 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                                             >
                                                 Descripción
                                             </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => focusObservationInput('secciones', 'presupuesto')}
-                                                className={`pb-1.5 border-b-2 transition-all duration-200 ${activeSectionTab === 'presupuesto' ? 'border-brand text-text-main font-black' : 'border-transparent text-text-dim'
-                                                    }`}
-                                            >
-                                                Presupuesto
-                                            </button>
                                         </div>
 
                                         {activeSectionTab === 'carrera' && (
@@ -487,19 +427,6 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                                                 />
                                             </div>
                                         )}
-                                        {activeSectionTab === 'presupuesto' && (
-                                            <div className="space-y-2 animate-in fade-in duration-200">
-                                                <label className="text-[9px] font-bold text-text-dim uppercase tracking-widest ml-1">Observaciones sobre Presupuesto</label>
-                                                <textarea
-                                                    ref={activeTextareaRef}
-                                                    key="presupuesto-obs"
-                                                    value={sectionObservations.presupuesto}
-                                                    onChange={(e) => setSectionObservations({ ...sectionObservations, presupuesto: e.target.value })}
-                                                    placeholder="Ingrese las observaciones sobre el presupuesto estimado..."
-                                                    className="input-vercel !h-32 !text-xs resize-none"
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 )}
 
@@ -519,7 +446,7 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                                             isSubmittingAdminReview ||
                                             (feedbackMode === 'general'
                                                 ? !adminObservation.trim()
-                                                : !(sectionObservations.carrera.trim() || sectionObservations.titulo.trim() || sectionObservations.descripcion.trim() || sectionObservations.presupuesto.trim()))
+                                                : !(sectionObservations.carrera.trim() || sectionObservations.titulo.trim() || sectionObservations.descripcion.trim()))
                                         }
                                         className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-error/10 text-error border border-error/30 hover:border-error/50 rounded-lg py-3 px-6 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
@@ -564,7 +491,6 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                                         { key: 'carrera', label: 'Carrera / Unidad', text: parsedObs.carrera },
                                         { key: 'titulo', label: 'Tema / Título', text: parsedObs.titulo },
                                         { key: 'descripcion', label: 'Descripción / Justificación', text: parsedObs.descripcion },
-                                        { key: 'presupuesto', label: 'Presupuesto Estimado', text: parsedObs.presupuesto },
                                     ].filter(item => Boolean(item.text));
 
                                     if (specificList.length === 0) return null;

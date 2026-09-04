@@ -2,95 +2,6 @@ import type { DocumentBlock } from '../../types';
 import { COLORS, headerBg } from './generatorStyles';
 
 /**
- * Genera el HTML de Recursos y Presupuesto Detallado (Bloque: project_budget_section / resources)
- */
-export const generateResourcesHtml = (block: DocumentBlock): string => {
-    const c: any = block.config || {};
-    const parts: string[] = [];
-
-    if (c.showRecursosDisponibles !== false) {
-        parts.push(`
-    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 10px 0 4px;">4.1 Recursos Disponibles (Equipos, Licencias, Espacios)</p>
-    <table class="info-table">
-      <thead>
-        <tr>
-          <th style="${headerBg('blue')}">Descripción del Recurso</th>
-          <th style="${headerBg('blue')} width: 60px; text-align: center;">Cantidad</th>
-          <th style="${headerBg('blue')} width: 150px;">Fuente</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each recursos_disponibles}}
-        <tr>
-          <td>{{this.descripcion}}</td>
-          <td style="text-align: center; font-weight: bold;">{{this.cantidad}}</td>
-          <td>{{this.fuente}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>`);
-    }
-
-    if (c.showRecursosNecesarios !== false) {
-        parts.push(`
-    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 15px 0 4px;">4.2 Recursos Necesarios (Presupuesto de Gasto)</p>
-    <table class="info-table">
-      <thead>
-        <tr>
-          <th style="${headerBg('blue')}">Partida / Rubro</th>
-          <th style="${headerBg('blue')} width: 60px; text-align: center;">Cantidad</th>
-          <th style="${headerBg('blue')} width: 90px; text-align: right;">P. Unitario</th>
-          <th style="${headerBg('blue')} width: 90px; text-align: right;">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each recursos_necesarios}}
-        <tr>
-          <td>{{this.descripcion}}</td>
-          <td style="text-align: center; font-weight: bold;">{{this.cantidad}}</td>
-          <td style="text-align: right;">$ {{this.costo_unitario}}</td>
-          <td style="text-align: right; font-weight: bold;">$ {{this.costo_total}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>`);
-    }
-
-    if (c.showFinanciamiento !== false) {
-        parts.push(`
-    <div style="margin-top: 15px; padding: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
-        <tbody>
-          <tr>
-            <td style="width: 65%;">
-              <div style="margin-bottom: 4px;">
-                <strong>Financiamiento Solicitado al ISTPET:</strong> {{#if financiamiento_istpet}}SÍ{{else}}NO{{/if}}
-              </div>
-              <div>
-                <strong>Financiamiento Otras Fuentes:</strong> {{#if financiamiento_otras_fuentes}}SÍ ({{default nombres_otras_fuentes "No especificadas"}}){{else}}NO{{/if}}
-              </div>
-            </td>
-            <td style="text-align: right; vertical-align: bottom;">
-              <span style="font-size: 8pt; text-transform: uppercase; color: #64748b; font-weight: bold; display: block;">Costo Total Estimado:</span>
-              <span style="font-size: 13pt; font-weight: bold; color: ${COLORS.blue};">$ {{default costo_total "0.00"}}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>`);
-    }
-
-    if (parts.length === 0) return '';
-
-    return `
-  <!-- BLOQUE: RECURSOS Y PRESUPUESTO -->
-  <div style="margin-top: 20px; page-break-inside: avoid;">
-    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 6px;">4. Recursos y Presupuesto Detallado</p>
-    ${parts.join('')}
-  </div>`;
-};
-
-/**
  * Genera el HTML del Informe de Avances (Bloque: project_progress_report)
  */
 export const generateProjectProgressHtml = (block: DocumentBlock): string => {
@@ -122,29 +33,6 @@ export const generateProjectProgressHtml = (block: DocumentBlock): string => {
           <td>{{this.actividad}}</td>
           <td style="text-align: center; font-weight: bold;">{{this.avance}} %</td>
           <td style="text-align: center; font-weight: bold; color: #10b981;">{{#if this.hito_completado}}SÍ{{else}}NO{{/if}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>`);
-    }
-
-    if (c.showPresupuestoEjecutado !== false) {
-        parts.push(`
-    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 15px 0 4px;">Presupuesto de Gasto Ejecutado</p>
-    <table class="info-table">
-      <thead>
-        <tr>
-          <th style="${headerBg('blue')}">Partida</th>
-          <th style="${headerBg('blue')} width: 90px; text-align: right;">Presupuestado</th>
-          <th style="${headerBg('blue')} width: 90px; text-align: right;">Ejecutado</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each presupuesto_ejecutado}}
-        <tr>
-          <td>{{this.partida}}</td>
-          <td style="text-align: right;">$ {{this.presupuestado}}</td>
-          <td style="text-align: right; font-weight: bold;">$ {{this.ejecutado}}</td>
         </tr>
         {{/each}}
       </tbody>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DOSIER — Tests: useProjectCore.ts (lógica pura)
  *
  * Valida la lógica central del workspace de proyectos:
@@ -70,8 +70,7 @@ const SECCIONES_MOCK: SeccionWorkspace[] = [
     { id: "informacion", label: "Información General", completado: true, bloqueado: false, requerido: true },
     { id: "equipo", label: "Equipo de Investigación", completado: true, bloqueado: false, requerido: true },
     { id: "objetivos", label: "Objetivos", completado: false, bloqueado: false, requerido: true },
-    { id: "presupuesto", label: "Presupuesto", completado: false, bloqueado: false, requerido: true },
-    { id: "cronograma", label: "Cronograma", completado: false, bloqueado: false, requerido: false },
+    { id: "cronograma", label: "Cronograma", completado: false, bloqueado: false, requerido: true },
     { id: "documentos", label: "Documentos Adjuntos", completado: false, bloqueado: true, requerido: false },
 ];
 
@@ -144,7 +143,7 @@ describe("clasificarSecciones — clasificación por estado", () => {
     it("clasifica correctamente en completadas, pendientes y bloqueadas", () => {
         const result = clasificarSecciones(SECCIONES_MOCK);
         expect(result.completadas).toHaveLength(2); // informacion y equipo
-        expect(result.pendientes).toHaveLength(3);  // objetivos, presupuesto, cronograma
+        expect(result.pendientes).toHaveLength(2);  // objetivos, cronograma
         expect(result.bloqueadas).toHaveLength(1);  // documentos
     });
 
@@ -153,5 +152,18 @@ describe("clasificarSecciones — clasificación por estado", () => {
         expect(result.completadas).toHaveLength(0);
         expect(result.pendientes).toHaveLength(0);
         expect(result.bloqueadas).toHaveLength(0);
+    });
+});
+
+describe("getSeccionesBloqueadas — secciones bloqueadas por estado", () => {
+    it("retorna solo secciones marcadas bloqueadas cuando el estado es editable", () => {
+        const bloqueadas = getSeccionesBloqueadas(SECCIONES_MOCK, "Borrador");
+        expect(bloqueadas).toHaveLength(1);
+        expect(bloqueadas[0].id).toBe("documentos");
+    });
+
+    it("retorna todas las secciones si el estado no es editable", () => {
+        const bloqueadas = getSeccionesBloqueadas(SECCIONES_MOCK, "Aprobado");
+        expect(bloqueadas).toHaveLength(SECCIONES_MOCK.length);
     });
 });

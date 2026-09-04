@@ -115,15 +115,11 @@ namespace dosier_api.Controllers
                     .Select(g => new
                     {
                         nombre = g.Key,
-                        proyectos = g.Count(),
-                        presupuesto = g.Sum(p => p.PresupuestoTotal ?? 0).ToString("N2")
+                        proyectos = g.Count()
                     })
                     .OrderByDescending(x => x.proyectos)
                     .ToList();
 
-                var totalBudget = filteredList.Sum(p => p.PresupuestoTotal ?? 0);
-                var executedBudget = filteredList.Sum(p => p.PresupuestoEjecutado ?? 0);
-                var executionPct = totalBudget > 0 ? Math.Round(executedBudget / totalBudget * 100, 1) : 0;
                 var pndAligned = filteredList.Count(p => !string.IsNullOrEmpty(p.ObjetivoPnd));
                 var pndPct = filteredList.Count > 0 ? Math.Round((double)pndAligned / filteredList.Count * 100, 1) : 0;
                 var pndUmbralC = 80.0;
@@ -163,19 +159,12 @@ namespace dosier_api.Controllers
                 var studStatus = studPct >= studUmbralC ? "CUMPLIDO" : studPct >= studUmbralP ? "EN PROCESO" : "ALERTA";
                 studPct = Math.Min(studPct, 100);
 
-                var budgetPct = (double)executionPct;
-                var budgetUmbralC = 75.0;
-                var budgetUmbralP = 40.0;
-                var budgetStatus = budgetPct >= budgetUmbralC ? "CUMPLIDO" : budgetPct >= budgetUmbralP ? "EN PROCESO" : "ALERTA";
-                budgetPct = Math.Min(budgetPct, 100);
-
                 var indicadoresCaces = new List<object>
                 {
                     new { codigo = "E1.PLAN", nombre = "Alineación PND y POA", descripcion = "Proyectos alineados al Plan Nacional de Desarrollo", progreso = (double)pndPct, meta = $"≥{pndUmbralC}%", estado = pndStatus, badge_class = pndStatus == "CUMPLIDO" ? "badge-success" : pndStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = pndStatus == "CUMPLIDO" ? "green" : pndStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{pndAligned} de {filteredList.Count} proyectos alineados" },
                     new { codigo = "E2.PROD", nombre = "Producción Científica del Claustro", descripcion = $"Tasa de publicaciones: {prodRate:F1}/investigador (meta: {prodReferencia:F1})", progreso = (double)prodPct, meta = $"≥{prodReferencia:F1} pub/invest.", estado = prodStatus, badge_class = prodStatus == "CUMPLIDO" ? "badge-success" : prodStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = prodStatus == "CUMPLIDO" ? "green" : prodStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{totalProd} productos de {researchers} investigadores" },
                     new { codigo = "E3.INNO", nombre = "Innovación y Transferencia Tecnológica", descripcion = $"Proyectos con TRL≥{trlMinimo} o entidad aliada", progreso = (double)innovPct, meta = $"≥{innovUmbralC}%", estado = innovStatus, badge_class = innovStatus == "CUMPLIDO" ? "badge-success" : innovStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = innovStatus == "CUMPLIDO" ? "green" : innovStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{withTrlOrPartner} de {filteredList.Count} proyectos innovadores" },
-                    new { codigo = "E4.STUD", nombre = "Vinculación Formativa (Semilleros)", descripcion = "Proyectos con participación estudiantil", progreso = (double)studPct, meta = $"≥{studUmbralC}%", estado = studStatus, badge_class = studStatus == "CUMPLIDO" ? "badge-success" : studStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = studStatus == "CUMPLIDO" ? "green" : studStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{withStudents} de {filteredList.Count} proyectos con estudiantes" },
-                    new { codigo = "E5.BUDG", nombre = "Ejecución Presupuestaria", descripcion = "Eficiencia en el uso de recursos asignados", progreso = (double)budgetPct, meta = $"≥{budgetUmbralC}%", estado = budgetStatus, badge_class = budgetStatus == "CUMPLIDO" ? "badge-success" : budgetStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = budgetStatus == "CUMPLIDO" ? "green" : budgetStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"${executedBudget:N0} de ${totalBudget:N0} ejecutados" }
+                    new { codigo = "E4.STUD", nombre = "Vinculación Formativa (Semilleros)", descripcion = "Proyectos con participación estudiantil", progreso = (double)studPct, meta = $"≥{studUmbralC}%", estado = studStatus, badge_class = studStatus == "CUMPLIDO" ? "badge-success" : studStatus == "EN PROCESO" ? "badge-warning" : "badge-danger", bar_color = studStatus == "CUMPLIDO" ? "green" : studStatus == "EN PROCESO" ? "amber" : "red", valor_actual = $"{withStudents} de {filteredList.Count} proyectos con estudiantes" }
                 };
 
                 var proyectosTabla = filteredList.Select(p =>
@@ -195,7 +184,6 @@ namespace dosier_api.Controllers
                         codigo = p.CodigoInstitucional ?? $"IST-{p.IdProyecto:D3}",
                         titulo = p.Titulo ?? "Sin título",
                         linea = p.LineaInvestigacion ?? "General",
-                        presupuesto = (p.PresupuestoTotal ?? 0).ToString("N2"),
                         estudiantes = p.TotalEstudiantes,
                         productos = p.TotalProductos,
                         estado = p.Estado ?? "Sin estado",
@@ -223,9 +211,6 @@ namespace dosier_api.Controllers
                     total_productos = totalProd,
                     articulos_indexados = stats.ArticulosIndexados,
                     prototipos = stats.Prototipos,
-                    presupuesto_total = $"${totalBudget:N0}",
-                    presupuesto_ejecutado = $"${executedBudget:N0}",
-                    porcentaje_ejecucion = executionPct,
                     total_grupos = groups.Count(),
                     investigadores_activos = stats.TotalInvestigadoresActivos,
                     convocatorias = stats.TotalConvocatoriasAbiertas,

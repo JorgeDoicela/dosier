@@ -77,10 +77,6 @@ export const generateHtmlFromBlocks = (blockList: DocumentBlock[], themeConfig?:
             case 'project_technical_section':
                 html += generateProjectTechnicalHtml(block);
                 break;
-            case 'project_budget_section':
-            case 'resources':
-                html += generateResourcesHtml(block);
-                break;
             case 'project_progress_report':
                 html += generateProjectProgressHtml(block);
                 break;

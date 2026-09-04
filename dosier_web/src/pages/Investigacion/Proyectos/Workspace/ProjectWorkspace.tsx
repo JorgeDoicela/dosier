@@ -12,8 +12,6 @@
 
 import React, { useEffect, useCallback, useRef } from 'react';
 import { Shield } from 'lucide-react';
-import api from '../../../../api/axios_config';
-import { useNotifications } from '../../../../api/NotificationsContext';
 import { FullscreenLoader } from '../../../../components/Common/FullscreenLoader';
 import DocumentEditor from '../Wizard/DocumentEditor';
 
@@ -35,8 +33,6 @@ import { PreproposalAdminView } from './components/PreproposalAdminView';
 import { PreproposalAuthorView } from './components/PreproposalAuthorView';
 
 export const ProjectWorkspace: React.FC = () => {
-    const { addToast } = useNotifications();
-
     const core = useProjectCore();
     const {
         templateCode,
@@ -302,8 +298,6 @@ export const ProjectWorkspace: React.FC = () => {
                 setEditTitulo={preproposal.setEditTitulo}
                 editDescripcion={preproposal.editDescripcion}
                 setEditDescripcion={preproposal.setEditDescripcion}
-                editPresupuesto={preproposal.editPresupuesto}
-                setEditPresupuesto={preproposal.setEditPresupuesto}
                 docenteCarreras={preproposal.docenteCarreras}
                 editIdCarrera={preproposal.editIdCarrera}
                 setEditIdCarrera={preproposal.setEditIdCarrera}

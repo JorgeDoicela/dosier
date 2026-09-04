@@ -20,8 +20,6 @@ public partial class DocProyecto
     public string? TiempoEjecucion { get; set; }
     public string Estado { get; set; } = "Borrador";
     public decimal? PuntajeEvaluacion { get; set; }
-    public decimal? ValorEjecucion { get; set; }
-    public decimal? PresupuestoEstimado { get; set; }
     public string? MetadataCacesJson { get; set; }
     public bool? Activo { get; set; }
     public bool? Eliminado { get; set; }
@@ -53,15 +51,10 @@ public partial class DocProyecto
     public virtual ICollection<DocProyectoParticipante> DocProyectoParticipantes { get; set; } = new List<DocProyectoParticipante>();
     public virtual ICollection<DocObjetivoProyecto> DocObjetivosProyecto { get; set; } = new List<DocObjetivoProyecto>();
     public virtual ICollection<DocProyectoOds> DocProyectosOds { get; set; } = new List<DocProyectoOds>();
-    public virtual ICollection<DocRecursoDisponible> DocRecursosDisponibles { get; set; } = new List<DocRecursoDisponible>();
-    public virtual ICollection<DocPresupuestoItem> DocPresupuestoItems { get; set; } = new List<DocPresupuestoItem>();
-    public virtual ICollection<DocFinanciamiento> DocFinanciamientos { get; set; } = new List<DocFinanciamiento>();
     public virtual ICollection<DocImpactoProyecto> DocImpactosProyecto { get; set; } = new List<DocImpactoProyecto>();
     public virtual ICollection<DocCronograma> DocCronogramas { get; set; } = new List<DocCronograma>();
     public virtual ICollection<DocBibliografiaProyecto> DocBibliografiasProyecto { get; set; } = new List<DocBibliografiaProyecto>();
     public virtual ICollection<DocInformeAvance> DocInformesAvance { get; set; } = new List<DocInformeAvance>();
-    public virtual ICollection<DocGasto> DocGastos { get; set; } = new List<DocGasto>();
-    public virtual ICollection<DocTransferencia> DocTransferencias { get; set; } = new List<DocTransferencia>();
 
     public virtual ICollection<DocProyectoMml> MatrizMarcoLogico { get; set; } = new List<DocProyectoMml>();
 

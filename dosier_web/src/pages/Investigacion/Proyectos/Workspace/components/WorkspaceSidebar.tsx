@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Shield, AlertCircle, FileText } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Shield, AlertCircle, FileText, BarChart3, ArrowUpRight } from 'lucide-react';
 import api from '../../../../../api/axios_config';
 import WorkspaceActivityPanel from '../WorkspaceActivityPanel';
 
 interface WorkspaceSidebarProps {
     currentProject: {
         linea: string;
-        presupuesto: number;
         status: string;
         puedeEditar?: boolean;
         puedeFirmar?: boolean;
@@ -30,7 +29,13 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
     setActiveDocument,
     isAdmin = false
 }) => {
+    const location = useLocation();
     const [asyncProtocoloSigned, setAsyncProtocoloSigned] = useState(false);
+
+    const isMisProyectos = location.pathname.startsWith('/investigacion/mis-proyectos');
+    const monitoringUrl = isMisProyectos
+        ? `/investigacion/mis-proyectos/monitoreo/${resolvedProjectUuid}`
+        : `/investigacion/monitoreo/${resolvedProjectUuid}`;
 
     const isDocValidlySigned = (doc: any): boolean => {
         if (!doc) return false;
@@ -143,6 +148,34 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                     <WorkspaceActivityPanel
                         projectUuid={resolvedProjectUuid}
                     />
+                </div>
+            )}
+
+            {/* Botón de Acceso a Monitoreo Gantt */}
+            {resolvedProjectUuid && (
+                <div className="bento-card static p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <BarChart3 size={13} className="text-brand" />
+                            <span className="section-label text-text-main">
+                                Monitoreo & Gantt
+                            </span>
+                        </div>
+                        <span className="badge-vercel-neutral text-[9px] font-mono">
+                            Fase C
+                        </span>
+                    </div>
+                    <p className="text-xs text-text-dim leading-relaxed">
+                        Seguimiento del cronograma, avance de hitos y temporalidad de la investigación.
+                    </p>
+                    <Link
+                        to={monitoringUrl}
+                        className="btn-vercel-secondary py-2 px-3 text-xs rounded-md no-underline flex items-center justify-center gap-2 hover:border-brand/40 group transition-all"
+                    >
+                        <BarChart3 size={13} className="text-text-dim group-hover:text-brand transition-colors" />
+                        <span className="font-medium text-text-main group-hover:text-brand transition-colors">Monitoreo Gantt</span>
+                        <ArrowUpRight size={12} className="text-text-dim group-hover:text-brand ml-auto transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </Link>
                 </div>
             )}
         </div>

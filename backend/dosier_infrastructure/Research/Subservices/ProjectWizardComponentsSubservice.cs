@@ -136,32 +136,6 @@ namespace dosier_infrastructure.Research.Subservices
             return ids;
         }
 
-        public async Task SyncPresupuestoAsync(int projectId, List<RecursoNecesarioDto>? recursos)
-        {
-            if (recursos == null) return;
-
-            var existing = await _context.DocPresupuestoItems
-                .Where(p => p.IdProyecto == projectId)
-                .ToListAsync();
-
-            _context.DocPresupuestoItems.RemoveRange(existing);
-            await _context.SaveChangesAsync();
-
-            foreach (var r in recursos)
-            {
-                _context.DocPresupuestoItems.Add(new DocPresupuestoItem
-                {
-                    IdProyecto = projectId,
-                    Categoria = "Gasto",
-                    Detalle = r.Descripcion ?? "Sin detalle",
-                    Cantidad = decimal.TryParse(r.Cantidad, out var c) ? c : 1,
-                    ValorUnitario = r.CostoUnitario,
-                    EsGastoCapital = r.EsGastoCapital ?? false,
-                    IdPartida = r.IdPartida
-                });
-            }
-        }
-
         public async Task SyncMmlAsync(int projectId, List<MmlRowDto>? mml)
         {
             if (mml == null) return;
@@ -312,36 +286,6 @@ namespace dosier_infrastructure.Research.Subservices
                 {
                     IdProyecto = projectId,
                     CitaApa = b
-                });
-            }
-        }
-
-        public async Task SyncRecursosDisponiblesAsync(int projectId, List<RecursoDisponibleDto>? recursos)
-        {
-            if (recursos == null) return;
-
-            var existing = await _context.DocRecursosDisponibles
-                .Where(r => r.IdProyecto == projectId)
-                .ToListAsync();
-
-            var newDetalles = recursos
-                .Where(r => !string.IsNullOrWhiteSpace(r.Descripcion))
-                .Select(r => r.Descripcion!.Trim())
-                .ToHashSet();
-
-            var toDelete = existing.Where(e => !newDetalles.Contains(e.Detalle.Trim())).ToList();
-            _context.DocRecursosDisponibles.RemoveRange(toDelete);
-
-            var existingDetalles = existing.Select(e => e.Detalle.Trim()).ToHashSet();
-            foreach (var r in recursos)
-            {
-                if (string.IsNullOrWhiteSpace(r.Descripcion) || existingDetalles.Contains(r.Descripcion.Trim())) continue;
-                _context.DocRecursosDisponibles.Add(new DocRecursoDisponible
-                {
-                    IdProyecto = projectId,
-                    Detalle = r.Descripcion,
-                    Cantidad = decimal.TryParse(r.Cantidad, out var cantRec) ? cantRec : 0,
-                    Fuente = r.Fuente
                 });
             }
         }

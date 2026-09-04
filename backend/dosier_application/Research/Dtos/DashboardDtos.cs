@@ -17,8 +17,6 @@ namespace Dosier.Application.Research.Dtos
         public string? LineaInvestigacion { get; set; }
         public string? TipoInvestigacion { get; set; }
         public string? Carrera { get; set; }
-        public decimal? PresupuestoTotal { get; set; }
-        public decimal? PresupuestoEjecutado { get; set; }
         public decimal? PuntajeEvaluacion { get; set; }
         public DateTime? FechaRegistro { get; set; }
         public DateTime? FechaModificacion { get; set; }
@@ -72,9 +70,6 @@ namespace Dosier.Application.Research.Dtos
         public int ArticulosIndexados { get; set; }
         public int Prototipos { get; set; }
         public int Ponencias { get; set; }
-
-        public decimal PresupuestoTotalAsignado { get; set; }
-        public decimal PresupuestoTotalEjecutado { get; set; }
 
         // ── Distribución por Estado (para gráfico de embudo) ──
         public List<EstadoConteoDto> ProyectosPorEstado { get; set; } = new();

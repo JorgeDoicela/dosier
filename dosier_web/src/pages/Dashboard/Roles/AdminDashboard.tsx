@@ -3,7 +3,7 @@ import {
     Activity, BarChart3,
     Megaphone,
     Fingerprint, FileText, Layers, ExternalLink,
-    HelpCircle, Folder, Lightbulb
+    Folder, RotateCw
 } from 'lucide-react';
 import { DashboardHeader } from '../Components/DashboardHeader';
 import { useAuth } from '../../../api/AuthContext';
@@ -25,8 +25,6 @@ interface GlobalStats {
     articulos_indexados: number;
     prototipos: number;
     ponencias: number;
-    presupuesto_total_asignado: number;
-    presupuesto_total_ejecutado: number;
     proyectos_por_estado: Array<{ estado: string; cantidad: number; color: string }>;
     actividad_reciente: Array<{
         tipo: string;
@@ -113,10 +111,6 @@ export const AdminDashboard: React.FC = () => {
         }
     }, [loading]);
 
-    const ejecucionPorc = stats?.presupuesto_total_asignado
-        ? Math.min(100, ((stats.presupuesto_total_ejecutado ?? 0) / stats.presupuesto_total_asignado) * 100)
-        : 0;
-
     return (
         <>
             <DashboardHeader
@@ -168,8 +162,8 @@ export const AdminDashboard: React.FC = () => {
                     {/* Main Content: Left Column */}
                     <div className="lg:col-span-3 flex flex-col gap-6">
 
-                        {/* Status Grid: proyectos por estado y presupuesto */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Status Grid: proyectos por estado */}
+                        <div className="grid grid-cols-1 gap-6">
 
                             {/* Proyectos por estado */}
                             <div className="bento-card static flex flex-col justify-between bg-surface border border-border-thin shadow-sm rounded-xl overflow-hidden">
@@ -207,46 +201,6 @@ export const AdminDashboard: React.FC = () => {
                                     <span className="font-mono font-medium text-text-main">
                                         <AnimatedNumber value={stats?.total_proyectos ?? 0} />
                                     </span>
-                                </div>
-                            </div>
-
-                            {/* Ejecución presupuestaria global */}
-                            <div className="bento-card static flex flex-col justify-between bg-surface border border-border-thin shadow-sm rounded-xl overflow-hidden">
-                                <div className="p-6">
-                                    <div className="flex items-center justify-between mb-5">
-                                        <span className="text-sm font-medium text-text-dim">Ejecución presupuestaria</span>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex items-baseline gap-1.5">
-                                            <span className="text-4xl font-semibold tracking-tight text-text-main font-sans">
-                                                <AnimatedNumber value={ejecucionPorc} formatter={(v) => `${v.toFixed(1)}%`} />
-                                            </span>
-                                            <span className="text-[10px] text-text-dim uppercase tracking-wider font-semibold">ejecutado</span>
-                                        </div>
-
-                                        <div className="w-full h-1 bg-border-thin rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full bg-success progress-bar-fill"
-                                                style={{ width: animate ? `${ejecucionPorc}%` : '0%' }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-border-thin bg-bg-deep/40 px-6 py-3 grid grid-cols-2 divide-x divide-border-thin/60">
-                                    <div className="pr-4">
-                                        <span className="text-[9px] text-text-dim uppercase tracking-wider font-medium">Ejecutado</span>
-                                        <p className="font-mono text-xs font-medium text-text-main mt-0.5">
-                                            <AnimatedNumber value={stats?.presupuesto_total_ejecutado ?? 0} formatter={(v) => `$${Math.round(v).toLocaleString('es-EC')}`} />
-                                        </p>
-                                    </div>
-                                    <div className="pl-4">
-                                        <span className="text-[9px] text-text-dim uppercase tracking-wider font-medium">Asignado</span>
-                                        <p className="font-mono text-xs font-medium text-text-main mt-0.5">
-                                            <AnimatedNumber value={stats?.presupuesto_total_asignado ?? 0} formatter={(v) => `$${Math.round(v).toLocaleString('es-EC')}`} />
-                                        </p>
-                                    </div>
                                 </div>
                             </div>
 
@@ -380,13 +334,6 @@ export const AdminDashboard: React.FC = () => {
                                     suffix: 'validados',
                                     max: 30,
                                     color: 'var(--info)'
-                                },
-                                {
-                                    label: 'Ejecución Presupuestaria',
-                                    value: Math.round(ejecucionPorc),
-                                    suffix: '%',
-                                    max: 100,
-                                    color: 'var(--success)'
                                 }
                             ]}
                         />

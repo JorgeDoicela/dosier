@@ -67,8 +67,7 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
                 { type: 'project_general_section', icon: BookOpen, label: 'Identificación del Proyecto', desc: 'Metadatos institucionales (título, carrera, plazos).', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'researchers_table', icon: Users, label: 'Investigadores', desc: 'Participantes y docentes del proyecto científico.', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'project_technical_section', icon: FileText, label: 'Especificación Técnica', desc: 'Sub-secciones de redacción científica y técnica.', color: 'text-emerald-500 bg-emerald-500/5' },
-                { type: 'project_budget_section', icon: DollarSign, label: 'Recursos y Presupuesto', desc: 'Tablas de recursos y financiamiento del proyecto.', color: 'text-emerald-500 bg-emerald-500/5' },
-                { type: 'project_progress_report', icon: BarChart2, label: 'Avance de Ejecución', desc: 'Hitos, evidencias y avance presupuestario.', color: 'text-emerald-500 bg-emerald-500/5' },
+                { type: 'project_progress_report', icon: BarChart2, label: 'Avance de Ejecución', desc: 'Hitos y evidencias de desarrollo académico.', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'signatures', icon: PenLine, label: 'Firmas de Responsabilidad', desc: 'Firmas de docentes, directores y autoridades institucionales.', color: 'text-emerald-500 bg-emerald-500/5' }
             ]
         },

@@ -7,7 +7,6 @@ interface ObservationConnectorsProps {
         carrera?: string;
         titulo?: string;
         descripcion?: string;
-        presupuesto?: string;
     };
     hoveredField?: string | null;
 }
@@ -38,7 +37,7 @@ export const ObservationConnectors: React.FC<ObservationConnectorsProps> = ({
         }
 
         const containerRect = container.getBoundingClientRect();
-        const activeKeys = ['general', 'carrera', 'titulo', 'descripcion', 'presupuesto'] as const;
+        const activeKeys = ['general', 'carrera', 'titulo', 'descripcion'] as const;
         const computedLines: ConnectorLine[] = [];
 
         for (const key of activeKeys) {

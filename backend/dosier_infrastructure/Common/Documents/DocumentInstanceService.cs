@@ -397,9 +397,9 @@ namespace Dosier.Infrastructure.Common.Documents
             // PROTOCOLO_INVESTIGACION
             "Antecedentes", "DescripcionProyecto", "Justificacion", "ObjetivoGeneral", "ObjetivosEspecificos", 
             "MarcoTeorico", "Metodologia", "Evaluacion", "Bibliografia", "Investigadores", 
-            "RecursosDisponibles", "RecursosNecesarios", "Cronograma", "ProductosEsperados",
+            "Cronograma", "ProductosEsperados",
             // INFORME_AVANCE
-            "HitosCompletados", "Evidencias", "PresupuestoEjecutado", "ConclusionesParciales", 
+            "HitosCompletados", "Evidencias", "ConclusionesParciales", 
             "ActividadesEjecutadas", "ActividadesNoPrevistas", "Obstaculos", "DescripcionFaseActual", 
             "EstadoEjecucion", "ObservacionesDirector", "ObservacionesCoordinador"
         };

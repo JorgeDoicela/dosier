@@ -90,7 +90,6 @@ namespace dosier_infrastructure.Research.Subservices
                     DescripcionProyecto = desc,
                     TieneGrupoInvestigacion = basicProject.TieneGrupo,
                     PuntajeEvaluacion = basicProject.PuntajeEvaluacion,
-                    CostoTotal = basicProject.PresupuestoEstimado ?? 0,
                     Investigadores = new List<InvestigadorDto>()
                 };
 
@@ -130,13 +129,10 @@ namespace dosier_infrastructure.Research.Subservices
                 .Include(p => p.DocProyectosCarreras)
                 .Include(p => p.DocProyectoParticipantes).ThenInclude(pp => pp.IdUsuarioNavigation)
                 .Include(p => p.DocObjetivosProyecto)
-                .Include(p => p.DocPresupuestoItems)
                 .Include(p => p.DocCronogramas)
                 .Include(p => p.DocBibliografiasProyecto)
                 .Include(p => p.DocImpactosProyecto)
                 .Include(p => p.MatrizMarcoLogico)
-                .Include(p => p.DocRecursosDisponibles)
-                .Include(p => p.DocGastos).ThenInclude(g => g.IdItemNavigation)
                 .FirstOrDefaultAsync(p => p.Uuid == canonicalUuid);
 
             if (p == null) return null;
@@ -447,7 +443,6 @@ namespace dosier_infrastructure.Research.Subservices
             dto.Estado = p.Estado;
             dto.IdConvocatoria = p.IdConvocatoria;
             dto.ConvocatoriaTitulo = p.IdConvocatoriaNavigation?.Titulo;
-            dto.ConvocatoriaMontoMaximo = null;
             dto.IdCarrera = p.DocProyectosCarreras?.FirstOrDefault(pc => pc.Modalidad == "PRINCIPAL")?.IdCarrera ?? p.DocProyectosCarreras?.FirstOrDefault()?.IdCarrera;
             if (dto.IdCarrera.HasValue)
             {
@@ -490,9 +485,6 @@ namespace dosier_infrastructure.Research.Subservices
                 dto.TieneGrupoInvestigacion = dto.TieneGrupoInvestigacion ?? false;
                 dto.GrupoInvestigacionTipo = dto.GrupoInvestigacionTipo ?? "NO";
             }
-            dto.CostoTotal = p.DocPresupuestoItems.Any()
-                ? p.DocPresupuestoItems.Sum(i => i.ValorUnitario * i.Cantidad)
-                : p.PresupuestoEstimado ?? 0;
             dto.Investigadores = investigadoresList;
 
             dto.FechaPresentacion = p.FechaPresentacion?.ToString("dd/MM/yyyy");
@@ -514,20 +506,6 @@ namespace dosier_infrastructure.Research.Subservices
                 .OrderBy(o => o.Orden)
                 .Select(o => o.Descripcion)
                 .ToList();
-            dto.RecursosNecesarios = p.DocPresupuestoItems.Select(i => new RecursoNecesarioDto
-            {
-                Descripcion = i.Detalle,
-                Cantidad = i.Cantidad.ToString(),
-                CostoUnitario = i.ValorUnitario,
-                IdPartida = i.IdPartida,
-                EsGastoCapital = i.EsGastoCapital
-            }).ToList();
-            dto.RecursosDisponibles = p.DocRecursosDisponibles.Select(r => new RecursoDisponibleDto
-            {
-                Descripcion = r.Detalle,
-                Cantidad = r.Cantidad.ToString(),
-                Fuente = r.Fuente
-            }).ToList();
             dto.ProductosEsperados = new List<ProductoEsperadoDto>();
             dto.Impacto = new ImpactoProyectoDto
             {
@@ -566,17 +544,6 @@ namespace dosier_infrastructure.Research.Subservices
                 Indicadores = m.Indicadores,
                 Medios = m.MediosVerificacion,
                 Supuestos = m.Supuestos
-            }).ToList();
-
-            dto.Gastos = p.DocGastos.Select(g => new GastoDto
-            {
-                Id = g.Uuid.ToString(),
-                Descripcion = g.Descripcion,
-                Partida = g.IdItemNavigation?.IdPartida,
-                Monto = g.Monto,
-                Fecha = g.FechaGasto.ToString("yyyy-MM-dd"),
-                ReferenciaFactura = g.NumeroFactura,
-                Categoria = g.IdItemNavigation?.Categoria
             }).ToList();
 
             return dto;

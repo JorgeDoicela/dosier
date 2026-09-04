@@ -24,16 +24,13 @@ namespace dosier_api.Controllers
     {
         private readonly IProjectOrchestrator _projectOrchestrator;
         private readonly IProjectSigningService _projectSigningService;
-        private readonly IProjectExpensesService _projectExpensesService;
 
         public ProjectsController(
             IProjectOrchestrator projectOrchestrator,
-            IProjectSigningService projectSigningService,
-            IProjectExpensesService projectExpensesService)
+            IProjectSigningService projectSigningService)
         {
             _projectOrchestrator = projectOrchestrator;
             _projectSigningService = projectSigningService;
-            _projectExpensesService = projectExpensesService;
         }
 
         /// <summary>
@@ -392,28 +389,6 @@ namespace dosier_api.Controllers
 
             var actividad = await _projectOrchestrator.GetProjectActivityAsync(uuid, maxItems);
             return Ok(actividad);
-        }
-
-        [HttpPost("{uuid}/gastos")]
-        public async Task<IActionResult> RegistrarGasto(string uuid, [FromBody] RegistrarGastoRequest request)
-        {
-            var result = await _projectExpensesService.RegistrarGastoAsync(uuid, request, User);
-            if (!result.Success)
-            {
-                return StatusCode(result.StatusCode, new { success = false, message = result.Message });
-            }
-            return Ok(result.Data);
-        }
-
-        [HttpDelete("{uuid}/gastos/{gastoUuid}")]
-        public async Task<IActionResult> EliminarGasto(string uuid, string gastoUuid)
-        {
-            var result = await _projectExpensesService.EliminarGastoAsync(uuid, gastoUuid, User);
-            if (!result.Success)
-            {
-                return StatusCode(result.StatusCode, new { success = false, message = result.Message });
-            }
-            return Ok(new { success = true });
         }
 
         private async Task<bool> CanCurrentUserModifyProjectAsync(string uuid)

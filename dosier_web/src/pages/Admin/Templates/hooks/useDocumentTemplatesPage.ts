@@ -444,20 +444,6 @@ export const useDocumentTemplatesPage = () => {
                     }
                 };
                 break;
-            case 'project_budget_section':
-            case 'resources':
-                newBlock = {
-                    id: newId,
-                    type,
-                    title: BLOCK_METADATA.project_budget_section.defaultTitle,
-                    isActive: true,
-                    config: {
-                        showRecursosDisponibles: true,
-                        showRecursosNecesarios: true,
-                        showFinanciamiento: true
-                    }
-                };
-                break;
             case 'project_progress_report':
                 newBlock = {
                     id: newId,
@@ -466,8 +452,7 @@ export const useDocumentTemplatesPage = () => {
                     isActive: true,
                     config: {
                         showHitosCompletados: true,
-                        showEvidencias: true,
-                        showPresupuestoEjecutado: true
+                        showEvidencias: true
                     }
                 };
                 break;

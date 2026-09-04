@@ -23,8 +23,6 @@ interface ProyectoResumen {
     tipo_investigacion?: string;
     template_code?: string;
     templateCode?: string;
-    presupuesto_total?: number;
-    presupuesto_ejecutado?: number;
     puntaje_evaluacion?: number;
     fecha_registro?: string;
     fecha_modificacion?: string;
@@ -284,9 +282,6 @@ const MyProjectsPage: React.FC = () => {
             if (sortBy === 'titulo') {
                 return a.titulo.localeCompare(b.titulo);
             }
-            if (sortBy === 'presupuesto') {
-                return (b.presupuesto_total || 0) - (a.presupuesto_total || 0);
-            }
             return 0;
         });
 
@@ -404,7 +399,6 @@ const MyProjectsPage: React.FC = () => {
                             <option value="recientes">Modificados recientemente</option>
                             <option value="antiguos">Más antiguos</option>
                             <option value="titulo">Título (A-Z)</option>
-                            <option value="presupuesto">Presupuesto mayor</option>
                         </select>
                         {(filterEstado !== 'todos' || filterLinea !== 'todas' || filterConvocatoria !== 'todas' || search !== '') && (
                             <button
@@ -510,9 +504,6 @@ const MyProjectsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-up [animation-delay:150ms]">
                 {filtered.map((p) => {
                     const cfg = getEstadoConfig(p.estado);
-                    const presupuestoPorc = p.presupuesto_total && p.presupuesto_ejecutado
-                        ? Math.min(100, (p.presupuesto_ejecutado / p.presupuesto_total) * 100)
-                        : 0;
 
                     return (
                         <div
@@ -611,25 +602,6 @@ const MyProjectsPage: React.FC = () => {
                                     <p className="text-[9px] text-text-dim uppercase tracking-wide">Informes</p>
                                 </div>
                             </div>
-
-                            {p.presupuesto_total !== undefined && p.presupuesto_total > 0 && (
-                                <div className="mb-3">
-                                    <div className="flex justify-between text-[10px] font-mono text-text-dim mb-1">
-                                        <span>Ejecución presupuestaria</span>
-                                        <span className="text-text-main font-bold">{presupuestoPorc.toFixed(0)}%</span>
-                                    </div>
-                                    <div className="w-full h-1 bg-border-thin rounded-full overflow-hidden">
-                                        <div
-                                            className="progress-fill progress-fill--brand"
-                                            style={{ width: `${presupuestoPorc}%` }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between text-[9px] text-text-dim mt-1">
-                                        <span>${(p.presupuesto_ejecutado ?? 0).toLocaleString('es-EC')}</span>
-                                        <span>${(p.presupuesto_total).toLocaleString('es-EC')}</span>
-                                    </div>
-                                </div>
-                            )}
 
                             <div className="flex items-center justify-between pt-3 border-t border-border mt-4 text-[10px] text-text-dim">
                                 <div className="flex items-center gap-1">

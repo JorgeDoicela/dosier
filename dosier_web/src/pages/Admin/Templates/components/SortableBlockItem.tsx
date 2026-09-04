@@ -22,7 +22,6 @@ import {
     RenderImpacts,
 } from './canvasRenderers/RenderSections';
 import {
-    RenderProjectBudgetSection,
     RenderProjectProgressReport,
 } from './canvasRenderers/RenderReports';
 import {
@@ -36,13 +35,11 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'cover',
     'project_general_section',
     'project_technical_section',
-    'project_budget_section',
     'project_progress_report',
     'researchers_table',
     'gantt',
     'signatures',
     'impacts',
-    'resources',
     'progress_header_section',
     'progress_status_section',
 ];
@@ -119,9 +116,6 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 return <RenderProjectGeneralSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'project_technical_section':
                 return <RenderProjectTechnicalSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
-            case 'project_budget_section':
-            case 'resources':
-                return <RenderProjectBudgetSection config={block.config} />;
             case 'project_progress_report':
                 return <RenderProjectProgressReport config={block.config} />;
             case 'impacts':

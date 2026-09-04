@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DOSIER — Tests: usePreproposalState.ts (lógica pura)
  *
  * Valida la lógica del estado de la prepropuesta de investigación:
@@ -21,7 +21,6 @@ interface PreproposalForm {
     metodologia: string;
     resultadosEsperados: string;
     lineaInvestigacion: string;
-    presupuestoEstimado: number | null;
 }
 
 const PREPROPOSAL_DEFAULT: PreproposalForm = {
@@ -32,7 +31,6 @@ const PREPROPOSAL_DEFAULT: PreproposalForm = {
     metodologia: "",
     resultadosEsperados: "",
     lineaInvestigacion: "",
-    presupuestoEstimado: null,
 };
 
 // ─── Lógica pura ──────────────────────────────────────────────────────────────
@@ -57,7 +55,6 @@ function calcularAvancePrepropuesta(form: PreproposalForm): number {
         form.metodologia.trim().length > 0,
         form.resultadosEsperados.trim().length > 0,
         form.lineaInvestigacion.trim().length > 0,
-        form.presupuestoEstimado !== null,
     ];
     const completados = campos.filter(Boolean).length;
     return Math.round((completados / campos.length) * 100);
@@ -96,7 +93,6 @@ const FORM_COMPLETO: PreproposalForm = {
     metodologia: "Metodología de desarrollo ágil con sprints de 2 semanas.",
     resultadosEsperados: "Un sistema funcional que reduzca el tiempo administrativo en 40%.",
     lineaInvestigacion: "Tecnologías de la Información Aplicadas",
-    presupuestoEstimado: 8500,
 };
 
 describe("validarPrepropuesta — campos requeridos", () => {

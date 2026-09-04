@@ -24,9 +24,6 @@ public class DocProyectoConfiguration : IEntityTypeConfiguration<DocProyecto>
         entity.Property(e => e.FechaFin).HasColumnName("fechaFin");
         entity.Property(e => e.TiempoEjecucion).HasColumnName("tiempoEjecucion").HasMaxLength(100);
         entity.Property(e => e.Estado).HasColumnName("estado").HasColumnType("varchar(50)").HasMaxLength(50).HasDefaultValueSql("'Borrador'");
-        entity.Property(e => e.PuntajeEvaluacion).HasColumnName("puntajeEvaluacion").HasPrecision(5, 2);
-        entity.Property(e => e.ValorEjecucion).HasColumnName("valorEjecucion").HasPrecision(12, 2).HasDefaultValueSql("'0.00'");
-        entity.Property(e => e.PresupuestoEstimado).HasColumnName("presupuesto_estimado").HasPrecision(12, 2).HasDefaultValueSql("'0.00'");
         entity.Property(e => e.MetadataCacesJson).HasColumnName("metadataCacesJson").HasColumnType("json");
         entity.Property(e => e.Activo).HasColumnName("activo").HasColumnType("tinyint(1)").HasDefaultValueSql("'1'").HasSentinel(true);
         entity.Property(e => e.Eliminado).HasColumnName("eliminado").HasColumnType("tinyint(1)").HasDefaultValueSql("'0'").HasSentinel(false);
@@ -147,59 +144,6 @@ public class DocProyectoOdsConfiguration : IEntityTypeConfiguration<DocProyectoO
     }
 }
 
-public class DocRecursoDisponibleConfiguration : IEntityTypeConfiguration<DocRecursoDisponible>
-{
-    public void Configure(EntityTypeBuilder<DocRecursoDisponible> entity)
-    {
-        entity.HasKey(e => e.IdRecurso).HasName("PRIMARY");
-        entity.ToTable("doc_recursos_disponibles");
-        entity.Property(e => e.IdRecurso).HasColumnName("idRecurso");
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.Detalle).HasColumnName("detalle").HasMaxLength(255).IsRequired();
-        entity.Property(e => e.Cantidad).HasColumnName("cantidad").HasPrecision(10, 2).IsRequired();
-        entity.Property(e => e.Fuente).HasColumnName("fuente").HasMaxLength(150);
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocRecursosDisponibles).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_rec_proyecto");
-    }
-}
-
-public class DocPresupuestoItemConfiguration : IEntityTypeConfiguration<DocPresupuestoItem>
-{
-    public void Configure(EntityTypeBuilder<DocPresupuestoItem> entity)
-    {
-        entity.HasKey(e => e.IdItem).HasName("PRIMARY");
-        entity.ToTable("doc_presupuesto_items");
-        entity.Property(e => e.IdItem).HasColumnName("idItem");
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.Categoria).HasColumnName("categoria").HasMaxLength(100).IsRequired();
-        entity.Property(e => e.Detalle).HasColumnName("detalle").HasColumnType("text").IsRequired();
-        entity.Property(e => e.IdPartida).HasColumnName("idPartida").HasMaxLength(50);
-        entity.Property(e => e.Cantidad).HasColumnName("cantidad").HasPrecision(10, 2).HasDefaultValueSql("'1'");
-        entity.Property(e => e.ValorUnitario).HasColumnName("valorUnitario").HasPrecision(12, 2).IsRequired();
-        entity.Property(e => e.ValorTotal).HasColumnName("valorTotal").HasPrecision(12, 2).ValueGeneratedOnAddOrUpdate();
-        entity.Property(e => e.EsGastoCapital).HasColumnName("esGastoCapital").HasColumnType("tinyint(1)").HasDefaultValueSql("'0'").HasSentinel(false);
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocPresupuestoItems).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_pres_proyecto");
-    }
-}
-
-public class DocFinanciamientoConfiguration : IEntityTypeConfiguration<DocFinanciamiento>
-{
-    public void Configure(EntityTypeBuilder<DocFinanciamiento> entity)
-    {
-        entity.HasKey(e => e.IdFinanciamiento).HasName("PRIMARY");
-        entity.ToTable("doc_financiamientos");
-        entity.Property(e => e.IdFinanciamiento).HasColumnName("idFinanciamiento");
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.EsIstpet).HasColumnName("esIstpet").HasColumnType("tinyint(1)").HasDefaultValueSql("'1'").HasSentinel(true);
-        entity.Property(e => e.NombreEmpresa).HasColumnName("nombreEmpresa").HasMaxLength(255);
-        entity.Property(e => e.OtrasFuentes).HasColumnName("otrasFuentes").HasColumnType("tinyint(1)").HasDefaultValueSql("'0'").HasSentinel(false);
-        entity.Property(e => e.Monto).HasColumnName("monto").HasPrecision(12, 2);
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocFinanciamientos).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_fin_proyecto");
-    }
-}
-
 public class DocImpactoProyectoConfiguration : IEntityTypeConfiguration<DocImpactoProyecto>
 {
     public void Configure(EntityTypeBuilder<DocImpactoProyecto> entity)
@@ -308,53 +252,6 @@ public class DocEvidenciaConfiguration : IEntityTypeConfiguration<DocEvidencia>
 
         entity.HasOne(d => d.IdInformeNavigation).WithMany(p => p.DocEvidencias).HasForeignKey(d => d.IdInforme).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_ev_informe");
         entity.HasOne(d => d.IdTipoEvidenciaNavigation).WithMany(p => p.DocEvidencias).HasForeignKey(d => d.IdTipoEvidencia).OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_ev_tipo");
-    }
-}
-
-public class DocGastoConfiguration : IEntityTypeConfiguration<DocGasto>
-{
-    public void Configure(EntityTypeBuilder<DocGasto> entity)
-    {
-        entity.HasKey(e => e.IdGasto).HasName("PRIMARY");
-        entity.ToTable("doc_gastos");
-        entity.Property(e => e.IdGasto).HasColumnName("idGasto");
-        entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-        entity.HasIndex(e => e.Uuid).IsUnique();
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.IdItem).HasColumnName("idItem");
-        entity.Property(e => e.Monto).HasColumnName("monto").HasPrecision(12, 2).IsRequired();
-        entity.Property(e => e.FechaGasto).HasColumnName("fechaGasto");
-        entity.Property(e => e.NumeroFactura).HasColumnName("numeroFactura").HasMaxLength(100);
-        entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasColumnType("text");
-        entity.Property(e => e.IdEvidencia).HasColumnName("idEvidencia");
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocGastos).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_gast_proyecto");
-        entity.HasOne(d => d.IdItemNavigation).WithMany(p => p.DocGastos).HasForeignKey(d => d.IdItem).OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_gast_item");
-        entity.HasOne(d => d.IdEvidenciaNavigation).WithMany().HasForeignKey(d => d.IdEvidencia).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_gast_evidencia");
-    }
-}
-
-public class DocTransferenciaConfiguration : IEntityTypeConfiguration<DocTransferencia>
-{
-    public void Configure(EntityTypeBuilder<DocTransferencia> entity)
-    {
-        entity.HasKey(e => e.IdTransferencia).HasName("PRIMARY");
-        entity.ToTable("doc_transferencias");
-        entity.Property(e => e.IdTransferencia).HasColumnName("idTransferencia");
-        entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.IdProducto).HasColumnName("idProducto");
-        entity.Property(e => e.EntidadReceptora).HasColumnName("entidadReceptora").HasMaxLength(255).IsRequired();
-        entity.Property(e => e.RucEntidad).HasColumnName("rucEntidad").HasMaxLength(13);
-        entity.Property(e => e.NumeroConvenio).HasColumnName("numeroConvenio").HasMaxLength(100);
-        entity.Property(e => e.FechaConvenio).HasColumnName("fechaConvenio");
-        entity.Property(e => e.Modalidad).HasColumnName("modalidad").HasMaxLength(50).HasDefaultValueSql("'ConvenioCooperacion'");
-        entity.Property(e => e.ValorMonetario).HasColumnName("valorMonetario").HasPrecision(12, 2).HasDefaultValueSql("'0.00'");
-        entity.Property(e => e.BeneficiariosDirectos).HasColumnName("beneficiariosDirectos").HasDefaultValueSql("'0'");
-        entity.Property(e => e.UrlActaFirmada).HasColumnName("urlActaFirmada").HasMaxLength(512);
-        entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasColumnType("text");
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocTransferencias).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_trans_proyecto");
     }
 }
 

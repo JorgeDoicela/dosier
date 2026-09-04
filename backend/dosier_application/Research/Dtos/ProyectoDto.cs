@@ -18,7 +18,6 @@ namespace Dosier.Application.Research.Dtos
         public string? CodigoInstitucional { get; set; }
         public int? IdConvocatoria { get; set; }
         public string? ConvocatoriaTitulo { get; set; }
-        public decimal? ConvocatoriaMontoMaximo { get; set; }
         public int? IdCarrera { get; set; }
         public int? IdObjetivoPnd { get; set; }
 
@@ -149,32 +148,22 @@ namespace Dosier.Application.Research.Dtos
         public string? Evaluacion { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
-        // SECCIÓN 4: RECURSOS, COSTO Y FINANCIAMIENTO
-        // ─────────────────────────────────────────────────────────────────────────
-        public List<RecursoDisponibleDto>? RecursosDisponibles { get; set; }
-        public List<RecursoNecesarioDto>? RecursosNecesarios { get; set; }
-        public decimal CostoTotal { get; set; }
-
-        public string? FuenteFinanciamiento { get; set; }
-        public string? NombreOtraFuente { get; set; }
-
-        // ─────────────────────────────────────────────────────────────────────────
-        // SECCIÓN 5: PRODUCTOS ESPERADOS
+        // SECCIÓN 4: PRODUCTOS ESPERADOS
         // ─────────────────────────────────────────────────────────────────────────
         public List<ProductoEsperadoDto>? ProductosEsperados { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
-        // SECCIÓN 6: IMPACTO DEL PROYECTO
+        // SECCIÓN 5: IMPACTO DEL PROYECTO
         // ─────────────────────────────────────────────────────────────────────────
         public ImpactoProyectoDto? Impacto { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
-        // SECCIÓN 7: CRONOGRAMA
+        // SECCIÓN 6: CRONOGRAMA
         // ─────────────────────────────────────────────────────────────────────────
         public List<ActividadCronogramaDto>? Cronograma { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
-        // SECCIÓN 8: BIBLIOGRAFÍA
+        // SECCIÓN 7: BIBLIOGRAFÍA
         // ─────────────────────────────────────────────────────────────────────────
         private List<string>? _bibliografia;
 
@@ -232,7 +221,6 @@ namespace Dosier.Application.Research.Dtos
         // --- Compliance ---
         public List<MmlRowDto>? MatrizMarcoLogico { get; set; }
         public List<DocumentoAdjuntoDto>? DocumentosAdjuntos { get; set; }
-        public List<GastoDto>? Gastos { get; set; }
 
         [System.Text.Json.Serialization.JsonExtensionData]
         public Dictionary<string, object>? ExtensionData { get; set; }
@@ -274,27 +262,6 @@ namespace Dosier.Application.Research.Dtos
         public decimal? HorasAsignadas { get; set; }
         public bool? EsDirector { get; set; }
         public bool? FirmaHabilitada { get; set; }
-    }
-
-    public class RecursoDisponibleDto
-    {
-        public string? Descripcion { get; set; }
-
-        [System.Text.Json.Serialization.JsonConverter(typeof(StringOrNumberConverter))]
-        public string? Cantidad { get; set; }
-        public string? Fuente { get; set; }
-    }
-
-    public class RecursoNecesarioDto
-    {
-        public string? Descripcion { get; set; }
-
-        [System.Text.Json.Serialization.JsonConverter(typeof(StringOrNumberConverter))]
-        public string? Cantidad { get; set; }
-        public decimal CostoUnitario { get; set; }
-        public decimal CostoTotal { get; set; }
-        public string? IdPartida { get; set; }
-        public bool? EsGastoCapital { get; set; }
     }
 
     public class ProductoEsperadoDto
@@ -356,17 +323,6 @@ namespace Dosier.Application.Research.Dtos
 
         /// <summary>Código de ícono sugerido: 'edit', 'check', 'eye', 'workflow', 'comment'</summary>
         public string Icono { get; set; } = "edit";
-    }
-
-    public class GastoDto
-    {
-        public string? Id { get; set; }
-        public string? Descripcion { get; set; }
-        public string? Partida { get; set; }
-        public decimal Monto { get; set; }
-        public string? Fecha { get; set; }
-        public string? ReferenciaFactura { get; set; }
-        public string? Categoria { get; set; }
     }
 
     public class FirmasResponsabilidadDto

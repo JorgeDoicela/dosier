@@ -88,7 +88,6 @@ namespace dosier_infrastructure.Research.Subservices
             project.FechaPresentacion = ProjectHelper.ParseDateOnly(dto.FechaPresentacion);
             project.FechaInicio = ProjectHelper.ParseDateOnly(dto.FechaInicio ?? dto.FechaInicioEstimada);
             project.FechaFin = ProjectHelper.ParseDateOnly(dto.FechaFin ?? dto.FechaFinEstimada);
-            project.PresupuestoEstimado = dto.CostoTotal;
 
             return (project, null, beforeJson);
         }
@@ -203,12 +202,10 @@ namespace dosier_infrastructure.Research.Subservices
                 .Include(p => p.DocProyectosCarreras)
                 .Include(p => p.DocProyectoParticipantes)
                 .Include(p => p.DocObjetivosProyecto)
-                .Include(p => p.DocPresupuestoItems)
                 .Include(p => p.DocCronogramas)
                 .Include(p => p.DocBibliografiasProyecto)
                 .Include(p => p.DocImpactosProyecto)
                 .Include(p => p.MatrizMarcoLogico)
-                .Include(p => p.DocRecursosDisponibles)
                 .FirstOrDefaultAsync(p => p.Uuid == uuid);
 
             if (project == null)
@@ -232,13 +229,10 @@ namespace dosier_infrastructure.Research.Subservices
                 _context.DocProyectosCarreras.RemoveRange(project.DocProyectosCarreras);
                 _context.DocProyectoParticipantes.RemoveRange(project.DocProyectoParticipantes);
                 _context.DocObjetivosProyecto.RemoveRange(project.DocObjetivosProyecto);
-                _context.DocPresupuestoItems.RemoveRange(project.DocPresupuestoItems);
-
                 _context.DocCronogramas.RemoveRange(project.DocCronogramas);
                 _context.DocBibliografiasProyecto.RemoveRange(project.DocBibliografiasProyecto);
                 _context.DocImpactosProyecto.RemoveRange(project.DocImpactosProyecto);
                 _context.DocProyectosMml.RemoveRange(project.MatrizMarcoLogico);
-                _context.DocRecursosDisponibles.RemoveRange(project.DocRecursosDisponibles);
 
                 var trazabilidadLogs = await _context.DocTrazabilidadProyectos
                     .Where(t => t.IdProyecto == project.IdProyecto)

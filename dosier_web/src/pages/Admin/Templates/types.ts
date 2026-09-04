@@ -51,12 +51,10 @@ export type BlockType =
     | 'project_general_section'
     | 'project_technical_section'
     | 'project_progress_report'
-    | 'resources'
     | 'impacts'
     | 'progress_header_section'
     | 'progress_activity_section'
-    | 'progress_status_section'
-    | 'project_budget_section';
+    | 'progress_status_section';
 
 export interface BlockMetaInfo {
     label: string;
@@ -76,8 +74,6 @@ export const BLOCK_METADATA: Record<BlockType, BlockMetaInfo> = {
     project_general_section: { label: 'Identificación del Proyecto', defaultTitle: '1. IDENTIFICACIÓN DEL PROYECTO', category: 'Base de Datos' },
     researchers_table: { label: 'Investigadores', defaultTitle: '2. INVESTIGADORES', category: 'Base de Datos' },
     project_technical_section: { label: 'Especificación Técnica', defaultTitle: '3. ESPECIFICACIÓN TÉCNICA', category: 'Base de Datos' },
-    project_budget_section: { label: 'Recursos y Presupuesto', defaultTitle: '4. RECURSOS Y PRESUPUESTO', category: 'Base de Datos' },
-    resources: { label: 'Recursos y Presupuesto', defaultTitle: '4. RECURSOS Y PRESUPUESTO', category: 'Base de Datos' },
     impacts: { label: 'Matriz de Impactos', defaultTitle: '6. MATRIZ DE IMPACTOS', category: 'Base de Datos' },
     project_progress_report: { label: 'Avance de Ejecución', defaultTitle: '7. AVANCE DE EJECUCIÓN', category: 'Base de Datos' },
     signatures: { label: 'Firmas de Responsabilidad', defaultTitle: 'FIRMAS DE RESPONSABILIDAD', category: 'Base de Datos' },

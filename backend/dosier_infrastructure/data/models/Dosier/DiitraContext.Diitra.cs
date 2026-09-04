@@ -24,16 +24,11 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocProyectoParticipanteConfiguration());
         modelBuilder.ApplyConfiguration(new DocObjetivoProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoOdsConfiguration());
-        modelBuilder.ApplyConfiguration(new DocRecursoDisponibleConfiguration());
-        modelBuilder.ApplyConfiguration(new DocPresupuestoItemConfiguration());
-        modelBuilder.ApplyConfiguration(new DocFinanciamientoConfiguration());
         modelBuilder.ApplyConfiguration(new DocImpactoProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocCronogramaConfiguration());
         modelBuilder.ApplyConfiguration(new DocBibliografiaProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocInformeAvanceConfiguration());
         modelBuilder.ApplyConfiguration(new DocEvidenciaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGastoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocTransferenciaConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoMmlConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoDocumentoAdjuntoConfiguration());
 

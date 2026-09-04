@@ -8,19 +8,16 @@ interface WorkspaceHeaderProps {
         uuid: string;
         title: string;
         status: string;
-        presupuesto: number;
         linea: string;
     };
     isSidebarCollapsed: boolean;
     urlPrefix: string;
-    templateCode?: string;
 }
 
 export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
     currentProject,
     isSidebarCollapsed,
     urlPrefix,
-    templateCode
 }) => {
     const returnPath = urlPrefix;
     const returnLabel = urlPrefix.endsWith('mis-proyectos') ? 'Mis Proyectos' : 'Investigación';

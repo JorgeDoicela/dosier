@@ -8,8 +8,6 @@ import api from '../../../../../api/axios_config';
 interface AdminReviewPanelProps {
     currentProject: {
         uuid: string;
-        presupuesto: number;
-        convocatoriaMontoMaximo: number | null;
         convocatoria: string;
         title: string;
     };
@@ -44,10 +42,6 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
     const [submitting, setSubmitting] = useState(false);
 
     // 1. CHEQUEOS AUTOMÁTICOS
-    // A. Presupuesto
-    const maxBudget = currentProject.convocatoriaMontoMaximo;
-    const currentBudget = currentProject.presupuesto || 0;
-    const isBudgetOk = maxBudget ? currentBudget <= maxBudget : true;
 
     // B. Equipo Mínimo
     const hasPrincipalInvestigator = investigadores.some(inv => 
@@ -69,7 +63,7 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
     // D. Sello Digital (Por estar en estado Enviado, ya está firmado)
     const isSigned = true;
 
-    const allOk = isBudgetOk && isTeamOk && isHoursOk && isSigned;
+    const allOk = isTeamOk && isHoursOk && isSigned;
 
     // 2. ACCIONES
     const handleAprobar = async () => {
@@ -198,21 +192,6 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
             {/* Checklist de Validación Automatizada */}
             <div className="space-y-3.5">
                 <h4 className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Chequeos de Consistencia</h4>
-                
-                {/* 1. Presupuesto */}
-                <div className="flex items-start gap-2.5 text-xs">
-                    {isBudgetOk ? (
-                        <CheckCircle2 size={14} className="text-success shrink-0 mt-0.5" />
-                    ) : (
-                        <AlertTriangle size={14} className="text-error shrink-0 mt-0.5 animate-bounce" />
-                    )}
-                    <div className="flex-1 leading-snug">
-                        <p className="font-semibold text-text-main">Tope de Presupuesto</p>
-                        <p className="text-[10px] text-text-dim mt-0.5">
-                            Costo: ${currentBudget.toLocaleString()} / Máx: {maxBudget ? `$${maxBudget.toLocaleString()}` : 'Sin tope'}
-                        </p>
-                    </div>
-                </div>
 
                 {/* 2. Equipo Humano */}
                 <div className="flex items-start gap-2.5 text-xs">

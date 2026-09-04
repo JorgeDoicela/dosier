@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createElement } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../../../../api/axios_config';
 import { useNotifications } from '../../../../../api/NotificationsContext';
 import { useConfirm } from '../../../../../api/ConfirmContext';
@@ -8,7 +8,6 @@ export interface ParsedObservations {
     carrera?: string;
     titulo?: string;
     descripcion?: string;
-    presupuesto?: string;
 }
 
 export const parseObservation = (obsText: string): ParsedObservations => {
@@ -17,8 +16,7 @@ export const parseObservation = (obsText: string): ParsedObservations => {
     const hasAnyTag = obsText.includes('[GENERAL]') ||
         obsText.includes('[CARRERA/UNIDAD]') ||
         obsText.includes('[TEMA/TÍTULO]') ||
-        obsText.includes('[DESCRIPCIÓN]') ||
-        obsText.includes('[PRESUPUESTO]');
+        obsText.includes('[DESCRIPCIÓN]');
 
     if (!hasAnyTag) {
         return { general: obsText };
@@ -26,23 +24,20 @@ export const parseObservation = (obsText: string): ParsedObservations => {
 
     const parsed: ParsedObservations = {};
 
-    const regexGeneral = /\[GENERAL\]\s*([\s\S]*?)(?=\[CARRERA\/UNIDAD\]|\[TEMA\/TÍTULO\]|\[DESCRIPCIÓN\]|\[PRESUPUESTO\]|$)/i;
-    const regexCarrera = /\[CARRERA\/UNIDAD\]\s*([\s\S]*?)(?=\[GENERAL\]|\[TEMA\/TÍTULO\]|\[DESCRIPCIÓN\]|\[PRESUPUESTO\]|$)/i;
-    const regexTitulo = /\[TEMA\/TÍTULO\]\s*([\s\S]*?)(?=\[GENERAL\]|\[CARRERA\/UNIDAD\]|\[DESCRIPCIÓN\]|\[PRESUPUESTO\]|$)/i;
-    const regexDescripcion = /\[DESCRIPCIÓN\]\s*([\s\S]*?)(?=\[GENERAL\]|\[CARRERA\/UNIDAD\]|\[TEMA\/TÍTULO\]|\[PRESUPUESTO\]|$)/i;
-    const regexPresupuesto = /\[PRESUPUESTO\]\s*([\s\S]*?)(?=\[GENERAL\]|\[CARRERA\/UNIDAD\]|\[TEMA\/TÍTULO\]|\[DESCRIPCIÓN\]|$)/i;
+    const regexGeneral = /\[GENERAL\]\s*([\s\S]*?)(?=\[CARRERA\/UNIDAD\]|\[TEMA\/TÍTULO\]|\[DESCRIPCIÓN\]|$)/i;
+    const regexCarrera = /\[CARRERA\/UNIDAD\]\s*([\s\S]*?)(?=\[GENERAL\]|\[TEMA\/TÍTULO\]|\[DESCRIPCIÓN\]|$)/i;
+    const regexTitulo = /\[TEMA\/TÍTULO\]\s*([\s\S]*?)(?=\[GENERAL\]|\[CARRERA\/UNIDAD\]|\[DESCRIPCIÓN\]|$)/i;
+    const regexDescripcion = /\[DESCRIPCIÓN\]\s*([\s\S]*?)(?=\[GENERAL\]|\[CARRERA\/UNIDAD\]|\[TEMA\/TÍTULO\]|$)/i;
 
     const matchGeneral = obsText.match(regexGeneral);
     const matchCarrera = obsText.match(regexCarrera);
     const matchTitulo = obsText.match(regexTitulo);
     const matchDescripcion = obsText.match(regexDescripcion);
-    const matchPresupuesto = obsText.match(regexPresupuesto);
 
     if (matchGeneral && matchGeneral[1].trim()) parsed.general = matchGeneral[1].trim();
     if (matchCarrera && matchCarrera[1].trim()) parsed.carrera = matchCarrera[1].trim();
     if (matchTitulo && matchTitulo[1].trim()) parsed.titulo = matchTitulo[1].trim();
     if (matchDescripcion && matchDescripcion[1].trim()) parsed.descripcion = matchDescripcion[1].trim();
-    if (matchPresupuesto && matchPresupuesto[1].trim()) parsed.presupuesto = matchPresupuesto[1].trim();
 
     return parsed;
 };
@@ -70,15 +65,13 @@ export function usePreproposalState(
     const [sectionObservations, setSectionObservations] = useState({
         carrera: '',
         titulo: '',
-        descripcion: '',
-        presupuesto: ''
+        descripcion: ''
     });
-    const [activeSectionTab, setActiveSectionTab] = useState<'carrera' | 'titulo' | 'descripcion' | 'presupuesto'>('carrera');
+    const [activeSectionTab, setActiveSectionTab] = useState<'carrera' | 'titulo' | 'descripcion'>('carrera');
     const [isSubmittingAdminReview, setIsSubmittingAdminReview] = useState(false);
 
     const [editTitulo, setEditTitulo] = useState('');
     const [editDescripcion, setEditDescripcion] = useState('');
-    const [editPresupuesto, setEditPresupuesto] = useState('');
     const [isSavingPreproposal, setIsSavingPreproposal] = useState(false);
 
     const [trazabilidad, setTrazabilidad] = useState<any[]>([]);
@@ -124,7 +117,6 @@ export function usePreproposalState(
         if (currentProject) {
             setEditTitulo(currentProject.title || '');
             setEditDescripcion(currentProject.descripcion || '');
-            setEditPresupuesto(currentProject.presupuesto?.toString() || '');
             const projCarreraId = currentProject.idCarrera || currentProject.id_carrera || 0;
             if (projCarreraId) {
                 setEditIdCarrera(Number(projCarreraId));
@@ -139,18 +131,13 @@ export function usePreproposalState(
         }
     }, [currentProject, docenteCarreras]);
 
-    const handleGuardarYReenviar = async (nuevoTitulo: string, nuevaDescripcion: string, nuevoPresupuesto: string, nuevoIdCarrera?: number) => {
+    const handleGuardarYReenviar = async (nuevoTitulo: string, nuevaDescripcion: string, nuevoIdCarrera?: number) => {
         if (!nuevoTitulo.trim()) {
             addToast("Validación", "El título de la prepropuesta es obligatorio.", "warning");
             return;
         }
         if (!nuevaDescripcion.trim()) {
             addToast("Validación", "La descripción de la prepropuesta es obligatoria.", "warning");
-            return;
-        }
-        const parsedBudget = parseFloat(nuevoPresupuesto);
-        if (isNaN(parsedBudget) || parsedBudget <= 0) {
-            addToast("Validación", "Debe ingresar un presupuesto estimado válido y mayor a cero.", "warning");
             return;
         }
 
@@ -176,12 +163,6 @@ export function usePreproposalState(
                 ...currentMetadata,
                 Titulo: nuevoTitulo.trim().toUpperCase(),
                 DescripcionProyecto: nuevaDescripcion.trim(),
-                CostoTotal: parsedBudget,
-                costoTotal: parsedBudget,
-                costo_total: parsedBudget,
-                PresupuestoEstimado: parsedBudget,
-                presupuestoEstimado: parsedBudget,
-                presupuesto_estimado: parsedBudget,
                 ...(finalCarreraId > 0 ? {
                     IdCarrera: finalCarreraId,
                     idCarrera: finalCarreraId,
@@ -252,9 +233,6 @@ export function usePreproposalState(
             if (sectionObservations.descripcion.trim()) {
                 lines.push(`[DESCRIPCIÓN] ${sectionObservations.descripcion.trim()}`);
             }
-            if (sectionObservations.presupuesto.trim()) {
-                lines.push(`[PRESUPUESTO] ${sectionObservations.presupuesto.trim()}`);
-            }
             const finalObservation = lines.join('\n\n');
 
             const obs = finalObservation || "Idea de proyecto aprobada por Dirección de Investigación";
@@ -277,7 +255,7 @@ export function usePreproposalState(
                 }
             );
             setAdminObservation('');
-            setSectionObservations({ carrera: '', titulo: '', descripcion: '', presupuesto: '' });
+            setSectionObservations({ carrera: '', titulo: '', descripcion: '' });
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
             await fetchProject();
         } catch (e: any) {
@@ -304,9 +282,6 @@ export function usePreproposalState(
         if (sectionObservations.descripcion.trim()) {
             lines.push(`[DESCRIPCIÓN] ${sectionObservations.descripcion.trim()}`);
         }
-        if (sectionObservations.presupuesto.trim()) {
-            lines.push(`[PRESUPUESTO] ${sectionObservations.presupuesto.trim()}`);
-        }
         const finalObservation = lines.join('\n\n');
 
         if (!finalObservation) {
@@ -329,9 +304,6 @@ export function usePreproposalState(
         }
         if (sectionObservations.descripcion.trim()) {
             sectionList.push({ label: 'Descripción / Justificación', text: sectionObservations.descripcion.trim() });
-        }
-        if (sectionObservations.presupuesto.trim()) {
-            sectionList.push({ label: 'Presupuesto Estimado', text: sectionObservations.presupuesto.trim() });
         }
 
         const confirmMessage = React.createElement('div', { className: 'space-y-5' },
@@ -397,7 +369,7 @@ export function usePreproposalState(
                 }
             );
             setAdminObservation('');
-            setSectionObservations({ carrera: '', titulo: '', descripcion: '', presupuesto: '' });
+            setSectionObservations({ carrera: '', titulo: '', descripcion: '' });
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
             await fetchProject();
         } catch (e: any) {
@@ -422,8 +394,6 @@ export function usePreproposalState(
         setEditTitulo,
         editDescripcion,
         setEditDescripcion,
-        editPresupuesto,
-        setEditPresupuesto,
         docenteCarreras,
         editIdCarrera,
         setEditIdCarrera,
