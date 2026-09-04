@@ -218,7 +218,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
                 !l.Utilizado &&
                 l.FechaExpiracion > DateTime.Now);
 
-        if (link == null) return invalido;
+        if (link == null || link.Usuario == null) return invalido;
 
         var user = link.Usuario;
 

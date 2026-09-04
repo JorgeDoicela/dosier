@@ -5,7 +5,7 @@ import type { PeriodoAcademico } from './useConfiguracion';
 
 interface PeriodosTabProps {
     hook: ReturnType<typeof useConfiguracion>;
-    setDetailItem: React.Dispatch<React.SetStateAction<{ type: 'linea' | 'periodo' | 'producto' | 'dominio' | 'indicador' | 'calendario'; data: any; } | null>>;
+    setDetailItem: React.Dispatch<React.SetStateAction<{ type: 'linea' | 'periodo' | 'dominio' | 'indicador' | 'calendario'; data: any; } | null>>;
 }
 
 export const PeriodosTab: React.FC<PeriodosTabProps> = ({ hook, setDetailItem }) => {

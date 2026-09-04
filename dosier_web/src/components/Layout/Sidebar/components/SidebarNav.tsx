@@ -316,7 +316,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             {[
                                 { name: 'Métricas de I+D', path: '/analiticas?tab=general', icon: TrendingUp },
                                 { name: 'Cumplimiento CACES', path: '/analiticas?tab=caces', icon: ShieldCheck },
-                                { name: 'Proyectos y Producción', path: '/analiticas?tab=productos', icon: ClipboardList }
+                                { name: 'Portafolio de Proyectos', path: '/analiticas?tab=proyectos', icon: ClipboardList }
                             ].map((subItem) => {
                                 const isSubActive = location.pathname === '/analiticas' && (
                                     (subItem.path.includes('tab=general') && (!location.search || location.search.includes('tab=general'))) ||

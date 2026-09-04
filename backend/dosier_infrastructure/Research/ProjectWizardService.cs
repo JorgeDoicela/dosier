@@ -94,7 +94,6 @@ namespace dosier_infrastructure.Research
 
                 // 3. Componentes del Proyecto
                 var objetivosCreadosIds = await _componentsSubservice.SyncObjetivosAsync(project.IdProyecto, dto.ObjetivoGeneral, dto.GetObjetivosEspecificosAsList());
-                await _componentsSubservice.SyncProductosAsync(project.IdProyecto, dto.ProductosEsperados);
                 await _componentsSubservice.SyncCronogramaAsync(project.IdProyecto, objetivosCreadosIds, dto.Cronograma);
                 await _componentsSubservice.SyncBibliografiaAsync(project.IdProyecto, dto.Bibliografia);
 

@@ -27,11 +27,11 @@ export const AnalyticsTabs: React.FC<AnalyticsTabsProps> = ({
                 Cumplimiento CACES
             </button>
             <button
-                onClick={() => setActiveTab('productos')}
-                className={`tab-vercel-item ${activeTab === 'productos' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
-                id="tab-productos"
+                onClick={() => setActiveTab('proyectos')}
+                className={`tab-vercel-item ${activeTab === 'proyectos' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
+                id="tab-proyectos"
             >
-                Proyectos y Producción
+                Portafolio de Proyectos
             </button>
         </div>
     );

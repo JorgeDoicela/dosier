@@ -18,13 +18,13 @@ El backend tiene configurada la propiedad `JsonNamingPolicy.SnakeCaseLower` de f
 ```json
 {
   "project_uuid": "550e8400-e29b-41d4-a716-446655440000",
-  "id_tipo_producto": 4,
+  "id_tipo_resultado": 4,
   "titulo_investigacion": "Desarrollo de Algoritmos Forenses",
   "observacion_revision": "Aprobado sin modificaciones"
 }
 ```
 
-La deserialización de .NET transforma automáticamente estas claves a sus correspondientes propiedades `PascalCase` en los DTOs de C# (`ProjectUuid`, `IdTipoProducto`, `TituloInvestigacion`, `ObservacionRevision`).
+La deserialización de .NET transforma automáticamente estas claves a sus correspondientes propiedades `PascalCase` en los DTOs de C# (`ProjectUuid`, `IdTipoResultado`, `TituloInvestigacion`, `ObservacionRevision`).
 
 ### 2.2. Parámetros de Consulta y Formularios (`[FromQuery]`, `[FromForm]`)
 * **Query Parameters (`[FromQuery]`):** El enlazador de parámetros de consulta es insensible a mayúsculas/minúsculas y vincula directamente con las variables de los métodos del controlador. Por convención, se envían en **`camelCase`** (ej. `?projectId=123&includeTeam=true`).
@@ -35,7 +35,7 @@ Las llamadas dirigidas al endpoint de parches de instancias documentales (`/docu
 
 ---
 
-## 3. Catálogo Técnico de los 23 Controladores del Backend
+## 3. Catálogo Técnico de Controladores del Backend
 
 | Controlador | Ruta Base HTTP | Subsistema | Responsabilidad Principal |
 | :--- | :--- | :--- | :--- |
@@ -50,7 +50,6 @@ Las llamadas dirigidas al endpoint de parches de instancias documentales (`/docu
 | `SignaturesController` | `/api/signatures` | Criptografía | Registro de firmas electrónicas, certificados PKCS#12 y sellos de tiempo. |
 | `ConvocatoriasController` | `/api/convocatorias` | Investigación | Convocatorias públicas institucionales y fondos concursables. |
 | `InformesAvanceController` | `/api/informes-avance` | Investigación | Seguimiento de entregables técnicos/financieros e informes de avance. |
-| `ResearchProductsController` | `/api/research-products` | Investigación | Registro de productos científicos (artículos, patentes, software y prototipos). |
 | `GroupsController` | `/api/groups` | Investigación | Grupos de investigación, líneas, sublíneas de adscripción y miembros. |
 | `CatalogsController` | `/api/catalogs` | Catálogos | Catálogos de áreas UNESCO, carreras SIGAFI y tipos de proyectos. |
 | `LopdpController` | `/api/lopdp` | Gobernanza | Gestión de derechos ARCO, consentimientos informados y anonimización. |

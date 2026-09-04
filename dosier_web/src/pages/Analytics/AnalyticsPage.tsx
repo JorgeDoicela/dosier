@@ -20,7 +20,7 @@ import { AnalyticsFilters } from './components/AnalyticsFilters';
 import { AnalyticsTabs } from './components/AnalyticsTabs';
 import { AnalyticsOverviewTab } from './components/AnalyticsOverviewTab';
 import { AnalyticsCacesTab } from './components/AnalyticsCacesTab';
-import { AnalyticsProductsTab } from './components/AnalyticsProductsTab';
+import { AnalyticsProjectsTab } from './components/AnalyticsProjectsTab';
 
 const AnalyticsPage: React.FC = () => {
     const {
@@ -142,8 +142,8 @@ const AnalyticsPage: React.FC = () => {
                         />
                     )}
 
-                    {activeTab === 'productos' && (
-                        <AnalyticsProductsTab
+                    {activeTab === 'proyectos' && (
+                        <AnalyticsProjectsTab
                             filteredProjects={filteredProjects}
                             activeProjectUuid={activeProjectUuid}
                             setActiveProjectUuid={setActiveProjectUuid}

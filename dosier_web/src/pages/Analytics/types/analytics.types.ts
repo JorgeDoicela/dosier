@@ -16,7 +16,6 @@ export interface ProyectoResumen {
     tiempoEjecucion: string | null;
     convocatoriaTitulo: string | null;
     totalInvestigadores: number;
-    totalProductos: number;
     totalInformes: number;
     informesAprobados: number;
     totalEstudiantes?: number;
@@ -46,7 +45,6 @@ export interface DashboardStats {
     proyectosFinalizados: number;
     totalConvocatoriasAbiertas: number;
     totalInvestigadoresActivos: number;
-    totalProductosPeriodo: number;
     articulosIndexados: number;
     prototipos: number;
     ponencias: number;

@@ -40,7 +40,6 @@ namespace dosier_infrastructure.Research.Subservices
             stats.TotalConvocatoriasAbiertas = await _context.DocConvocatorias
                 .CountAsync(c => c.Estado == "Abierta");
 
-            stats.TotalProductosPeriodo = 0;
             stats.ArticulosIndexados = 0;
             stats.Prototipos = 0;
             stats.Ponencias = 0;
@@ -93,7 +92,6 @@ namespace dosier_infrastructure.Research.Subservices
                     .Where(p => misIds.Contains(p.IdProyecto) && (p.Estado == "En Revisión" || p.Estado == "Enviado"))
                     .CountAsync();
 
-                stats.MisProductosRegistrados = 0;
                 stats.MisInformesPendientes = 0;
 
                 stats.MisHorasInvestigacion = await _context.DocProyectoParticipantes

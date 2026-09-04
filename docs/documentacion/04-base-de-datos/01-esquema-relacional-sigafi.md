@@ -19,7 +19,6 @@ erDiagram
     PROJECTS ||--|{ PROJECT_TEAM : incluye
     PROJECTS ||--o{ DOCUMENT_INSTANCES : vincula
     PROJECTS ||--o{ INFORMES_AVANCE : genera
-    PROJECTS ||--o{ RESEARCH_PRODUCTS : produce
 
     DOCUMENT_TEMPLATES ||--o{ DOCUMENT_INSTANCES : instacia
     DOCUMENT_INSTANCES ||--o{ COWORK_DOCUMENTOS : sincroniza

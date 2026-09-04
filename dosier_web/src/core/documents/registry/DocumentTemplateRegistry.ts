@@ -98,8 +98,8 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             FinanciamientoOtrasFuentes: false,
             NombresOtrasFuentes: '',
 
-            // Sección 5: Productos Esperados
-            ProductosEsperados: [],
+            // Sección 5: Resultados Esperados
+            ResultadosEsperados: [],
 
             // Sección 6: Impactos
             Impacto: { social: '', cientifico: '', economico: '', politico: '', ambiental: '', otro: '' },

@@ -2,13 +2,13 @@ import React from 'react';
 import type { ProyectoResumen } from '../types/analytics.types';
 import { formatCurrency } from '../utils/cacesCalculator';
 
-export interface AnalyticsProductsTabProps {
+export interface AnalyticsProjectsTabProps {
     filteredProjects: ProyectoResumen[];
     activeProjectUuid: string | null;
     setActiveProjectUuid: (uuid: string) => void;
 }
 
-export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
+export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
     filteredProjects,
     activeProjectUuid,
     setActiveProjectUuid
@@ -111,8 +111,8 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                         <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.totalEstudiantes || 0} estudiantes</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Productos Registrados</span>
-                                        <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.totalProductos || 0} registrados</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Informes Aprobados</span>
+                                        <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.informesAprobados || 0} / {selectedProj.totalInformes || 0}</span>
                                     </div>
                                 </div>
 
@@ -168,10 +168,10 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                     </div>
                                 </div>
 
-                                {/* Fila Inferior de Productos Entregables */}
+                                {/* Fila Inferior de Informes y Entregables */}
                                 <div className="space-y-3 pt-4 border-t border-brand/20 select-none animate-fade-up">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-text-dim pl-1 font-mono block">
-                                        Entregables Científicos de este Proyecto
+                                        Entregables y Fases de este Proyecto
                                     </span>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -200,10 +200,10 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                                     <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                                                     En Revisión
                                                 </span>
-                                                <span className="font-mono">{selectedProj.totalProductos > 1 ? 1 : 0}</span>
+                                                <span className="font-mono">{selectedProj.totalInformes > selectedProj.informesAprobados ? 1 : 0}</span>
                                             </div>
                                             <div className="pt-1.5 space-y-2 text-[11px] font-semibold text-text-main">
-                                                {selectedProj.totalProductos > 1 ? (
+                                                {selectedProj.totalInformes > selectedProj.informesAprobados ? (
                                                     <div className="p-2 bg-bg-deep/20 border border-border-thin/40 rounded-lg flex flex-col gap-1">
                                                         <p className="leading-snug line-clamp-2">Artículo de Investigación — Revisión Regional (Latindex)</p>
                                                         <span className="text-[7.5px] font-mono font-bold text-warning uppercase mt-0.5">Peer Review</span>
@@ -221,16 +221,16 @@ export const AnalyticsProductsTab: React.FC<AnalyticsProductsTabProps> = ({
                                                     <span className="w-1.5 h-1.5 rounded-full bg-success" />
                                                     Publicado / Validado
                                                 </span>
-                                                <span className="font-mono">{selectedProj.totalProductos > 0 ? (selectedProj.totalProductos > 1 ? selectedProj.totalProductos - 1 : 1) : 0}</span>
+                                                <span className="font-mono">{selectedProj.informesAprobados || 0}</span>
                                             </div>
                                             <div className="pt-1.5 space-y-2 text-[11px] font-semibold text-text-main">
-                                                {selectedProj.totalProductos > 0 ? (
+                                                {selectedProj.informesAprobados > 0 ? (
                                                     <div className="p-2 bg-bg-deep/20 border border-border-thin/40 rounded-lg flex flex-col gap-1">
-                                                        <p className="leading-snug line-clamp-2">Producto de Investigación o Innovación Científica</p>
-                                                        <span className="text-[7.5px] font-mono font-bold text-success uppercase mt-0.5">Scopus / Patente</span>
+                                                        <p className="leading-snug line-clamp-2">Publicación o Informe de Avance Aprobado</p>
+                                                        <span className="text-[7.5px] font-mono font-bold text-success uppercase mt-0.5">Aprobado</span>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[10px] text-text-dim font-bold text-center py-5 italic">No se han registrado publicaciones aún.</p>
+                                                    <p className="text-[10px] text-text-dim font-bold text-center py-5 italic">No se han registrado entregables aprobados aún.</p>
                                                 )}
                                             </div>
                                         </div>

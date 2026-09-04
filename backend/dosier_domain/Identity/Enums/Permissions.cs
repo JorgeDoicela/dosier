@@ -9,7 +9,7 @@ public static class Permissions
     public const string RegistrarBitacora = "PROYECTOS:EDITAR";
     
     // Módulo de Seguimiento
-    public const string RegistrarProducto = "PROYECTOS:EDITAR";
+    public const string RegistrarAvance = "PROYECTOS:EDITAR";
     
     // Gestión Departamental (Director / Admin)
     public const string CrearConvocatoria = "CONVOCATORIAS:CREAR";

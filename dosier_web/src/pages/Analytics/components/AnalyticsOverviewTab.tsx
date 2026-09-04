@@ -56,15 +56,15 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     ]}
                 />
                 <KPICard
-                    title="Producción Científica"
-                    value={filteredProjects.reduce((acc, p) => acc + (p.totalProductos || 0), 0)}
+                    title="Producción Académica"
+                    value={(stats?.articulosIndexados || 0) + (stats?.ponencias || 0)}
                     icon={<BookOpen size={14} />}
                     accentColor="success"
-                    subText="Entregables vinculados"
-                    badgeText={`Total Periodo: ${stats?.totalProductosPeriodo || 0}`}
+                    subText="Publicaciones y ponencias"
+                    badgeText={`Indexados: ${stats?.articulosIndexados || 0}`}
                     footerItems={[
                         { label: 'Artículos Indexados', value: stats?.articulosIndexados || 0, valueColorClass: 'text-success font-semibold' },
-                        { label: 'Prototipos', value: stats?.prototipos || 0 }
+                        { label: 'Ponencias / Difusión', value: stats?.ponencias || 0 }
                     ]}
                 />
                 <KPICard
@@ -202,11 +202,11 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                     <span className={`p-2 rounded-lg shrink-0 border transition-all duration-300 ${
                                         act.tipo === 'proyecto'
                                             ? 'bg-brand-subtle text-brand border-brand/10 group-hover:border-brand/35'
-                                            : act.tipo === 'producto'
+                                            : act.tipo === 'informe'
                                                 ? 'bg-success-subtle text-success border-success/10 group-hover:border-success/35'
                                                 : 'bg-warning-subtle text-warning border-warning/10 group-hover:border-warning/35'
                                     }`}>
-                                        {act.tipo === 'proyecto' ? <Cpu size={13} /> : act.tipo === 'producto' ? <BookOpen size={13} /> : <FileText size={13} />}
+                                        {act.tipo === 'proyecto' ? <Cpu size={13} /> : act.tipo === 'informe' ? <BookOpen size={13} /> : <FileText size={13} />}
                                     </span>
                                     <div className="min-w-0 flex-1 space-y-1">
                                         <p className="text-[11.5px] font-semibold text-text-main group-hover:text-brand transition-colors truncate leading-relaxed">

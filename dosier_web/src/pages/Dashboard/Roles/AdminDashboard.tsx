@@ -21,7 +21,6 @@ interface GlobalStats {
     proyectos_finalizados: number;
     total_convocatorias_abiertas: number;
     total_investigadores_activos: number;
-    total_productos_periodo: number;
     articulos_indexados: number;
     prototipos: number;
     ponencias: number;
@@ -329,10 +328,10 @@ export const AdminDashboard: React.FC = () => {
                                     color: 'var(--brand)'
                                 },
                                 {
-                                    label: 'Productos Científicos',
-                                    value: stats?.total_productos_periodo ?? 0,
-                                    suffix: 'validados',
-                                    max: 30,
+                                    label: 'Proyectos en Ejecución',
+                                    value: stats?.proyectos_en_ejecucion ?? 0,
+                                    suffix: 'activos',
+                                    max: 20,
                                     color: 'var(--info)'
                                 }
                             ]}

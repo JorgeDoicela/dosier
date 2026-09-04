@@ -32,7 +32,6 @@ interface ProyectoResumen {
     convocatoria_titulo?: string;
     rol_en_proyecto?: string;
     total_investigadores: number;
-    total_productos: number;
     total_informes: number;
     informes_aprobados: number;
     director_nombre?: string;
@@ -584,22 +583,18 @@ const MyProjectsPage: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-3 gap-2 mb-4">
+                            <div className="grid grid-cols-2 gap-2 mb-4">
                                 <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">{p.total_investigadores}</p>
-                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Invest.</p>
-                                </div>
-                                <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">{p.total_productos}</p>
-                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Produc.</p>
-                                </div>
-                                <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">
-                                        {p.informes_aprobados}/{p.total_informes}
-                                    </p>
-                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Informes</p>
-                                </div>
-                            </div>
+                                 <p className="stat-number--sm !text-base font-bold text-text-main font-mono">{p.total_investigadores}</p>
+                                 <p className="text-[9px] text-text-dim uppercase tracking-wide">Invest.</p>
+                             </div>
+                             <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
+                                 <p className="stat-number--sm !text-base font-bold text-text-main font-mono">
+                                     {p.informes_aprobados}/{p.total_informes}
+                                 </p>
+                                 <p className="text-[9px] text-text-dim uppercase tracking-wide">Informes</p>
+                             </div>
+                         </div>
 
                             <div className="flex items-center justify-between pt-3 border-t border-border mt-4 text-[10px] text-text-dim">
                                 <div className="flex items-center gap-1">

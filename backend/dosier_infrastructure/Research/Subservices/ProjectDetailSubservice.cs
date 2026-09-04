@@ -500,7 +500,7 @@ namespace dosier_infrastructure.Research.Subservices
                 .OrderBy(o => o.Orden)
                 .Select(o => o.Descripcion)
                 .ToList();
-            dto.ProductosEsperados = new List<ProductoEsperadoDto>();
+            dto.ResultadosEsperados = new List<ResultadoEsperadoDto>();
             var specificObjetivoIds = p.DocObjetivosProyecto
                 .Where(o => !o.EsGeneral)
                 .OrderBy(o => o.Orden)

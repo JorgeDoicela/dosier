@@ -397,7 +397,7 @@ namespace Dosier.Infrastructure.Common.Documents
             // PROTOCOLO_INVESTIGACION
             "Antecedentes", "DescripcionProyecto", "Justificacion", "ObjetivoGeneral", "ObjetivosEspecificos", 
             "MarcoTeorico", "Metodologia", "Evaluacion", "Bibliografia", "Investigadores", 
-            "Cronograma", "ProductosEsperados"
+            "Cronograma", "ResultadosEsperados"
         };
 
         private static bool IsHtmlEmpty(string? html)

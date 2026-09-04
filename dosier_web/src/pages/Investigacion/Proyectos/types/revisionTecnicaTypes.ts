@@ -42,7 +42,7 @@ export const FIELD_LABELS: Record<string, string> = {
     objetivos: 'Objetivo General y Específicos',
     metodologia: 'Metodología y Diseño Técnico',
     presupuesto: 'Recursos y Presupuesto',
-    impacto: 'Impacto y Productos Esperados',
+    impacto: 'Impacto y Resultados Esperados',
     cronograma: 'Cronograma (Diagrama de Gantt)',
     bibliografia: 'Bibliografía y Firmas de Responsabilidad'
 };
@@ -52,7 +52,7 @@ export const SECTIONS: SectionItem[] = [
     { id: 'equipo', label: 'Equipo Humano', icon: Users },
     { id: 'plan_tecnico', label: 'Plan Técnico', icon: Activity },
     { id: 'recursos', label: 'Recursos & Financiamiento', icon: DollarSign },
-    { id: 'impacto', label: 'Impacto & Productos', icon: Target },
+    { id: 'impacto', label: 'Impacto & Resultados', icon: Target },
     { id: 'cronograma', label: 'Cronograma (Gantt)', icon: Activity },
     { id: 'bibliografia', label: 'Bibliografía & Firmas', icon: BookOpen }
 ];

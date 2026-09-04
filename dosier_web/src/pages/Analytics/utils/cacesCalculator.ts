@@ -5,12 +5,12 @@ export const calculateCacesIndicators = (
     stats: DashboardStats | null
 ): readonly CacesIndicator[] => {
     const totalProyectos = projects.length;
-    const totalProductos = stats?.totalProductosPeriodo || projects.reduce((sum, p) => sum + (p.totalProductos || 0), 0);
+    const totalPublicaciones = (stats?.articulosIndexados || 0) + (stats?.ponencias || 0) + projects.reduce((sum, p) => sum + (p.informesAprobados || 0), 0);
     const totalInvestigadores = stats?.totalInvestigadoresActivos || projects.reduce((sum, p) => sum + (p.totalInvestigadores || 0), 0);
 
     // E2.PROD: Tasa de Publicación por Docente (Meta: 0.5 por investigador)
     const prodTarget = Math.max(1, Math.ceil(totalInvestigadores * 0.5));
-    const prodProgress = Math.min(100, Math.round((totalProductos / prodTarget) * 100)) || 0;
+    const prodProgress = Math.min(100, Math.round((totalPublicaciones / prodTarget) * 100)) || 0;
 
     // E4.STUD: Vinculación Formativa / Semilleros (Meta: 30% de proyectos con estudiantes semilleristas activos)
     const studentTarget = Math.max(1, Math.ceil(totalProyectos * 0.3));
@@ -29,8 +29,8 @@ export const calculateCacesIndicators = (
             description: 'Artículos en revistas indexadas (Latindex, Scopus) y ponencias en eventos académicos. Meta: 0.5 publicaciones por docente.',
             status: prodProgress >= 100 ? 'CUMPLIDO' : prodProgress >= 50 ? 'EN PROCESO' : 'ALERTA',
             progress: prodProgress,
-            metaLabel: `Meta: ${prodTarget} Productos`,
-            currentLabel: `${totalProductos} Productos Registrados`
+            metaLabel: `Meta: ${prodTarget} Publicaciones`,
+            currentLabel: `${totalPublicaciones} Publicaciones Registradas`
         },
         {
             code: 'E4.STUD',
@@ -60,9 +60,9 @@ export const getProjectClassification = (projects: ProyectoResumen[], code: stri
 
     projects.forEach(p => {
         if (code === 'E2.PROD') {
-            if (p.totalProductos === 0) {
+            if (p.informesAprobados === 0) {
                 poor.push(p);
-            } else if (p.totalProductos === 1) {
+            } else if (p.informesAprobados === 1) {
                 warning.push(p);
             } else {
                 great.push(p);

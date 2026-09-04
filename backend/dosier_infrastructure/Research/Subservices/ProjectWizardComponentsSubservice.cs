@@ -136,11 +136,6 @@ namespace dosier_infrastructure.Research.Subservices
             return ids;
         }
 
-        public Task SyncProductosAsync(int projectId, List<ProductoEsperadoDto>? productos)
-        {
-            return Task.CompletedTask;
-        }
-
         public async Task SyncCronogramaAsync(int projectId, List<int> objetivosCreadosIds, List<ActividadCronogramaDto>? cronograma)
         {
             if (cronograma == null) return;

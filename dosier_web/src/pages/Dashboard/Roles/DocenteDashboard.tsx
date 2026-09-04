@@ -15,7 +15,6 @@ interface DashboardStats {
     mis_proyectos_activos: number;
     mis_proyectos_borrador: number;
     mis_proyectos_en_revision: number;
-    mis_productos_registrados: number;
     mis_informes_pendientes: number;
     mis_horas_investigacion: number;
     horas_disponibles_distributivo?: number;
@@ -105,7 +104,7 @@ export const DocenteDashboard: React.FC = () => {
         <>
             <DashboardHeader
                 title={`Bienvenido, ${firstName}`}
-                subtitle="Gestiona tus proyectos, carga horaria y productos científicos en un solo lugar."
+                subtitle="Gestiona tus proyectos, carga horaria y avances curriculares en un solo lugar."
                 roleName="Docente Investigador"
                 actions={
                     <>
@@ -310,10 +309,10 @@ export const DocenteDashboard: React.FC = () => {
                                     color: 'var(--success)'
                                 },
                                 {
-                                    label: 'Productos Registrados',
-                                    value: stats?.mis_productos_registrados ?? 0,
-                                    suffix: 'validados',
-                                    max: 10,
+                                    label: 'Proyectos en Revisión',
+                                    value: stats?.mis_proyectos_en_revision ?? 0,
+                                    suffix: 'en trámite',
+                                    max: 5,
                                     color: 'var(--brand)'
                                 },
                                 {

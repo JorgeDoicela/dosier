@@ -56,8 +56,8 @@ export const DASHBOARD_CONFIG: HelpConfig = {
     description: "El panel principal centraliza el estado global de tus investigaciones académicas y del nivel de cumplimiento científico del instituto. Ofrece información instantánea sobre tu carga horaria dedicada a la investigación científica, presupuesto del departamento, estado de revisiones en curso y enlaces interactivos para iniciar tareas clave en pocos clics.",
     steps: [
         {
-            title: "Monitoreo en tiempo real de KPIs científicos",
-            description: "Examina los contadores principales en la parte superior del tablero. Estas tarjetas informativas reflejan el número de proyectos aprobados, los productos científicos publicados en el periodo actual, las horas asignadas en tu distributivo académico y el presupuesto financiero ejecutado. Se sincronizan directamente con las bases del SIGAFI.",
+            title: "Monitoreo en tiempo real de KPIs de investigación",
+            description: "Examina los contadores principales en la parte superior del tablero. Estas tarjetas informativas reflejan el número de proyectos aprobados, el estado de avance de los proyectos en el periodo actual, las horas asignadas en tu distributivo académico y el presupuesto financiero ejecutado. Se sincronizan directamente con las bases del SIGAFI.",
             highlight: 'content-top'
         },
         {

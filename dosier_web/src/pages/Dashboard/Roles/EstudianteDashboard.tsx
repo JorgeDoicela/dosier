@@ -84,10 +84,9 @@ export const EstudianteDashboard: React.FC = () => {
         };
     }, []);
 
-    // Puntuación acumulada: base de 100 puntos + 250 por proyecto activo + 500 por producto registrado
+    // Puntuación acumulada: base de 100 puntos + 250 por proyecto activo
     const activeProjectsCount = stats?.mis_proyectos_activos ?? 0;
-    const productsCount = stats?.mis_productos_registrados ?? 0;
-    const score = 100 + (activeProjectsCount * 250) + (productsCount * 500);
+    const score = 100 + (activeProjectsCount * 250);
 
     let tier = "Semillero Iniciante";
     if (score >= 1000) {

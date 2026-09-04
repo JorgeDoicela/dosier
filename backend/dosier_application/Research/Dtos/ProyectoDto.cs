@@ -141,9 +141,9 @@ namespace Dosier.Application.Research.Dtos
         public string? Evaluacion { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
-        // SECCIÓN 4: PRODUCTOS ESPERADOS
+        // SECCIÓN 4: RESULTADOS ESPERADOS
         // ─────────────────────────────────────────────────────────────────────────
-        public List<ProductoEsperadoDto>? ProductosEsperados { get; set; }
+        public List<ResultadoEsperadoDto>? ResultadosEsperados { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
         // SECCIÓN 5: IMPACTO DEL PROYECTO
@@ -247,7 +247,7 @@ namespace Dosier.Application.Research.Dtos
         public bool? FirmaHabilitada { get; set; }
     }
 
-    public class ProductoEsperadoDto
+    public class ResultadoEsperadoDto
     {
         public string? Tipo { get; set; }
 

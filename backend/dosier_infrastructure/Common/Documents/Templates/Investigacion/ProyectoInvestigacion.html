@@ -493,15 +493,15 @@
       </tr>
       </tbody>
     </table>
-  <!-- BLOQUE: PRODUCTOS ESPERADOS (DETALLADO CACES) -->
+  <!-- BLOQUE: RESULTADOS Y ENTREGABLES ESPERADOS (DETALLADO CACES) -->
   <div style="margin-top: 20px;">
-    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: {{ theme.colors.primary }}; margin-bottom: 6px;">5. Productos y Entregables Esperados</p>
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: {{ theme.colors.primary }}; margin-bottom: 6px;">5. Resultados y Entregables Esperados</p>
     <table class="info-table">
       <thead>
         <tr>
           <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important;">Categoría</th>
           <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important;">Subtipo / Entregable</th>
-          <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important;">Nombre del Producto</th>
+          <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important;">Nombre del Entregable</th>
           <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important;">Indicador Verificable</th>
           <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important;">Medio de Verificación</th>
           <th style="background: {{default theme.colors.table_header_bg "#222c57"}}; color: {{default theme.colors.table_header_color "#ffffff"}} !important; width: 60px; text-align: center;">Cant.</th>
@@ -509,13 +509,13 @@
         </tr>
       </thead>
       <tbody>
-        {{#each productos_esperados}}
+        {{#each (default resultados_esperados entregables)}}
         <tr>
           <td>{{#if this.categoria}}{{this.categoria}}{{else}}{{#if this.Category}}{{this.Category}}{{else}}{{#if this.Categoria}}{{this.Categoria}}{{else}}General{{/if}}{{/if}}{{/if}}</td>
-          <td>{{#if this.tipo_producto_nombre}}{{this.tipo_producto_nombre}}{{else}}{{this.tipo}}{{/if}}</td>
+          <td>{{#if this.tipo_nombre}}{{this.tipo_nombre}}{{else}}{{this.tipo}}{{/if}}</td>
           <td>{{#if this.titulo}}{{this.titulo}}{{else}}{{this.nombre}}{{/if}}</td>
           <td>{{#if this.indicador}}{{this.indicador}}{{else}}1 Entregable completado{{/if}}</td>
-          <td>{{#if this.medio_verificacion}}{{this.medio_verificacion}}{{else}}{{#if this.url_producto}}{{this.url_producto}}{{else}}Certificado / Informe{{/if}}{{/if}}</td>
+          <td>{{#if this.medio_verificacion}}{{this.medio_verificacion}}{{else}}{{#if this.url_evidencia}}{{this.url_evidencia}}{{else}}Certificado / Informe{{/if}}{{/if}}</td>
           <td style="text-align: center; font-weight: bold;">{{#if this.cantidad}}{{this.cantidad}}{{else}}1{{/if}}</td>
           <td style="text-align: center;">{{#if this.plazo}}{{this.plazo}}{{else}}Final del Proyecto{{/if}}</td>
         </tr>

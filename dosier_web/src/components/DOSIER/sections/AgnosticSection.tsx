@@ -42,7 +42,6 @@ interface AgnosticSectionProps {
     config?: any;             // Prop directo para carga dinámica desde backend
     carreras?: any[];
     convocatorias?: any[];
-    tiposProducto?: any[];
     onAdd?: (list: string, template: any) => void;
     onRemove?: (list: string, index: number) => void;
     onUpdateItem?: (list: string, index: number, field: string, value: any) => void;
@@ -57,14 +56,13 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
     label: labelProp,
     carreras = [],
     convocatorias = [],
-    tiposProducto = [],
     onAdd,
     onRemove,
     onUpdateItem,
     config: configProp,    // <-- prop directo desde DocumentEditor (carga dinámica)
 }) => {
     // Evitar errores de compilación por variables no leídas pero requeridas por la firma genérica
-    void carreras; void convocatorias; void tiposProducto; void onAdd; void onRemove; void onUpdateItem;
+    void carreras; void convocatorias; void onAdd; void onRemove; void onUpdateItem;
 
     const [collapsed, setCollapsed] = useState(false);
     const [referenceData, setReferenceData] = useState<any>(null);

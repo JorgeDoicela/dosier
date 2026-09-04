@@ -2,7 +2,7 @@ USE sigafi_es;
  
 SET FOREIGN_KEY_CHECKS = 0;
  
--- 1. Limpieza de tablas de proyectos, productos, etc.
+-- 1. Limpieza de tablas de proyectos e instancias documentales
 TRUNCATE TABLE doc_proyectos_carreras;
 TRUNCATE TABLE doc_proyecto_participantes;
 TRUNCATE TABLE doc_objetivos_proyecto;

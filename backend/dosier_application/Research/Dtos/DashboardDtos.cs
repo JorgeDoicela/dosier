@@ -26,7 +26,6 @@ namespace Dosier.Application.Research.Dtos
         public string? ConvocatoriaTitulo { get; set; }
         public string? RolEnProyecto { get; set; }  // Rol del usuario actual en este proyecto
         public int TotalInvestigadores { get; set; }
-        public int TotalProductos { get; set; }
         public int TotalInformes { get; set; }
         public int InformesAprobados { get; set; }
         // Soporte CACES
@@ -46,7 +45,6 @@ namespace Dosier.Application.Research.Dtos
         public int MisProyectosActivos { get; set; }
         public int MisProyectosBorrador { get; set; }
         public int MisProyectosEnRevision { get; set; }
-        public int MisProductosRegistrados { get; set; }
         public int MisInformesPendientes { get; set; }
         public decimal MisHorasInvestigacion { get; set; }
         public decimal? HorasDisponiblesDistributivo { get; set; }
@@ -61,7 +59,6 @@ namespace Dosier.Application.Research.Dtos
 
         public int TotalConvocatoriasAbiertas { get; set; }
         public int TotalInvestigadoresActivos { get; set; }
-        public int TotalProductosPeriodo { get; set; }
         public int ArticulosIndexados { get; set; }
         public int Prototipos { get; set; }
         public int Ponencias { get; set; }

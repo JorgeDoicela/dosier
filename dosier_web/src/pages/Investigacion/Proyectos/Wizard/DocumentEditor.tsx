@@ -54,7 +54,7 @@ const PROTOCOLO_STRING_FIELDS: ReadonlyArray<string> = [
 //
 // RESPONSABILIDADES:
 //   1. Resolver la configuración de la plantilla (Registry local > Backend dinámico)
-//   2. Cargar catálogos institucionales (carreras, convocatorias, tipos de producto)
+//   2. Cargar catálogos institucionales (carreras, convocatorias, grupos)
 //   3. Instanciar useCoWork() con los datos del usuario autenticado  ← NUEVO V1.0
 //   4. Instanciar useDOSIERDocument() con el ydoc reactivo           ← NUEVO V1.0
 //   5. Pasar el CoWorkHandle al DOSIERBuilderShell como prop         ← NUEVO V1.0
@@ -119,7 +119,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
     // Catálogos institucionales (agnóstico por plantilla)
     const [carreras, setCarreras] = useState<any[]>([]);
     const [convocatorias, setConvocatorias] = useState<any[]>([]);
-    const [tiposProducto, setTiposProducto] = useState<any[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
     const [customCatalogs, setCustomCatalogs] = useState<Record<string, any[]>>({});
 
@@ -134,7 +133,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             // 2. Lanzar peticiones de red
             const needsInstanceFetch = !!(initialData?.Uuid && !initialData.Uuid.startsWith('temp_'));
 
-            const [configResult, instanceResult, carrerasRes, convsRes, tiposRes, groupsRes] = await Promise.all([
+            const [configResult, instanceResult, carrerasRes, convsRes, groupsRes] = await Promise.all([
                 needsInstanceFetch
                     ? api.get(`/documents/instances/${initialData.Uuid}/ui-config`).catch(() => ({ data: null }))
                     : api.get(`/documents/instances/templates/${templateCode}/ui-config`).catch(() => ({ data: null })),
@@ -143,7 +142,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
                     : Promise.resolve({ data: null }),
                 getCachedOrFetch('carreras', () => api.get('/catalogs/carreras')),
                 getCachedOrFetch('convocatorias', () => api.get('/Convocatorias')),
-                Promise.resolve({ data: [] }),
                 getCachedOrFetch('groups', () => api.get('/groups')),
             ]);
 
@@ -238,7 +236,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             const allConvs = convsRes.data || [];
             const activeConvs = allConvs.filter((c: any) => c.estado === 'Abierta' || c.estado === 'Activa' || (isAdmin && c.estado === 'Borrador'));
             setConvocatorias(activeConvs.length > 0 ? activeConvs : allConvs.filter((c: any) => c.estado !== 'Borrador' || isAdmin));
-            setTiposProducto(tiposRes.data || []);
             setGroups(groupsRes.data || []);
 
             setIsLoading(false);
@@ -276,7 +273,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             entityUuid={entityUuid}
             carreras={carreras}
             convocatorias={convocatorias}
-            tiposProducto={tiposProducto}
             groups={groups}
             customCatalogs={customCatalogs}
             onClose={onClose}
@@ -301,7 +297,6 @@ interface DocumentEditorCoreProps {
     entityUuid?: string;
     carreras: any[];
     convocatorias: any[];
-    tiposProducto: any[];
     groups: any[];
     customCatalogs?: Record<string, any[]>;
     onClose: () => void;
@@ -318,7 +313,6 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
     entityUuid,
     carreras,
     convocatorias,
-    tiposProducto,
     groups,
     customCatalogs = {},
     onClose,
@@ -440,7 +434,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             list.push('Bibliografia');
         }
 
-        ['Antecedentes', 'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'ObjetivosEspecificos', 'MarcoTeorico', 'Metodologia', 'Evaluacion', 'Indice', 'sec_indice', 'Resumen', 'sec_resumen', 'resumen_ejecutivo', 'Introduccion', 'sec_introduccion', 'Objetivos', 'sec_objetivos', 'cumplimiento_objetivos', 'Fundamentos', 'sec_fundamentos', 'Metodos', 'sec_metodos', 'Resultados', 'sec_resultados', 'Productos', 'sec_productos', 'Impactos', 'sec_impactos', 'impacto_final', 'Transferencia', 'sec_transferencia', 'transferencia_conocimiento', 'InformeFinanciero', 'sec_informe_financiero', 'Conclusiones', 'sec_conclusiones', 'Recomendaciones', 'sec_recomendaciones', 'Bibliografia', 'sec_bibliografia', 'bibliografia_final', 'Anexos', 'sec_anexos'].forEach(k => {
+        ['Antecedentes', 'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'ObjetivosEspecificos', 'MarcoTeorico', 'Metodologia', 'Evaluacion', 'Indice', 'sec_indice', 'Resumen', 'sec_resumen', 'resumen_ejecutivo', 'Introduccion', 'sec_introduccion', 'Objetivos', 'sec_objetivos', 'cumplimiento_objetivos', 'Fundamentos', 'sec_fundamentos', 'Metodos', 'sec_metodos', 'Resultados', 'sec_resultados', 'Impactos', 'sec_impactos', 'impacto_final', 'Transferencia', 'sec_transferencia', 'transferencia_conocimiento', 'InformeFinanciero', 'sec_informe_financiero', 'Conclusiones', 'sec_conclusiones', 'Recomendaciones', 'sec_recomendaciones', 'Bibliografia', 'sec_bibliografia', 'bibliografia_final', 'Anexos', 'sec_anexos'].forEach(k => {
             if (!list.includes(k)) list.push(k);
         });
 
@@ -519,8 +513,8 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                 }
             });
         }
-        if (Array.isArray(cloned.ProductosEsperados)) {
-            cloned.ProductosEsperados.forEach((p: any) => {
+        if (Array.isArray(cloned.ResultadosEsperados)) {
+            cloned.ResultadosEsperados.forEach((p: any) => {
                 if (p.cantidad !== undefined && p.cantidad !== null) {
                     p.cantidad = String(p.cantidad);
                 }
@@ -714,7 +708,6 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                             templateCode={templateCode}
                             carreras={carreras}
                             convocatorias={convocatorias}
-                            tiposProducto={tiposProducto}
                             groups={groups}
                             customCatalogs={customCatalogs}
                             config={activeSectionConfig.config}
@@ -726,7 +719,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                             recursosNecesarios={formData?.RecursosNecesarios || []}
                             costoTotal={formData?.CostoTotal || 0}
                             cronograma={formData?.Cronograma || []}
-                            productosEsperados={formData?.ProductosEsperados || []}
+                            resultadosEsperados={formData?.ResultadosEsperados || []}
 
                             // Handlers genéricos de listas
                             onAdd={(list: string, tpl: any) => addItem(list, tpl)}
@@ -740,9 +733,9 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                             onAddNecesario={() => addItem('RecursosNecesarios', { Descripcion: '', Cantidad: '1', CostoUnitario: 0, CostoTotal: 0 })}
                             onRemoveNecesario={(i: number) => removeItem('RecursosNecesarios', i)}
                             onUpdateNecesario={(i: number, f: string, v: any) => updateItem('RecursosNecesarios', i, f, v)}
-                            onAddProducto={() => addItem('ProductosEsperados', { categoria: '', tipo: '', titulo: '', indicador: '', medio_verificacion: '', cantidad: '1', plazo: '' })}
-                            onRemoveProducto={(i: number) => removeItem('ProductosEsperados', i)}
-                            onUpdateProducto={(i: number, f: string, v: any) => updateItem('ProductosEsperados', i, f, v)}
+                            onAddResultado={() => addItem('ResultadosEsperados', { categoria: '', tipo: '', titulo: '', indicador: '', medio_verificacion: '', cantidad: '1', plazo: '' })}
+                            onRemoveResultado={(i: number) => removeItem('ResultadosEsperados', i)}
+                            onUpdateResultado={(i: number, f: string, v: any) => updateItem('ResultadosEsperados', i, f, v)}
                             onUpdateImpacto={(t: string, v: any) => updateField('Impacto', (prev: any) => ({ ...(prev || {}), [t.toLowerCase()]: v }))}
 
                             {...listProps}

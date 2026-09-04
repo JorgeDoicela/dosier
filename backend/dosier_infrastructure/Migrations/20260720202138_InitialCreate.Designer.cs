@@ -2414,52 +2414,6 @@ namespace dosier_infrastructure.Migrations
                     b.ToTable("doc_cat_tipo_evidencia", (string)null);
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocCatTipoProducto", b =>
-                {
-                    b.Property<int>("IdTipoProducto")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idTipoProducto");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdTipoProducto"));
-
-                    b.Property<bool?>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("activo")
-                        .HasDefaultValueSql("'1'");
-
-                    b.Property<string>("Categoria")
-                        .IsRequired()
-                        .HasColumnType("enum('Académico','Tecnológico','Innovación','Transferencia')")
-                        .HasColumnName("categoria");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("nombre");
-
-                    b.Property<bool?>("RequiereRegistro")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("requiereRegistro")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<string>("Uuid")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("varchar(36)")
-                        .HasColumnName("uuid");
-
-                    b.HasKey("IdTipoProducto")
-                        .HasName("PRIMARY");
-
-                    b.HasIndex("Uuid")
-                        .IsUnique();
-
-                    b.ToTable("doc_cat_tipo_producto", (string)null);
-                });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocConfigGeneral", b =>
                 {
@@ -4368,68 +4322,6 @@ namespace dosier_infrastructure.Migrations
                     b.ToTable("doc_presupuesto_items", (string)null);
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocProducto", b =>
-                {
-                    b.Property<int>("IdProducto")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idProducto");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdProducto"));
-
-                    b.Property<int>("Cantidad")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("cantidad")
-                        .HasDefaultValueSql("'1'");
-
-                    b.Property<bool?>("EsPropiedadIntelectual")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("esPropiedadIntelectual")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<DateOnly?>("FechaRegistroSenadi")
-                        .HasColumnType("date")
-                        .HasColumnName("fechaRegistroSenadi");
-
-                    b.Property<int>("IdProyecto")
-                        .HasColumnType("int")
-                        .HasColumnName("idProyecto");
-
-                    b.Property<int>("IdTipoProducto")
-                        .HasColumnType("int")
-                        .HasColumnName("idTipoProducto");
-
-                    b.Property<string>("MetadataJson")
-                        .HasColumnType("json")
-                        .HasColumnName("metadataJson");
-
-                    b.Property<string>("NumeroRegistro")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("numeroRegistro");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
-                        .HasColumnName("titulo");
-
-                    b.Property<string>("UrlProducto")
-                        .HasMaxLength(512)
-                        .HasColumnType("varchar(512)")
-                        .HasColumnName("urlProducto");
-
-                    b.HasKey("IdProducto")
-                        .HasName("PRIMARY");
-
-                    b.HasIndex("IdProyecto");
-
-                    b.HasIndex("IdTipoProducto");
-
-                    b.ToTable("doc_productos", (string)null);
-                });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocPrograma", b =>
                 {
@@ -6771,26 +6663,6 @@ namespace dosier_infrastructure.Migrations
                     b.Navigation("IdProyectoNavigation");
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocProducto", b =>
-                {
-                    b.HasOne("dosier_infrastructure.data.models.DocProyecto", "IdProyectoNavigation")
-                        .WithMany("DocProductos")
-                        .HasForeignKey("IdProyecto")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_prod_proyecto");
-
-                    b.HasOne("dosier_infrastructure.data.models.DocCatTipoProducto", "IdTipoProductoNavigation")
-                        .WithMany("DocProductos")
-                        .HasForeignKey("IdTipoProducto")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_prod_tipo");
-
-                    b.Navigation("IdProyectoNavigation");
-
-                    b.Navigation("IdTipoProductoNavigation");
-                });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocProyecto", b =>
                 {
@@ -7201,10 +7073,6 @@ namespace dosier_infrastructure.Migrations
                     b.Navigation("DocEvidencias");
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocCatTipoProducto", b =>
-                {
-                    b.Navigation("DocProductos");
-                });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocConvocatoria", b =>
                 {
@@ -7295,7 +7163,6 @@ namespace dosier_infrastructure.Migrations
 
                     b.Navigation("DocPresupuestoItems");
 
-                    b.Navigation("DocProductos");
 
                     b.Navigation("DocProyectoParticipantes");
 

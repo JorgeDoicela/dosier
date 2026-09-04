@@ -89,7 +89,7 @@ classDiagram
 | :--- | :--- | :--- |
 | `SUPER_ADMIN` | Administrador del Sistema | Acceso total a configuraciones, usuarios, tablas y logs de auditoría. |
 | `DIRECTOR_INVESTIGACION` | Director de I+D+i | Gestión de convocatorias, asignación de evaluadores, aprobación final de proyectos y emisión de resoluciones. |
-| `DOCENTE_INVESTIGADOR` | Docente Investigador | Creación de propuestas, edición colaborativa de borradores, envío de informes de avance y registro de productos. |
+| `DOCENTE_INVESTIGADOR` | Docente Investigador | Creación de propuestas, edición colaborativa de borradores, envío de informes de avance y registro de entregables. |
 | `EVALUADOR_PAR` | Evaluador Par Ciego | Acceso exclusivo al portal de evaluación ciega para asignaciones específicas, llenado de rúbricas y dictamen. |
 | `AUDITOR_CACES` | Auditor Externo | Acceso de solo lectura a reportes institucionales, matrices de evidencia y nodos de verificación SHA-256. |
 

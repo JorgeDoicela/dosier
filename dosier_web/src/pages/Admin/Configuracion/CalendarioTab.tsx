@@ -5,7 +5,7 @@ import type { EventoNormativo } from './useConfiguracion';
 
 interface CalendarioTabProps {
     hook: ReturnType<typeof useConfiguracion>;
-    setDetailItem: React.Dispatch<React.SetStateAction<{ type: 'linea' | 'periodo' | 'producto' | 'dominio' | 'indicador' | 'calendario'; data: any; } | null>>;
+    setDetailItem: React.Dispatch<React.SetStateAction<{ type: 'linea' | 'periodo' | 'dominio' | 'indicador' | 'calendario'; data: any; } | null>>;
 }
 
 export const CalendarioTab: React.FC<CalendarioTabProps> = ({ hook, setDetailItem }) => {

@@ -222,7 +222,7 @@
 2. [Actividad que realizará el estudiante].
 3. [Actividad que realizará el estudiante].
 
-**Producto final:** [Indique el resultado o evidencia que deberá entregar].
+**Entregable final:** [Indique el resultado o evidencia que deberá entregar].
 
 ##### Objetivos
 
@@ -292,7 +292,7 @@
 2. [Acción requerida].
 3. [Acción requerida].
 
-**Resultado esperado:** [Indique el producto o evidencia del ejercicio].
+**Resultado esperado:** [Indique el entregable o evidencia del ejercicio].
 
 > Repita el bloque de parte y ejercicio tantas veces como requiera la práctica. Sustituya los ejercicios resueltos del documento por nuevas consignas.
 
@@ -396,11 +396,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -445,11 +445,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -494,11 +494,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -543,11 +543,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -791,11 +791,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -840,11 +840,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -889,11 +889,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -938,11 +938,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -987,11 +987,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -1234,7 +1234,7 @@
 2. [Actividad que realizará el estudiante].
 3. [Actividad que realizará el estudiante].
 
-**Producto final:** [Indique el resultado o evidencia que deberá entregar].
+**Entregable final:** [Indique el resultado o evidencia que deberá entregar].
 
 ##### Objetivos
 
@@ -1304,7 +1304,7 @@
 2. [Acción requerida].
 3. [Acción requerida].
 
-**Resultado esperado:** [Indique el producto o evidencia del ejercicio].
+**Resultado esperado:** [Indique el entregable o evidencia del ejercicio].
 
 > Repita el bloque de parte y ejercicio tantas veces como requiera la práctica. Sustituya los ejercicios resueltos del documento por nuevas consignas.
 
@@ -1408,11 +1408,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -1457,11 +1457,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 
@@ -1506,11 +1506,11 @@
 
 ##### Consigna o planteamiento de la actividad
 
-[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué producto debe obtener].
+[Redacte qué debe realizar el estudiante, sobre qué contenido, con qué alcance y qué resultado o entregable debe obtener].
 
 ##### Instrucciones para la entrega
 
-**Formato de entrega:** [Tipo de archivo o producto y secciones que debe contener].
+**Formato de entrega:** [Tipo de archivo o entregable y secciones que debe contener].
 
 **Requisitos académicos:** [Requisitos de contenido, calidad, fuentes, originalidad y presentación que correspondan].
 

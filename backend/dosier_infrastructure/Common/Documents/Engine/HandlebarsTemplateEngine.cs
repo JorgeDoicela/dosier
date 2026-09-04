@@ -379,10 +379,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             SyncKeyAlias("Resultados", "sec_resultados");
             SyncKeyAlias("resultados", "sec_resultados");
 
-            SyncKeyAlias("Productos", "productos");
-            SyncKeyAlias("Productos", "sec_productos");
-            SyncKeyAlias("productos", "sec_productos");
-
             SyncKeyAlias("Impactos", "impactos");
             SyncKeyAlias("Impactos", "sec_impactos");
             SyncKeyAlias("impactos", "impacto_final");

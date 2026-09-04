@@ -474,21 +474,21 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                 </div>
             )}
 
-            {/* 5. PRODUCTOS ESPERADOS */}
-            {(activeSection === 'productos_esperados' || activeSection === 'productos') && (
-                <div className="space-y-6 animate-fade-in font-sans" id="field-card-productos_esperados">
+            {/* 5. RESULTADOS ESPERADOS */}
+            {(activeSection === 'resultados_esperados' || activeSection === 'entregables_esperados' || activeSection === 'entregables') && (
+                <div className="space-y-6 animate-fade-in font-sans" id="field-card-resultados_esperados">
                     <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">5. Productos Esperados</h3>
-                            {renderFieldStatusBadge('productos_esperados')}
+                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">5. Resultados y Entregables Esperados</h3>
+                            {renderFieldStatusBadge('resultados_esperados')}
                         </div>
-                        {renderCommentButton('productos_esperados', 'Productos Esperados')}
+                        {renderCommentButton('resultados_esperados', 'Resultados Esperados')}
                     </div>
 
                     <div className="p-4 rounded-xl border border-border-thin bg-surface space-y-3 select-none">
                         <span className="text-[8px] font-bold text-brand uppercase tracking-widest font-mono">Entregables Planificados del Proyecto</span>
                         <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-main font-medium select-text">
-                            {getSafeArray(docSnapshot.ProductosEsperados || docSnapshot.Entregables).map((e: any, idx: number) => (
+                            {getSafeArray(docSnapshot.ResultadosEsperados || docSnapshot.Entregables).map((e: any, idx: number) => (
                                 <li key={idx} className="leading-relaxed">{stripHtml(e.tipo || e.descripcion || e)}</li>
                             ))}
                         </ul>

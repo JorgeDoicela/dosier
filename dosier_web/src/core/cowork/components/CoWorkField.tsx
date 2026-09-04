@@ -168,7 +168,7 @@ function resolveDbValue(parentFormData: any, name: string): any {
         { key: 'Cron_', listName: 'Cronograma', fields: { act: 'Actividad', num: 'Numero', rec: 'RecursosNecesarios' } },
         { key: 'RecDisp_', listName: 'RecursosDisponibles', fields: { desc: 'Descripcion', cant: 'Cantidad', fnt: 'Fuente' } },
         { key: 'RecNec_', listName: 'RecursosNecesarios', fields: { desc: 'Descripcion', cant: 'Cantidad', unit: 'CostoUnitario' } },
-        { key: 'Prod_', listName: 'ProductosEsperados', fields: { cant: 'cantidad' } }
+        { key: 'Res_', listName: 'ResultadosEsperados', fields: { cant: 'cantidad' } }
     ];
 
     for (const prefix of prefixes) {
@@ -197,8 +197,8 @@ function resolveDbValue(parentFormData: any, name: string): any {
                             return false;
                         }
                         
-                        // Special handling for ProductosEsperados type selection (Prod_0_tipo)
-                        if (prefix.key === 'Prod_' && fieldSuffix === 'tipo') {
+                        // Special handling for ResultadosEsperados type selection (Res_0_tipo)
+                        if (prefix.key === 'Res_' && fieldSuffix === 'tipo') {
                             return item.tipo ?? item.Tipo ?? '';
                         }
                         

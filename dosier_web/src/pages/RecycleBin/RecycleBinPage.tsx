@@ -75,7 +75,7 @@ const RecycleBinPage: React.FC = () => {
     const handlePurge = async (uuid: string, title: string) => {
         const entityLabel = activeTab === 'projects' ? 'proyecto' : activeTab === 'convocatorias' ? 'convocatoria' : 'grupo';
         const warningMessage = activeTab === 'projects'
-            ? `¿Está seguro de ELIMINAR PERMANENTEMENTE el proyecto "${title}"? Esta acción es irreversible e incluye el presupuesto, cronograma, productos y todos los datos asociados.`
+            ? `¿Está seguro de ELIMINAR PERMANENTEMENTE el proyecto "${title}"? Esta acción es irreversible e incluye el presupuesto, cronograma y todos los datos asociados.`
             : `¿Está seguro de ELIMINAR PERMANENTEMENTE la ${entityLabel} "${title}"? Esta acción no se puede deshacer de ninguna manera.`;
 
         if (!await confirm({

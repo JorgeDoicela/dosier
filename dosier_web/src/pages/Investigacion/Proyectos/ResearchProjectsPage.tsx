@@ -34,7 +34,6 @@ export interface ProyectoResumen {
     convocatoria_titulo?: string;
     rol_en_proyecto?: string;
     total_investigadores: number;
-    total_productos: number;
     total_informes: number;
     informes_aprobados: number;
     director_nombre?: string;
@@ -350,7 +349,7 @@ const ResearchProjectsPage = () => {
                 description={
                     <span className="flex flex-col md:flex-row md:items-center gap-x-2 gap-y-1">
                         <span>
-                            Administre y califique los proyectos de investigación registrados en el sistema, supervise su presupuesto y valide sus productos.
+                            Administre y califique los proyectos de investigación registrados en el sistema, supervise su presupuesto y valide su avance.
                         </span>
                         {refreshing && (
                             <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse shrink-0">
@@ -600,11 +599,6 @@ const ResearchProjectsPage = () => {
                                         <span className="flex items-center gap-1 font-medium">
                                             <span className="font-semibold text-text-main font-mono">{p.total_investigadores}</span>
                                             <span className="text-[10px]">invest.</span>
-                                        </span>
-                                        <span className="text-border-thin">·</span>
-                                        <span className="flex items-center gap-1 font-medium">
-                                            <span className="font-semibold text-text-main font-mono">{p.total_productos}</span>
-                                            <span className="text-[10px]">prod.</span>
                                         </span>
                                         <span className="text-border-thin">·</span>
                                         <span className="flex items-center gap-1 font-medium">

@@ -588,26 +588,6 @@ namespace dosier_infrastructure.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateTable(
-                name: "doc_cat_tipo_producto",
-                columns: table => new
-                {
-                    idTipoProducto = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    uuid = table.Column<string>(type: "varchar(36)", maxLength: 36, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    nombre = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    categoria = table.Column<string>(type: "enum('Académico','Tecnológico','Innovación','Transferencia')", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    requiereRegistro = table.Column<bool>(type: "tinyint(1)", nullable: true, defaultValueSql: "'0'"),
-                    activo = table.Column<bool>(type: "tinyint(1)", nullable: true, defaultValueSql: "'1'")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PRIMARY", x => x.idTipoProducto);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "doc_collaboration_comments",
@@ -2806,43 +2786,6 @@ namespace dosier_infrastructure.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateTable(
-                name: "doc_productos",
-                columns: table => new
-                {
-                    idProducto = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    idProyecto = table.Column<int>(type: "int", nullable: false),
-                    idTipoProducto = table.Column<int>(type: "int", nullable: false),
-                    titulo = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    cantidad = table.Column<int>(type: "int", nullable: false, defaultValueSql: "'1'"),
-                    urlProducto = table.Column<string>(type: "varchar(512)", maxLength: 512, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    esPropiedadIntelectual = table.Column<bool>(type: "tinyint(1)", nullable: true, defaultValueSql: "'0'"),
-                    numeroRegistro = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    fechaRegistroSenadi = table.Column<DateOnly>(type: "date", nullable: true),
-                    metadataJson = table.Column<string>(type: "json", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PRIMARY", x => x.idProducto);
-                    table.ForeignKey(
-                        name: "fk_prod_proyecto",
-                        column: x => x.idProyecto,
-                        principalTable: "doc_proyectos",
-                        principalColumn: "idProyecto",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_prod_tipo",
-                        column: x => x.idTipoProducto,
-                        principalTable: "doc_cat_tipo_producto",
-                        principalColumn: "idTipoProducto",
-                        onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
                 name: "doc_proyecto_extensiones",
@@ -3453,11 +3396,6 @@ namespace dosier_infrastructure.Migrations
                 column: "uuid",
                 unique: true);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_doc_cat_tipo_producto_uuid",
-                table: "doc_cat_tipo_producto",
-                column: "uuid",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_doc_collaboration_comments_instanceUuid",
@@ -3828,15 +3766,6 @@ namespace dosier_infrastructure.Migrations
                 table: "doc_presupuesto_items",
                 column: "idProyecto");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_doc_productos_idProyecto",
-                table: "doc_productos",
-                column: "idProyecto");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_doc_productos_idTipoProducto",
-                table: "doc_productos",
-                column: "idTipoProducto");
 
             migrationBuilder.CreateIndex(
                 name: "IX_doc_programas_uuid",
@@ -4257,8 +4186,6 @@ namespace dosier_infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "doc_notificaciones");
 
-            migrationBuilder.DropTable(
-                name: "doc_productos");
 
             migrationBuilder.DropTable(
                 name: "doc_proyecto_extensiones");
@@ -4365,8 +4292,6 @@ namespace dosier_infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "doc_cat_impactos");
 
-            migrationBuilder.DropTable(
-                name: "doc_cat_tipo_producto");
 
             migrationBuilder.DropTable(
                 name: "doc_ods");
