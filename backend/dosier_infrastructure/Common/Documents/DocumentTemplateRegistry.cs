@@ -43,21 +43,6 @@ namespace Dosier.Infrastructure.Common.Documents
             // OTRAS ÁREAS (Registro de marcadores de posición)
             // ══════════════════════════════════════════════════════════════
 
-
-
-            yield return DocumentTemplate.Create(
-                code: InformeAvanceTemplate.CODE,
-                name: "Informe de Avance de Proyecto",
-                description: "Ejecución y Monitoreo (Fase 3).",
-                category: DocumentCategory.InformeAvance,
-                htmlContent: "<!-- Cargado desde Templates/Investigacion/InformeAvance.html -->",
-                requiresLopdp: true,
-                supportsBlind: false,
-                requiresTraceability: true,
-                requiresSignature: true,
-                collaborativeFields: "[\"ActividadesEjecutadas\", \"ActividadesNoPrevistas\", \"Obstaculos\", \"ConclusionesParciales\", \"EstadoEjecucion\", \"DescripcionFaseActual\", \"ObservacionesDirector\", \"ObservacionesCoordinador\", \"HitosCompletados\", \"Evidencias\"]",
-                version: 20);
-
             yield return DocumentTemplate.Create(
                 code: ReporteAnaliticasTemplate.CODE,
                 name: "Reporte de Analíticas de Investigación e Innovación",

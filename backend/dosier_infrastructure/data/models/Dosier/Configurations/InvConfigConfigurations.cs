@@ -12,7 +12,6 @@ public class DocConfigWorkflowConfiguration : IEntityTypeConfiguration<DocConfig
         entity.Property(e => e.EstadoOrigen).HasMaxLength(50).IsRequired();
         entity.Property(e => e.EstadoDestino).HasMaxLength(50).IsRequired();
         entity.Property(e => e.ContabilizaCargaHoraria).HasColumnName("contabilizaCargaHoraria").HasColumnType("tinyint(1)").HasDefaultValue(false);
-        entity.Property(e => e.PermiteInformesAvance).HasColumnName("permiteInformesAvance").HasColumnType("tinyint(1)").HasDefaultValue(false);
         entity.Property(e => e.EsEstadoFinal).HasColumnName("esEstadoFinal").HasColumnType("tinyint(1)").HasDefaultValue(false);
         entity.Property(e => e.EtiquetaUi).HasColumnName("etiquetaUi").HasMaxLength(80);
         entity.Property(e => e.ColorHex).HasColumnName("colorHex").HasMaxLength(7);

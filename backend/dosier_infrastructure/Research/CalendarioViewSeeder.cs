@@ -157,36 +157,6 @@ WHERE fechaFin IS NOT NULL
 
 UNION ALL
 
--- 7. Informes de Avance (fechaReporte)
-SELECT
-    CONCAT('INF-', ia.idInforme),
-    ia.uuid,
-    CONCAT('Informe Avance #', ia.numeroInforme, ': ', COALESCE(p.codigoInstitucional, p.titulo)),
-    CONCAT('Fecha de entrega del informe de avance #', ia.numeroInforme, '. Resumen: ', SUBSTRING(ia.resumenActividades, 1, 100)),
-    'InformeAvance',
-    'EntregaInforme',
-    ia.fechaReporte,
-    NULL,
-    1,
-    '#8B5CF6',
-    ia.idInforme,
-    ia.uuid,
-    'INFORME_AVANCE',
-    NULL,
-    'DOSIER_ADMIN',
-    IF(p.estado NOT IN ('Borrador','Anulado','Rechazado') AND p.activo = 1, 1, 0),
-    0                                       AS esPrivado,
-    'Media'                                 AS prioridad,
-    IF(ia.estado = 'Aprobado', 'Completado', 'Pendiente') AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_informes_avance ia
-JOIN doc_proyectos p ON p.idProyecto = ia.idProyecto
-WHERE ia.fechaReporte IS NOT NULL
-
-UNION ALL
-
 -- 9. Plazos de Subsanación fijados por el Administrador (fechaLimiteSubsanacion)
 SELECT
     CONCAT('PROY-SUBS-', p.idProyecto),

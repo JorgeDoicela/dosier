@@ -11,13 +11,6 @@ import {
     generateProjectTechnicalHtml,
     generateImpactsHtml,
 } from './htmlGenerators/sectionsGenerator';
-import {
-    generateResourcesHtml,
-    generateProjectProgressHtml,
-    generateProgressActivityHtml,
-    generateProgressStatusHtml,
-    generateProgressHeaderHtml,
-} from './htmlGenerators/reportsGenerator';
 import { generateGanttHtml } from './htmlGenerators/ganttGenerator';
 import {
     generateTitleHtml,
@@ -76,18 +69,6 @@ export const generateHtmlFromBlocks = (blockList: DocumentBlock[], themeConfig?:
                 break;
             case 'project_technical_section':
                 html += generateProjectTechnicalHtml(block);
-                break;
-            case 'project_progress_report':
-                html += generateProjectProgressHtml(block);
-                break;
-            case 'progress_header_section':
-                html += generateProgressHeaderHtml(block);
-                break;
-            case 'progress_activity_section':
-                html += generateProgressActivityHtml(block);
-                break;
-            case 'progress_status_section':
-                html += generateProgressStatusHtml(block);
                 break;
             case 'impacts':
                 html += generateImpactsHtml(block);

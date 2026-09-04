@@ -129,36 +129,5 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             { id: 'bibliografia', label: '8. Bibliografía', iconName: 'BookOpen', componentName: 'AgnosticSection' },
             { id: 'firmas', label: '9. Firmas de Responsabilidad', iconName: 'PenTool', componentName: 'SignaturesSection' }
         ]
-    },
-
-    INFORME_AVANCE: {
-        title: "Informe de Avance de Proyecto",
-        subtitle: "Ejecución y Monitoreo (Fase 3)",
-        schema: {
-            // Sección 1: Bitácora Científica & Actividades Ejecutadas
-            ConclusionesParciales: '',
-            ActividadesEjecutadas: [],
-            ActividadesNoPrevistas: [],
-            Obstaculos: [],
-            
-            // Sección 2: Estado de Ejecución
-            EstadoEjecucion: 'EN AVANCE',
-            DescripcionFaseActual: '',
-            
-            // Sección 3: Observaciones y Roles
-            ObservacionesDirector: '',
-            ObservacionesCoordinador: '',
-            
-            // Legacy / Compatibilidad
-            HitosCompletados: [],
-            Evidencias: [],
-            PresupuestoEjecutado: [],
-        },
-        lists: ['ActividadesEjecutadas', 'ActividadesNoPrevistas', 'Obstaculos', 'HitosCompletados', 'Evidencias', 'PresupuestoEjecutado'],
-        sections: [
-            { id: 'avance_bitacora', label: '1. Bitácora Científica', iconName: 'FileText', componentName: 'ProgressLogSection' },
-            { id: 'avance_estado', label: '2. Estado de Ejecución', iconName: 'CheckCircle', componentName: 'ProgressStateSection' },
-            { id: 'avance_observaciones', label: '3. Observaciones y Firmas', iconName: 'PenTool', componentName: 'ProgressObservationsSection' }
-        ]
     }
 };

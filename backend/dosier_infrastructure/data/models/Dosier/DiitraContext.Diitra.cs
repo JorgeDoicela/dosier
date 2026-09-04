@@ -27,8 +27,6 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocImpactoProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocCronogramaConfiguration());
         modelBuilder.ApplyConfiguration(new DocBibliografiaProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocInformeAvanceConfiguration());
-        modelBuilder.ApplyConfiguration(new DocEvidenciaConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoMmlConfiguration());
         modelBuilder.ApplyConfiguration(new DocProyectoDocumentoAdjuntoConfiguration());
 

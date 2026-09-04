@@ -74,8 +74,6 @@ DROP TABLE IF EXISTS
     doc_cowork_documentos,
 
     -- Núcleo V3 (Secciones 1-9)
-    doc_evidencias,
-    doc_informes_avance,
     doc_bibliografia_proyecto,
     doc_cronograma,
     doc_impactos_proyecto,
@@ -498,42 +496,6 @@ CREATE TABLE doc_bibliografia_proyecto (
     tituloFuente   TEXT,
     url            VARCHAR(512),
     FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
--- SECCIÓN 9: MONITOREO Y EJECUCIÓN (SISTEMA MODERNO)
--- #############################################################################
-
--- Informes de Avance (Mensuales/Trimestrales)
-CREATE TABLE doc_informes_avance (
-    idInforme         INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid              VARCHAR(36)      NOT NULL UNIQUE,
-    idProyecto        INT           NOT NULL,
-    numeroInforme     INT           NOT NULL,
-    fechaReporte      DATE          NOT NULL,
-    resumenActividades TEXT         NOT NULL,
-    -- Campos para Firma Electrónica (FirmaEC/Ecuador)
-    esFirmadoDigital  TINYINT(1)    DEFAULT 0,
-    hashFirma         TEXT,         -- Almacena el hash del documento firmado
-    fechaFirma        TIMESTAMP     NULL,
-    validadoPor       INT(11)       NULL, -- ID del Director de Investigación
-    estado            ENUM('Pendiente','Aprobado','Observado') DEFAULT 'Pendiente',
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (validadoPor) REFERENCES usuarios(idUsuario)      ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Evidencias del Informe (Fotos, Listas, Documentos)
-CREATE TABLE doc_evidencias (
-    idEvidencia    INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid           VARCHAR(36)      NOT NULL UNIQUE,
-    idInforme      INT           NOT NULL,
-    idTipoEvidencia INT          NOT NULL,
-    descripcion    VARCHAR(255),
-    rutaArchivo    VARCHAR(512)  NOT NULL,
-    metadataJson   JSON          NULL COMMENT 'Datos adicionales (Geolocalización, Hash del archivo)',
-    fechaRegistro  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (idInforme) REFERENCES doc_informes_avance(idInforme) ON DELETE CASCADE,
-    FOREIGN KEY (idTipoEvidencia) REFERENCES doc_cat_tipo_evidencia(idTipoEvidencia)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- #############################################################################
@@ -998,8 +960,6 @@ CREATE TABLE doc_config_workflow (
     -- El WorkflowEngineService debe consultarlas en lugar de usar arrays hardcodeados.
     contabilizaCargaHoraria TINYINT(1)    NOT NULL DEFAULT 0
         COMMENT '1 si los proyectos en estadoDestino consumen horas del distributivo docente SIGAFI',
-    permiteInformesAvance   TINYINT(1)    NOT NULL DEFAULT 0
-        COMMENT '1 si se pueden crear Informes de Avance cuando el proyecto está en estadoDestino',
     esEstadoFinal           TINYINT(1)    NOT NULL DEFAULT 0
         COMMENT '1 si estadoDestino es un estado terminal (sin más transiciones salvo excepción)',
 
@@ -1015,26 +975,25 @@ CREATE TABLE doc_config_workflow (
 -- =============================================================================
 -- SEED: Ciclo de vida completo del proyecto CACES
 -- contabilizaCargaHoraria: 1 para estados activos (bloquea horas en SIGAFI)
--- permiteInformesAvance:   1 solo en 'En Ejecución'
 -- esEstadoFinal:           1 para Finalizado, Rechazado, Anulado, Inconcluso
 -- =============================================================================
---                                                                          contabiliza  permiteInf  esFinal   etiqueta              color
+--                                                                          contabiliza  esFinal   etiqueta              color
 INSERT INTO doc_config_workflow
-    (estadoOrigen,    estadoDestino,    rolRequerido,   requiereObservacion, contabilizaCargaHoraria, permiteInformesAvance, esEstadoFinal, etiquetaUi,      colorHex, activo)
+    (estadoOrigen,    estadoDestino,    rolRequerido,   requiereObservacion, contabilizaCargaHoraria, esEstadoFinal, etiquetaUi,      colorHex, activo)
 VALUES
 -- Flujo principal de postulación
-('Borrador',         'Enviado',         NULL,             0,                   0,                       0,                     0,             'Enviado',        '#3B82F6', 1),
-('Enviado',          'En Revisión',     'DOSIER_ADMIN',   0,                   1,                       0,                     0,             'En Revisión',    '#F59E0B', 1),
-('Enviado',          'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,                     0,             'En Corrección',  '#F97316', 1),
-('En Revisión',      'Aprobado',        'DOSIER_ADMIN',   1,                   1,                       0,                     0,             'Aprobado',       '#10B981', 1),
-('En Revisión',      'Rechazado',       'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Rechazado',      '#EF4444', 1),
-('En Revisión',      'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,                     0,             'En Corrección',  '#F97316', 1),
-('En Corrección',    'Enviado',         NULL,             0,                   0,                       0,                     0,             'Enviado',        '#3B82F6', 1),
+('Borrador',         'Enviado',         NULL,             0,                   0,                       0,             'Enviado',        '#3B82F6', 1),
+('Enviado',          'En Revisión',     'DOSIER_ADMIN',   0,                   1,                       0,             'En Revisión',    '#F59E0B', 1),
+('Enviado',          'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,             'En Corrección',  '#F97316', 1),
+('En Revisión',      'Aprobado',        'DOSIER_ADMIN',   1,                   1,                       0,             'Aprobado',       '#10B981', 1),
+('En Revisión',      'Rechazado',       'DOSIER_ADMIN',   1,                   0,                       1,             'Rechazado',      '#EF4444', 1),
+('En Revisión',      'En Corrección',   'DOSIER_ADMIN',   1,                   0,                       0,             'En Corrección',  '#F97316', 1),
+('En Corrección',    'Enviado',         NULL,             0,                   0,                       0,             'Enviado',        '#3B82F6', 1),
 -- Paso a ejecución
-('Aprobado',         'En Ejecución',    'DOSIER_ADMIN',   0,                   1,                       1,                     0,             'En Ejecución',   '#8B5CF6', 1),
+('Aprobado',         'En Ejecución',    'DOSIER_ADMIN',   0,                   1,                       0,             'En Ejecución',   '#8B5CF6', 1),
 -- Cierre del proyecto
-('En Ejecución',     'Finalizado',      'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Finalizado',     '#059669', 1),
-('En Ejecución',     'Inconcluso',      'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Inconcluso',     '#6B7280', 1),
+('En Ejecución',     'Finalizado',      'DOSIER_ADMIN',   1,                   0,                       1,             'Finalizado',     '#059669', 1),
+('En Ejecución',     'Inconcluso',      'DOSIER_ADMIN',   1,                   0,                       1,             'Inconcluso',     '#6B7280', 1),
 -- Anulación desde cualquier estado pre-ejecución
 ('Borrador',         'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1),
 ('Enviado',          'Anulado',         'DOSIER_ADMIN',   1,                   0,                       0,                     1,             'Anulado',        '#94A3B8', 1),
@@ -1473,29 +1432,6 @@ SELECT
     0                                       AS recurrenciaAnual
 FROM doc_proyectos
 WHERE fechaFin IS NOT NULL
-
-UNION ALL
-
--- 7. Entrega de informes de avance pendientes
-SELECT
-    CONCAT('INF-', ia.idInforme),
-    ia.uuid,
-    CONCAT('Informe #', ia.numeroInforme, ': ', p.titulo),
-    CONCAT('Entrega del Informe de Avance N° ', ia.numeroInforme),
-    'Monitoreo', 'InformeAvance',
-    ia.fechaReporte, NULL, 1,
-    '#8B5CF6',
-    ia.idProyecto, p.uuid, 'INFORME_AVANCE',
-    NULL, NULL,
-    IF(ia.estado = 'Pendiente', 1, 0),
-    0                                       AS esPrivado,
-    'Media'                                 AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_informes_avance ia
-JOIN doc_proyectos p ON p.idProyecto = ia.idProyecto
 
 UNION ALL
 

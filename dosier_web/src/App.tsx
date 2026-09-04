@@ -31,7 +31,6 @@ const VerifyDocument         = lazy(() => import('./pages/Public/VerifyDocument'
 const AnalyticsPage          = lazy(() => import('./pages/Analytics/AnalyticsPage'));
 const NotificationsPage      = lazy(() => import('./pages/Notificaciones/NotificationsPage'));
 const EmailEnginePage        = lazy(() => import('./pages/Admin/Emails/EmailEnginePage'));
-const InformesAvancePage     = lazy(() => import('./pages/Investigacion/Proyectos/InformesAvancePage'));
 const SettingsPage           = lazy(() => import('./pages/Settings/SettingsPage'));
 const LopdpConsentPage       = lazy(() => import('./pages/Lopdp/LopdpConsentPage'));
 const LopdpAdminPage         = lazy(() => import('./pages/Lopdp/LopdpAdminPage'));
@@ -280,14 +279,12 @@ function App() {
                             <Route path="/investigacion" element={<AdminRoute><ResearchProjectsPage /></AdminRoute>} />
                             <Route path="/investigacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
                             <Route path="/investigacion/monitoreo/:projectUuid" element={<AdminRoute><MonitoringPage /></AdminRoute>} />
-                            <Route path="/investigacion/informes-avance/:projectId" element={<AdminRoute><InformesAvancePage /></AdminRoute>} />
                             <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
                             
                             {/* Researcher Context (Docentes, Estudiantes, Externos) */}
                             <Route path="/investigacion/mis-proyectos" element={<ResearcherRoute><MyProjectsPage /></ResearcherRoute>} />
                             <Route path="/investigacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
                             <Route path="/investigacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoringPage /></ResearcherRoute>} />
-                            <Route path="/investigacion/mis-proyectos/informes-avance/:projectId" element={<ResearcherRoute><InformesAvancePage /></ResearcherRoute>} />
                             
                             <Route path="/convocatorias" element={<ConvocatoriaRoute />} />
                             <Route path="/verificacion" element={<VerifyDocument />} />

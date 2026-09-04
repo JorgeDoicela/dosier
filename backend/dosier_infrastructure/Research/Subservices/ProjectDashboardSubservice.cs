@@ -94,10 +94,7 @@ namespace dosier_infrastructure.Research.Subservices
                     .CountAsync();
 
                 stats.MisProductosRegistrados = 0;
-
-                stats.MisInformesPendientes = await _context.DocInformesAvance
-                    .Where(i => misIds.Contains(i.IdProyecto) && i.Estado == "Pendiente")
-                    .CountAsync();
+                stats.MisInformesPendientes = 0;
 
                 stats.MisHorasInvestigacion = await _context.DocProyectoParticipantes
                     .Where(pp => pp.IdUsuario == userId.Value && pp.Activo != false && pp.TipoParticipante == "Docente" && (pp.IdProyectoNavigation!.Estado == "En Ejecución" || pp.IdProyectoNavigation.Estado == "Aprobado"))
@@ -127,7 +124,6 @@ namespace dosier_infrastructure.Research.Subservices
             }
 
             var ultimosProyectosQuery = _context.DocProyectos.AsQueryable();
-            var ultimosInformesQuery = _context.DocInformesAvance.AsQueryable();
 
             if (!isAdmin && userId != null)
             {
@@ -135,12 +131,11 @@ namespace dosier_infrastructure.Research.Subservices
                     .Where(pp => pp.IdUsuario == userId.Value).Select(pp => pp.IdProyecto);
 
                 ultimosProyectosQuery = ultimosProyectosQuery.Where(p => misIds.Contains(p.IdProyecto));
-                ultimosInformesQuery = ultimosInformesQuery.Where(i => misIds.Contains(i.IdProyecto));
             }
 
             var ultimosProyectos = await ultimosProyectosQuery
                 .OrderByDescending(p => p.FechaModificacion ?? p.FechaRegistro)
-                .Take(5)
+                .Take(8)
                 .Select(p => new ActividadRecienteDto
                 {
                     Tipo = "proyecto",
@@ -151,36 +146,7 @@ namespace dosier_infrastructure.Research.Subservices
                 })
                 .ToListAsync();
 
-            var ultimosInformesDb = await ultimosInformesQuery
-                .Include(i => i.IdProyectoNavigation)
-                .OrderByDescending(i => i.IdInforme)
-                .Take(5)
-                .Select(i => new
-                {
-                    i.NumeroInforme,
-                    TituloProyecto = i.IdProyectoNavigation.Titulo,
-                    i.FechaFirma,
-                    i.FechaReporte,
-                    UuidString = i.Uuid.ToString(),
-                    ProyectoUuid = i.IdProyectoNavigation.Uuid,
-                    i.Estado
-                })
-                .ToListAsync();
-
-            var ultimosInformes = ultimosInformesDb.Select(i => new ActividadRecienteDto
-            {
-                Tipo = "informe",
-                Descripcion = $"Informe #{i.NumeroInforme} — {i.TituloProyecto}",
-                Fecha = i.FechaFirma ?? new DateTime(i.FechaReporte.Year, i.FechaReporte.Month, i.FechaReporte.Day, 0, 0, 0, DateTimeKind.Utc),
-                Uuid = i.UuidString,
-                Estado = i.Estado
-            }).ToList();
-
-            stats.ActividadReciente = ultimosProyectos
-                .Concat(ultimosInformes)
-                .OrderByDescending(a => a.Fecha)
-                .Take(8)
-                .ToList();
+            stats.ActividadReciente = ultimosProyectos;
 
             return stats;
         }

@@ -241,43 +241,6 @@ public class CalendarioService : ICalendarioService
             }
         }
 
-        // 3. INFORMES DE AVANCE
-        var projectIdsPermitidos = rolUsuario == "DOSIER_ADMIN" ? null : proyectos.Select(p => p.IdProyecto).ToHashSet();
-        var informesAvance = await _context.DocInformesAvance
-            .AsNoTracking()
-            .Include(ia => ia.IdProyectoNavigation)
-            .Where(ia => ia.Estado == "Pendiente" && ia.FechaReporte >= desde && ia.FechaReporte <= hasta)
-            .ToListAsync();
-
-        foreach (var ia in informesAvance)
-        {
-            if (projectIdsPermitidos != null && !projectIdsPermitidos.Contains(ia.IdProyecto)) continue;
-            var p = ia.IdProyectoNavigation;
-            resultado.Add(new CalendarioEventoDto(
-                $"INF-{ia.IdInforme}",
-                ia.Uuid.ToString(),
-                $"Informe #{ia.NumeroInforme}: {p?.Titulo ?? "Proyecto"}",
-                $"Entrega del Informe de Avance N° {ia.NumeroInforme}",
-                "Monitoreo",
-                "InformeAvance",
-                ia.FechaReporte,
-                null,
-                true,
-                "#8B5CF6",
-                ia.IdProyecto,
-                p?.Uuid,
-                "INFORME_AVANCE",
-                p != null ? $"/investigacion/proyectos/informes-avance/{p.Uuid}" : null,
-                null,
-                false,
-                "Media",
-                "Pendiente",
-                null,
-                null,
-                false
-            ));
-        }
-
         // 5. HITOS NORMATIVOS Y PERSONALES (doc_calendario_eventos_normativos)
         var normativos = await _context.Set<DocCalendarioEventoNormativo>()
             .AsNoTracking()

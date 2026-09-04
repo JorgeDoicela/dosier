@@ -65,7 +65,6 @@ namespace dosier_infrastructure.Research.Subservices
                 .Include(p => p.IdObjetivoPndNavigation)
                 .Include(p => p.IdEntidadAliadaNavigation)
                 .Include(p => p.DocProyectoParticipantes)
-                .Include(p => p.DocInformesAvance)
                 .Include(p => p.DocProyectosCarreras).ThenInclude(pc => pc.IdCarreraNavigation)
                 .OrderByDescending(p => p.FechaRegistro)
                 .Select(p => new ProyectoResumenDto
@@ -86,8 +85,8 @@ namespace dosier_infrastructure.Research.Subservices
                     ConvocatoriaTitulo = p.IdConvocatoriaNavigation != null ? p.IdConvocatoriaNavigation.Titulo : null,
                     TotalInvestigadores = p.DocProyectoParticipantes.Count(pp => pp.Activo != false),
                     TotalProductos = 0,
-                    TotalInformes = p.DocInformesAvance.Count,
-                    InformesAprobados = p.DocInformesAvance.Count(i => i.Estado == "Aprobado"),
+                    TotalInformes = 0,
+                    InformesAprobados = 0,
                     TrlActual = (int?)p.TrlActual,
                     TrlMeta = (int?)p.TrlMeta,
                     TotalEstudiantes = p.DocProyectoParticipantes.Count(pp => pp.TipoParticipante == "Alumno" && pp.Activo != false),
@@ -139,7 +138,6 @@ namespace dosier_infrastructure.Research.Subservices
                 .Include(p => p.IdObjetivoPndNavigation)
                 .Include(p => p.IdEntidadAliadaNavigation)
                 .Include(p => p.DocProyectoParticipantes)
-                .Include(p => p.DocInformesAvance)
                 .Include(p => p.DocProyectosCarreras).ThenInclude(pc => pc.IdCarreraNavigation)
                 .Where(p => projectIds.Contains(p.IdProyecto) || (p.TieneGrupo == true && p.IdGrupo.HasValue && groupIds.Contains(p.IdGrupo.Value)))
                 .OrderByDescending(p => p.FechaRegistro)
@@ -161,8 +159,8 @@ namespace dosier_infrastructure.Research.Subservices
                     ConvocatoriaTitulo = p.IdConvocatoriaNavigation != null ? p.IdConvocatoriaNavigation.Titulo : null,
                     TotalInvestigadores = p.DocProyectoParticipantes.Count(pp => pp.Activo != false),
                     TotalProductos = 0,
-                    TotalInformes = p.DocInformesAvance.Count,
-                    InformesAprobados = p.DocInformesAvance.Count(i => i.Estado == "Aprobado"),
+                    TotalInformes = 0,
+                    InformesAprobados = 0,
                     TrlActual = (int?)p.TrlActual,
                     TrlMeta = (int?)p.TrlMeta,
                     TotalEstudiantes = p.DocProyectoParticipantes.Count(pp => pp.TipoParticipante == "Alumno" && pp.Activo != false),

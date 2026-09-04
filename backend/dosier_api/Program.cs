@@ -226,7 +226,6 @@ builder.Services.AddScoped<IDocumentAuditRepository, DocumentAuditRepository>();
 builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentInstanceService, Dosier.Infrastructure.Common.Documents.DocumentInstanceService>();
 builder.Services.AddScoped<IDocumentDataOrchestrator, DocumentDataOrchestrator>();
 builder.Services.AddScoped<IDocumentDataProvider, ProjectDocumentDataProvider>();
-builder.Services.AddScoped<IDocumentDataProvider, Dosier.Infrastructure.Common.Documents.Providers.InformeAvanceDataProvider>();
 builder.Services.AddSingleton<Dosier.Infrastructure.Common.Storage.IFileStorageService, Dosier.Infrastructure.Common.Storage.LocalFileStorageService>();
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -265,7 +264,6 @@ builder.Services.AddScoped<dosier_application.Common.Notifications.INotification
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.EmailDriver>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.PushDriver>();
 
-builder.Services.AddScoped<dosier_application.Research.IInformeAvanceService, dosier_infrastructure.Research.InformeAvanceService>();
 builder.Services.AddScoped<IConvocatoriaService, ConvocatoriaService>();
 builder.Services.AddScoped<dosier_application.Research.IGroupsQueryService, GroupsQueryService>();
 builder.Services.AddScoped<dosier_application.Research.IGroupsWorkflowService, GroupsWorkflowService>();

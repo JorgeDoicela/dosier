@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    Settings, CheckCircle2, FileText,
-    AlertCircle, BarChart, Shield, Clock
+    CheckCircle2, FileText,
+    AlertCircle, Shield, Clock
 } from 'lucide-react';
 import api from '../../../../../api/axios_config';
 import { buildWorkspacePath, templateCodeToEditParam } from '../../../../../core/documents/templateUrl';
@@ -10,7 +10,6 @@ import { buildWorkspacePath, templateCodeToEditParam } from '../../../../../core
 const WorkflowPhases = [
     { id: 'Borrador', label: 'Formulación', icon: FileText },
     { id: 'Enviado', label: 'Revisión Administrador', icon: Shield },
-    { id: 'En Ejecución', label: 'Ejecución y Avance', icon: Settings },
 ];
 
 interface CacesWorkflowProps {
@@ -31,13 +30,10 @@ interface CacesWorkflowProps {
     projectDocuments?: any[];
     templateCode: string;
     isAdmin: boolean;
-    iniciandoEjecucion: boolean;
-    resolvingDocument: string | null;
     urlPrefix: string;
     resolvedProjectUuid: string;
     setActiveDocument: (doc: string) => void;
-    resolveDocumentInstance: (doc: string) => void;
-    handleIniciarEjecucion: () => void;
+    resolveDocumentInstance: (code: string) => void;
     navigate: (path: string) => void;
 }
 
@@ -46,13 +42,10 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
     projectDocuments,
     templateCode,
     isAdmin,
-    iniciandoEjecucion,
-    resolvingDocument,
     urlPrefix,
     resolvedProjectUuid,
     setActiveDocument,
     resolveDocumentInstance,
-    handleIniciarEjecucion,
     navigate
 }) => {
     const [asyncProtocoloSigned, setAsyncProtocoloSigned] = useState(false);
@@ -174,13 +167,9 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                         isCurrent = !isPast && (status === 'Borrador' || status === 'En Corrección' || status === 'Enviado');
                     } else if (phase.id === 'Enviado') {
                         // Fase 2: Revisión técnica del Administrador
-                        isPast = ['En Revisión', 'Aprobado', 'En Ejecución', 'Finalizado'].includes(status);
-                        isCurrent = !isPast && (status === 'Enviado' || (isProtocoloSigned && status === 'Borrador'));
+                        isPast = ['Aprobado', 'En Ejecución', 'Finalizado'].includes(status);
+                        isCurrent = !isPast && (status === 'Enviado' || status === 'En Revisión' || (isProtocoloSigned && status === 'Borrador'));
                         isFuture = !isCurrent && !isPast;
-                    } else if (phase.id === 'En Ejecución') {
-                        isPast = status === 'Finalizado';
-                        isCurrent = status === 'Aprobado' || status === 'En Ejecución';
-                        isFuture = status === 'Borrador' || status === 'En Corrección' || status === 'Enviado' || status === 'En Revisión';
                     }
 
                     const showChecked = isPast;
@@ -193,9 +182,6 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                     if (phase.id === 'Borrador' && status === 'En Corrección') {
                         deadlineDate = currentProject.fecha_limite_subsanacion || currentProject.fechaLimiteSubsanacion || null;
                         deadlinePrefix = 'Subsanación';
-                    } else if (phase.id === 'En Ejecución' && status === 'En Ejecución' && !showChecked) {
-                        deadlineDate = currentProject.fecha_fin || currentProject.fechaFin || null;
-                        deadlinePrefix = 'Cierre Proyecto';
                     }
 
                     return (
@@ -237,8 +223,6 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                         } else if (currentProject.status === 'En Corrección') {
                                             navigate(buildWorkspacePath(templateCode, resolvedProjectUuid, `?edit=${templateCodeToEditParam(templateCode)}`, urlPrefix));
                                         }
-                                    } else if (phase.id === 'En Ejecución' && currentProject.status === 'Aprobado' && isAdmin && !iniciandoEjecucion) {
-                                        handleIniciarEjecucion();
                                     }
                                 }}
                                 className={`p-4 rounded-xl border transition-all duration-300 ${isCurrentActive
@@ -268,9 +252,8 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                     {phase.id === 'Enviado' && (
                                         (currentProject.status === 'Prepropuesta' || currentProject.status === 'Prepropuesta Rechazada')
                                             ? 'Validación y dictamen preliminar de la idea de proyecto por parte del Administrador.'
-                                            : 'Revisión formal de requisitos, carga horaria, firmas y presupuesto institucional.'
+                                            : 'Revisión formal de requisitos, carga horaria, firmas y dictamen institucional.'
                                     )}
-                                    {phase.id === 'En Ejecución' && 'Seguimiento de hitos, envío de informes de avance y ejecución presupuestaria.'}
                                 </p>
 
                                 {/* 1. FORMULACIÓN */}
@@ -316,47 +299,6 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                             </div>
                                         )}
                                     </div>
-                                )}
-
-                                {/* 3. EJECUCIÓN Y AVANCE */}
-                                {phase.id === 'En Ejecución' && (
-                                    (currentProject.status === 'Aprobado' || currentProject.status === 'En Ejecución' || currentProject.status === 'Finalizado') && (
-                                        <div className="mt-4 animate-fade-in flex flex-col gap-2.5">
-                                            {currentProject.codigoInstitucional && (
-                                                <span className="badge-vercel badge-vercel-success !text-[11px] !py-2 font-mono w-full justify-center">
-                                                    Código: {currentProject.codigoInstitucional}
-                                                </span>
-                                            )}
-
-                                            {currentProject.status === 'Aprobado' ? (
-                                                isAdmin ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => { e.stopPropagation(); handleIniciarEjecucion(); }}
-                                                        disabled={iniciandoEjecucion}
-                                                        className="btn-vercel-primary !py-2.5 w-full justify-center font-semibold flex items-center gap-1.5 shadow-[0_4px_12px_rgba(0,112,243,0.1)] cursor-pointer disabled:opacity-50"
-                                                    >
-                                                        <Settings size={14} className={iniciandoEjecucion ? 'animate-spin' : ''} />
-                                                        <span>{iniciandoEjecucion ? 'Iniciando...' : 'Iniciar Ejecución del Proyecto'}</span>
-                                                    </button>
-                                                ) : (
-                                                    <div className="w-full py-2.5 px-3 bg-surface/50 border border-border-thin rounded-xl text-center flex items-center justify-center gap-2 text-text-dim text-xs font-medium select-none">
-                                                        <Clock size={14} className="text-brand animate-pulse" />
-                                                        <span>Proyecto aprobado — En espera de inicio de ejecución</span>
-                                                    </div>
-                                                )
-                                            ) : (
-                                                <Link
-                                                    to={`${urlPrefix}/informes-avance/${currentProject.uuid}`}
-                                                    onClick={(e) => { e.stopPropagation(); }}
-                                                    className="btn-vercel-primary !py-2.5 w-full justify-center font-semibold flex items-center gap-1.5"
-                                                >
-                                                    <BarChart size={14} />
-                                                    <span>Informes de Avance</span>
-                                                </Link>
-                                            )}
-                                        </div>
-                                    )
                                 )}
                             </div>
                         </div>

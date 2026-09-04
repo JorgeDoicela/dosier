@@ -170,7 +170,6 @@ export const buildPayload = (fields: {
 export const EVENTO_CONTEXTO_HELP: Record<string, string> = {
     PROYECTO: 'Este hito está vinculado al módulo de Proyectos de Investigación. Representa una fecha oficial establecida en el cronograma aprobado para la ejecución del proyecto.',
     CONVOCATORIA: 'Este evento corresponde a un hito oficial del cronograma de Convocatorias. Es clave para el control de los plazos de postulación y revisión de propuestas.',
-    INFORME_AVANCE: 'Este plazo representa una fecha límite de entrega para un Informe de Avance. Es obligatorio cargar la documentación firmada digitalmente junto con las evidencias correspondientes antes de esta fecha.',
 };
 
 /** Retorna la explicación conceptual del origen de un hito */
@@ -215,8 +214,6 @@ export const resolveEventUrl = (ev: {
         }
         case 'CONVOCATORIA':
             return '/convocatorias';
-        case 'INFORME_AVANCE':
-            return projectUuid ? `${prefix}/informes-avance/${projectUuid}` : `${prefix}`;
         case 'PEER_REVIEW':
             return '/revisiones';
         default:

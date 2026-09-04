@@ -38,8 +38,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocImpactoProyecto>    DocImpactosProyecto    { get; set; }
     public virtual DbSet<DocCronograma>         DocCronogramas         { get; set; }
     public virtual DbSet<DocBibliografiaProyecto> DocBibliografiasProyecto { get; set; }
-    public virtual DbSet<DocInformeAvance>      DocInformesAvance      { get; set; }
-    public virtual DbSet<DocEvidencia>          DocEvidencias          { get; set; }
     public virtual DbSet<DocTrazabilidadProyecto> DocTrazabilidadProyectos { get; set; }
     public virtual DbSet<DocConfigWorkflow> DocConfigWorkflows { get; set; }
     public virtual DbSet<DocDocumentoSeccionMetadata> DocDocumentosSeccionesMetadata { get; set; }

@@ -229,7 +229,7 @@ export function useProjectCore() {
                 params: {
                     templateCode: docTemplateCode,
                     entityUuid: resolvedProjectUuid,
-                    title: `${docTemplateCode === 'RUBRICA_EVALUACION' ? 'Rúbrica de Evaluación' : docTemplateCode === 'INFORME_AVANCE' ? 'Informe de Avance' : docTemplateCode} — ${currentProject?.title || ''}`
+                    title: `${docTemplateCode === 'RUBRICA_EVALUACION' ? 'Rúbrica de Evaluación' : docTemplateCode} — ${currentProject?.title || ''}`
                 }
             });
             const instanceUuid = res.data?.uuid || res.data?.Uuid;

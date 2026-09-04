@@ -33,7 +33,6 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'cover',
     'project_general_section',
     'project_technical_section',
-    'project_progress_report',
     'researchers_table',
     'gantt',
     'impacts',

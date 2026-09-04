@@ -118,7 +118,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PROTOCOLO_INVESTIGACION"]       = "Investigacion/ProyectoInvestigacion.html",
-                ["INFORME_AVANCE"]                = "Investigacion/InformeAvance.html",
                 ["REPORTE_ANALITICAS"]            = "Investigacion/ReporteAnaliticas.html",
                 ["PROPUESTA_GRUPO_INVESTIGACION"] = "Investigacion/PropuestaGrupoInvestigacion.html",
             };

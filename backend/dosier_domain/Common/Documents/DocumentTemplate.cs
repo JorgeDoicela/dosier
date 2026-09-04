@@ -182,7 +182,6 @@ namespace Dosier.Domain.Common.Documents
         // Ciclo de vida del proyecto
         Protocolo = 1,
         ActaAprobacion = 2,
-        InformeAvance = 3,
         ActaLiquidacion = 5,
 
         // Gestión de presupuesto público (SERCOP)

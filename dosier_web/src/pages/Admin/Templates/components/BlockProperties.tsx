@@ -10,9 +10,6 @@ import { GanttProperties } from './properties/GanttProperties';
 import { ProjectGeneralProperties } from './properties/ProjectGeneralProperties';
 import { ProjectTechnicalProperties } from './properties/ProjectTechnicalProperties';
 import { ImpactsProperties } from './properties/ImpactsProperties';
-import { ProgressHeaderProperties } from './properties/ProgressHeaderProperties';
-import { ProgressActivityProperties } from './properties/ProgressActivityProperties';
-import { ProgressStatusProperties } from './properties/ProgressStatusProperties';
 import { ThemeEditorTab } from './ThemeEditorTab';
 import { CoverProperties } from './properties/CoverProperties';
 
@@ -449,44 +446,6 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                             {/* ── MATRIZ DE IMPACTO ───────────────────────────────────────── */}
                             {activeBlock.type === 'impacts' && (
                                 <ImpactsProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
-                            )}
-
-                            {activeBlock.type === 'progress_header_section' && (
-                                <ProgressHeaderProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
-                            )}
-
-                            {activeBlock.type === 'progress_activity_section' && (
-                                <ProgressActivityProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
-                            )}
-
-                            {activeBlock.type === 'progress_status_section' && (
-                                <ProgressStatusProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
-                            )}
-
-                            {/* ── AVANCE DE EJECUCIÓN ──────────────────────────────────────── */}
-                            {activeBlock.type === 'project_progress_report' && (
-                                <div className="space-y-3 border-t border-border-thin/20 pt-4">
-                                    <p className="text-[10px] text-text-dim leading-relaxed">
-                                        Activa o desactiva los apartados del informe de avance / bitácora:
-                                    </p>
-                                    {[
-                                        { key: 'showHitosCompletados', label: 'Mostrar Monitoreo de Hitos', desc: 'Seguimiento porcentual de las actividades programadas.' },
-                                        { key: 'showEvidencias', label: 'Mostrar Bitácoras y Evidencias', desc: 'Carga de archivos o links de evidencia física.' },
-                                    ].map(({ key, label, desc }) => (
-                                        <div key={key} className="flex items-center justify-between border-b border-border-thin/10 pb-3 last:border-0 last:pb-0">
-                                            <div>
-                                                <label className="text-xs font-semibold text-text-main block">{label}</label>
-                                                <span className="text-[9px] text-text-dim block mt-0.5 leading-tight">{desc}</span>
-                                            </div>
-                                            <input
-                                                type="checkbox"
-                                                checked={(activeBlock.config as any)[key] !== false}
-                                                onChange={e => onUpdateConfig(activeBlock.id, key, e.target.checked)}
-                                                className="w-4 h-4 text-text-main accent-text-main bg-surface border-border-thin rounded focus:ring-text-main"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
                             )}
                         </div>
                     )}

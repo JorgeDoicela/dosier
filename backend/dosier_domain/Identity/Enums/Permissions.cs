@@ -6,11 +6,9 @@ public static class Permissions
     public const string CrearProyecto = "PROYECTOS:CREAR";
     public const string PostularProyecto = "PROYECTOS:POSTULAR";
     public const string LiderarEquipo = "PROYECTOS:EDITAR"; // Reutilizamos operaciones base
-    public const string GestionarPresupuesto = "PROYECTOS:GESTIONAR";
     public const string RegistrarBitacora = "PROYECTOS:EDITAR";
     
     // Módulo de Seguimiento
-    public const string SubirInformeAvance = "PROYECTOS:EDITAR";
     public const string RegistrarProducto = "PROYECTOS:EDITAR";
     
     // Gestión Departamental (Director / Admin)

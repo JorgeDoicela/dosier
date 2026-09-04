@@ -210,51 +210,6 @@ public class DocBibliografiaProyectoConfiguration : IEntityTypeConfiguration<Doc
     }
 }
 
-public class DocInformeAvanceConfiguration : IEntityTypeConfiguration<DocInformeAvance>
-{
-    public void Configure(EntityTypeBuilder<DocInformeAvance> entity)
-    {
-        entity.HasKey(e => e.IdInforme).HasName("PRIMARY");
-        entity.ToTable("doc_informes_avance");
-        entity.Property(e => e.IdInforme).HasColumnName("idInforme");
-        entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-        entity.HasIndex(e => e.Uuid).IsUnique();
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.NumeroInforme).HasColumnName("numeroInforme").IsRequired();
-        entity.Property(e => e.FechaReporte).HasColumnName("fechaReporte");
-        entity.Property(e => e.ResumenActividades).HasColumnName("resumenActividades").HasColumnType("text").IsRequired();
-        entity.Property(e => e.EsFirmadoDigital).HasColumnName("esFirmadoDigital").HasColumnType("tinyint(1)").HasDefaultValueSql("'0'").HasSentinel(false);
-        entity.Property(e => e.HashFirma).HasColumnName("hashFirma").HasColumnType("text");
-        entity.Property(e => e.FechaFirma).HasColumnName("fechaFirma");
-        entity.Property(e => e.ValidadoPor).HasColumnName("validadoPor");
-        entity.Property(e => e.Estado).HasColumnName("estado").HasColumnType("enum('Pendiente','Aprobado','Observado')").HasDefaultValueSql("'Pendiente'");
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocInformesAvance).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_inf_proyecto");
-        entity.HasOne(d => d.ValidadoPorNavigation).WithMany().HasForeignKey(d => d.ValidadoPor).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_inf_validador");
-    }
-}
-
-public class DocEvidenciaConfiguration : IEntityTypeConfiguration<DocEvidencia>
-{
-    public void Configure(EntityTypeBuilder<DocEvidencia> entity)
-    {
-        entity.HasKey(e => e.IdEvidencia).HasName("PRIMARY");
-        entity.ToTable("doc_evidencias");
-        entity.Property(e => e.IdEvidencia).HasColumnName("idEvidencia");
-        entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-        entity.HasIndex(e => e.Uuid).IsUnique();
-        entity.Property(e => e.IdInforme).HasColumnName("idInforme");
-        entity.Property(e => e.IdTipoEvidencia).HasColumnName("idTipoEvidencia");
-        entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(255);
-        entity.Property(e => e.RutaArchivo).HasColumnName("rutaArchivo").HasMaxLength(512).IsRequired();
-        entity.Property(e => e.MetadataJson).HasColumnName("metadataJson").HasColumnType("json");
-        entity.Property(e => e.FechaRegistro).HasColumnName("fechaRegistro").HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-        entity.HasOne(d => d.IdInformeNavigation).WithMany(p => p.DocEvidencias).HasForeignKey(d => d.IdInforme).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_ev_informe");
-        entity.HasOne(d => d.IdTipoEvidenciaNavigation).WithMany(p => p.DocEvidencias).HasForeignKey(d => d.IdTipoEvidencia).OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_ev_tipo");
-    }
-}
-
 public class DocProyectoMmlConfiguration : IEntityTypeConfiguration<DocProyectoMml>
 {
     public void Configure(EntityTypeBuilder<DocProyectoMml> entity)

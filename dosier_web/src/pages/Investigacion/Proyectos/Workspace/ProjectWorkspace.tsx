@@ -241,9 +241,6 @@ export const ProjectWorkspace: React.FC = () => {
         } else if (activeDocument === 'RUBRICA_EVALUACION') {
             isReadOnly = true;
             readOnlyReason = 'review';
-        } else if (activeDocument === 'INFORME_AVANCE') {
-            isReadOnly = currentProject.status === 'Finalizado';
-            readOnlyReason = 'state';
         } else {
             isReadOnly = currentProject.status === 'Finalizado';
             readOnlyReason = 'state';
@@ -333,13 +330,10 @@ export const ProjectWorkspace: React.FC = () => {
                                 projectDocuments={projectDocuments}
                                 templateCode={templateCode}
                                 isAdmin={isAdmin}
-                                iniciandoEjecucion={iniciandoEjecucion}
-                                resolvingDocument={resolvingDocument}
                                 urlPrefix={urlPrefix}
                                 resolvedProjectUuid={resolvedProjectUuid}
                                 setActiveDocument={setActiveDocument}
                                 resolveDocumentInstance={resolveDocumentInstance}
-                                handleIniciarEjecucion={handleIniciarEjecucion}
                                 navigate={navigate}
                             />
 

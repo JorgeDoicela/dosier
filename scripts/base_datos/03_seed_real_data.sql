@@ -5,8 +5,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 1. Limpieza de tablas de proyectos, productos, etc.
 TRUNCATE TABLE doc_proyectos_carreras;
 TRUNCATE TABLE doc_proyecto_participantes;
-TRUNCATE TABLE doc_informes_avance;
-TRUNCATE TABLE doc_evidencias;
 TRUNCATE TABLE doc_objetivos_proyecto;
 TRUNCATE TABLE doc_proyectos_ods;
 TRUNCATE TABLE doc_proyectos_mml;
@@ -296,10 +294,6 @@ INSERT INTO doc_cronograma (uuid, idProyecto, idObjetivo, numeroActividad, descr
 (UUID(), 1, 3, 3, 'Desarrollo de modelos de IA', 'Entrenamiento de redes neuronales recursivas en Python.', 'Giovanny Naranjo', 'Algoritmo LSTM entrenado', '2025-10-02', '2025-11-15', 75.00, 25.00, 1),
 (UUID(), 1, 4, 4, 'Construcción del Dashboard Web', 'Integración del cliente web en React con la base de datos de telemetría.', 'Giovanny Naranjo', 'Dashboard React operativo', '2025-11-16', '2025-12-31', 20.00, 25.00, 1);
  
--- 15. Poblar Informes de Avance
-INSERT INTO doc_informes_avance (idInforme, uuid, idProyecto, numeroInforme, fechaReporte, resumenActividades, esFirmadoDigital, estado) VALUES
-(1, UUID(), 1, 1, '2025-10-01', 'Se han completado los hitos de estado del arte y diseño eléctrico del prototipo de sensado.', 0, 'Aprobado');
- 
 -- 16. Poblar Trazabilidad de Estados
 INSERT INTO doc_trazabilidad_proyectos (idTrazabilidad, uuid, idProyecto, idUsuario, estadoAnterior, estadoNuevo, observacion, fechaTransicion) VALUES
 (1, UUID(), 1, (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1), 'Borrador', 'En Revisión', 'Envío de propuesta inicial.', '2025-05-10 14:00:00'),
@@ -343,9 +337,9 @@ INSERT INTO doc_backup_logs (uuid, fechaBackup, tipo, destino, nombreArchivo, ta
  
 -- 27. Datos adicionales de prueba para adaptabilidad CACES (Nuevos Estados y Umbrales)
 INSERT INTO doc_config_workflow 
-    (estadoOrigen, estadoDestino, rolRequerido, requiereObservacion, contabilizaCargaHoraria, permiteInformesAvance, esEstadoFinal, etiquetaUi, colorHex, activo)
+    (estadoOrigen, estadoDestino, rolRequerido, requiereObservacion, contabilizaCargaHoraria, esEstadoFinal, etiquetaUi, colorHex, activo)
 VALUES 
-    ('En Ejecución', 'En Acreditación CACES', 'DOSIER_ADMIN', 1, 1, 1, 0, 'Evaluación Acreditación CACES', '#D97706', 1);
+    ('En Ejecución', 'En Acreditación CACES', 'DOSIER_ADMIN', 1, 1, 0, 'Evaluación Acreditación CACES', '#D97706', 1);
  
 -- Agregamos el proyecto 8 en el nuevo estado 'En Acreditación CACES'
 INSERT INTO doc_proyectos (idProyecto, uuid, idConvocatoria, codigoInstitucional, titulo, idGrupo, tieneGrupo, fechaPresentacion, fechaInicio, fechaFin, tiempoEjecucion, estado, puntajeEvaluacion, idObjetivoPnd, idEntidadAliada, trlInicial, trlActual, trlMeta, hashActaAprobacion, fechaAprobacion, firmadoPor, metadataCacesJson) VALUES

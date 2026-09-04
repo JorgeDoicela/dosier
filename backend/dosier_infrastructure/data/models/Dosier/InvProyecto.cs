@@ -54,7 +54,6 @@ public partial class DocProyecto
     public virtual ICollection<DocImpactoProyecto> DocImpactosProyecto { get; set; } = new List<DocImpactoProyecto>();
     public virtual ICollection<DocCronograma> DocCronogramas { get; set; } = new List<DocCronograma>();
     public virtual ICollection<DocBibliografiaProyecto> DocBibliografiasProyecto { get; set; } = new List<DocBibliografiaProyecto>();
-    public virtual ICollection<DocInformeAvance> DocInformesAvance { get; set; } = new List<DocInformeAvance>();
 
     public virtual ICollection<DocProyectoMml> MatrizMarcoLogico { get; set; } = new List<DocProyectoMml>();
 

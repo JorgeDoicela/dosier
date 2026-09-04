@@ -173,8 +173,7 @@ namespace dosier_api.Controllers
                     estado = w.EstadoDestino,
                     etiqueta = w.EtiquetaUi ?? w.EstadoDestino,
                     color = w.ColorHex ?? "#94A3B8",
-                    esFinal = w.EsEstadoFinal,
-                    permiteInformes = w.PermiteInformesAvance
+                    esFinal = w.EsEstadoFinal
                 })
                 .Distinct()
                 .ToListAsync();

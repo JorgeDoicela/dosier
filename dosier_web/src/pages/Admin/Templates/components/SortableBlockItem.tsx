@@ -21,27 +21,16 @@ import {
     RenderProjectTechnicalSection,
     RenderImpacts,
 } from './canvasRenderers/RenderSections';
-import {
-    RenderProjectProgressReport,
-} from './canvasRenderers/RenderReports';
-import {
-    RenderProgressHeaderSection,
-    RenderProgressActivitySection,
-    RenderProgressStatusSection,
-} from './canvasRenderers/RenderProgressSections';
 
 /** Tipos de bloques de los que solo se permite una única instancia */
 const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'cover',
     'project_general_section',
     'project_technical_section',
-    'project_progress_report',
     'researchers_table',
     'gantt',
     'signatures',
     'impacts',
-    'progress_header_section',
-    'progress_status_section',
 ];
 
 interface SortableBlockItemProps {
@@ -49,25 +38,25 @@ interface SortableBlockItemProps {
     index: number;
     isActive: boolean;
     coverImage?: string;
-    onSelectBlock: (id: string | null) => void;
-    onToggleActive: (index: number) => void;
-    onDeleteBlock: (id: string) => void;
-    onDuplicateBlock: (id: string) => void;
-    onUpdateConfig?: (blockId: string, key: string, value: any) => void;
     themeConfig?: any;
+    onSelectBlock: (id: string) => void;
+    onToggleActive: (index: number) => void;
+    onDuplicateBlock: (id: string) => void;
+    onDeleteBlock: (id: string) => void;
+    onUpdateConfig?: (blockId: string, key: string, value: any) => void;
 }
 
 export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
     block,
     index,
     isActive,
-    coverImage,
+    coverImage: _coverImage,
+    themeConfig: _themeConfig,
     onSelectBlock,
     onToggleActive,
-    onDeleteBlock,
     onDuplicateBlock,
+    onDeleteBlock,
     onUpdateConfig,
-    themeConfig,
 }) => {
     const {
         attributes,
@@ -78,26 +67,19 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
         isDragging,
     } = useSortable({ id: block.id });
 
-    const style = {
+    const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.45 : block.isActive ? 1 : 0.45,
+        opacity: isDragging ? 0.35 : 1,
+        zIndex: isDragging ? 50 : undefined,
     };
 
-    const renderContent = () => {
-        if (!block.isActive) {
-            return (
-                <div className="py-3 px-4 border border-dashed border-slate-200 bg-slate-50/50 rounded text-center text-slate-400 italic text-[10px]">
-                    Bloque "{block.title}" oculto en la generación del PDF
-                </div>
-            );
-        }
-
+    const renderBlockPreview = () => {
         switch (block.type) {
             case 'cover':
-                return <RenderCover config={block.config} coverImage={coverImage} blockId={block.id} onUpdateConfig={onUpdateConfig} themeConfig={themeConfig} />;
+                return <RenderCover config={block.config} />;
             case 'title':
-                return <RenderTitle config={block.config} themeConfig={themeConfig} />;
+                return <RenderTitle config={block.config} title={block.title} />;
             case 'rich_text':
                 return <RenderRichText config={block.config} />;
             case 'advanced_table':
@@ -116,16 +98,8 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 return <RenderProjectGeneralSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'project_technical_section':
                 return <RenderProjectTechnicalSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
-            case 'project_progress_report':
-                return <RenderProjectProgressReport config={block.config} />;
             case 'impacts':
                 return <RenderImpacts config={block.config} />;
-            case 'progress_header_section':
-                return <RenderProgressHeaderSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
-            case 'progress_activity_section':
-                return <RenderProgressActivitySection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
-            case 'progress_status_section':
-                return <RenderProgressStatusSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'page_break':
                 return (
                     <div className="w-full flex items-center justify-between py-2 select-none">
@@ -197,7 +171,7 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
 
             {/* Contenido del bloque */}
             <div className={`relative ${isCover ? 'flex-1 flex flex-col' : 'pt-5'}`}>
-                {renderContent()}
+                {renderBlockPreview()}
             </div>
         </div>
     );

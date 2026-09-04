@@ -26,9 +26,7 @@ import { useConfirm } from '../../../../api/ConfirmContext';
 import { type DocumentTemplateDto, type DocumentBlock, type BlockType, type TableRow, BLOCK_METADATA } from '../types';
 import {
     DEFAULT_TECHNICAL_SUBSECTIONS,
-    DEFAULT_IMPACT_CATEGORIES,
-    DEFAULT_PROGRESS_HEADER_FIELDS,
-    DEFAULT_PROGRESS_STATUS_SUBSECTIONS
+    DEFAULT_IMPACT_CATEGORIES
 } from '../types';
 import { mergeWithDefaults } from '../utils/theme-schema';
 import { generateHtmlFromBlocks } from '../utils/HtmlGenerator';
@@ -444,18 +442,6 @@ export const useDocumentTemplatesPage = () => {
                     }
                 };
                 break;
-            case 'project_progress_report':
-                newBlock = {
-                    id: newId,
-                    type,
-                    title: BLOCK_METADATA.project_progress_report.defaultTitle,
-                    isActive: true,
-                    config: {
-                        showHitosCompletados: true,
-                        showEvidencias: true
-                    }
-                };
-                break;
             case 'impacts':
                 newBlock = {
                     id: newId,
@@ -465,36 +451,6 @@ export const useDocumentTemplatesPage = () => {
                     config: {
                         impactCategories: DEFAULT_IMPACT_CATEGORIES,
                         impactLayoutMode: 'table'
-                    }
-                };
-                break;
-            case 'progress_header_section':
-                newBlock = {
-                    id: newId,
-                    type,
-                    title: 'Encabezado Informe Avance',
-                    isActive: true,
-                    config: {
-                        headerTitle: '1. DATOS GENERALES DEL INFORME DE AVANCE',
-                        progressHeaderFields: DEFAULT_PROGRESS_HEADER_FIELDS,
-                        progressHeaderColor: 'navy',
-                        progressHeaderBorder: 'solid'
-                    }
-                };
-                break;
-            case 'progress_activity_section':
-                newBlock = { id: newId, type, title: 'Matriz Actividades Avance', isActive: true, config: { activityVariant: 'ejecutadas', activityTableTitle: 'MATRIZ DE ACTIVIDADES EJECUTADAS', activityHeaderColor: 'navy' } };
-                break;
-            case 'progress_status_section':
-                newBlock = {
-                    id: newId,
-                    type,
-                    title: 'Estado y Observaciones',
-                    isActive: true,
-                    config: {
-                        statusTitle: 'ESTADO Y OBSERVACIONES',
-                        progressStatusSections: DEFAULT_PROGRESS_STATUS_SUBSECTIONS,
-                        progressStatusHeaderColor: 'navy'
                     }
                 };
                 break;

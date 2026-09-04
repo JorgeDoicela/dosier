@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, FileText, Users, DollarSign, Calendar, Target, CheckSquare, BarChart, Library, Award, Shield } from 'lucide-react';
 
@@ -122,9 +122,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
     const [groups, setGroups] = useState<any[]>([]);
     const [customCatalogs, setCustomCatalogs] = useState<Record<string, any[]>>({});
 
-    const [isInstanceSigned, setIsInstanceSigned] = useState<boolean>(false);
-
-    const isSignedDocumentReadOnly = readOnly;
     const effectiveConfig = templateConfig;
 
     // ── Carga paralela: configuración de plantilla + datos de instancia + catálogos ──
@@ -422,8 +419,6 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             ['Antecedentes', 'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'ObjetivosEspecificos', 'MarcoTeorico', 'Metodologia', 'Evaluacion', 'Bibliografia'].forEach(k => {
                 if (!list.includes(k)) list.push(k);
             });
-        } else if (templateCode === 'INFORME_AVANCE' && !templateConfig?.sections?.some((s: any) => s.id === "edicion_colaborativa")) {
-            list.push('ConclusionesParciales');
         }
 
         if (templateConfig?.sections) {

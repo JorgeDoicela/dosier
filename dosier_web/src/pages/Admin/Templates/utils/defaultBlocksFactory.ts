@@ -201,40 +201,6 @@ export function generateDefaultBlocksForTemplate(
         ];
     }
 
-    // C. INFORME DE AVANCE
-    if (code === 'INFORME_AVANCE') {
-        return [
-            createBaseCoverBlock('INFORME DE AVANCE DE INVESTIGACIÓN', { colorTitle: 'navy' }),
-            {
-                id: 'block-progress-1', type: 'progress_header_section' as BlockType, title: '1. Encabezado e Identificación', isActive: true,
-                config: { progressHeaderColor: 'navy', progressHeaderBorder: 'solid' }
-            },
-            {
-                id: 'block-progress-2', type: 'progress_activity_section' as BlockType, title: '2. Matriz de Actividades Ejecutadas', isActive: true,
-                config: { activityVariant: 'ejecutadas', activityTableTitle: 'MATRIZ DE ACTIVIDADES EJECUTADAS', activityHeaderColor: 'navy' }
-            },
-            {
-                id: 'block-progress-3', type: 'progress_activity_section' as BlockType, title: '3. Actividades No Previstas y Replanificadas', isActive: true,
-                config: { activityVariant: 'no_previstas', activityTableTitle: 'ACTIVIDADES NO PREVISTAS', activityHeaderColor: 'gold' }
-            },
-            {
-                id: 'block-progress-4', type: 'progress_activity_section' as BlockType, title: '4. Obstáculos y Medidas Correctivas', isActive: true,
-                config: { activityVariant: 'obstaculos', activityTableTitle: 'OBSTÁCULOS Y DIFICULTADES ENCONTRADAS', activityHeaderColor: 'crimson' }
-            },
-            {
-                id: 'block-progress-5', type: 'progress_products_section' as BlockType, title: '5. Estado de Productos y Entregables', isActive: true,
-                config: { progressHeaderColor: 'navy' }
-            },
-            {
-                id: 'block-progress-6', type: 'progress_budget_section' as BlockType, title: '6. Ejecución Presupuestaria y Financiera', isActive: true,
-                config: { progressHeaderColor: 'navy' }
-            },
-            createBaseSignaturesBlock([
-                { label: 'Director del Proyecto', name: '{{director_proyecto}}', role: 'Director de Proyecto' },
-                { label: 'Coordinación de Investigación', name: 'Ing. Estefani Sánchez Mgtr.', role: 'Coordinadora de Investigación' }
-            ])
-        ];
-    }
 
     // H. PROPUESTA DE GRUPO DE INVESTIGACIÓN
     if (code === 'PROPUESTA_GRUPO_INVESTIGACION' || code.includes('GRUPO') && !code.includes('CERTIFICADO') || category === 40 || category === 44) {

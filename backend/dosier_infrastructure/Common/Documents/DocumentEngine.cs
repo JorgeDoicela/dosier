@@ -714,8 +714,7 @@ namespace Dosier.Infrastructure.Common.Documents
                 {
                     string? snapshot = null;
                     bool requiresSnapshot = template.Category is DocumentCategory.Protocolo 
-                                            or DocumentCategory.ActaAprobacion 
-                                            or DocumentCategory.InformeAvance;
+                                            or DocumentCategory.ActaAprobacion;
 
                     if (renderData != null)
                     {
@@ -863,7 +862,6 @@ namespace Dosier.Infrastructure.Common.Documents
             {
                 DocumentCategory.Protocolo => "PROTO",
                 DocumentCategory.ActaAprobacion => "ACTA",
-                DocumentCategory.InformeAvance => "IAVNC",
                 DocumentCategory.TerminosDeReferencia => "TDR",
                 DocumentCategory.ProtocoloBioetico => "ETICO",
                 DocumentCategory.ConsentimientoInformado => "LOPD",

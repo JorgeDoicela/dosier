@@ -24,12 +24,12 @@ namespace dosier_infrastructure.data.models.Cowork
         [Required, MaxLength(100)]
         public string Uuid { get; set; } = string.Empty;
 
-        /// <summary>Tipo de entidad que contiene este documento (PROYECTO, INFORME_AVANCE, etc.).</summary>
+        /// <summary>Tipo de entidad que contiene este documento (PROYECTO, etc.).</summary>
         [Column("entidadTipo")]
         [Required, MaxLength(50)]
         public string EntidadTipo { get; set; } = "PROYECTO";
 
-        /// <summary>UUID de la entidad padre (el proyecto, el informe, etc.).</summary>
+        /// <summary>UUID de la entidad padre (el proyecto, etc.).</summary>
         [Column("entidadUuid", TypeName = "varchar(36)")]
         [Required, MaxLength(36)]
         public string EntidadUuid { get; set; } = string.Empty;

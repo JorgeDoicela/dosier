@@ -27,8 +27,6 @@ namespace dosier_infrastructure.data.models
 
         public bool ContabilizaCargaHoraria { get; set; } = false;
 
-        public bool PermiteInformesAvance { get; set; } = false;
- 
         public bool EsEstadoFinal { get; set; } = false;
 
         [MaxLength(80)]

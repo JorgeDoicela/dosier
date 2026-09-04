@@ -29,7 +29,6 @@ import { BudgetSection }          from '../../../components/DOSIER/sections/Budg
 import { TimelineSection }        from '../../../components/DOSIER/sections/TimelineSection';
 import { ImpactSection }          from '../../../components/DOSIER/sections/ImpactSection';
 import { BibliographySection }    from '../../../components/DOSIER/sections/BibliographySection';
-import { ProgressReportSection }  from '../../../components/DOSIER/sections/ProgressReportSection';
 import { AgnosticSection }        from '../../../components/DOSIER/sections/AgnosticSection';
 import { MultiSectionTableSection } from '../../../components/DOSIER/sections/MultiSectionTableSection';
 
@@ -44,7 +43,6 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
     'TimelineSection': TimelineSection,
     'ImpactSection': ImpactSection,
     'BibliographySection': BibliographySection,
-    'ProgressReportSection': ProgressReportSection,
     'AgnosticSection': AgnosticSection,
     'MultiSectionTableSection': MultiSectionTableSection
 };

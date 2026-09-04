@@ -11,6 +11,4 @@ public partial class DocCatTipoEvidencia
     public string? Descripcion { get; set; }
     public string? Extensiones { get; set; }
     public bool? Activo { get; set; }
-
-    public virtual ICollection<DocEvidencia> DocEvidencias { get; set; } = new List<DocEvidencia>();
 }

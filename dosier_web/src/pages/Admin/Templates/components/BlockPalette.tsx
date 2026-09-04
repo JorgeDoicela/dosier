@@ -11,13 +11,7 @@ import {
     BookOpen,
     Users,
     FileText,
-    DollarSign,
-    Award,
-    PenLine,
-    Table,
-    Layout,
-    GraduationCap,
-    ClipboardCheck
+    PenLine
 } from 'lucide-react';
 import type { BlockType, DocumentBlock } from '../types';
 
@@ -67,16 +61,7 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
                 { type: 'project_general_section', icon: BookOpen, label: 'Identificación del Proyecto', desc: 'Metadatos institucionales (título, carrera, plazos).', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'researchers_table', icon: Users, label: 'Investigadores', desc: 'Participantes y docentes del proyecto científico.', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'project_technical_section', icon: FileText, label: 'Especificación Técnica', desc: 'Sub-secciones de redacción científica y técnica.', color: 'text-emerald-500 bg-emerald-500/5' },
-                { type: 'project_progress_report', icon: BarChart2, label: 'Avance de Ejecución', desc: 'Hitos y evidencias de desarrollo académico.', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'signatures', icon: PenLine, label: 'Firmas de Responsabilidad', desc: 'Firmas de docentes, directores y autoridades institucionales.', color: 'text-emerald-500 bg-emerald-500/5' }
-            ]
-        },
-        {
-            title: 'Bloques de Informe de Avance',
-            items: [
-                { type: 'progress_header_section', icon: FileText, label: 'Datos Generales del Proyecto', desc: 'Datos generales auto-poblados del proyecto (ISTPET).', color: 'text-blue-500 bg-blue-500/5' },
-                { type: 'progress_activity_section', icon: Table, label: 'Matriz de Actividades y Avance', desc: 'Tabla configurable (Ejecutadas, NP u Obstáculos).', color: 'text-amber-500 bg-amber-500/5' },
-                { type: 'progress_status_section', icon: Layout, label: 'Estado y Observaciones', desc: 'Estado del proyecto y redacción con permisos de rol.', color: 'text-indigo-500 bg-indigo-500/5' }
             ]
         }
     ];
