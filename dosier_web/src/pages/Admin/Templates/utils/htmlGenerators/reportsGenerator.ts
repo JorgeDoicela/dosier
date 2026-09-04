@@ -1,0 +1,693 @@
+import type { DocumentBlock } from '../../types';
+import { DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS } from '../../types';
+import { COLORS, headerBg } from './generatorStyles';
+
+/**
+ * Genera el HTML de Recursos y Presupuesto Detallado (Bloque: project_budget_section / resources)
+ */
+export const generateResourcesHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const parts: string[] = [];
+
+    if (c.showRecursosDisponibles !== false) {
+        parts.push(`
+    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 10px 0 4px;">4.1 Recursos Disponibles (Equipos, Licencias, Espacios)</p>
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th style="${headerBg('blue')}">Descripción del Recurso</th>
+          <th style="${headerBg('blue')} width: 60px; text-align: center;">Cantidad</th>
+          <th style="${headerBg('blue')} width: 150px;">Fuente</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each recursos_disponibles}}
+        <tr>
+          <td>{{this.descripcion}}</td>
+          <td style="text-align: center; font-weight: bold;">{{this.cantidad}}</td>
+          <td>{{this.fuente}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>`);
+    }
+
+    if (c.showRecursosNecesarios !== false) {
+        parts.push(`
+    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 15px 0 4px;">4.2 Recursos Necesarios (Presupuesto de Gasto)</p>
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th style="${headerBg('blue')}">Partida / Rubro</th>
+          <th style="${headerBg('blue')} width: 60px; text-align: center;">Cantidad</th>
+          <th style="${headerBg('blue')} width: 90px; text-align: right;">P. Unitario</th>
+          <th style="${headerBg('blue')} width: 90px; text-align: right;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each recursos_necesarios}}
+        <tr>
+          <td>{{this.descripcion}}</td>
+          <td style="text-align: center; font-weight: bold;">{{this.cantidad}}</td>
+          <td style="text-align: right;">$ {{this.costo_unitario}}</td>
+          <td style="text-align: right; font-weight: bold;">$ {{this.costo_total}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>`);
+    }
+
+    if (c.showFinanciamiento !== false) {
+        parts.push(`
+    <div style="margin-top: 15px; padding: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+        <tbody>
+          <tr>
+            <td style="width: 65%;">
+              <div style="margin-bottom: 4px;">
+                <strong>Financiamiento Solicitado al ISTPET:</strong> {{#if financiamiento_istpet}}SÍ{{else}}NO{{/if}}
+              </div>
+              <div>
+                <strong>Financiamiento Otras Fuentes:</strong> {{#if financiamiento_otras_fuentes}}SÍ ({{default nombres_otras_fuentes "No especificadas"}}){{else}}NO{{/if}}
+              </div>
+            </td>
+            <td style="text-align: right; vertical-align: bottom;">
+              <span style="font-size: 8pt; text-transform: uppercase; color: #64748b; font-weight: bold; display: block;">Costo Total Estimado:</span>
+              <span style="font-size: 13pt; font-weight: bold; color: ${COLORS.blue};">$ {{default costo_total "0.00"}}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`);
+    }
+
+    if (parts.length === 0) return '';
+
+    return `
+  <!-- BLOQUE: RECURSOS Y PRESUPUESTO -->
+  <div style="margin-top: 20px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 6px;">4. Recursos y Presupuesto Detallado</p>
+    ${parts.join('')}
+  </div>`;
+};
+
+/**
+ * Genera el HTML del Informe de Avances (Bloque: project_progress_report)
+ */
+export const generateProjectProgressHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const parts: string[] = [];
+
+    if (c.showEvidencias !== false) {
+        parts.push(`
+    <div style="margin-bottom: 15px;">
+      <strong style="font-size: 8.5pt; color: ${COLORS.gray}; display: block; margin-bottom: 4px;">Bitácora Científica & Conclusiones Parciales:</strong>
+      <div style="font-size: 9pt; line-height: 1.5; color: #1e293b;">{{default conclusiones_parciales "Sin registros de bitácora."}}</div>
+    </div>`);
+    }
+
+    if (c.showHitosCompletados !== false) {
+        parts.push(`
+    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 15px 0 4px;">Hitos & Entregables Completados</p>
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th style="${headerBg('blue')}">Actividad / Hito</th>
+          <th style="${headerBg('blue')} width: 80px; text-align: center;">% Avance</th>
+          <th style="${headerBg('blue')} width: 90px; text-align: center;">Completado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each hitos_completados}}
+        <tr>
+          <td>{{this.actividad}}</td>
+          <td style="text-align: center; font-weight: bold;">{{this.avance}} %</td>
+          <td style="text-align: center; font-weight: bold; color: #10b981;">{{#if this.hito_completado}}SÍ{{else}}NO{{/if}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>`);
+    }
+
+    if (c.showPresupuestoEjecutado !== false) {
+        parts.push(`
+    <p style="font-weight: bold; font-size: 8.5pt; color: ${COLORS.gray}; margin: 15px 0 4px;">Presupuesto de Gasto Ejecutado</p>
+    <table class="info-table">
+      <thead>
+        <tr>
+          <th style="${headerBg('blue')}">Partida</th>
+          <th style="${headerBg('blue')} width: 90px; text-align: right;">Presupuestado</th>
+          <th style="${headerBg('blue')} width: 90px; text-align: right;">Ejecutado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each presupuesto_ejecutado}}
+        <tr>
+          <td>{{this.partida}}</td>
+          <td style="text-align: right;">$ {{this.presupuestado}}</td>
+          <td style="text-align: right; font-weight: bold;">$ {{this.ejecutado}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>`);
+    }
+
+    if (parts.length === 0) return '';
+
+    return `
+  <!-- BLOQUE: INFORME DE AVANCES -->
+  <div style="margin-top: 20px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 8px;">Informe Parcial de Avances & Resultados</p>
+    ${parts.join('')}
+  </div>`;
+};
+
+/**
+ * Genera el HTML Handlebars para la Matriz de Actividades de Avance (Bloque: progress_activity_section)
+ */
+export const generateProgressActivityHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const variant = c.activityVariant || 'ejecutadas';
+    const customTitle = c.activityTableTitle;
+
+    if (variant === 'no_previstas') {
+        const title = customTitle || 'ACTIVIDADES NO PREVISTAS INICIALMENTE QUE HAN SIDO REALIZADAS DURANTE LA EJECUCIÓN DEL PROYECTO';
+        return `
+  <!-- BLOQUE: MATRIZ DE ACTIVIDADES NO PREVISTAS -->
+  <div style="margin-top: 20px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 8px;">${title}</p>
+    {{#each ActividadesNoPrevistas}}
+    <table class="info-table" style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 15px;">
+      <tbody>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; width: 35%; padding: 5px 8px; border: 1px solid #334155;">NÚMERO DE ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">{{default this.NumeroActividad this.numero_actividad ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">OBJETIVO DEL PROYECTO DE INVESTIGACIÓN</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ObjetivoAsociado this.objetivo_asociado ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">ACTIVIDAD EJECUTADA</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ActividadesEjecutadas this.actividades_ejecutadas ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">RESULTADOS OBTENIDOS</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ResultadosObtenidos this.resultados_obtenidos ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PORCENTAJE DE AVANCE (%)</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold;">{{default this.PorcentajeAvance this.porcentaje_avance "100"}}%</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PARTICIPANTES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.Participantes this.participantes "Director del Proyecto, Investigadores"}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA DE INICIO DE LA ACTIVIDAD NO PREVISTA</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.FechaInicio this.fecha_inicio ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA FIN DE LA ACTIVIDAD NO PREVISTA</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.FechaFin this.fecha_fin ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #b8860b; color: black; font-weight: bold; padding: 5px 8px; border: 1px solid #996515; vertical-align: top;">OBSERVACIONES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; min-height: 40px; vertical-align: top;">{{default this.Observaciones this.observaciones ""}}</td>
+        </tr>
+      </tbody>
+    </table>
+    {{/each}}
+  </div>`;
+    }
+
+    if (variant === 'obstaculos') {
+        const title = customTitle || 'OBSTÁCULOS QUE SE HAN PRESENTADO PARA LA EJECUCIÓN DEL PROYECTO';
+        return `
+  <!-- BLOQUE: MATRIZ DE OBSTÁCULOS -->
+  <div style="margin-top: 20px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 8px;">${title}</p>
+    {{#each Obstaculos}}
+    <table class="info-table" style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 15px;">
+      <tbody>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; width: 35%; padding: 5px 8px; border: 1px solid #334155;">NÚMERO DE ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">{{default this.NumeroActividad this.numero_actividad ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">OBJETIVO DEL PROYECTO DE INVESTIGACIÓN</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ObjetivoAsociado this.objetivo_asociado ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">LIMITACIÓN</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.Limitacion this.limitacion ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">ACTIVIDAD CORRECTIVA DESARROLLADA</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ActividadesEjecutadas this.actividades_ejecutadas ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">RESULTADOS OBTENIDOS</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ResultadosObtenidos this.resultados_obtenidos ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PORCENTAJE DE AVANCE (%)</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold;">{{default this.PorcentajeAvance this.porcentaje_avance "100"}}%</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PARTICIPANTES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.Participantes this.participantes "Director del Proyecto, Investigadores"}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA DE INICIO DE LA ACTIVIDAD CORRECTIVA</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.FechaInicio this.fecha_inicio ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA FIN DE LA ACTIVIDAD CORRECTIVA</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.FechaFin this.fecha_fin ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #b8860b; color: black; font-weight: bold; padding: 5px 8px; border: 1px solid #996515; vertical-align: top;">OBSERVACIONES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; min-height: 40px; vertical-align: top;">{{default this.Observaciones this.observaciones ""}}</td>
+        </tr>
+      </tbody>
+    </table>
+    {{/each}}
+  </div>`;
+    }
+
+    // Default: ejecutadas
+    const title = customTitle || '2. MATRIZ DE ACTIVIDADES EJECUTADAS';
+    return `
+  <!-- BLOQUE: MATRIZ DE ACTIVIDADES EJECUTADAS -->
+  <div style="margin-top: 20px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 8px;">${title}</p>
+    {{#each ActividadesEjecutadas}}
+    <table class="info-table" style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 15px;">
+      <tbody>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; width: 32%; padding: 5px 8px; border: 1px solid #334155;">NÚMERO DE ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">{{default this.NumeroActividad this.numero_actividad ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">ACTIVIDADES EJECUTADAS</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ActividadesEjecutadas this.actividades_ejecutadas ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">RESULTADOS OBTENIDOS</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.ResultadosObtenidos this.resultados_obtenidos ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PORCENTAJE DE AVANCE (%)</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold;">{{default this.PorcentajeAvance this.porcentaje_avance "100"}}%</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PARTICIPANTES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.Participantes this.participantes "Director del Proyecto e Investigadores"}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA DE INICIO DE LA ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.FechaInicio this.fecha_inicio ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA FIN DE LA ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default this.FechaFin this.fecha_fin ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #b8860b; color: black; font-weight: bold; padding: 5px 8px; border: 1px solid #996515; vertical-align: top;">OBSERVACIONES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; min-height: 40px; vertical-align: top;">{{default this.Observaciones this.observaciones ""}}</td>
+        </tr>
+      </tbody>
+    </table>
+    {{/each}}
+  </div>`;
+};
+
+/**
+ * Genera el HTML Handlebars para el Estado de Ejecución del Proyecto (Bloque: progress_status_section)
+ */
+export const generateProgressStatusHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const title = c.statusTableTitle || 'ESTADO DE EJECUCIÓN DEL PROYECTO';
+    return `
+  <!-- BLOQUE: ESTADO DE EJECUCIÓN -->
+  <div style="margin-top: 25px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 10pt; text-transform: uppercase; text-align: center; color: #000000; margin-bottom: 12px;">${title}</p>
+    <p style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; margin-bottom: 6px; color: #000000;">MARQUE CON UNA (X) EL ESTADO ACTUAL DEL PROYECTO DE INVESTIGACIÓN:</p>
+    
+    <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8.5pt; margin-bottom: 0px;">
+      <thead>
+        <tr style="background-color: #1e2a4a; color: white; font-weight: bold;">
+          <th style="width: 20%; padding: 6px 4px; border: 1px solid #000000; text-transform: uppercase;">INICIADO</th>
+          <th style="width: 20%; padding: 6px 4px; border: 1px solid #000000; text-transform: uppercase;">EN AVANCE</th>
+          <th style="width: 20%; padding: 6px 4px; border: 1px solid #000000; text-transform: uppercase;">SUSPENDIDO</th>
+          <th style="width: 20%; padding: 6px 4px; border: 1px solid #000000; text-transform: uppercase;">POR FINALIZAR</th>
+          <th style="width: 20%; padding: 6px 4px; border: 1px solid #000000; text-transform: uppercase;">FINALIZADO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 8px 4px; border: 1px solid #000000; font-weight: bold; font-size: 10pt;">{{#if_eq EstadoEjecucion "INICIADO"}}(X){{else}}{{#if_eq estado_ejecucion "INICIADO"}}(X){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 8px 4px; border: 1px solid #000000; font-weight: bold; font-size: 10pt;">{{#if_eq EstadoEjecucion "EN AVANCE"}}(X){{else}}{{#if_eq estado_ejecucion "EN AVANCE"}}(X){{else}}{{#unless EstadoEjecucion}}{{#unless estado_ejecucion}}(X){{/unless}}{{/unless}}{{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 8px 4px; border: 1px solid #000000; font-weight: bold; font-size: 10pt;">{{#if_eq EstadoEjecucion "SUSPENDIDO"}}(X){{else}}{{#if_eq estado_ejecucion "SUSPENDIDO"}}(X){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 8px 4px; border: 1px solid #000000; font-weight: bold; font-size: 10pt;">{{#if_eq EstadoEjecucion "POR FINALIZAR"}}(X){{else}}{{#if_eq estado_ejecucion "POR FINALIZAR"}}(X){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 8px 4px; border: 1px solid #000000; font-weight: bold; font-size: 10pt;">{{#if_eq EstadoEjecucion "FINALIZADO"}}(X){{else}}{{#if_eq estado_ejecucion "FINALIZADO"}}(X){{/if_eq}}{{/if_eq}}</td>
+        </tr>
+        <tr style="background-color: #1e2a4a; color: white; font-weight: bold; text-align: left;">
+          <td colspan="5" style="padding: 6px 8px; border: 1px solid #000000; font-size: 8.5pt; text-transform: uppercase;">
+            EXPLIQUE BREVEMENTE LA FASE DE EJECUCIÓN EN QUE SE ENCUENTRA SU PROYECTO:
+          </td>
+        </tr>
+        <tr style="text-align: left;">
+          <td colspan="5" style="padding: 8px; border: 1px solid #000000; font-size: 8.5pt; min-height: 50px; vertical-align: top; color: #000000;">
+            {{{default DescripcionFaseActual descripcion_fase_actual ""}}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 18px;">
+      <p style="font-weight: bold; font-size: 8.5pt; text-transform: uppercase; margin-bottom: 6px; color: #000000;">OBSERVACIONES GENERALES DEL DIRECTOR DEL PROYECTO:</p>
+      <div style="padding: 8px; border: 1px solid #000000; font-size: 8.5pt; min-height: 50px; color: #000000;">
+        {{{default ObservacionesDirector observaciones_director ""}}}
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <p style="font-weight: bold; font-size: 8.5pt; text-transform: uppercase; margin-bottom: 6px; color: #000000;">OBSERVACIONES GENERALES DEL COORDINADOR DE LA UNIDAD DE INVESTIGACIÓN:</p>
+      <div style="padding: 8px; border: 1px solid #000000; font-size: 8.5pt; min-height: 45px; color: #000000;">
+        {{{default ObservacionesCoordinador observaciones_coordinador ""}}}
+      </div>
+    </div>
+  </div>`;
+};
+
+/**
+ * Genera el HTML Handlebars para los Datos Generales del Proyecto (Bloque: progress_header_section)
+ */
+export const generateProgressHeaderHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const title = c.headerTitle || '1. DATOS GENERALES DEL PROYECTO';
+    return `
+  <!-- BLOQUE: DATOS GENERALES DEL PROYECTO (ENCABEZADO INFORME AVANCE) -->
+  <div style="margin-top: 15px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: ${COLORS.blue}; margin-bottom: 6px;">${title}</p>
+    <table class="info-table" style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+      <tbody>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; width: 32%; padding: 5px 8px; border: 1px solid #334155;">NOMBRE DEL PROYECTO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;" colspan="3">{{default NombreProyecto Titulo title ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PROGRAMA:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default Programa ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">GRUPO DE INVESTIGACIÓN:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default GrupoInvestigacion GrupoInvestigacionNombre ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">DOMINIO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default Dominio ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">LÍNEA DE INVESTIGACIÓN:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default LineaInvestigacion ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">SUBLÍNEA DE INVESTIGACIÓN:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default SublineaInvestigacion ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">CAMPO AMPLIO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default CampoAmplio ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">CAMPO ESPECÍFICO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default CampoEspecifico ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">CAMPO DETALLADO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default CampoDetallado ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">CARRERA:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default Carrera ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">TIPO DE INVESTIGACIÓN:</td>
+          <td style="padding: 0; border: 1px solid #cbd5e1;" colspan="3">
+            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt;">
+              <tr>
+                <td style="width: 25%; padding: 4px; font-weight: bold;">BÁSICA</td>
+                <td style="width: 8%; border-right: 1px solid #cbd5e1;">[ &nbsp; ]</td>
+                <td style="width: 25%; padding: 4px; font-weight: bold;">APLICADA</td>
+                <td style="width: 8%; border-right: 1px solid #cbd5e1;">[ X ]</td>
+                <td style="width: 26%; padding: 4px; font-weight: bold;">DESARROLLO EXPERIMENTAL</td>
+                <td style="width: 8%;">[ &nbsp; ]</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PERIODO ACADÉMICO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default Periodo PeriodoConvocatoria ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">DIRECTOR DEL PROYECTO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #1e293b;" colspan="3">{{default DirectorProyecto NombreDirectorFirma ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">INVESTIGADORES:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;" colspan="3">{{default InvestigadoresTexto ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #b8860b; color: black; font-weight: bold; padding: 5px 8px; border: 1px solid #996515; width: 32%;">FECHA INICIO DEL PROYECTO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; width: 18%;">{{default FechaInicio ""}}</td>
+          <td style="background-color: #b8860b; color: black; font-weight: bold; padding: 5px 8px; border: 1px solid #996515; width: 32%;">FECHA FIN PREVISTA DEL PROYECTO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; width: 18%;">{{default FechaFin ""}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BLOQUE: 2. MATRIZ DE ACTIVIDADES EJECUTADAS -->
+  {{#if ActividadesEjecutadas}}
+  <div style="margin-top: 25px; page-break-inside: avoid;">
+    <p style="font-weight: bold; font-size: 9.5pt; text-transform: uppercase; color: {{ theme.colors.primary }}; margin-bottom: 6px;">2. MATRIZ DE ACTIVIDADES EJECUTADAS</p>
+    {{#each ActividadesEjecutadas}}
+    <table class="info-table" style="width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 15px;">
+      <tbody>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; width: 32%; padding: 5px 8px; border: 1px solid #334155;">NÚMERO DE ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold; color: #0f172a;">{{default NumeroActividad ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">ACTIVIDADES EJECUTADAS</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default ActividadesEjecutadas ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">RESULTADOS OBTENIDOS</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default ResultadosObtenidos ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PORCENTAJE DE AVANCE (%)</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: bold;">{{default PorcentajeAvance "100"}}%</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">PARTICIPANTES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default Participantes "Director del Proyecto e Investigadores"}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA DE INICIO DE LA ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default FechaInicio ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #1e293b; color: white; font-weight: bold; padding: 5px 8px; border: 1px solid #334155;">FECHA FIN DE LA ACTIVIDAD</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">{{default FechaFin ""}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #b8860b; color: black; font-weight: bold; padding: 5px 8px; border: 1px solid #996515; vertical-align: top;">OBSERVACIONES</td>
+          <td style="padding: 5px 8px; border: 1px solid #cbd5e1; min-height: 40px; vertical-align: top;">{{default Observaciones ""}}</td>
+        </tr>
+      </tbody>
+    </table>
+    {{/each}}
+  </div>
+  {{/if}}
+</div>`;
+};
+
+export const generateFinalReportHeaderHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const title = c.finalReportTitle || 'DATOS DEL PROYECTO DE INVESTIGACIÓN';
+
+    const showTipo = c.showTipoInvestigacion !== false;
+    const showAlcance = c.showAlcanceProyecto !== false;
+    const showFechas = c.showFechasProyecto !== false;
+    const showInvestigadores = c.showTablaInvestigadores !== false;
+
+    return `
+  <!-- BLOQUE: ENCABEZADO INFORME FINAL -->
+  <div style="margin-top: 10px; page-break-inside: avoid;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt; color: #000000; border: 1px solid #000000;">
+      <tbody>
+        <tr style="text-align: center; font-weight: bold; background-color: #ffffff;">
+          <td colspan="6" style="padding: 7px; border: 1px solid #000000; font-size: 10pt; text-transform: uppercase; color: #000000;">${title}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; width: 32%; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">NOMBRE DEL PROYECTO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000; font-weight: bold; color: #000000;" colspan="5">{{{default Titulo titulo_proyecto TituloProyecto "[TÍTULO DEL PROYECTO]"}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">PROGRAMA:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default Programa programa ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">GRUPO DE INVESTIGACIÓN:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default GrupoInvestigacionNombre grupo_investigacion GrupoInvestigacion ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">DOMINIO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default Dominio dominio ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">LÍNEA DE INVESTIGACIÓN:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default LineaInvestigacion linea_investigacion ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">SUBLÍNEA DE INVESTIGACIÓN:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default SublineaInvestigacion sublinea_investigacion ""}}}</td>
+        </tr>
+        ${showTipo ? `
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">TIPO DE INVESTIGACIÓN (X):</td>
+          <td style="padding: 0; border: 1px solid #000000;" colspan="5">
+            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt; color: #000000; margin: 0;">
+              <tr>
+                <td style="width: 20%; font-weight: bold; padding: 4px; border: none; border-right: 1px solid #000000;">BÁSICA</td>
+                <td style="width: 13%; padding: 4px; border: none; border-right: 1px solid #000000;">{{#if_eq TipoInvestigacion "BASICA"}}(X){{else}}{{#if_eq tipo_investigacion "BASICA"}}(X){{else}}( &nbsp; ){{/if_eq}}{{/if_eq}}</td>
+                <td style="width: 20%; font-weight: bold; padding: 4px; border: none; border-right: 1px solid #000000;">APLICADA</td>
+                <td style="width: 13%; padding: 4px; border: none; border-right: 1px solid #000000;">{{#if_eq TipoInvestigacion "APLICADA"}}(X){{else}}{{#if_eq tipo_investigacion "APLICADA"}}(X){{else}}( X ){{/if_eq}}{{/if_eq}}</td>
+                <td style="width: 24%; font-weight: bold; padding: 4px; border: none; border-right: 1px solid #000000;">DESARROLLO EXPERIMENTAL</td>
+                <td style="width: 10%; padding: 4px; border: none;">{{#if_eq TipoInvestigacion "EXPERIMENTAL"}}(X){{else}}{{#if_eq tipo_investigacion "EXPERIMENTAL"}}(X){{else}}( &nbsp; ){{/if_eq}}{{/if_eq}}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>` : ''}
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">CAMPO AMPLIO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default CampoAmplio campo_amplio ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">CAMPO ESPECÍFICO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default CampoEspecifico campo_especifico ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">CAMPO DETALLADO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default CampoDetallado campo_detallado ""}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">CARRERA:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">Tecnología Superior en {{{default Carrera carrera "TECNOLOGÍA SUPERIOR EN DESARROLLO DE SOFTWARE"}}}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #ffffff; color: #000000; font-weight: bold; padding: 5px 8px; border: 1px solid #000000; text-transform: uppercase;">PERIODO ACADÉMICO:</td>
+          <td style="padding: 5px 8px; border: 1px solid #000000;" colspan="5">{{{default Periodo periodo "PERIODO ACADÉMICO MARZO 2025 - SEPTIEMBRE 2025"}}}</td>
+        </tr>
+        ${showAlcance ? `
+        <tr style="background-color: #ffffff; color: #000000; font-weight: bold; text-align: center;">
+          <td colspan="6" style="padding: 6px; border: 1px solid #000000; text-transform: uppercase; font-size: 9pt;">ALCANCE DEL PROYECTO (X)</td>
+        </tr>
+        <tr style="background-color: #ffffff; text-align: center; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; color: #000000;">
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;">INSTITUCIONAL</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;">PARROQUIAL</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;">CANTONAL</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;">PROVINCIAL</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;" colspan="2">NACIONAL</td>
+        </tr>
+        <tr style="text-align: center; font-weight: bold; color: #000000;">
+          <td style="padding: 5px; border: 1px solid #000000;">{{#if_eq AlcanceProyecto "INSTITUCIONAL"}}(X){{else}}{{#if_eq alcance_proyecto "INSTITUCIONAL"}}(X){{else}}( X ){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;">{{#if_eq AlcanceProyecto "PARROQUIAL"}}(X){{else}}{{#if_eq alcance_proyecto "PARROQUIAL"}}(X){{else}}( &nbsp; ){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;">{{#if_eq AlcanceProyecto "CANTONAL"}}(X){{else}}{{#if_eq alcance_proyecto "CANTONAL"}}(X){{else}}( &nbsp; ){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;">{{#if_eq AlcanceProyecto "PROVINCIAL"}}(X){{else}}{{#if_eq alcance_proyecto "PROVINCIAL"}}(X){{else}}( &nbsp; ){{/if_eq}}{{/if_eq}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="2">{{#if_eq AlcanceProyecto "NACIONAL"}}(X){{else}}{{#if_eq alcance_proyecto "NACIONAL"}}(X){{else}}( &nbsp; ){{/if_eq}}{{/if_eq}}</td>
+        </tr>` : ''}
+        ${showFechas ? `
+        <tr style="background-color: #ffffff; text-align: center; font-weight: bold; font-size: 8pt; text-transform: uppercase; color: #000000;">
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="1">FECHA DE PRESENTACIÓN DEL PROYECTO</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="2">FECHA DE INICIO DEL PROYECTO</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="1">FECHA FIN PRESENTADA DEL PROYECTO</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="2">FECHA FIN REAL</td>
+        </tr>
+        <tr style="text-align: center; color: #000000;">
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="1">{{{default FechaPresentacion fecha_presentacion ""}}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="2">{{{default FechaInicio fecha_inicio ""}}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="1">{{{default FechaFinPresentada fecha_fin_presentada ""}}}</td>
+          <td style="padding: 5px; border: 1px solid #000000;" colspan="2">{{{default FechaFinReal fecha_fin_real ""}}}</td>
+        </tr>` : ''}
+        ${showInvestigadores ? `
+        <tr style="background-color: #ffffff; color: #000000; font-weight: bold; text-align: center;">
+          <td colspan="6" style="padding: 6px; border: 1px solid #000000; text-transform: uppercase; font-size: 9pt;">INVESTIGADORES</td>
+        </tr>
+        <tr style="background-color: #ffffff; font-weight: bold; text-transform: uppercase; font-size: 8.5pt; text-align: center; color: #000000;">
+          <td style="padding: 5px; border: 1px solid #000000; width: 25%;">NOMBRE</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;">NÚMERO DE CÉDULA</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;">EMAIL</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 15%;">TELÉFONO</td>
+          <td style="padding: 5px; border: 1px solid #000000; width: 20%;" colspan="2">ROL DENTRO DE LA INSTITUCIÓN</td>
+        </tr>
+        {{#if Investigadores}}
+          {{#each Investigadores}}
+          <tr style="color: #000000; text-align: center;">
+            <td style="padding: 5px; border: 1px solid #000000; text-align: left; font-weight: bold;">{{{default Nombre nombre ""}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;">{{{default Cedula cedula ""}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;">{{{default Email email ""}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;">{{{default Telefono telefono ""}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;" colspan="2">{{{default Rol rol "INVESTIGADOR"}}}</td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <tr style="color: #000000; text-align: center;">
+            <td style="padding: 5px; border: 1px solid #000000; text-align: left; font-weight: bold;">{{{default DirectorProyecto NombreDirector "JOSUE ISRAEL MIÑO SOLIZ"}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;">{{{default CedulaDirector cedula_director "__________"}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;">{{{default EmailDirector email_director "director@istpet.edu.ec"}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000;">{{{default TelefonoDirector telefono_director ""}}}</td>
+            <td style="padding: 5px; border: 1px solid #000000; font-weight: bold;" colspan="2">DIRECTOR DE PROYECTO</td>
+          </tr>
+        {{/if}}
+        ` : ''}
+      </tbody>
+    </table>
+  </div>`;
+};
+
+export const generateFinalReportWritingHtml = (block: DocumentBlock): string => {
+    const c: any = block.config || {};
+    const rawSections = (c.writingSections && Array.isArray(c.writingSections) && c.writingSections.length > 0)
+        ? c.writingSections
+        : DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS;
+
+    const activeSubs = rawSections.filter((s: any) => s.enabled !== false);
+
+    let html = `<!-- BLOQUE: PLAN DE REDACCIÓN INFORME FINAL -->\n<div style="margin-top: 25px;">\n`;
+
+    activeSubs.forEach((sub: any) => {
+        const key = sub.fieldKey || sub.id;
+        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+        const title = sub.title || key;
+        const prefix = sub.numberPrefix ? `${sub.numberPrefix} ` : '';
+        html += `
+  <div style="margin-top: 25px; page-break-inside: avoid;">
+    <h2 style="color: #002060; font-size: 14pt; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 6px; font-family: Arial, sans-serif;">
+      ${prefix}${title}
+    </h2>
+    <div style="font-size: 10pt; line-height: 1.5; color: #000000; text-align: justify; font-family: Arial, sans-serif;">
+      {{{default ${key} ${snakeKey} ""}}}
+    </div>
+  </div>\n`;
+    });
+
+    html += `</div>`;
+    return html;
+};

@@ -1,0 +1,118 @@
+import React, { useState } from 'react';
+import { Calendar, Plus, Search, Settings2 } from 'lucide-react';
+import { useConfiguracion } from './Configuracion/useConfiguracion';
+import { PeriodosTab } from './Configuracion/PeriodosTab';
+import { CalendarioTab } from './Configuracion/CalendarioTab';
+import { ConfiguracionDetailDrawer } from './Configuracion/ConfiguracionDetailDrawer';
+
+interface ConfiguracionPageProps {
+    embedded?: boolean;
+}
+
+const ConfiguracionPage: React.FC<ConfiguracionPageProps> = ({ embedded = false }) => {
+    const hook = useConfiguracion();
+    const {
+        activeTab,
+        setActiveTab,
+        search,
+        setSearch,
+        handleOpenPeriodoModal,
+        handleOpenCalendarioModal
+    } = hook;
+
+    const [detailItem, setDetailItem] = useState<{
+        type: 'periodo' | 'calendario';
+        data: any;
+    } | null>(null);
+
+    return (
+        <main className={`flex-1 ${embedded ? '' : 'bg-bg-deep p-4 md:p-10 overflow-y-auto'}`}>
+            <header className={`flex flex-col lg:flex-row ${embedded ? 'justify-end mb-6' : 'justify-between mb-10 lg:mb-16'} items-start lg:items-end animate-fade-up gap-8 lg:gap-0`}>
+                {!embedded && (
+                    <div className="space-y-2">
+                        <div className="section-label text-text-main">
+                            <Settings2 size={10} className="text-text-main animate-spin-slow" />
+                            <span>Catálogos Institucionales</span>
+                        </div>
+                        <h1 className="text-2xl md:text-3xl font-black text-text-main tracking-tight uppercase">
+                            Configuración del Sistema
+                        </h1>
+                        <p className="text-xs text-text-dim max-w-md leading-relaxed">
+                            Mantenimiento de períodos académicos institucionales y calendario académico docente.
+                        </p>
+                    </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                    <div className="relative flex-1 sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" size={14} />
+                        <input 
+                            type="text" 
+                            placeholder="Buscar parámetro..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="input-vercel !pl-9 w-full"
+                        />
+                    </div>
+                    {activeTab === 'periodos' && (
+                        <button 
+                            onClick={() => handleOpenPeriodoModal()}
+                            className="btn-vercel-primary"
+                        >
+                            <Plus size={14} strokeWidth={3} />
+                            Nuevo Período
+                        </button>
+                    )}
+                    {activeTab === 'calendario' && (
+                        <button 
+                            onClick={() => handleOpenCalendarioModal()}
+                            className="btn-vercel-primary"
+                        >
+                            <Plus size={14} strokeWidth={3} />
+                            Nuevo Hito
+                        </button>
+                    )}
+                </div>
+            </header>
+
+            <div className="tabs-vercel">
+                <button
+                    onClick={() => { setActiveTab('periodos'); setSearch(''); }}
+                    className={`tab-vercel-item flex items-center gap-2 ${
+                        activeTab === 'periodos' ? 'active' : ''
+                    }`}
+                >
+                    <Calendar size={14} />
+                    <span>Períodos Académicos</span>
+                </button>
+                <button
+                    onClick={() => { setActiveTab('calendario'); setSearch(''); }}
+                    className={`tab-vercel-item flex items-center gap-2 ${
+                        activeTab === 'calendario' ? 'active' : ''
+                    }`}
+                >
+                    <Calendar size={14} />
+                    <span>Hitos de Calendario</span>
+                </button>
+            </div>
+
+            <div className="bento-card table-container overflow-x-auto min-h-[400px]">
+                {activeTab === 'periodos' && (
+                    <PeriodosTab hook={hook} setDetailItem={setDetailItem} />
+                )}
+                {activeTab === 'calendario' && (
+                    <CalendarioTab hook={hook} setDetailItem={setDetailItem} />
+                )}
+            </div>
+
+            {/* Shared Detail Drawer */}
+            <ConfiguracionDetailDrawer 
+                detailItem={detailItem} 
+                setDetailItem={setDetailItem} 
+                hook={hook} 
+            />
+        </main>
+    );
+};
+
+export default ConfiguracionPage;

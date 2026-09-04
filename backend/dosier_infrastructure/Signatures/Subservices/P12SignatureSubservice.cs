@@ -1,0 +1,321 @@
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
+using dosier_application.Signatures;
+using dosier_domain.Signatures;
+using dosier_infrastructure.data.models;
+using dosier_infrastructure.Security;
+using Dosier.Domain.Common.Documents;
+using Dosier.Infrastructure.Common.Storage;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace dosier_infrastructure.Signatures.Subservices;
+
+public class P12SignatureSubservice : IP12SignatureSubservice
+{
+    private readonly DosierContext _context;
+    private readonly SignatureHashService _hashService;
+    private readonly IConfiguration _config;
+    private readonly IFileStorageService _storageService;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<P12SignatureSubservice> _logger;
+    private readonly dosier_application.Common.IAppUrlService _appUrlService;
+
+    public P12SignatureSubservice(
+        DosierContext context,
+        SignatureHashService hashService,
+        IConfiguration config,
+        IFileStorageService storageService,
+        IServiceProvider serviceProvider,
+        ILogger<P12SignatureSubservice> logger,
+        dosier_application.Common.IAppUrlService appUrlService)
+    {
+        _context = context;
+        _hashService = hashService;
+        _config = config;
+        _storageService = storageService;
+        _serviceProvider = serviceProvider;
+        _logger = logger;
+        _appUrlService = appUrlService;
+    }
+
+    public async Task<SignatureResultDto> SignDocumentWithP12Async(
+        int idUsuario,
+        string ipAddress,
+        string userAgent,
+        byte[] certificateBytes,
+        string certificatePassword,
+        string documentoUuid,
+        string? rolFirmante)
+    {
+        var p12SignerService = _serviceProvider.GetRequiredService<IFirmaElectronicaService>();
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == idUsuario)
+            ?? throw new UnauthorizedAccessException("Usuario no encontrado.");
+
+        var skipAuth = _config.GetValue<bool>("Firma:SkipCertificateValidation");
+
+        // 1. Validar certificado digital y contraseña
+        string signerName = user.Nombre ?? "Firmante";
+        string signerEntity = "Entidad de Certificación Digital";
+
+        if (certificateBytes != null)
+        {
+            if (!p12SignerService.ValidateCertificate(certificateBytes, certificatePassword))
+            {
+                throw new InvalidOperationException("La contraseña del certificado no es válida o el archivo .p12 está corrupto.");
+            }
+
+            try
+            {
+                using var cert2 = new X509Certificate2(certificateBytes, certificatePassword);
+                var parsedName = cert2.GetNameInfo(X509NameType.SimpleName, false);
+
+                if (!skipAuth && !string.IsNullOrWhiteSpace(parsedName) && !string.IsNullOrWhiteSpace(user.Nombre))
+                {
+                    string normUser = NormalizeName(user.Nombre);
+                    string normCert = NormalizeName(parsedName);
+                    if (!ValidateNameMatch(normUser, normCert))
+                    {
+                        throw new InvalidOperationException($"El certificado digital cargado pertenece a '{parsedName}', pero usted ha iniciado sesión como '{user.Nombre}'. Por seguridad, solo puede firmar documentos usando su propio certificado personal.");
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(parsedName)) signerName = parsedName;
+                var parsedIssuer = cert2.GetNameInfo(X509NameType.SimpleName, true);
+                if (!string.IsNullOrWhiteSpace(parsedIssuer)) signerEntity = parsedIssuer;
+            }
+            catch (Exception ex)
+            {
+                if (!skipAuth) throw;
+                _logger.LogWarning(ex, "No se pudo extraer metadatos del certificado de firma. Se usará información del perfil.");
+            }
+        }
+        else if (!skipAuth)
+        {
+            throw new InvalidOperationException("Debe adjuntar su archivo de firma digital (.p12) en cada solicitud de firma.");
+        }
+
+        // 2. Verificar que el documento existe y es accesible (buscando por Uuid de Instancia o Uuid de Entidad + TemplateCode)
+        var instancia = await _context.DocumentInstances
+            .FirstOrDefaultAsync(d => d.Uuid == documentoUuid)
+            ?? await _context.DocumentInstances
+            .FirstOrDefaultAsync(d => d.EntityUuid == documentoUuid && d.TemplateCode == "PROTOCOLO_INVESTIGACION")
+            ?? throw new KeyNotFoundException($"Documento '{documentoUuid}' no encontrado.");
+
+        // 3. Verificar firma existente o permitir re-firma si el proyecto fue devuelto a corrección
+        var existingFirmas = await _context.DocDocumentoFirmas
+            .Where(f => (f.DocumentoUuid == instancia.Uuid || f.DocumentoUuid == instancia.EntityUuid)
+                     && (f.FirmanteId == idUsuario.ToString() || f.FirmanteId == $"USR-{idUsuario}")
+                     && f.TipoFirma == "FirmaEC"
+                     && f.EsValida)
+            .ToListAsync();
+
+        if (existingFirmas.Any())
+        {
+            var project = await _context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == instancia.EntityUuid);
+            var stateLower = project?.Estado?.ToLower().Trim() ?? "";
+            var isFinalLockedState = stateLower == "enviado" || stateLower == "aprobado" || stateLower == "en ejecución" || stateLower == "en ejecucion" || stateLower == "finalizado";
+            var isCorrectionMode = !isFinalLockedState || stateLower.Contains("devuelt") || stateLower.Contains("correc") || stateLower.Contains("observac") || stateLower.Contains("edici");
+
+            if (isCorrectionMode)
+            {
+                foreach (var f in existingFirmas)
+                {
+                    f.EsValida = false;
+                }
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new InvalidOperationException("Ya existe una firma digital (FirmaEC) válida de este usuario en el documento.");
+            }
+        }
+
+        // 4. Obtener PDF actual del documento
+        var pdfBytes = await GetPdfBytesFromInstanceAsync(instancia);
+
+        // 5. Firma criptográfica PAdES (FirmaEC)
+        byte[] signedPdfBytes;
+        if (certificateBytes != null && !skipAuth)
+        {
+            signedPdfBytes = p12SignerService.SignPdf(pdfBytes, certificateBytes, certificatePassword,
+                reason: $"Firma Digital de Documento - {instancia.Title ?? "DOSIER"}",
+                location: "Quito, Ecuador");
+        }
+        else
+        {
+            signedPdfBytes = pdfBytes;
+        }
+
+        // 6. Calcular hashes y códigos
+        var docHash = SignatureHashService.ComputeSha256(signedPdfBytes);
+        var firmaCode = SignatureHashService.GenerateFirmaCode();
+        var firmadoEn = DateTime.UtcNow;
+
+        var firmanteIdStr = $"USR-{idUsuario}";
+        var hmacHash = _hashService.GenerateHmac(docHash, firmanteIdStr, firmadoEn, firmaCode);
+
+        var signatureProfile = await _context.DocUserSignaturePerfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdUsuario == idUsuario);
+
+        // 7. Iniciar transacción explícita de EF Core
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        string? pdfPath = null;
+
+        try
+        {
+            // 8. Guardar PDF firmado
+            pdfPath = await SaveSignedPdfAsync(signedPdfBytes, documentoUuid, firmaCode);
+
+            // 9. Actualizar DocumentInstance
+            instancia.Finalize(pdfPath, docHash, firmaCode);
+
+            // 10. Registrar en doc_documentos_firmas
+            var snapshotJson = JsonSerializer.Serialize(new
+            {
+                nombre = signerName,
+                cedula = user.IdSigafi,
+                cargo = signatureProfile?.Cargo ?? rolFirmante,
+                departamento = signatureProfile?.Departamento,
+                rol = rolFirmante,
+                metodo = "P12_PADES_ECUADOR",
+            });
+
+            var registroFirma = new DocDocumentoFirma
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                DocumentoUuid = instancia.Uuid,
+                FirmanteId = firmanteIdStr,
+                FirmanteRol = rolFirmante ?? "Firmante",
+                FechaFirma = firmadoEn,
+                TipoFirma = "FirmaEC",
+                FirmaCode = firmaCode,
+                HmacHash = hmacHash,
+                DocHash = docHash,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                FirmaMetadata = snapshotJson,
+                ArchivoPdfFirmado = pdfPath,
+                EsValida = true,
+            };
+
+            _context.DocDocumentoFirmas.Add(registroFirma);
+
+            // 11. Auditoría LOPDP
+            var lopdpService = _serviceProvider.GetRequiredService<dosier_application.Security.ILopdpService>();
+            await lopdpService.AuditoriaAccesoDatosAsync(
+                idUsuario, idUsuario, "doc_documentos_firmas", "firma_code", "ESCRITURA",
+                $"Firma digital avanzada (.p12) de documento exitosa. Código: {firmaCode}.", ipAddress, userAgent);
+
+            // Persistir cambios de la instancia y firma antes de evaluar transiciones de workflow en la base de datos
+            await _context.SaveChangesAsync();
+
+            // 12. Transición de Estado de Workflow al firmar Protocolo de Investigación
+            if (instancia.TemplateCode == "PROTOCOLO_INVESTIGACION")
+            {
+                var workflowService = _serviceProvider.GetRequiredService<Dosier.Application.Research.IWorkflowEngineService>();
+                await workflowService.TransicionarEstadoAsync(instancia.EntityUuid, "Enviado", 1, $"Firma Digital .p12 de Protocolo de Investigación - Hash: {docHash}");
+            }
+            else if (instancia.TemplateCode == "INFORME_FINAL_INVESTIGACION")
+            {
+                var notifService = _serviceProvider.GetRequiredService<dosier_application.Common.Notifications.INotificationService>();
+                var project = await _context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == instancia.EntityUuid);
+                if (project != null)
+                {
+                    project.FechaLimiteSubsanacionFinal = null;
+
+                    var trazabilidad = new DocTrazabilidadProyecto
+                    {
+                        Uuid = Guid.NewGuid().ToString(),
+                        IdProyecto = project.IdProyecto,
+                        IdUsuario = idUsuario,
+                        EstadoAnterior = project.Estado,
+                        EstadoNuevo = project.Estado,
+                        Observacion = $"Firma digital avanzada (.p12) y postulación del Informe Final para revisión y dictamen institucional de cierre (Código: {firmaCode})",
+                        FechaTransicion = DateTime.UtcNow
+                    };
+                    _context.DocTrazabilidadProyectos.Add(trazabilidad);
+
+                    await notifService.NotifyByRoleCodesAsync(
+                        "Informe Final Postulado",
+                        $"El Director del proyecto '{project.Titulo}' ha firmado el Informe Final. Requiere revisión técnica y dictamen institucional de cierre.",
+                        new[] { "DOSIER_ADMIN" },
+                        $"/investigacion/mis-proyectos/workspace/protocolo-investigacion/{project.Uuid}"
+                    );
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            if (!string.IsNullOrEmpty(pdfPath))
+            {
+                try { await _storageService.DeleteFileAsync(pdfPath); } catch { }
+            }
+            _logger.LogError(ex, "[DOSIER Firma] Error al firmar con .p12 para documento {DocUuid}", documentoUuid);
+            throw;
+        }
+
+        var verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");
+
+        return new SignatureResultDto
+        {
+            FirmaCode = firmaCode,
+            HmacHash = hmacHash,
+            DocHash = docHash,
+            FirmadoEn = firmadoEn,
+            VerificationUrl = verificationUrl,
+        };
+    }
+
+    private async Task<byte[]> GetPdfBytesFromInstanceAsync(Dosier.Domain.Common.Documents.DocumentInstance instancia)
+    {
+        var dataOrchestrator = _serviceProvider.GetRequiredService<Dosier.Application.Common.Documents.IDocumentDataOrchestrator>();
+        var documentEngine = _serviceProvider.GetRequiredService<Dosier.Application.Common.Documents.IDocumentEngine>();
+
+        var docRequest = await dataOrchestrator.PrepareRequestAsync(instancia.Uuid, "sistema", forceDraftMode: false);
+        var buildResult = await documentEngine.GenerateAsync(docRequest);
+
+        return buildResult.PdfBytes;
+    }
+
+    private async Task<string> SaveSignedPdfAsync(byte[] pdfBytes, string documentoUuid, string firmaCode)
+    {
+        var fileName = $"{documentoUuid}_{firmaCode}.pdf";
+        return await _storageService.SaveFileAsync(fileName, pdfBytes, "firmas");
+    }
+
+    private static string NormalizeName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "";
+        var normalized = name.ToLowerInvariant().Trim();
+        normalized = normalized.Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u").Replace("ñ", "n");
+        return normalized;
+    }
+
+    private static bool ValidateNameMatch(string userNormalized, string certNormalized)
+    {
+        if (string.IsNullOrEmpty(userNormalized) || string.IsNullOrEmpty(certNormalized)) return false;
+        if (userNormalized.Contains(certNormalized) || certNormalized.Contains(userNormalized)) return true;
+
+        var userWords = userNormalized.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var certWords = certNormalized.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        int matches = 0;
+        foreach (var uWord in userWords)
+        {
+            if (uWord.Length > 2 && certWords.Contains(uWord))
+            {
+                matches++;
+            }
+        }
+        return matches >= 2;
+    }
+}

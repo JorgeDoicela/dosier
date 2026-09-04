@@ -1,0 +1,26 @@
+using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+
+namespace dosier_infrastructure.Common.Notifications.Hubs
+{
+    [Authorize]
+    public class NotificationHub : Hub
+    {
+        public override async Task OnConnectedAsync()
+        {
+            var userId = Context.User?.FindFirst("id_usuario")?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId}");
+            }
+            await Groups.AddToGroupAsync(Context.ConnectionId, "GlobalNotifications");
+            await base.OnConnectedAsync();
+        }
+
+        public async Task SendNotification(string userId, object notification)
+        {
+            await Clients.Group($"User_{userId}").SendAsync("ReceiveNotification", notification);
+        }
+    }
+}

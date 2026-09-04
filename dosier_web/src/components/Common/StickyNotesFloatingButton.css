@@ -1,0 +1,307 @@
+.sticky-floating-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 50;
+    font-family: var(--font-sans);
+}
+
+.sticky-floating-trigger-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--fg);
+    color: var(--bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    position: relative;
+}
+
+.sticky-floating-trigger-btn:hover {
+    transform: scale(1.05);
+    background: var(--fg);
+    opacity: 0.9;
+}
+
+.sticky-floating-badge-plus {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Badge de contador de notas pendientes */
+.sticky-floating-badge-count {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    background: #EF4444;
+    color: #fff;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 2px solid var(--bg);
+    animation: badge-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+}
+
+@keyframes badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+    50%       { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+}
+
+/* Chip de contexto de página */
+.sticky-context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+    width: fit-content;
+}
+
+/* Toggle "Añadir más detalles..." */
+.sticky-detalle-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 0;
+    transition: color 0.15s ease;
+}
+
+.sticky-detalle-toggle:hover {
+    color: var(--fg);
+}
+
+/* Textarea de detalle (más pequeña y sutil) */
+.sticky-detalle-textarea {
+    min-height: 64px !important;
+    font-size: 12px !important;
+    opacity: 0.85;
+}
+
+@keyframes expand {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-expand {
+    animation: expand 0.18s ease forwards;
+}
+
+.sticky-floating-card {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    width: calc(100vw - 48px);
+    max-width: 350px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sticky-floating-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sticky-floating-header h3 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sticky-floating-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sticky-floating-inbox-link {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sticky-floating-inbox-link:hover {
+    background: var(--surface-hover);
+    color: var(--fg);
+}
+
+.sticky-floating-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sticky-floating-close:hover {
+    background: var(--surface-hover);
+    color: var(--fg);
+}
+
+.sticky-floating-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sticky-floating-textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--fg);
+    min-height: 120px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+}
+
+.sticky-floating-textarea:focus {
+    border-color: var(--border-hover);
+}
+
+.sticky-floating-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.sticky-floating-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+
+
+.sticky-floating-colors {
+    display: flex;
+    gap: 4px;
+}
+
+.sticky-color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s;
+    padding: 0;
+}
+
+.sticky-color-dot:hover {
+    transform: scale(1.15);
+}
+
+.sticky-color-dot.active {
+    border-color: var(--fg);
+    transform: scale(1.1);
+}
+
+.sticky-floating-success {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success);
+    text-align: center;
+}
+
+/* Animations */
+.animate-slide-up {
+    animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .sticky-floating-container {
+        bottom: 16px;
+        right: 16px;
+    }
+    .sticky-floating-card {
+        bottom: 56px;
+        width: calc(100vw - 32px);
+    }
+}
+
+.sticky-floating-triggers-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}

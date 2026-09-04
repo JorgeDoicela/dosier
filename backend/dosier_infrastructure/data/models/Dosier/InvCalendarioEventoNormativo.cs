@@ -1,0 +1,33 @@
+namespace dosier_infrastructure.data.models;
+
+public partial class DocCalendarioEventoNormativo
+{
+    public int IdEvento { get; set; }
+    public string Uuid { get; set; } = null!;
+    public string Titulo { get; set; } = null!;
+    public string? Descripcion { get; set; }
+    public string TipoEvento { get; set; } = "Normativo";
+    public DateOnly? FechaInicio { get; set; }
+    public DateOnly? FechaFin { get; set; }
+    public bool EsTodoElDia { get; set; } = true;
+    public bool RecurrenciaAnual { get; set; } = false;
+    public DateOnly? RecurrenciaHasta { get; set; }
+    public string? RolesVisibles { get; set; }
+    public string? ModuloOrigen { get; set; }
+    public string? UrlAccion { get; set; }
+    public string? ColorHex { get; set; } = "#6B7280";
+    public int? AlertaDias { get; set; } = 7;
+    public bool Activo { get; set; } = true;
+    public bool EsPrivado { get; set; } = true;
+    public string Prioridad { get; set; } = "Media";
+    public string Estado { get; set; } = "Pendiente";
+    public int? CreadoPor { get; set; }
+    public DateTime FechaRegistro { get; set; }
+    public DateTime FechaModificacion { get; set; }
+
+    // ── Notas Rápidas — campos extendidos ────────────────────────────────────
+    /// <summary>Descripción extendida de la nota rápida (campo expandible en UI).</summary>
+    public string? NotaDetalle { get; set; }
+    /// <summary>Posición manual de la nota en la bandeja Inbox (drag-to-reorder). NULL = no ordenada.</summary>
+    public int? OrdenBandeja { get; set; }
+}

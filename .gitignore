@@ -1,0 +1,177 @@
+# ====================================================================
+# DOSIER - Sistema de Portafolio Docente y Acreditación Curricular
+# .gitignore Global y Unificado (Monorepo)
+# ====================================================================
+
+# --------------------------------------------------------------------
+# 1. Archivos de Sistema Operativo y Temporales
+# --------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+Thumbs.db
+Thumbs.db:encryptable
+desktop.ini
+$RECYCLE.BIN/
+.tmp.drivedownload
+.tmp.driveupload
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+*.bak
+
+# --------------------------------------------------------------------
+# 2. Entornos de Desarrollo e IDEs (Visual Studio, VS Code, JetBrains Rider)
+# --------------------------------------------------------------------
+.vs/
+**/.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+**/.idea/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.vsconfig
+_ReSharper*/
+*.DotSettings.user
+*.ncrunch*
+*.fleet/
+
+# --------------------------------------------------------------------
+# 3. Variables de Entorno y Secretos (.env)
+# --------------------------------------------------------------------
+.env
+.env.*
+.env*.local
+*.local
+!.env.example
+!.env.template
+!.env.*.example
+!.env.*.template
+
+# --------------------------------------------------------------------
+# 4. Certificados Digitales, Firmas Electrónicas y Claves Criptográficas
+# --------------------------------------------------------------------
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+*.jks
+*.keystore
+*.mobileprovision
+*.p8
+
+# --------------------------------------------------------------------
+# 5. Backend (.NET 8 C# / EF Core 9 / Pomelo MySQL)
+# --------------------------------------------------------------------
+**/[Bb]in/
+**/[Oo]bj/
+**/[Aa]rms/
+**/[Aa]rm64/
+**/[Xx]64/
+**/[Xx]86/
+**/[Tt]est[Rr]esults/
+**/publish/
+backend/publish/
+backend/**/bin/
+backend/**/obj/
+backend/dosier_api/*.pdf
+backend/dosier_tests/TestResults/
+
+# Configuraciones y Secretos en Backend (appsettings)
+backend/dosier_api/appsettings.json
+backend/dosier_api/appsettings.*.json
+!backend/dosier_api/appsettings.template.json
+!backend/dosier_api/appsettings.*.template.json
+!backend/dosier_api/appsettings.Example.json
+!backend/dosier_api/appsettings.*.Example.json
+
+# --------------------------------------------------------------------
+# 6. Uploads, Archivos Generados, Firmas y Backups
+# --------------------------------------------------------------------
+# Subidas y PDFs generados en Backend
+backend/dosier_api/uploads/**
+!backend/dosier_api/uploads/
+!backend/dosier_api/uploads/**/
+!backend/dosier_api/uploads/**/.gitkeep
+
+# Backups locales (.dump, .sql.bak, temporales)
+backend/dosier_api/backups/**
+!backend/dosier_api/backups/
+!backend/dosier_api/backups/**/
+!backend/dosier_api/backups/**/.gitkeep
+
+scripts/despliegue/backups/**
+!scripts/despliegue/backups/
+!scripts/despliegue/backups/**/
+!scripts/despliegue/backups/**/.gitkeep
+
+*.dump
+*.sql.bak
+*.sql.dump
+*.db-shm
+*.db-wal
+
+# --------------------------------------------------------------------
+# 7. Frontend Web & Mobile (Node, React 18, Vite, TypeScript, Expo)
+# --------------------------------------------------------------------
+**/node_modules/
+node_modules/
+.pnp
+.pnp.js
+
+# Salidas de compilación y empaquetado
+**/dist/
+dist/
+dist-ssr/
+build/
+web-build/
+.expo/
+**/.expo/
+.expo-shared/
+expo-env.d.ts
+.metro-health-check*
+app-example/
+
+# Builds Nativas de Expo / React Native
+/dosier_mobile/ios/
+/dosier_mobile/android/
+.kotlin/
+*.orig.*
+
+# Caché, Linters y TypeScript
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+.turbo/
+.cache/
+.parcel-cache/
+
+# Cobertura de pruebas
+coverage/
+**/coverage/
+*.lcov
+.nyc_output/
+
+# --------------------------------------------------------------------
+# 8. Logs y Depuración
+# --------------------------------------------------------------------
+*.log
+logs/
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*

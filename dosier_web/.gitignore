@@ -1,0 +1,59 @@
+# ====================================================================
+# Frontend Web (React 18 / Vite / TypeScript / Tailwind v4) - DOSIER
+# ====================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build Outputs
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Cache & Linters
+.eslintcache
+.stylelintcache
+.turbo/
+.cache/
+.parcel-cache/
+
+# Environment Variables & Secrets
+.env
+.env.*
+.env*.local
+*.local
+!.env.example
+!.env.template
+!.env.*.example
+!.env.*.template
+
+# Coverage / Tests
+coverage/
+*.lcov
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,72 @@
+# ====================================================================
+# Mobile App (Expo / React Native / TypeScript) - DOSIER
+# ====================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo & Metro
+.expo/
+.expo-shared/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Native builds & Artifacts (EAS / Prebuild)
+/ios
+/android
+.kotlin/
+*.orig.*
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pfx
+*.key
+*.pem
+*.crt
+*.cer
+*.mobileprovision
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+*.log
+logs/
+
+# Environment Variables & Secrets
+.env
+.env.*
+.env*.local
+*.local
+!.env.example
+!.env.template
+!.env.*.example
+!.env.*.template
+
+# TypeScript, Linters & Cache
+*.tsbuildinfo
+.eslintcache
+.turbo/
+.cache/
+
+# Coverage / Tests
+coverage/
+*.lcov
+
+# Example app
+app-example/
+
+# Editor & OS files
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

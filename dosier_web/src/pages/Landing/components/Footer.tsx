@@ -1,0 +1,117 @@
+import React from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../api/AuthContext';
+
+interface FooterProps {
+    currentTheme: 'dark' | 'light';
+}
+
+const Footer: React.FC<FooterProps> = ({ currentTheme }) => {
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleLogoClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (isAuthenticated) {
+            navigate('/dashboard');
+        } else {
+            if (location.pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                navigate('/');
+                window.scrollTo({ top: 0 });
+            }
+        }
+    };
+
+    const footerColumns = [
+        {
+            title: 'Plataforma',
+            links: [
+                { label: 'Workspace', href: '#workspace' },
+                { label: 'Acreditación', href: '#caces' },
+                { label: 'Documentos', href: '#modulos' },
+                { label: 'Estructura', href: '#roles' },
+            ]
+        },
+        {
+            title: 'Recursos',
+            links: [
+                { label: 'Portal ISTPET', href: '#' },
+                { label: 'Reglamento CACES', href: '#' },
+                { label: 'Régimen Académico CES', href: '#' },
+                { label: 'Mallas SIGAFI', href: '#' },
+            ]
+        },
+        {
+            title: 'Institución',
+            links: [
+                { label: 'ISTPET Principal', href: '#' },
+                { label: 'Campus Traversari', href: '#' },
+                { label: 'Coordinación Académica', href: '#' },
+                { label: 'Soporte Docente', href: '#' },
+            ]
+        },
+        {
+            title: 'Seguridad',
+            links: [
+                { label: 'Firma.ec Integration', href: '#' },
+                { label: 'Firma P12 Seguro', href: '#' },
+                { label: 'Auditoría CACES', href: '#' },
+                { label: 'Sellos Forenses SHA-256', href: '#' },
+            ]
+        },
+        {
+            title: 'Legal',
+            links: [
+                { label: 'Términos de Uso', href: '#' },
+                { label: 'Política Privacidad', href: '#' },
+                { label: 'Licencia DOSIER', href: '#' },
+            ]
+        }
+    ];
+
+    return (
+        <footer className="w-full border-t border-border-thin text-text-dim">
+            <div className="max-w-7xl mx-auto px-6">
+                <div className="py-20 lg:-ml-24 lg:-mr-24">
+                    {/* Grid de 5 Columnas de Enlaces al estilo Vercel */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
+                        {footerColumns.map((col, idx) => (
+                            <div key={idx} className="space-y-4 flex flex-col">
+                                <span className="text-text-main font-bold font-mono text-[10px] uppercase tracking-[0.2em]">
+                                    {col.title}
+                                </span>
+                                <div className="flex flex-col gap-2.5 text-[11px] font-medium font-sans">
+                                    {col.links.map((link, lIdx) => (
+                                        <a key={lIdx} href={link.href} className="hover:text-text-main transition-colors w-fit">
+                                            {link.label}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Copyright y Logotipos abajo */}
+                    <div className="mt-20 pt-10 border-t border-border-thin flex flex-col sm:flex-row justify-between items-center gap-6 text-[9px] font-mono select-none">
+                        <div className="flex items-center gap-4">
+                            <Link to={isAuthenticated ? "/dashboard" : "/"} onClick={handleLogoClick}>
+                                <img
+                                    src={currentTheme === 'dark' ? `${import.meta.env.BASE_URL}logo_blanco.png` : `${import.meta.env.BASE_URL}logo_negro.png`}
+                                    alt="DOSIER Logo"
+                                    className="h-8 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                                />
+                            </Link>
+                            <span className="opacity-80">© {new Date().getFullYear()} DOSIER. TODOS LOS DERECHOS RESERVADOS.</span>
+                        </div>
+                        <span className="text-text-dim opacity-80">TECNOLÓGICO TRAVERSARI - ISTPET</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    );
+};
+
+export default Footer;

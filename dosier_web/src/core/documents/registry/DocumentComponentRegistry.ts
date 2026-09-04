@@ -1,0 +1,97 @@
+// ═══════════════════════════════════════════════════════════════════
+// DOSIER — Document Component Registry
+//
+// Mapeo de IDs de sección → Componentes React.
+//
+// ¿Por qué existe este archivo separado?
+// ──────────────────────────────────────
+// El DocumentTemplateRegistry define los ESQUEMAS de datos (qué campos
+// existen, qué listas, qué schema inicial). Es puro JSON — puede usarse
+// en tests, en el backend, o en cualquier contexto no-React.
+//
+// Este archivo es el que trae los componentes de React al sistema.
+// Solo se importa en contextos donde React está disponible.
+//
+// Extensión:
+// ─────────────────────────────────────────────────────────────────
+// Para agregar un nuevo documento con secciones personalizadas:
+//   1. Define el schema en DocumentTemplateRegistry.ts
+//   2. Crea tu componente de sección (ej: ActaSection.tsx)
+//   3. Registra el id de la sección aquí
+//
+// Si NO registras un id aquí, se usa AgnosticSection como fallback automático.
+// ═══════════════════════════════════════════════════════════════════
+
+import { GeneralSection }         from '../../../components/DOSIER/sections/GeneralSection';
+import { TechnicalSection }       from '../../../components/DOSIER/sections/TechnicalSection';
+import { TeamSection }            from '../../../components/DOSIER/sections/TeamSection';
+import { BudgetSection }          from '../../../components/DOSIER/sections/BudgetSection';
+import { TimelineSection }        from '../../../components/DOSIER/sections/TimelineSection';
+import { ImpactSection }          from '../../../components/DOSIER/sections/ImpactSection';
+import { BibliographySection }    from '../../../components/DOSIER/sections/BibliographySection';
+import { ProgressReportSection }  from '../../../components/DOSIER/sections/ProgressReportSection';
+import { FinalReportHeaderSection } from '../../../components/DOSIER/sections/FinalReportHeaderSection';
+import { AgnosticSection }        from '../../../components/DOSIER/sections/AgnosticSection';
+import { MultiSectionTableSection } from '../../../components/DOSIER/sections/MultiSectionTableSection';
+
+/**
+ * Mapa de nombre string de componente → Componente React real
+ */
+export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
+    'GeneralSection': GeneralSection,
+    'TeamSection': TeamSection,
+    'TechnicalSection': TechnicalSection,
+    'BudgetSection': BudgetSection,
+    'TimelineSection': TimelineSection,
+    'ImpactSection': ImpactSection,
+    'BibliographySection': BibliographySection,
+    'ProgressReportSection': ProgressReportSection,
+    'FinalReportHeaderSection': FinalReportHeaderSection,
+    'AgnosticSection': AgnosticSection,
+    'MultiSectionTableSection': MultiSectionTableSection
+};
+
+/**
+ * Mapa de ID de sección → componente React específico.
+ * Clave: ID de sección tal como se define en DocumentTemplateRegistry.ts
+ * Valor: Componente React de sección
+ */
+export const DocumentComponentRegistry: Record<string, React.ComponentType<any>> = {
+    // ── PROTOCOLO DE INVESTIGACIÓN ─────────────────────────────────
+    'identificacion': GeneralSection,
+    'datos_generales_informe_final': FinalReportHeaderSection,
+    'equipo':         TeamSection,
+    'tecnico':        TechnicalSection,
+    'recursos':       BudgetSection,
+    'impactos':       ImpactSection,
+    'cronograma':     TimelineSection,
+    'bibliografia':   BibliographySection,
+};
+
+/**
+ * Resuelve el componente React correcto para una sección dada.
+ * Si no existe un componente específico, devuelve AgnosticSection.
+ *
+ * @param sectionId - ID de la sección (ej: 'identificacion', 'tecnico')
+ * @param overrideComponent - Componente definido directamente en la config de la sección (compat legacy)
+ */
+export function getDocumentSection(
+    sectionId: string,
+    overrideComponent?: React.ComponentType<any>
+): React.ComponentType<any> {
+    // Prioridad 1: Componente explícito en la config de la sección (retrocompatibilidad)
+    if (overrideComponent) return overrideComponent;
+    // Prioridad 2: Resolución por nombre de componente
+    if (COMPONENT_MAP[sectionId]) return COMPONENT_MAP[sectionId];
+    // Prioridad 3: Registro explícito por ID
+    if (DocumentComponentRegistry[sectionId]) return DocumentComponentRegistry[sectionId];
+    // Prioridad 4: Prefijos dinámicos de bloques conocidos
+    if (sectionId && typeof sectionId === 'string' && sectionId.startsWith('multi_section_table')) {
+        return MultiSectionTableSection;
+    }
+    // Fallback: AgnosticSection para secciones dinámicas del backend
+    return AgnosticSection;
+}
+
+// Necesario para el tipado del import
+import type React from 'react';

@@ -1,0 +1,106 @@
+namespace dosier_application.Security.DTOs;
+
+public class LoginRequest
+{
+    public string Username { get; set; } = null!;
+    public string Password { get; set; } = null!;
+}
+
+public class AuthResponse
+{
+    public string IdReferencia { get; set; } = null!;
+    public string NombreCompleto { get; set; } = null!;
+    public string Role { get; set; } = null!;
+    public List<string> Roles { get; set; } = new();
+    public List<string> RoleCodes { get; set; } = new();
+    public string TipoUsuario { get; set; } = null!; // profesor, alumno, externo, admin
+    public List<string> Permissions { get; set; } = new();
+    public string Token { get; set; } = null!;
+    public string? RefreshToken { get; set; }
+    public string? Email { get; set; }
+    public string Sistemas { get; set; } = string.Empty;
+    public bool Administrador { get; set; }
+    public int IdUsuario { get; set; }
+    public string UserUuid { get; set; } = null!;
+    public string Usuario { get; set; } = null!;
+    public bool AceptoLopdp { get; set; }
+}
+
+/// <summary>Respuesta cuando el usuario está bloqueado por exceso de intentos fallidos.</summary>
+public class LoginBlockedResponse
+{
+    public string Message { get; set; } = null!;
+    /// <summary>UTC moment when the lockout expires (ISO 8601).</summary>
+    public DateTime BloqueadoHasta { get; set; }
+    /// <summary>Seconds remaining until the account unlocks.</summary>
+    public int SegundosRestantes { get; set; }
+}
+
+public class MagicLoginRequest
+{
+    public string Token { get; set; } = null!;
+}
+
+public class HandoffLoginRequest
+{
+    public string Pin { get; set; } = null!;
+}
+
+public class MagicLoginResponseDto
+{
+    public AuthResponse Auth { get; set; } = null!;
+    public string? Pin { get; set; }
+}
+
+public class MagicResendRequest
+{
+    public string Email { get; set; } = null!;
+}
+
+public class MagicConfirmRequest
+{
+    public string Token { get; set; } = null!;
+}
+
+public class MicrosoftLoginRequest
+{
+    public string IdToken { get; set; } = null!;
+}
+
+/// <summary>Solicitud de recuperación de contraseña. Acepta cédula o correo institucional.</summary>
+public class PasswordRecoveryRequestDto
+{
+    public string Identificador { get; set; } = null!;
+    public string? Cedula { get; set; }
+}
+
+/// <summary>Resultado de la solicitud de recuperación.</summary>
+public class PasswordRecoveryRequestResult
+{
+    public bool Exito { get; set; }
+    public bool RequiereDesambiguacion { get; set; }
+    public string? Message { get; set; }
+}
+
+/// <summary>Respuesta interna del servicio al validar el token de recuperación.</summary>
+public class PasswordRecoveryValidationResult
+{
+    public bool Valido { get; set; }
+    public string? Password { get; set; }
+    public string? NombreUsuario { get; set; }
+    /// <summary>Cuando la contraseña en SIGAFI está hasheada (BCrypt) y no puede recuperarse.</summary>
+    public bool EsHashInaccesible { get; set; }
+    public bool EsRevisorExterno { get; set; }
+}
+
+public class ChangePasswordRequestDto
+{
+    public string CurrentPassword { get; set; } = null!;
+    public string NewPassword { get; set; } = null!;
+}
+
+public class RevertPasswordRequestDto
+{
+    public string Token { get; set; } = null!;
+    public string NewPassword { get; set; } = null!;
+}

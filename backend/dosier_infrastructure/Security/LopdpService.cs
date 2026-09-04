@@ -1,0 +1,249 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using dosier_application.Security;
+using dosier_application.Security.DTOs;
+using dosier_infrastructure.data.models;
+using dosier_application.Common.Notifications;
+
+namespace dosier_infrastructure.Security;
+
+public class LopdpService : ILopdpService
+{
+    private readonly DosierContext _context;
+    private readonly ILogger<LopdpService> _logger;
+    private readonly INotificationService _notificationService;
+    private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+
+    public LopdpService(DosierContext context, INotificationService notificationService, ILogger<LopdpService> logger)
+    {
+        _context = context;
+        _notificationService = notificationService;
+        _logger = logger;
+    }
+
+    public async Task RegistrarConsentimientoAsync(int idUsuario, string versionPolitica, string? ip, string? userAgent)
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            var consentimiento = new DocLopdpConsentimiento
+            {
+                IdUsuario = idUsuario,
+                VersionPolitica = versionPolitica,
+                Canal = "Web",
+                FechaConsentimiento = DateTime.Now,
+                IpDireccion = ip,
+                UserAgent = userAgent,
+                Estado = "Otorgado"
+            };
+
+            _context.DocLopdpConsentimientos.Add(consentimiento);
+
+            // Si es consentimiento para LOPDP general o firma electrónica, actualizamos la tabla de metadata del usuario
+            if (versionPolitica.Equals("LOPDP_GENERAL", StringComparison.OrdinalIgnoreCase) ||
+                versionPolitica.Equals("FIRMA_ELECTRONICA", StringComparison.OrdinalIgnoreCase) ||
+                versionPolitica.Equals("FIRMA", StringComparison.OrdinalIgnoreCase))
+            {
+                var metadata = await _context.DocUsuariosMetadata.FirstOrDefaultAsync(m => m.IdUsuario == idUsuario);
+                if (metadata == null)
+                {
+                    metadata = new DocUsuarioMetadata
+                    {
+                        IdUsuario = idUsuario,
+                        Uuid = Guid.NewGuid(),
+                        Version = 1
+                    };
+                    _context.DocUsuariosMetadata.Add(metadata);
+                }
+
+                metadata.AceptoTerminosFirma = true;
+                metadata.FechaConsentimientoFirma = DateTime.Now;
+                metadata.Version++;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registrando consentimiento LOPDP para Usuario={IdUsuario}", idUsuario);
+            throw;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+
+    public async Task<List<ConsentimientoResponse>> GetAllConsentimientosAsync()
+    {
+        try
+        {
+            return await _context.DocLopdpConsentimientos
+                .OrderByDescending(c => c.FechaConsentimiento)
+                .Select(c => new ConsentimientoResponse
+                {
+                    IdConsentimiento = c.IdConsentimiento,
+                    Uuid = c.Uuid,
+                    IdUsuario = c.IdUsuario,
+                    NombreUsuario = c.User != null ? (c.User.Nombre ?? "Usuario " + c.IdUsuario) : "Usuario " + c.IdUsuario,
+                    VersionPolitica = c.VersionPolitica,
+                    Canal = c.Canal,
+                    FechaConsentimiento = c.FechaConsentimiento,
+                    IpDireccion = c.IpDireccion,
+                    UserAgent = c.UserAgent,
+                    Estado = c.Estado
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener todos los consentimientos LOPDP");
+            throw;
+        }
+    }
+
+    public async Task AuditoriaAccesoDatosAsync(int? idUsuarioActor, int idUsuarioAfectado, string tablaAfectada, string? columnaAfectada, string operacion, string? motivo, string? ip, string? userAgent)
+    {
+        try
+        {
+            var auditoria = new DocLopdpAuditoriaDatos
+            {
+                IdUsuarioActor = idUsuarioActor,
+                IdUsuarioAfectado = idUsuarioAfectado,
+                TablaAfectada = tablaAfectada,
+                ColumnaAfectada = columnaAfectada,
+                Operacion = operacion,
+                Motivo = motivo,
+                IpDireccion = ip,
+                UserAgent = userAgent,
+                FechaAcceso = DateTime.Now
+            };
+
+            _context.DocLopdpAuditoriaDatos.Add(auditoria);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "CONTINGENCIA_LOPDP: Fallo en base de datos al registrar auditoría de datos sensibles. " +
+                "Actor={Actor}, Afectado={Afectado}, Tabla={Tabla}, Columna={Columna}, Operacion={Operacion}, Motivo={Motivo}, IP={IP}, UserAgent={UA}, Timestamp={Timestamp}",
+                idUsuarioActor, idUsuarioAfectado, tablaAfectada, columnaAfectada, operacion, motivo, ip, userAgent, DateTime.UtcNow.ToString("O"));
+            // No propagamos la excepción en auditoría para evitar interrumpir la operación principal
+        }
+    }
+
+    public async Task<PerfilLopdpDto?> GetPerfilAsync(int idUsuario)
+    {
+        try
+        {
+            var meta = await _context.DocUsuariosMetadata.FirstOrDefaultAsync(m => m.IdUsuario == idUsuario);
+            if (meta == null)
+            {
+                meta = new DocUsuarioMetadata
+                {
+                    IdUsuario = idUsuario,
+                    Uuid = Guid.NewGuid(),
+                    Version = 1
+                };
+                _context.DocUsuariosMetadata.Add(meta);
+                await _context.SaveChangesAsync();
+            }
+
+            return new PerfilLopdpDto
+            {
+                AceptoTerminosFirma = meta.AceptoTerminosFirma,
+                FechaConsentimientoFirma = meta.FechaConsentimientoFirma,
+                HasP12Certificate = false
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener perfil LOPDP para Usuario={IdUsuario}", idUsuario);
+            throw;
+        }
+    }
+
+    public async Task UpdatePerfilAsync(int idUsuario, ActualizarPerfilRequest request)
+    {
+        try
+        {
+            var meta = await _context.DocUsuariosMetadata.FirstOrDefaultAsync(m => m.IdUsuario == idUsuario);
+            if (meta == null)
+            {
+                meta = new DocUsuarioMetadata
+                {
+                    IdUsuario = idUsuario,
+                    Uuid = Guid.NewGuid(),
+                    Version = 1
+                };
+                _context.DocUsuariosMetadata.Add(meta);
+            }
+
+            if (request.AceptoTerminosFirma.HasValue)
+            {
+                meta.AceptoTerminosFirma = request.AceptoTerminosFirma.Value;
+                if (meta.AceptoTerminosFirma && !meta.FechaConsentimientoFirma.HasValue)
+                {
+                    meta.FechaConsentimientoFirma = DateTime.UtcNow;
+                }
+            }
+            meta.Version++;
+
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar perfil LOPDP para Usuario={IdUsuario}", idUsuario);
+            throw;
+        }
+    }
+
+    public async Task RevocarConsentimientoAsync(int idUsuario, string? ip, string? userAgent)
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            var politicas = new[] { "LOPDP_GENERAL", "FIRMA_ELECTRONICA" };
+            foreach (var politica in politicas)
+            {
+                var consentimientoRevocado = new DocLopdpConsentimiento
+                {
+                    IdUsuario = idUsuario,
+                    VersionPolitica = politica,
+                    Canal = "Web",
+                    FechaConsentimiento = DateTime.Now,
+                    IpDireccion = ip,
+                    UserAgent = userAgent,
+                    Estado = "Revocado"
+                };
+                _context.DocLopdpConsentimientos.Add(consentimientoRevocado);
+            }
+
+            var metadata = await _context.DocUsuariosMetadata.FirstOrDefaultAsync(m => m.IdUsuario == idUsuario);
+            if (metadata != null)
+            {
+                metadata.AceptoTerminosFirma = false;
+                metadata.FechaConsentimientoFirma = null;
+                metadata.Version++;
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Evidencia de revocación LOPDP registrada para el Usuario={IdUsuario}", idUsuario);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al registrar revocación LOPDP para el Usuario={IdUsuario}", idUsuario);
+            throw;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+}
+

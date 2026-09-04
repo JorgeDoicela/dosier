@@ -1,0 +1,125 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+// https://vite.dev/config/
+export default defineConfig(({ command }) => {
+  return {
+    base: command === 'serve' ? '/' : '/dosier/',
+    plugins: [
+      react(),
+      tailwindcss()
+    ],
+    server: {
+      port: 3010,
+      host: true,
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:5185',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.removeAllListeners('error');
+            proxy.on('error', (err, _req, res) => {
+              if (err.message.includes('ECONNREFUSED')) {
+                if (res) {
+                  if ('writeHead' in res) {
+                    if (!res.headersSent) {
+                      res.writeHead(502, { 'Content-Type': 'text/plain' });
+                    }
+                    res.end('Backend offline (ECONNREFUSED)');
+                  } else if ('destroy' in res) {
+                    res.destroy();
+                  }
+                }
+                return;
+              }
+              console.error('Proxy API error:', err);
+            });
+          }
+        },
+        '/hubs': {
+          target: 'http://127.0.0.1:5185',
+          ws: true,
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.removeAllListeners('error');
+            proxy.on('error', (err, _req, res) => {
+              if (err.message.includes('ECONNREFUSED')) {
+                if (res) {
+                  if ('writeHead' in res) {
+                    if (!res.headersSent) {
+                      res.writeHead(502, { 'Content-Type': 'text/plain' });
+                    }
+                    res.end('Backend offline (ECONNREFUSED)');
+                  } else if ('destroy' in res) {
+                    res.destroy();
+                  }
+                }
+                return;
+              }
+              console.error('Proxy Hubs error:', err);
+            });
+          }
+        }
+      }
+    },
+    resolve: {
+      dedupe: ['yjs', 'y-prosemirror']
+    },
+    optimizeDeps: {
+      include: ['yjs', 'y-prosemirror', 'date-fns'],
+      exclude: ['@tiptap/pm']
+    },
+    build: {
+      // Aumenta el límite de advertencia de chunk (kB)
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            // React core — siempre se necesita
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+              return 'vendor-react';
+            }
+            // Router
+            if (id.includes('node_modules/react-router')) {
+              return 'vendor-router';
+            }
+            // Editor colaborativo — muy pesado, carga solo en workspace
+            if (
+              id.includes('node_modules/@tiptap/') ||
+              id.includes('node_modules/yjs') ||
+              id.includes('node_modules/y-prosemirror') ||
+              id.includes('node_modules/y-protocols') ||
+              id.includes('node_modules/lib0') ||
+              id.includes('node_modules/prosemirror')
+            ) {
+              return 'vendor-editor';
+            }
+            // SignalR — carga solo cuando hay colaboración activa
+            if (id.includes('node_modules/@microsoft/signalr')) {
+              return 'vendor-signalr';
+            }
+            // Exportación Excel — carga solo en páginas con exportación
+            if (id.includes('node_modules/xlsx')) {
+              return 'vendor-xlsx';
+            }
+            // Utilidades comunes
+            if (
+              id.includes('node_modules/date-fns') ||
+              id.includes('node_modules/axios') ||
+              id.includes('node_modules/lucide-react') ||
+              id.includes('node_modules/zod') ||
+              id.includes('node_modules/react-hook-form') ||
+              id.includes('node_modules/@hookform') ||
+              id.includes('node_modules/dompurify')
+            ) {
+              return 'vendor-utils';
+            }
+          }
+        }
+      }
+    }
+  }
+})

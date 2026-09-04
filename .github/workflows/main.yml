@@ -1,0 +1,40 @@
+name: DOSIER CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore backend/dosier.slnx
+    - name: Build
+      run: dotnet build backend/dosier.slnx --no-restore
+    - name: Test
+      run: dotnet test backend/dosier_tests/dosier_tests.csproj --no-build --verbosity normal
+
+  frontend-web-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Install dependencies
+      run: |
+        cd dosier_web
+        npm install
+    - name: Build
+      run: |
+        cd dosier_web
+        npm run build

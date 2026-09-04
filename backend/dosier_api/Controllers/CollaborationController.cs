@@ -1,0 +1,456 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
+using dosier_infrastructure.data.models;
+using dosier_infrastructure.data.models.Cowork;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.SignalR;
+using dosier_infrastructure.Collaboration;
+using Microsoft.AspNetCore.Authorization;
+
+namespace dosier_api.Controllers
+{
+    /// <summary>
+    /// CONTROLADOR DE COORDINACIÓN (Team Pulse)
+    /// Maneja el estado inicial de la colaboración antes de entrar al flujo SignalR.
+    /// </summary>
+    [ApiController]
+    [Route("api/collaboration")]
+    [Authorize]
+    public class CollaborationController : ControllerBase
+    {
+        private readonly DosierContext _db;
+        private readonly Dosier.Infrastructure.Common.Storage.IFileStorageService _storageService;
+        private readonly IHubContext<CollaborationHub> _hubContext;
+
+        public CollaborationController(
+            DosierContext db, 
+            Dosier.Infrastructure.Common.Storage.IFileStorageService storageService,
+            IHubContext<CollaborationHub> hubContext)
+        {
+            _db = db;
+            _storageService = storageService;
+            _hubContext = hubContext;
+        }
+
+        /// <summary>
+        /// Recibe una imagen pegada en el editor colaborativo, la guarda en el servidor
+        /// y retorna su URL estática para evitar incrustar Base64 en el Yjs.
+        /// </summary>
+        [HttpPost("upload")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadImage(Microsoft.AspNetCore.Http.IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No se proporcionó ningún archivo." });
+
+            try
+            {
+                using var memoryStream = new System.IO.MemoryStream();
+                await file.CopyToAsync(memoryStream);
+                var content = memoryStream.ToArray();
+
+                // Guardar usando el servicio
+                var relativePath = await _storageService.SaveFileAsync(file.FileName, content, "cowork_images");
+
+                // Generar URL pública (asumiendo que la API se sirve en la ruta raíz o mapeada a frontend)
+                // Se reemplazan los "\" por "/" para compatibilidad de URL en navegadores.
+                var url = $"/api/storage/{relativePath.Replace('\\', '/')}";
+
+                return Ok(new { url = url });
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"[DOSIER ERROR] Fallo al subir imagen CoWork: {ex.Message}");
+                return StatusCode(500, new { message = "Error interno al guardar la imagen", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el pulso actual del documento (comentarios y estados de sección).
+        /// </summary>
+        [HttpGet("{instanceUuid}/pulse")]
+        public async Task<IActionResult> GetPulse(string instanceUuid)
+        {
+            try 
+            {
+                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
+                if (!isAdmin)
+                {
+                    var username = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value?.Trim();
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        var user = await _db.Users.FirstOrDefaultAsync(u => u.IdSigafi.Trim() == username);
+                        if (user != null)
+                        {
+                            var group = await _db.DocGruposInvestigacion
+                                .Include(g => g.IdCoordinadorNavigation)
+                                .FirstOrDefaultAsync(g => g.Uuid == instanceUuid);
+                            if (group != null)
+                            {
+                                var isGroupMember = (group.IdCoordinador == user.IdUsuario) ||
+                                                    (group.IdCoordinadorNavigation != null && group.IdCoordinadorNavigation.IdSigafi.Trim() == username) ||
+                                                    await _db.DocGruposMiembros.AnyAsync(m => m.IdGrupo == group.IdGrupo && m.IdUsuario == user.IdUsuario && (m.Activo != false || m.Activo == null));
+                                if (!isGroupMember)
+                                {
+                                    return StatusCode(403, new { message = "No tienes permisos para acceder a la retroalimentación de este grupo de investigación." });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var comments = await _db.DocCollaborationComments
+                    .Where(c => c.DocumentoUuid == instanceUuid)
+                    .OrderByDescending(c => c.CreadoEn)
+                    .Take(50)
+                    .ToListAsync();
+
+                var statuses = await _db.DocDocumentosSeccionesMetadata
+                    .Where(s => s.DocumentoUuid == instanceUuid)
+                    .Select(s => new {
+                        s.SeccionNombre,
+                        s.Estado,
+                        s.UltimoNombreUsuario,
+                        s.UltimoUsuarioUuid,
+                        s.ActualizadoEn
+                    })
+                    .ToListAsync();
+
+                // Evitar errores de claves duplicadas si por alguna razón la BD tiene inconsistencias
+                var statusesDict = statuses
+                    .GroupBy(s => s.SeccionNombre)
+                    .ToDictionary(g => g.Key, g => new {
+                        estado = g.First().Estado,
+                        ultimoNombreUsuario = g.First().UltimoNombreUsuario,
+                        ultimoUsuarioUuid = g.First().UltimoUsuarioUuid,
+                        actualizadoEn = g.First().ActualizadoEn
+                    });
+
+                // Cargar actividad reciente para esta instancia documental
+                var pattern = instanceUuid + "%";
+                var sesiones = await _db.DocCoworkSesiones.AsNoTracking()
+                    .Where(s => EF.Functions.Like(s.DocumentoUuid, pattern) &&
+                                (s.SeccionNombre != null || s.Accion != null))
+                    .OrderByDescending(s => s.ConectadoEn)
+                    .Take(50) // traer más para poder filtrar el ruido de React
+                    .ToListAsync();
+
+                // Filtrar sesiones de menos de 30 segundos (ruido de React unmount/remount)
+                // Mantener las sesiones activas (sin DesconectadoEn) siempre
+                sesiones = sesiones
+                    .Where(s => !s.DesconectadoEn.HasValue ||
+                                (s.DesconectadoEn.Value - s.ConectadoEn).TotalSeconds >= 5)
+                    .Take(15)
+                    .ToList();
+
+                var metaSecciones = await _db.DocDocumentosSeccionesMetadata
+                    .AsNoTracking()
+                    .Where(m => m.DocumentoUuid == instanceUuid)
+                    .OrderByDescending(m => m.ActualizadoEn)
+                    .Take(15)
+                    .ToListAsync();
+
+                var activitiesList = new List<CollaborationActivityItem>();
+
+                foreach (var s in sesiones)
+                {
+                    // Ignorar eventos técnicos sin sección/acción útil.
+                    if (string.IsNullOrWhiteSpace(s.SeccionNombre) && string.IsNullOrWhiteSpace(s.Accion))
+                    {
+                        continue;
+                    }
+
+                    string sectionName;
+                    string action;
+
+                    if (!string.IsNullOrWhiteSpace(s.SeccionNombre))
+                    {
+                        sectionName = s.SeccionNombre.Replace("_", " ");
+                        action = string.IsNullOrWhiteSpace(s.Accion) ? "ha entrado a redactar" : s.Accion;
+                    }
+                    else
+                    {
+                        // Fallback para registros antiguos (retrocompatibilidad)
+                        var parts = s.DocumentoUuid.Split('_');
+                        sectionName = parts.Length > 1 ? parts[1].Replace("_", " ") : "General";
+                        var durMin = s.DesconectadoEn.HasValue
+                            ? (int)(s.DesconectadoEn.Value - s.ConectadoEn).TotalMinutes
+                            : -1;
+
+                        action = parts.Length > 1
+                            ? "ha entrado a redactar"
+                            : (durMin >= 0
+                                ? $"editó 'General' durante {durMin} min"
+                                : "está editando 'General'");
+                    }
+
+                    activitiesList.Add(new CollaborationActivityItem
+                    {
+                        UserName = string.IsNullOrWhiteSpace(s.NombreUsuario) ? "Usuario" : s.NombreUsuario,
+                        Action = action,
+                        SectionName = sectionName,
+                        Timestamp = s.ConectadoEn
+                    });
+                }
+
+                foreach (var sec in metaSecciones)
+                {
+                    activitiesList.Add(new CollaborationActivityItem
+                    {
+                        UserName = sec.UltimoNombreUsuario ?? "Sistema",
+                        Action = $"marcó sección como {sec.Estado}",
+                        SectionName = sec.SeccionNombre,
+                        Timestamp = sec.ActualizadoEn
+                    });
+                }
+
+                var orderedActivities = activitiesList
+                    .OrderByDescending(a => a.Timestamp)
+                    .Take(20)
+                    .Select(a => new {
+                        userName = a.UserName,
+                        action = a.Action,
+                        sectionName = a.SectionName,
+                        timestamp = a.Timestamp
+                    })
+                    .ToList();
+
+                return Ok(new { 
+                    comments = comments, 
+                    statuses = statusesDict,
+                    activities = orderedActivities
+                });
+            }
+            catch (System.Exception ex)
+            {
+                // Loguear el error para que sea visible en la consola del backend
+                System.Console.WriteLine($"[DOSIER ERROR] Error en GetPulse para {instanceUuid}: {ex.Message}");
+                return StatusCode(500, new { message = "Error interno al cargar el pulso de colaboración", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Publica un comentario en el hilo de colaboración / retroalimentación de un documento o grupo.
+        /// </summary>
+        [HttpPost("comments")]
+        public async Task<IActionResult> PostComment([FromBody] CreateCommentRequest request)
+        {
+            if (string.IsNullOrEmpty(request.DocumentoUuid) || string.IsNullOrEmpty(request.Contenido))
+                return BadRequest(new { message = "Faltan campos obligatorios." });
+
+            try
+            {
+                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
+                if (!isAdmin)
+                {
+                    var username = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value?.Trim();
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        var user = await _db.Users.FirstOrDefaultAsync(u => u.IdSigafi.Trim() == username);
+                        if (user != null)
+                        {
+                            var group = await _db.DocGruposInvestigacion
+                                .Include(g => g.IdCoordinadorNavigation)
+                                .FirstOrDefaultAsync(g => g.Uuid == request.DocumentoUuid);
+                            if (group != null)
+                            {
+                                var isGroupMember = (group.IdCoordinador == user.IdUsuario) ||
+                                                    (group.IdCoordinadorNavigation != null && group.IdCoordinadorNavigation.IdSigafi.Trim() == username) ||
+                                                    await _db.DocGruposMiembros.AnyAsync(m => m.IdGrupo == group.IdGrupo && m.IdUsuario == user.IdUsuario && (m.Activo != false || m.Activo == null));
+                                if (!isGroupMember)
+                                {
+                                    return StatusCode(403, new { message = "No tienes permisos para enviar retroalimentación a este grupo de investigación." });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
+                var userName = User.FindFirst("nombre")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Usuario";
+
+                var comment = new DocCollaborationComment
+                {
+                    DocumentoUuid = request.DocumentoUuid,
+                    UsuarioUuid = userUuid,
+                    NombreUsuario = userName,
+                    Contenido = request.Contenido,
+                    IdPadre = request.IdPadre,
+                    CreadoEn = System.DateTime.UtcNow
+                };
+
+                _db.DocCollaborationComments.Add(comment);
+                await _db.SaveChangesAsync();
+
+                // Retransmitir en tiempo real a todos los clientes del Hub de colaboración en el grupo correspondiente (normalizando el UUID a minúsculas)
+                await _hubContext.Clients.Group(request.DocumentoUuid.ToLower().Trim()).SendAsync("NewCommentReceived", new
+                {
+                    idComentario = comment.IdComentario,
+                    usuarioUuid = comment.UsuarioUuid,
+                    nombreUsuario = comment.NombreUsuario,
+                    contenido = comment.Contenido,
+                    idPadre = comment.IdPadre,
+                    creadoEn = comment.CreadoEn
+                });
+
+                return Ok(comment);
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"[DOSIER ERROR] Fallo al publicar comentario: {ex.Message}");
+                return StatusCode(500, new { message = "Error interno al publicar comentario", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el contenido de un comentario (Edición).
+        /// </summary>
+        [HttpPut("comments/{id}")]
+        public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Contenido))
+                return BadRequest(new { message = "El contenido no puede estar vacío." });
+
+            try
+            {
+                var comment = await _db.DocCollaborationComments.FindAsync(id);
+                if (comment == null)
+                    return NotFound(new { message = "Comentario no encontrado." });
+
+                var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
+                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
+
+                if (comment.UsuarioUuid != userUuid && !isAdmin)
+                {
+                    return StatusCode(403, new { message = "No tienes permisos para editar este comentario." });
+                }
+
+                comment.Contenido = request.Contenido;
+                await _db.SaveChangesAsync();
+
+                // Notificar en tiempo real
+                await _hubContext.Clients.Group(comment.DocumentoUuid.ToLower().Trim()).SendAsync("CommentUpdated", new
+                {
+                    idComentario = comment.IdComentario,
+                    documentoUuid = comment.DocumentoUuid,
+                    contenido = comment.Contenido
+                });
+
+                return Ok(comment);
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"[DOSIER ERROR] Fallo al actualizar comentario: {ex.Message}");
+                return StatusCode(500, new { message = "Error interno al editar el comentario", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Elimina un comentario y sus respuestas (Eliminación).
+        /// </summary>
+        [HttpDelete("comments/{id}")]
+        public async Task<IActionResult> DeleteComment(int id)
+        {
+            try
+            {
+                var comment = await _db.DocCollaborationComments.FindAsync(id);
+                if (comment == null)
+                    return NotFound(new { message = "Comentario no encontrado." });
+
+                var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
+                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
+
+                if (comment.UsuarioUuid != userUuid && !isAdmin)
+                {
+                    return StatusCode(403, new { message = "No tienes permisos para eliminar este comentario." });
+                }
+
+                // Obtener e hijos si existen y borrarlos en cascada
+                var children = await _db.DocCollaborationComments.Where(c => c.IdPadre == id).ToListAsync();
+                _db.DocCollaborationComments.RemoveRange(children);
+                _db.DocCollaborationComments.Remove(comment);
+                await _db.SaveChangesAsync();
+
+                // Notificar en tiempo real
+                await _hubContext.Clients.Group(comment.DocumentoUuid.ToLower().Trim()).SendAsync("CommentDeleted", new
+                {
+                    idComentario = comment.IdComentario,
+                    documentoUuid = comment.DocumentoUuid
+                });
+
+                return Ok(new { message = "Comentario eliminado correctamente." });
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"[DOSIER ERROR] Fallo al eliminar comentario: {ex.Message}");
+                return StatusCode(500, new { message = "Error interno al eliminar el comentario", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Elimina una imagen de cowork_images.
+        /// </summary>
+        [HttpDelete("delete-image")]
+        public async Task<IActionResult> DeleteImage([FromQuery] string url)
+        {
+            if (string.IsNullOrEmpty(url))
+                return BadRequest(new { message = "No se proporcionó la URL de la imagen." });
+
+            try
+            {
+                // Extraer la ruta relativa de la URL
+                // Ejemplo de URL: /api/storage/cowork_images/639198926921636825_image.png
+                var prefix = "/api/storage/";
+                var idx = url.IndexOf(prefix);
+                if (idx == -1)
+                {
+                    return BadRequest(new { message = "URL de imagen no válida." });
+                }
+
+                var relativePath = url.Substring(idx + prefix.Length);
+
+                // Evitar path traversal por seguridad
+                if (relativePath.Contains("..") || relativePath.StartsWith("/") || relativePath.StartsWith("\\"))
+                {
+                    return BadRequest(new { message = "Ruta de archivo no permitida." });
+                }
+
+                // Asegurar que esté dentro de cowork_images
+                if (!relativePath.StartsWith("cowork_images/"))
+                {
+                    return BadRequest(new { message = "Solo se permite eliminar imágenes de colaboración." });
+                }
+
+                await _storageService.DeleteFileAsync(relativePath);
+                return Ok(new { message = "Imagen eliminada correctamente." });
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"[DOSIER ERROR] Fallo al eliminar imagen de colaboración: {ex.Message}");
+                return StatusCode(500, new { message = "Error interno al eliminar la imagen", detail = ex.Message });
+            }
+        }
+    }
+
+    public class UpdateCommentRequest
+    {
+        public string Contenido { get; set; } = null!;
+    }
+
+    public class CreateCommentRequest
+    {
+        public string DocumentoUuid { get; set; } = null!;
+        public string Contenido { get; set; } = null!;
+        public int? IdPadre { get; set; }
+    }
+
+    public class CollaborationActivityItem
+    {
+        public string UserName { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public string SectionName { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+}

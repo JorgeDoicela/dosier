@@ -1,0 +1,862 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Dosier.Application.Common.Documents;
+using Dosier.Domain.Common.Documents;
+using System.Text.Json;
+using Dosier.Infrastructure.Common.Storage;
+using dosier_infrastructure.data.models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Dosier.Infrastructure.Common.Documents
+{
+    public class DocumentInstanceService : IDocumentInstanceService
+    {
+        private readonly DosierContext _context;
+        private readonly IFileStorageService _storageService;
+        private readonly IServiceProvider _serviceProvider;
+
+        public DocumentInstanceService(DosierContext context, IFileStorageService storageService, IServiceProvider serviceProvider)
+        {
+            _context = context;
+            _storageService = storageService;
+            _serviceProvider = serviceProvider;
+        }
+
+        public async Task<DocumentInstance> CreateAsync(string templateCode, string entityUuid, string createdBy, string? title = null, string entityType = "Proyecto", CancellationToken ct = default)
+        {
+            var template = await _context.DocumentTemplates
+                .FirstOrDefaultAsync(t => t.Code == templateCode && t.IsActive, ct);
+
+            if (template == null)
+            {
+                var seed = DocumentTemplateRegistry.GetByCode(templateCode);
+                if (seed != null)
+                {
+                    _context.DocumentTemplates.Add(seed);
+                    await _context.SaveChangesAsync(ct);
+                    template = seed;
+                }
+                else
+                {
+                    throw new KeyNotFoundException($"La plantilla '{templateCode}' no existe o no está activa.");
+                }
+            }
+
+            string? blocksJson = null;
+            if (!string.IsNullOrEmpty(template.HtmlContent))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(template.HtmlContent, @"<!-- DOSIER_SECTIONS_JSON: (.*?) -->");
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    try
+                    {
+                        var base64 = match.Groups[1].Value;
+                        var bytes = System.Convert.FromBase64String(base64);
+                        blocksJson = System.Text.Encoding.UTF8.GetString(bytes);
+                    }
+                    catch { }
+                }
+            }
+
+            var instance = DocumentInstance.Create(
+                templateCode, 
+                template.Version, 
+                entityUuid, 
+                createdBy, 
+                title, 
+                entityType, 
+                templateConfigSnapshotJson: blocksJson);
+            
+            _context.DocumentInstances.Add(instance);
+            await _context.SaveChangesAsync(ct);
+            
+            return instance;
+        }
+
+        public async Task<DocumentInstance?> GetByUuidAsync(string uuid, CancellationToken ct = default)
+        {
+            var instance = await ResolveEditableInstanceAsync(uuid, ct);
+
+            if (instance != null)
+                await SyncFromProjectAsync(instance, ct);
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Resuelve la instancia editable (Draft o Review) para un UUID dado.
+        /// El UUID puede ser el de la instancia directamente, o el del proyecto (entityUuid).
+        /// Prioridad: Draft > Review > Signed (fallback). Si solo existe Signed, crea un Draft nuevo.
+        /// </summary>
+        private async Task<DocumentInstance?> ResolveEditableInstanceAsync(string uuid, CancellationToken ct)
+        {
+            // 1. Buscar por UUID exacto de instancia
+            var instance = await _context.DocumentInstances
+                .FirstOrDefaultAsync(i => i.Uuid == uuid, ct);
+
+            // 2. Si se encontró por UUID pero está sellada, intentar redirigir a su Draft más reciente
+            if (instance != null && IsImmutable(instance))
+            {
+                var draft = await FindLatestEditableAsync(instance.EntityUuid, instance.TemplateCode, ct);
+                if (draft != null)
+                    instance = draft;
+                // Si no hay Draft disponible, se retorna la sellada (el caller decide cómo manejarlo)
+            }
+
+            // 3. Fallback: el UUID puede corresponder al EntityUuid del proyecto
+            if (instance == null)
+            {
+                instance = await FindLatestEditableAsync(uuid, "PROTOCOLO_INVESTIGACION", ct)
+                        ?? await _context.DocumentInstances
+                               .Where(i => i.EntityUuid == uuid && i.TemplateCode == "PROTOCOLO_INVESTIGACION")
+                               .OrderByDescending(i => i.CreatedAt)
+                               .FirstOrDefaultAsync(ct);
+            }
+
+            // 4. Auto-creación resiliente: si el proyecto existe pero no tiene instancia, crearla en caliente
+            if (instance == null)
+            {
+                var projectExists = await _context.DocProyectos.AnyAsync(p => p.Uuid == uuid, ct);
+                if (projectExists)
+                    instance = await CreateAsync("PROTOCOLO_INVESTIGACION", uuid, "sistema", "Protocolo Oficial", "Proyecto", ct);
+            }
+
+            return instance;
+        }
+
+        /// <summary>Devuelve true si el documento está en un estado que impide modificaciones de contenido.</summary>
+        private static bool IsImmutable(DocumentInstance instance) =>
+            instance.State == DocumentState.Signed || instance.State == DocumentState.Archived;
+
+        /// <summary>Busca la instancia más reciente en estado editable (Draft o Review) para un EntityUuid y TemplateCode.</summary>
+        private async Task<DocumentInstance?> FindLatestEditableAsync(string entityUuid, string templateCode, CancellationToken ct) =>
+            await _context.DocumentInstances
+                .Where(i => i.EntityUuid == entityUuid
+                         && i.TemplateCode == templateCode
+                         && (i.State == DocumentState.Draft || i.State == DocumentState.Review))
+                .OrderByDescending(i => i.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+
+
+        public async Task<IEnumerable<DocumentInstance>> GetByEntityAsync(string entityUuid, CancellationToken ct = default)
+        {
+            // 1. Documentos directamente vinculados al proyecto
+            var directDocs = await _context.DocumentInstances
+                .Where(i => i.EntityUuid == entityUuid)
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync(ct);
+
+            foreach (var doc in directDocs)
+            {
+                await ValidateStorageIntegrityAsync(doc, ct);
+            }
+
+            return directDocs;
+        }
+
+        public async Task<IEnumerable<DocumentInstance>> GetAllAsync(int limit = 20, CancellationToken ct = default)
+        {
+            return await _context.DocumentInstances
+                .OrderByDescending(i => i.CreatedAt)
+                .Take(limit)
+                .ToListAsync(ct);
+        }
+
+        public async Task<DocumentInstance> FinalizeAsync(string uuid, byte[] pdfContent, string fileName, string hash, string traceabilityCode, CancellationToken ct = default)
+        {
+            var instance = await _context.DocumentInstances
+                .FirstOrDefaultAsync(i => i.Uuid == uuid, ct);
+
+            if (instance == null)
+                throw new KeyNotFoundException($"La instancia '{uuid}' no existe.");
+
+            // 1. Guardar el archivo físico usando el servicio de almacenamiento
+            var relativePath = await _storageService.SaveFileAsync(fileName, pdfContent);
+
+            // 2. Finalizar la instancia en la base de datos
+            instance.Finalize(relativePath, hash, traceabilityCode);
+            
+            await _context.SaveChangesAsync(ct);
+            return instance;
+        }
+
+        private long GetFileSize(string? relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return 0;
+            try
+            {
+                var config = _serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                var basePath = config["Storage:BasePath"] ?? Path.Combine(AppContext.BaseDirectory, "dosier_data");
+                var fullPath = Path.Combine(basePath, relativePath);
+                if (System.IO.File.Exists(fullPath))
+                {
+                    return new System.IO.FileInfo(fullPath).Length;
+                }
+            }
+            catch {}
+            return 0;
+        }
+
+        private string FormatFileSize(long bytes)
+        {
+            if (bytes <= 0) return "0 Bytes";
+            string[] suffixes = { "Bytes", "KB", "MB", "GB" };
+            int counter = 0;
+            decimal number = bytes;
+            while (Math.Round(number / 1024) >= 1)
+            {
+                number /= 1024;
+                counter++;
+            }
+            return $"{number:n1} {suffixes[counter]}";
+        }
+
+        public async Task<IEnumerable<object>> GetObsoleteDocumentDiagnosisAsync(CancellationToken ct = default)
+        {
+            int retentionDays = 1825; // 5 años por defecto (CACES)
+            var configParam = await _context.DocConfigsGenerales
+                .FirstOrDefaultAsync(c => c.Clave == "DocumentMaintenance.RetentionDays", ct);
+
+            if (configParam != null && int.TryParse(configParam.Valor, out var dbDays))
+            {
+                retentionDays = dbDays;
+            }
+            var retentionLimitDate = DateTime.UtcNow.AddDays(-retentionDays);
+
+            var signedInstances = await _context.DocumentInstances
+                .Where(i => i.State == DocumentState.Signed || i.State == DocumentState.Archived)
+                .ToListAsync(ct);
+
+            var projectUuids = signedInstances.Select(i => i.EntityUuid).Distinct().ToList();
+            var projects = await _context.DocProyectos
+                .Where(p => projectUuids.Contains(p.Uuid))
+                .Select(p => new { p.Uuid, p.Titulo })
+                .ToDictionaryAsync(p => p.Uuid, p => p.Titulo, ct);
+
+            var diagnosis = new List<object>();
+
+            var grouped = signedInstances
+                .GroupBy(i => new { i.EntityUuid, i.TemplateCode })
+                .Where(g => g.Count() > 1);
+
+            foreach (var group in grouped)
+            {
+                var sorted = group.OrderByDescending(i => i.UpdatedAt).ToList();
+                // El primero (índice 0) es la versión oficial activa.
+                // El segundo (índice 1) es el respaldo caliente (política de retención).
+                // Las versiones obsoletas candidatas a purga masiva son del índice 2 en adelante.
+                // Para el listado de diagnóstico, mostramos todas las que no son la oficial activa (índice 1 en adelante)
+                // e indicamos si son candidatas de seguridad o respaldo.
+                var obsolete = sorted.Skip(1);
+
+                foreach (var inst in obsolete)
+                {
+                    bool isPurged = inst.IsFilePurged;
+                    long size = isPurged ? 0 : GetFileSize(inst.FinalPdfPath);
+                    string projectTitle = projects.TryGetValue(inst.EntityUuid, out var title) ? title : "Proyecto Desconocido";
+
+                    // Determinar si es la versión de respaldo caliente (v1 anterior)
+                    var isBackupVersion = sorted.Count > 1 && sorted[1].Uuid == inst.Uuid;
+
+                    // Determinar si está protegido por la política de retención del CACES (fecha reciente dentro de los 5 años)
+                    bool isProtectedByRetention = inst.CreatedAt >= retentionLimitDate;
+
+                    diagnosis.Add(new
+                    {
+                        uuid = inst.Uuid,
+                        projectUuid = inst.EntityUuid,
+                        projectTitle = projectTitle,
+                        documentTitle = inst.Title ?? $"Documento {inst.TemplateCode}",
+                        templateCode = inst.TemplateCode,
+                        version = inst.TemplateVersion,
+                        createdBy = inst.CreatedBy,
+                        createdAt = inst.CreatedAt,
+                        updatedAt = inst.UpdatedAt,
+                        finalPdfPath = isPurged 
+                            ? $"[PURGED] Purgado por {inst.PurgedBy} el {inst.PurgedAt:dd/MM/yyyy HH:mm:ss} (UTC)"
+                            : inst.FinalPdfPath,
+                        fileHash = inst.FileHash,
+                        isFilePurged = isPurged,
+                        fileSizeBytes = size,
+                        fileSizeFormatted = isPurged ? "Liberado" : FormatFileSize(size),
+                        traceabilityCode = inst.TraceabilityCode,
+                        isBackupVersion = isBackupVersion, // Bandera para la UI
+                        isProtectedByRetention = isProtectedByRetention // Indica si no califica para purga automática
+                    });
+                }
+            }
+
+            return diagnosis;
+        }
+
+        public async Task<bool> PurgeObsoleteFileByUuidAsync(string uuid, string purgedBy, CancellationToken ct = default)
+        {
+            var inst = await _context.DocumentInstances.FirstOrDefaultAsync(i => i.Uuid == uuid, ct);
+            if (inst == null) return false;
+
+            if (inst.State != DocumentState.Signed && inst.State != DocumentState.Archived)
+            {
+                throw new InvalidOperationException("Solo se pueden purgar archivos de instancias firmadas o archivadas.");
+            }
+
+            if (inst.IsFilePurged)
+            {
+                return true;
+            }
+
+            var siblings = await _context.DocumentInstances
+                .Where(i => i.EntityUuid == inst.EntityUuid && i.TemplateCode == inst.TemplateCode)
+                .ToListAsync(ct);
+
+            var newest = siblings.OrderByDescending(i => i.UpdatedAt).First();
+            if (newest.Uuid == inst.Uuid)
+            {
+                throw new InvalidOperationException("No se puede purgar la versión firmada oficial más reciente de un proyecto activo.");
+            }
+
+            // Eliminar físicamente el archivo del disco primero
+            if (!string.IsNullOrEmpty(inst.FinalPdfPath))
+            {
+                try
+                {
+                    await _storageService.DeleteFileAsync(inst.FinalPdfPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Garbage Collector] Advertencia al eliminar archivo físico: {ex.Message}");
+                }
+            }
+
+            // Cambiar de forma estructurada el estado en base de datos
+            inst.PurgeFile(purgedBy);
+            await _context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<int> PurgeAllObsoleteDocumentFilesAsync(string purgedBy, CancellationToken ct = default)
+        {
+            int retentionDays = 1825; // 5 años por defecto (CACES)
+            var configParam = await _context.DocConfigsGenerales
+                .FirstOrDefaultAsync(c => c.Clave == "DocumentMaintenance.RetentionDays", ct);
+
+            if (configParam != null && int.TryParse(configParam.Valor, out var dbDays))
+            {
+                retentionDays = dbDays;
+            }
+            var retentionLimitDate = DateTime.UtcNow.AddDays(-retentionDays);
+
+            // Filtrar directamente desde la base de datos solo aquellas instancias obsoletas creadas antes de la fecha límite de retención
+            var signedInstances = await _context.DocumentInstances
+                .Where(i => (i.State == DocumentState.Signed || i.State == DocumentState.Archived) && i.FinalPdfPath != null && !i.IsFilePurged && i.CreatedAt < retentionLimitDate)
+                .ToListAsync(ct);
+
+            var grouped = signedInstances
+                .GroupBy(i => new { i.EntityUuid, i.TemplateCode })
+                .Where(g => g.Count() > 2); // Exige más de 2 versiones para purgar masivamente (política N-1)
+
+            int purgedCount = 0;
+
+            foreach (var group in grouped)
+            {
+                var sorted = group.OrderByDescending(i => i.UpdatedAt).ToList();
+                // Saltamos 2 versiones: la activa oficial (índice 0) y el respaldo caliente (índice 1).
+                var obsoleteInstances = sorted.Skip(2);
+
+                foreach (var inst in obsoleteInstances)
+                {
+                    if (!string.IsNullOrEmpty(inst.FinalPdfPath) && !inst.IsFilePurged)
+                    {
+                        try
+                        {
+                            await _storageService.DeleteFileAsync(inst.FinalPdfPath);
+                            inst.PurgeFile(purgedBy);
+                            purgedCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[Garbage Collector] Error al purgar archivo {inst.FinalPdfPath}: {ex.Message}");
+                        }
+                    }
+                }
+            }
+
+            if (purgedCount > 0)
+            {
+                await _context.SaveChangesAsync(ct);
+            }
+
+            return purgedCount;
+        }
+
+        private static readonly HashSet<string> VolatileFields = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // PROTOCOLO_INVESTIGACION
+            "Antecedentes", "DescripcionProyecto", "Justificacion", "ObjetivoGeneral", "ObjetivosEspecificos", 
+            "MarcoTeorico", "Metodologia", "Evaluacion", "Bibliografia", "Investigadores", 
+            "RecursosDisponibles", "RecursosNecesarios", "Cronograma", "ProductosEsperados",
+            // INFORME_AVANCE
+            "HitosCompletados", "Evidencias", "PresupuestoEjecutado", "ConclusionesParciales", 
+            "ActividadesEjecutadas", "ActividadesNoPrevistas", "Obstaculos", "DescripcionFaseActual", 
+            "EstadoEjecucion", "ObservacionesDirector", "ObservacionesCoordinador",
+            // INFORME_FINAL_INVESTIGACION
+            "ResumenEjecutivo", "CumplimientoObjetivos", "ResultadosDiscusion", "ImpactoInnovacion", "ConclusionesRecomendaciones", "BibliografiaFinal",
+            "resumen_ejecutivo", "cumplimiento_objetivos", "resultados_discusion", "impacto_innovacion", "conclusiones_recomendaciones", "bibliografia_final",
+            "Indice", "Resumen", "Introduccion", "Objetivos", "Fundamentos", "Metodos", "Resultados", "Productos", "Impactos", "Transferencia", "InformeFinanciero", "Conclusiones", "Recomendaciones", "Bibliografia", "Anexos",
+            "indice", "resumen", "introduccion", "objetivos", "fundamentos", "metodos", "resultados", "productos", "impactos", "transferencia", "informe_financiero", "conclusiones", "recomendaciones", "bibliografia", "anexos",
+            "resultados", "discusion", "impacto_final", "transferencia_conocimiento"
+        };
+
+        private static bool IsHtmlEmpty(string? html)
+        {
+            if (string.IsNullOrWhiteSpace(html)) return true;
+            
+            // Eliminar etiquetas HTML vacías y sus variantes comunes
+            string normalized = html.Replace("<p></p>", "")
+                                    .Replace("<p> </p>", "")
+                                    .Replace("<p>&nbsp;</p>", "")
+                                    .Replace("<br>", "")
+                                    .Replace("<br/>", "")
+                                    .Replace("<br />", "")
+                                    .Trim();
+            
+            return string.IsNullOrEmpty(normalized);
+        }
+
+        public async Task<DocumentInstance> UpdateMetadataAsync(string uuid, string metadataJson, CancellationToken ct = default)
+        {
+            Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] Iniciando para Uuid: {uuid}");
+
+            // Sanitizar entrada para corregir valores corruptos "[object Object]"
+            metadataJson = SanitizeObjectObjectValues(metadataJson);
+
+            // Resolver instancia editable (Draft/Review), con auto-creación si aplica
+            var instance = await ResolveEditableInstanceAsync(uuid, ct);
+
+            if (instance == null)
+            {
+                Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] ERROR: No se encontró instancia ni proyecto para '{uuid}'.");
+                throw new KeyNotFoundException($"La instancia o proyecto '{uuid}' no existe.");
+            }
+
+            // Si la instancia resuelta sigue siendo inmutable (solo-Signed sin Draft disponible),
+            // crear un nuevo Draft que herede el snapshot actual.
+            if (IsImmutable(instance))
+            {
+                Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] Instancia sellada. Creando nuevo Draft para '{instance.EntityUuid}'.");
+                instance = DocumentInstance.Create(
+                    instance.TemplateCode, instance.TemplateVersion,
+                    instance.EntityUuid, "sistema",
+                    instance.Title, instance.EntityType,
+                    instance.DataSnapshotJson,
+                    instance.TemplateConfigSnapshotJson);
+                _context.DocumentInstances.Add(instance);
+                await _context.SaveChangesAsync(ct);
+                Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] Nuevo Draft creado: {instance.Uuid}");
+            }
+
+            // Si la instancia es antigua (legacy) y no tiene snapshot de plantilla,
+            // capturar y guardar en caliente el diseño de la plantilla activa actual.
+            if (string.IsNullOrEmpty(instance.TemplateConfigSnapshotJson))
+            {
+                var template = await _context.DocumentTemplates
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.Code == instance.TemplateCode && t.IsActive, ct);
+
+                if (template != null && !string.IsNullOrEmpty(template.HtmlContent))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(template.HtmlContent, @"<!-- DOSIER_SECTIONS_JSON: (.*?) -->");
+                    if (match.Success && match.Groups.Count > 1)
+                    {
+                        try
+                        {
+                            var base64 = match.Groups[1].Value;
+                            var bytes = System.Convert.FromBase64String(base64);
+                            instance.UpdateTemplateConfigSnapshot(System.Text.Encoding.UTF8.GetString(bytes));
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            // Fusionar metadatos con snapshot existente respetando campos volátiles
+            metadataJson = MergeWithExistingSnapshot(instance, metadataJson) ?? metadataJson;
+
+            instance.UpdateDataSnapshot(metadataJson);
+            await _context.SaveChangesAsync(ct);
+            Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] Guardado exitoso. Instancia: {instance.Uuid}, Tamaño: {metadataJson?.Length ?? 0} bytes");
+            return instance;
+        }
+
+        private string SanitizeObjectObjectValues(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return json;
+            return System.Text.RegularExpressions.Regex.Replace(
+                json,
+                @"\""([Ii]mpacto|[Ff]irmasResponsabilidad)\""\s*:\s*\""\[object Object\]\""",
+                "\"$1\":null",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        private string? MergeWithExistingSnapshot(DocumentInstance instance, string? incomingJson)
+        {
+            if (string.IsNullOrEmpty(instance.DataSnapshotJson))
+                return incomingJson;
+
+            try
+            {
+                Console.WriteLine($"[DOSIER] [MergeSnapshot] Fusionando {instance.DataSnapshotJson.Length} bytes existentes con {incomingJson?.Length ?? 0} bytes entrantes.");
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var cleanedExisting = Engine.HandlebarsTemplateEngine.CleanAndNormalizeJson(SanitizeObjectObjectValues(instance.DataSnapshotJson));
+                var existing = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(cleanedExisting, options);
+                var cleanedIncoming = !string.IsNullOrEmpty(incomingJson) ? Engine.HandlebarsTemplateEngine.CleanAndNormalizeJson(incomingJson) : incomingJson;
+                var incoming = !string.IsNullOrEmpty(cleanedIncoming)
+                    ? JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(cleanedIncoming, options)
+                    : null;
+
+                if (existing == null || incoming == null)
+                    return incomingJson;
+
+                var merged = new Dictionary<string, object>(existing.ToDictionary(k => k.Key, v => (object)v.Value));
+
+                foreach (var (key, incomingVal) in incoming)
+                {
+                    if (VolatileFields.Contains(key))
+                    {
+                        bool incomingEmpty = incomingVal.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+                            || (incomingVal.ValueKind == JsonValueKind.String && IsHtmlEmpty(incomingVal.GetString()))
+                            || (incomingVal.ValueKind == JsonValueKind.Array && incomingVal.GetArrayLength() == 0);
+
+                        if (incomingEmpty && existing.TryGetValue(key, out var existingVal))
+                        {
+                            bool existingEmpty = existingVal.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+                                || (existingVal.ValueKind == JsonValueKind.String && IsHtmlEmpty(existingVal.GetString()))
+                                || (existingVal.ValueKind == JsonValueKind.Array && existingVal.GetArrayLength() == 0);
+
+                            if (!existingEmpty)
+                            {
+                                Console.WriteLine($"[DOSIER] [MergeSnapshot] Preservando campo volátil '{key}' (entrante vacío, existente con valor).");
+                                continue;
+                            }
+                        }
+                    }
+                    merged[key] = incomingVal;
+                }
+
+                return JsonSerializer.Serialize(merged);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DOSIER] [MergeSnapshot] Error al fusionar snapshot: {ex.Message}. Usando JSON entrante sin fusionar.");
+                return incomingJson;
+            }
+        }
+
+        public async Task<DocumentInstance> ResolveAsync(string templateCode, string entityUuid, string createdBy, string? title = null, string entityType = "Proyecto", CancellationToken ct = default)
+        {
+            var existing = await _context.DocumentInstances
+                .FirstOrDefaultAsync(i => i.EntityUuid == entityUuid && i.TemplateCode == templateCode, ct);
+
+            if (existing != null)
+            {
+                await SyncFromProjectAsync(existing, ct);
+                await ValidateStorageIntegrityAsync(existing, ct);
+                return existing;
+            }
+
+            var created = await CreateAsync(templateCode, entityUuid, createdBy, title, entityType, ct);
+            await SyncFromProjectAsync(created, ct);
+            await ValidateStorageIntegrityAsync(created, ct);
+            return created;
+        }
+
+        private async Task ValidateStorageIntegrityAsync(DocumentInstance instance, CancellationToken ct)
+        {
+            // 0. Detectar contaminación cruzada: Si otra instancia de diferente plantilla para la misma entidad tiene exactamente la misma ruta de PDF
+            if (!string.IsNullOrWhiteSpace(instance.EntityUuid) && !string.IsNullOrWhiteSpace(instance.FinalPdfPath))
+            {
+                var contaminatedByOther = await _context.DocumentInstances
+                    .AnyAsync(other => other.EntityUuid == instance.EntityUuid
+                                    && other.TemplateCode != instance.TemplateCode
+                                    && other.FinalPdfPath == instance.FinalPdfPath, ct);
+
+                if (contaminatedByOther)
+                {
+                    Console.WriteLine($"[DOSIER Autosanación] Contaminación cruzada detectada en instancia '{instance.Uuid}' ({instance.TemplateCode}). Limpiando ruta compartida errónea '{instance.FinalPdfPath}'...");
+                    instance.SetFinalPdfPath(null);
+                    await _context.SaveChangesAsync(ct);
+
+                    // Si no tiene firmas propias en DocDocumentoFirmas, la limpieza termina aquí
+                    var tieneFirmasPropias = await _context.DocDocumentoFirmas
+                        .AnyAsync(f => f.DocumentoUuid == instance.Uuid && f.EsValida, ct);
+
+                    if (!tieneFirmasPropias)
+                    {
+                        return;
+                    }
+                }
+            }
+
+            bool isFileMissing = string.IsNullOrWhiteSpace(instance.FinalPdfPath) || !_storageService.FileExists(instance.FinalPdfPath);
+
+            if (isFileMissing)
+            {
+                var firmasDb = await _context.DocDocumentoFirmas
+                    .Where(f => (f.DocumentoUuid == instance.Uuid || (instance.TemplateCode == "PROTOCOLO_INVESTIGACION" && f.DocumentoUuid == instance.EntityUuid)) && f.EsValida)
+                    .OrderBy(f => f.FechaFirma)
+                    .ToListAsync(ct);
+
+                if (firmasDb.Any())
+                {
+                    Console.WriteLine($"[DOSIER Autosanación] Firmas activas detectadas para documento '{instance.Uuid}' ({instance.TemplateCode}). Regenerando PDF oficial...");
+                    try
+                    {
+                        var orchestrator = _serviceProvider.GetRequiredService<IDocumentDataOrchestrator>();
+                        var documentEngine = _serviceProvider.GetRequiredService<IDocumentEngine>();
+
+                        var docRequest = await orchestrator.PrepareRequestAsync(instance.Uuid, "sistema", forceDraftMode: false, ct: ct);
+                        var buildResult = await documentEngine.GenerateAsync(docRequest, ct);
+                        var currentBytes = buildResult.PdfBytes;
+
+                        var appUrlService = _serviceProvider.GetRequiredService<dosier_application.Common.IAppUrlService>();
+                        var stamper = _serviceProvider.GetRequiredService<dosier_infrastructure.Signatures.SignatureStamper>();
+
+                        foreach (var firma in firmasDb)
+                        {
+                            string nombreFirmante = firma.FirmanteId;
+                            string? cargo = firma.FirmanteRol;
+                            string? departamento = null;
+                            try
+                            {
+                                using var doc = JsonDocument.Parse(firma.FirmaMetadata ?? "{}");
+                                if (doc.RootElement.TryGetProperty("nombre", out var n)) nombreFirmante = n.GetString() ?? nombreFirmante;
+                                if (doc.RootElement.TryGetProperty("cargo", out var c)) cargo = c.GetString() ?? cargo;
+                                if (doc.RootElement.TryGetProperty("departamento", out var d)) departamento = d.GetString() ?? departamento;
+                            }
+                            catch { }
+
+                            var verificationUrl = appUrlService.BuildFrontendUrl($"/verificacion/{firma.FirmaCode}");
+                            currentBytes = stamper.StampSignatureBlock(
+                                pdfBytes: currentBytes,
+                                nombreFirmante: nombreFirmante,
+                                cedula: "",
+                                cargo: cargo,
+                                departamento: departamento,
+                                rolEnDocumento: firma.FirmanteRol,
+                                firmaCode: firma.FirmaCode ?? "",
+                                firmaImagenB64: null,
+                                verificationUrl: verificationUrl,
+                                firmadoEn: firma.FechaFirma
+                            );
+                        }
+
+                        var lastFirma = firmasDb.Last();
+                        var lastFirmaCode = lastFirma.FirmaCode ?? Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+                        var docHash = lastFirma.DocHash ?? "HASH-RESTORED";
+                        var fileName = $"{instance.Uuid}_{lastFirmaCode}.pdf";
+                        var newPath = await _storageService.SaveFileAsync(fileName, currentBytes, "firmas");
+
+                        instance.Finalize(newPath, docHash, lastFirmaCode);
+                        await _context.SaveChangesAsync(ct);
+                        Console.WriteLine($"[DOSIER Autosanación] PDF firmado autosanado y re-generado en: '{newPath}'");
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DOSIER Autosanación] Error al intentar autosanar el PDF firmado: {ex.Message}");
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(instance.FinalPdfPath))
+                {
+                    // Si no había firmas válidas y el archivo no existe, se limpia la ruta huérfana
+                    instance.SetFinalPdfPath(null);
+                    await _context.SaveChangesAsync(ct);
+                    Console.WriteLine($"[DOSIER Autosanación] Referencia huérfana de PDF saneada a NULL en BD.");
+                }
+            }
+        }
+
+        private async Task SyncFromProjectAsync(DocumentInstance instance, CancellationToken ct)
+        {
+            if (instance.TemplateCode == "PROTOCOLO_INVESTIGACION")
+            {
+                Console.WriteLine($"[DOSIER] [SyncFromProjectAsync] Iniciando sincronización relacional para instancia: {instance.Uuid}");
+                var project = await _context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == instance.EntityUuid, ct);
+                if (project != null)
+                {
+                    // La reapertura formal de documentos por corrección solo debe activarse si el proyecto está explícitamente devuelto/en corrección formal
+                    // Y no cuenta con firmas activas recién estampadas por el usuario.
+                    var stateLower = project.Estado?.ToLower().Trim() ?? "";
+                    var isExplicitCorrectionMode = stateLower.Contains("devuelt") || stateLower.Contains("correc") || stateLower.Contains("observac");
+
+                    if (isExplicitCorrectionMode && (instance.State == DocumentState.Signed || !string.IsNullOrEmpty(instance.FinalPdfPath)))
+                    {
+                        var hasActiveSignatures = await _context.DocDocumentoFirmas
+                            .AnyAsync(f => (f.DocumentoUuid == instance.Uuid || f.DocumentoUuid == instance.EntityUuid) && f.EsValida, ct);
+
+                        if (!hasActiveSignatures)
+                        {
+                            Console.WriteLine($"[DOSIER] Proyecto en estado de corrección ('{project.Estado}') sin firmas activas. Reabriendo instancia para edición viva.");
+                            instance.ReopenForRevision();
+                            await _context.SaveChangesAsync(ct);
+                        }
+                    }
+
+                    // Si el documento está en borrador/revisión, asegurar que tenga la última configuración de bloques de la plantilla activa
+                    if (instance.State == DocumentState.Draft || instance.State == DocumentState.Review)
+                    {
+                        var activeTemplate = await _context.DocumentTemplates
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(t => t.Code == instance.TemplateCode && t.IsActive, ct);
+
+                        if (activeTemplate != null && !string.IsNullOrEmpty(activeTemplate.HtmlContent))
+                        {
+                            var match = System.Text.RegularExpressions.Regex.Match(activeTemplate.HtmlContent, @"<!-- DOSIER_SECTIONS_JSON: (.*?) -->");
+                            if (match.Success && match.Groups.Count > 1)
+                            {
+                                try
+                                {
+                                    var base64 = match.Groups[1].Value;
+                                    var bytes = System.Convert.FromBase64String(base64);
+                                    var activeConfig = System.Text.Encoding.UTF8.GetString(bytes);
+                                    if (instance.TemplateConfigSnapshotJson != activeConfig)
+                                    {
+                                        instance.UpdateTemplateConfigSnapshot(activeConfig);
+                                        await _context.SaveChangesAsync(ct);
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        var orchestrator = _serviceProvider.GetRequiredService<Dosier.Application.Research.IProjectOrchestrator>();
+                        var projectDetail = await orchestrator.GetProjectDetailAsync(project.Uuid);
+                        if (projectDetail != null)
+                        {
+                            if (string.IsNullOrEmpty(instance.DataSnapshotJson))
+                            {
+                                var json = JsonSerializer.Serialize(projectDetail);
+                                Console.WriteLine($"[DOSIER] [SyncFromProjectAsync] Snapshot vacío. Reconstrucción exitosa. Longitud: {json.Length}");
+                                instance.UpdateDataSnapshot(json);
+                                project.MetadataCacesJson = json;
+                                await _context.SaveChangesAsync(ct);
+                            }
+                            else
+                            {
+                                // Si ya existe, fusionamos campos clave del proyecto relacional (Título, Grupo, Integrantes)
+                                // para evitar que datos viejos del editor de documentos sobrescriban los del Workspace.
+                                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                                var cleanedSnapshotJson = Engine.HandlebarsTemplateEngine.CleanAndNormalizeJson(instance.DataSnapshotJson);
+                                var snapshot = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(cleanedSnapshotJson, options);
+                                if (snapshot != null)
+                                {
+                                    var merged = new Dictionary<string, object>();
+                                    foreach (var kvp in snapshot)
+                                    {
+                                        merged[kvp.Key] = kvp.Value;
+                                    }
+
+                                    merged["Titulo"] = projectDetail.Titulo ?? "";
+                                    merged["GrupoInvestigacionTipo"] = projectDetail.TieneGrupoInvestigacion == true ? "SI" : "NO";
+                                    merged["GrupoInvestigacionNombre"] = projectDetail.GrupoInvestigacion ?? "";
+                                    merged["GrupoInvestigacionUuid"] = projectDetail.GrupoInvestigacionUuid ?? "";
+                                    merged["TieneGrupoInvestigacion"] = projectDetail.TieneGrupoInvestigacion ?? false;
+                                    merged["Investigadores"] = projectDetail.Investigadores ?? new List<Dosier.Application.Research.Dtos.InvestigadorDto>();
+
+                                    MergeField(merged, "Periodo", projectDetail.Periodo);
+                                    MergeField(merged, "FechaPresentacion", projectDetail.FechaPresentacion);
+                                    MergeField(merged, "FechaInicio", projectDetail.FechaInicio);
+                                    MergeField(merged, "FechaFin", projectDetail.FechaFin);
+                                    MergeField(merged, "FechaInicioEstimada", projectDetail.FechaInicioEstimada);
+                                    MergeField(merged, "FechaFinEstimada", projectDetail.FechaFinEstimada);
+                                    MergeField(merged, "LineaInvestigacion", projectDetail.LineaInvestigacion);
+                                    MergeField(merged, "Dominio", projectDetail.Dominio);
+                                    MergeField(merged, "Carrera", projectDetail.Carrera);
+                                    MergeField(merged, "IdCarrera", projectDetail.IdCarrera);
+                                    MergeField(merged, "IdConvocatoria", projectDetail.IdConvocatoria);
+                                    MergeField(merged, "IdObjetivoPnd", projectDetail.IdObjetivoPnd);
+                                    MergeField(merged, "Programa", projectDetail.Programa);
+                                    MergeField(merged, "DirectorProyecto", projectDetail.DirectorProyecto);
+                                    MergeField(merged, "TipoInvestigacion", projectDetail.TipoInvestigacion);
+                                    MergeField(merged, "CampoAmplio", projectDetail.CampoAmplio);
+                                    MergeField(merged, "CampoEspecifico", projectDetail.CampoEspecifico);
+                                    MergeField(merged, "CampoDetallado", projectDetail.CampoDetallado);
+                                    MergeField(merged, "SublineaInvestigacion", projectDetail.SublineaInvestigacion);
+                                    MergeField(merged, "TiempoEjecucion", projectDetail.TiempoEjecucion);
+
+                                    var json = JsonSerializer.Serialize(merged);
+                                    instance.UpdateDataSnapshot(json);
+                                    project.MetadataCacesJson = json;
+                                    await _context.SaveChangesAsync(ct);
+                                    Console.WriteLine($"[DOSIER] [SyncFromProjectAsync] Snapshot fusionado y sincronizado con éxito.");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DOSIER] [SyncFromProjectAsync] ERROR al sincronizar/fusionar con proyecto: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[DOSIER] [SyncFromProjectAsync] No se encontró el proyecto con EntityUuid: {instance.EntityUuid}");
+                }
+            }
+        }
+
+        private static void MergeField(Dictionary<string, object> target, string key, object? newValue)
+        {
+            if (newValue == null) return;
+            if (newValue is string str && string.IsNullOrWhiteSpace(str)) return;
+
+            var existingKey = target.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase)) ?? key;
+            target[existingKey] = newValue;
+        }
+
+        public async Task<DocumentInstance> UpgradeTemplateAsync(string uuid, CancellationToken ct = default)
+        {
+            var instance = await _context.DocumentInstances
+                .FirstOrDefaultAsync(i => i.Uuid == uuid, ct);
+
+            if (instance == null)
+                throw new KeyNotFoundException($"La instancia '{uuid}' no existe.");
+
+            if (instance.State == DocumentState.Signed || instance.State == DocumentState.Archived)
+                throw new InvalidOperationException("No se puede actualizar la plantilla de un documento firmado o archivado.");
+
+            var template = await _context.DocumentTemplates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Code == instance.TemplateCode && t.IsActive, ct);
+
+            if (template == null)
+                throw new KeyNotFoundException($"La plantilla activa '{instance.TemplateCode}' no existe.");
+
+            string? blocksJson = null;
+            if (!string.IsNullOrEmpty(template.HtmlContent))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(template.HtmlContent, @"<!-- DOSIER_SECTIONS_JSON: (.*?) -->");
+                if (match.Success && match.Groups.Count > 1)
+                {
+                    try
+                    {
+                        var base64 = match.Groups[1].Value;
+                        var bytes = System.Convert.FromBase64String(base64);
+                        blocksJson = System.Text.Encoding.UTF8.GetString(bytes);
+                    }
+                    catch { }
+                }
+            }
+
+            instance.UpgradeTemplate(blocksJson, template.Version);
+            await _context.SaveChangesAsync(ct);
+            return instance;
+        }
+    }
+}

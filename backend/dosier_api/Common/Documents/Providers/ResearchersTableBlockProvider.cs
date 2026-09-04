@@ -1,0 +1,53 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Threading;
+using dosier_infrastructure.data.models;
+
+namespace dosier_api.Controllers
+{
+    public class ResearchersTableBlockProvider : IDocumentBlockProvider
+    {
+        public string BlockType => "researchers_table";
+        public BlockBehavior Behavior => BlockBehavior.DataCapture;
+
+        public void PopulateSchema(
+            JsonElement block, 
+            Dictionary<string, object> schemaDict, 
+            List<string> listsList,
+            List<object> richTextFields,
+            ref int premiumFieldsCount,
+            string templateCode)
+        {
+            schemaDict["Investigadores"] = new object[] { };
+            if (!listsList.Contains("Investigadores")) listsList.Add("Investigadores");
+        }
+
+        public Task MapToUiSectionAsync(
+            JsonElement block, 
+            string title, 
+            List<UiSectionDto> sectionsList,
+            DosierContext dbContext,
+            string templateCode,
+            CancellationToken ct)
+        {
+            if (!sectionsList.Any(s => s.Id == "equipo"))
+            {
+                var configDict = new Dictionary<string, object>
+                {
+                    ["completionFields"] = new[] { "Investigadores" }
+                };
+
+                sectionsList.Add(new UiSectionDto {
+                    Id = "equipo",
+                    Label = "Equipo Humano",
+                    IconName = "Users",
+                    ComponentName = "TeamSection",
+                    Config = configDict
+                });
+            }
+            return Task.CompletedTask;
+        }
+    }
+}

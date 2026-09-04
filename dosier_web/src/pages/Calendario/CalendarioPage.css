@@ -1,0 +1,112 @@
+/*
+=================================================================================
+             DOSIER GLOBAL PLANNING & CALENDAR SYSTEM (VERCEL LOOK)
+=================================================================================
+Este archivo centraliza el layout base del módulo de calendario e integra las hojas
+de estilo modularizadas de cada vista y componente para evitar archivos extensos.
+=================================================================================
+*/
+
+@import "./components/CalendarioSidebar.css";
+@import "./components/CalendarView.css";
+@import "./components/KanbanView.css";
+@import "./components/InboxView.css";
+@import "./components/EventoDrawers.css";
+
+/* ─── Layout principal y estructura base ─────────────────────────── */
+.calendario-page-container {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    height: calc(100vh - 56px);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.calendario-main {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.03);
+    min-width: 0;
+}
+
+.calendario-loading-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--brand);
+    color: #ffffff;
+    text-align: center;
+    font-size: 11px;
+    padding: 4px 0;
+    z-index: 10;
+    animation: fadeIn 0.3s;
+    font-weight: 500;
+}
+
+.calendario-main.calendario-loading {
+    opacity: 0.75;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+/* Selector de Vista (Calendario / Kanban) */
+.calendario-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.view-selector-pill {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px;
+    border-radius: 8px;
+}
+
+.view-selector-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: var(--font-sans);
+}
+
+.view-selector-btn:hover {
+    color: var(--fg);
+    background: var(--surface-hover);
+}
+
+.view-selector-btn.active {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}

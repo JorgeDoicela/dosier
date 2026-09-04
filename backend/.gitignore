@@ -1,0 +1,84 @@
+# ====================================================================
+# Backend .NET C# / EF Core 9 - DOSIER
+# ====================================================================
+
+# Compilación y Binarios
+**/[Bb]in/
+**/[Oo]bj/
+**/[Aa]rms/
+**/[Aa]rm64/
+**/[Xx]64/
+**/[Xx]86/
+publish/
+**/publish/
+out/
+dosier_api/*.pdf
+
+# Resultados de Tests y Cobertura
+[Tt]est[Rr]esults/
+**/[Tt]est[Rr]esults/
+[Cc]overage/
+**/[Cc]overage/
+*.opencover.xml
+*.coverage
+*.coveragexml
+
+# Entornos y Archivos de Configuración con Secretos
+dosier_api/appsettings.json
+dosier_api/appsettings.*.json
+!dosier_api/appsettings.template.json
+!dosier_api/appsettings.*.template.json
+!dosier_api/appsettings.Example.json
+!dosier_api/appsettings.*.Example.json
+
+# Certificados Digitales y Claves Criptográficas (Firmas Electrónicas)
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+
+# Uploads y Archivos Generados Dinámicamente (PDFs, Firmas)
+dosier_api/uploads/**
+!dosier_api/uploads/
+!dosier_api/uploads/**/
+!dosier_api/uploads/**/.gitkeep
+
+# Backups Locales y Dumps
+dosier_api/backups/**
+!dosier_api/backups/
+!dosier_api/backups/**/
+!dosier_api/backups/**/.gitkeep
+*.dump
+*.sql.bak
+*.bak
+
+# Logs
+*.log
+logs/
+**/logs/
+dosier_api/logs/
+
+# Editores e IDEs (Visual Studio, Rider, VS Code)
+.vs/
+**/.vs/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+**/.idea/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.vsconfig
+_ReSharper*/
+*.DotSettings.user
+
+# Sistema Operativo y Temporales
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp

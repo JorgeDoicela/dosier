@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="dosier_api/dosier_api.csproj" />
+  <Project Path="dosier_application/dosier_application.csproj" />
+  <Project Path="dosier_domain/dosier_domain.csproj" />
+  <Project Path="dosier_infrastructure/dosier_infrastructure.csproj" />
+  <Project Path="dosier_tests/dosier_tests.csproj" />
+</Solution>
