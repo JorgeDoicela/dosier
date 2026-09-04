@@ -343,13 +343,13 @@ const ResearchProjectsPage = () => {
     return (
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-10">
             <PageHeader
-                kicker="Revisión Institucional de Proyectos"
+                kicker="Revisión Institucional de Expedientes"
                 icon={ClipboardList}
-                title="Supervisión de Investigaciones"
+                title="Supervisión de Documentación y Portafolios"
                 description={
                     <span className="flex flex-col md:flex-row md:items-center gap-x-2 gap-y-1">
                         <span>
-                            Administre y califique los proyectos de investigación registrados en el sistema, supervise su presupuesto y valide su avance.
+                            Administre y califique los proyectos y portafolios documentales registrados en el sistema, supervise su presupuesto y valide su avance.
                         </span>
                         {refreshing && (
                             <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse shrink-0">
@@ -437,7 +437,7 @@ const ResearchProjectsPage = () => {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-0.5">Línea de Investigación</label>
+                            <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-0.5">Línea / Área Temática</label>
                             <select
                                 value={filterLinea}
                                 onChange={e => setFilterLinea(e.target.value)}
@@ -598,7 +598,7 @@ const ResearchProjectsPage = () => {
                                     <div className="flex items-center justify-between py-1.5 px-3 bg-surface/50 rounded-lg border border-border-thin text-[11px] text-text-dim">
                                         <span className="flex items-center gap-1 font-medium">
                                             <span className="font-semibold text-text-main font-mono">{p.total_investigadores}</span>
-                                            <span className="text-[10px]">invest.</span>
+                                            <span className="text-[10px]">autores</span>
                                         </span>
                                         <span className="text-border-thin">·</span>
                                         <span className="flex items-center gap-1 font-medium">

@@ -106,8 +106,8 @@ const AuditPage: React.FC = () => {
                                 <option value="">Todos los Módulos</option>
                                 <option value="SEGURIDAD">Seguridad</option>
                                 <option value="USUARIOS">Usuarios</option>
-                                <option value="PROYECTOS">Proyectos</option>
-                                <option value="INVESTIGACION">Grupos de Investigación</option>
+                                <option value="PROYECTOS">Proyectos y Documentos</option>
+                                <option value="INVESTIGACION">Comités y Grupos Documentales</option>
                                 <option value="CONVOCATORIAS">Convocatorias</option>
                             </select>
                         </div>

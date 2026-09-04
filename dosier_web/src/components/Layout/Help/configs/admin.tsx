@@ -409,35 +409,35 @@ export const EMAILS_CONFIG: HelpConfig = {
 
 export const GRUPOS_CONFIG: HelpConfig = {
     icon: <Award size={24} className="text-brand" />,
-    title: "Grupos de Investigación",
-    summary: "Registro institucional, estructura colaborativa y proyectos de los grupos de investigación oficiales.",
-    description: "Panel para la postulación, formalización y seguimiento de los grupos de investigación de la institución. Permite a los directores y coordinadores registrar líneas de investigación grupales, integrar miembros docentes y estudiantes, y reportar la producción colectiva.",
+    title: "Comités y Grupos Documentales",
+    summary: "Registro institucional, estructura colaborativa y proyectos de los comités y grupos documentales oficiales.",
+    description: "Panel para la postulación, formalización y seguimiento de los comités y colectivos documentales de la institución. Permite a los directores y coordinadores registrar áreas temáticas grupales, integrar miembros docentes y estudiantes, y reportar la producción colectiva.",
     roleOverrides: {
         estudiante: {
-            summary: "Directorio institucional de grupos de investigación y oportunidades de semilleros para estudiantes."
+            summary: "Directorio institucional de comités y grupos documentales para estudiantes."
         }
     },
     steps: [
         {
             title: "Directorio y visualización de grupos activos",
-            description: "Explora la lista completa de grupos de investigación aprobados por el consejo científico. Revisa sus líneas de acción, miembros activos y la producción científica acumulada durante el ciclo.",
+            description: "Explora la lista completa de grupos documentales aprobados institucionalmente. Revisa sus áreas de acción, miembros activos y la producción documental acumulada durante el ciclo.",
             highlight: 'content-bottom',
             roles: ['todos']
         },
         {
-            title: "Creación y postulación de nuevo grupo",
-            description: "Inicia una solicitud para la creación de un nuevo grupo de investigación completando los campos de justificación académica, plan de trabajo bienal, líneas de investigación institucionales y presupuesto estimado.",
+            title: "Creación y postulación de nuevo grupo o comité",
+            description: "Inicia una solicitud para la creación de un nuevo grupo documental completando los campos de justificación académica, plan de trabajo, áreas temáticas y presupuesto estimado.",
             highlight: 'content-top',
             roles: ['admin', 'docente']
         },
         {
             title: "Gestión de miembros y roles del grupo",
-            description: "Configura el equipo de trabajo asignando el rol de Director de Grupo, Co-investigadores docentes o estudiantes colaboradores de semilleros para fortalecer el indicador de investigación formativa.",
+            description: "Configura el equipo de trabajo asignando el rol de Director o Coordinador, Co-autores docentes o estudiantes colaboradores para fortalecer los expedientes.",
             highlight: 'content-bottom',
             roles: ['admin', 'docente']
         },
         {
-            title: "Vinculación y semilleros de investigación",
+            title: "Vinculación y equipos de trabajo",
             description: "Revisa las líneas de investigación activas de cada grupo para identificar oportunidades de titulación y postular a proyectos tutelados por docentes investigadores.",
             highlight: 'content-bottom',
             roles: ['estudiante']

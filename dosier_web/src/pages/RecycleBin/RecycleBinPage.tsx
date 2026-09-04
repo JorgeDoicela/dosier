@@ -113,9 +113,9 @@ const RecycleBinPage: React.FC = () => {
     };
 
     const tabs = [
-        { id: 'projects', name: 'Proyectos', icon: FileText, adminOnly: false },
+        { id: 'projects', name: 'Proyectos y Documentos', icon: FileText, adminOnly: false },
         { id: 'convocatorias', name: 'Convocatorias', icon: Calendar, adminOnly: true },
-        { id: 'groups', name: 'Grupos de Investigación', icon: Award, adminOnly: false }
+        { id: 'groups', name: 'Comités y Grupos Documentales', icon: Award, adminOnly: false }
     ].filter(tab => !tab.adminOnly || isAdmin);
 
     return (

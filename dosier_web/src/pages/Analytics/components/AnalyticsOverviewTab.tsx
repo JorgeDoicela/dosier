@@ -83,9 +83,9 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     value={groups.length}
                     icon={<Users size={14} />}
                     accentColor="violet"
-                    subText="Grupos de Investigación"
+                    subText="Comités y Grupos Documentales"
                     footerItems={[
-                        { label: 'Docentes Activos', value: stats?.totalInvestigadoresActivos || 0 },
+                        { label: 'Docentes y Autores', value: stats?.totalInvestigadoresActivos || 0 },
                         { label: 'Convocatorias', value: stats?.totalConvocatoriasAbiertas || 0 }
                     ]}
                 />

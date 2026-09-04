@@ -76,17 +76,17 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                     </div>
                     <div>
                         <h4 className="text-xs font-black text-warning uppercase tracking-widest">
-                            Integrantes Vinculados al Grupo de Investigación
+                            Integrantes Vinculados al Comité o Grupo Documental
                         </h4>
                         <p className="text-xs text-text-dim mt-2 leading-relaxed max-w-3xl font-medium">
-                            Este proyecto está asociado a un Grupo de Investigación. Los integrantes y sus roles oficiales se sincronizan automáticamente desde la nómina del grupo aprobada en la administración central. Las altas, bajas y modificaciones de integrantes deben gestionarse a través del director del grupo en la pantalla de <strong>Grupos de Investigación</strong>. Solo se permite registrar las horas semanales de dedicación asignadas para este proyecto.
+                            Este proyecto está asociado a un Comité o Grupo Documental. Los integrantes y sus roles oficiales se sincronizan automáticamente desde la nómina del grupo aprobada en la administración central. Las altas, bajas y modificaciones de integrantes deben gestionarse a través del director o coordinador en la sección de <strong>Comités y Grupos Documentales</strong>. Solo se permite registrar las horas semanales de dedicación asignadas para este proyecto.
                         </p>
                     </div>
                 </div>
             )}
             <div className="flex justify-between items-center px-2">
                 <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                    <Users size={18} /> 2. Investigadores (Docentes y Estudiantes)
+                    <Users size={18} /> 2. Autores y Miembros del Equipo (Docentes y Estudiantes)
                 </h4>
             </div>
             <div className="space-y-4">

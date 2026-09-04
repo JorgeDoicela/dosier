@@ -17,10 +17,10 @@ export const GroupsHeader: React.FC<GroupsHeaderProps> = ({
 }) => {
     return (
         <PageHeader
-            kicker="Investigación y Desarrollo"
+            kicker="Estructura Académica y Documental"
             icon={Users}
-            title="Grupos de Investigación"
-            description="Administración centralizada de grupos institucionales, semilleros y líneas de vinculación tecnológica."
+            title="Comités y Grupos Documentales"
+            description="Administración centralizada de comités, colectivos y grupos documentales institucionales."
         >
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                 <div className="relative group w-full md:w-80">

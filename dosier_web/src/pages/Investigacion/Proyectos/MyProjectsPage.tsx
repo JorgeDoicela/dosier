@@ -296,13 +296,13 @@ const MyProjectsPage: React.FC = () => {
     return (
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto">
             <PageHeader
-                kicker="Mis Investigaciones"
+                kicker="Portafolio Docente y Documental"
                 icon={ClipboardList}
-                title="Mis proyectos de investigación"
+                title="Mis Proyectos y Documentos"
                 description={
                     <span className="flex items-center gap-2">
                         <span>
-                            {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''} en tu expediente institucional.
+                            {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''} y expedientes en tu portafolio institucional.
                         </span>
                         {refreshing && (
                             <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse">
@@ -430,7 +430,7 @@ const MyProjectsPage: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-1">Línea de Investigación</label>
+                        <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-0.5">Línea / Área Temática</label>
                         <select
                             value={filterLinea}
                             onChange={e => setFilterLinea(e.target.value)}
@@ -582,19 +582,18 @@ const MyProjectsPage: React.FC = () => {
                                     <span className="truncate">{p.linea_investigacion}</span>
                                 </div>
                             )}
-
                             <div className="grid grid-cols-2 gap-2 mb-4">
                                 <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                 <p className="stat-number--sm !text-base font-bold text-text-main font-mono">{p.total_investigadores}</p>
-                                 <p className="text-[9px] text-text-dim uppercase tracking-wide">Invest.</p>
-                             </div>
-                             <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                 <p className="stat-number--sm !text-base font-bold text-text-main font-mono">
-                                     {p.informes_aprobados}/{p.total_informes}
-                                 </p>
-                                 <p className="text-[9px] text-text-dim uppercase tracking-wide">Informes</p>
-                             </div>
-                         </div>
+                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">{p.total_investigadores}</p>
+                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Autores</p>
+                                </div>
+                                <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
+                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">
+                                        {p.informes_aprobados}/{p.total_informes}
+                                    </p>
+                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Informes</p>
+                                </div>
+                            </div>
 
                             <div className="flex items-center justify-between pt-3 border-t border-border mt-4 text-[10px] text-text-dim">
                                 <div className="flex items-center gap-1">
