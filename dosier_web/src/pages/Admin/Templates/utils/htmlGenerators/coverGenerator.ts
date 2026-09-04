@@ -12,7 +12,7 @@ export const generateCoverHtml = (block: DocumentBlock, themeConfig?: any): stri
     const textInst = c.textoInstitucion !== undefined
         ? c.textoInstitucion
         : (gCover.textoInstitucion !== undefined ? gCover.textoInstitucion : 'INSTITUTO TECNOLÓGICO SUPERIOR MAYOR PEDRO TRAVERSARI');
-    const textTitle = c.tituloSuperior || gCover.tituloSuperior || 'INFORME FINAL DEL PROYECTO DE INVESTIGACIÓN';
+    const textTitle = c.tituloSuperior || gCover.tituloSuperior || 'PROYECTO DE INVESTIGACIÓN';
     const placeholderTema = (c.placeholderTema || gCover.placeholderTema || 'ESCRIBIR EL TEMA EN MAYÚSCULAS').replace(/'/g, "\\'");
 
     const colorTitleKey = c.colorTituloSuperior || gCover.colorTituloSuperior || 'navy';

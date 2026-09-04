@@ -92,10 +92,8 @@ export const RenderCover: React.FC<RenderCoverProps> = ({
     const textInst = config.textoInstitucion !== undefined
         ? config.textoInstitucion
         : (gCover.textoInstitucion !== undefined ? gCover.textoInstitucion : 'INSTITUTO TECNOLÓGICO SUPERIOR MAYOR PEDRO TRAVERSARI');
-    const textTitle = config.tituloSuperior || gCover.tituloSuperior || 'INFORME FINAL DEL PROYECTO DE INVESTIGACIÓN';
+    const textTitle = config.tituloSuperior || gCover.tituloSuperior || 'PROYECTO DE INVESTIGACIÓN';
     const placeholderTema = config.placeholderTema || gCover.placeholderTema || 'ESCRIBIR EL TEMA EN MAYÚSCULAS';
-    const textCarrera = config.carreraPorDefecto || gCover.carreraPorDefecto || 'TECNOLOGÍA SUPERIOR EN DESARROLLO DE SOFTWARE';
-    const textPeriodo = config.periodoPorDefecto || gCover.periodoPorDefecto || 'PERIODO ACADÉMICO MARZO 2025 – SEPTIEMBRE 2025';
 
     const colorTitleKey = config.colorTituloSuperior || gCover.colorTituloSuperior || 'navy';
     const titleColor = colorTitleKey === 'gold' ? '#b8912e' : colorTitleKey === 'white' ? '#ffffff' : colorTitleKey === 'slate' ? '#475569' : colorTitleKey === 'navy' ? '#1e2a4a' : colorTitleKey;
@@ -113,8 +111,6 @@ export const RenderCover: React.FC<RenderCoverProps> = ({
 
     const institutionFontSize = Number(config.institutionFontSize || gCover.institutionFontSize || 11);
     const institutionItalica = Boolean(config.institutionItalica ?? gCover.institutionItalica);
-
-    const isWhite = (colorStr?: string) => !colorStr || colorStr.toLowerCase() === '#ffffff' || colorStr.toLowerCase() === '#fff' || colorStr.toLowerCase() === 'white';
 
     const rawColorInst = config.colorInstitution || gCover.colorInstitution;
     const rawColorTema = config.colorTemaProyecto || gCover.colorTemaProyecto;
@@ -222,7 +218,7 @@ export const RenderCover: React.FC<RenderCoverProps> = ({
                 style={style}
                 {...handlers}
                 onClick={(e) => {
-                    handlers.onClick?.(e);
+                    (handlers as any).onClick?.(e);
                     handleSelectSubtab();
                 }}
                 onPointerDown={(e) => {

@@ -91,13 +91,19 @@ DROP TABLE IF EXISTS
     doc_presupuesto_items,
     doc_recursos_disponibles,
     doc_objetivos_proyecto,
+    doc_proyecto_extensiones,
     doc_proyecto_participantes,
     doc_proyectos_carreras,
+    doc_trazabilidad_proyectos,
+    doc_proyectos_documentos_adjuntos,
+    doc_proyectos_mml,
+    doc_proyectos,
+    doc_convocatorias,
+    doc_agendas_zonales,
+    doc_tipos_convocatoria,
     doc_grupos_carreras,
     doc_grupos_miembros,
     doc_grupos_investigacion,
-    doc_proyectos_documentos_adjuntos,
-    doc_proyectos_mml,
     doc_pnd_objetivos,
 
     -- Catálogos y Configuración adicionales
@@ -287,8 +293,6 @@ CREATE TABLE doc_proyectos (
 
     -- GESTIÓN Y CONTROL DE PLAZOS INSTITUCIONALES (DEADLINES)
     fechaLimiteSubsanacion      DATE          NULL COMMENT 'Fecha límite fijada por el Administrador para subsanar observaciones del protocolo (Fase 1/2)',
-    fechaLimiteInformeFinal     DATE          NULL COMMENT 'Fecha límite formal fijada para la entrega del informe final (Fase 6)',
-    fechaLimiteSubsanacionFinal DATE          NULL COMMENT 'Fecha límite fijada al devolver el informe final con observaciones (Fase 6/7)',
 
 
     FOREIGN KEY (idConvocatoria) REFERENCES doc_convocatorias(idConvocatoria),
@@ -1151,44 +1155,6 @@ CREATE TABLE doc_collaboration_comments (
     CONSTRAINT fk_doc_comment_parent FOREIGN KEY (parentId) REFERENCES doc_collaboration_comments(idComment) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Hilos de discusión real-time dentro de los documentos';
 
-/*
-=============================================================================
-RESPALDO HISTÓRICO: INSERCIONES DE SEMILLAS ORIGINALES (MIGRACIÓN ANTERIOR)
-=============================================================================
-A continuación se conserva el respaldo comentado de las semillas SQL originales:
-
-INSERT INTO doc_document_templates
-    (code, name, description, html_content, category, collaborative_fields_json, requires_signature, supports_blind_mode, requires_traceability, requires_lopdp)
-VALUES
-    (
-        'PROTOCOLO_INVESTIGACION',
-        'Protocolo de Investigación',
-        'Template oficial para la presentación de proyectos SENESCYT/CACES.',
-        '<!-- DOSIER_SECTIONS_JSON: W3siaWQiOiJibG9... -->\n<div class="protocolo-container"...',
-        1, -- category
-        '["antecedentes", "justificacion", "marco_teorico", "metodologia", "evaluacion"]',
-        1, -- requires_signature
-        0, -- supports_blind_mode
-        1, -- requires_traceability
-        1  -- requires_lopdp
-    ),
-    (
-        'INFORME_FINAL_INVESTIGACION',
-        'Informe Final de Investigación',
-        'Template consolidado para el cierre de proyectos CACES 2026.',
-                    </tr>
-                </table>
-            </section>
-        </div>',
-        2,    -- category: 2 = Arbitraje
-        NULL, -- collaborative_fields_json: NULL (no CoWork)
-        1,    -- requires_signature = TRUE
-        1,    -- supports_blind_mode = TRUE
-        1,    -- requires_traceability = TRUE
-        0     -- requires_lopdp = FALSE (no datos personales sensibles en el acta)
-    );
-*/
-
 -- =============================================================================
 -- SECCIÓN: MOTOR DE CORREOS PERSONALIZADO (DOSIER)
 -- =============================================================================
@@ -1639,30 +1605,7 @@ SELECT
     NULL                                    AS alertaDias,
     0                                       AS recurrenciaAnual
 FROM doc_proyectos p
-WHERE p.fechaLimiteSubsanacion IS NOT NULL
-
-UNION ALL
-
--- 10. Plazo de entrega de informe final (Fase 6)
-SELECT
-    CONCAT('INF-FIN-', p.idProyecto),
-    p.uuid,
-    CONCAT('Entrega Informe Final: ', p.titulo),
-    'Fecha límite para la consolidación, firma y entrega del informe final.',
-    'Proyecto', 'EntregaInformeFinal',
-    COALESCE(p.fechaLimiteSubsanacionFinal, p.fechaLimiteInformeFinal, p.fechaFin), NULL, 1,
-    '#3B82F6',
-    p.idProyecto, p.uuid, 'PROYECTO',
-    NULL, NULL,
-    IF(p.estado = 'En Ejecución' AND p.activo = 1, 1, 0),
-    0                                       AS esPrivado,
-    'Alta'                                  AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_proyectos p
-WHERE (p.fechaLimiteInformeFinal IS NOT NULL OR p.fechaLimiteSubsanacionFinal IS NOT NULL);
+WHERE p.fechaLimiteSubsanacion IS NOT NULL;
 
 
 -- =============================================================================

@@ -20,8 +20,8 @@ export const INVESTIGACION_CONFIG: HelpConfig = {
             highlight: 'content-bottom'
         },
         {
-            title: "Compilación y envío del Informe Final de Resultados",
-            description: "Al completar el cronograma, utiliza la herramienta de cierre para generar tu Informe Final. El sistema compilará automáticamente los entregables aprobados a lo largo del periodo, los informes de monitoreo mensual y te permitirá adjuntar las evidencias físicas del producto científico final (como enlaces a artículos indexados, certificados de ponencias o patentes registradas) antes de enviarlo al comité evaluador.",
+            title: "Compilación y seguimiento de Informes de Avance",
+            description: "Durante el cronograma, utiliza la herramienta de seguimiento para generar tus Informes de Avance. El sistema compilará automáticamente los entregables aprobados y te permitirá adjuntar las evidencias físicas antes de enviarlo al comité evaluador.",
             highlight: 'content-bottom'
         }
     ],
@@ -60,8 +60,8 @@ export const INVESTIGACION_CONFIG: HelpConfig = {
                         <div className="w-3.5 h-3.5 rounded bg-brand/10 text-brand flex items-center justify-center">
                             <FileText size={8} />
                         </div>
-                        <span className="text-[7px] font-bold text-text-main leading-tight uppercase">Informe Final</span>
-                        <span className="text-[5px] text-text-dim leading-none uppercase">Informe final</span>
+                        <span className="text-[7px] font-bold text-text-main leading-tight uppercase">Informes de Avance</span>
+                        <span className="text-[5px] text-text-dim leading-none uppercase">Avances</span>
                     </div>
                 </div>
 

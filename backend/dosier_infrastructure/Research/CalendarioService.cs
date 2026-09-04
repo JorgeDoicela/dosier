@@ -68,9 +68,7 @@ public class CalendarioService : ICalendarioService
                 p.Estado,
                 p.FechaInicio,
                 p.FechaFin,
-                p.FechaLimiteSubsanacion,
-                p.FechaLimiteInformeFinal,
-                p.FechaLimiteSubsanacionFinal
+                p.FechaLimiteSubsanacion
             })
             .ToListAsync();
 
@@ -160,39 +158,6 @@ public class CalendarioService : ICalendarioService
                     p.Uuid,
                     "PROYECTO",
                     $"/investigacion/workspace/protocolo-investigacion/{p.Uuid}",
-                    null,
-                    false,
-                    "Alta",
-                    "Pendiente",
-                    null,
-                    null,
-                    false
-                ));
-            }
-
-            // 1.4 Entrega Informe Final (Fases 6 y 7) — Exclusivo para el Docente/Equipo de Proyecto
-            var fechaInformeFinal = p.FechaLimiteSubsanacionFinal ?? p.FechaLimiteInformeFinal;
-            if (rolUsuario != "DOSIER_ADMIN" &&
-                fechaInformeFinal.HasValue &&
-                fechaInformeFinal.Value >= desde &&
-                fechaInformeFinal.Value <= hasta &&
-                p.Estado == "En Ejecución")
-            {
-                resultado.Add(new CalendarioEventoDto(
-                    $"INF-FIN-{p.IdProyecto}",
-                    p.Uuid,
-                    $"Entrega Informe Final: {p.Titulo}",
-                    "Fecha límite para la consolidación, firma y entrega del informe final.",
-                    "Proyecto",
-                    "EntregaInformeFinal",
-                    fechaInformeFinal.Value,
-                    null,
-                    true,
-                    "#3B82F6",
-                    p.IdProyecto,
-                    p.Uuid,
-                    "PROYECTO",
-                    $"/investigacion/workspace/informe-final/{p.Uuid}",
                     null,
                     false,
                     "Alta",

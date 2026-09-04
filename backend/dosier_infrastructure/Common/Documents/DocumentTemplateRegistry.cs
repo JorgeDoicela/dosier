@@ -43,19 +43,6 @@ namespace Dosier.Infrastructure.Common.Documents
             // OTRAS ÁREAS (Registro de marcadores de posición)
             // ══════════════════════════════════════════════════════════════
 
-            yield return DocumentTemplate.Create(
-                code: InformeFinalTemplate.CODE,
-                name: "Informe Final de Investigación",
-                description: "Documento de consolidación de resultados para acreditación CACES.",
-                category: DocumentCategory.InformeFinal,
-                htmlContent: "<!-- Cargado desde Templates/Investigacion/InformeFinal.html -->",
-                requiresLopdp: true,
-                supportsBlind: false,
-                requiresTraceability: true,
-                requiresSignature: true,
-                collaborativeFields: "[\"Indice\", \"sec_indice\", \"Resumen\", \"sec_resumen\", \"resumen_ejecutivo\", \"Introduccion\", \"sec_introduccion\", \"Objetivos\", \"sec_objetivos\", \"cumplimiento_objetivos\", \"Fundamentos\", \"sec_fundamentos\", \"Metodos\", \"sec_metodos\", \"Resultados\", \"sec_resultados\", \"Productos\", \"sec_productos\", \"Impactos\", \"sec_impactos\", \"impacto_final\", \"Transferencia\", \"sec_transferencia\", \"transferencia_conocimiento\", \"InformeFinanciero\", \"sec_informe_financiero\", \"Conclusiones\", \"sec_conclusiones\", \"Recomendaciones\", \"sec_recomendaciones\", \"Bibliografia\", \"sec_bibliografia\", \"bibliografia_final\", \"Anexos\", \"sec_anexos\"]",
-                version: 20);
-
 
 
             yield return DocumentTemplate.Create(

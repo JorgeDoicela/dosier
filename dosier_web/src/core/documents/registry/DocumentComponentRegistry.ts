@@ -30,7 +30,6 @@ import { TimelineSection }        from '../../../components/DOSIER/sections/Time
 import { ImpactSection }          from '../../../components/DOSIER/sections/ImpactSection';
 import { BibliographySection }    from '../../../components/DOSIER/sections/BibliographySection';
 import { ProgressReportSection }  from '../../../components/DOSIER/sections/ProgressReportSection';
-import { FinalReportHeaderSection } from '../../../components/DOSIER/sections/FinalReportHeaderSection';
 import { AgnosticSection }        from '../../../components/DOSIER/sections/AgnosticSection';
 import { MultiSectionTableSection } from '../../../components/DOSIER/sections/MultiSectionTableSection';
 
@@ -46,7 +45,6 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
     'ImpactSection': ImpactSection,
     'BibliographySection': BibliographySection,
     'ProgressReportSection': ProgressReportSection,
-    'FinalReportHeaderSection': FinalReportHeaderSection,
     'AgnosticSection': AgnosticSection,
     'MultiSectionTableSection': MultiSectionTableSection
 };
@@ -59,7 +57,6 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
 export const DocumentComponentRegistry: Record<string, React.ComponentType<any>> = {
     // ── PROTOCOLO DE INVESTIGACIÓN ─────────────────────────────────
     'identificacion': GeneralSection,
-    'datos_generales_informe_final': FinalReportHeaderSection,
     'equipo':         TeamSection,
     'tecnico':        TechnicalSection,
     'recursos':       BudgetSection,

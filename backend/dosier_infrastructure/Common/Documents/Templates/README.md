@@ -50,9 +50,8 @@ Abre [TemplateFileLoader.cs](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/do
 ```csharp
 var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
 {
-    ["PROTOCOLO_INVESTIGACION"]     = "Investigacion/ProyectoInvestigacion.html",
-    ["INFORME_FINAL_INVESTIGACION"] = "Investigacion/InformeFinal.html",
-    ["MI_NUEVO_CODIGO"]             = "Investigacion/NuevoDocumento.html", // <-- Agrega esta línea
+    ["PROTOCOLO_INVESTIGACION"] = "Investigacion/ProyectoInvestigacion.html",
+    ["MI_NUEVO_CODIGO"]         = "Investigacion/NuevoDocumento.html", // <-- Agrega esta línea
 };
 ```
 

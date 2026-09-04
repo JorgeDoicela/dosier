@@ -115,7 +115,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             DocumentCategory.Protocolo => "Protocolo de Investigación",
             DocumentCategory.ActaAprobacion => "Acta de Aprobación",
             DocumentCategory.InformeAvance => "Informe de Avance",
-            DocumentCategory.InformeFinal => "Informe Final",
             DocumentCategory.ActaLiquidacion => "Acta de Liquidación",
             DocumentCategory.TerminosDeReferencia => "Términos de Referencia (SERCOP)",
             DocumentCategory.EspecificacionTecnica => "Especificación Técnica (SERCOP)",

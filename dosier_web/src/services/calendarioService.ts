@@ -211,9 +211,6 @@ export const resolveEventUrl = (ev: {
             if (ev.subcategoria === 'SubsanacionProtocolo' || ev.subcategoria === 'InicioProyecto') {
                 return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
             }
-            if (ev.subcategoria === 'EntregaInformeFinal') {
-                return `${prefix}/workspace/informe-final-investigacion/${projectUuid}`;
-            }
             return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
         }
         case 'CONVOCATORIA':

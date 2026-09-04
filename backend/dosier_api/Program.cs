@@ -226,7 +226,6 @@ builder.Services.AddScoped<IDocumentAuditRepository, DocumentAuditRepository>();
 builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentInstanceService, Dosier.Infrastructure.Common.Documents.DocumentInstanceService>();
 builder.Services.AddScoped<IDocumentDataOrchestrator, DocumentDataOrchestrator>();
 builder.Services.AddScoped<IDocumentDataProvider, ProjectDocumentDataProvider>();
-builder.Services.AddScoped<IDocumentDataProvider, FinalReportDataProvider>();
 builder.Services.AddScoped<IDocumentDataProvider, Dosier.Infrastructure.Common.Documents.Providers.InformeAvanceDataProvider>();
 builder.Services.AddSingleton<Dosier.Infrastructure.Common.Storage.IFileStorageService, Dosier.Infrastructure.Common.Storage.LocalFileStorageService>();
 // ─────────────────────────────────────────────────────────────────────────────

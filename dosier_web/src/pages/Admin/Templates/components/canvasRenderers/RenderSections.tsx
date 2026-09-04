@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowUp, ArrowDown, Scissors } from 'lucide-react';
 import type { ImpactCategory } from '../../types';
-import { DEFAULT_TECHNICAL_SUBSECTIONS, DEFAULT_IMPACT_CATEGORIES, DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS } from '../../types';
+import { DEFAULT_TECHNICAL_SUBSECTIONS, DEFAULT_IMPACT_CATEGORIES } from '../../types';
 
 export const RenderProjectGeneralSection: React.FC<{
     config?: any;
@@ -542,46 +542,6 @@ export const RenderProjectTechnicalSection: React.FC<{
     );
 };
 
-export const RenderFinalReportWritingSection: React.FC<{
-    config: any;
-    blockId?: string;
-    onUpdateConfig?: (blockId: string, key: string, value: any) => void;
-}> = ({ config }) => {
-    const c = config || {};
-
-    const rawSections = (c.writingSections && Array.isArray(c.writingSections) && c.writingSections.length > 0)
-        ? c.writingSections
-        : DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS;
-
-    const subs = rawSections.filter((s: any) => s.enabled !== false).map((s: any) => ({
-        key: s.id || s.fieldKey,
-        title: s.title,
-        numberPrefix: s.numberPrefix || '',
-        requirementText: s.requirementText || s.placeholder || '',
-        colSpan: s.colSpan || 2,
-        variant: s.variant || 'standard'
-    }));
-
-    return (
-        <div className="w-full font-sans my-4 space-y-6">
-            {subs.map((sub: any) => (
-                <div key={sub.key} className="w-full bg-white p-3 border-b border-slate-200">
-                    <h2 className="text-[13pt] font-extrabold text-[#002060] text-center uppercase tracking-wide mb-1.5 font-sans">
-                        {sub.numberPrefix ? `${sub.numberPrefix} ${sub.title}` : sub.title}
-                    </h2>
-                    {sub.requirementText && (
-                        <p className="text-[9pt] text-slate-700 italic text-left mb-2 leading-relaxed">
-                            {sub.requirementText}
-                        </p>
-                    )}
-                    <div className="text-[9.5pt] text-slate-400 italic text-justify leading-relaxed">
-                        [Redacción enriquecida colaborativa en Tiptap / Yjs...]
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
 
 export const RenderImpacts: React.FC<{ config: any }> = ({ config }) => {
     const c = config || {};

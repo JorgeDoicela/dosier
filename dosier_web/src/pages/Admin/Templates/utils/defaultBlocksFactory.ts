@@ -247,31 +247,6 @@ export function generateDefaultBlocksForTemplate(
         ];
     }
 
-    // D. INFORME FINAL DE INVESTIGACIÓN
-    if (code === 'INFORME_FINAL_INVESTIGACION') {
-        return [
-            createBaseCoverBlock('INFORME FINAL DE INVESTIGACIÓN', { colorTitle: 'navy' }),
-            { id: 'block-indice', type: 'rich_text' as BlockType, title: 'ÍNDICE', isActive: true, config: { text: 'ÍNDICE GENERAL DEL INFORME' } },
-            { id: 'block-resumen', type: 'rich_text' as BlockType, title: 'RESUMEN', isActive: true, config: { text: 'RESUMEN EJECUTIVO' } },
-            { id: 'block-introduccion', type: 'rich_text' as BlockType, title: 'INTRODUCCIÓN', isActive: true, config: { text: 'INTRODUCCIÓN' } },
-            { id: 'block-objetivos', type: 'rich_text' as BlockType, title: 'OBJETIVOS', isActive: true, config: { text: 'OBJETIVO GENERAL Y OBJETIVOS ESPECÍFICOS' } },
-            { id: 'block-fundamentos', type: 'rich_text' as BlockType, title: 'FUNDAMENTOS', isActive: true, config: { text: 'FUNDAMENTOS' } },
-            { id: 'block-metodos', type: 'rich_text' as BlockType, title: 'MÉTODOS', isActive: true, config: { text: 'MÉTODOS' } },
-            { id: 'block-resultados', type: 'rich_text' as BlockType, title: 'RESULTADOS', isActive: true, config: { text: 'RESULTADOS' } },
-            { id: 'block-productos', type: 'rich_text' as BlockType, title: 'PRODUCTOS', isActive: true, config: { text: 'PRODUCTOS' } },
-            { id: 'block-impactos', type: 'rich_text' as BlockType, title: 'IMPACTOS', isActive: true, config: { text: 'IMPACTOS' } },
-            { id: 'block-transferencia', type: 'rich_text' as BlockType, title: 'TRANSFERENCIA', isActive: true, config: { text: 'TRANSFERENCIA DE RESULTADOS' } },
-            { id: 'block-informe_financiero', type: 'rich_text' as BlockType, title: 'INFORME FINANCIERO', isActive: true, config: { text: 'INFORME FINANCIERO DE GASTOS' } },
-            { id: 'block-conclusiones', type: 'rich_text' as BlockType, title: 'CONCLUSIONES', isActive: true, config: { text: 'CONCLUSIONES' } },
-            { id: 'block-recomendaciones', type: 'rich_text' as BlockType, title: 'RECOMENDACIONES', isActive: true, config: { text: 'RECOMENDACIONES' } },
-            { id: 'block-bibliografia', type: 'rich_text' as BlockType, title: 'BIBLIOGRAFÍA', isActive: true, config: { text: 'BIBLIOGRAFÍA' } },
-            createBaseSignaturesBlock([
-                { label: 'Director del Proyecto', name: '{{director_proyecto}}', role: 'Director de Proyecto' },
-                { label: 'Comisión de Evaluación', name: 'Ing. Estefani Sánchez Mgtr.', role: 'Coordinadora de Investigación' }
-            ])
-        ];
-    }
-
     // H. PROPUESTA DE GRUPO DE INVESTIGACIÓN
     if (code === 'PROPUESTA_GRUPO_INVESTIGACION' || code.includes('GRUPO') && !code.includes('CERTIFICADO') || category === 40 || category === 44) {
         return [
@@ -281,7 +256,7 @@ export function generateDefaultBlocksForTemplate(
                 type: 'title' as BlockType,
                 title: '1. DATOS GENERALES DEL GRUPO DE INVESTIGACIÓN',
                 isActive: true,
-                config: { text: '1. DATOS GENERALES DEL GRUPO DE INVESTIGACIÓN', fontSize: 'H2', color: '#1e2a4a' }
+                config: { text: '1. DATOS GENERALES DEL GRUPO DE INVESTIGACIÓN', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
             },
             {
                 id: 'block-table-datos',
@@ -310,7 +285,7 @@ export function generateDefaultBlocksForTemplate(
                 type: 'title' as BlockType,
                 title: '2. IDENTIDAD ESTRATÉGICA Y PROPÓSITO',
                 isActive: true,
-                config: { text: '2. IDENTIDAD ESTRATÉGICA Y PROPÓSITO', fontSize: 'H2', color: '#1e2a4a' }
+                config: { text: '2. IDENTIDAD ESTRATÉGICA Y PROPÓSITO', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
             },
             {
                 id: 'block-mision-vision',
@@ -329,7 +304,7 @@ export function generateDefaultBlocksForTemplate(
                 type: 'title' as BlockType,
                 title: '3. OBJETIVO GENERAL DEL GRUPO',
                 isActive: true,
-                config: { text: '3. OBJETIVO GENERAL DEL GRUPO', fontSize: 'H2', color: '#1e2a4a' }
+                config: { text: '3. OBJETIVO GENERAL DEL GRUPO', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
             },
             {
                 id: 'block-objetivo',
@@ -350,7 +325,7 @@ export function generateDefaultBlocksForTemplate(
                 type: 'title' as BlockType,
                 title: '4. EQUIPO DE INVESTIGADORES Y SEMILLERISTAS',
                 isActive: true,
-                config: { text: '4. EQUIPO DE INVESTIGADORES Y SEMILLERISTAS', fontSize: 'H2', color: '#1e2a4a' }
+                config: { text: '4. EQUIPO DE INVESTIGADORES Y SEMILLERISTAS', titleLevel: 'h2', fontSize: 14, color: '#1e2a4a' }
             },
             createBaseSignaturesBlock([
                 { label: 'Docente Coordinador del Grupo', name: '{{coordinador_nombre}}', role: 'Coordinador / Líder' },

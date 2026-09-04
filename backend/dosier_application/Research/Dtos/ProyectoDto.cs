@@ -60,8 +60,6 @@ namespace Dosier.Application.Research.Dtos
 
         // PLAZOS INSTITUCIONALES (DEADLINES)
         public string? FechaLimiteSubsanacion { get; set; }
-        public string? FechaLimiteInformeFinal { get; set; }
-        public string? FechaLimiteSubsanacionFinal { get; set; }
 
         // ─────────────────────────────────────────────────────────────────────────
         // SECCIÓN 2: INVESTIGADORES

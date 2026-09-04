@@ -490,60 +490,6 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                                 <ProgressStatusProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
                             )}
 
-                            {activeBlock.type === 'final_report_header_section' && (
-                                <div className="space-y-4 border-t border-border-thin/20 pt-4">
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider block mb-1">Título del Encabezado</label>
-                                        <input
-                                            type="text"
-                                            value={activeBlock.config.finalReportTitle || 'DATOS DEL PROYECTO DE INVESTIGACIÓN'}
-                                            onChange={(e) => onUpdateConfig(activeBlock.id, 'finalReportTitle', e.target.value)}
-                                            className="w-full text-xs p-2 bg-bg-main border border-border-thin rounded-lg text-text-main"
-                                        />
-                                    </div>
-                                    <ColorPickerField
-                                        label="Color del Tema"
-                                        value={activeBlock.config.finalReportHeaderColor || '#1e2a4a'}
-                                        onChange={val => onUpdateConfig(activeBlock.id, 'finalReportHeaderColor', val)}
-                                    />
-                                    <div className="space-y-2 pt-2 border-t border-border-thin/10">
-                                        {[
-                                            { key: 'showTipoInvestigacion', label: 'Mostrar Tipo de Investigación', desc: 'Básica, Aplicada, Desarrollo Experimental (X)' },
-                                            { key: 'showAlcanceProyecto', label: 'Mostrar Alcance del Proyecto', desc: 'Institucional, Parroquial, Cantonal, Provincial, Nacional (X)' },
-                                            { key: 'showFechasProyecto', label: 'Mostrar Cuadro de Fechas', desc: 'Presentación, Inicio, Fin Presentada y Fin Real' },
-                                            { key: 'showTablaInvestigadores', label: 'Mostrar Tabla de Investigadores', desc: 'Nombre, Cédula, Email, Teléfono y Rol' }
-                                        ].map(({ key, label, desc }) => (
-                                            <div key={key} className="flex items-center justify-between border-b border-border-thin/10 pb-2">
-                                                <div>
-                                                    <p className="text-xs font-medium text-text-main">{label}</p>
-                                                    <p className="text-[10px] text-text-dim">{desc}</p>
-                                                </div>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={(activeBlock.config as any)[key] !== false}
-                                                    onChange={(e) => onUpdateConfig(activeBlock.id, key, e.target.checked)}
-                                                    className="rounded text-indigo-600"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeBlock.type === 'final_report_writing_section' && (
-                                <div className="space-y-4 border-t border-border-thin/20 pt-4">
-                                    <ColorPickerField
-                                        label="Color del Tema de Encabezados"
-                                        value={activeBlock.config.writingHeaderColor || '#1e2a4a'}
-                                        onChange={val => onUpdateConfig(activeBlock.id, 'writingHeaderColor', val)}
-                                    />
-                                    <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-                                        <p className="text-xs font-semibold text-indigo-400">Sub-Secciones de Redacción Pre-Cargadas (15)</p>
-                                        <p className="text-[10px] text-text-dim mt-1">Este bloque unificado administra automáticamente las 15 sub-secciones científicas con editores Tiptap colaborativos en tiempo real.</p>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* ── AVANCE DE EJECUCIÓN ──────────────────────────────────────── */}
                             {activeBlock.type === 'project_progress_report' && (
                                 <div className="space-y-3 border-t border-border-thin/20 pt-4">

@@ -56,8 +56,6 @@ export type BlockType =
     | 'progress_header_section'
     | 'progress_activity_section'
     | 'progress_status_section'
-    | 'final_report_header_section'
-    | 'final_report_writing_section'
     | 'project_budget_section';
 
 export interface BlockMetaInfo {
@@ -85,9 +83,7 @@ export const BLOCK_METADATA: Record<BlockType, BlockMetaInfo> = {
     signatures: { label: 'Firmas de Responsabilidad', defaultTitle: 'FIRMAS DE RESPONSABILIDAD', category: 'Base de Datos' },
     progress_header_section: { label: 'Datos Generales del Proyecto', defaultTitle: '1. DATOS GENERALES DEL PROYECTO', category: 'Informe de Avance' },
     progress_activity_section: { label: 'Matriz de Actividades y Avance', defaultTitle: '2. MATRIZ DE ACTIVIDADES Y AVANCE', category: 'Informe de Avance' },
-    progress_status_section: { label: 'Estado y Observaciones', defaultTitle: '3. ESTADO Y OBSERVACIONES GENERALES', category: 'Informe de Avance' },
-    final_report_header_section: { label: 'Información General del Proyecto', defaultTitle: '1. INFORMACIÓN GENERAL DEL PROYECTO', category: 'Informe Final' },
-    final_report_writing_section: { label: 'Plan de Redacción Científica', defaultTitle: '2. PLAN DE REDACCIÓN CIENTÍFICA', category: 'Informe Final' }
+    progress_status_section: { label: 'Estado y Observaciones', defaultTitle: '3. ESTADO Y OBSERVACIONES GENERALES', category: 'Informe de Avance' }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -145,142 +141,45 @@ export const DEFAULT_TECHNICAL_SUBSECTIONS: TechnicalSubsection[] = [
     { id: 'sec_evaluacion', fieldKey: 'Evaluacion', numberPrefix: '3.8', title: 'EVALUACIÓN', placeholder: 'Describir los criterios e indicadores...', requirementText: 'DETALLAR EN MÍNIMO 2 PÁRRAFOS DE 5 LÍNEAS', enabled: true, scribanVariable: 'evaluacion', legacyKey: 'showEvaluacion', colSpan: 2, variant: 'standard', hasContent: true }
 ];
 
-export interface FinalReportWritingSubsection {
-    id: string;
-    fieldKey: string;
-    numberPrefix?: string;
-    title: string;
-    placeholder?: string;
-    requirementText?: string;
-    enabled: boolean;
-    colSpan?: 1 | 2;
-    variant?: 'standard' | 'banner_navy' | 'banner_gold' | string;
-    hasContent?: boolean;
-    isGroupHeader?: boolean;
-    parentId?: string;
-}
-
-export const DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS: FinalReportWritingSubsection[] = [
-    { id: 'sec_indice', fieldKey: 'Indice', numberPrefix: '2.', title: 'ÍNDICE', placeholder: 'Elaborar un índice detallado con los títulos y subtítulos del informe, numerando cada sección de acuerdo con el formato del documento.\nIncluir las páginas correspondientes a cada sección.\nIncluir el índice de tablas.\nIncluir el índice de imágenes.', requirementText: 'DETALLAR ÍNDICE DE CONTENIDO, TABLAS E IMÁGENES', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_resumen', fieldKey: 'Resumen', numberPrefix: '3.', title: 'RESUMEN', placeholder: '(250-300 palabras, 3-4 párrafos)\nPresentar una síntesis clara del proyecto, destacando el problema abordado, los objetivos, la metodología, los principales resultados y conclusiones.\nDebe redactarse en tercera persona y sin incluir citas.', requirementText: '250-300 PALABRAS, 3-4 PÁRRAFOS - TERCERA PERSONA SIN CITAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_introduccion', fieldKey: 'Introduccion', numberPrefix: '4.', title: 'INTRODUCCIÓN', placeholder: '(500-700 palabras, 5-7 párrafos)\nExplicar el contexto y la relevancia del proyecto de investigación.\nDefinir el problema central y justificar su importancia.\nDescribir brevemente el enfoque metodológico utilizado.\nMencionar el impacto esperado del proyecto.\nIncluir citas según normas APA 7ª edición.', requirementText: '500-700 PALABRAS, 5-7 PÁRRAFOS - NORMAS APA 7ª EDICIÓN', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_objetivos', fieldKey: 'Objetivos', numberPrefix: '5.', title: 'OBJETIVO GENERAL Y OBJETIVOS ESPECÍFICOS', placeholder: 'Escriba su objetivo general.\nEscriba sus objetivos específicos, en forma de lista, orientados a la consecución del objetivo general.', requirementText: 'OBJETIVO GENERAL + LISTA DE OBJETIVOS ESPECÍFICOS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_fundamentos', fieldKey: 'Fundamentos', numberPrefix: '6.', title: 'FUNDAMENTOS', placeholder: '(EXTENSIÓN VARIABLE)\nDescribir los conceptos clave, antecedentes y fundamentos teóricos que respaldan el proyecto.\nIncluir referencias a estudios previos, normativas o metodologías relacionadas.\nCITAR USANDO normas APA 7ª edición.\nPuede extenderse según la necesidad del tema.', requirementText: 'EXTENSIÓN VARIABLE - CITAR USANDO NORMAS APA 7ª EDICIÓN', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_metodos', fieldKey: 'Metodos', numberPrefix: '7.', title: 'MÉTODOS', placeholder: '(700-900 palabras, 5-8 párrafos)\nExplicar detalladamente la metodología utilizada en la investigación.\nDescribir las técnicas, herramientas e instrumentos empleados para la recolección y análisis de datos.\nJustificar la elección de métodos y procedimientos.\nIncluir un cuadro o esquema si es necesario.', requirementText: '700-900 PALABRAS, 5-8 PÁRRAFOS - TÉCNICAS E INSTRUMENTOS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_resultados', fieldKey: 'Resultados', numberPrefix: '8.', title: 'RESULTADOS', placeholder: '(800-1200 palabras, 6-12 párrafos)\nExponer los hallazgos obtenidos en la investigación.\nPresentar datos relevantes a través de gráficos, tablas o figuras si es necesario.\nInterpretar los resultados de manera objetiva.\nComparar con investigaciones previas si aplica.', requirementText: '800-1200 PALABRAS, 6-12 PÁRRAFOS - GRÁFICOS, TABLAS O FIGURAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_productos', fieldKey: 'Productos', numberPrefix: '9.', title: 'PRODUCTOS', placeholder: '(400-600 palabras, 4-6 párrafos)\nDescribir los productos generados a partir del proyecto (publicaciones, prototipos, software, modelos, documentos técnicos, etc.).\nIncluir evidencia tangible de estos productos si aplica.', requirementText: '400-600 PALABRAS, 4-6 PÁRRAFOS - PUBLICACIONES Y SOFTWARE', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_impactos', fieldKey: 'Impactos', numberPrefix: '10.', title: 'IMPACTOS', placeholder: '(500-800 palabras, 5-8 párrafos)\nExplicar los impactos generados por el proyecto en términos científicos, tecnológicos, sociales, económicos o educativos.\nPresentar evidencia de la aplicación práctica de los resultados.', requirementText: '500-800 PALABRAS, 5-8 PÁRRAFOS - IMPACTOS CIENTÍFICOS Y SOCIALES', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_transferencia', fieldKey: 'Transferencia', numberPrefix: '11.', title: 'TRANSFERENCIA DE RESULTADOS', placeholder: '(400-600 palabras, 4-6 párrafos)\nDescribir cómo se han compartido o aplicado los resultados del proyecto en otros ámbitos.\nMencionar convenios, publicaciones, capacitaciones o implementaciones en organizaciones externas.', requirementText: '400-600 PALABRAS, 4-6 PÁRRAFOS - CONVENIOS Y APLICACIONES', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_informe_financiero', fieldKey: 'InformeFinanciero', numberPrefix: '12.', title: 'INFORME FINANCIERO DE GASTOS', placeholder: '(Extensión variable)\nPresentar un desglose detallado de los recursos utilizados en el proyecto.\nIncluir tablas que especifiquen montos, conceptos y justificaciones de los gastos.', requirementText: 'EXTENSIÓN VARIABLE - TABLAS Y JUSTIFICACIÓN DE GASTOS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_conclusiones', fieldKey: 'Conclusiones', numberPrefix: '13.', title: 'CONCLUSIONES', placeholder: '(500-700 palabras, 5-7 párrafos)\nResumir los principales hallazgos del proyecto.\nExplicar si los objetivos planteados fueron alcanzados.\nMencionar limitaciones y posibles mejoras futuras.', requirementText: '500-700 PALABRAS, 5-7 PÁRRAFOS - LOGRO DE OBJETIVOS Y LIMITACIONES', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_recomendaciones', fieldKey: 'Recomendaciones', numberPrefix: '14.', title: 'RECOMENDACIONES', placeholder: '(500-700 palabras, 5-7 párrafos)\nProponer acciones concretas basadas en los hallazgos del proyecto.\nSugerir mejoras en la metodología, implementación o futuras líneas de investigación.\nIndicar estrategias para la aplicación práctica de los resultados en contextos académicos, industriales o sociales.\nConsiderar limitaciones detectadas y cómo superarlas en investigaciones futuras.\nLas recomendaciones deben ser viables, realistas y alineadas con los objetivos del proyecto.', requirementText: '500-700 PALABRAS, 5-7 PÁRRAFOS - ACCIONES VIABLES Y MEJORAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_bibliografia', fieldKey: 'Bibliografia', numberPrefix: '15.', title: 'BIBLIOGRAFÍA', placeholder: '(Extensión variable)\nListar fuentes adicionales que hayan sido consultadas, tanto las usadas como aquellas que no necesariamente han sido citadas en el texto.', requirementText: 'NORMAS APA 7ª EDICIÓN', enabled: true, colSpan: 2, variant: 'standard', hasContent: true },
-    { id: 'sec_anexos', fieldKey: 'Anexos', numberPrefix: '16.', title: 'ANEXOS', placeholder: '(Extensión variable)\nIncluir documentos complementarios como cuestionarios, encuestas, imágenes, gráficos, diagramas, o capturas de pantalla de herramientas utilizadas.', requirementText: 'DOCUMENTOS COMPLEMENTARIOS Y CAPTURAS', enabled: true, colSpan: 2, variant: 'standard', hasContent: true }
-];
-
 export interface ImpactCategory {
     id: string;
-    key: string;               // p. ej. 'social', 'cientifico', 'tecnologico'
-    title: string;             // p. ej. 'Impacto Social', 'Impacto Tecnológico'
-    placeholder?: string;      // Guía o ayuda visual de redacción
+    key: string;
+    title: string;
+    placeholder?: string;
     enabled: boolean;
-    scribanVariable?: string;  // p. ej. 'impacto.social'
-    colSpan?: 1 | 2;           // 1 = 50%, 2 = 100%
-    legacyKey?: string;        // p. ej. 'showImpactoSocial'
+    colSpan?: 1 | 2;
+    scribanVariable?: string;
+    legacyKey?: string;
 }
 
 export const DEFAULT_IMPACT_CATEGORIES: ImpactCategory[] = [
-    { id: 'imp_social', key: 'social', title: 'Impacto Social', placeholder: 'Descripción del impacto positivo en la comunidad o grupo beneficiario...', enabled: true, scribanVariable: 'impacto.social', legacyKey: 'showImpactoSocial', colSpan: 2 },
-    { id: 'imp_cientifico', key: 'cientifico', title: 'Impacto Científico', placeholder: 'Aporte al estado del arte, desarrollo tecnológico o nuevo conocimiento...', enabled: true, scribanVariable: 'impacto.cientifico', legacyKey: 'showImpactoCientifico', colSpan: 2 },
-    { id: 'imp_economico', key: 'economico', title: 'Impacto Económico', placeholder: 'Optimización de recursos, retorno de inversión o reactivación productiva...', enabled: true, scribanVariable: 'impacto.economico', legacyKey: 'showImpactoEconomico', colSpan: 2 },
-    { id: 'imp_politico', key: 'politico', title: 'Impacto Político', placeholder: 'Aporte a políticas públicas, regulación, normativas o gobernanza...', enabled: true, scribanVariable: 'impacto.politico', legacyKey: 'showImpactoPolitico', colSpan: 2 },
-    { id: 'imp_ambiental', key: 'ambiental', title: 'Impacto Ambiental', placeholder: 'Mitigación de huella ecológica, conservación o desarrollo sostenible...', enabled: true, scribanVariable: 'impacto.ambiental', legacyKey: 'showImpactoAmbiental', colSpan: 2 },
-    { id: 'imp_otro', key: 'otro', title: 'Otro Impacto', placeholder: 'Cualquier otro impacto institucional o transferible no clasificado...', enabled: true, scribanVariable: 'impacto.otro', legacyKey: 'showImpactoOtro', colSpan: 2 }
+    { id: 'imp_social', key: 'social', title: 'Social / Comunitario', placeholder: 'Impacto directo en la sociedad y la comunidad...', enabled: true, colSpan: 2, scribanVariable: 'impacto.social', legacyKey: 'showSocial' },
+    { id: 'imp_cientifico', key: 'cientifico', title: 'Científico / Tecnológico', placeholder: 'Aportes al conocimiento científico e innovaciones tecnológicas...', enabled: true, colSpan: 2, scribanVariable: 'impacto.cientifico', legacyKey: 'showCientifico' },
+    { id: 'imp_economico', key: 'economico', title: 'Económico / Productivo', placeholder: 'Beneficios económicos, optimización o desarrollo productivo...', enabled: true, colSpan: 2, scribanVariable: 'impacto.economico', legacyKey: 'showEconomico' },
+    { id: 'imp_ambiental', key: 'ambiental', title: 'Ambiental / Ecológico', placeholder: 'Sostenibilidad ambiental y mitigación de huella ecológica...', enabled: true, colSpan: 2, scribanVariable: 'impacto.ambiental', legacyKey: 'showAmbiental' },
+    { id: 'imp_educativo', key: 'educativo', title: 'Metodológico / Educativo', placeholder: 'Impacto en la formación académica y metodologías de enseñanza...', enabled: true, colSpan: 2, scribanVariable: 'impacto.educativo', legacyKey: 'showEducativo' },
 ];
 
-
-export interface IdentificationField {
-    fieldKey: string;
-    label: string;
-    fieldType: 'text' | 'date' | 'textarea' | 'select_inline' | 'select_catalog';
-    options?: string[];
-    catalogUrl?: string;
-    catalogLabelKey?: string;
-    catalogValueKey?: string;
-    colSpan?: 1 | 2;
-    scriptMode?: 'scriban' | 'static';
-    scriptVariable?: string;
-    collaborative?: boolean;
-    uppercase?: boolean;
-    placeholder?: string;
-    required?: boolean;
-    isGroupHeader?: boolean;    // true = actúa como banner/separador temático (ej. "A. DATOS INSTITUCIONALES")
-    variant?: 'standard' | 'banner_gold' | 'banner_navy' | 'banner_emerald' | string;
-    requirementText?: string;   // Texto de orientación para el docente
-    helpText?: string;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Gantt
-// ─────────────────────────────────────────────────────────────────────────────
-export type GanttColor = '#1e2a4a' | '#b8912e' | '#60a5fa' | '#f97316' | '#a855f7' | '#10b981' | '#ef4444' | '#64748b';
-
-export interface GanttActivity {
-    id: string;
-    name: string;
-    resources: string;
-    startMonth: number; // 0-indexed dentro del array de meses
-    startWeek: number;  // 0-3 (semana dentro del mes)
-    endMonth: number;
-    endWeek: number;
-    color: GanttColor;
-}
-
-export interface GanttObjective {
-    id: string;
-    name: string;
-    activities: GanttActivity[];
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Bloque principal
-// ─────────────────────────────────────────────────────────────────────────────
 export interface DocumentBlock {
     id: string;
     type: BlockType;
-    title: string;
-    isActive: boolean;
+    title?: string;
+    enabled?: boolean;
+    isActive?: boolean;
     config: {
-        isEditableWorkspace?: boolean;
-        allowDynamicRows?: boolean;
-
-        // ── cover ──────────────────────────────────────────────────────────
-        coverLayoutMode?: 'zones' | 'freeform'; // 'freeform' es el default moderno
-        tituloSuperior?: string;
-        colorTituloSuperior?: string;
-        colorTemaProyecto?: string;
-        colorCarrera?: string;
-        colorPeriodo?: string;
-        colorInstitution?: string;
-        estiloTituloSuperior?: 'italic_bold' | 'bold' | 'normal';
-        carreraPorDefecto?: string;
-        prefijoCarrera?: string;
-        periodoPorDefecto?: string;
-        prefijoPeriodo?: string;
-        colorTema?: string;
+        [key: string]: any;
+        // ── cover ───────────────────────────────────────────────────────────
         showInstitution?: boolean;
+        showTitle?: boolean;
+        showTemaProyecto?: boolean;
+        showCarrera?: boolean;
+        showPeriodo?: boolean;
         textoInstitucion?: string;
-        coverImage?: string;
-        // Opciones avanzadas de Institución / Logo
-        institutionMode?: 'text' | 'image' | 'hybrid';
-        institutionImage?: string;
-        institutionLogoHeight?: number;
-        institutionLogoRadius?: 'none' | 'sm' | 'md' | 'full';
-        institutionLogoInvert?: boolean;
-        institutionVariant?: 'pill' | 'clean' | 'bordered';
-        bgInstitution?: string;
-        institutionFontSize?: number;
-        institutionItalica?: boolean;
+        tituloSuperior?: string;
+        placeholderTema?: string;
+        carreraPorDefecto?: string;
+        periodoPorDefecto?: string;
+        colorTituloSuperior?: 'navy' | 'gold' | 'slate' | 'white' | string;
         tituloFontSize?: number;
         tituloItalica?: boolean;
         temaFontSize?: number;
@@ -289,173 +188,95 @@ export interface DocumentBlock {
         carreraItalica?: boolean;
         periodoFontSize?: number;
         periodoItalica?: boolean;
-        // posicionamiento libre (% relativo al canvas A4 210×297mm)
-        xInstitution?: number; yInstitution?: number;  // default: x=10, y=13
-        xLogo?: number; yLogo?: number;                // default: x=10, y=3
-        xTitle?: number; yTitle?: number;         // default: x=10, y=35
-        xCarrera?: number; yCarrera?: number;       // default: x=10, y=70
-        xPeriodo?: number; yPeriodo?: number;       // default: x=10, y=80
-        alignInstitution?: string;
-        showTitle?: boolean;
-        alignTitle?: string;
-        showTemaProyecto?: boolean;
-        xTema?: number;
-        yTema?: number;
-        alignTema?: string;
-        showCarrera?: boolean;
-        alignCarrera?: string;
-        showPeriodo?: boolean;
-        alignPeriodo?: string;
-        // legacy (zonas fijas - retrocompatibilidad)
-        posInstitution?: string;
-        posTitle?: string;
-        posCarrera?: string;
-        posPeriodo?: string;
+        headerBgColor?: string;
+        headerBorderColor?: string;
 
-        // ── title ──────────────────────────────────────────────────────────
-        text?: string;
-        fontSize?: 'H1' | 'H2' | 'H3';
-        color?: string;
-        alignment?: 'left' | 'center' | 'right' | 'justify';
+        // ── title ───────────────────────────────────────────────────────────
+        titleText?: string;
+        titleLevel?: 'h1' | 'h2' | 'h3';
+        titleColor?: 'navy' | 'gold' | 'slate' | string;
+        alignment?: 'left' | 'center' | 'right';
+        fontSize?: number | string;
+        bold?: boolean;
+        italic?: boolean;
+        underline?: boolean;
+        badgeText?: string;
+        badgeColor?: 'blue' | 'gold' | 'green' | 'red';
+        badgeAlign?: 'left' | 'center' | 'right';
 
-        // ── rich_text ──────────────────────────────────────────────────────
-        html?: string;             // Contenido HTML serializado por Tiptap
-        title?: string;            // Título opcional de sección para bloque rich_text
-        placeholder?: string;      // Placeholder o guía de redacción institucional
-        toolbarMode?: ToolbarMode; // 'apa_full' (defecto) | 'standard' | 'compact'
+        // ── rich_text ───────────────────────────────────────────────────────
+        content?: string;
+        minWords?: number;
+        maxWords?: number;
+        toolbarMode?: ToolbarMode;
+        placeholder?: string;
+        requirementText?: string;
+        apaGuidelines?: string[];
+        showWordCount?: boolean;
+        showCharCount?: boolean;
+        guidelines?: string[];
 
-        // ── advanced_table ─────────────────────────────────────────────────
-        headerStyle?: 'blue' | 'gold' | 'gray' | 'none';
-        columnCount?: ColumnCount;
+        // ── advanced_table / multi_section_table ────────────────────────────
         headers?: string[];
-        rows?: TableRow[];
         colWidths?: string[];
+        rows?: TableRow[];
+        tableSections?: TableSection[];
+        columnCount?: ColumnCount;
+        tableBorderColor?: string;
+        tableHeaderColor?: string;
+        alternateRowBg?: boolean;
 
-        // ── multi_section_table ────────────────────────────────────────────
-        sections?: TableSection[];
+        // ── two_column ──────────────────────────────────────────────────────
+        leftContent?: string;
+        rightContent?: string;
+        leftWidth?: number;
+        rightWidth?: number;
 
-        // ── two_column ─────────────────────────────────────────────────────
-        leftTitle?: string;
-        leftContent?: string;      // HTML serializado (Tiptap) para columna izquierda
-        rightTitle?: string;
-        rightContent?: string;     // HTML serializado (Tiptap) para columna derecha
-        leftHeaderStyle?: 'blue' | 'gold' | 'gray' | 'none';
-        rightHeaderStyle?: 'blue' | 'gold' | 'gray' | 'none';
+        // ── page_break ──────────────────────────────────────────────────────
+        breakType?: 'page' | 'column';
 
-        // ── gantt ──────────────────────────────────────────────────────────
-        ganttMonths?: string[];          // Nombres de los meses del cronograma
-        ganttObjectives?: GanttObjective[];
+        // ── gantt ───────────────────────────────────────────────────────────
+        activities?: any[];
+        totalWeeks?: number;
 
-        // ── researchers_table ──────────────────────────────────────────────
-        mostrarCedula?: boolean;
-        mostrarHoras?: boolean;
-        mostrarEmail?: boolean;
-        mostrarNivelAcademico?: boolean;
-        mostrarTelefono?: boolean;
+        // ── researchers_table ───────────────────────────────────────────────
+        researchers?: any[];
 
-        // ── signatures ─────────────────────────────────────────────────────
+        // ── signatures ──────────────────────────────────────────────────────
         signaturesMode?: SignaturesMode;
-        signaturesOrder?: string[];
-        includeDirector?: boolean;
-        includeDocentes?: boolean;
-        includeEstudiantes?: boolean;
-        includeCoordinadorCarrera?: boolean;
-        includeCoordinadorDosier?: boolean;
-        includeVicerrectorado?: boolean;
         signatories?: Signatory[];
+        showSignaturesGrid?: boolean;
+        showLegalClause?: boolean;
+        customClauseText?: string;
 
-        // ── project_general_section ────────────────────────────────────────
-        identificationMode?: 'catalogs' | 'fields';
-        tableStyle?: 'classic' | 'grid' | string;
-        borderStyle?: 'solid' | 'none' | string;
-        headerColor?: 'navy' | 'primary' | 'emerald' | 'slate' | 'dark' | string;
-        fieldsOrder?: string[];
-        customFields?: IdentificationField[];
-        showTitulo?: boolean;
-        showPrograma?: boolean;
-        showGrupo?: boolean;
-        showLinea?: boolean;
-        showTipo?: boolean;
-        showCaces?: boolean;
-        showConvocatoria?: boolean;
-        showDirector?: boolean;
-        showFechas?: boolean;
+        // ── project_general_section ─────────────────────────────────────────
+        generalFields?: BentoGridItem[];
 
-        // ── project_technical_section ──────────────────────────────────────
-        technicalSections?: TechnicalSubsection[];
-        technicalLayoutMode?: 'table_2col' | 'stacked' | string;
-        technicalHeaderColor?: 'navy' | 'gold' | 'slate' | 'emerald' | string;
-        technicalBorderStyle?: 'solid' | 'none' | string;
-        showAntecedentes?: boolean;
-        showDescripcionProyecto?: boolean;
-        showJustificacion?: boolean;
-        showObjetivoGeneral?: boolean;
-        showObjetivosEspecificos?: boolean;
-        showOds?: boolean;
-        showMarcoTeorico?: boolean;
-        showMetodologia?: boolean;
-        showEvaluacion?: boolean;
+        // ── project_technical_section ───────────────────────────────────────
+        technicalSubsections?: TechnicalSubsection[];
 
-        // ── project_budget_section ─────────────────────────────────────────
-        showRecursosDisponibles?: boolean;
-        showRecursosNecesarios?: boolean;
-        showFinanciamiento?: boolean;
+        // ── project_budget_section / resources ──────────────────────────────
+        budgetItems?: any[];
+        totalBudget?: number;
 
-        // ── impacts ────────────────────────────────────────────────────────
-        impactCategories?: ImpactCategory[];
-        impactLayoutMode?: 'table' | 'cards' | 'sections';
-        impactHeaderColor?: 'navy' | 'gold' | 'slate' | 'emerald' | string;
-        productosTitle?: string;
-        showImpactoSocial?: boolean;
-        showImpactoCientifico?: boolean;
-        showImpactoEconomico?: boolean;
-        showImpactoPolitico?: boolean;
-        showImpactoAmbiental?: boolean;
-        showImpactoOtro?: boolean;
-        showProductosEsperados?: boolean;
+        // ── impacts ─────────────────────────────────────────────────────────
+        impacts?: any[];
 
-
-
-        // ── project_progress_report ────────────────────────────────────────
-        showHitosCompletados?: boolean;
-        showEvidencias?: boolean;
-        showPresupuestoEjecutado?: boolean;
-
-
-        // ── progress_header_section ────────────────────────────────────────
-        headerTitle?: string;
+        // ── progress_header_section ─────────────────────────────────────────
         progressHeaderFields?: ProgressHeaderField[];
+        progressHeaderTitle?: string;
         progressHeaderColor?: 'navy' | 'gold' | 'slate' | string;
-        progressHeaderBorder?: 'solid' | 'none' | string;
 
-        // ── progress_activity_section ──────────────────────────────────────
-        activityVariant?: ProgressActivityVariant;
+        // ── progress_activity_section ───────────────────────────────────────
         activityColumns?: ProgressActivityColumn[];
-        activityTableTitle?: string;
+        activityVariants?: ProgressActivityVariant[];
         activityHeaderColor?: 'navy' | 'gold' | 'slate' | string;
-        activityAllowDynamicRows?: boolean;
 
         // ── progress_status_section ────────────────────────────────────────
         statusTitle?: string;
         progressStatusSections?: ProgressStatusSubsection[];
         progressStatusHeaderColor?: 'navy' | 'gold' | 'slate' | string;
         statusOptions?: string[];
-
-        // ── final_report_header_section ────────────────────────────────────
-        finalReportTitle?: string;
-        finalReportHeaderColor?: 'navy' | 'gold' | 'slate' | string;
-        showTipoInvestigacion?: boolean;
-        showAlcanceProyecto?: boolean;
-        showFechasProyecto?: boolean;
-        showTablaInvestigadores?: boolean;
-
-        // ── final_report_writing_section ───────────────────────────────────
-        writingSections?: FinalReportWritingSubsection[];
-        writingLayoutMode?: 'table_2col' | 'stacked' | string;
-        writingHeaderColor?: 'navy' | 'gold' | 'slate' | string;
-        coordinador_nombre?: string;
-        coordinador_cargo?: string;
-        firmante_institucion?: string;
 
         // ── certificate blocks ─────────────────────────────────────────────
         certificateTitle?: string;

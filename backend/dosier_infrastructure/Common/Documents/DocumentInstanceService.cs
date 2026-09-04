@@ -401,13 +401,7 @@ namespace Dosier.Infrastructure.Common.Documents
             // INFORME_AVANCE
             "HitosCompletados", "Evidencias", "PresupuestoEjecutado", "ConclusionesParciales", 
             "ActividadesEjecutadas", "ActividadesNoPrevistas", "Obstaculos", "DescripcionFaseActual", 
-            "EstadoEjecucion", "ObservacionesDirector", "ObservacionesCoordinador",
-            // INFORME_FINAL_INVESTIGACION
-            "ResumenEjecutivo", "CumplimientoObjetivos", "ResultadosDiscusion", "ImpactoInnovacion", "ConclusionesRecomendaciones", "BibliografiaFinal",
-            "resumen_ejecutivo", "cumplimiento_objetivos", "resultados_discusion", "impacto_innovacion", "conclusiones_recomendaciones", "bibliografia_final",
-            "Indice", "Resumen", "Introduccion", "Objetivos", "Fundamentos", "Metodos", "Resultados", "Productos", "Impactos", "Transferencia", "InformeFinanciero", "Conclusiones", "Recomendaciones", "Bibliografia", "Anexos",
-            "indice", "resumen", "introduccion", "objetivos", "fundamentos", "metodos", "resultados", "productos", "impactos", "transferencia", "informe_financiero", "conclusiones", "recomendaciones", "bibliografia", "anexos",
-            "resultados", "discusion", "impacto_final", "transferencia_conocimiento"
+            "EstadoEjecucion", "ObservacionesDirector", "ObservacionesCoordinador"
         };
 
         private static bool IsHtmlEmpty(string? html)

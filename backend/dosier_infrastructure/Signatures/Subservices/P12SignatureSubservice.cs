@@ -220,35 +220,6 @@ public class P12SignatureSubservice : IP12SignatureSubservice
                 var workflowService = _serviceProvider.GetRequiredService<Dosier.Application.Research.IWorkflowEngineService>();
                 await workflowService.TransicionarEstadoAsync(instancia.EntityUuid, "Enviado", 1, $"Firma Digital .p12 de Protocolo de Investigación - Hash: {docHash}");
             }
-            else if (instancia.TemplateCode == "INFORME_FINAL_INVESTIGACION")
-            {
-                var notifService = _serviceProvider.GetRequiredService<dosier_application.Common.Notifications.INotificationService>();
-                var project = await _context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == instancia.EntityUuid);
-                if (project != null)
-                {
-                    project.FechaLimiteSubsanacionFinal = null;
-
-                    var trazabilidad = new DocTrazabilidadProyecto
-                    {
-                        Uuid = Guid.NewGuid().ToString(),
-                        IdProyecto = project.IdProyecto,
-                        IdUsuario = idUsuario,
-                        EstadoAnterior = project.Estado,
-                        EstadoNuevo = project.Estado,
-                        Observacion = $"Firma digital avanzada (.p12) y postulación del Informe Final para revisión y dictamen institucional de cierre (Código: {firmaCode})",
-                        FechaTransicion = DateTime.UtcNow
-                    };
-                    _context.DocTrazabilidadProyectos.Add(trazabilidad);
-
-                    await notifService.NotifyByRoleCodesAsync(
-                        "Informe Final Postulado",
-                        $"El Director del proyecto '{project.Titulo}' ha firmado el Informe Final. Requiere revisión técnica y dictamen institucional de cierre.",
-                        new[] { "DOSIER_ADMIN" },
-                        $"/investigacion/mis-proyectos/workspace/protocolo-investigacion/{project.Uuid}"
-                    );
-                }
-            }
-
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         }

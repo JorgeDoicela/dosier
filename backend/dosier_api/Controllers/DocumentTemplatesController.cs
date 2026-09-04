@@ -185,22 +185,6 @@ namespace dosier_api.Controllers
         }
 
         /// <summary>
-        /// [DEPRECADO] Las plantillas ahora se cargan desde archivos .html físicos (TemplateFileLoader).
-        /// Para modificar el diseño edita: Templates/Investigacion/InformeFinal.html
-        /// </summary>
-        [HttpPost("migrate-informe-final")]
-        public IActionResult MigrateInformeFinal()
-        {
-            return Ok(new
-            {
-                message = "Las plantillas ahora se cargan automáticamente desde archivos .html físicos. No se requiere migración manual.",
-                templateCode = InformeFinalTemplate.CODE,
-                htmlFile = "Templates/Investigacion/InformeFinal.html",
-                info = "Edita el archivo .html y genera el documento. El cambio aplica sin recompilar."
-            });
-        }
-
-        /// <summary>
         /// Restablece una plantilla en la BD a sus archivos físicos oficiales (HTML y CSS).
         /// </summary>
         [HttpPost("{code}/reset-to-default")]

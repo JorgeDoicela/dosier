@@ -212,36 +212,7 @@ SELECT
     NULL                                    AS alertaDias,
     0                                       AS recurrenciaAnual
 FROM doc_proyectos p
-WHERE p.fechaLimiteSubsanacion IS NOT NULL
-
-UNION ALL
-
--- 10. Plazos de Informe Final fijados por el Administrador (fechaLimiteInformeFinal / fechaLimiteSubsanacionFinal)
-SELECT
-    CONCAT('PROY-INF-FIN-', p.idProyecto),
-    p.uuid,
-    CONCAT('Límite Entrega Informe Final: ', COALESCE(p.codigoInstitucional, p.titulo)),
-    CONCAT('Fecha límite fijada por el Administrador para la entrega del informe final del proyecto ', COALESCE(p.codigoInstitucional, p.uuid)),
-    'Proyecto',
-    'EntregaInformeFinal',
-    COALESCE(p.fechaLimiteSubsanacionFinal, p.fechaLimiteInformeFinal),
-    NULL,
-    1,
-    '#DC2626',
-    p.idProyecto,
-    p.uuid,
-    'PROYECTO',
-    NULL,
-    'DOSIER_ADMIN',
-    IF(p.estado IN ('En Ejecución', 'En Corrección') AND p.activo = 1, 1, 0),
-    0                                       AS esPrivado,
-    'Alta'                                  AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_proyectos p
-WHERE (p.fechaLimiteInformeFinal IS NOT NULL OR p.fechaLimiteSubsanacionFinal IS NOT NULL);
+WHERE p.fechaLimiteSubsanacion IS NOT NULL;
 ";
 
                 await context.Database.ExecuteSqlRawAsync(viewSql);

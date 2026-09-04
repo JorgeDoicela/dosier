@@ -493,21 +493,7 @@ namespace Dosier.Infrastructure.Research
             {
                 try
                 {
-                    // 1. Sellar de forma inmutable la instancia de Informe Final para acreditación CACES
-                    var finalDocs = await _context.DocumentInstances
-                        .Where(d => d.EntityUuid == proyecto.Uuid && (d.TemplateCode == "INFORME_FINAL_INVESTIGACION" || d.TemplateCode == "INFORME_FINAL"))
-                        .ToListAsync();
-
-                    foreach (var fDoc in finalDocs)
-                    {
-                        if (fDoc.State != DocumentState.Signed && fDoc.State != DocumentState.Archived)
-                        {
-                            fDoc.TransitionTo(DocumentState.Signed);
-                        }
-                    }
-                    await _context.SaveChangesAsync();
-
-                    // 2. Notificar a todos los participantes
+                    // 1. Notificar a todos los participantes
                     var participantUserIds = await _context.DocProyectoParticipantes
                         .Where(pp => pp.IdProyecto == proyecto.IdProyecto && pp.Activo != false)
                         .Select(pp => pp.IdUsuario)

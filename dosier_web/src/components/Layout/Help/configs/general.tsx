@@ -62,7 +62,7 @@ export const DASHBOARD_CONFIG: HelpConfig = {
         },
         {
             title: "Accesos directos Bento y bandeja de actividades",
-            description: "Usa las tarjetas de acceso rápido para crear una nueva postulación, firmar el informe final, revisar el historial de actividad o consultar documentos oficiales sin navegar manualmente por el menú.",
+            description: "Usa las tarjetas de acceso rápido para crear una nueva postulación, firmar informes de avance, revisar el historial de actividad o consultar documentos oficiales sin navegar manualmente por el menú.",
             highlight: 'content-bottom'
         },
         {

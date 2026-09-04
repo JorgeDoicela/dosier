@@ -23,7 +23,6 @@ const ResearchProjectsPage   = lazy(() => import('./pages/Investigacion/Proyecto
 const MyProjectsPage         = lazy(() => import('./pages/Investigacion/Proyectos/MyProjectsPage'));
 const ProjectWorkspace       = lazy(() => import('./pages/Investigacion/Proyectos/Workspace/ProjectWorkspace').then(m => ({ default: m.ProjectWorkspace })));
 const RevisionTecnicaPage    = lazy(() => import('./pages/Investigacion/Proyectos/RevisionTecnicaPage').then(m => ({ default: m.RevisionTecnicaPage })));
-const RevisionInformeFinalPage = lazy(() => import('./pages/Investigacion/Proyectos/RevisionInformeFinalPage').then(m => ({ default: m.RevisionInformeFinalPage })));
 const MonitoringPage         = lazy(() => import('./pages/Investigacion/Monitoreo/MonitoringPage'));
 const GroupsPage             = lazy(() => import('./pages/Admin/GroupsPage'));
 const AuditPage              = lazy(() => import('./pages/Admin/AuditPage'));
@@ -283,14 +282,12 @@ function App() {
                             <Route path="/investigacion/monitoreo/:projectUuid" element={<AdminRoute><MonitoringPage /></AdminRoute>} />
                             <Route path="/investigacion/informes-avance/:projectId" element={<AdminRoute><InformesAvancePage /></AdminRoute>} />
                             <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
-                            <Route path="/investigacion/revision-informe-final/:projectUuid" element={<RevisionInformeFinalPage />} />
                             
                             {/* Researcher Context (Docentes, Estudiantes, Externos) */}
                             <Route path="/investigacion/mis-proyectos" element={<ResearcherRoute><MyProjectsPage /></ResearcherRoute>} />
                             <Route path="/investigacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
                             <Route path="/investigacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoringPage /></ResearcherRoute>} />
                             <Route path="/investigacion/mis-proyectos/informes-avance/:projectId" element={<ResearcherRoute><InformesAvancePage /></ResearcherRoute>} />
-                            <Route path="/investigacion/mis-proyectos/revision-informe-final/:projectUuid" element={<RevisionInformeFinalPage />} />
                             
                             <Route path="/convocatorias" element={<ConvocatoriaRoute />} />
                             <Route path="/verificacion" element={<VerifyDocument />} />

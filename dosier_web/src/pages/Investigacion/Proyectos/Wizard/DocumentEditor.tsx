@@ -397,8 +397,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
         const techSection = templateConfig?.sections?.find((s: any) =>
             s.componentName === "TechnicalSection" ||
             s.component_name === "TechnicalSection" ||
-            s.id === "tecnico" ||
-            s.id === "redaccion_informe_final"
+            s.id === "tecnico"
         );
 
         if (techSection) {
@@ -421,10 +420,6 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             }
         } else if (templateCode === 'PROTOCOLO_INVESTIGACION') {
             ['Antecedentes', 'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'ObjetivosEspecificos', 'MarcoTeorico', 'Metodologia', 'Evaluacion', 'Bibliografia'].forEach(k => {
-                if (!list.includes(k)) list.push(k);
-            });
-        } else if (templateCode === 'INFORME_FINAL_INVESTIGACION') {
-            ['Indice', 'Resumen', 'Introduccion', 'Objetivos', 'Fundamentos', 'Metodos', 'Resultados', 'Productos', 'Impactos', 'Transferencia', 'InformeFinanciero', 'Conclusiones', 'Recomendaciones', 'Bibliografia', 'Anexos'].forEach(k => {
                 if (!list.includes(k)) list.push(k);
             });
         } else if (templateCode === 'INFORME_AVANCE' && !templateConfig?.sections?.some((s: any) => s.id === "edicion_colaborativa")) {

@@ -79,13 +79,6 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
                 { type: 'progress_activity_section', icon: Table, label: 'Matriz de Actividades y Avance', desc: 'Tabla configurable (Ejecutadas, NP u Obstáculos).', color: 'text-amber-500 bg-amber-500/5' },
                 { type: 'progress_status_section', icon: Layout, label: 'Estado y Observaciones', desc: 'Estado del proyecto y redacción con permisos de rol.', color: 'text-indigo-500 bg-indigo-500/5' }
             ]
-        },
-        {
-            title: 'Bloques de Informe Final',
-            items: [
-                { type: 'final_report_header_section', icon: BookOpen, label: 'Información General del Proyecto', desc: 'Datos del proyecto, tipo de investigación, alcance, plazos e investigadores.', color: 'text-purple-500 bg-purple-500/5' },
-                { type: 'final_report_writing_section', icon: FileText, label: 'Plan de Redacción Científica', desc: '15 sub-secciones de redacción científica pre-cargadas.', color: 'text-indigo-500 bg-indigo-500/5' }
-            ]
         }
     ];
 

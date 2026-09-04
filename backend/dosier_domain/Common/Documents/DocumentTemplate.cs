@@ -183,7 +183,6 @@ namespace Dosier.Domain.Common.Documents
         Protocolo = 1,
         ActaAprobacion = 2,
         InformeAvance = 3,
-        InformeFinal = 4,
         ActaLiquidacion = 5,
 
         // Gestión de presupuesto público (SERCOP)

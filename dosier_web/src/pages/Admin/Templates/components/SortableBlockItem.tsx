@@ -20,7 +20,6 @@ import {
     RenderProjectGeneralSection,
     RenderProjectTechnicalSection,
     RenderImpacts,
-    RenderFinalReportWritingSection,
 } from './canvasRenderers/RenderSections';
 import {
     RenderProjectBudgetSection,
@@ -30,7 +29,6 @@ import {
     RenderProgressHeaderSection,
     RenderProgressActivitySection,
     RenderProgressStatusSection,
-    RenderFinalReportHeaderSection,
 } from './canvasRenderers/RenderProgressSections';
 
 /** Tipos de bloques de los que solo se permite una única instancia */
@@ -47,8 +45,6 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'resources',
     'progress_header_section',
     'progress_status_section',
-    'final_report_header_section',
-    'final_report_writing_section',
 ];
 
 interface SortableBlockItemProps {
@@ -136,10 +132,6 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 return <RenderProgressActivitySection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'progress_status_section':
                 return <RenderProgressStatusSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
-            case 'final_report_header_section':
-                return <RenderFinalReportHeaderSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
-            case 'final_report_writing_section':
-                return <RenderFinalReportWritingSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'page_break':
                 return (
                     <div className="w-full flex items-center justify-between py-2 select-none">

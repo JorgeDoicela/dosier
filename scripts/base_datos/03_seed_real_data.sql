@@ -174,47 +174,47 @@ INSERT INTO doc_convocatorias (idConvocatoria, uuid, codigoConvocatoria, titulo,
 (2, '9fb183ea-e522-4828-98e3-841853ad76aa', 'CONV-2026-I', 'Convocatoria Proyectos de Innovación Tecnológica 2026-I', 'ABR2026', '2026-04-10', '2026-06-10', '2026', 'Enfoque en desarrollo de software, prototipos de hardware y transferencia tecnológica', 'https://bases.traversari.edu.ec/2026-I', 'Tener grupo de investigación registrado o semillero activo', 2, 'Abierta');
  
 -- 7. Poblar Proyectos
-INSERT INTO doc_proyectos (idProyecto, uuid, idConvocatoria, codigoInstitucional, titulo, idSublinea, idPrograma, idGrupo, tieneGrupo, idTipo, fechaPresentacion, fechaInicio, fechaFin, tiempoEjecucion, estado, puntajeEvaluacion, valorEjecucion, idObjetivoPnd, idEntidadAliada, trlInicial, trlActual, trlMeta, hashActaAprobacion, fechaAprobacion, firmadoPor, metadataCacesJson) VALUES
+INSERT INTO doc_proyectos (idProyecto, uuid, idConvocatoria, codigoInstitucional, titulo, idGrupo, tieneGrupo, fechaPresentacion, fechaInicio, fechaFin, tiempoEjecucion, estado, puntajeEvaluacion, valorEjecucion, idObjetivoPnd, idEntidadAliada, trlInicial, trlActual, trlMeta, hashActaAprobacion, fechaAprobacion, firmadoPor, metadataCacesJson) VALUES
 (1, '11111111-1111-1111-1111-111111111111', 1, 'PROY-SOFT-2025-001',
  'Desarrollo de una Plataforma IoT con Inteligencia Artificial para el Monitoreo del Consumo Eléctrico Doméstico en el IST Traversari',
- 1, 1, 1, 1, 2, '2025-05-10', '2025-07-01', '2026-01-01', '6 meses', 'En Ejecución', 85.50, 3200.00, 3, 3, 2, 5, 6,
+ 1, 1, '2025-05-10', '2025-07-01', '2026-01-01', '6 meses', 'En Ejecución', 85.50, 3200.00, 3, 3, 2, 5, 6,
  '3f78ec90141f22e84c1fbc0d16f8ef190a421b8ff120f269ad3f82163b86029d5', '2025-06-20 09:30:00', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1),
  '{"descripcionProyecto": "Desarrollo de hardware de sensado y una plataforma web con modelos de redes neuronales recursivas para la clasificación automática de cargas y predicción de consumo eléctrico domiciliar.", "antecedentes": "El desperdicio de energía eléctrica en hogares de Quito asciende al 15% debido a la falta de información desagregada sobre el consumo de electrodomésticos en tiempo real...", "justificacion": "Este proyecto permite reducir la facturación eléctrica de las familias y ayuda al instituto a acreditar en los estándares de vinculación tecnológica del CACES...", "marcoTeorico": "Estudios previos muestran que las redes neuronales LSTM alcanzan un 92% de precisión en la desagregación de carga no intrusiva (NILM)...", "metodologia": "Se implementará una metodología ágil XP. Se utilizarán microcontroladores ESP32, sensores SCT-013 y una arquitectura backend basada en ASP.NET Core y Python...", "metodoEvaluacion": "Comparación del consumo histórico mensual facturado versus el consumo optimizado post-instalación de alertas tempranas en una muestra piloto de 10 hogares."}'),
  
 (2, '22222222-2222-2222-2222-222222222222', 1, 'PROY-ENE-2025-002',
  'Implementación de un Sistema Solar Fotovoltaico Autónomo para la Iluminación del Campus Traversari Quito',
- 3, 2, 2, 1, 2, '2025-05-12', '2025-07-05', '2026-01-05', '6 meses', 'Finalizado', 92.00, 6500.00, 2, 2, 3, 7, 7,
- 'f82bbcbff18acb9eef89283f12e840afbc89e81bfafeff093b128afc298ec289', '2025-06-22 10:45:00', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1), '123456789/104',
+ 2, 1, '2025-05-12', '2025-07-05', '2026-01-05', '6 meses', 'Finalizado', 92.00, 6500.00, 2, 2, 3, 7, 7,
+ 'f82bbcbff18acb9eef89283f12e840afbc89e81bfafeff093b128afc298ec289', '2025-06-22 10:45:00', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1),
  '{"descripcionProyecto": "Diseño, cálculo y puesta en marcha de un sistema de paneles solares fotovoltaicos con banco de baterías para alimentar la iluminación perimetral del campus Traversari, reduciendo la huella de carbono institucional.", "antecedentes": "El campus de Quito del IST Traversari experimenta cortes intermitentes de energía y una alta facturación en iluminación externa...", "justificacion": "Garantiza la continuidad operativa de la iluminación externa de seguridad y sirve como laboratorio vivo para los estudiantes de la carrera de Electrónica...", "marcoTeorico": "La radiación solar media en Quito es de 4.8 kWh/m²/día, lo cual hace altamente viable la generación distribuida autónoma...", "metodologia": "Metodología experimental: 1. Dimensionamiento de la carga, 2. Selección de módulos monocristalinos e inversor, 3. Instalación física, 4. Pruebas de descarga profunda de baterías.", "metodoEvaluacion": "Medición diaria del rendimiento del sistema en kWh generados y ahorro porcentual respecto a la red de distribución eléctrica pública."}'),
  
 (3, '33333333-3333-3333-3333-333333333333', 1, 'PROY-ADM-2025-003',
  'Estudio del Impacto del Teletrabajo en la Productividad del Claustro Docente en Institutos Tecnológicos de Quito',
- 5, 3, 3, 1, 1, '2025-05-15', '2025-07-10', '2026-01-10', '6 meses', 'Aprobado', 78.00, 1200.00, 4, NULL, 1, 3, 4,
- 'a12bc90fe838efca839ea12bfaec09e20a9bfedcba91bfadcf928eef920fe1a8', '2025-06-25 11:15:00', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1), NULL,
+ 3, 1, '2025-05-15', '2025-07-10', '2026-01-10', '6 meses', 'Aprobado', 78.00, 1200.00, 4, NULL, 1, 3, 4,
+ 'a12bc90fe838efca839ea12bfaec09e20a9bfedcba91bfadcf928eef920fe1a8', '2025-06-25 11:15:00', (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1),
  '{"descripcionProyecto": "Investigación empírica y análisis correlacional del desempeño laboral docente bajo esquemas mixtos de teletrabajo en institutos de Pichincha.", "antecedentes": "La transición abrupta al teletrabajo generó cambios significativos en el clima organizacional y la productividad de los docentes universitarios y tecnológicos...", "justificacion": "Permite diseñar políticas internas de bienestar y optimización de distributivos horarios conforme a la normativa vigente del CES...", "marcoTeorico": "Se revisarán los modelos de balance vida-trabajo de Greenhaus y las escalas de productividad de Koopmans aplicados al sector educativo...", "metodologia": "Investigación no experimental, de corte transversal, utilizando encuestas estructuradas a 120 docentes de 5 institutos tecnológicos de Quito y análisis con SPSS.", "metodoEvaluacion": "Validación de hipótesis de correlación mediante pruebas de Chi-cuadrado y coeficientes R de Pearson entre variables de clima y metas cumplidas."}'),
  
 (4, '44444444-4444-4444-4444-444444444444', 2, 'PROY-SOFT-2026-004',
  'Desarrollo de un Asistente Virtual Conversacional basado en IA para la Gestión Académica de Estudiantes en el IST Traversari',
- 2, 1, 1, 1, 2, '2026-04-15', '2026-07-01', '2027-01-01', '6 meses', 'Borrador', NULL, 0.00, 3, NULL, 2, 2, 5,
- NULL, NULL, NULL, NULL,
+ 1, 1, '2026-04-15', '2026-07-01', '2027-01-01', '6 meses', 'Borrador', NULL, 0.00, 3, NULL, 2, 2, 5,
+ NULL, NULL, NULL,
  '{"descripcionProyecto": "Diseño de un asistente virtual inteligente basado en modelos de lenguaje (LLM) y técnicas de generación aumentada por recuperación (RAG) para automatizar la atención a estudiantes sobre trámites académicos, calendarios y reglamentos institucionales.", "antecedentes": "El departamento de bienestar estudiantil y secretaría del IST Traversari registra saturación en canales de consulta rutinaria...", "justificacion": "Mejora los tiempos de respuesta estudiantil de horas a segundos, liberando tiempo administrativo para casos de atención compleja...", "marcoTeorico": "La arquitectura RAG permite mitigar alucinaciones de modelos de lenguaje mediante inyección de contexto de bases de conocimiento oficiales...", "metodologia": "Desarrollo incremental bajo metodología SCRUM: 1. Curación de reglamentos institucionales, 2. Embeddings y base de datos vectorial, 3. Orquestación con LangChain y API de chat, 4. Frontend web interactivo.", "metodoEvaluacion": "Evaluación de precisión conversacional utilizando el framework Ragas y encuestas de usabilidad y satisfacción de estudiantes."}'),
  
 (5, '55555555-5555-5555-5555-555555555555', 2, 'PROY-RED-2026-005',
  'Diseño y Construcción de un Prototipo para la Detección Temprana de Fallas Eléctricas en Laboratorios de Electrónica del IST Traversari',
- 6, 1, 1, 1, 2, '2026-04-20', '2026-07-05', '2027-01-05', '6 meses', 'En Revisión', NULL, 500.00, 2, 1, 2, 3, 6,
- NULL, NULL, NULL, NULL,
+ 1, 1, '2026-04-20', '2026-07-05', '2027-01-05', '6 meses', 'En Revisión', NULL, 500.00, 2, 1, 2, 3, 6,
+ NULL, NULL, NULL,
  '{"descripcionProyecto": "Construcción de hardware detector con microcontrolador y análisis de señales de corriente para la desconexión preventiva de mesas de trabajo en laboratorios ante transitorios y cortocircuitos.", "antecedentes": "Los laboratorios de electrónica sufren constantes daños en sus osciloscopios y fuentes debido a cortocircuitos accidentales cometidos por estudiantes en prácticas...", "justificacion": "Protege los activos tecnológicos del instituto y reduce costos de mantenimiento correctivo de laboratorios...", "marcoTeorico": "Los transitorios de corriente y sobretensiones en microsegundos pueden detectarse mediante comparadores analógicos rápidos y optoacopladores de aislamiento...", "metodologia": "Diseño del PCB en Altium, fabricación del prototipo, integración de relevadores de estado sólido de disparo rápido y pruebas controladas con cargas inductivas.", "metodoEvaluacion": "Tiempo promedio de respuesta en milisegundos desde la detección del corto hasta la apertura del circuito."}'),
  
 (6, '66666666-6666-6666-6666-666666666666', 1, 'PROY-MKT-2025-006',
  'Estrategias de Marketing Digital para la Reactivación Comercial de las MIPYMES de la Parroquia Traversari en Quito',
- 8, 3, 3, 1, 1, '2025-05-18', '2025-07-15', '2026-01-15', '6 meses', 'Rechazado', 62.50, 0.00, 5, NULL, 1, 1, 3,
- NULL, NULL, NULL, NULL,
+ 3, 1, '2025-05-18', '2025-07-15', '2026-01-15', '6 meses', 'Rechazado', 62.50, 0.00, 5, NULL, 1, 1, 3,
+ NULL, NULL, NULL,
  '{"descripcionProyecto": "Formulación e implementación de planes de comercio electrónico y marketing digital para un grupo de 15 microempresas del sector de influencia del instituto en el sur de Quito.", "antecedentes": "La baja adopción digital de las MIPYMES locales limita su crecimiento comercial y competitividad...", "justificacion": "Vincula la academia con las microempresas del sector para dinamizar la economía local post-crisis...", "marcoTeorico": "Los modelos de adopción tecnológica TAM aplicados a microempresarios demuestran que la facilidad de uso percibida es clave...", "metodologia": "Capacitación a microempresarios, diseño de catálogos web de bajo costo y configuración de canales de WhatsApp Business y redes sociales.", "metodoEvaluacion": "Incremento porcentual estimado de ventas y nivel de tráfico en los canales digitales configurados."}'),
  
 (7, '77777777-7777-7777-7777-777777777777', 1, 'PROY-GAS-2025-007',
  'Estudio y Preservación de Técnicas Culinarias Ancestrales en el Distrito Metropolitano de Quito',
- 9, 3, 5, 1, 2, '2025-05-20', '2025-07-20', '2026-01-20', '6 meses', 'Inconcluso', NULL, 0.00, 2, NULL, 1, 2, 3,
- NULL, NULL, NULL, NULL,
+ 5, 1, '2025-05-20', '2025-07-20', '2026-01-20', '6 meses', 'Inconcluso', NULL, 0.00, 2, NULL, 1, 2, 3,
+ NULL, NULL, NULL,
  '{"descripcionProyecto": "Investigación histórica, etnográfica y experimental de la culinaria prehispánica del norte de Pichincha, documentando recetas y procesos químicos de fermentación tradicional.", "antecedentes": "La globalización alimentaria desplaza la cocina tradicional quiteña, perdiendo técnicas de fermentación ancestrales como la chicha de jora o la preparación del machica...", "justificacion": "Permite salvaguardar el patrimonio inmaterial y nutrir la malla académica de la carrera de Gastronomía con conocimientos vernáculos...", "marcoTeorico": "Estudios bromatológicos de la fermentación láctica de granos andinos demuestran propiedades nutricionales y probióticas excepcionales...", "metodologia": "Entrevistas etnográficas en comunas ancestrales de Quito (Pomasqui, Calderón) y pruebas de laboratorio bromatológico para caracterizar las propiedades físico-químicas de las recetas.", "metodoEvaluacion": "Registro detallado en un catálogo técnico gastronómico y publicación de un recetario estandarizado."}');
  
 -- Relaciones de Proyectos con Carreras
@@ -350,7 +350,7 @@ INSERT INTO doc_lopdp_consentimientos (uuid, idUsuario, versionPolitica, canal, 
 -- 24. Poblar Auditoria LOPDP
 INSERT INTO doc_lopdp_auditoria_datos (uuid, idUsuarioActor, idUsuarioAfectado, tablaAfectada, columnaAfectada, operacion, motivo, ipDireccion, userAgent, fechaAcceso) VALUES
 (UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1718161126' LIMIT 1), 'doc_usuarios_metadata', 'rutaFirmaP12', 'LECTURA', 'Validación del certificado digital para firma del acta de inicio.', '192.168.1.60', 'Mozilla/5.0', '2025-07-01 09:20:00'),
-(UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802707511' LIMIT 1), 'doc_usuarios_metadata', 'rutaFirmaP12', 'LECTURA', 'Verificación de firma electrónica en informe final de proyecto.', '192.168.1.60', 'Mozilla/5.0', '2026-01-05 16:10:00');
+(UUID(), (SELECT idUsuario FROM usuarios WHERE idSigafi = '0302144159' LIMIT 1), (SELECT idUsuario FROM usuarios WHERE idSigafi = '1802707511' LIMIT 1), 'doc_usuarios_metadata', 'rutaFirmaP12', 'LECTURA', 'Verificación de firma electrónica en informe de avance de proyecto.', '192.168.1.60', 'Mozilla/5.0', '2026-01-05 16:10:00');
  
 -- 25. Poblar Respaldo de Base de Datos
 INSERT INTO doc_backup_logs (uuid, fechaBackup, tipo, destino, nombreArchivo, tamanioBytes, estado, hashVerificacion, errorMensaje, ejecutadoPor) VALUES
@@ -368,10 +368,10 @@ VALUES
     ('En Ejecución', 'En Acreditación CACES', 'DOSIER_ADMIN', 1, 1, 1, 0, 0, 0, 'Evaluación Acreditación CACES', '#D97706', 1);
  
 -- Agregamos el proyecto 8 en el nuevo estado 'En Acreditación CACES'
-INSERT INTO doc_proyectos (idProyecto, uuid, idConvocatoria, codigoInstitucional, titulo, idSublinea, idPrograma, idGrupo, tieneGrupo, idTipo, fechaPresentacion, fechaInicio, fechaFin, tiempoEjecucion, estado, puntajeEvaluacion, valorEjecucion, idObjetivoPnd, idEntidadAliada, trlInicial, trlActual, trlMeta, hashActaAprobacion, fechaAprobacion, firmadoPor, metadataCacesJson) VALUES
+INSERT INTO doc_proyectos (idProyecto, uuid, idConvocatoria, codigoInstitucional, titulo, idGrupo, tieneGrupo, fechaPresentacion, fechaInicio, fechaFin, tiempoEjecucion, estado, puntajeEvaluacion, valorEjecucion, idObjetivoPnd, idEntidadAliada, trlInicial, trlActual, trlMeta, hashActaAprobacion, fechaAprobacion, firmadoPor, metadataCacesJson) VALUES
 (8, '88888888-8888-8888-8888-888888888888', 1, 'PROY-CACES-2026-008',
  'Proyecto Piloto de Adaptabilidad para Acreditación de Calidad Educativa CACES',
- 1, 1, 1, 1, 2, '2026-06-10', '2026-07-01', '2027-01-01', '6 meses', 'En Acreditación CACES', 95.00, 1500.00, 3, NULL, 4, 5, 8,
+ 1, 1, '2026-06-10', '2026-07-01', '2027-01-01', '6 meses', 'En Acreditación CACES', 95.00, 1500.00, 3, NULL, 4, 5, 8,
  NULL, NULL, NULL,
  '{"descripcionProyecto": "Monitoreo experimental y levantamiento de evidencias en tiempo real bajo el nuevo modelo CACES para institutos tecnologicos.", "antecedentes": "La evaluacion del CACES requiere que los proyectos de investigacion presenten evidencias estructuradas...", "justificacion": "Demostrar la capacidad de adaptacion inmediata ante los cambios normativos del CACES en el IST Traversari...", "marcoTeorico": "Modelos de aseguramiento de la calidad en la educacion superior en America Latina...", "metodologia": "Investigacion-accion y desarrollo agil sobre los modulos de auditoria y reportes dinamicos...", "metodoEvaluacion": "Medicion del tiempo de response del sistema ante actualizaciones de umbrales normativos."}');
  

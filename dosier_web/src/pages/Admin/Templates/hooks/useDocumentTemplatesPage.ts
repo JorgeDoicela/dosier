@@ -28,8 +28,7 @@ import {
     DEFAULT_TECHNICAL_SUBSECTIONS,
     DEFAULT_IMPACT_CATEGORIES,
     DEFAULT_PROGRESS_HEADER_FIELDS,
-    DEFAULT_PROGRESS_STATUS_SUBSECTIONS,
-    DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS
+    DEFAULT_PROGRESS_STATUS_SUBSECTIONS
 } from '../types';
 import { mergeWithDefaults } from '../utils/theme-schema';
 import { generateHtmlFromBlocks } from '../utils/HtmlGenerator';
@@ -511,22 +510,6 @@ export const useDocumentTemplatesPage = () => {
                         statusTitle: 'ESTADO Y OBSERVACIONES',
                         progressStatusSections: DEFAULT_PROGRESS_STATUS_SUBSECTIONS,
                         progressStatusHeaderColor: 'navy'
-                    }
-                };
-                break;
-            case 'final_report_header_section':
-                newBlock = { id: newId, type, title: 'Encabezado Informe Final', isActive: true, config: { finalReportTitle: 'DATOS DEL PROYECTO DE INVESTIGACIÓN', finalReportHeaderColor: 'navy', showTipoInvestigacion: true, showAlcanceProyecto: true, showFechasProyecto: true, showTablaInvestigadores: true } };
-                break;
-            case 'final_report_writing_section':
-                newBlock = {
-                    id: newId,
-                    type,
-                    title: 'Plan de Redacción Informe Final',
-                    isActive: true,
-                    config: {
-                        writingHeaderColor: 'navy',
-                        writingLayoutMode: 'table_2col',
-                        writingSections: DEFAULT_FINAL_REPORT_WRITING_SUBSECTIONS
                     }
                 };
                 break;

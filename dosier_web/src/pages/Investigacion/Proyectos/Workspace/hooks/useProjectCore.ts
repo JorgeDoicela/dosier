@@ -194,9 +194,7 @@ export function useProjectCore() {
                 convocatoriaMontoMaximo: res.data.convocatoria_monto_maximo ?? res.data.convocatoriaMontoMaximo ?? res.data.ConvocatoriaMontoMaximo ?? null,
                 fechaInicio: res.data.fecha_inicio || res.data.fechaInicio || null,
                 fechaFin: res.data.fecha_fin || res.data.fechaFin || null,
-                fechaLimiteSubsanacion: res.data.fecha_limite_subsanacion || res.data.fechaLimiteSubsanacion || null,
-                fechaLimiteInformeFinal: res.data.fecha_limite_informe_final || res.data.fechaLimiteInformeFinal || null,
-                fechaLimiteSubsanacionFinal: res.data.fecha_limite_subsanacion_final || res.data.fechaLimiteSubsanacionFinal || null
+                fechaLimiteSubsanacion: res.data.fecha_limite_subsanacion || res.data.fechaLimiteSubsanacion || null
             };
             setCurrentProject(projectData);
             if (resDocs && Array.isArray(resDocs.data)) {
@@ -231,7 +229,7 @@ export function useProjectCore() {
                 params: {
                     templateCode: docTemplateCode,
                     entityUuid: resolvedProjectUuid,
-                    title: `${docTemplateCode === 'RUBRICA_EVALUACION' ? 'Rúbrica de Evaluación' : docTemplateCode === 'INFORME_AVANCE' ? 'Informe de Avance' : (docTemplateCode === 'INFORME_FINAL_INVESTIGACION' || docTemplateCode === 'INFORME_FINAL') ? 'Informe Final' : docTemplateCode} — ${currentProject?.title || ''}`
+                    title: `${docTemplateCode === 'RUBRICA_EVALUACION' ? 'Rúbrica de Evaluación' : docTemplateCode === 'INFORME_AVANCE' ? 'Informe de Avance' : docTemplateCode} — ${currentProject?.title || ''}`
                 }
             });
             const instanceUuid = res.data?.uuid || res.data?.Uuid;

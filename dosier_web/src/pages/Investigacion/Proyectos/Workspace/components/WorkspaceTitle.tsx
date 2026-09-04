@@ -66,10 +66,10 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
                         </div>
                         <div>
                             <h3 className="text-xs font-semibold text-text-main uppercase tracking-widest">
-                                {templateCode === 'INFORME_FINAL_INVESTIGACION' ? 'Informe Final en Proceso' : 'Documento en Edición'}
+                                Documento en Edición
                             </h3>
                             <p className="text-xs text-text-dim mt-1.5 leading-relaxed">
-                                Estás en el espacio de trabajo de este proyecto. Puedes continuar completando los campos colaborativos del {templateCode === 'INFORME_FINAL_INVESTIGACION' ? 'informe final' : 'documento'} o revisar el estado institucional abajo.
+                                Estás en el espacio de trabajo de este proyecto. Puedes continuar completando los campos colaborativos del documento o revisar el estado institucional abajo.
                             </p>
                         </div>
                     </div>

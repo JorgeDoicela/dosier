@@ -41,8 +41,6 @@ public partial class DocProyecto
 
     // GESTIÓN Y CONTROL DE PLAZOS INSTITUCIONALES (DEADLINES)
     public DateOnly? FechaLimiteSubsanacion { get; set; }
-    public DateOnly? FechaLimiteInformeFinal { get; set; }
-    public DateOnly? FechaLimiteSubsanacionFinal { get; set; }
 
 
     public virtual DocConvocatoria? IdConvocatoriaNavigation { get; set; }

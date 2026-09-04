@@ -36,11 +36,6 @@ namespace dosier_api.Controllers
                 return NotFound(new { message = $"La plantilla '{code}' no está activa o no existe en la base de datos." });
             }
 
-            if (code == "INFORME_FINAL_INVESTIGACION" || code == "INFORME_FINAL")
-            {
-                return Ok(new { hasDynamicConfig = false, message = "La plantilla oficial de Informe Final utiliza componentes nativos de alta gama." });
-            }
-
             var fileLoader = new Dosier.Infrastructure.Common.Documents.Engine.TemplateFileLoader(_environment);
             var fileHtml = await fileLoader.LoadAsync(template.Code);
 
@@ -96,11 +91,6 @@ namespace dosier_api.Controllers
             if (template == null)
             {
                 return NotFound(new { message = $"La plantilla '{instance.TemplateCode}' no está activa o no existe en la base de datos." });
-            }
-
-            if (instance.TemplateCode == "INFORME_FINAL_INVESTIGACION" || instance.TemplateCode == "INFORME_FINAL")
-            {
-                return Ok(new { hasDynamicConfig = false, message = "La plantilla oficial de Informe Final utiliza componentes nativos de alta gama." });
             }
 
             // 1. Obtener la estructura de bloques más reciente desde la plantilla activa (HtmlContent Base64 o Archivo Físico)
