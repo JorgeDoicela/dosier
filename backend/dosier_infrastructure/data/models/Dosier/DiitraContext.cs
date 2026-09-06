@@ -22,10 +22,6 @@ public partial class DosierContext : DbContext
     // ============================================================
     // TABLAS NUEVAS Dosier (doc_) - V3 Core Schema
     // ============================================================
-    public virtual DbSet<DocGrupoInvestigacion> DocGruposInvestigacion { get; set; }
-    public virtual DbSet<DocGrupoMiembro>       DocGruposMiembros       { get; set; }
-    public virtual DbSet<DocTipoConvocatoria>   DocTiposConvocatoria   { get; set; }
-    public virtual DbSet<DocConvocatoria>       DocConvocatorias       { get; set; }
     public virtual DbSet<DocProyecto>           DocProyectos           { get; set; }
     public virtual DbSet<DocProyectoCarrera>    DocProyectosCarreras    { get; set; }
     public virtual DbSet<DocProyectoParticipante> DocProyectoParticipantes { get; set; }
@@ -36,7 +32,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocConfigWorkflow> DocConfigWorkflows { get; set; }
     public virtual DbSet<DocDocumentoSeccionMetadata> DocDocumentosSeccionesMetadata { get; set; }
     public virtual DbSet<DocCollaborationComment> DocCollaborationComments { get; set; }
-    public virtual DbSet<DocProyectoDocumentoAdjunto>  DocProyectosDocumentosAdjuntos { get; set; }
 
     // --- Sistema y Seguridad ---
     public virtual DbSet<DocNotificacion>       DocNotificaciones      { get; set; }
@@ -51,8 +46,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocMagicLink>        DocMagicLinks          { get; set; }
     public virtual DbSet<DocConfigGeneral>    DocConfigsGenerales    { get; set; }
     public virtual DbSet<DocBackupLog>        DocBackupLogs          { get; set; }
-
-    public virtual DbSet<DocProyectoExtension> DocProyectoExtensions { get; set; }
 
     // --- Módulo Calendario ---
     public virtual DbSet<DocCalendarioEventoNormativo>  DocCalendarioEventosNormativos  { get; set; }
@@ -187,8 +180,6 @@ public partial class DosierContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DocProyecto>().HasQueryFilter(p => p.Eliminado != true);
-        modelBuilder.Entity<DocConvocatoria>().HasQueryFilter(c => c.Eliminado != true);
-        modelBuilder.Entity<DocGrupoInvestigacion>().HasQueryFilter(g => g.Eliminado != true);
 
         // Modularización de Fluent API mediante clases parciales
         OnModelCreatingSigafi(modelBuilder);

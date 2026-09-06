@@ -260,8 +260,6 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         // ── Ciclo documental y gestión académica (inicio → formulación → revisión → aprobación) ──
         { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN'], group: 1, hasChevron: true },
         { name: 'Documentación', icon: ClipboardList, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ESTUDIANTE'], group: 1, hasChevron: true },
-        { name: 'Convocatorias', icon: PenTool, path: '/convocatorias', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], group: 1 },
-        { name: 'Comités', icon: Award, path: '/grupos', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], group: 1 },
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN'], group: 2, hasChevron: true },

@@ -40,21 +40,8 @@ public class CalendarioService : ICalendarioService
 
         if (rolUsuario != "DOSIER_ADMIN")
         {
-            var misGruposMiembro = await _context.Set<DocGrupoMiembro>()
-                .Where(m => m.IdUsuario == idUsuario && (m.Activo ?? true))
-                .Select(m => m.IdGrupo)
-                .ToListAsync();
-
-            var misGruposCoordinador = await _context.Set<DocGrupoInvestigacion>()
-                .Where(g => g.IdCoordinador == idUsuario && (g.Activo ?? true) && (g.Eliminado != true))
-                .Select(g => g.IdGrupo)
-                .ToListAsync();
-
-            var misGrupos = misGruposMiembro.Union(misGruposCoordinador).Distinct().ToList();
-
             proyectosQuery = proyectosQuery.Where(p =>
-                p.DocProyectoParticipantes.Any(pp => pp.IdUsuario == idUsuario && (pp.Activo ?? true)) ||
-                (p.IdGrupo.HasValue && misGrupos.Contains(p.IdGrupo.Value))
+                p.DocProyectoParticipantes.Any(pp => pp.IdUsuario == idUsuario && (pp.Activo ?? true))
             );
         }
 
@@ -169,77 +156,7 @@ public class CalendarioService : ICalendarioService
             }
         }
 
-        // 2. CONVOCATORIAS (Apertura y Cierre)
-        var convocatorias = await _context.DocConvocatorias
-            .AsNoTracking()
-            .Where(c => (c.Eliminado != true) && (c.Estado == "Borrador" || c.Estado == "Abierta" || c.Estado == "Cerrada"))
-            .Select(c => new
-            {
-                c.IdConvocatoria,
-                c.Uuid,
-                c.Titulo,
-                c.CodigoConvocatoria,
-                c.FechaApertura,
-                c.FechaCierre
-            })
-            .ToListAsync();
 
-        foreach (var conv in convocatorias)
-        {
-            if (conv.FechaApertura >= desde && conv.FechaApertura <= hasta)
-            {
-                resultado.Add(new CalendarioEventoDto(
-                    $"CONV-APE-{conv.IdConvocatoria}",
-                    conv.Uuid,
-                    $"Apertura: {conv.Titulo}",
-                    $"Convocatoria {conv.CodigoConvocatoria} - Inicio del período de postulación.",
-                    "Convocatoria",
-                    "AperturaConvocatoria",
-                    conv.FechaApertura,
-                    null,
-                    true,
-                    "#3B82F6",
-                    conv.IdConvocatoria,
-                    conv.Uuid,
-                    "CONVOCATORIA",
-                    null,
-                    null,
-                    false,
-                    "Media",
-                    "Pendiente",
-                    null,
-                    null,
-                    false
-                ));
-            }
-
-            if (conv.FechaCierre >= desde && conv.FechaCierre <= hasta)
-            {
-                resultado.Add(new CalendarioEventoDto(
-                    $"CONV-CIE-{conv.IdConvocatoria}",
-                    conv.Uuid,
-                    $"Cierre: {conv.Titulo}",
-                    $"Convocatoria {conv.CodigoConvocatoria} - Fecha límite de postulación.",
-                    "Convocatoria",
-                    "CierreConvocatoria",
-                    conv.FechaCierre,
-                    null,
-                    true,
-                    "#F97316",
-                    conv.IdConvocatoria,
-                    conv.Uuid,
-                    "CONVOCATORIA",
-                    null,
-                    null,
-                    false,
-                    "Media",
-                    "Pendiente",
-                    null,
-                    null,
-                    false
-                ));
-            }
-        }
 
         // 5. HITOS NORMATIVOS Y PERSONALES (doc_calendario_eventos_normativos)
         var normativos = await _context.Set<DocCalendarioEventoNormativo>()

@@ -104,27 +104,5 @@ namespace dosier_infrastructure.Research
 
             return result;
         }
-
-        public static async Task<DocGrupoInvestigacion?> ResolveApprovedGroupAsync(DosierContext context, string? groupUuid)
-        {
-            if (string.IsNullOrWhiteSpace(groupUuid))
-            {
-                return null;
-            }
-
-            var normalized = groupUuid.Trim();
-            if (!Guid.TryParse(normalized, out _))
-            {
-                return await context.DocGruposInvestigacion.FirstOrDefaultAsync(g =>
-                    g.Nombre.ToLower() == normalized.ToLower() &&
-                    g.Activo == true &&
-                    g.Estado == "Aprobado");
-            }
-
-            return await context.DocGruposInvestigacion
-                .FirstOrDefaultAsync(g => g.Uuid == normalized &&
-                g.Activo == true &&
-                g.Estado == "Aprobado");
-        }
     }
 }

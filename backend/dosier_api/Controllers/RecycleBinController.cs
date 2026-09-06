@@ -19,19 +19,13 @@ namespace dosier_api.Controllers
     {
         private readonly DosierContext _context;
         private readonly IProjectOrchestrator _projectOrchestrator;
-        private readonly IConvocatoriaService _convocatoriaService;
-        private readonly IGroupsService _groupsService;
 
         public RecycleBinController(
             DosierContext context,
-            IProjectOrchestrator projectOrchestrator,
-            IConvocatoriaService convocatoriaService,
-            IGroupsService groupsService)
+            IProjectOrchestrator projectOrchestrator)
         {
             _context = context;
             _projectOrchestrator = projectOrchestrator;
-            _convocatoriaService = convocatoriaService;
-            _groupsService = groupsService;
         }
 
         private async Task<int?> GetInternalUserIdAsync()
@@ -100,75 +94,6 @@ namespace dosier_api.Controllers
             return Ok(projects);
         }
 
-        [HttpGet("convocatorias")]
-        [Authorize(Roles = "DOSIER_ADMIN")]
-        public async Task<IActionResult> GetDeletedConvocatorias()
-        {
-            var rawConvocatorias = await _context.DocConvocatorias
-                .IgnoreQueryFilters()
-                .Where(c => c.Eliminado == true)
-                .Select(c => new
-                {
-                    c.Uuid,
-                    c.Titulo,
-                    RawCodigoConvocatoria = c.CodigoConvocatoria,
-                    c.Estado,
-                    c.Anio,
-                    c.FechaEliminacion,
-                    EliminadoPor = c.EliminadoPorUsuarioId != null
-                        ? _context.Users.Where(u => u.IdUsuario == c.EliminadoPorUsuarioId).Select(u => u.Nombre).FirstOrDefault()
-                        : "Desconocido"
-                })
-                .ToListAsync();
-
-            var convocatorias = rawConvocatorias.Select(c => new
-            {
-                c.Uuid,
-                c.Titulo,
-                CodigoConvocatoria = CleanDeletedSuffix(c.RawCodigoConvocatoria),
-                c.Estado,
-                c.Anio,
-                c.FechaEliminacion,
-                c.EliminadoPor
-            });
-
-            return Ok(convocatorias);
-        }
-
-        [HttpGet("groups")]
-        public async Task<IActionResult> GetDeletedGroups()
-        {
-            int? currentUserId = await GetInternalUserIdAsync();
-            if (currentUserId == null) return Unauthorized();
-
-            bool isAdmin = IsAdmin();
-
-            var groupsQuery = _context.DocGruposInvestigacion
-                .IgnoreQueryFilters()
-                .Where(g => g.Eliminado == true);
-
-            if (!isAdmin)
-            {
-                groupsQuery = groupsQuery.Where(g => g.EliminadoPorUsuarioId == currentUserId || g.IdCoordinador == currentUserId);
-            }
-
-            var groups = await groupsQuery
-                .Select(g => new
-                {
-                    g.Uuid,
-                    g.Nombre,
-                    g.Siglas,
-                    g.Estado,
-                    g.FechaEliminacion,
-                    EliminadoPor = g.EliminadoPorUsuarioId != null
-                        ? _context.Users.Where(u => u.IdUsuario == g.EliminadoPorUsuarioId).Select(u => u.Nombre).FirstOrDefault()
-                        : "Desconocido"
-                })
-                .ToListAsync();
-
-            return Ok(groups);
-        }
-
         [HttpPost("restore/{entityType}/{uuid}")]
         public async Task<IActionResult> Restore(string entityType, string uuid)
         {
@@ -179,15 +104,6 @@ namespace dosier_api.Controllers
             {
                 var result = await _projectOrchestrator.RestoreProjectAsync(uuid, userIdRef);
                 success = result.Success;
-            }
-            else if (entityType.Equals("convocatoria", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!IsAdmin()) return StatusCode(403, new { message = "Solo los administradores pueden restaurar convocatorias." });
-                success = await _convocatoriaService.RestoreAsync(uuid, userIdRef);
-            }
-            else if (entityType.Equals("group", StringComparison.OrdinalIgnoreCase))
-            {
-                success = await _groupsService.RestoreAsync(uuid, userIdRef);
             }
             else
             {
@@ -210,22 +126,6 @@ namespace dosier_api.Controllers
                 var result = await _projectOrchestrator.PurgeProjectAsync(uuid, userIdRef);
                 success = result.Success;
                 message = result.Message ?? string.Empty;
-            }
-            else if (entityType.Equals("convocatoria", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!IsAdmin()) return StatusCode(403, new { message = "Solo los administradores pueden purgar convocatorias." });
-                try
-                {
-                    success = await _convocatoriaService.PurgeAsync(uuid, userIdRef);
-                }
-                catch (Exception ex)
-                {
-                    message = ex.Message;
-                }
-            }
-            else if (entityType.Equals("group", StringComparison.OrdinalIgnoreCase))
-            {
-                success = await _groupsService.PurgeAsync(uuid, userIdRef);
             }
             else
             {

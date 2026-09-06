@@ -38,25 +38,7 @@ export const BudgetSection: React.FC<BudgetSectionProps> = ({
     readOnly = false,
     config
 }) => {
-    const limit = React.useMemo(() => {
-        if (!formData?.IdConvocatoria || !convocatorias) return null;
-        const selectedConv = convocatorias.find(
-            (c: any) => Number(c.idConvocatoria ?? c.id_convocatoria) === Number(formData.IdConvocatoria)
-        );
-        if (!selectedConv) return null;
-
-        const maxVal = selectedConv.montoMaximoProyecto ?? selectedConv.monto_maximo_proyecto;
-        if (maxVal !== undefined && maxVal !== null) {
-            return Number(maxVal);
-        }
-
-        const totalVal = selectedConv.presupuestoTotal ?? selectedConv.presupuesto_total;
-        if (totalVal !== undefined && totalVal !== null) {
-            return Number(totalVal);
-        }
-
-        return null;
-    }, [formData?.IdConvocatoria, convocatorias]);
+    const limit = null;
     const showDisponibles = config?.showRecursosDisponibles !== false;
     const showNecesarios = config?.showRecursosNecesarios !== false;
     const showFinanciamiento = config?.showFinanciamiento !== false;
@@ -194,38 +176,10 @@ export const BudgetSection: React.FC<BudgetSectionProps> = ({
                                     <div className="pt-4 mt-4 border-t border-border-thin space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-[10px] font-black uppercase text-text-dim">Costo Total Estimado</span>
-                                            <span className={`text-sm font-black transition-colors ${limit !== null && limit > 0 && costoTotal > limit ? 'text-red-500 font-extrabold animate-pulse' : 'text-text-main'}`}>
+                                            <span className="text-sm font-black text-text-main">
                                                 $ {costoTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                             </span>
                                         </div>
-                                        {limit !== null && limit > 0 && (
-                                            <div className="space-y-2 mt-2">
-                                                <div className="flex justify-between items-center text-[10px] font-black uppercase text-text-dim/80">
-                                                    <span>Límite de Convocatoria</span>
-                                                    <span className={`font-black ${costoTotal > limit ? 'text-red-500' : 'text-text-main'}`}>
-                                                        $ {limit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                                    </span>
-                                                </div>
-                                                <div className="w-full bg-border-thin/20 h-1.5 rounded-full overflow-hidden">
-                                                    <div 
-                                                        className={`h-full transition-all duration-500 ${costoTotal > limit ? 'bg-red-500' : 'bg-text-main'}`}
-                                                        style={{ width: `${Math.min(100, (costoTotal / limit) * 100)}%` }}
-                                                    />
-                                                </div>
-                                                <div className="flex justify-between text-[9px] text-text-dim font-bold uppercase tracking-wider">
-                                                    <span>Consumo de Presupuesto</span>
-                                                    <span className={costoTotal > limit ? 'text-red-500' : 'text-text-main'}>
-                                                        {((costoTotal / limit) * 100).toFixed(0)}%
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                        {limit !== null && limit > 0 && costoTotal > limit && (
-                                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[10px] font-black uppercase tracking-wider flex items-center gap-2 animate-fade-in">
-                                                <AlertCircle size={14} className="shrink-0 text-red-500" />
-                                                <span>El costo excede el límite permitido por la convocatoria.</span>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>

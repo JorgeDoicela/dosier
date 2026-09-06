@@ -19,6 +19,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@microsoft/signalr": "^10.0.0",
     "@tailwindcss/vite": "^4.2.2",
+    "@tiptap/core": "3.22.5",
     "@tiptap/extension-blockquote": "3.22.5",
     "@tiptap/extension-bold": "3.22.5",
     "@tiptap/extension-bullet-list": "3.22.5",
@@ -27,6 +28,8 @@
     "@tiptap/extension-collaboration": "3.22.5",
     "@tiptap/extension-collaboration-cursor": "^3.0.0",
     "@tiptap/extension-document": "3.22.5",
+    "@tiptap/extension-dropcursor": "3.22.5",
+    "@tiptap/extension-gapcursor": "3.22.5",
     "@tiptap/extension-hard-break": "3.22.5",
     "@tiptap/extension-heading": "3.22.5",
     "@tiptap/extension-horizontal-rule": "3.22.5",
@@ -94,5 +97,16 @@
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.9",
     "vitest": "^4.1.10"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tiptap/core": "3.22.5",
+      "@tiptap/pm": "3.22.5",
+      "@tiptap/extension-list": "3.22.5",
+      "@tiptap/extension-floating-menu": "3.22.5",
+      "@tiptap/extension-bubble-menu": "3.22.5",
+      "@tiptap/extensions": "3.22.5",
+      "@tiptap/extension-link": "3.22.5"
+    }
   }
 }

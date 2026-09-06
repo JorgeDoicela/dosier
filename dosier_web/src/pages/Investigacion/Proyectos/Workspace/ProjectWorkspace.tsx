@@ -28,7 +28,6 @@ import CacesWorkflow from './components/CacesWorkflow';
 import TeamManagement from './components/TeamManagement';
 import WorkspaceSidebar from './components/WorkspaceSidebar';
 import DirectorTransferModal from './components/DirectorTransferModal';
-import { GroupDetailDrawer } from '../../../Admin/components/GroupDetailDrawer';
 import { PreproposalAdminView } from './components/PreproposalAdminView';
 import { PreproposalAuthorView } from './components/PreproposalAuthorView';
 
@@ -340,10 +339,6 @@ export const ProjectWorkspace: React.FC = () => {
                             <TeamManagement
                                 currentProject={currentProject}
                                 investigadores={team.investigadores}
-                                tieneGrupo={team.tieneGrupo}
-                                grupoInvestigacion={team.grupoInvestigacion}
-                                approvedGroups={team.approvedGroups}
-                                isSyncingGroupMembers={team.isSyncingGroupMembers}
                                 isSavingTeam={team.isSavingTeam}
                                 teamMessage={team.teamMessage}
                                 teamChangeRequests={team.teamChangeRequests}
@@ -366,15 +361,12 @@ export const ProjectWorkspace: React.FC = () => {
                                 setIsHistoryExpanded={team.setIsHistoryExpanded}
                                 isChangeRequestsExpanded={team.isChangeRequestsExpanded}
                                 setIsChangeRequestsExpanded={team.setIsChangeRequestsExpanded}
-                                onToggleTieneGrupo={team.handleToggleTieneGrupo}
-                                onSetGrupoInvestigacion={team.setGrupoInvestigacion}
                                 onSaveTeam={team.handleSaveTeam}
                                 onCreateTeamChangeRequest={team.handleCreateTeamChangeRequest}
                                 onReviewTeamChangeRequest={team.handleReviewTeamChangeRequest}
                                 onOpenTransferModal={team.handleOpenTransferModal}
                                 onUpdateMember={team.handleUpdateMember}
                                 onRemoveMember={team.handleRemoveMember}
-                                onOpenGroupDetail={team.handleOpenGroupDetail}
                             />
                         </div>
 
@@ -410,20 +402,6 @@ export const ProjectWorkspace: React.FC = () => {
                 setTransferDescripcion={team.setTransferDescripcion}
                 isTransferring={team.isTransferring}
                 investigadores={team.investigadores}
-            />
-
-            <GroupDetailDrawer
-                isOpen={team.isGroupDetailOpen}
-                onClose={team.handleCloseGroupDetail}
-                detailGroup={team.detailGroup}
-                setDetailGroup={team.setDetailGroup}
-                isAdmin={isAdmin}
-                user={user}
-                dominios={team.dominios}
-                carreras={team.carreras}
-                lines={team.lines}
-                formatCareerName={team.formatCareerName}
-                handleOpenReview={() => { }}
             />
         </div>
     );

@@ -52,34 +52,9 @@ namespace dosier_infrastructure.Research
 
             string beforeJson = project.MetadataCacesJson ?? "{}";
 
-            var isAssociativeRequested = tieneGrupoInvestigacion ?? (investigadores.Count > 1 || !string.IsNullOrWhiteSpace(grupoInvestigacion));
-            DocGrupoInvestigacion? approvedGroup = null;
             var effectiveInvestigadores = investigadores;
 
-            if (isAssociativeRequested)
-            {
-                if (string.IsNullOrWhiteSpace(grupoInvestigacion))
-                {
-                    return new SyncResult
-                    {
-                        Success = false,
-                        Message = "Para guardar un proyecto asociativo, debe seleccionar un grupo de investigación aprobado."
-                    };
-                }
-
-                approvedGroup = await ProjectHelper.ResolveApprovedGroupAsync(_context, grupoInvestigacion);
-                if (approvedGroup == null)
-                {
-                    return new SyncResult
-                    {
-                        Success = false,
-                        Message = "El grupo seleccionado no existe o no está aprobado/activo."
-                    };
-                }
-
-                effectiveInvestigadores = await BuildProjectInvestigadoresFromGroupAsync(approvedGroup.IdGrupo, project.IdProyecto, investigadores);
-
-                var activeDirector = await _context.DocProyectoParticipantes
+            var activeDirector = await _context.DocProyectoParticipantes
                     .Include(pp => pp.IdUsuarioNavigation)
                     .FirstOrDefaultAsync(pp => pp.IdProyecto == project.IdProyecto && pp.EsDirector == true && pp.Activo != false && pp.TipoParticipante == "Docente");
 
@@ -111,7 +86,6 @@ namespace dosier_infrastructure.Research
                         });
                     }
                 }
-            }
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var currentPeriod = await _context.Periodos
@@ -147,23 +121,19 @@ namespace dosier_infrastructure.Research
 
                 if (isStudent)
                 {
-                    // Regla Institucional: En equipos ad-hoc (no grupos), los estudiantes deben estar matriculados en el período actual
-                    if (!isAssociativeRequested)
-                    {
-                        var isEnrolled = await _context.Matriculas.AsNoTracking()
-                            .AnyAsync(m => m.IdAlumno == sigafiIdNormalizado &&
-                                           m.IdPeriodo == currentPeriod.IdPeriodo &&
-                                           m.Valida == 1 &&
-                                           (m.Retirado == null || m.Retirado == false));
+                    var isEnrolled = await _context.Matriculas.AsNoTracking()
+                        .AnyAsync(m => m.IdAlumno == sigafiIdNormalizado &&
+                                       m.IdPeriodo == currentPeriod.IdPeriodo &&
+                                       m.Valida == 1 &&
+                                       (m.Retirado == null || m.Retirado == false));
 
-                        if (!isEnrolled)
+                    if (!isEnrolled)
+                    {
+                        return new SyncResult
                         {
-                            return new SyncResult
-                            {
-                                Success = false,
-                                Message = $"El estudiante {persona.Nombre} (C.I. {persona.IdSigafi}) no registra matrícula activa en el período académico vigente ({currentPeriod.Detalle ?? currentPeriod.IdPeriodo}). Solo pueden participar estudiantes matriculados."
-                            };
-                        }
+                            Success = false,
+                            Message = $"El estudiante {persona.Nombre} (C.I. {persona.IdSigafi}) no registra matrícula activa en el período académico vigente ({currentPeriod.Detalle ?? currentPeriod.IdPeriodo}). Solo pueden participar estudiantes matriculados."
+                        };
                     }
                     continue;
                 }
@@ -176,8 +146,8 @@ namespace dosier_infrastructure.Research
                     .Select(pa => pa.HorasSemana)
                     .FirstOrDefaultAsync() ?? 0;
 
-                // Regla Institucional: En equipos ad-hoc, los docentes deben tener horas de investigación/documentación asignadas en el período actual
-                if (!isAssociativeRequested && availableHours <= 0)
+                // Regla Institucional: Los docentes deben tener horas de investigación/documentación asignadas en el período actual
+                if (availableHours <= 0)
                 {
                     return new SyncResult
                     {
@@ -231,29 +201,10 @@ namespace dosier_infrastructure.Research
                     };
                 }
 
-                if (isAssociativeRequested)
-                {
-                    if (approvedGroup == null)
-                    {
-                        return new SyncResult { Success = false, Message = "No se pudo resolver el grupo aprobado." };
-                    }
-
-                    project.TieneGrupo = true;
-                    project.IdGrupo = approvedGroup.IdGrupo;
-                    dto.TieneGrupoInvestigacion = true;
-                    dto.GrupoInvestigacion = approvedGroup.Nombre;
-                    dto.GrupoInvestigacionUuid = approvedGroup.Uuid;
-                    dto.Investigadores = effectiveInvestigadores;
-                }
-                else
-                {
-                    project.TieneGrupo = false;
-                    project.IdGrupo = null;
-                    dto.TieneGrupoInvestigacion = false;
-                    dto.GrupoInvestigacion = null;
-                    dto.GrupoInvestigacionUuid = null;
-                    dto.Investigadores = investigadores;
-                }
+                dto.TieneGrupoInvestigacion = false;
+                dto.GrupoInvestigacion = null;
+                dto.GrupoInvestigacionUuid = null;
+                dto.Investigadores = effectiveInvestigadores;
 
                 await SyncInvestigadoresAsync(project.IdProyecto, dto.Investigadores ?? new List<InvestigadorDto>(), isFromWizard: false);
 
@@ -280,10 +231,6 @@ namespace dosier_infrastructure.Research
                                 merged[kvp.Key] = kvp.Value;
                             }
                             merged["Investigadores"] = dto.Investigadores ?? new List<InvestigadorDto>();
-                            merged["GrupoInvestigacionTipo"] = project.TieneGrupo == true ? "SI" : "NO";
-                            merged["GrupoInvestigacionNombre"] = dto.GrupoInvestigacion ?? "";
-                            merged["GrupoInvestigacionUuid"] = dto.GrupoInvestigacionUuid ?? "";
-                            merged["TieneGrupoInvestigacion"] = project.TieneGrupo == true;
 
                             var newSnapshot = System.Text.Json.JsonSerializer.Serialize(merged);
                             docInstance.UpdateDataSnapshot(newSnapshot);
@@ -302,7 +249,6 @@ namespace dosier_infrastructure.Research
                 {
                     Titulo = project.Titulo,
                     CodigoInstitucional = project.CodigoInstitucional,
-                    TieneGrupo = project.TieneGrupo,
                     TotalInvestigadores = dto.Investigadores?.Count ?? 0,
                     FechaModificacion = project.FechaModificacion
                 });

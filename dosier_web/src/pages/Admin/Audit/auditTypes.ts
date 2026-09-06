@@ -58,7 +58,6 @@ export const formatDateSafe = (dateString: string | null | undefined, formatStr:
 
 export const formatKeyName = (key: string): string => {
     const dictionary: Record<string, string> = {
-        TieneGrupoInvestigacion: '¿Tiene Grupo?',
         CodigoInstitucional: 'Código Institucional',
         DescripcionProyecto: 'Descripción',
         Antecedentes: 'Antecedentes',
@@ -68,8 +67,6 @@ export const formatKeyName = (key: string): string => {
         Evaluacion: 'Método de Evaluación',
         TiempoEjecucion: 'Tiempo Ejecución (meses)',
         Estado: 'Estado del Proyecto',
-        IdGrupo: 'ID Grupo',
-        IdConvocatoria: 'ID Convocatoria',
         OrcidId: 'ID ORCID',
         ScopusId: 'ID Scopus',
         GoogleScholarUrl: 'Google Scholar URL',

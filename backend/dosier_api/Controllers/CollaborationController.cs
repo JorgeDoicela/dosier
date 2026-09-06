@@ -75,31 +75,6 @@ namespace dosier_api.Controllers
         {
             try 
             {
-                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
-                if (!isAdmin)
-                {
-                    var username = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value?.Trim();
-                    if (!string.IsNullOrEmpty(username))
-                    {
-                        var user = await _db.Users.FirstOrDefaultAsync(u => u.IdSigafi.Trim() == username);
-                        if (user != null)
-                        {
-                            var group = await _db.DocGruposInvestigacion
-                                .Include(g => g.IdCoordinadorNavigation)
-                                .FirstOrDefaultAsync(g => g.Uuid == instanceUuid);
-                            if (group != null)
-                            {
-                                var isGroupMember = (group.IdCoordinador == user.IdUsuario) ||
-                                                    (group.IdCoordinadorNavigation != null && group.IdCoordinadorNavigation.IdSigafi.Trim() == username) ||
-                                                    await _db.DocGruposMiembros.AnyAsync(m => m.IdGrupo == group.IdGrupo && m.IdUsuario == user.IdUsuario && (m.Activo != false || m.Activo == null));
-                                if (!isGroupMember)
-                                {
-                                    return StatusCode(403, new { message = "No tienes permisos para acceder a la retroalimentación de este grupo de investigación." });
-                                }
-                            }
-                        }
-                    }
-                }
 
                 var comments = await _db.DocCollaborationComments
                     .Where(c => c.DocumentoUuid == instanceUuid)
@@ -242,31 +217,6 @@ namespace dosier_api.Controllers
 
             try
             {
-                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
-                if (!isAdmin)
-                {
-                    var username = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value?.Trim();
-                    if (!string.IsNullOrEmpty(username))
-                    {
-                        var user = await _db.Users.FirstOrDefaultAsync(u => u.IdSigafi.Trim() == username);
-                        if (user != null)
-                        {
-                            var group = await _db.DocGruposInvestigacion
-                                .Include(g => g.IdCoordinadorNavigation)
-                                .FirstOrDefaultAsync(g => g.Uuid == request.DocumentoUuid);
-                            if (group != null)
-                            {
-                                var isGroupMember = (group.IdCoordinador == user.IdUsuario) ||
-                                                    (group.IdCoordinadorNavigation != null && group.IdCoordinadorNavigation.IdSigafi.Trim() == username) ||
-                                                    await _db.DocGruposMiembros.AnyAsync(m => m.IdGrupo == group.IdGrupo && m.IdUsuario == user.IdUsuario && (m.Activo != false || m.Activo == null));
-                                if (!isGroupMember)
-                                {
-                                    return StatusCode(403, new { message = "No tienes permisos para enviar retroalimentación a este grupo de investigación." });
-                                }
-                            }
-                        }
-                    }
-                }
 
                 var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
                 var userName = User.FindFirst("nombre")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Usuario";

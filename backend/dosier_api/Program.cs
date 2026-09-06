@@ -159,7 +159,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<dosier_application.Security
 // Registrar MediatR para manejar Commands y Queries en dosier_application y dosier_infrastructure
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(dosier_application.Security.IAuthService).Assembly,
-    typeof(dosier_infrastructure.Research.GroupsService).Assembly
+    typeof(dosier_infrastructure.Research.CalendarioService).Assembly
 ));
 
 // 3. Agregar SignalR con límites ampliados para soportar transporte de imágenes Base64 en CoWork
@@ -265,11 +265,6 @@ builder.Services.AddScoped<dosier_application.Common.Notifications.INotification
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.EmailDriver>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.PushDriver>();
 
-builder.Services.AddScoped<IConvocatoriaService, ConvocatoriaService>();
-builder.Services.AddScoped<dosier_application.Research.IGroupsQueryService, GroupsQueryService>();
-builder.Services.AddScoped<dosier_application.Research.IGroupsWorkflowService, GroupsWorkflowService>();
-builder.Services.AddScoped<IGroupsService, GroupsService>();
-builder.Services.AddScoped<dosier_application.Research.IGroupDocumentOrchestrator, dosier_infrastructure.Research.GroupDocumentOrchestrator>();
 builder.Services.AddScoped<ICalendarioService, dosier_infrastructure.Research.CalendarioService>();
 builder.Services.AddScoped<IAIAssistantService, AIAssistantService>();
 builder.Services.AddScoped<Dosier.Application.Research.IWorkflowEngineService, Dosier.Infrastructure.Research.WorkflowEngineService>();

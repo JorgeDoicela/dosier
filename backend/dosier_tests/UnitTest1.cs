@@ -45,7 +45,6 @@ public class UnitTest1
             "ALTER TABLE doc_proyectos_alumnos ADD COLUMN fecha_inicio DATETIME NULL;",
             "ALTER TABLE doc_proyectos_alumnos ADD COLUMN motivo_cambio VARCHAR(150) NULL;",
 
-            "ALTER TABLE doc_grupos_documentales ADD COLUMN estado VARCHAR(20) DEFAULT 'Aprobado';",
             "ALTER TABLE doc_proyectos ADD COLUMN autoExtendDeadlines TINYINT(1) DEFAULT 0;",
             "ALTER TABLE doc_proyectos ADD COLUMN autoExtendDays INT DEFAULT 7;",
             "ALTER TABLE doc_cronograma ADD COLUMN responsable VARCHAR(255) NULL;",

@@ -7,9 +7,6 @@ public partial class DosierContext
 {
     partial void OnModelCreatingDosier(ModelBuilder modelBuilder)
     {
-        // Catálogos e información maestra
-        modelBuilder.ApplyConfiguration(new DocTipoConvocatoriaConfiguration());
-
         // Ciclo de vida de Proyectos
         modelBuilder.ApplyConfiguration(new DocProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocTrazabilidadProyectoConfiguration());
@@ -18,10 +15,6 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocObjetivoProyectoConfiguration());
         modelBuilder.ApplyConfiguration(new DocCronogramaConfiguration());
         modelBuilder.ApplyConfiguration(new DocBibliografiaProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocProyectoDocumentoAdjuntoConfiguration());
-
-        // Convocatorias
-        modelBuilder.ApplyConfiguration(new DocConvocatoriaConfiguration());
 
         // Motor de Documentos
         modelBuilder.ApplyConfiguration(new DocumentInstanceConfiguration());
@@ -39,10 +32,6 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocCalendarioEventoNormativoConfiguration());
         modelBuilder.ApplyConfiguration(new DocIcalTokenConfiguration());
         modelBuilder.ApplyConfiguration(new DocCalendarioAlertaEnviadaConfiguration());
-
-        // Grupos de Investigación
-        modelBuilder.ApplyConfiguration(new DocGrupoInvestigacionConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGrupoMiembroConfiguration());
 
         // Configuraciones de Workflow
         modelBuilder.ApplyConfiguration(new DocConfigWorkflowConfiguration());

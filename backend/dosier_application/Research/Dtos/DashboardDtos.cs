@@ -57,7 +57,6 @@ namespace Dosier.Application.Research.Dtos
         public int ProyectosEnEjecucion { get; set; }
         public int ProyectosFinalizados { get; set; }
 
-        public int TotalConvocatoriasAbiertas { get; set; }
         public int TotalInvestigadoresActivos { get; set; }
         public int ArticulosIndexados { get; set; }
         public int Prototipos { get; set; }

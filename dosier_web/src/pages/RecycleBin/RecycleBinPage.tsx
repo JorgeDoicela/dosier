@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, RotateCcw, FileText, Calendar, Award, RefreshCw, Trash } from 'lucide-react';
+import { Trash2, RotateCcw, FileText, RefreshCw, Trash } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
 import api from '../../api/axios_config';
 import { useAuth } from '../../api/AuthContext';
@@ -11,8 +11,6 @@ interface DeletedItem {
     titulo?: string;
     nombre?: string;
     codigoInstitucional?: string;
-    codigoConvocatoria?: string;
-    siglas?: string;
     estado: string;
     fechaEliminacion: string;
     eliminadoPor: string;
@@ -22,23 +20,17 @@ const RecycleBinPage: React.FC = () => {
     const { isAdmin } = useAuth();
     const confirm = useConfirm();
     const { addToast } = useNotifications();
-    const [activeTab, setActiveTab] = useState<'projects' | 'convocatorias' | 'groups'>('projects');
     const [items, setItems] = useState<DeletedItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     const fetchItems = async () => {
-        if (activeTab === 'convocatorias' && !isAdmin) {
-            setActiveTab('projects');
-            return;
-        }
-
         try {
             setLoading(true);
-            const response = await api.get(`/recyclebin/${activeTab}`);
+            const response = await api.get('/recyclebin/projects');
             setItems(response.data || []);
         } catch (error) {
-            console.error(`Error fetching deleted ${activeTab}:`, error);
+            console.error('Error fetching deleted projects:', error);
         } finally {
             setLoading(false);
         }
@@ -46,13 +38,12 @@ const RecycleBinPage: React.FC = () => {
 
     useEffect(() => {
         fetchItems();
-    }, [activeTab, isAdmin]);
+    }, [isAdmin]);
 
     const handleRestore = async (uuid: string, title: string) => {
-        const entityLabel = activeTab === 'projects' ? 'proyecto' : activeTab === 'convocatorias' ? 'convocatoria' : 'grupo';
         if (!await confirm({
-            title: `Restaurar ${entityLabel === 'proyecto' ? 'Proyecto' : entityLabel === 'convocatoria' ? 'Convocatoria' : 'Grupo'}`,
-            message: `¿Está seguro de restaurar el ${entityLabel} "${title}"?`,
+            title: "Restaurar Proyecto",
+            message: `¿Está seguro de restaurar el proyecto "${title}"?`,
             confirmText: "Restaurar",
             cancelText: "Cancelar",
             variant: "warning"
@@ -60,10 +51,9 @@ const RecycleBinPage: React.FC = () => {
 
         try {
             setActionLoading(uuid);
-            const type = activeTab === 'projects' ? 'project' : activeTab === 'convocatorias' ? 'convocatoria' : 'group';
-            await api.post(`/recyclebin/restore/${type}/${uuid}`);
+            await api.post(`/recyclebin/restore/project/${uuid}`);
             setItems(items.filter(item => item.uuid !== uuid));
-            addToast('Restauración Exitosa', `El ${entityLabel} "${title}" ha sido restaurado con éxito.`, 'success');
+            addToast('Restauración Exitosa', `El proyecto "${title}" ha sido restaurado con éxito.`, 'success');
         } catch (error: any) {
             console.error('Error restoring item:', error);
             addToast('Error al Restaurar', error.response?.data?.message || 'No se pudo restaurar el elemento en este momento.', 'error');
@@ -73,10 +63,7 @@ const RecycleBinPage: React.FC = () => {
     };
 
     const handlePurge = async (uuid: string, title: string) => {
-        const entityLabel = activeTab === 'projects' ? 'proyecto' : activeTab === 'convocatorias' ? 'convocatoria' : 'grupo';
-        const warningMessage = activeTab === 'projects'
-            ? `¿Está seguro de ELIMINAR PERMANENTEMENTE el proyecto "${title}"? Esta acción es irreversible e incluye el presupuesto, cronograma y todos los datos asociados.`
-            : `¿Está seguro de ELIMINAR PERMANENTEMENTE la ${entityLabel} "${title}"? Esta acción no se puede deshacer de ninguna manera.`;
+        const warningMessage = `¿Está seguro de ELIMINAR PERMANENTEMENTE el proyecto "${title}"? Esta acción es irreversible e incluye los componentes y todos los datos asociados.`;
 
         if (!await confirm({
             title: "Eliminación Permanente",
@@ -88,10 +75,9 @@ const RecycleBinPage: React.FC = () => {
 
         try {
             setActionLoading(uuid);
-            const type = activeTab === 'projects' ? 'project' : activeTab === 'convocatorias' ? 'convocatoria' : 'group';
-            await api.delete(`/recyclebin/purge/${type}/${uuid}`);
+            await api.delete(`/recyclebin/purge/project/${uuid}`);
             setItems(items.filter(item => item.uuid !== uuid));
-            addToast('Eliminado Definitivamente', `El ${entityLabel} "${title}" ha sido purgado permanentemente del sistema.`, 'success');
+            addToast('Eliminado Definitivamente', `El proyecto "${title}" ha sido purgado permanentemente del sistema.`, 'success');
         } catch (error: any) {
             console.error('Error purging item:', error);
             addToast('Error al Eliminar', error.response?.data?.message || 'No se pudo eliminar el elemento de forma permanente.', 'error');
@@ -113,10 +99,8 @@ const RecycleBinPage: React.FC = () => {
     };
 
     const tabs = [
-        { id: 'projects', name: 'Proyectos y Documentos', icon: FileText, adminOnly: false },
-        { id: 'convocatorias', name: 'Convocatorias', icon: Calendar, adminOnly: true },
-        { id: 'groups', name: 'Comités y Grupos Documentales', icon: Award, adminOnly: false }
-    ].filter(tab => !tab.adminOnly || isAdmin);
+        { id: 'projects', name: 'Proyectos y Documentos', icon: FileText, adminOnly: false }
+    ];
 
     return (
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-6">
@@ -162,7 +146,7 @@ const RecycleBinPage: React.FC = () => {
                     </div>
                     <h3 className="text-base font-semibold text-text-main">La papelera está vacía</h3>
                     <p className="text-sm text-text-dim mt-1 text-center max-w-sm">
-                        No hay {activeTab === 'projects' ? 'proyectos' : activeTab === 'convocatorias' ? 'convocatorias' : 'grupos'} eliminados en este momento.
+                        No hay proyectos eliminados en este momento.
                     </p>
                 </div>
             ) : (
@@ -181,7 +165,7 @@ const RecycleBinPage: React.FC = () => {
                             <tbody className="divide-y divide-black/5 dark:divide-white/5 text-sm text-text-main">
                                 {items.map((item) => {
                                     const title = item.titulo || item.nombre || 'Sin título';
-                                    const code = item.codigoInstitucional || item.codigoConvocatoria || item.siglas || '-';
+                                    const code = item.codigoInstitucional || item.siglas || '-';
                                     const isPendingAction = actionLoading === item.uuid;
 
                                     return (

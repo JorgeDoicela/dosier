@@ -48,17 +48,10 @@ DROP TABLE IF EXISTS
     doc_bibliografia_proyecto,
     doc_cronograma,
     doc_objetivos_proyecto,
-    doc_proyecto_extensiones,
     doc_proyecto_participantes,
     doc_proyectos_carreras,
     doc_trazabilidad_proyectos,
-    doc_proyectos_documentos_adjuntos,
     doc_proyectos,
-    doc_convocatorias,
-    doc_tipos_convocatoria,
-    doc_grupos_carreras,
-    doc_grupos_miembros,
-    doc_grupos_documentales,
 
     -- Catálogos y Configuración adicionales
     doc_config_workflow,
@@ -69,106 +62,17 @@ DROP TABLE IF EXISTS
     doc_calendario_eventos_normativos;
 
 -- #############################################################################
--- SECCIÓN 1: CATÁLOGOS BASE
--- #############################################################################
-
-CREATE TABLE doc_grupos_documentales (
-    idGrupo              INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid                 VARCHAR(36)     NOT NULL UNIQUE,
-    nombre               VARCHAR(255) NOT NULL,
-    siglas               VARCHAR(50),
-    tipoGrupo            ENUM('Documental', 'Comisión', 'Semillero') NOT NULL DEFAULT 'Documental',
-    idCoordinador        INT(11) NULL,
-    objetivoGeneral      TEXT,
-    mision               TEXT,
-    vision               TEXT,
-    resolucionAprobacion VARCHAR(100),
-    fechaCreacion        DATE,
-    categoriaConsolidacion VARCHAR(50) DEFAULT 'En Formación' COMMENT 'En Formación, Consolidado',
-    estado               VARCHAR(20)  DEFAULT 'Aprobado',
-    activo               TINYINT(1)   DEFAULT 1,
-    eliminado            TINYINT(1)   DEFAULT 0,
-    fechaEliminacion     TIMESTAMP    NULL,
-    eliminadoPorUsuarioId INT(11)     NULL,
-    fechaRegistro        TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    linkWhatsapp         VARCHAR(255) NULL,
-    telefonoCoordinador  VARCHAR(20)  NULL,
-    fotoUrl              VARCHAR(500) NULL,
-    FOREIGN KEY (idCoordinador) REFERENCES usuarios(idUsuario) ON DELETE SET NULL,
-    FOREIGN KEY (eliminadoPorUsuarioId) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_grupos_carreras (
-    idGrupo   INT NOT NULL,
-    idCarrera INT(11) NOT NULL,
-    PRIMARY KEY (idGrupo, idCarrera),
-    FOREIGN KEY (idGrupo)   REFERENCES doc_grupos_documentales(idGrupo) ON DELETE CASCADE,
-    FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera)              ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Vinculación de grupos con programas académicos';
-
-CREATE TABLE doc_grupos_miembros (
-    idGrupoMiembro INT          AUTO_INCREMENT PRIMARY KEY,
-    idGrupo        INT          NOT NULL,
-    idUsuario      INT(11)      NOT NULL,
-    rol            VARCHAR(100) COMMENT 'Director de Proyecto, Co-Autor, Semillerista',
-    activo         TINYINT(1)   DEFAULT 1,
-    fechaInicio    DATE,
-    fechaFin       DATE,
-    motivoSalida   VARCHAR(255) NULL,
-    telefonoContacto VARCHAR(20)  NULL,
-    FOREIGN KEY (idGrupo)    REFERENCES doc_grupos_documentales(idGrupo) ON DELETE CASCADE,
-    FOREIGN KEY (idUsuario)  REFERENCES usuarios(idUsuario) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
--- CATALOGOS DE CONVOCATORIA (EXCELENCIA 2026)
--- #############################################################################
-
-CREATE TABLE doc_tipos_convocatoria (
-    idTipoConvocatoria INT AUTO_INCREMENT PRIMARY KEY,
-    nombre             VARCHAR(100) NOT NULL,
-    descripcion        VARCHAR(255)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Los tipos de convocatoria se insertan en la sección de datos semilla al final.
-
-CREATE TABLE doc_convocatorias (
-    idConvocatoria     INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid               VARCHAR(36)      NOT NULL UNIQUE,
-    codigoConvocatoria VARCHAR(30)   NOT NULL UNIQUE,
-    titulo             VARCHAR(255)  NOT NULL,
-    idPeriodo          CHAR(7) CHARACTER SET latin1 NOT NULL,
-    fechaApertura      DATE          NOT NULL,
-    fechaCierre        DATE          NOT NULL,
-    anio               VARCHAR(50)   NOT NULL,
-    descripcion        TEXT,
-    urlBases           VARCHAR(512),
-    requisitosMinimos  TEXT,
-    idTipoConvocatoria INT           NULL,
-    estado             ENUM('Borrador','Abierta','Cerrada','Anulada') DEFAULT 'Borrador',
-    eliminado             TINYINT(1)    DEFAULT 0,
-    fechaEliminacion      TIMESTAMP     NULL,
-    eliminadoPorUsuarioId INT(11)       NULL,
-    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo),
-    FOREIGN KEY (idTipoConvocatoria) REFERENCES doc_tipos_convocatoria(idTipoConvocatoria),
-    FOREIGN KEY (eliminadoPorUsuarioId) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
 -- SECCIÓN 2: PROYECTO Y PARTICIPANTES
 -- #############################################################################
 
 CREATE TABLE doc_proyectos (
     idProyecto            INT           AUTO_INCREMENT PRIMARY KEY,
     uuid                  VARCHAR(36)      NOT NULL UNIQUE,
-    idConvocatoria        INT,
     codigoInstitucional   VARCHAR(50)   UNIQUE,
     titulo                VARCHAR(500)  NOT NULL,
     -- Nota: Los textos descriptivos (antecedentes, justificacion, marcoTeorico, metodologia,
     -- metodoEvaluacion) viven exclusivamente en metadataCacesJson y en el snapshot del
     -- documento colaborativo (doc_documentos_instancias). No se duplican aquí.
-    idGrupo               INT           NULL,
-    tieneGrupo            TINYINT(1)    DEFAULT 0,
     fechaPresentacion     DATE          NULL,
     fechaInicio           DATE,
     fechaFin              DATE,
@@ -190,9 +94,6 @@ CREATE TABLE doc_proyectos (
     -- GESTIÓN Y CONTROL DE PLAZOS INSTITUCIONALES (DEADLINES)
     fechaLimiteSubsanacion      DATE          NULL COMMENT 'Fecha límite fijada por el Administrador para subsanar observaciones del protocolo (Fase 1/2)',
 
-    FOREIGN KEY (idConvocatoria) REFERENCES doc_convocatorias(idConvocatoria),
-    FOREIGN KEY (idGrupo)        REFERENCES doc_grupos_documentales(idGrupo),
-
     -- Extensiones CACES / SENESCYT
     hashActaAprobacion   TEXT NULL,
     fechaAprobacion      TIMESTAMP NULL,
@@ -200,17 +101,6 @@ CREATE TABLE doc_proyectos (
     metadataCacesJson    JSON          NULL COMMENT 'Snapshot de indicadores para acreditación',
     FOREIGN KEY (firmadoPor) REFERENCES usuarios(idUsuario) ON DELETE SET NULL,
     FOREIGN KEY (eliminadoPorUsuarioId) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Documentos Adjuntos del Proyecto (Checklist de Postulación)
-CREATE TABLE doc_proyectos_documentos_adjuntos (
-    idDocAdj        INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid            VARCHAR(36)     NOT NULL UNIQUE,
-    idProyecto      INT          NOT NULL,
-    nombreArchivo   VARCHAR(255) NOT NULL,
-    rutaArchivo     VARCHAR(512) NOT NULL,
-    fechaSubida     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Trazabilidad de Estados para Auditoría (CACES)
@@ -280,19 +170,6 @@ CREATE TABLE doc_proyecto_participantes (
     UNIQUE KEY uq_proyecto_usuario (idProyecto, idUsuario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Participantes del proyecto: docentes, alumnos y externos unificados';
 
-
-CREATE TABLE doc_proyecto_extensiones (
-    idExtension      INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid             VARCHAR(36)   NOT NULL UNIQUE,
-    idProyecto       INT           NOT NULL,
-    fechaAnterior    DATE          NOT NULL,
-    fechaNueva       DATE          NOT NULL,
-    motivo           TEXT          NULL,
-    resolucion       TEXT          NULL,
-    fechaRegistro    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- #############################################################################
 -- SECCIÓN 3: OBJETIVOS Y ODS
 -- #############################################################################
@@ -356,13 +233,6 @@ CREATE TABLE doc_bibliografia_proyecto (
 
 DELIMITER $$
 CREATE TRIGGER trg_doc_proyectos_uuid BEFORE INSERT ON doc_proyectos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-CREATE TRIGGER trg_doc_convocatorias_uuid BEFORE INSERT ON doc_convocatorias FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
--- Triggers adicionales para asegurar la generación de UUIDs en todo el esquema
-CREATE TRIGGER trg_doc_grupos_uuid BEFORE INSERT ON doc_grupos_documentales FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-CREATE TRIGGER trg_doc_proy_docadj_uuid BEFORE INSERT ON doc_proyectos_documentos_adjuntos FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_trazabilidad_uuid BEFORE INSERT ON doc_trazabilidad_proyectos FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
@@ -491,8 +361,6 @@ DELIMITER $$
 CREATE TRIGGER trg_doc_usermeta_uuid
 BEFORE INSERT ON doc_usuarios_metadata FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-CREATE TRIGGER trg_doc_proy_ext_uuid BEFORE INSERT ON doc_proyecto_extensiones FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_lopdp_consentimientos_uuid BEFORE INSERT ON doc_lopdp_consentimientos FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 CREATE TRIGGER trg_doc_lopdp_auditoria_uuid BEFORE INSERT ON doc_lopdp_auditoria_datos FOR EACH ROW
@@ -551,19 +419,10 @@ SET FOREIGN_KEY_CHECKS = 1;
 SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
-TRUNCATE TABLE doc_tipos_convocatoria;
 TRUNCATE TABLE doc_config_general;
 
 SET SQL_SAFE_UPDATES = 1;
 SET FOREIGN_KEY_CHECKS = 1;
-
--- 1. Tipos de Convocatoria
-INSERT INTO doc_tipos_convocatoria (nombre, descripcion) VALUES
-('Investigación Aplicada', 'Desarrollo de prototipos y soluciones técnicas'),
-('Innovación y Transferencia Tecnológica', 'Proyectos orientados a prototipos, registro de propiedad intelectual y transferencia a la industria'),
-('Retos de Innovación Abierta', 'Desafíos técnicos formulados por empresas o GADs locales'),
-('Semilleros', 'Iniciación a la investigación con estudiantes'),
-('Vinculación e Investigación', 'Proyectos integrados con la comunidad');
 
 -- Configuración General Semilla
 INSERT INTO doc_config_general (Clave, Valor, Descripcion) VALUES
@@ -1002,50 +861,6 @@ FROM doc_calendario_eventos_normativos
 
 UNION ALL
 
--- 2. Apertura de convocatorias
-SELECT
-    CONCAT('CONV-APE-', idConvocatoria),
-    uuid,
-    CONCAT('Apertura: ', titulo),
-    CONCAT('Convocatoria ', codigoConvocatoria, ' - Inicio del período de postulación.'),
-    'Convocatoria', 'AperturaConvocatoria',
-    fechaApertura, NULL, 1,
-    '#3B82F6',
-    idConvocatoria, uuid, 'CONVOCATORIA',
-    NULL, NULL,
-    IF(estado IN ('Borrador','Abierta','Cerrada'), 1, 0),
-    0                                       AS esPrivado,
-    'Media'                                 AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_convocatorias
-
-UNION ALL
-
--- 3. Cierre de convocatorias
-SELECT
-    CONCAT('CONV-CIE-', idConvocatoria),
-    uuid,
-    CONCAT('Cierre: ', titulo),
-    CONCAT('Convocatoria ', codigoConvocatoria, ' - Fecha límite de postulación.'),
-    'Convocatoria', 'CierreConvocatoria',
-    fechaCierre, NULL, 1,
-    '#F97316',
-    idConvocatoria, uuid, 'CONVOCATORIA',
-    NULL, NULL,
-    IF(estado IN ('Borrador','Abierta','Cerrada'), 1, 0),
-    0                                       AS esPrivado,
-    'Media'                                 AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_convocatorias
-
-UNION ALL
-
 -- 5. Inicio de proyectos activos
 SELECT
     CONCAT('PROY-INI-', idProyecto),
@@ -1143,13 +958,6 @@ VALUES
     'Apertura del segundo período académico. Los docentes deben registrar su distributivo y horas de gestión documental asignadas.',
     'Academico', '2025-10-01', NULL, 1,
     NULL, 'DISTRIBUTIVO', '/documentacion', '#0891B2', 7, 1
-),
-(
-    UUID(),
-    'Cierre de Convocatoria Interna — Proyectos 2025-II',
-    'Fecha máxima para la recepción de protocolos de investigación aplicada del segundo semestre 2025.',
-    'Institucional', '2025-10-31', NULL, 1,
-    NULL, 'CONVOCATORIAS', '/convocatorias', '#D97706', 7, 1
 ),
 (
     UUID(),

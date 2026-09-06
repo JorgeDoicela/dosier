@@ -31,10 +31,7 @@ namespace dosier_infrastructure.Research
             _logger = logger;
         }
 
-        public async Task<DocGrupoInvestigacion?> ResolveApprovedGroupAsync(string? groupUuid)
-        {
-            return await ProjectHelper.ResolveApprovedGroupAsync(_context, groupUuid);
-        }
+
 
         public async Task SyncInvestigadoresAsync(int projectId, List<InvestigadorDto>? investigadores, bool isFromWizard = false)
         {
@@ -252,90 +249,8 @@ namespace dosier_infrastructure.Research
 
         public async Task<List<InvestigadorDto>> BuildProjectInvestigadoresFromGroupAsync(int groupId, int projectId, List<InvestigadorDto>? incomingInvestigadores = null)
         {
-            var groupMembers = await _context.DocGruposMiembros
-                .Include(m => m.IdUsuarioNavigation)
-                .Where(m => m.IdGrupo == groupId && m.Activo != false && m.IdUsuarioNavigation != null && !string.IsNullOrEmpty(m.IdUsuarioNavigation.IdSigafi))
-                .ToListAsync();
-
-            var group = await _context.DocGruposInvestigacion
-                .Include(g => g.IdCoordinadorNavigation)
-                .FirstOrDefaultAsync(g => g.IdGrupo == groupId);
-
-            var participantes = new List<InvestigadorDto>();
-
-            if (group?.IdCoordinadorNavigation != null && !string.IsNullOrEmpty(group.IdCoordinadorNavigation.IdSigafi))
-            {
-                var coordSigafi = group.IdCoordinadorNavigation.IdSigafi.Trim();
-                var phone = await ProjectHelper.GetUserPhoneFromCatalogAsync(_context, coordSigafi, group.IdCoordinadorNavigation.TablaSigafi);
-                
-                decimal? coordHours = 0;
-                var coordIncoming = incomingInvestigadores?.FirstOrDefault(i => !string.IsNullOrEmpty(i.Cedula) && i.Cedula.Trim() == coordSigafi);
-                if (coordIncoming != null)
-                {
-                    coordHours = coordIncoming.HorasSemanales;
-                }
-
-                participantes.Add(new InvestigadorDto
-                {
-                    Nombre = group.IdCoordinadorNavigation.Nombre,
-                    Cedula = coordSigafi,
-                    Email = group.IdCoordinadorNavigation.EmailInstitucional ?? group.IdCoordinadorNavigation.IdSigafi ?? "",
-                    Rol = "Coordinador de Proyecto",
-                    NivelAcademico = "Tercer Nivel",
-                    Telefono = phone,
-                    Activo = true,
-                    HorasSemanales = coordHours,
-                    FechaInicio = DateTime.Now,
-                    EsDirector = false
-                });
-            }
-
-            foreach (var m in groupMembers)
-            {
-                var user = m.IdUsuarioNavigation!;
-                var sigafiId = user.IdSigafi!.Trim();
-
-                if (participantes.Any(p => p.Cedula == sigafiId)) continue;
-
-                var phone = await ProjectHelper.GetUserPhoneFromCatalogAsync(_context, sigafiId, user.TablaSigafi);
-                decimal? memberHours = 0;
-                var memberIncoming = incomingInvestigadores?.FirstOrDefault(i => !string.IsNullOrEmpty(i.Cedula) && i.Cedula.Trim() == sigafiId);
-                if (memberIncoming != null)
-                {
-                    memberHours = memberIncoming.HorasSemanales;
-                }
-
-                participantes.Add(new InvestigadorDto
-                {
-                    Nombre = user.Nombre,
-                    Cedula = sigafiId,
-                    Email = user.EmailInstitucional ?? user.IdSigafi ?? "",
-                    Rol = m.Rol ?? "Co-Investigador",
-                    NivelAcademico = user.TablaSigafi == "alumno" ? "Pregrado" : "Tercer Nivel",
-                    Telefono = phone,
-                    Activo = true,
-                    HorasSemanales = memberHours,
-                    FechaInicio = DateTime.Now,
-                    EsDirector = false
-                });
-            }
-
-            foreach (var p in participantes)
-            {
-                if (string.IsNullOrWhiteSpace(p.Cedula)) continue;
-                var phone = await ProjectHelper.GetUserPhoneFromCatalogAsync(_context, p.Cedula, p.NivelAcademico == "Pregrado" ? "alumno" : "profesor");
-                if (!string.IsNullOrEmpty(phone))
-                {
-                    p.Telefono = phone;
-                }
-                p.Carrera = null;
-            }
-
-            return participantes
-                .Where(i => !string.IsNullOrWhiteSpace(i.Cedula))
-                .GroupBy(i => i.Cedula!.Trim())
-                .ToDictionary(g => g.Key, g => g.First())
-                .Values.ToList();
+            await Task.CompletedTask;
+            return incomingInvestigadores ?? new List<InvestigadorDto>();
         }
 
         public async Task SyncProjectCarrerasAsync(int projectId, int? idCarreraPrincipal, List<InvestigadorDto>? investigadores)

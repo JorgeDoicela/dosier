@@ -79,14 +79,14 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     ]}
                 />
                 <KPICard
-                    title="Estructura de Redes"
-                    value={groups.length}
+                    title="Estructura Académica"
+                    value={stats?.totalInvestigadoresActivos || 0}
                     icon={<Users size={14} />}
                     accentColor="violet"
-                    subText="Comités y Grupos Documentales"
+                    subText="Docentes e Investigadores"
                     footerItems={[
-                        { label: 'Docentes y Autores', value: stats?.totalInvestigadoresActivos || 0 },
-                        { label: 'Convocatorias', value: stats?.totalConvocatoriasAbiertas || 0 }
+                        { label: 'Docentes Activos', value: stats?.totalInvestigadoresActivos || 0 },
+                        { label: 'En Ejecución', value: stats?.proyectosEnEjecucion || 0 }
                     ]}
                 />
             </div>

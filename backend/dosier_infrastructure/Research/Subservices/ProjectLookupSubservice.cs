@@ -61,7 +61,6 @@ namespace dosier_infrastructure.Research.Subservices
         public async Task<List<ProyectoResumenDto>> GetAllProjectsAsync()
         {
             return await _context.DocProyectos
-                .Include(p => p.IdConvocatoriaNavigation)
                 .Include(p => p.DocProyectoParticipantes)
                 .Include(p => p.DocProyectosCarreras).ThenInclude(pc => pc.IdCarreraNavigation)
                 .OrderByDescending(p => p.FechaRegistro)
@@ -80,12 +79,12 @@ namespace dosier_infrastructure.Research.Subservices
                     FechaInicio = p.FechaInicio,
                     FechaFin = p.FechaFin,
                     TiempoEjecucion = p.TiempoEjecucion,
-                    ConvocatoriaTitulo = p.IdConvocatoriaNavigation != null ? p.IdConvocatoriaNavigation.Titulo : null,
+                    ConvocatoriaTitulo = null,
                     TotalInvestigadores = p.DocProyectoParticipantes.Count(pp => pp.Activo != false),
                     TotalInformes = 0,
                     InformesAprobados = 0,
                     TotalEstudiantes = p.DocProyectoParticipantes.Count(pp => pp.TipoParticipante == "Alumno" && pp.Activo != false),
-                    ConvocatoriaCodigo = p.IdConvocatoriaNavigation != null ? p.IdConvocatoriaNavigation.CodigoConvocatoria : null,
+                    ConvocatoriaCodigo = null,
                     DirectorNombre = p.DocProyectoParticipantes
                         .Where(pp => pp.EsDirector == true && pp.IdUsuarioNavigation != null)
                         .Select(pp => pp.IdUsuarioNavigation!.Nombre)
@@ -102,11 +101,6 @@ namespace dosier_infrastructure.Research.Subservices
         {
             if (!userId.HasValue) return new List<ProyectoResumenDto>();
 
-            var groupIds = await _context.DocGruposMiembros
-                .Where(gm => gm.IdUsuario == userId.Value && gm.Activo == true)
-                .Select(gm => gm.IdGrupo)
-                .ToListAsync();
-
             var projectIds = await _context.DocProyectoParticipantes
                 .Where(pp => pp.IdUsuario == userId.Value && pp.Activo != false)
                 .Select(pp => pp.IdProyecto)
@@ -114,10 +108,9 @@ namespace dosier_infrastructure.Research.Subservices
                 .ToListAsync();
 
             return await _context.DocProyectos
-                .Include(p => p.IdConvocatoriaNavigation)
                 .Include(p => p.DocProyectoParticipantes)
                 .Include(p => p.DocProyectosCarreras).ThenInclude(pc => pc.IdCarreraNavigation)
-                .Where(p => projectIds.Contains(p.IdProyecto) || (p.TieneGrupo == true && p.IdGrupo.HasValue && groupIds.Contains(p.IdGrupo.Value)))
+                .Where(p => projectIds.Contains(p.IdProyecto))
                 .OrderByDescending(p => p.FechaRegistro)
                 .Select(p => new ProyectoResumenDto
                 {
@@ -134,12 +127,12 @@ namespace dosier_infrastructure.Research.Subservices
                     FechaInicio = p.FechaInicio,
                     FechaFin = p.FechaFin,
                     TiempoEjecucion = p.TiempoEjecucion,
-                    ConvocatoriaTitulo = p.IdConvocatoriaNavigation != null ? p.IdConvocatoriaNavigation.Titulo : null,
+                    ConvocatoriaTitulo = null,
                     TotalInvestigadores = p.DocProyectoParticipantes.Count(pp => pp.Activo != false),
                     TotalInformes = 0,
                     InformesAprobados = 0,
                     TotalEstudiantes = p.DocProyectoParticipantes.Count(pp => pp.TipoParticipante == "Alumno" && pp.Activo != false),
-                    ConvocatoriaCodigo = p.IdConvocatoriaNavigation != null ? p.IdConvocatoriaNavigation.CodigoConvocatoria : null,
+                    ConvocatoriaCodigo = null,
                     DirectorNombre = p.DocProyectoParticipantes
                         .Where(pp => pp.EsDirector == true && pp.IdUsuarioNavigation != null)
                         .Select(pp => pp.IdUsuarioNavigation!.Nombre)

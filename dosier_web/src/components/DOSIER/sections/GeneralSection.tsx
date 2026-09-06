@@ -7,7 +7,7 @@ import type { IdentificationField } from '../../../pages/Admin/Templates/types';
 interface GeneralSectionProps {
     formData: any;
     cowork: CoWorkHandle;
-    convocatorias: any[];
+    convocatorias?: any[];
     carreras: any[];
     misCarreras?: any[];
     programas?: any[];
@@ -21,23 +21,10 @@ interface GeneralSectionProps {
     config?: any;
 }
 
-const isPastDeadline = (fechaCierre: string) => {
-    if (!fechaCierre) return false;
-    const deadline = new Date(fechaCierre);
-    const now = new Date();
-    if (isNaN(deadline.getTime())) return false;
-    if (fechaCierre.length <= 10) {
-        const [year, month, day] = fechaCierre.split('-').map(Number);
-        const localDeadline = new Date(year, month - 1, day, 23, 59, 59, 999);
-        return now > localDeadline;
-    }
-    return now > deadline;
-};
-
 export const GeneralSection: React.FC<GeneralSectionProps> = ({
     formData,
     cowork,
-    convocatorias,
+    convocatorias = [],
     carreras,
     misCarreras: initialMisCarreras = [],
     programas: initialProgramas = [],
@@ -70,7 +57,6 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
     const showTipo = config?.showTipo !== false;
     const showCaces = config?.showCaces !== false;
     const showCarrera = config?.showCarrera !== false;
-    const showConvocatoria = config?.showConvocatoria !== false;
     const showFechas = config?.showFechas !== false;
     const showDirector = config?.showDirector !== false;
 
@@ -79,7 +65,6 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
     const labelGrupo = config?.customLabel_showGrupo || "Grupo de Investigación vinculante";
     const labelDirector = config?.customLabel_showDirector || "Director del Proyecto";
     const labelCarrera = config?.customLabel_showCarrera || "Carrera / Unidad Académica Vinculada";
-    const labelConvocatoria = config?.customLabel_showConvocatoria || "Convocatoria Activa ISTT";
     const labelTipo = config?.customLabel_showTipo || "Tipo de Investigación";
     const labelFechas = config?.customLabel_showFechas || "Fecha de Presentación del Proyecto";
 
@@ -228,42 +213,14 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
         return date;
     };
 
-    // Obtener convocatoria activa seleccionada
-    const selectedConvocatoria = React.useMemo(() => {
-        const id = Number(formData.IdConvocatoria) || 0;
-        if (id <= 0) return null;
-        return convocatorias.find(c => (c.id_convocatoria ?? c.idConvocatoria ?? c.id) === id) || null;
-    }, [convocatorias, formData.IdConvocatoria]);
-
-    const convAperturaStr = selectedConvocatoria?.fecha_apertura ?? selectedConvocatoria?.fechaApertura ?? selectedConvocatoria?.fecha_inicio ?? selectedConvocatoria?.fechaInicio ?? '';
-    const convCierreStr = selectedConvocatoria?.fecha_cierre ?? selectedConvocatoria?.fechaCierre ?? selectedConvocatoria?.fecha_fin ?? selectedConvocatoria?.fechaFin ?? '';
-    const convPeriodo = selectedConvocatoria?.periodo_nombre ?? selectedConvocatoria?.periodoNombre ?? selectedConvocatoria?.periodo ?? selectedConvocatoria?.id_periodo_navigation?.detalle ?? selectedConvocatoria?.idPeriodoNavigation?.detalle ?? '';
-
-    // Sincronización automática del Periodo Académico de la Convocatoria
-    React.useEffect(() => {
-        if (convPeriodo && formData.Periodo !== convPeriodo) {
-            onUpdate('Periodo', convPeriodo, { source: 'system' });
-        }
-    }, [convPeriodo, formData.Periodo, onUpdate]);
-
-    const convAperturaDate = React.useMemo(() => convAperturaStr ? parseLocalDate(convAperturaStr) : null, [convAperturaStr]);
-    const convCierreDate = React.useMemo(() => convCierreStr ? parseLocalDate(convCierreStr) : null, [convCierreStr]);
-
     // Límites dinámicos reactivos para los 3 calendarios
     const maxFechaPresentacion = React.useMemo(() => {
-        if (convCierreStr && formData.FechaInicio) {
-            const dCierre = parseLocalDate(convCierreStr);
-            const dInicio = parseLocalDate(formData.FechaInicio);
-            if (dCierre && dInicio) {
-                return dInicio < dCierre ? formData.FechaInicio : convCierreStr;
-            }
-        }
-        return convCierreStr || formData.FechaInicio || undefined;
-    }, [convCierreStr, formData.FechaInicio]);
+        return formData.FechaInicio || undefined;
+    }, [formData.FechaInicio]);
 
     const minFechaInicio = React.useMemo(() => {
-        return formData.FechaPresentacion || convAperturaStr || (!isAdmin ? new Date().toISOString().split('T')[0] : undefined);
-    }, [formData.FechaPresentacion, convAperturaStr, isAdmin]);
+        return formData.FechaPresentacion || (!isAdmin ? new Date().toISOString().split('T')[0] : undefined);
+    }, [formData.FechaPresentacion, isAdmin]);
 
     const minFechaFin = React.useMemo(() => {
         return formData.FechaInicio || undefined;
@@ -361,16 +318,6 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
                 parsedPres = parseLocalDate(presVal);
                 if (!parsedPres) {
                     errors.FechaPresentacion = 'Fecha inválida';
-                } else if (convAperturaDate && parsedPres < convAperturaDate) {
-                    const dia = String(convAperturaDate.getDate()).padStart(2, '0');
-                    const mes = String(convAperturaDate.getMonth() + 1).padStart(2, '0');
-                    const anio = convAperturaDate.getFullYear();
-                    errors.FechaPresentacion = `No puede ser anterior a la apertura de la convocatoria (${dia}/${mes}/${anio})`;
-                } else if (convCierreDate && parsedPres > convCierreDate) {
-                    const dia = String(convCierreDate.getDate()).padStart(2, '0');
-                    const mes = String(convCierreDate.getMonth() + 1).padStart(2, '0');
-                    const anio = convCierreDate.getFullYear();
-                    errors.FechaPresentacion = `Supera el cierre de la convocatoria (${dia}/${mes}/${anio})`;
                 }
             } else {
                 errors.FechaPresentacion = 'Fecha incompleta (dd/mm/aaaa)';
@@ -428,7 +375,7 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
         }
 
         return errors;
-    }, [formData?.FechaPresentacion, formData?.FechaInicio, formData?.FechaFin, isAdmin, convAperturaDate, convCierreDate]);
+    }, [formData?.FechaPresentacion, formData?.FechaInicio, formData?.FechaFin, isAdmin]);
 
     // Handler when the selected research group changes
     const handleGroupChange = (groupName: string, meta?: { source?: 'local' | 'remote' }) => {
@@ -735,91 +682,59 @@ export const GeneralSection: React.FC<GeneralSectionProps> = ({
                 ) : null;
 
             case 'showCarrera':
-            case 'showConvocatoria':
                 renderedCoreKeys.add('showCarrera');
-                renderedCoreKeys.add('showConvocatoria');
-                const canShowConvocatoriaField = isAdmin && showConvocatoria;
-                return (showCarrera || canShowConvocatoriaField) ? (
-                    <div key="showCarrera" className={`grid grid-cols-1 ${canShowConvocatoriaField ? 'md:grid-cols-2' : ''} gap-4 sm:gap-6`}>
-                        {showCarrera && (
-                            <div className="w-full">
-                                <CoWorkField 
-                                    name="IdCarrera"
-                                    type="select"
-                                    cowork={cowork}
-                                    label={labelCarrera}
-                                    readOnly={!isAdmin && filteredCarreras.length <= 1}
-                                    onValueChange={(val) => {
-                                        const numVal = Number(val);
-                                        onUpdate('IdCarrera', numVal);
-                                        const selectedCarrera = carreras.find(c => (c.id_carrera ?? c.idCarrera ?? 0) === numVal);
-                                        if (selectedCarrera) {
-                                            const cname = selectedCarrera.nombre_carrera ?? selectedCarrera.carrera1 ?? selectedCarrera.carrera ?? '';
-                                            onUpdate('Carrera', cname, { source: 'system' });
-                                        } else {
-                                            onUpdate('Carrera', '', { source: 'system' });
-                                        }
-                                    }}
-                                    className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm text-text-main font-bold"
-                                >
-                                    <option value={0}>Seleccione una carrera...</option>
-                                    {filteredCarreras.map(c => {
-                                        const cid = c.id_carrera ?? c.idCarrera ?? 0;
-                                        const cname = c.nombre_carrera ?? c.carrera1 ?? c.carrera ?? 'Sin Nombre';
-                                        return (
-                                            <option key={cid} value={cid}>{cname}</option>
-                                        );
-                                    })}
-                                </CoWorkField>
-                                {!isAdmin && misCarreras.length > 1 && (
-                                    <div className="mt-2.5 ml-2 text-[10px] text-warning font-semibold flex items-center gap-1.5 animate-fade-in">
-                                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                                        <span>Perteneces a múltiples carreras. Por favor, selecciona una carrera principal para esta propuesta.</span>
-                                    </div>
-                                )}
-                                {formData.GrupoInvestigacionTipo === 'SI' && coejecutoras.length > 0 && (
-                                    <div className="mt-2.5 ml-2 animate-fade-in">
-                                        <span className="text-[9px] font-black text-warning uppercase tracking-widest block mb-1.5">
-                                            Carreras Co-ejecutoras (Asociativas)
-                                        </span>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {coejecutoras.map((name, i) => (
-                                                <span key={i} className="px-2.5 py-1 text-[9px] font-extrabold bg-warning/10 border border-warning/20 text-warning uppercase rounded-md tracking-wider">
-                                                    {name}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {canShowConvocatoriaField && (
-                            <div className="w-full">
-                                <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">{labelConvocatoria}</label>
-                                <div className="relative">
-                                    <select 
-                                        value={formData.IdConvocatoria || 0}
-                                        onChange={(e) => onUpdate('IdConvocatoria', Number(e.target.value))}
-                                        className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm text-text-main font-bold outline-none cursor-pointer transition-all"
-                                    >
-                                        <option value={0}>Seleccione una convocatoria...</option>
-                                        {convocatorias.map(c => {
-                                            const isExpired = isPastDeadline(c.fecha_cierre || c.fechaCierre);
-                                            const isCurrent = Number(c.id_convocatoria ?? c.idConvocatoria) === Number(formData.IdConvocatoria);
-                                            if (isExpired && !isCurrent) {
-                                                return null;
-                                            }
-                                            return (
-                                                <option key={c.id_convocatoria ?? c.idConvocatoria} value={c.id_convocatoria ?? c.idConvocatoria}>
-                                                    {c.codigo_convocatoria ?? c.codigoConvocatoria} - {c.titulo} {isExpired ? '(CERRADA)' : ''}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
+                return showCarrera ? (
+                    <div key="showCarrera" className="grid grid-cols-1 gap-4 sm:gap-6">
+                        <div className="w-full">
+                            <CoWorkField 
+                                name="IdCarrera"
+                                type="select"
+                                cowork={cowork}
+                                label={labelCarrera}
+                                readOnly={!isAdmin && filteredCarreras.length <= 1}
+                                onValueChange={(val) => {
+                                    const numVal = Number(val);
+                                    onUpdate('IdCarrera', numVal);
+                                    const selectedCarrera = carreras.find(c => (c.id_carrera ?? c.idCarrera ?? 0) === numVal);
+                                    if (selectedCarrera) {
+                                        const cname = selectedCarrera.nombre_carrera ?? selectedCarrera.carrera1 ?? selectedCarrera.carrera ?? '';
+                                        onUpdate('Carrera', cname, { source: 'system' });
+                                    } else {
+                                        onUpdate('Carrera', '', { source: 'system' });
+                                    }
+                                }}
+                                className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm text-text-main font-bold"
+                            >
+                                <option value={0}>Seleccione una carrera...</option>
+                                {filteredCarreras.map(c => {
+                                    const cid = c.id_carrera ?? c.idCarrera ?? 0;
+                                    const cname = c.nombre_carrera ?? c.carrera1 ?? c.carrera ?? 'Sin Nombre';
+                                    return (
+                                        <option key={cid} value={cid}>{cname}</option>
+                                    );
+                                })}
+                            </CoWorkField>
+                            {!isAdmin && misCarreras.length > 1 && (
+                                <div className="mt-2.5 ml-2 text-[10px] text-warning font-semibold flex items-center gap-1.5 animate-fade-in">
+                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                                    <span>Perteneces a múltiples carreras. Por favor, selecciona una carrera principal para esta propuesta.</span>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                            {formData.GrupoInvestigacionTipo === 'SI' && coejecutoras.length > 0 && (
+                                <div className="mt-2.5 ml-2 animate-fade-in">
+                                    <span className="text-[9px] font-black text-warning uppercase tracking-widest block mb-1.5">
+                                        Carreras Co-ejecutoras (Asociativas)
+                                    </span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {coejecutoras.map((name, i) => (
+                                            <span key={i} className="px-2.5 py-1 text-[9px] font-extrabold bg-warning/10 border border-warning/20 text-warning uppercase rounded-md tracking-wider">
+                                                {name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ) : null;
 

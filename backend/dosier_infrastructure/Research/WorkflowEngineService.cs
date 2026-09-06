@@ -126,33 +126,13 @@ namespace Dosier.Infrastructure.Research
                 }
             }
 
-            // 1.1 Validación de Reglas de Convocatoria (CACES & SENESCYT Compliance)
-            if (nuevoEstado == "Enviado" && proyecto.IdConvocatoria.HasValue)
+            // 1.1 Validación de Equipo Humano
+            if (nuevoEstado == "Enviado")
             {
-                var convocatoria = await _context.DocConvocatorias
-                    .FirstOrDefaultAsync(c => c.IdConvocatoria == proyecto.IdConvocatoria.Value);
-
-                if (convocatoria != null)
+                var totalInvestigadores = await _context.DocProyectoParticipantes.CountAsync(p => p.IdProyecto == proyecto.IdProyecto && p.Activo != false);
+                if (totalInvestigadores == 0)
                 {
-                    // A. Validación de Fechas de Cierre
-                    var hoy = DateOnly.FromDateTime(DateTime.Today);
-                    if (hoy > convocatoria.FechaCierre)
-                    {
-                        throw new InvalidOperationException($"No es posible enviar la postulación. La convocatoria '{convocatoria.Titulo}' cerró el {convocatoria.FechaCierre:dd/MM/yyyy}.");
-                    }
-                    if (hoy < convocatoria.FechaApertura)
-                    {
-                        throw new InvalidOperationException($"No es posible enviar la postulación. La convocatoria '{convocatoria.Titulo}' abre el {convocatoria.FechaApertura:dd/MM/yyyy}.");
-                    }
-
-                    // B. Validación de Presupuesto Máximo (Simplificada: Sin tope de convocatoria en BD)
-
-                    // C. Validación de al menos un Investigador
-                    var totalInvestigadores = await _context.DocProyectoParticipantes.CountAsync(p => p.IdProyecto == proyecto.IdProyecto && p.Activo != false);
-                    if (totalInvestigadores == 0)
-                    {
-                        throw new InvalidOperationException("No es posible enviar la propuesta. Debe registrar al menos un investigador en el equipo humano.");
-                    }
+                    throw new InvalidOperationException("No es posible enviar la propuesta. Debe registrar al menos un docente en el equipo humano.");
                 }
             }
 

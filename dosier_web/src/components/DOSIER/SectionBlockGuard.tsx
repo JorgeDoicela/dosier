@@ -45,11 +45,10 @@ export const SectionBlockGuard: React.FC<SectionBlockGuardProps> = ({
         if (isAdmin) return true;
         if (isDirectorOrAdmin) {
             const hasMultipleResearchers = Array.isArray(formData?.Investigadores) && formData.Investigadores.length > 1;
-            const hasResearchGroup = formData?.GrupoInvestigacionTipo === 'SI' || formData?.TieneGrupoInvestigacion;
-            return hasMultipleResearchers || hasResearchGroup;
+            return hasMultipleResearchers;
         }
         return false;
-    }, [isBlocked, isAdmin, isDirectorOrAdmin, formData?.Investigadores, formData?.GrupoInvestigacionTipo, formData?.TieneGrupoInvestigacion]);
+    }, [isBlocked, isAdmin, isDirectorOrAdmin, formData?.Investigadores]);
 
     return (
         <SectionGuardContext.Provider value={{ 

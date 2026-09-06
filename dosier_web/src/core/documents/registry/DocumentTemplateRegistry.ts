@@ -58,12 +58,9 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             // Sección 1: Identificación
             Titulo: '',
             IdCarrera: 0,
-            IdConvocatoria: 0,
             Periodo: '',
             TiempoEjecucion: '',
             Programa: '',
-            GrupoInvestigacionTipo: 'NO',       // 'NO' | 'SI'
-            GrupoInvestigacionNombre: '',
             Dominio: '',
             LineaInvestigacion: '',
             SublineaInvestigacion: '',

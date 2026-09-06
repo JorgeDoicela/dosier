@@ -112,7 +112,6 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                             <div>
                                 <h3 className="text-sm font-black text-text-main uppercase tracking-widest">Detalle de la Prepropuesta</h3>
                                 <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">Docente Proponente: {currentProject.directorProyecto || 'No asignado'}</p>
-                                <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">Convocatoria: {currentProject.convocatoria || 'No especificada'}</p>
                             </div>
                             {isEvaluating && feedbackMode === 'general' && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse shrink-0" />

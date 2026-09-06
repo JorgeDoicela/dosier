@@ -197,7 +197,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                         >
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">CARRERA Y CONVOCATORIA ACTIVA</span>
+                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">CARRERA / UNIDAD ACADÉMICA</span>
                                     {renderFieldStatusBadge('carrera')}
                                 </div>
                                 {renderCommentButton('carrera', 'Carrera')}
@@ -208,8 +208,8 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                     <p className="text-xs font-semibold text-text-main mt-0.5">{project.carrera || docSnapshot.Carrera || 'Institucional'}</p>
                                 </div>
                                 <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Convocatoria</span>
-                                    <p className="text-xs font-semibold text-text-main mt-0.5 truncate">{project.convocatoria || 'Convocatoria Regular'}</p>
+                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Régimen / Asignación</span>
+                                    <p className="text-xs font-semibold text-text-main mt-0.5 truncate">{project.periodoAcademico || 'Período Académico Regular'}</p>
                                 </div>
                             </div>
                         </div>
@@ -382,29 +382,15 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                     </div>
 
                     {/* CONTROL PRESUPUESTAL */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 select-none">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 select-none">
                         <div className="p-4 rounded-xl border border-border-thin bg-surface flex flex-col justify-between">
                             <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Presupuesto Propuesto</span>
                             <span className="text-lg font-mono font-bold text-text-main mt-2 select-text">${(project.presupuesto || docSnapshot.CostoTotal || 0).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="p-4 rounded-xl border border-border-thin bg-surface flex flex-col justify-between">
-                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Límite Convocatoria</span>
+                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Total Recursos Requeridos</span>
                             <span className="text-lg font-mono font-bold text-brand mt-2 select-text">
-                                {project.convocatoriaMontoMaximo 
-                                    ? `$${project.convocatoriaMontoMaximo.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                                    : 'Sin Límite'}
-                            </span>
-                        </div>
-                        <div className="p-4 rounded-xl border border-border-thin bg-surface flex flex-col justify-between">
-                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Diferencia / Margen</span>
-                            <span className={`text-lg font-mono font-bold mt-2 select-text ${
-                                project.convocatoriaMontoMaximo && (project.presupuesto || docSnapshot.CostoTotal || 0) > project.convocatoriaMontoMaximo 
-                                    ? 'text-error animate-pulse' 
-                                    : 'text-emerald-500'
-                            }`}>
-                                {project.convocatoriaMontoMaximo 
-                                    ? `$${(project.convocatoriaMontoMaximo - (project.presupuesto || docSnapshot.CostoTotal || 0)).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                                    : 'N/D'}
+                                ${(project.presupuesto || docSnapshot.CostoTotal || 0).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                         </div>
                     </div>

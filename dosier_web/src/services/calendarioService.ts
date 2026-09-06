@@ -213,7 +213,7 @@ export const resolveEventUrl = (ev: {
             return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
         }
         case 'CONVOCATORIA':
-            return '/convocatorias';
+            return '/proyectos';
         case 'PEER_REVIEW':
             return '/revisiones';
         default:
@@ -225,7 +225,7 @@ export const resolveEventUrl = (ev: {
         return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
     }
     if (ev.categoria_global === 'Convocatoria') {
-        return '/convocatorias';
+        return '/proyectos';
     }
     if (ev.categoria_global === 'Monitoreo' && projectUuid) {
         return `${prefix}/informes-avance/${projectUuid}`;

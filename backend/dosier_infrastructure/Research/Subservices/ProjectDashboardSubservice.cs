@@ -37,9 +37,6 @@ namespace dosier_infrastructure.Research.Subservices
             stats.ProyectosEnEjecucion = conteoDict.GetValueOrDefault("En Ejecución", 0);
             stats.ProyectosFinalizados = conteoDict.GetValueOrDefault("Finalizado", 0);
 
-            stats.TotalConvocatoriasAbiertas = await _context.DocConvocatorias
-                .CountAsync(c => c.Estado == "Abierta");
-
             stats.ArticulosIndexados = 0;
             stats.Prototipos = 0;
             stats.Ponencias = 0;

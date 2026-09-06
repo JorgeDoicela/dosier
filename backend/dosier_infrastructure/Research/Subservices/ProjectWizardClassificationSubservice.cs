@@ -24,83 +24,18 @@ namespace dosier_infrastructure.Research.Subservices
 
         public async Task<SyncResult?> SyncResearchGroupAndAssociativeAsync(DocProyecto project, ProyectoDto dto)
         {
-            bool isAssociative = dto.TieneGrupoInvestigacion == true ||
-                                 dto.GrupoInvestigacionTipo == "SI" ||
-                                 dto.GrupoInvestigacionTipo == "si";
-
-            if (isAssociative)
-            {
-                var groupUuid = dto.GrupoInvestigacionUuid ?? dto.GrupoInvestigacion ?? dto.GrupoInvestigacionNombre;
-                if (string.IsNullOrWhiteSpace(groupUuid))
-                {
-                    return new SyncResult
-                    {
-                        Success = false,
-                        Message = "Para proyectos asociativos debe seleccionar un grupo de investigación aprobado."
-                    };
-                }
-
-                var approvedGroup = await ProjectHelper.ResolveApprovedGroupAsync(_context, groupUuid);
-                if (approvedGroup == null)
-                {
-                    return new SyncResult
-                    {
-                        Success = false,
-                        Message = "El grupo seleccionado no existe o no está aprobado/activo."
-                    };
-                }
-
-                project.TieneGrupo = true;
-                project.IdGrupo = approvedGroup.IdGrupo;
-                dto.GrupoInvestigacion = approvedGroup.Nombre;
-                dto.GrupoInvestigacionUuid = approvedGroup.Uuid;
-                dto.TieneGrupoInvestigacion = true;
-                dto.GrupoInvestigacionTipo = "SI";
-                dto.GrupoInvestigacionNombre = approvedGroup.Nombre;
-
-                dto.Investigadores = await _teamService.BuildProjectInvestigadoresFromGroupAsync(approvedGroup.IdGrupo, project.IdProyecto, dto.Investigadores);
-            }
-            else
-            {
-                project.TieneGrupo = false;
-                project.IdGrupo = null;
-                dto.GrupoInvestigacion = null;
-                dto.GrupoInvestigacionUuid = null;
-                dto.TieneGrupoInvestigacion = false;
-                dto.GrupoInvestigacionTipo = "NO";
-                dto.GrupoInvestigacionNombre = null;
-            }
-
+            dto.TieneGrupoInvestigacion = false;
+            dto.GrupoInvestigacion = null;
+            dto.GrupoInvestigacionUuid = null;
+            dto.GrupoInvestigacionTipo = "NO";
+            dto.GrupoInvestigacionNombre = null;
+            await Task.CompletedTask;
             return null;
         }
 
         public async Task<SyncResult?> SyncConvocatoriaAndObjectivesPndAsync(DocProyecto project, ProyectoDto dto)
         {
-            if (dto.IdConvocatoria.HasValue && dto.IdConvocatoria.Value > 0)
-            {
-                if (project.IdConvocatoria != dto.IdConvocatoria.Value)
-                {
-                    var conv = await _context.DocConvocatorias.FirstOrDefaultAsync(c => c.IdConvocatoria == dto.IdConvocatoria.Value);
-                    if (conv != null)
-                    {
-                        var today = DateOnly.FromDateTime(DateTime.Today);
-                        if (conv.FechaCierre < today)
-                        {
-                            return new SyncResult
-                            {
-                                Success = false,
-                                Message = $"La convocatoria \"{conv.Titulo}\" cerró el {conv.FechaCierre:dd/MM/yyyy} y no acepta nuevas postulaciones."
-                            };
-                        }
-                    }
-                }
-                project.IdConvocatoria = dto.IdConvocatoria.Value;
-            }
-            else
-            {
-                project.IdConvocatoria = null;
-            }
-
+            await Task.CompletedTask;
             return null;
         }
 
@@ -119,45 +54,6 @@ namespace dosier_infrastructure.Research.Subservices
 
         public async Task SyncGroupMembersAndCreatorAsync(DocProyecto project, ProyectoDto dto, string? creatorUserIdRef, bool isOversightUser)
         {
-            // Sincronización automática de miembros de grupo
-            if (project.TieneGrupo == true && project.IdGrupo.HasValue)
-            {
-                var groupMembers = await _context.DocGruposMiembros
-                    .Include(m => m.IdUsuarioNavigation)
-                    .Where(m => m.IdGrupo == project.IdGrupo.Value && m.Activo != false)
-                    .ToListAsync();
-
-                if (dto.Investigadores == null)
-                {
-                    dto.Investigadores = new List<InvestigadorDto>();
-                }
-
-                foreach (var member in groupMembers)
-                {
-                    var user = member.IdUsuarioNavigation;
-                    if (user == null) continue;
-
-                    var alreadyAdded = dto.Investigadores.Any(i => !string.IsNullOrEmpty(i.Cedula) && i.Cedula.Trim() == user.IdSigafi.Trim());
-                    if (!alreadyAdded)
-                    {
-                        var phone = await ProjectHelper.GetUserPhoneFromCatalogAsync(_context, user.IdSigafi, user.TablaSigafi);
-                        dto.Investigadores.Add(new InvestigadorDto
-                        {
-                            Nombre = user.Nombre,
-                            Cedula = user.IdSigafi,
-                            Email = user.EmailInstitucional ?? user.IdSigafi ?? "",
-                            Rol = member.Rol ?? "Co-Investigador",
-                            NivelAcademico = user.TablaSigafi == "alumno" ? "Pregrado" : "Tercer Nivel",
-                            Telefono = phone,
-                            Activo = true,
-                            FechaInicio = DateTime.Now,
-                            EsDirector = member.Rol?.Contains("Director", StringComparison.OrdinalIgnoreCase) == true
-                        });
-                    }
-                }
-
-                project.MetadataCacesJson = System.Text.Json.JsonSerializer.Serialize(dto);
-            }
 
             // Sincronización de Equipo
             if (dto.Investigadores != null && dto.Investigadores.Count > 0)

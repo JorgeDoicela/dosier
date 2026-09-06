@@ -105,9 +105,6 @@ namespace dosier_infrastructure.Research
                     Titulo = project.Titulo,
                     CodigoInstitucional = project.CodigoInstitucional,
                     TiempoEjecucion = project.TiempoEjecucion,
-                    TieneGrupoInvestigacion = project.TieneGrupo,
-                    IdGrupo = project.IdGrupo,
-                    IdConvocatoria = project.IdConvocatoria,
                     Estado = project.Estado
                 };
                 string afterJson = System.Text.Json.JsonSerializer.Serialize(afterState);

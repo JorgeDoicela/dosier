@@ -296,129 +296,14 @@ namespace dosier_infrastructure.Research
 
             var targetCedula = payload.CedulaObjetivo.Trim();
 
-            if ((payload.Tipo ?? string.Empty).Trim().ToUpperInvariant() == "CAMBIO_GRUPO")
-            {
-                var approvedGroup = await _context.DocGruposInvestigacion
-                    .FirstOrDefaultAsync(g => g.Uuid == targetCedula && g.Estado == "Aprobado");
-                if (approvedGroup == null)
-                {
-                    return new SyncResult { Success = false, Message = "No se pudo encontrar un grupo de investigación aprobado con el UUID especificado." };
-                }
-                project.TieneGrupo = true;
-                project.IdGrupo = approvedGroup.IdGrupo;
-
-                var effectiveInvestigadores = await _teamSyncService.BuildProjectInvestigadoresFromGroupAsync(approvedGroup.IdGrupo, project.IdProyecto);
-                await _teamSyncService.SyncInvestigadoresAsync(project.IdProyecto, effectiveInvestigadores, isFromWizard: false);
-
-                var dto = DeserializeProyectoMetadata(project.MetadataCacesJson);
-                dto.TieneGrupoInvestigacion = true;
-                dto.GrupoInvestigacion = approvedGroup.Nombre;
-                dto.GrupoInvestigacionUuid = approvedGroup.Uuid;
-                dto.Investigadores = effectiveInvestigadores;
-                dto.Uuid = project.Uuid;
-                project.MetadataCacesJson = System.Text.Json.JsonSerializer.Serialize(dto);
-                project.FechaModificacion = DateTime.Now;
-
-                return new SyncResult { Success = true, Uuid = project.Uuid };
-            }
-
             var targetUser = await _authService.GetOrProvisionUserByCedulaAsync(targetCedula);
             if (targetUser == null)
             {
                 return new SyncResult { Success = false, Message = "No se pudo resolver el usuario objetivo por cédula." };
             }
 
-            if (project.TieneGrupo == true && project.IdGrupo.HasValue)
-            {
-                var groupId = project.IdGrupo.Value;
-                var groupMember = await _context.DocGruposMiembros
-                    .FirstOrDefaultAsync(m => m.IdGrupo == groupId && m.IdUsuario == targetUser.IdUsuario);
-
-                switch ((payload.Tipo ?? string.Empty).Trim().ToUpperInvariant())
-                {
-                    case "ALTA":
-                        if (groupMember == null)
-                        {
-                            _context.DocGruposMiembros.Add(new DocGrupoMiembro
-                            {
-                                IdGrupo = groupId,
-                                IdUsuario = targetUser.IdUsuario,
-                                Rol = string.IsNullOrWhiteSpace(payload.RolPropuesto) ? "Co-Investigador" : ProjectHelper.NormalizeRole(payload.RolPropuesto),
-                                Activo = true,
-                                FechaInicio = DateOnly.FromDateTime(payload.FechaEfectiva ?? DateTime.Now)
-                            });
-                        }
-                        else
-                        {
-                            groupMember.Activo = true;
-                            groupMember.Rol = string.IsNullOrWhiteSpace(payload.RolPropuesto) ? groupMember.Rol : ProjectHelper.NormalizeRole(payload.RolPropuesto);
-                            groupMember.FechaInicio = DateOnly.FromDateTime(payload.FechaEfectiva ?? DateTime.Now);
-                            groupMember.FechaFin = null;
-                            groupMember.MotivoSalida = null;
-                        }
-                        break;
-
-                    case "BAJA":
-                        if (groupMember == null || groupMember.Activo == false)
-                        {
-                            return new SyncResult { Success = false, Message = "No existe un integrante activo con esa cédula en el grupo." };
-                        }
-                        groupMember.Activo = false;
-                        groupMember.FechaFin = DateOnly.FromDateTime(payload.FechaEfectiva ?? DateTime.Now);
-                        groupMember.MotivoSalida = payload.Motivo;
-                        break;
-
-                    case "CAMBIO_DIRECTOR":
-                        var activeMembers = await _context.DocGruposMiembros
-                            .Where(m => m.IdGrupo == groupId && m.Activo != false)
-                            .ToListAsync();
-
-                        foreach (var member in activeMembers.Where(m => !string.IsNullOrWhiteSpace(m.Rol) && m.Rol!.ToLower().Contains("director")))
-                        {
-                            member.Rol = "Co-Investigador";
-                        }
-
-                        if (groupMember == null)
-                        {
-                            _context.DocGruposMiembros.Add(new DocGrupoMiembro
-                            {
-                                IdGrupo = groupId,
-                                IdUsuario = targetUser.IdUsuario,
-                                Rol = "Director de Proyecto",
-                                Activo = true,
-                                FechaInicio = DateOnly.FromDateTime(payload.FechaEfectiva ?? DateTime.Now)
-                            });
-                        }
-                        else
-                        {
-                            groupMember.Activo = true;
-                            groupMember.Rol = "Director de Proyecto";
-                            groupMember.FechaInicio = DateOnly.FromDateTime(payload.FechaEfectiva ?? DateTime.Now);
-                            groupMember.FechaFin = null;
-                            groupMember.MotivoSalida = null;
-                        }
-                        break;
-
-                    default:
-                        return new SyncResult { Success = false, Message = "Tipo de cambio no soportado para ejecución." };
-                }
-
-                var effectiveInvestigadores = await _teamSyncService.BuildProjectInvestigadoresFromGroupAsync(groupId, project.IdProyecto);
-                await _teamSyncService.SyncInvestigadoresAsync(project.IdProyecto, effectiveInvestigadores, isFromWizard: false);
-
-                var dto = DeserializeProyectoMetadata(project.MetadataCacesJson);
-                dto.TieneGrupoInvestigacion = true;
-                dto.Investigadores = effectiveInvestigadores;
-                dto.Uuid = project.Uuid;
-                project.MetadataCacesJson = System.Text.Json.JsonSerializer.Serialize(dto);
-                project.FechaModificacion = DateTime.Now;
-
-                return new SyncResult { Success = true, Uuid = project.Uuid };
-            }
-            else
-            {
-                var dto = DeserializeProyectoMetadata(project.MetadataCacesJson);
-                var currentTeam = dto.Investigadores ?? new List<InvestigadorDto>();
+            var dto = DeserializeProyectoMetadata(project.MetadataCacesJson);
+            var currentTeam = dto.Investigadores ?? new List<InvestigadorDto>();
 
                 switch ((payload.Tipo ?? string.Empty).Trim().ToUpperInvariant())
                 {
@@ -505,7 +390,6 @@ namespace dosier_infrastructure.Research
                 await _teamSyncService.SyncInvestigadoresAsync(project.IdProyecto, currentTeam, isFromWizard: false);
                 return new SyncResult { Success = true, Uuid = project.Uuid };
             }
-        }
 
         private ProyectoDto DeserializeProyectoMetadata(string? metadataJson)
         {

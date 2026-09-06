@@ -9,23 +9,9 @@ import { useConfirm } from '../../api/ConfirmContext';
 import { DocumentTemplateRegistry } from '../../core/documents/registry/DocumentTemplateRegistry';
 
 interface CreateProjectModalProps {
-    preselectedConvocatoriaId?: number | null;
     onClose: () => void;
     restoreDraftOnOpen?: boolean;
 }
-
-const isPastDeadline = (fechaCierre: string) => {
-    if (!fechaCierre) return false;
-    const deadline = new Date(fechaCierre);
-    const now = new Date();
-    if (isNaN(deadline.getTime())) return false;
-    if (fechaCierre.length <= 10) {
-        const [year, month, day] = fechaCierre.split('-').map(Number);
-        const localDeadline = new Date(year, month - 1, day, 23, 59, 59, 999);
-        return now > localDeadline;
-    }
-    return now > deadline;
-};
 
 const formatCurrency = (val: string) => {
     const num = parseFloat(val);
@@ -38,7 +24,6 @@ const formatCurrency = (val: string) => {
 };
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
-    preselectedConvocatoriaId,
     onClose,
     restoreDraftOnOpen = false
 }) => {
@@ -51,17 +36,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     const [descripcion, setDescripcion] = useState('');
     const [presupuestoEstimado, setPresupuestoEstimado] = useState<string>('');
     const [idCarrera, setIdCarrera] = useState<number>(0);
-    const [idConvocatoria, setIdConvocatoria] = useState<number>(preselectedConvocatoriaId || 0);
     const [careerLocked, setCareerLocked] = useState(false);
 
     const [isOpenCarrera, setIsOpenCarrera] = useState(false);
-    const [isOpenConvocatoria, setIsOpenConvocatoria] = useState(false);
 
     const carreraRef = useRef<HTMLDivElement>(null);
-    const convocatoriaRef = useRef<HTMLDivElement>(null);
 
     const [carreras, setCarreras] = useState<any[]>([]);
-    const [convocatorias, setConvocatorias] = useState<any[]>([]);
 
     const [isLoadingCatalogs, setIsLoadingCatalogs] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
@@ -79,13 +60,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     const getCarreraId = (c: any): number => c.idCarrera ?? c.id_carrera ?? 0;
     const getCarreraName = (c: any): string => c.carrera1 ?? c.nombre_carrera ?? c.carrera ?? 'Sin Nombre';
 
-    const getConvocatoriaId = (c: any): number => c.id_convocatoria ?? c.idConvocatoria ?? 0;
-    const getConvocatoriaName = (c: any): string => {
-        const code = c.codigo_convocatoria ?? c.codigoConvocatoria ?? '';
-        const title = c.titulo ?? '';
-        return code ? `${code} - ${title}` : title;
-    };
-
     const justRestoredRef = useRef(false);
 
     const handleRestoreDraft = () => {
@@ -100,9 +74,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                     setPresupuestoEstimado(parsed.presupuestoEstimado || '');
                     if (!careerLocked && parsed.idCarrera) {
                         setIdCarrera(parsed.idCarrera);
-                    }
-                    if (!preselectedConvocatoriaId && parsed.idConvocatoria) {
-                        setIdConvocatoria(parsed.idConvocatoria);
                     }
                     setIsDraftRestored(true);
                 }
@@ -151,17 +122,14 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             titulo.trim() !== '' ||
             descripcion.trim() !== '' ||
             presupuestoEstimado.trim() !== '' ||
-            (!careerLocked && idCarrera !== 0) ||
-            (!preselectedConvocatoriaId && idConvocatoria !== 0);
+            (!careerLocked && idCarrera !== 0);
 
         if (hasChanges) {
             const draftData = {
-                modalidad,
                 titulo,
                 descripcion,
                 presupuestoEstimado,
-                idCarrera,
-                idConvocatoria
+                idCarrera
             };
 
             localStorage.setItem('preproposal_form_draft', JSON.stringify(draftData));
@@ -175,7 +143,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             localStorage.removeItem('preproposal_form_draft');
             localStorage.removeItem('preproposal_draft_metadata');
         }
-    }, [titulo, descripcion, presupuestoEstimado, idCarrera, idConvocatoria, careerLocked, preselectedConvocatoriaId]);
+    }, [titulo, descripcion, presupuestoEstimado, idCarrera, careerLocked]);
 
     const handleDiscardDraft = async () => {
         if (await confirm({
@@ -198,10 +166,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     };
 
     // Tracking inputs for unsaved changes checks on close
-    const stateRef = useRef({ titulo, descripcion, presupuestoEstimado, idCarrera, idConvocatoria });
+    const stateRef = useRef({ titulo, descripcion, presupuestoEstimado, idCarrera });
     useEffect(() => {
-        stateRef.current = { titulo, descripcion, presupuestoEstimado, idCarrera, idConvocatoria };
-    }, [titulo, descripcion, presupuestoEstimado, idCarrera, idConvocatoria]);
+        stateRef.current = { titulo, descripcion, presupuestoEstimado, idCarrera };
+    }, [titulo, descripcion, presupuestoEstimado, idCarrera]);
 
     const hasUnsavedChanges = () => {
         const current = stateRef.current;
@@ -209,8 +177,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             current.titulo.trim() !== '' ||
             current.descripcion.trim() !== '' ||
             current.presupuestoEstimado.trim() !== '' ||
-            (!careerLocked && current.idCarrera !== 0) ||
-            (!preselectedConvocatoriaId && current.idConvocatoria !== 0)
+            (!careerLocked && current.idCarrera !== 0)
         );
     };
 
@@ -234,26 +201,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     useEffect(() => {
         const loadCatalogs = async () => {
             try {
-                const [rConvocatorias, rMiCarrera, rCarreras] = await Promise.all([
-                    api.get('/Convocatorias').catch(() => ({ data: [] })),
+                const [rMiCarrera, rCarreras] = await Promise.all([
                     isDocente ? api.get('/catalogs/mi-carrera').catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
                     api.get('/catalogs/carreras').catch(() => ({ data: [] }))
                 ]);
-
-                const allConvs = rConvocatorias.data || [];
-                const activeConvs = allConvs.filter((c: any) => {
-                    const isBorradorOrAbierta = c.estado === 'Abierta' || (isAdmin && c.estado === 'Borrador');
-                    return isBorradorOrAbierta && !isPastDeadline(c.fecha_cierre || c.fechaCierre);
-                });
-
-                if (preselectedConvocatoriaId && !activeConvs.some((c: any) => getConvocatoriaId(c) === preselectedConvocatoriaId)) {
-                    const preselected = allConvs.find((c: any) => getConvocatoriaId(c) === preselectedConvocatoriaId);
-                    if (preselected) {
-                        activeConvs.push(preselected);
-                    }
-                }
-
-                setConvocatorias(activeConvs);
 
                 const linkedCareers = Array.isArray(rMiCarrera.data) ? rMiCarrera.data : [];
                 if (isDocente && linkedCareers.length > 0) {
@@ -274,10 +225,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 } else {
                     setCarreras(rCarreras.data || []);
                 }
-
-                if (preselectedConvocatoriaId) {
-                    setIdConvocatoria(preselectedConvocatoriaId);
-                }
             } catch (err) {
                 console.error("[DOSIER] Error loading catalogs for wizard:", err);
                 setError("No se pudieron cargar los catálogos institucionales.");
@@ -286,15 +233,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             }
         };
         loadCatalogs();
-    }, [preselectedConvocatoriaId, isDocente]);
+    }, [isDocente]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (carreraRef.current && !carreraRef.current.contains(event.target as Node)) {
                 setIsOpenCarrera(false);
-            }
-            if (convocatoriaRef.current && !convocatoriaRef.current.contains(event.target as Node)) {
-                setIsOpenConvocatoria(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -308,15 +252,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 setIsOpenCarrera(false);
                 return;
             }
-            if (isOpenConvocatoria) {
-                setIsOpenConvocatoria(false);
-                return;
-            }
             handleRequestClose();
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isCreating, isOpenCarrera, isOpenConvocatoria]);
+    }, [isCreating, isOpenCarrera]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -333,12 +273,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 : (isDocente
                     ? "No se encontró una carrera vinculada a su perfil docente. Contacte al administrador institucional."
                     : "Debe seleccionar una carrera asociada."));
-        }
-        if (idConvocatoria === 0) return setError("Debe vincular su propuesta a una convocatoria.");
-
-        const selected = convocatorias.find(c => getConvocatoriaId(c) === idConvocatoria);
-        if (selected && isPastDeadline(selected.fecha_cierre || selected.fechaCierre)) {
-            return setError("La convocatoria seleccionada ha cerrado debido a que el plazo límite ha vencido.");
         }
 
         setIsCreating(true);
@@ -360,14 +294,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 throw new Error("No se recibió el identificador único del proyecto.");
             }
 
-            setCreationStepMsg("Vinculando convocatoria y estructurando secciones CACES...");
+            setCreationStepMsg("Estructurando secciones CACES...");
 
             const initialMetadata = {
                 ...DocumentTemplateRegistry.PROTOCOLO_INVESTIGACION.schema,
                 Uuid: newUuid,
                 Titulo: titulo.trim().toUpperCase(),
                 IdCarrera: idCarrera,
-                IdConvocatoria: idConvocatoria,
                 DirectorProyecto: user?.nombre_completo || '',
                 DescripcionProyecto: descripcion.trim(),
                 CostoTotal: parsedBudget,
@@ -406,10 +339,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
     const selectedCarrera = carreras.find(c => getCarreraId(c) === idCarrera);
     const selectedCarreraName = selectedCarrera ? getCarreraName(selectedCarrera) : "Seleccione una carrera asociada...";
-
-    const selectedConvocatoria = convocatorias.find(c => getConvocatoriaId(c) === idConvocatoria);
-    const selectedConvocatoriaLabel = selectedConvocatoria ? getConvocatoriaName(selectedConvocatoria) : "Seleccione una convocatoria...";
-    const isSelectedExpired = selectedConvocatoria && isPastDeadline(selectedConvocatoria.fecha_cierre || selectedConvocatoria.fechaCierre);
 
     return createPortal(
         <div className="fixed inset-0 z-[110] flex justify-end">
@@ -623,51 +552,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                                 )}
                             </div>
 
-                            <div className="space-y-2" ref={convocatoriaRef}>
-                                <label className="flex items-center gap-2 text-[9px] font-black text-text-dim uppercase tracking-widest ml-1">
-                                    <Award size={10} className="text-text-dim" />
-                                    Convocatoria Vinculada
-                                </label>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => !preselectedConvocatoriaId && setIsOpenConvocatoria(!isOpenConvocatoria)}
-                                        disabled={!!preselectedConvocatoriaId}
-                                        className="input-vercel !font-bold !text-xs text-left disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-between"
-                                    >
-                                        <span className={idConvocatoria === 0 ? 'text-text-dim opacity-50' : ''}>
-                                            {selectedConvocatoriaLabel}
-                                        </span>
-                                        {!preselectedConvocatoriaId && (
-                                            <ChevronDown size={14} className="transition-transform duration-200" style={{ transform: isOpenConvocatoria ? 'rotate(180deg)' : 'none' }} />
-                                        )}
-                                    </button>
-
-                                    {isOpenConvocatoria && !preselectedConvocatoriaId && (
-                                        <div className="absolute z-[120] mt-1 w-full max-h-48 overflow-y-auto border border-border-thin rounded-md shadow-2xl py-1 bg-surface">
-                                            {convocatorias.map(c => {
-                                                const coid = getConvocatoriaId(c);
-                                                const coname = getConvocatoriaName(c);
-                                                return (
-                                                    <button
-                                                        key={coid}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setIdConvocatoria(coid);
-                                                            setIsOpenConvocatoria(false);
-                                                        }}
-                                                        className={`w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center justify-between cursor-pointer border-none outline-none ${idConvocatoria === coid ? 'bg-text-main text-bg-deep font-bold' : 'bg-transparent text-text-main hover:bg-surface-hover'}`}
-                                                    >
-                                                        <span>{coname}</span>
-                                                        {idConvocatoria === coid && <Check size={12} />}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
                             <div className="pt-4 flex gap-3">
                                 <button
                                     type="button"
@@ -678,10 +562,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={!!isSelectedExpired}
-                                    className="btn-vercel-primary flex-1 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="btn-vercel-primary flex-1 py-3"
                                 >
-                                    {isSelectedExpired ? "Convocatoria Cerrada" : "Enviar Prepropuesta"}
+                                    Enviar Prepropuesta
                                 </button>
                             </div>
                         </form>

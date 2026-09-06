@@ -73,7 +73,6 @@ export const PreproposalAuthorView: React.FC<PreproposalAuthorViewProps> = ({
                             <div>
                                 <h3 className="text-sm font-black text-text-main uppercase tracking-widest">Datos de la Prepropuesta</h3>
                                 <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">Docente Proponente: {currentProject.directorProyecto || 'No asignado'}</p>
-                                <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">Convocatoria: {currentProject.convocatoria || 'No especificada'}</p>
                             </div>
                             {!currentProject.puedeEditar && (
                                 <span className="text-[9px] font-bold bg-surface border border-border-thin text-text-dim px-2.5 py-1 rounded-full uppercase tracking-wider">

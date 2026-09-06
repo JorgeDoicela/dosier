@@ -34,7 +34,7 @@ export const FIELD_LABELS: Record<string, string> = {
     programa: 'Programa del Proyecto',
     grupo: 'Grupo de Investigación',
     dominio_linea: 'Dominio y Líneas de Investigación',
-    carrera: 'Carrera y Convocatoria',
+    carrera: 'Carrera y Unidad Académica',
     campos: 'Campos Detallados (CACES)',
     equipo: 'Equipo Humano de Investigación',
     antecedentes: 'Antecedentes de la Propuesta',

@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Xunit;
 using Moq;
 using Microsoft.EntityFrameworkCore;
@@ -66,7 +66,7 @@ public class ProjectSecurityServiceTests
             Uuid = "uuid-enviado",
             Estado = "Enviado",
             Titulo = "Proyecto Enviado",
-            TieneGrupo = false
+
         };
         context.Users.Add(user);
         context.DocProyectos.Add(proyecto);
@@ -100,7 +100,7 @@ public class ProjectSecurityServiceTests
             Uuid = "uuid-borrador",
             Estado = "Borrador",
             Titulo = "Proyecto en Borrador",
-            TieneGrupo = false
+
         };
         var participante = new DocProyectoParticipante
         {
@@ -144,7 +144,7 @@ public class ProjectSecurityServiceTests
         await using var context = CreateInMemoryContext(dbName);
 
         var user = new User { IdUsuario = 5, IdSigafi = "sigafi-doc", Nombre = "Docente", Administrador = false };
-        var proyecto = new DocProyecto { IdProyecto = 50, Uuid = "uuid-bloqueado", Estado = estado, Titulo = "T", TieneGrupo = false };
+        var proyecto = new DocProyecto { IdProyecto = 50, Uuid = "uuid-bloqueado", Estado = estado, Titulo = "T" };
         var participante = new DocProyectoParticipante { IdParticipante = 5, IdProyecto = 50, IdUsuario = 5, Activo = true, TipoParticipante = "Docente" };
 
         context.Users.Add(user);
@@ -336,7 +336,7 @@ public class ProjectSecurityServiceTests
         await using var context = CreateInMemoryContext(dbName);
 
         var user = new User { IdUsuario = 30, IdSigafi = "sigafi-miembro", Nombre = "Miembro", Administrador = false };
-        var proyecto = new DocProyecto { IdProyecto = 30, Uuid = "uuid-view-test", Estado = "Aprobado", Titulo = "Proyecto View Test", TieneGrupo = false };
+        var proyecto = new DocProyecto { IdProyecto = 30, Uuid = "uuid-view-test", Estado = "Aprobado", Titulo = "Proyecto View Test" };
         var participante = new DocProyectoParticipante { IdParticipante = 30, IdProyecto = 30, IdUsuario = 30, Activo = true, Rol = "Investigador", TipoParticipante = "Docente" };
 
         context.Users.Add(user);
@@ -366,7 +366,7 @@ public class ProjectSecurityServiceTests
         await using var context = CreateInMemoryContext(dbName);
 
         var ajeno = new User { IdUsuario = 40, IdSigafi = "sigafi-ajeno", Nombre = "Ajeno", Administrador = false };
-        var proyecto = new DocProyecto { IdProyecto = 40, Uuid = "uuid-privado", Estado = "En Ejecución", Titulo = "Proyecto Privado", TieneGrupo = false };
+        var proyecto = new DocProyecto { IdProyecto = 40, Uuid = "uuid-privado", Estado = "En Ejecución", Titulo = "Proyecto Privado" };
 
         context.Users.Add(ajeno);
         context.DocProyectos.Add(proyecto);

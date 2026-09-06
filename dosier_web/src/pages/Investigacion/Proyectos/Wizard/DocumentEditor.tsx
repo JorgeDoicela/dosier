@@ -118,8 +118,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
 
     // Catálogos institucionales (agnóstico por plantilla)
     const [carreras, setCarreras] = useState<any[]>([]);
-    const [convocatorias, setConvocatorias] = useState<any[]>([]);
-    const [groups, setGroups] = useState<any[]>([]);
     const [customCatalogs, setCustomCatalogs] = useState<Record<string, any[]>>({});
 
     const effectiveConfig = templateConfig;
@@ -133,7 +131,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             // 2. Lanzar peticiones de red
             const needsInstanceFetch = !!(initialData?.Uuid && !initialData.Uuid.startsWith('temp_'));
 
-            const [configResult, instanceResult, carrerasRes, convsRes, groupsRes] = await Promise.all([
+            const [configResult, instanceResult, carrerasRes] = await Promise.all([
                 needsInstanceFetch
                     ? api.get(`/documents/instances/${initialData.Uuid}/ui-config`).catch(() => ({ data: null }))
                     : api.get(`/documents/instances/templates/${templateCode}/ui-config`).catch(() => ({ data: null })),
@@ -141,8 +139,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
                     ? api.get(`/documents/instances/${initialData.Uuid}`).catch(() => ({ data: null }))
                     : Promise.resolve({ data: null }),
                 getCachedOrFetch('carreras', () => api.get('/catalogs/carreras')),
-                getCachedOrFetch('convocatorias', () => api.get('/Convocatorias')),
-                getCachedOrFetch('groups', () => api.get('/groups')),
             ]);
 
             // Aplicar config de plantilla (prioriza backend si retornó respuesta con secciones válidas, de lo contrario cae en localConfig)
@@ -233,10 +229,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
 
             // Aplicar catálogos
             setCarreras(carrerasRes.data || []);
-            const allConvs = convsRes.data || [];
-            const activeConvs = allConvs.filter((c: any) => c.estado === 'Abierta' || c.estado === 'Activa' || (isAdmin && c.estado === 'Borrador'));
-            setConvocatorias(activeConvs.length > 0 ? activeConvs : allConvs.filter((c: any) => c.estado !== 'Borrador' || isAdmin));
-            setGroups(groupsRes.data || []);
 
             setIsLoading(false);
         };
@@ -272,8 +264,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             initialData={{ ...docInstanceData, Uuid: resolvedUuid || initialData?.Uuid }}
             entityUuid={entityUuid}
             carreras={carreras}
-            convocatorias={convocatorias}
-            groups={groups}
             customCatalogs={customCatalogs}
             onClose={onClose}
             readOnly={readOnly || isInstanceSigned}
@@ -296,8 +286,6 @@ interface DocumentEditorCoreProps {
     initialData: any;
     entityUuid?: string;
     carreras: any[];
-    convocatorias: any[];
-    groups: any[];
     customCatalogs?: Record<string, any[]>;
     onClose: () => void;
     readOnly?: boolean;                                  // ← Bandera de sólo lectura
@@ -312,8 +300,6 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
     initialData,
     entityUuid,
     carreras,
-    convocatorias,
-    groups,
     customCatalogs = {},
     onClose,
     readOnly = false,
@@ -523,16 +509,10 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                 }
             });
         }
-
-        if (cloned.GrupoInvestigacionTipo === 'SI' || cloned.GrupoInvestigacionTipo === 'si') {
-            cloned.TieneGrupoInvestigacion = true;
-            cloned.GrupoInvestigacion = cloned.GrupoInvestigacionNombre;
-        } else if (cloned.GrupoInvestigacionTipo === 'NO' || cloned.GrupoInvestigacionTipo === 'no') {
-            cloned.TieneGrupoInvestigacion = false;
-            cloned.GrupoInvestigacionUuid = null;
-            cloned.GrupoInvestigacionNombre = '';
-            cloned.GrupoInvestigacion = '';
-        }
+        cloned.TieneGrupoInvestigacion = false;
+        cloned.GrupoInvestigacionUuid = null;
+        cloned.GrupoInvestigacionNombre = '';
+        cloned.GrupoInvestigacion = '';
 
         // Garantizar que todos los campos string del ProyectoDto sean cadenas de texto.
         // Yjs puede convertir valores numéricos a Number; esto los normaliza antes de enviar al backend.
@@ -707,8 +687,6 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                             activeTab={activeTab}
                             templateCode={templateCode}
                             carreras={carreras}
-                            convocatorias={convocatorias}
-                            groups={groups}
                             customCatalogs={customCatalogs}
                             config={activeSectionConfig.config}
 

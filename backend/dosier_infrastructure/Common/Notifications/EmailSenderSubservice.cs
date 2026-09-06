@@ -226,16 +226,6 @@ namespace dosier_infrastructure.Common.Notifications
                             contextReplacements["[[proyecto_workspace_url]]"] = _appUrlService.BuildFrontendUrl($"/investigacion/workspace/protocolo-investigacion/{proj.Uuid}");
                         }
                     }
-                    else if (request.EntityType.Equals("Convocatoria", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var conv = await _context.DocConvocatorias
-                            .FirstOrDefaultAsync(c => c.Uuid == request.EntityUuid);
-                        if (conv != null)
-                        {
-                            contextReplacements["[[convocatoria_titulo]]"] = conv.Titulo ?? "";
-                            contextReplacements["[[convocatoria_codigo]]"] = conv.CodigoConvocatoria ?? "";
-                        }
-                    }
                 }
                 catch (Exception ex)
                 {

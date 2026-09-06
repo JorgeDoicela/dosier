@@ -8,8 +8,6 @@ interface WorkspaceTitleProps {
         status: string;
         uuid: string;
         id: string;
-        tieneGrupoInvestigacion?: boolean;
-        grupoInvestigacion?: string;
     };
     user: any;
     templateCode: string;
@@ -43,11 +41,6 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
                             <span className={`dot ${cfg.dot}`} style={cfg.dotStyle} />
                             {cfg.label}
                         </div>
-                        {currentProject.tieneGrupoInvestigacion && currentProject.grupoInvestigacion && (
-                            <span className="badge-vercel badge-vercel-brand text-[11px] !py-0.5 !px-2.5 font-medium">
-                                Grupo: {currentProject.grupoInvestigacion}
-                            </span>
-                        )}
                         {(currentProject as any).linea && (
                             <span className="text-[11px] text-text-dim bg-surface border border-border-thin rounded px-2 py-0.5 truncate max-w-[280px]" title={(currentProject as any).linea}>
                                 {(currentProject as any).linea}

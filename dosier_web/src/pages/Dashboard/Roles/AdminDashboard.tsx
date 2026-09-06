@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Activity, BarChart3,
-    Megaphone,
     Fingerprint, FileText, Layers, ExternalLink,
     Folder, RotateCw
 } from 'lucide-react';
@@ -19,7 +18,6 @@ interface GlobalStats {
     proyectos_aprobados: number;
     proyectos_en_ejecucion: number;
     proyectos_finalizados: number;
-    total_convocatorias_abiertas: number;
     total_investigadores_activos: number;
     articulos_indexados: number;
     prototipos: number;
@@ -126,11 +124,11 @@ export const AdminDashboard: React.FC = () => {
                             <span>Documentación</span>
                         </Link>
                         <Link
-                            to="/convocatorias"
+                            to="/proyectos"
                             className="btn-vercel-primary flex-1 md:flex-none no-underline"
                         >
-                            <Megaphone size={16} />
-                            <span>Convocatorias</span>
+                            <FileText size={16} />
+                            <span>Proyectos</span>
                         </Link>
                     </>
                 }
@@ -314,10 +312,10 @@ export const AdminDashboard: React.FC = () => {
                             animate={animate}
                             items={[
                                 {
-                                    label: 'Convocatorias Activas',
-                                    value: stats?.total_convocatorias_abiertas ?? 0,
-                                    suffix: 'vigentes',
-                                    max: 5,
+                                    label: 'Proyectos Aprobados',
+                                    value: stats?.proyectos_aprobados ?? 0,
+                                    suffix: 'aprobados',
+                                    max: 20,
                                     color: 'var(--success)'
                                 },
                                 {

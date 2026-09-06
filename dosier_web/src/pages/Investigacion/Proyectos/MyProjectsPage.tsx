@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '../../../components/Common/PageHeader';
 import {
     ClipboardList, Plus, ArrowRight, Calendar, AlertCircle,
-    Loader2, Search, BarChart3, Target, BookOpen, Trash2, User, PenTool, FileText, Pin
+    Loader2, Search, BarChart3, Target, BookOpen, Trash2, User, FileText, Pin
 } from 'lucide-react';
 import api from '../../../api/axios_config';
 import { CreateProjectModal } from '../../../components/DOSIER/CreateProjectModal';
@@ -54,7 +54,6 @@ const MyProjectsPage: React.FC = () => {
 
     const [filterEstado, setFilterEstado] = useState<string>('todos');
     const [filterLinea, setFilterLinea] = useState<string>('todas');
-    const [filterConvocatoria, setFilterConvocatoria] = useState<string>('todas');
     const [sortBy, setSortBy] = useState<string>('mi_actividad');
     const [showNewProject, setShowNewProject] = useState(false);
     const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
@@ -206,10 +205,6 @@ const MyProjectsPage: React.FC = () => {
         new Set(proyectos.map(p => p.linea_investigacion).filter(Boolean))
     ) as string[];
 
-    const convocatoriasDisponibles = Array.from(
-        new Set(proyectos.map(p => p.convocatoria_titulo).filter(Boolean))
-    ) as string[];
-
     const filtered = proyectos
         .filter(p => {
             const query = search.toLowerCase();
@@ -218,14 +213,12 @@ const MyProjectsPage: React.FC = () => {
                 (p.codigo_institucional || '').toLowerCase().includes(query) ||
                 (p.director_nombre || '').toLowerCase().includes(query) ||
                 (p.linea_investigacion || '').toLowerCase().includes(query) ||
-                (p.convocatoria_titulo || '').toLowerCase().includes(query) ||
                 (p.carrera || '').toLowerCase().includes(query);
 
             const matchEstado = filterEstado === 'todos' || p.estado === filterEstado;
             const matchLinea = filterLinea === 'todas' || p.linea_investigacion === filterLinea;
-            const matchConvocatoria = filterConvocatoria === 'todas' || p.convocatoria_titulo === filterConvocatoria;
 
-            return matchSearch && matchEstado && matchLinea && matchConvocatoria;
+            return matchSearch && matchEstado && matchLinea;
         })
         .sort((a, b) => {
             if (sortBy === 'mi_actividad') {
@@ -282,7 +275,7 @@ const MyProjectsPage: React.FC = () => {
             return 0;
         });
 
-    const hasActiveFilters = search !== '' || filterEstado !== 'todos' || filterLinea !== 'todas' || filterConvocatoria !== 'todas';
+    const hasActiveFilters = search !== '' || filterEstado !== 'todos' || filterLinea !== 'todas';
 
     if (loading) return (
         <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -314,23 +307,13 @@ const MyProjectsPage: React.FC = () => {
                 }
             >
                 <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                    <Link
-                        to="/convocatorias"
-                        className="btn-vercel-secondary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
-                        title="Ver convocatorias vigentes"
+                    <button
+                        onClick={() => setShowNewProject(true)}
+                        className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
                     >
-                        <PenTool size={14} />
-                        <span>Convocatorias</span>
-                    </Link>
-                    {!isDocente && (
-                        <button
-                            onClick={() => setShowNewProject(true)}
-                            className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
-                        >
-                            <Plus size={14} strokeWidth={3} />
-                            Nueva Postulación
-                        </button>
-                    )}
+                        <Plus size={14} strokeWidth={3} />
+                        Nueva Propuesta
+                    </button>
                 </div>
             </PageHeader>
 
@@ -381,7 +364,7 @@ const MyProjectsPage: React.FC = () => {
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            placeholder="Buscar por título, código, director, carrera o convocatoria..."
+                            placeholder="Buscar por título, código, director o carrera..."
                             className="input-vercel !pl-9 !rounded-xl !py-2.5 !text-sm !placeholder:text-text-dim w-full"
                         />
                     </div>
@@ -442,20 +425,6 @@ const MyProjectsPage: React.FC = () => {
                             ))}
                         </select>
                     </div>
-
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-1">Convocatoria</label>
-                        <select
-                            value={filterConvocatoria}
-                            onChange={e => setFilterConvocatoria(e.target.value)}
-                            className="input-vercel !rounded-xl !py-2 !text-xs w-full cursor-pointer"
-                        >
-                            <option value="todas">Todas las convocatorias</option>
-                            {convocatoriasDisponibles.map(conv => (
-                                <option key={conv} value={conv}>{conv}</option>
-                            ))}
-                        </select>
-                    </div>
                 </div>
             </div>
 
@@ -479,21 +448,13 @@ const MyProjectsPage: React.FC = () => {
                             ? 'Prueba con otros filtros de búsqueda.'
                             : 'Crea tu primera propuesta de investigación para comenzar.'}
                     </p>
-                    {!hasActiveFilters && !isDocente && (
+                    {!hasActiveFilters && (
                         <button
                             onClick={() => setShowNewProject(true)}
-                            className="btn-vercel-primary px-6 py-2.5"
-                        >
-                            <Plus size={14} strokeWidth={3} /> Crear primer proyecto
-                        </button>
-                    )}
-                    {!hasActiveFilters && isDocente && (
-                        <Link
-                            to="/convocatorias"
                             className="btn-vercel-primary px-6 py-2.5 flex items-center justify-center gap-2"
                         >
-                            <Plus size={14} strokeWidth={3} /> Postular a Convocatoria
-                        </Link>
+                            <Plus size={14} strokeWidth={3} /> Iniciar propuesta
+                        </button>
                     )}
                 </div>
             )}

@@ -89,33 +89,9 @@ namespace dosier_infrastructure.Collaboration
 
                         bool hasAccess = isTeamMember;
 
-                        if (!hasAccess && project.TieneGrupo == true && project.IdGrupo.HasValue)
-                        {
-                            var isGroupMember = await _db.DocGruposMiembros
-                                .AnyAsync(m => m.IdGrupo == project.IdGrupo.Value && m.IdUsuario == user.IdUsuario && m.Activo != false);
-                            if (isGroupMember) hasAccess = true;
-                        }
-
                         if (!hasAccess)
                         {
                             _logger.LogWarning("[HUB] Access Denied: User {User} has no permissions for project {ProjectUuid}", username, projectUuid);
-                            throw new HubException("No tienes permisos para unirte a esta sesión colaborativa.");
-                        }
-                    }
-                }
-                else
-                {
-                    var group = await _db.DocGruposInvestigacion
-                        .Include(g => g.IdCoordinadorNavigation)
-                        .FirstOrDefaultAsync(g => g.Uuid == instanceUuid);
-                    if (group != null)
-                    {
-                        var isGroupMember = (group.IdCoordinador == user.IdUsuario) ||
-                                            (group.IdCoordinadorNavigation != null && group.IdCoordinadorNavigation.IdSigafi.Trim() == username.Trim()) ||
-                                            await _db.DocGruposMiembros.AnyAsync(m => m.IdGrupo == group.IdGrupo && m.IdUsuario == user.IdUsuario && (m.Activo != false || m.Activo == null));
-                        if (!isGroupMember)
-                        {
-                            _logger.LogWarning("[HUB] Access Denied: User {User} has no permissions for group {GroupUuid}", username, instanceUuid);
                             throw new HubException("No tienes permisos para unirte a esta sesión colaborativa.");
                         }
                     }

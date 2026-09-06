@@ -36,13 +36,6 @@ namespace dosier_infrastructure.Research
                 return false;
             }
 
-            if (project.TieneGrupo == true && project.IdGrupo.HasValue)
-            {
-                var isGroupMember = await _context.DocGruposMiembros
-                    .AnyAsync(m => m.IdGrupo == project.IdGrupo.Value && m.IdUsuario == user.IdUsuario && m.Activo != false);
-                if (isGroupMember) return true;
-            }
-
             return await _context.DocProyectoParticipantes.AnyAsync(pp => pp.IdProyecto == project.IdProyecto && pp.IdUsuario == user.IdUsuario && pp.Activo != false);
         }
 
@@ -58,18 +51,7 @@ namespace dosier_infrastructure.Research
             if (project == null) return true;
 
             // 1. Verificar si es integrante directo del equipo del proyecto
-            var isTeamMember = await _context.DocProyectoParticipantes.AnyAsync(pp => pp.IdProyecto == project.IdProyecto && pp.IdUsuario == user.IdUsuario && pp.Activo != false);
-            if (isTeamMember) return true;
-
-            // 2. Verificar si es miembro del grupo de investigación asociado al proyecto
-            if (project.TieneGrupo == true && project.IdGrupo.HasValue)
-            {
-                var isGroupMember = await _context.DocGruposMiembros
-                    .AnyAsync(m => m.IdGrupo == project.IdGrupo.Value && m.IdUsuario == user.IdUsuario && m.Activo != false);
-                if (isGroupMember) return true;
-            }
-
-            return false;
+            return await _context.DocProyectoParticipantes.AnyAsync(pp => pp.IdProyecto == project.IdProyecto && pp.IdUsuario == user.IdUsuario && pp.Activo != false);
         }
 
         public async Task<bool> IsSystemAdminAsync(string userSigafiId)
@@ -128,27 +110,6 @@ namespace dosier_infrastructure.Research
             var isProjectTeamMember = await _context.DocProyectoParticipantes.AsNoTracking()
                     .AnyAsync(pp => pp.IdProyecto == project.IdProyecto && pp.IdUsuario == user.IdUsuario && pp.Activo != false);
             if (isProjectTeamMember) return true;
-
-            if (project.TieneGrupo == true && project.IdGrupo.HasValue)
-            {
-                var group = await _context.DocGruposInvestigacion.AsNoTracking()
-                    .Include(g => g.IdCoordinadorNavigation)
-                    .FirstOrDefaultAsync(g => g.IdGrupo == project.IdGrupo.Value);
-                if (group != null)
-                {
-                    if (group.IdCoordinador == user.IdUsuario) return true;
-
-                    var coordinatorSigafi = group.IdCoordinadorNavigation?.IdSigafi?.Trim();
-                    if (!string.IsNullOrEmpty(coordinatorSigafi) &&
-                        string.Equals(coordinatorSigafi, userSigafiId.Trim(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-
-                    return await _context.DocGruposMiembros.AsNoTracking()
-                        .AnyAsync(m => m.IdGrupo == group.IdGrupo && m.IdUsuario == user.IdUsuario && m.Activo != false);
-                }
-            }
 
             return false;
         }

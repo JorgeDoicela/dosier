@@ -1,25 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { coworkLog } from '../../../../core/cowork/utils/log';
 
-export function getMetadataSaveBlockReason(data: any, templateCode: string): string | null {
-    if (templateCode !== 'PROTOCOLO_INVESTIGACION') return null;
-
-    const isAssociative =
-        data.TieneGrupoInvestigacion === true ||
-        data.GrupoInvestigacionTipo === 'SI' ||
-        data.GrupoInvestigacionTipo === 'si';
-
-    if (!isAssociative) return null;
-
-    const groupRef =
-        data.GrupoInvestigacionUuid ||
-        data.GrupoInvestigacion ||
-        data.GrupoInvestigacionNombre;
-
-    if (!groupRef || String(groupRef).trim() === '') {
-        return 'Para proyectos asociativos debes seleccionar un grupo de investigación aprobado antes de guardar.';
-    }
-
+export function getMetadataSaveBlockReason(_data: any, _templateCode: string): string | null {
     return null;
 }
 

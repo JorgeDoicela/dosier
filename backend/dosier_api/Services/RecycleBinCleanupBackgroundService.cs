@@ -58,9 +58,6 @@ namespace dosier_api.Services
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DosierContext>();
             var projectOrchestrator = scope.ServiceProvider.GetRequiredService<IProjectOrchestrator>();
-            var convocatoriaService = scope.ServiceProvider.GetRequiredService<IConvocatoriaService>();
-            var groupsService = scope.ServiceProvider.GetRequiredService<IGroupsService>();
-
             var expirationLimit = DateTime.UtcNow.AddDays(-30);
 
             // 1. Purgar Proyectos
@@ -86,60 +83,6 @@ namespace dosier_api.Services
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Error purgando proyecto expirado UUID: {Uuid}", uuid);
-                    }
-                }
-            }
-
-            // 2. Purgar Convocatorias
-            var expiredConvs = await context.DocConvocatorias
-                .IgnoreQueryFilters()
-                .Where(c => c.Eliminado == true && c.FechaEliminacion != null && c.FechaEliminacion < expirationLimit)
-                .Select(c => c.Uuid)
-                .ToListAsync();
-
-            if (expiredConvs.Any())
-            {
-                _logger.LogInformation("Encontrados {Count} convocatorias expiradas en la papelera. Iniciando purga.", expiredConvs.Count);
-                foreach (var uuid in expiredConvs)
-                {
-                    try
-                    {
-                        var success = await convocatoriaService.PurgeAsync(uuid, "SYSTEM_CLEANUP");
-                        if (!success)
-                        {
-                            _logger.LogWarning("No se pudo purgar convocatoria {Uuid}", uuid);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error purgando convocatoria expirada UUID: {Uuid}", uuid);
-                    }
-                }
-            }
-
-            // 3. Purgar Grupos
-            var expiredGroups = await context.DocGruposInvestigacion
-                .IgnoreQueryFilters()
-                .Where(g => g.Eliminado == true && g.FechaEliminacion != null && g.FechaEliminacion < expirationLimit)
-                .Select(g => g.Uuid)
-                .ToListAsync();
-
-            if (expiredGroups.Any())
-            {
-                _logger.LogInformation("Encontrados {Count} grupos expirados en la papelera. Iniciando purga.", expiredGroups.Count);
-                foreach (var uuid in expiredGroups)
-                {
-                    try
-                    {
-                        var success = await groupsService.PurgeAsync(uuid, "SYSTEM_CLEANUP");
-                        if (!success)
-                        {
-                            _logger.LogWarning("No se pudo purgar grupo {Uuid}", uuid);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error purgando grupo expirado UUID: {Uuid}", uuid);
                     }
                 }
             }

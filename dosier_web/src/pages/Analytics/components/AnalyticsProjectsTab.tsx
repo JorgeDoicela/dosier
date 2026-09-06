@@ -160,9 +160,9 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                             </p>
                                         </div>
                                         <div className="space-y-0.5">
-                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Convocatoria de Origen</span>
-                                            <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.convocatoriaTitulo || 'General'}>
-                                                {selectedProj.convocatoriaTitulo || 'Sin convocatoria asignada'}
+                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Carrera / Unidad</span>
+                                            <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.carrera || 'Institucional'}>
+                                                {selectedProj.carrera || 'Asignación Institucional'}
                                             </p>
                                         </div>
                                     </div>

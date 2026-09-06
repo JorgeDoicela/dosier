@@ -101,7 +101,6 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                             const contextoChip = (() => {
                                 const url = note.url_accion || '';
                                 if (url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                                if (url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
                                 if (url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
                                 if (url.startsWith('/documentacion') || url.startsWith('/investigacion')) return { label: 'Documentación', icon: BookOpen };
                                 if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };

@@ -76,15 +76,14 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         if (layout.isSectionBlocked) return true;
         // 2. El Administrador siempre tiene disponible el control institucional de bloqueo en cualquier documento
         if (isAdmin) return true;
-        // 3. El Director del Proyecto tiene control si el proyecto cuenta con equipo o es grupal
+        // 3. El Director del Proyecto tiene control si el proyecto cuenta con equipo
         if (layout.isDirectorOrAdmin) {
             const hasMultipleResearchers = Array.isArray(formData?.Investigadores) && formData.Investigadores.length > 1;
-            const hasResearchGroup = formData?.GrupoInvestigacionTipo === 'SI' || formData?.TieneGrupoInvestigacion;
-            return hasMultipleResearchers || hasResearchGroup;
+            return hasMultipleResearchers;
         }
         // 4. Miembros regulares no ven el control si la sección está abierta
         return false;
-    }, [isAdmin, layout.isDirectorOrAdmin, layout.isSectionBlocked, formData?.Investigadores, formData?.GrupoInvestigacionTipo, formData?.TieneGrupoInvestigacion]);
+    }, [isAdmin, layout.isDirectorOrAdmin, layout.isSectionBlocked, formData?.Investigadores]);
 
     useEffect(() => {
         if (hasTemplateUpdate) {

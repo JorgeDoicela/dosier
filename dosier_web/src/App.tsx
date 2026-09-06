@@ -18,15 +18,12 @@ const MagicResend            = lazy(() => import('./pages/Login/MagicResend'));
 const MicrosoftCallback      = lazy(() => import('./pages/Login/MicrosoftCallback'));
 const RecuperarContrasenia   = lazy(() => import('./pages/Login/RecuperarContrasenia'));
 const VerContrasenia         = lazy(() => import('./pages/Login/VerContrasenia'));
-const ConvocatoriasPage      = lazy(() => import('./pages/Investigacion/Convocatorias/ConvocatoriasPage'));
 const ResearchProjectsPage   = lazy(() => import('./pages/Investigacion/Proyectos/ResearchProjectsPage'));
 const MyProjectsPage         = lazy(() => import('./pages/Investigacion/Proyectos/MyProjectsPage'));
 const ProjectWorkspace       = lazy(() => import('./pages/Investigacion/Proyectos/Workspace/ProjectWorkspace').then(m => ({ default: m.ProjectWorkspace })));
 const RevisionTecnicaPage    = lazy(() => import('./pages/Investigacion/Proyectos/RevisionTecnicaPage').then(m => ({ default: m.RevisionTecnicaPage })));
 const MonitoringPage         = lazy(() => import('./pages/Investigacion/Monitoreo/MonitoringPage'));
-const GroupsPage             = lazy(() => import('./pages/Admin/GroupsPage'));
 const AuditPage              = lazy(() => import('./pages/Admin/AuditPage'));
-const PublicConvocatoriasPage = lazy(() => import('./pages/Investigacion/Convocatorias/PublicConvocatoriasPage'));
 const VerifyDocument         = lazy(() => import('./pages/Public/VerifyDocument'));
 const AnalyticsPage          = lazy(() => import('./pages/Analytics/AnalyticsPage'));
 const NotificationsPage      = lazy(() => import('./pages/Notificaciones/NotificationsPage'));
@@ -150,13 +147,7 @@ const ResearcherRoute = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
 };
 
-const ConvocatoriaRoute = () => {
-    const { isAdmin, isEstudiante } = useAuth();
-    if (isEstudiante) {
-        return <Navigate to="/dashboard" replace />;
-    }
-    return isAdmin ? <ConvocatoriasPage /> : <PublicConvocatoriasPage />;
-};
+
 
 const NavigateToProjectDetail = () => {
     const { projectUuid } = useParams();
@@ -256,7 +247,6 @@ function App() {
                             <Route path="/notificaciones" element={<NotificationsPage />} />
                             <Route path="/usuarios" element={<PermissionRoute module="USUARIOS" op="VER"><UsersPage /></PermissionRoute>} />
                             <Route path="/auditoria" element={<AdminRoute><AuditPage /></AdminRoute>} />
-                            <Route path="/grupos" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_DOCENTE']}><GroupsPage /></RoleRoute>} />
                             <Route path="/parametros-normativos" element={<Navigate to="/configuracion?tab=parametros" replace />} />
                              <Route path="/emails" element={<AdminRoute><EmailEnginePage /></AdminRoute>} />
                              <Route path="/admin/documentos" element={<AdminRoute><DocumentMaintenancePage /></AdminRoute>} />
@@ -264,7 +254,6 @@ function App() {
                              <Route path="/admin/plantillas" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/templates" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/admin" element={<Navigate to="/usuarios" replace />} />
-                             <Route path="/admin/groups" element={<RedirectPreserveSearch to="/grupos" />} />
                              <Route path="/admin/audit" element={<Navigate to="/auditoria" replace />} />
                              <Route path="/admin/configuracion" element={<RedirectPreserveSearch to="/parametros-normativos" />} />
                              <Route path="/admin/lopdp" element={<Navigate to="/lopdp" replace />} />
@@ -294,7 +283,6 @@ function App() {
                             <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoringPage /></ResearcherRoute>} />
                             <Route path="/investigacion/mis-proyectos" element={<RedirectPreserveSearch to="/documentacion/mis-proyectos" />} />
                             
-                            <Route path="/convocatorias" element={<ConvocatoriaRoute />} />
                             <Route path="/verificacion" element={<VerifyDocument />} />
                             <Route path="/verificar-firma" element={<RedirectPreserveSearch to="/verificacion" />} />
                             <Route path="/verify" element={<RedirectPreserveSearch to="/verificacion" />} />

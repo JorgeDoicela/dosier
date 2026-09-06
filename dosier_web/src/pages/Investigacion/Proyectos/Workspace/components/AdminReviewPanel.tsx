@@ -8,7 +8,7 @@ import api from '../../../../../api/axios_config';
 interface AdminReviewPanelProps {
     currentProject: {
         uuid: string;
-        convocatoria: string;
+        convocatoria?: string;
         title: string;
     };
     investigadores: Array<{

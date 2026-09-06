@@ -88,7 +88,6 @@ export const InboxView: React.FC<InboxViewProps> = ({
                         </button>
                         {[
                             { key: 'Proyectos', label: 'Proyectos', icon: Folder },
-                            { key: 'Convocatorias', label: 'Convocatorias', icon: Bell },
                             { key: 'Monitoreo', label: 'Monitoreo', icon: BarChart3 },
                             { key: 'Investigacion', label: 'Investigación', icon: BookOpen },
                             { key: 'Agenda', label: 'Agenda', icon: CalendarIcon },
@@ -141,9 +140,8 @@ export const InboxView: React.FC<InboxViewProps> = ({
                         const matchesContext = !selectedFilterContext ? true : (() => {
                             const url = note.url_accion || '';
                             if (selectedFilterContext === 'Proyectos') return url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos');
-                            if (selectedFilterContext === 'Convocatorias') return url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias');
                             if (selectedFilterContext === 'Monitoreo') return url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo');
-                            if (selectedFilterContext === 'Investigacion' || selectedFilterContext === 'Documentacion') return (url.startsWith('/documentacion') || url.startsWith('/investigacion')) && !url.includes('/proyectos') && !url.includes('/convocatorias');
+                            if (selectedFilterContext === 'Investigacion' || selectedFilterContext === 'Documentacion') return (url.startsWith('/documentacion') || url.startsWith('/investigacion')) && !url.includes('/proyectos');
                             if (selectedFilterContext === 'Agenda') return url.startsWith('/agenda');
                             return false;
                         })();
@@ -189,7 +187,6 @@ export const InboxView: React.FC<InboxViewProps> = ({
                         const contextoChip = (() => {
                             const url = note.url_accion || '';
                             if (url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                            if (url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
                             if (url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
                             if (url.startsWith('/documentacion') || url.startsWith('/investigacion')) return { label: 'Documentación', icon: BookOpen };
                             if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
@@ -302,7 +299,6 @@ export const InboxView: React.FC<InboxViewProps> = ({
                 const draggedContextoChip = (() => {
                     const url = draggedNote.url_accion || '';
                     if (url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                    if (url.startsWith('/documentacion/convocatorias') || url.startsWith('/investigacion/convocatorias')) return { label: 'Convocatorias', icon: Bell };
                     if (url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
                     if (url.startsWith('/documentacion') || url.startsWith('/investigacion')) return { label: 'Documentación', icon: BookOpen };
                     if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };

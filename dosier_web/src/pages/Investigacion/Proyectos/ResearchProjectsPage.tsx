@@ -66,7 +66,6 @@ const ResearchProjectsPage = () => {
 
     const [filterEstado, setFilterEstado] = useState<string>('todos');
     const [filterLinea, setFilterLinea] = useState<string>('todas');
-    const [filterConvocatoria, setFilterConvocatoria] = useState<string>('todas');
     const [sortBy, setSortBy] = useState<string>('mi_actividad');
     
     const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
@@ -142,12 +141,6 @@ const ResearchProjectsPage = () => {
         ) as string[];
     }, [proyectos]);
 
-    const convocatoriasDisponibles = useMemo(() => {
-        return Array.from(
-            new Set(proyectos.map(p => p.convocatoria_titulo).filter(Boolean))
-        ) as string[];
-    }, [proyectos]);
-
     const filteredProjects = useMemo(() => {
         return proyectos
             .filter(p => {
@@ -157,14 +150,12 @@ const ResearchProjectsPage = () => {
                     (p.codigo_institucional || '').toLowerCase().includes(query) ||
                     (p.director_nombre || '').toLowerCase().includes(query) ||
                     (p.linea_investigacion || '').toLowerCase().includes(query) ||
-                    (p.convocatoria_titulo || '').toLowerCase().includes(query) ||
                     (p.carrera || '').toLowerCase().includes(query);
 
                 const matchEstado = filterEstado === 'todos' || p.estado === filterEstado;
                 const matchLinea = filterLinea === 'todas' || p.linea_investigacion === filterLinea;
-                const matchConvocatoria = filterConvocatoria === 'todas' || p.convocatoria_titulo === filterConvocatoria;
 
-                return matchSearch && matchEstado && matchLinea && matchConvocatoria;
+                return matchSearch && matchEstado && matchLinea;
             })
             .sort((a, b) => {
                 if (sortBy === 'mi_actividad') {
@@ -223,7 +214,7 @@ const ResearchProjectsPage = () => {
                 }
                 return 0;
             });
-    }, [proyectos, search, filterEstado, filterLinea, filterConvocatoria, sortBy, isPinned, recentVisitsMap]);
+    }, [proyectos, search, filterEstado, filterLinea, sortBy, isPinned, recentVisitsMap]);
 
     const confirmarEliminar = (uuid: string, titulo: string) => {
         setDeletingUuid(uuid);
@@ -338,7 +329,7 @@ const ResearchProjectsPage = () => {
         }
     };
 
-    const hasActiveFilters = search !== '' || filterEstado !== 'todos' || filterLinea !== 'todas' || filterConvocatoria !== 'todas';
+    const hasActiveFilters = search !== '' || filterEstado !== 'todos' || filterLinea !== 'todas';
 
     return (
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-10">
@@ -387,7 +378,7 @@ const ResearchProjectsPage = () => {
                             <input
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                placeholder="Buscar por título, código, director, carrera o convocatoria..."
+                                placeholder="Buscar por título, código, director o carrera..."
                                 className="input-vercel !pl-10 !rounded-lg !py-2 !text-xs !placeholder:text-text-dim w-full"
                             />
                         </div>
@@ -410,7 +401,6 @@ const ResearchProjectsPage = () => {
                                         setSearch('');
                                         setFilterEstado('todos');
                                         setFilterLinea('todas');
-                                        setFilterConvocatoria('todas');
                                         setSortBy('mi_actividad');
                                     }}
                                     className="btn-vercel-secondary !py-2 !px-3 !rounded-lg !text-xs whitespace-nowrap"
@@ -446,20 +436,6 @@ const ResearchProjectsPage = () => {
                                 <option value="todas">Todas las líneas</option>
                                 {lineasDisponibles.map(linea => (
                                     <option key={linea} value={linea}>{linea}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-0.5">Convocatoria</label>
-                            <select
-                                value={filterConvocatoria}
-                                onChange={e => setFilterConvocatoria(e.target.value)}
-                                className="input-vercel !rounded-lg !py-1.5 !text-xs w-full cursor-pointer"
-                            >
-                                <option value="todas">Todas las convocatorias</option>
-                                {convocatoriasDisponibles.map(conv => (
-                                    <option key={conv} value={conv}>{conv}</option>
                                 ))}
                             </select>
                         </div>

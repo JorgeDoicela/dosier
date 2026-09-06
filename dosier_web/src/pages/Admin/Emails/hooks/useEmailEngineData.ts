@@ -83,16 +83,15 @@ export const useEmailEngineData = (): UseEmailEngineDataResult => {
     const loadInitialData = useCallback(async () => {
         setLoading(true);
         try {
-            const [templatesRes, carrerasRes, projectsRes, convocatoriasRes] = await Promise.all([
+            const [templatesRes, carrerasRes, projectsRes] = await Promise.all([
                 api.get<any[]>('/Admin/email-engine/templates'),
                 api.get<Carrera[]>('/catalogs/carreras'),
-                api.get<Proyecto[]>('/projects'),
-                api.get<any[]>('/Convocatorias')
+                api.get<Proyecto[]>('/projects')
             ]);
             setTemplates(templatesRes.data.map(mapTemplateToCamelCase));
             setCarreras(carrerasRes.data.map(mapCarreraToCamelCase));
             setProjects(projectsRes.data);
-            setConvocatorias(convocatoriasRes.data.map(mapConvocatoriaToCamelCase));
+            setConvocatorias([]);
         } catch (e) {
             console.error('[DOSIER EMAIL ENGINE] Error loading catalogs:', e);
         } finally {

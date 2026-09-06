@@ -25,8 +25,6 @@ namespace dosier_infrastructure.Research.Subservices
             if (canonicalUuid == null) return null;
 
             var basicProject = await _context.DocProyectos
-                .Include(p => p.IdConvocatoriaNavigation).ThenInclude(c => c!.IdPeriodoNavigation)
-                .Include(p => p.IdGrupoNavigation)
                 .FirstOrDefaultAsync(p => p.Uuid == canonicalUuid);
 
             if (basicProject == null) return null;
@@ -84,11 +82,11 @@ namespace dosier_infrastructure.Research.Subservices
                 {
                     Uuid = basicProject.Uuid,
                     Estado = basicProject.Estado,
-                    IdConvocatoria = basicProject.IdConvocatoria,
-                    ConvocatoriaTitulo = basicProject.IdConvocatoriaNavigation?.Titulo,
+                    IdConvocatoria = null,
+                    ConvocatoriaTitulo = null,
                     Titulo = basicProject.Titulo,
                     DescripcionProyecto = desc,
-                    TieneGrupoInvestigacion = basicProject.TieneGrupo,
+                    TieneGrupoInvestigacion = false,
                     PuntajeEvaluacion = basicProject.PuntajeEvaluacion,
                     Investigadores = new List<InvestigadorDto>()
                 };
@@ -124,8 +122,6 @@ namespace dosier_infrastructure.Research.Subservices
 
             var p = await _context.DocProyectos
                 .AsSplitQuery()
-                .Include(p => p.IdConvocatoriaNavigation).ThenInclude(c => c!.IdPeriodoNavigation)
-                .Include(p => p.IdGrupoNavigation)
                 .Include(p => p.DocProyectosCarreras)
                 .Include(p => p.DocProyectoParticipantes).ThenInclude(pp => pp.IdUsuarioNavigation)
                 .Include(p => p.DocObjetivosProyecto)
@@ -439,8 +435,8 @@ namespace dosier_infrastructure.Research.Subservices
             dto.Uuid = p.Uuid;
             dto.CodigoInstitucional = p.CodigoInstitucional;
             dto.Estado = p.Estado;
-            dto.IdConvocatoria = p.IdConvocatoria;
-            dto.ConvocatoriaTitulo = p.IdConvocatoriaNavigation?.Titulo;
+            dto.IdConvocatoria = null;
+            dto.ConvocatoriaTitulo = null;
             dto.IdCarrera = p.DocProyectosCarreras?.FirstOrDefault(pc => pc.Modalidad == "PRINCIPAL")?.IdCarrera ?? p.DocProyectosCarreras?.FirstOrDefault()?.IdCarrera;
             if (dto.IdCarrera.HasValue)
             {
@@ -452,10 +448,8 @@ namespace dosier_infrastructure.Research.Subservices
             }
             dto.Titulo = p.Titulo;
             dto.TiempoEjecucion = p.TiempoEjecucion;
-            dto.TieneGrupoInvestigacion = p.TieneGrupo;
+            dto.TieneGrupoInvestigacion = false;
             dto.PuntajeEvaluacion = p.PuntajeEvaluacion;
-
-
 
             dto.DirectorProyecto = p.DocProyectoParticipantes
                 .Where(pp => pp.EsDirector == true && pp.IdUsuarioNavigation != null && pp.TipoParticipante == "Docente")
@@ -466,19 +460,13 @@ namespace dosier_infrastructure.Research.Subservices
                 .Select(pp => pp.IdUsuarioNavigation!.Nombre)
                 .FirstOrDefault()
                 ?? dto.DirectorProyecto;
-            if (p.IdGrupoNavigation != null)
-            {
-                dto.GrupoInvestigacion = p.IdGrupoNavigation.Nombre;
-                dto.GrupoInvestigacionUuid = p.IdGrupoNavigation.Uuid;
-                dto.TieneGrupoInvestigacion = true;
-                dto.GrupoInvestigacionTipo = "SI";
-                dto.GrupoInvestigacionNombre = p.IdGrupoNavigation.Nombre;
-            }
-            else
-            {
-                dto.TieneGrupoInvestigacion = dto.TieneGrupoInvestigacion ?? false;
-                dto.GrupoInvestigacionTipo = dto.GrupoInvestigacionTipo ?? "NO";
-            }
+
+            dto.TieneGrupoInvestigacion = false;
+            dto.GrupoInvestigacionTipo = "NO";
+            dto.GrupoInvestigacion = null;
+            dto.GrupoInvestigacionUuid = null;
+            dto.GrupoInvestigacionNombre = null;
+
             dto.Investigadores = investigadoresList;
 
             dto.FechaPresentacion = p.FechaPresentacion?.ToString("dd/MM/yyyy");
@@ -487,14 +475,8 @@ namespace dosier_infrastructure.Research.Subservices
             dto.FechaInicioEstimada = p.FechaInicio?.ToString("dd/MM/yyyy");
             dto.FechaFinEstimada = p.FechaFin?.ToString("dd/MM/yyyy");
             dto.FechaLimiteSubsanacion = p.FechaLimiteSubsanacion?.ToString("yyyy-MM-dd");
-            dto.Periodo = p.IdConvocatoriaNavigation?.IdPeriodoNavigation?.Detalle
-                          ?? p.IdConvocatoriaNavigation?.IdPeriodo
-                          ?? dto.Periodo
-                          ?? currentPeriod?.Detalle;
-            dto.PeriodoConvocatoria = p.IdConvocatoriaNavigation?.IdPeriodoNavigation?.Detalle
-                                      ?? p.IdConvocatoriaNavigation?.IdPeriodo
-                                      ?? dto.PeriodoConvocatoria
-                                      ?? dto.Periodo;
+            dto.Periodo = dto.Periodo ?? currentPeriod?.Detalle;
+            dto.PeriodoConvocatoria = dto.Periodo;
             dto.ObjetivosEspecificos = p.DocObjetivosProyecto
                 .Where(o => !o.EsGeneral)
                 .OrderBy(o => o.Orden)

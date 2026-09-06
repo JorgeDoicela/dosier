@@ -13,12 +13,9 @@ public class DocProyectoConfiguration : IEntityTypeConfiguration<DocProyecto>
         entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
         entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired().HasConversion<string>();
         entity.HasIndex(e => e.Uuid).IsUnique();
-        entity.Property(e => e.IdConvocatoria).HasColumnName("idConvocatoria");
         entity.Property(e => e.CodigoInstitucional).HasColumnName("codigoInstitucional").HasMaxLength(50);
         entity.HasIndex(e => e.CodigoInstitucional).IsUnique();
         entity.Property(e => e.Titulo).HasColumnName("titulo").HasMaxLength(500).IsRequired();
-        entity.Property(e => e.IdGrupo).HasColumnName("idGrupo");
-        entity.Property(e => e.TieneGrupo).HasColumnName("tieneGrupo").HasColumnType("tinyint(1)").HasDefaultValueSql("'0'").HasSentinel(false);
         entity.Property(e => e.FechaPresentacion).HasColumnName("fechaPresentacion");
         entity.Property(e => e.FechaInicio).HasColumnName("fechaInicio");
         entity.Property(e => e.FechaFin).HasColumnName("fechaFin");
@@ -34,9 +31,6 @@ public class DocProyectoConfiguration : IEntityTypeConfiguration<DocProyecto>
         entity.Property(e => e.AutoExtendDeadlines).HasColumnName("autoExtendDeadlines").HasColumnType("tinyint(1)").HasDefaultValue(false);
         entity.Property(e => e.AutoExtendDays).HasColumnName("autoExtendDays").HasColumnType("int").HasDefaultValue(7);
         entity.Property(e => e.FechaLimiteSubsanacion).HasColumnName("fechaLimiteSubsanacion");
-
-        entity.HasOne(d => d.IdConvocatoriaNavigation).WithMany(p => p.Proyectos).HasForeignKey(d => d.IdConvocatoria).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_proy_conv");
-        entity.HasOne(d => d.IdGrupoNavigation).WithMany(p => p.DocProyectos).HasForeignKey(d => d.IdGrupo).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_proy_grupo");
     }
 }
 
@@ -168,23 +162,5 @@ public class DocBibliografiaProyectoConfiguration : IEntityTypeConfiguration<Doc
         entity.Property(e => e.Url).HasColumnName("url").HasMaxLength(512);
 
         entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocBibliografiasProyecto).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_bib_proyecto");
-    }
-}
-
-public class DocProyectoDocumentoAdjuntoConfiguration : IEntityTypeConfiguration<DocProyectoDocumentoAdjunto>
-{
-    public void Configure(EntityTypeBuilder<DocProyectoDocumentoAdjunto> entity)
-    {
-        entity.HasKey(e => e.IdDocAdj).HasName("PRIMARY");
-        entity.ToTable("doc_proyectos_documentos_adjuntos");
-        entity.Property(e => e.IdDocAdj).HasColumnName("idDocAdj");
-        entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-        entity.HasIndex(e => e.Uuid).IsUnique();
-        entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-        entity.Property(e => e.NombreArchivo).HasColumnName("nombreArchivo").HasMaxLength(255).IsRequired();
-        entity.Property(e => e.RutaArchivo).HasColumnName("rutaArchivo").HasMaxLength(512).IsRequired();
-        entity.Property(e => e.FechaSubida).HasColumnName("fechaSubida").HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-        entity.HasOne(d => d.IdProyectoNavigation).WithMany(p => p.DocumentosAdjuntos).HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_docadj_proyecto");
     }
 }

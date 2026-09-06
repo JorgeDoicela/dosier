@@ -17,20 +17,17 @@ namespace dosier_api.Controllers
     {
         private readonly IDocumentEngine _documentEngine;
         private readonly IProjectOrchestrator _projectOrchestrator;
-        private readonly IGroupsService _groupsService;
         private readonly DosierContext _context;
         private readonly ILogger<ReportsController> _logger;
 
         public ReportsController(
             IDocumentEngine documentEngine,
             IProjectOrchestrator projectOrchestrator,
-            IGroupsService groupsService,
             DosierContext context,
             ILogger<ReportsController> logger)
         {
             _documentEngine = documentEngine;
             _projectOrchestrator = projectOrchestrator;
-            _groupsService = groupsService;
             _context = context;
             _logger = logger;
         }
@@ -50,7 +47,6 @@ namespace dosier_api.Controllers
 
                 var projects = await _projectOrchestrator.GetAllProjectsAsync();
                 var stats = await _projectOrchestrator.GetDashboardStatsAsync(userIdRef ?? "system", isAdmin);
-                var groups = await _groupsService.GetAllAsync();
 
                 var filteredProjects = projects.AsEnumerable();
 
@@ -167,9 +163,7 @@ namespace dosier_api.Controllers
                     };
                 }).ToList();
 
-                var consolidatedGroups = groups.Count(g =>
-                    g.CategoriaConsolidacion?.Contains("Consolid", StringComparison.OrdinalIgnoreCase) == true ||
-                    g.CategoriaConsolidacion?.Contains("A", StringComparison.OrdinalIgnoreCase) == true);
+                var consolidatedGroups = 0;
 
                 var periodLabel = string.IsNullOrEmpty(period) || period == "TODOS" ? "Todos los Periodos" : period;
                 var carreraLabel = string.IsNullOrEmpty(carrera) || carrera == "TODAS" ? "Todas las Tecnologías" : carrera;
@@ -186,9 +180,9 @@ namespace dosier_api.Controllers
                     total_publicaciones = totalPub,
                     articulos_indexados = stats.ArticulosIndexados,
                     prototipos = stats.Prototipos,
-                    total_grupos = groups.Count(),
+                    total_grupos = 0,
                     investigadores_activos = stats.TotalInvestigadoresActivos,
-                    convocatorias = stats.TotalConvocatoriasAbiertas,
+                    convocatorias = 0,
                     estados_distribucion = estadosDistribucion,
                     lineas_distribucion = lineasDistribucion,
                     indicadores_caces = indicadoresCaces,

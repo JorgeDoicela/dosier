@@ -290,7 +290,7 @@ function usuarioToItem(u: any): SearchItem {
 }
 
 function grupoToItem(g: any): SearchItem {
-    // Groups open their side detail drawer via ?open=UUID in GroupsPage
+    // Colectivos / grupos documentales
     return {
         id: `grupo-${g.uuid || g.id_grupo}`,
         label: g.nombre || 'Grupo de Investigación',
