@@ -60,9 +60,13 @@ dosier/
 │   └── src/                     # Páginas, Landing, Editor Colaborativo y Componentes
 ├── docs/
 │   ├── documentacion/           # Documentación técnica y arquitectónica completa
-│   └── tesis/                   # Memoria académica, formatos oficiales y hoja de ruta
+│   └── tesis/
+│       ├── analisis_y_planificacion/
+│       │   └── codex.md         # Diagnóstico SIGAFI, arquitectura y delimitación de tesis
+│       └── formatos_oficiales/   # Formatos institucionales (PEA y Sílabo de 19 semanas)
 └── scripts/
-    └── base_datos/              # Scripts SQL de inicialización y sincronización
+    ├── base_datos/              # Scripts SQL de inicialización y sincronización
+    └── despliegue/              # Scripts de automatización y despliegue local
 ```
 
 ---
@@ -70,9 +74,9 @@ dosier/
 ## 5. Documentación de Tesis y Formatos Oficiales
 
 Toda la fundamentación académica y especificación de formatos oficiales se encuentra organizada en `docs/tesis/`:
-* [Tema y Planteamiento de Tesis](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/docs/tesis/tema_tesis.md)
-* [Contexto, Arquitectura y Hoja de Ruta](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/docs/tesis/contexto_y_hoja_de_ruta.md)
-* [Formatos Oficiales del ISTPET (PEA, Sílabo, Guías APE y Guía de Estudio)](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/docs/tesis/documentos_oficiales_a_realizar.md/)
+* [CODEX: Diagnóstico SIGAFI, Arquitectura y Delimitación de Tesis](docs/tesis/analisis_y_planificacion/codex.md)
+* [Formato Oficial: Programa de Estudio de la Asignatura (PEA)](docs/tesis/formatos_oficiales/Programa%20de%20Estudio%20de%20la%20Asignatura%20%28PEA%29.md)
+* [Formato Oficial de Referencia: Plan Analítico / Sílabo (19 Semanas)](docs/tesis/formatos_oficiales/Plan_analitico_o_silabo.md)
 
 ---
 
