@@ -12,6 +12,10 @@ using dosier_application.Curriculum.Interfaces;
 using dosier_domain.Curriculum.Entities;
 using dosier_infrastructure.data.models;
 
+using dosier_domain.Signatures;
+using dosier_infrastructure.Security;
+using dosier_infrastructure.Signatures;
+
 namespace dosier_infrastructure.Curriculum
 {
     public class PeaService : IPeaService
@@ -19,15 +23,24 @@ namespace dosier_infrastructure.Curriculum
         private readonly DosierContext _context;
         private readonly IAcademicContextResolver _academicContextResolver;
         private readonly IExpedienteCurricularService _expedienteService;
+        private readonly SignatureHashService _hashService;
+        private readonly dosier_application.Common.IAppUrlService _appUrlService;
+        private readonly IFirmaElectronicaService _firmaElectronicaService;
 
         public PeaService(
             DosierContext context,
             IAcademicContextResolver academicContextResolver,
-            IExpedienteCurricularService expedienteService)
+            IExpedienteCurricularService expedienteService,
+            SignatureHashService hashService,
+            dosier_application.Common.IAppUrlService appUrlService,
+            IFirmaElectronicaService firmaElectronicaService)
         {
             _context = context;
             _academicContextResolver = academicContextResolver;
             _expedienteService = expedienteService;
+            _hashService = hashService;
+            _appUrlService = appUrlService;
+            _firmaElectronicaService = firmaElectronicaService;
         }
 
         public async Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)
@@ -312,6 +325,194 @@ namespace dosier_infrastructure.Curriculum
         }
 
         // =====================================================================
+        // FIRMA DIGITAL INSTITUCIONAL Y LEGAL (LEY 67 ECUADOR)
+        // =====================================================================
+
+        public async Task<PeaFirmaResultadoDto> FirmarPeaAsync(int idPea, int idUsuario, FirmarPeaDto dto, string ipAddress, string userAgent)
+        {
+            var pea = await _context.DocPeas
+                .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                .Include(p => p.ResultadosAprendizaje)
+                .Include(p => p.ActividadesPracticas)
+                .Include(p => p.Bibliografias)
+                .Include(p => p.Observaciones)
+                .Include(p => p.Trazabilidades)
+                .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo)
+                ?? throw new KeyNotFoundException($"No se encontró el PEA con id {idPea}");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == idUsuario)
+                ?? throw new UnauthorizedAccessException("Usuario firmante no encontrado en el sistema.");
+
+            // 1. Verificación de Identidad (No-repudio)
+            string tipoFirmaNormalizado = (dto.TipoFirma ?? "DOSIER").Trim();
+            if (tipoFirmaNormalizado.Equals("FirmaEC", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrEmpty(dto.CertificadoP12Base64))
+                    throw new ArgumentException("Debe adjuntar el archivo de certificado (.p12) para la firma electrónica avanzada.");
+
+                byte[] certBytes;
+                try
+                {
+                    certBytes = Convert.FromBase64String(dto.CertificadoP12Base64);
+                }
+                catch
+                {
+                    throw new ArgumentException("El certificado .p12 provisto no tiene una codificación Base64 válida.");
+                }
+
+                bool certValido = _firmaElectronicaService.ValidateCertificate(certBytes, dto.ContraseniaP12 ?? string.Empty);
+                if (!certValido)
+                    throw new UnauthorizedAccessException("Certificado digital inválido o contraseña del certificado incorrecta.");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(user.Contrasenia))
+                    throw new UnauthorizedAccessException("El usuario no posee una contraseña configurada para validar la firma.");
+
+                bool passwordOk = false;
+                try
+                {
+                    if (!string.IsNullOrEmpty(dto.Password) && BCrypt.Net.BCrypt.Verify(dto.Password, user.Contrasenia))
+                    {
+                        passwordOk = true;
+                    }
+                }
+                catch
+                {
+                    if (user.Contrasenia == dto.Password)
+                    {
+                        passwordOk = true;
+                    }
+                }
+
+                if (!passwordOk)
+                    throw new UnauthorizedAccessException("Contraseña incorrecta. La firma requiere verificación estricta de identidad.");
+            }
+
+            // 2. Validación de Workflow y Determinación de la Transición de Estado
+            string estadoAnterior = pea.Estado;
+            string estadoNuevo;
+            string rol = (dto.RolFirmante ?? "Docente").Trim();
+
+            if (rol.Equals("Docente", StringComparison.OrdinalIgnoreCase) || rol.Equals("Elaborador", StringComparison.OrdinalIgnoreCase))
+            {
+                if (pea.Estado != "Borrador" && pea.Estado != "Corregido")
+                    throw new InvalidOperationException($"El docente solo puede firmar PEAs en estado Borrador o Corregido. Estado actual: {pea.Estado}");
+
+                estadoNuevo = "EnRevision";
+            }
+            else if (rol.Equals("Coordinador", StringComparison.OrdinalIgnoreCase) || rol.Equals("Revisor", StringComparison.OrdinalIgnoreCase))
+            {
+                if (pea.Estado != "EnRevision")
+                    throw new InvalidOperationException($"El coordinador solo puede revisar PEAs en estado EnRevision. Estado actual: {pea.Estado}");
+
+                estadoNuevo = "RevisadoCoord";
+            }
+            else if (rol.Equals("Vicerrector", StringComparison.OrdinalIgnoreCase) || rol.Equals("Aprobador", StringComparison.OrdinalIgnoreCase))
+            {
+                if (pea.Estado != "RevisadoCoord" && pea.Estado != "EnRevision")
+                    throw new InvalidOperationException($"El vicerrector solo puede aprobar PEAs que hayan sido revisados. Estado actual: {pea.Estado}");
+
+                estadoNuevo = "Aprobado";
+            }
+            else
+            {
+                throw new ArgumentException($"Rol de firmante no reconocido: '{rol}'. Use Docente, Coordinador o Vicerrector.");
+            }
+
+            // 3. Generación Forense del Hash SHA-256 del PEA
+            string docHash = CalcularHashSha256(pea);
+            string firmaCode = SignatureHashService.GenerateFirmaCode();
+            DateTime firmadoEn = DateTime.UtcNow;
+            string firmanteIdStr = $"USR-{idUsuario}";
+            string hmacHash = _hashService.GenerateHmac(docHash, firmanteIdStr, firmadoEn, firmaCode);
+
+            // 4. Perfil de Firma y Metadatos Institucionales
+            var perfil = await _context.DocUserSignaturePerfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.IdUsuario == idUsuario);
+
+            var metadataJson = JsonSerializer.Serialize(new
+            {
+                nombre = user.Nombre ?? user.IdSigafi ?? "Usuario DOSIER",
+                cedula = user.IdSigafi,
+                cargo = perfil?.Cargo ?? rol,
+                departamento = perfil?.Departamento ?? "ISTPET",
+                rol = rol,
+                metodo = tipoFirmaNormalizado.Equals("FirmaEC", StringComparison.OrdinalIgnoreCase) ? "P12_PADES_ECUADOR" : "DOSIER_HMAC_SHA256",
+                institucion = "Instituto Superior Tecnológico Sucre (ISTPET)"
+            });
+
+            // 5. Registro en doc_documentos_firmas (Módulo Transversal Oficial)
+            var registroFirma = new DocDocumentoFirma
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                DocumentoUuid = pea.Uuid,
+                FirmanteId = firmanteIdStr,
+                FirmanteRol = rol,
+                FechaFirma = firmadoEn,
+                TipoFirma = tipoFirmaNormalizado.Equals("FirmaEC", StringComparison.OrdinalIgnoreCase) ? "FirmaEC" : "DOSIER",
+                FirmaCode = firmaCode,
+                HmacHash = hmacHash,
+                DocHash = docHash,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                FirmaMetadata = metadataJson,
+                EsValida = true
+            };
+            _context.DocDocumentoFirmas.Add(registroFirma);
+
+            // 6. Actualizar las columnas normativas del PEA con el código de firma oficial
+            pea.Estado = estadoNuevo;
+            pea.FechaModificacion = firmadoEn;
+
+            if (estadoNuevo == "EnRevision")
+            {
+                pea.FirmaElaboradoDocente = firmaCode;
+                pea.FechaElaborado = firmadoEn;
+            }
+            else if (estadoNuevo == "RevisadoCoord")
+            {
+                pea.FirmaRevisadoCoord = firmaCode;
+                pea.FechaRevisadoCoord = firmadoEn;
+            }
+            else if (estadoNuevo == "Aprobado")
+            {
+                pea.FirmaAprobadoVicerrector = firmaCode;
+                pea.FechaAprobado = firmadoEn;
+            }
+
+            // 7. Registro en doc_pea_trazabilidad
+            var traza = new DocPeaTrazabilidad
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdPea = idPea,
+                IdUsuario = idUsuario,
+                EstadoAnterior = estadoAnterior,
+                EstadoNuevo = estadoNuevo,
+                Motivo = dto.Motivo ?? $"Firma digital oficial ({rol}) bajo Ley 67. Código: {firmaCode}",
+                HashIntegridadSha256 = docHash,
+                FechaTransicion = firmadoEn
+            };
+            _context.DocPeaTrazabilidades.Add(traza);
+
+            await _context.SaveChangesAsync();
+
+            string verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");
+
+            return new PeaFirmaResultadoDto
+            {
+                Exito = true,
+                Mensaje = $"PEA firmado exitosamente por {rol}. Transición a '{estadoNuevo}' registrada.",
+                FirmaCode = firmaCode,
+                DocHash = docHash,
+                EstadoNuevo = estadoNuevo,
+                FechaFirma = firmadoEn,
+                VerificationUrl = verificationUrl
+            };
+        }
+
+        // =====================================================================
         // WORKFLOW COLEGIADO DE OBSERVACIONES Y TRAZABILIDAD
         // =====================================================================
 
@@ -548,6 +749,14 @@ namespace dosier_infrastructure.Curriculum
                 Estado = pea.Estado,
                 Version = pea.Version,
                 Activo = pea.Activo,
+                FirmaElaboradoDocente = pea.FirmaElaboradoDocente,
+                FechaElaborado = pea.FechaElaborado,
+                FirmaRevisadoCoord = pea.FirmaRevisadoCoord,
+                FechaRevisadoCoord = pea.FechaRevisadoCoord,
+                FirmaRevisadoAcad = pea.FirmaRevisadoAcad,
+                FechaRevisadoAcad = pea.FechaRevisadoAcad,
+                FirmaAprobadoVicerrector = pea.FirmaAprobadoVicerrector,
+                FechaAprobado = pea.FechaAprobado,
                 Unidades = pea.Unidades.OrderBy(u => u.Orden).Select(u => new PeaUnidadDto
                 {
                     IdUnidad = u.IdUnidad,

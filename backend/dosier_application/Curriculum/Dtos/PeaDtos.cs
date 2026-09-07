@@ -39,6 +39,14 @@ namespace dosier_application.Curriculum.Dtos
         public int Version { get; set; } = 1;
         public bool Activo { get; set; } = true;
         public int? IdExpediente { get; set; }
+        public string? FirmaElaboradoDocente { get; set; }
+        public DateTime? FechaElaborado { get; set; }
+        public string? FirmaRevisadoCoord { get; set; }
+        public DateTime? FechaRevisadoCoord { get; set; }
+        public string? FirmaRevisadoAcad { get; set; }
+        public DateTime? FechaRevisadoAcad { get; set; }
+        public string? FirmaAprobadoVicerrector { get; set; }
+        public DateTime? FechaAprobado { get; set; }
 
         public List<PeaUnidadDto> Unidades { get; set; } = new List<PeaUnidadDto>();
         public List<PeaResultadoAprendizajeDto> ResultadosAprendizaje { get; set; } = new List<PeaResultadoAprendizajeDto>();

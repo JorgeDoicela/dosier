@@ -527,13 +527,12 @@ CREATE TABLE doc_documentos_firmas (
     ip_address              VARCHAR(45)   NULL COMMENT 'IP de auditoría forense',
     user_agent              TEXT          NULL COMMENT 'Navegador de auditoría forense',
     firma_metadata          TEXT          NULL COMMENT 'Datos extraídos del certificado PAdES .p12 o JSON de la firma DOSIER',
-    archivo_pdf_firmado     VARCHAR(512)  NOT NULL COMMENT 'Ruta relativa al documento final firmado por este usuario',
+    archivo_pdf_firmado     VARCHAR(512)  NULL COMMENT 'Ruta relativa al documento final firmado, o NULL si es firma digital sobre hash de datos curriculares',
     es_valida               TINYINT(1)    NOT NULL DEFAULT 1,
     revocada_en             TIMESTAMP     NULL,
     motivo_revocacion       TEXT          NULL,
-    INDEX idx_doc_firma (documento_uuid),
-    CONSTRAINT fk_doc_firma_documento FOREIGN KEY (documento_uuid) REFERENCES doc_documentos_instancias(uuid) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    INDEX idx_doc_firma (documento_uuid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Motor Transversal de Firmas Digitales (Ley 67 Ecuador — Proyectos, PEA, Sílabos)';
 
 CREATE TABLE doc_document_audit (
     id                      INT           AUTO_INCREMENT PRIMARY KEY,

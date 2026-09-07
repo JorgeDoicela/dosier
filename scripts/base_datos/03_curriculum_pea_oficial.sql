@@ -75,14 +75,14 @@ CREATE TABLE doc_pea (
     fechaCreacion           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fechaModificacion       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    -- Firmas institucionales de responsabilidad (Sección k)
-    firmaElaboradoDocente   VARCHAR(255)    NULL,
+    -- Firmas institucionales de responsabilidad (Sección k — Ley 67 Ecuador)
+    firmaElaboradoDocente   VARCHAR(255)    NULL COMMENT 'Código oficial DFRM de firma digital (Ley 67) del Docente Elaborador',
     fechaElaborado          DATETIME        NULL,
-    firmaRevisadoCoord      VARCHAR(255)    NULL,
+    firmaRevisadoCoord      VARCHAR(255)    NULL COMMENT 'Código oficial DFRM de firma digital (Ley 67) del Coordinador de Carrera',
     fechaRevisadoCoord      DATETIME        NULL,
-    firmaRevisadoAcad       VARCHAR(255)    NULL,
+    firmaRevisadoAcad       VARCHAR(255)    NULL COMMENT 'Código oficial DFRM de firma digital (Ley 67) de la Comisión Académica',
     fechaRevisadoAcad       DATETIME        NULL,
-    firmaAprobadoVicerrector VARCHAR(255)   NULL,
+    firmaAprobadoVicerrector VARCHAR(255)   NULL COMMENT 'Código oficial DFRM de firma digital (Ley 67) del Vicerrector Académico',
     fechaAprobado           DATETIME        NULL,
     
     INDEX idx_pea_carrera_asig (idCarrera, idAsignatura, idPeriodo),

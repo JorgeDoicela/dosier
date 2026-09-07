@@ -45,7 +45,8 @@ namespace dosier_application.Curriculum.Interfaces
         Task<bool> CambiarEstadoAsync(int idPea, string nuevoEstado, string? firmaDocente, string? idUsuario, string? motivo = null);
         Task<PeaDto> ClonarPeaPeriodoAsync(int idPeaOrigen, string nuevoPeriodo, string? idUsuario);
 
-        // Workflow Colegiado
+        // Workflow Colegiado y Firma Digital (Ley 67 Ecuador)
+        Task<PeaFirmaResultadoDto> FirmarPeaAsync(int idPea, int idUsuario, FirmarPeaDto dto, string ipAddress, string userAgent);
         Task<PeaObservacionDto> AgregarObservacionAsync(int idPea, string rolObservador, string seccion, string texto, int? idUsuario);
         Task<bool> SubsanarObservacionAsync(int idObservacion, string respuestaDocente, int? idUsuario);
         Task<List<PeaObservacionDto>> GetObservacionesByPeaAsync(int idPea);

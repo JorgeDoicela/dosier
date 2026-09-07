@@ -58,7 +58,7 @@ public class DocDocumentoFirma
     public string? FirmaMetadata { get; set; }
 
     [Column("archivo_pdf_firmado")]
-    public string ArchivoPdfFirmado { get; set; } = string.Empty;
+    public string? ArchivoPdfFirmado { get; set; }
 
     [Column("es_valida")]
     public bool EsValida { get; set; } = true;

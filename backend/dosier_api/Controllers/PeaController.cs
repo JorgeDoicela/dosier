@@ -65,6 +65,50 @@ namespace dosier_api.Controllers
             return Ok(new { success = true });
         }
 
+        /// <summary>
+        /// Firma electrónica oficial del PEA (Ley 67 Ecuador).
+        /// Conecta con el subsistema criptográfico transversal (HMAC-SHA256 y FirmaEC P12).
+        /// </summary>
+        [HttpPost("{id:int}/firmar")]
+        public async Task<IActionResult> Firmar(int id, [FromBody] FirmarPeaDto dto)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                ?? User.FindFirstValue("sub") 
+                ?? User.FindFirstValue("id_usuario");
+
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int idUsuario))
+                return Unauthorized(new { message = "Sesión inválida o identificador de usuario no encontrado." });
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            var userAgent = Request.Headers["User-Agent"].ToString();
+
+            try
+            {
+                var resultado = await _peaService.FirmarPeaAsync(id, idUsuario, dto, ip, userAgent);
+                return Ok(resultado);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error interno al procesar la firma del PEA.", detalle = ex.Message });
+            }
+        }
+
         [HttpPost("{id}/clonar")]
         public async Task<IActionResult> Clonar(int id, [FromQuery] string nuevoPeriodo)
         {
