@@ -21,7 +21,7 @@ SET SQL_SAFE_UPDATES = 0;
 DROP TRIGGER IF EXISTS trg_doc_normativas_uuid;
 DROP TRIGGER IF EXISTS trg_doc_normativa_articulos_uuid;
 DROP TRIGGER IF EXISTS trg_doc_modelos_educativos_uuid;
-DROP TRIGGER IF EXISTS trg_doc_proyectos_carrera_uuid;
+DROP TRIGGER IF EXISTS trg_doc_proyectos_curriculares_uuid;
 DROP TRIGGER IF EXISTS trg_doc_perfiles_egreso_uuid;
 DROP TRIGGER IF EXISTS trg_doc_perfil_egreso_res_uuid;
 DROP TRIGGER IF EXISTS trg_doc_expedientes_curriculares_uuid;
@@ -30,8 +30,8 @@ DROP TABLE IF EXISTS
     doc_asignatura_resultado_perfil,
     doc_perfil_egreso_resultados,
     doc_perfiles_egreso,
-    doc_proyectos_carrera,
     doc_expedientes_curriculares,
+    doc_proyectos_curriculares,
     doc_modelos_educativos,
     doc_normativa_articulos,
     doc_normativas;
@@ -111,9 +111,9 @@ DELIMITER ;
 -- 3. CAPA DE DISEÑO CURRICULAR DE CARRERAS Y PERFILES DE EGRESO
 -- =============================================================================
 
--- Proyecto aprobado de carrera (Resolución CES)
-CREATE TABLE doc_proyectos_carrera (
-    idProyectoCarrera       INT             AUTO_INCREMENT PRIMARY KEY,
+-- Proyecto curricular aprobado de carrera (Resolución CES / Rediseño)
+CREATE TABLE doc_proyectos_curriculares (
+    idProyectoCurricular    INT             AUTO_INCREMENT PRIMARY KEY,
     uuid                    VARCHAR(36)     NOT NULL UNIQUE,
     idCarrera               INT(11)         NOT NULL,
     idMalla                 INT(11)         NOT NULL,
@@ -127,10 +127,10 @@ CREATE TABLE doc_proyectos_carrera (
     INDEX idx_proy_carrera_malla (idCarrera, idMalla),
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT,
     FOREIGN KEY (idMalla) REFERENCES mallas(idMalla) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Proyectos y resoluciones de aprobación de carreras y rediseños';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Proyectos y resoluciones CES de aprobación y rediseño de carreras';
 
 DELIMITER $$
-CREATE TRIGGER trg_doc_proyectos_carrera_uuid BEFORE INSERT ON doc_proyectos_carrera FOR EACH ROW
+CREATE TRIGGER trg_doc_proyectos_curriculares_uuid BEFORE INSERT ON doc_proyectos_curriculares FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 DELIMITER ;
 
@@ -206,6 +206,7 @@ CREATE TABLE doc_expedientes_curriculares (
     idSeccion               INT(11)         NULL,
     paralelo                VARCHAR(20)     NULL,
     idDocenteResponsable    VARCHAR(20)     NULL,
+    idProyectoCurricular    INT             NULL COMMENT 'Vínculo al proyecto de carrera aprobado por CES',
     idPerfilEgreso          INT             NULL,
     idModeloEducativo       INT             NULL,
     estadoGeneral           ENUM('Abierto', 'EnRevision', 'Aprobado', 'Cerrado') NOT NULL DEFAULT 'Abierto',
@@ -219,6 +220,7 @@ CREATE TABLE doc_expedientes_curriculares (
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT,
     FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura) ON DELETE RESTRICT,
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo) ON DELETE RESTRICT,
+    FOREIGN KEY (idProyectoCurricular) REFERENCES doc_proyectos_curriculares(idProyectoCurricular) ON DELETE SET NULL,
     FOREIGN KEY (idPerfilEgreso) REFERENCES doc_perfiles_egreso(idPerfilEgreso) ON DELETE SET NULL,
     FOREIGN KEY (idModeloEducativo) REFERENCES doc_modelos_educativos(idModelo) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Expediente Curricular Maestro: Agrupador oficial de PEA, Sílabo y Guías';

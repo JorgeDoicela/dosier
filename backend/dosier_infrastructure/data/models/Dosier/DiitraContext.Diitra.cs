@@ -36,6 +36,16 @@ public partial class DosierContext
         // Configuraciones de Workflow
         modelBuilder.ApplyConfiguration(new DocConfigWorkflowConfiguration());
 
+        // Gobernanza Curricular y Antecedentes Institucionales
+        modelBuilder.ApplyConfiguration(new DocNormativaConfiguration());
+        modelBuilder.ApplyConfiguration(new DocNormativaArticuloConfiguration());
+        modelBuilder.ApplyConfiguration(new DocModeloEducativoConfiguration());
+        modelBuilder.ApplyConfiguration(new DocProyectoCurricularConfiguration());
+        modelBuilder.ApplyConfiguration(new DocPerfilEgresoConfiguration());
+        modelBuilder.ApplyConfiguration(new DocPerfilEgresoResultadoConfiguration());
+        modelBuilder.ApplyConfiguration(new DocAsignaturaResultadoPerfilConfiguration());
+        modelBuilder.ApplyConfiguration(new DocExpedienteCurricularConfiguration());
+
         // Módulos Curriculares Oficiales (Los 4 Documentos ISTPET)
         // 1. PEA
         modelBuilder.ApplyConfiguration(new DocPeaConfiguration());
@@ -44,6 +54,8 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocPeaResultadoAprendizajeConfiguration());
         modelBuilder.ApplyConfiguration(new DocPeaActividadPracticaConfiguration());
         modelBuilder.ApplyConfiguration(new DocPeaBibliografiaConfiguration());
+        modelBuilder.ApplyConfiguration(new DocPeaObservacionConfiguration());
+        modelBuilder.ApplyConfiguration(new DocPeaTrazabilidadConfiguration());
 
         // 2. Sílabo (19 Semanas)
         modelBuilder.ApplyConfiguration(new DocSilaboConfiguration());

@@ -7,6 +7,7 @@ namespace dosier_domain.Curriculum.Entities
     {
         public int IdPea { get; set; }
         public string Uuid { get; set; } = Guid.NewGuid().ToString();
+        public int? IdExpediente { get; set; }
         public int IdCarrera { get; set; }
         public int IdAsignatura { get; set; }
         public string IdPeriodo { get; set; } = string.Empty;
@@ -52,10 +53,13 @@ namespace dosier_domain.Curriculum.Entities
         public DateTime? FechaAprobado { get; set; }
 
         // Navegación
+        public virtual DocExpedienteCurricular? Expediente { get; set; }
         public virtual ICollection<DocPeaUnidad> Unidades { get; set; } = new List<DocPeaUnidad>();
         public virtual ICollection<DocPeaResultadoAprendizaje> ResultadosAprendizaje { get; set; } = new List<DocPeaResultadoAprendizaje>();
         public virtual ICollection<DocPeaActividadPractica> ActividadesPracticas { get; set; } = new List<DocPeaActividadPractica>();
         public virtual ICollection<DocPeaBibliografia> Bibliografias { get; set; } = new List<DocPeaBibliografia>();
+        public virtual ICollection<DocPeaObservacion> Observaciones { get; set; } = new List<DocPeaObservacion>();
+        public virtual ICollection<DocPeaTrazabilidad> Trazabilidades { get; set; } = new List<DocPeaTrazabilidad>();
         public virtual ICollection<DocSilabo> Silabos { get; set; } = new List<DocSilabo>();
     }
 }

@@ -67,6 +67,16 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocCoworkUpdate>    DocCoworkUpdates    { get; set; }
     public virtual DbSet<DocCoworkSesion>    DocCoworkSesiones   { get; set; }
 
+    // --- DOSIER Gobernanza Curricular y Antecedentes Institucionales ---
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocNormativa> DocNormativas { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocNormativaArticulo> DocNormativaArticulos { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocModeloEducativo> DocModelosEducativos { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocProyectoCurricular> DocProyectosCurriculares { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocPerfilEgreso> DocPerfilesEgreso { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocPerfilEgresoResultado> DocPerfilEgresoResultados { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocAsignaturaResultadoPerfil> DocAsignaturasResultadosPerfil { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocExpedienteCurricular> DocExpedientesCurriculares { get; set; }
+
     // --- DOSIER Curricular (Los 4 Documentos Oficiales ISTPET) ---
     // 1. PEA (Programa de Estudio de la Asignatura)
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPea>                  DocPeas                   { get; set; }
@@ -75,6 +85,8 @@ public partial class DosierContext : DbContext
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaResultadoAprendizaje> DocPeaResultadosAprendizaje { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaActividadPractica> DocPeaActividadesPracticas { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaBibliografia>      DocPeaBibliografias       { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaObservacion>       DocPeaObservaciones       { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaTrazabilidad>      DocPeaTrazabilidades      { get; set; }
 
     // 2. Sílabo / Plan Analítico (19 Semanas)
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocSilabo>               DocSilabos                { get; set; }

@@ -271,6 +271,11 @@ builder.Services.AddScoped<Dosier.Application.Research.IWorkflowEngineService, D
 builder.Services.AddScoped<dosier_application.Security.IAuditService, dosier_infrastructure.Security.AuditService>();
 builder.Services.AddScoped<dosier_application.Security.ILopdpService, dosier_infrastructure.Security.LopdpService>();
 
+// Gobernanza Curricular y Antecedentes Institucionales (CES / CACES / ISTPET)
+builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.INormativaService, dosier_infrastructure.Curriculum.NormativaService>();
+builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IPerfilEgresoService, dosier_infrastructure.Curriculum.PerfilEgresoService>();
+builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IExpedienteCurricularService, dosier_infrastructure.Curriculum.ExpedienteCurricularService>();
+
 // Servicios Curriculares Oficiales ISTPET (Los 4 Documentos)
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.ICurriculumCatalogService, dosier_infrastructure.Curriculum.CurriculumCatalogService>();
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IPeaService, dosier_infrastructure.Curriculum.PeaService>();

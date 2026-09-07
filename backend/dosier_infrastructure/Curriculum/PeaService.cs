@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using dosier_application.Academico;
 using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
 using dosier_domain.Curriculum.Entities;
 using dosier_infrastructure.data.models;
-using dosier_application.Academico;
-using System.Text.Json;
 
 namespace dosier_infrastructure.Curriculum
 {
@@ -16,30 +18,51 @@ namespace dosier_infrastructure.Curriculum
     {
         private readonly DosierContext _context;
         private readonly IAcademicContextResolver _academicContextResolver;
+        private readonly IExpedienteCurricularService _expedienteService;
 
-        public PeaService(DosierContext context, IAcademicContextResolver academicContextResolver)
+        public PeaService(
+            DosierContext context,
+            IAcademicContextResolver academicContextResolver,
+            IExpedienteCurricularService expedienteService)
         {
             _context = context;
             _academicContextResolver = academicContextResolver;
+            _expedienteService = expedienteService;
         }
 
         public async Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)
         {
             var academicContext = await _academicContextResolver.ResolveByAssignmentAsync(idAsignacion, idProfesor)
-                ?? throw new KeyNotFoundException("No se encontro una asignacion academica valida para crear el PEA.");
+                ?? throw new KeyNotFoundException("No se encontró una asignación académica válida para crear el PEA.");
 
             var existing = await _context.DocPeas
                 .Include(p => p.Unidades).ThenInclude(u => u.Temas)
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
                 .Include(p => p.Bibliografias)
+                .Include(p => p.Observaciones)
+                .Include(p => p.Trazabilidades)
                 .FirstOrDefaultAsync(p => p.IdAsignacion == idAsignacion && p.Activo);
+
             if (existing != null)
+            {
+                // Si existe pero no tenía expediente vinculado, vincularlo ahora
+                if (!existing.IdExpediente.HasValue)
+                {
+                    var expExistente = await _expedienteService.ObtenerOCrearExpedienteAsync(idAsignacion, idProfesor);
+                    existing.IdExpediente = expExistente.IdExpediente;
+                    await _context.SaveChangesAsync();
+                }
                 return await MapToDtoAsync(existing);
+            }
+
+            // Asegurar que exista el Expediente Curricular Institucional
+            var expediente = await _expedienteService.ObtenerOCrearExpedienteAsync(idAsignacion, idProfesor);
 
             var entity = new DocPea
             {
                 Uuid = Guid.NewGuid().ToString(),
+                IdExpediente = expediente.IdExpediente,
                 IdAsignacion = academicContext.IdAsignacion,
                 IdMalla = academicContext.IdMalla,
                 IdDetalleMalla = academicContext.IdDetalleMalla,
@@ -53,7 +76,7 @@ namespace dosier_infrastructure.Curriculum
                 FuenteMalla = academicContext.FuenteMalla,
                 SnapshotCurricularJson = JsonSerializer.Serialize(academicContext),
                 IdDocenteElaborador = academicContext.IdProfesor,
-                Modalidad = academicContext.NombreModalidad ?? "Sin modalidad",
+                Modalidad = academicContext.NombreModalidad ?? "Presencial",
                 UnidadOrganizacion = academicContext.UnidadOrganizacionCurricular,
                 SemestreNivel = academicContext.NombreNivel,
                 TotalHorasAsignatura = academicContext.HorasTotales,
@@ -68,6 +91,10 @@ namespace dosier_infrastructure.Curriculum
 
             _context.DocPeas.Add(entity);
             await _context.SaveChangesAsync();
+
+            // Registrar trazabilidad inicial
+            await RegistrarTrazabilidadAsync(entity.IdPea, "Nuevo", "Borrador", "Creación inicial del PEA desde asignación de SIGAFI", null, null);
+
             return await MapToDtoAsync(entity);
         }
 
@@ -78,6 +105,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
                 .Include(p => p.Bibliografias)
+                .Include(p => p.Observaciones)
+                .Include(p => p.Trazabilidades)
                 .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
 
             if (pea == null) return null;
@@ -91,6 +120,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
                 .Include(p => p.Bibliografias)
+                .Include(p => p.Observaciones)
+                .Include(p => p.Trazabilidades)
                 .FirstOrDefaultAsync(p => p.IdAsignatura == idAsignatura && p.IdPeriodo == idPeriodo && p.Activo);
 
             if (pea == null) return null;
@@ -108,13 +139,14 @@ namespace dosier_infrastructure.Curriculum
                     .Include(p => p.ResultadosAprendizaje)
                     .Include(p => p.ActividadesPracticas)
                     .Include(p => p.Bibliografias)
+                    .Include(p => p.Observaciones)
+                    .Include(p => p.Trazabilidades)
                     .FirstOrDefaultAsync(p => p.IdPea == dto.IdPea && p.Activo)
                     ?? throw new KeyNotFoundException($"No se encontró el PEA con id {dto.IdPea}");
 
                 entity.Modalidad = dto.Modalidad;
                 if (entity.IdAsignacion == null)
                 {
-                    // Compatibilidad temporal con borradores creados antes de la integracion SIGAFI.
                     entity.UnidadOrganizacion = dto.UnidadOrganizacion;
                     entity.SemestreNivel = dto.SemestreNivel;
                     entity.TotalHorasAsignatura = dto.TotalHorasAsignatura;
@@ -123,26 +155,29 @@ namespace dosier_infrastructure.Curriculum
                     entity.HorasPracticoExperimental = dto.HorasPracticoExperimental;
                     entity.HorasAutonomo = dto.HorasAutonomo;
                 }
+
                 entity.ObjetivoAsignatura = dto.ObjetivoAsignatura;
                 entity.MetodologiaEnsenanza = dto.MetodologiaEnsenanza;
                 entity.RecursosDidacticos = dto.RecursosDidacticos;
                 entity.EvaluacionAprendizaje = dto.EvaluacionAprendizaje;
                 entity.FechaModificacion = DateTime.UtcNow;
 
-                _context.DocPeaBibliografias.RemoveRange(entity.Bibliografias);
-                _context.DocPeaActividadesPracticas.RemoveRange(entity.ActividadesPracticas);
-                _context.DocPeaResultadosAprendizaje.RemoveRange(entity.ResultadosAprendizaje);
                 _context.DocPeaUnidades.RemoveRange(entity.Unidades);
+                _context.DocPeaResultadosAprendizaje.RemoveRange(entity.ResultadosAprendizaje);
+                _context.DocPeaActividadesPracticas.RemoveRange(entity.ActividadesPracticas);
+                _context.DocPeaBibliografias.RemoveRange(entity.Bibliografias);
             }
             else
             {
                 entity = new DocPea
                 {
                     Uuid = Guid.NewGuid().ToString(),
+                    IdExpediente = dto.IdExpediente,
                     IdCarrera = dto.IdCarrera,
                     IdAsignatura = dto.IdAsignatura,
                     IdPeriodo = dto.IdPeriodo,
-                    IdDocenteElaborador = dto.IdDocenteElaborador ?? idUsuarioModificador,
+                    IdAsignacion = dto.IdAsignacion,
+                    IdDocenteElaborador = dto.IdDocenteElaborador,
                     Modalidad = dto.Modalidad,
                     UnidadOrganizacion = dto.UnidadOrganizacion,
                     SemestreNivel = dto.SemestreNivel,
@@ -157,9 +192,7 @@ namespace dosier_infrastructure.Curriculum
                     EvaluacionAprendizaje = dto.EvaluacionAprendizaje,
                     Estado = "Borrador",
                     Version = 1,
-                    Activo = true,
-                    FechaCreacion = DateTime.UtcNow,
-                    FechaModificacion = DateTime.UtcNow
+                    Activo = true
                 };
                 _context.DocPeas.Add(entity);
             }
@@ -226,11 +259,18 @@ namespace dosier_infrastructure.Curriculum
             return await MapToDtoAsync(entity);
         }
 
-        public async Task<bool> CambiarEstadoAsync(int idPea, string nuevoEstado, string? firmaDocente, string? idUsuario)
+        public async Task<bool> CambiarEstadoAsync(int idPea, string nuevoEstado, string? firmaDocente, string? idUsuario, string? motivo = null)
         {
-            var entity = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
+            var entity = await _context.DocPeas
+                .Include(p => p.Unidades)
+                .Include(p => p.ResultadosAprendizaje)
+                .Include(p => p.ActividadesPracticas)
+                .Include(p => p.Bibliografias)
+                .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
+
             if (entity == null) return false;
 
+            string estadoAnterior = entity.Estado;
             entity.Estado = nuevoEstado;
             entity.FechaModificacion = DateTime.UtcNow;
 
@@ -246,6 +286,13 @@ namespace dosier_infrastructure.Curriculum
             }
 
             await _context.SaveChangesAsync();
+
+            // Calcular hash forense del contenido en la transición
+            string hashSha256 = CalcularHashSha256(entity);
+            int? idUserInt = int.TryParse(idUsuario, out int u) ? u : null;
+
+            await RegistrarTrazabilidadAsync(idPea, estadoAnterior, nuevoEstado, motivo ?? $"Transición de estado a {nuevoEstado}", hashSha256, idUserInt);
+
             return true;
         }
 
@@ -264,6 +311,199 @@ namespace dosier_infrastructure.Curriculum
             return await GuardarPeaAsync(origen, idUsuario);
         }
 
+        // =====================================================================
+        // WORKFLOW COLEGIADO DE OBSERVACIONES Y TRAZABILIDAD
+        // =====================================================================
+
+        public async Task<PeaObservacionDto> AgregarObservacionAsync(int idPea, string rolObservador, string seccion, string texto, int? idUsuario)
+        {
+            var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo)
+                ?? throw new KeyNotFoundException($"No se encontró el PEA con id {idPea}");
+
+            var obs = new DocPeaObservacion
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdPea = idPea,
+                IdUsuarioObservador = idUsuario,
+                RolObservador = rolObservador,
+                SeccionAfectada = seccion,
+                TextoObservacion = texto,
+                Estado = "Pendiente",
+                FechaObservacion = DateTime.UtcNow
+            };
+
+            _context.DocPeaObservaciones.Add(obs);
+
+            // Si el PEA estaba en revisión, pasa a Observado
+            if (pea.Estado == "EnRevision")
+            {
+                pea.Estado = "Observado";
+                await RegistrarTrazabilidadAsync(idPea, "EnRevision", "Observado", $"Observación en sección {seccion}: {texto}", null, idUsuario);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new PeaObservacionDto
+            {
+                IdObservacion = obs.IdObservacion,
+                Uuid = obs.Uuid,
+                IdPea = obs.IdPea,
+                IdUsuarioObservador = obs.IdUsuarioObservador,
+                RolObservador = obs.RolObservador,
+                SeccionAfectada = obs.SeccionAfectada,
+                TextoObservacion = obs.TextoObservacion,
+                Estado = obs.Estado,
+                FechaObservacion = obs.FechaObservacion
+            };
+        }
+
+        public async Task<bool> SubsanarObservacionAsync(int idObservacion, string respuestaDocente, int? idUsuario)
+        {
+            var obs = await _context.DocPeaObservaciones.FirstOrDefaultAsync(o => o.IdObservacion == idObservacion);
+            if (obs == null) return false;
+
+            obs.Estado = "Subsanada";
+            obs.RespuestaDocente = respuestaDocente;
+            obs.FechaResolucion = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Verificar si quedan observaciones pendientes en el PEA
+            var pendientes = await _context.DocPeaObservaciones
+                .CountAsync(o => o.IdPea == obs.IdPea && o.Estado == "Pendiente");
+
+            if (pendientes == 0)
+            {
+                var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == obs.IdPea);
+                if (pea != null && pea.Estado == "Observado")
+                {
+                    pea.Estado = "Corregido";
+                    await RegistrarTrazabilidadAsync(obs.IdPea, "Observado", "Corregido", "Todas las observaciones fueron subsanadas por el docente", null, idUsuario);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<List<PeaObservacionDto>> GetObservacionesByPeaAsync(int idPea)
+        {
+            var list = await _context.DocPeaObservaciones
+                .AsNoTracking()
+                .Where(o => o.IdPea == idPea)
+                .OrderByDescending(o => o.FechaObservacion)
+                .ToListAsync();
+
+            var dtos = new List<PeaObservacionDto>();
+            foreach (var o in list)
+            {
+                string? nombreUsuario = null;
+                if (o.IdUsuarioObservador.HasValue)
+                {
+                    var u = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.IdUsuario == o.IdUsuarioObservador.Value);
+                    if (u != null) nombreUsuario = u.Nombre;
+                }
+
+                dtos.Add(new PeaObservacionDto
+                {
+                    IdObservacion = o.IdObservacion,
+                    Uuid = o.Uuid,
+                    IdPea = o.IdPea,
+                    IdUsuarioObservador = o.IdUsuarioObservador,
+                    NombreObservador = nombreUsuario,
+                    RolObservador = o.RolObservador,
+                    SeccionAfectada = o.SeccionAfectada,
+                    TextoObservacion = o.TextoObservacion,
+                    Estado = o.Estado,
+                    RespuestaDocente = o.RespuestaDocente,
+                    FechaObservacion = o.FechaObservacion,
+                    FechaResolucion = o.FechaResolucion
+                });
+            }
+
+            return dtos;
+        }
+
+        public async Task<List<PeaTrazabilidadDto>> GetTrazabilidadByPeaAsync(int idPea)
+        {
+            var list = await _context.DocPeaTrazabilidades
+                .AsNoTracking()
+                .Where(t => t.IdPea == idPea)
+                .OrderByDescending(t => t.FechaTransicion)
+                .ToListAsync();
+
+            var dtos = new List<PeaTrazabilidadDto>();
+            foreach (var t in list)
+            {
+                string? nombreUsuario = null;
+                if (t.IdUsuario.HasValue)
+                {
+                    var u = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.IdUsuario == t.IdUsuario.Value);
+                    if (u != null) nombreUsuario = u.Nombre;
+                }
+
+                dtos.Add(new PeaTrazabilidadDto
+                {
+                    IdTrazabilidad = t.IdTrazabilidad,
+                    Uuid = t.Uuid,
+                    IdPea = t.IdPea,
+                    IdUsuario = t.IdUsuario,
+                    NombreUsuario = nombreUsuario,
+                    EstadoAnterior = t.EstadoAnterior,
+                    EstadoNuevo = t.EstadoNuevo,
+                    Motivo = t.Motivo,
+                    HashIntegridadSha256 = t.HashIntegridadSha256,
+                    FechaTransicion = t.FechaTransicion
+                });
+            }
+
+            return dtos;
+        }
+
+        private async Task RegistrarTrazabilidadAsync(int idPea, string anterior, string nuevo, string? motivo, string? hashSha256, int? idUsuario)
+        {
+            var traza = new DocPeaTrazabilidad
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdPea = idPea,
+                IdUsuario = idUsuario,
+                EstadoAnterior = anterior,
+                EstadoNuevo = nuevo,
+                Motivo = motivo,
+                HashIntegridadSha256 = hashSha256,
+                FechaTransicion = DateTime.UtcNow
+            };
+
+            _context.DocPeaTrazabilidades.Add(traza);
+            await _context.SaveChangesAsync();
+        }
+
+        private static string CalcularHashSha256(DocPea pea)
+        {
+            var payload = new
+            {
+                pea.IdPea,
+                pea.Uuid,
+                pea.IdCarrera,
+                pea.IdAsignatura,
+                pea.IdPeriodo,
+                pea.Version,
+                pea.Estado,
+                pea.TotalHorasAsignatura,
+                pea.Creditos,
+                pea.ObjetivoAsignatura,
+                pea.MetodologiaEnsenanza,
+                pea.EvaluacionAprendizaje,
+                UnidadesCount = pea.Unidades.Count,
+                RdaCount = pea.ResultadosAprendizaje.Count
+            };
+
+            string json = JsonSerializer.Serialize(payload);
+            using var sha = SHA256.Create();
+            byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(json));
+            return Convert.ToHexString(bytes).ToLowerInvariant();
+        }
+
         private async Task<PeaDto> MapToDtoAsync(DocPea pea)
         {
             var carrera = await _context.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == pea.IdCarrera);
@@ -276,8 +516,9 @@ namespace dosier_infrastructure.Curriculum
             {
                 IdPea = pea.IdPea,
                 Uuid = pea.Uuid,
+                IdExpediente = pea.IdExpediente,
                 IdCarrera = pea.IdCarrera,
-                NombreCarrera = carrera?.Carrera1 ?? "Carrera",
+                NombreCarrera = carrera?.Carrera1 ?? "Carrera ISTPET",
                 IdAsignatura = pea.IdAsignatura,
                 NombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura",
                 CodigoAsignatura = asignatura?.Codigo,
@@ -367,6 +608,32 @@ namespace dosier_infrastructure.Curriculum
                     UrlRecurso = b.UrlRecurso,
                     CitaCompletaApa = b.CitaCompletaApa,
                     Orden = b.Orden
+                }).ToList(),
+                Observaciones = pea.Observaciones.OrderByDescending(o => o.FechaObservacion).Select(o => new PeaObservacionDto
+                {
+                    IdObservacion = o.IdObservacion,
+                    Uuid = o.Uuid,
+                    IdPea = o.IdPea,
+                    IdUsuarioObservador = o.IdUsuarioObservador,
+                    RolObservador = o.RolObservador,
+                    SeccionAfectada = o.SeccionAfectada,
+                    TextoObservacion = o.TextoObservacion,
+                    Estado = o.Estado,
+                    RespuestaDocente = o.RespuestaDocente,
+                    FechaObservacion = o.FechaObservacion,
+                    FechaResolucion = o.FechaResolucion
+                }).ToList(),
+                Trazabilidades = pea.Trazabilidades.OrderByDescending(t => t.FechaTransicion).Select(t => new PeaTrazabilidadDto
+                {
+                    IdTrazabilidad = t.IdTrazabilidad,
+                    Uuid = t.Uuid,
+                    IdPea = t.IdPea,
+                    IdUsuario = t.IdUsuario,
+                    EstadoAnterior = t.EstadoAnterior,
+                    EstadoNuevo = t.EstadoNuevo,
+                    Motivo = t.Motivo,
+                    HashIntegridadSha256 = t.HashIntegridadSha256,
+                    FechaTransicion = t.FechaTransicion
                 }).ToList()
             };
         }

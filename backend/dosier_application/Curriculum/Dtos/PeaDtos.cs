@@ -38,11 +38,14 @@ namespace dosier_application.Curriculum.Dtos
         public string Estado { get; set; } = "Borrador";
         public int Version { get; set; } = 1;
         public bool Activo { get; set; } = true;
+        public int? IdExpediente { get; set; }
 
         public List<PeaUnidadDto> Unidades { get; set; } = new List<PeaUnidadDto>();
         public List<PeaResultadoAprendizajeDto> ResultadosAprendizaje { get; set; } = new List<PeaResultadoAprendizajeDto>();
         public List<PeaActividadPracticaDto> ActividadesPracticas { get; set; } = new List<PeaActividadPracticaDto>();
         public List<PeaBibliografiaDto> Bibliografias { get; set; } = new List<PeaBibliografiaDto>();
+        public List<PeaObservacionDto> Observaciones { get; set; } = new List<PeaObservacionDto>();
+        public List<PeaTrazabilidadDto> Trazabilidades { get; set; } = new List<PeaTrazabilidadDto>();
     }
 
     public class PeaUnidadDto
@@ -110,5 +113,35 @@ namespace dosier_application.Curriculum.Dtos
         public string? UrlRecurso { get; set; }
         public string CitaCompletaApa { get; set; } = string.Empty;
         public int Orden { get; set; }
+    }
+
+    public class PeaObservacionDto
+    {
+        public int IdObservacion { get; set; }
+        public string Uuid { get; set; } = string.Empty;
+        public int IdPea { get; set; }
+        public int? IdUsuarioObservador { get; set; }
+        public string? NombreObservador { get; set; }
+        public string RolObservador { get; set; } = "CoordinadorCarrera";
+        public string SeccionAfectada { get; set; } = string.Empty;
+        public string TextoObservacion { get; set; } = string.Empty;
+        public string Estado { get; set; } = "Pendiente"; // Pendiente, Subsanada, Desestimada
+        public string? RespuestaDocente { get; set; }
+        public DateTime FechaObservacion { get; set; }
+        public DateTime? FechaResolucion { get; set; }
+    }
+
+    public class PeaTrazabilidadDto
+    {
+        public int IdTrazabilidad { get; set; }
+        public string Uuid { get; set; } = string.Empty;
+        public int IdPea { get; set; }
+        public int? IdUsuario { get; set; }
+        public string? NombreUsuario { get; set; }
+        public string EstadoAnterior { get; set; } = string.Empty;
+        public string EstadoNuevo { get; set; } = string.Empty;
+        public string? Motivo { get; set; }
+        public string? HashIntegridadSha256 { get; set; }
+        public DateTime FechaTransicion { get; set; }
     }
 }

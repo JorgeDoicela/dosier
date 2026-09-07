@@ -20,6 +20,12 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.SnapshotCurricularJson).HasColumnType("json");
             builder.Property(e => e.EvaluacionAprendizaje).HasColumnType("text");
             builder.HasIndex(e => new { e.IdAsignacion, e.Version });
+            builder.HasIndex(e => e.IdExpediente);
+
+            builder.HasOne(e => e.Expediente)
+                   .WithMany(exp => exp.Peas)
+                   .HasForeignKey(e => e.IdExpediente)
+                   .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasMany(e => e.Unidades)
                    .WithOne(u => u.Pea)
@@ -44,6 +50,16 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.HasMany(e => e.Silabos)
                    .WithOne(s => s.Pea)
                    .HasForeignKey(s => s.IdPea)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.Observaciones)
+                   .WithOne(o => o.Pea)
+                   .HasForeignKey(o => o.IdPea)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.Trazabilidades)
+                   .WithOne(t => t.Pea)
+                   .HasForeignKey(t => t.IdPea)
                    .OnDelete(DeleteBehavior.Cascade);
         }
     }
@@ -103,6 +119,33 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.ToTable("doc_pea_bibliografia");
             builder.HasKey(e => e.IdBiblio);
             builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+        }
+    }
+
+    public class DocPeaObservacionConfiguration : IEntityTypeConfiguration<DocPeaObservacion>
+    {
+        public void Configure(EntityTypeBuilder<DocPeaObservacion> builder)
+        {
+            builder.ToTable("doc_pea_observaciones");
+            builder.HasKey(e => e.IdObservacion);
+            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+            builder.Property(e => e.RolObservador).IsRequired().HasMaxLength(50);
+            builder.Property(e => e.SeccionAfectada).IsRequired().HasMaxLength(100);
+            builder.Property(e => e.TextoObservacion).IsRequired();
+            builder.Property(e => e.Estado).IsRequired().HasMaxLength(20);
+        }
+    }
+
+    public class DocPeaTrazabilidadConfiguration : IEntityTypeConfiguration<DocPeaTrazabilidad>
+    {
+        public void Configure(EntityTypeBuilder<DocPeaTrazabilidad> builder)
+        {
+            builder.ToTable("doc_pea_trazabilidad");
+            builder.HasKey(e => e.IdTrazabilidad);
+            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+            builder.Property(e => e.EstadoAnterior).IsRequired().HasMaxLength(50);
+            builder.Property(e => e.EstadoNuevo).IsRequired().HasMaxLength(50);
+            builder.Property(e => e.HashIntegridadSha256).HasMaxLength(64);
         }
     }
 }

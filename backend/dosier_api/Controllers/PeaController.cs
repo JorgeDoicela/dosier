@@ -60,7 +60,7 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] CambiarEstadoRequest req)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-            var ok = await _peaService.CambiarEstadoAsync(id, req.NuevoEstado, req.Firma, userId);
+            var ok = await _peaService.CambiarEstadoAsync(id, req.NuevoEstado, req.Firma, userId, req.Motivo);
             if (!ok) return NotFound("No se pudo actualizar el estado del PEA.");
             return Ok(new { success = true });
         }
@@ -73,11 +73,64 @@ namespace dosier_api.Controllers
             var clonado = await _peaService.ClonarPeaPeriodoAsync(id, nuevoPeriodo, userId);
             return Ok(clonado);
         }
+
+        // =====================================================================
+        // ENDPOINTS DE OBSERVACIONES Y WORKFLOW COLEGIADO
+        // =====================================================================
+
+        [HttpGet("{id:int}/observaciones")]
+        public async Task<IActionResult> GetObservaciones(int id)
+        {
+            var list = await _peaService.GetObservacionesByPeaAsync(id);
+            return Ok(list);
+        }
+
+        [HttpPost("{id:int}/observaciones")]
+        public async Task<IActionResult> AgregarObservacion(int id, [FromBody] AgregarObservacionRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.Texto)) return BadRequest("El texto de la observación no puede estar vacío.");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            int? idUserInt = int.TryParse(userId, out int u) ? u : null;
+
+            var obs = await _peaService.AgregarObservacionAsync(id, req.RolObservador ?? "CoordinadorCarrera", req.SeccionAfectada ?? "General", req.Texto, idUserInt);
+            return Ok(obs);
+        }
+
+        [HttpPatch("observaciones/{idObs:int}/subsanar")]
+        public async Task<IActionResult> SubsanarObservacion(int idObs, [FromBody] SubsanarObservacionRequest req)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            int? idUserInt = int.TryParse(userId, out int u) ? u : null;
+
+            var ok = await _peaService.SubsanarObservacionAsync(idObs, req.RespuestaDocente, idUserInt);
+            if (!ok) return NotFound("No se encontró la observación.");
+            return Ok(new { success = true });
+        }
+
+        [HttpGet("{id:int}/trazabilidad")]
+        public async Task<IActionResult> GetTrazabilidad(int id)
+        {
+            var list = await _peaService.GetTrazabilidadByPeaAsync(id);
+            return Ok(list);
+        }
     }
 
     public class CambiarEstadoRequest
     {
         public string NuevoEstado { get; set; } = string.Empty;
         public string? Firma { get; set; }
+        public string? Motivo { get; set; }
+    }
+
+    public class AgregarObservacionRequest
+    {
+        public string? RolObservador { get; set; }
+        public string? SeccionAfectada { get; set; }
+        public string Texto { get; set; } = string.Empty;
+    }
+
+    public class SubsanarObservacionRequest
+    {
+        public string RespuestaDocente { get; set; } = string.Empty;
     }
 }

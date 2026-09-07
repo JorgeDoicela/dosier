@@ -10,10 +10,23 @@ SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
 -- =============================================================================
--- LIMPIEZA PREVIA (Tablas y Vistas exclusivas del módulo 'doc_')
+-- LIMPIEZA PREVIA (Tablas, Vistas y Triggers del módulo 'doc_')
 -- =============================================================================
 
 DROP VIEW IF EXISTS v_doc_calendario_eventos;
+
+DROP TRIGGER IF EXISTS trg_doc_proyectos_uuid;
+DROP TRIGGER IF EXISTS trg_doc_trazabilidad_uuid;
+DROP TRIGGER IF EXISTS trg_doc_notif_uuid;
+DROP TRIGGER IF EXISTS trg_doc_tokens_uuid;
+DROP TRIGGER IF EXISTS trg_doc_usermeta_uuid;
+DROP TRIGGER IF EXISTS trg_doc_lopdp_consentimientos_uuid;
+DROP TRIGGER IF EXISTS trg_doc_lopdp_auditoria_uuid;
+DROP TRIGGER IF EXISTS trg_doc_backup_logs_uuid;
+DROP TRIGGER IF EXISTS trg_doc_email_tpl_uuid;
+DROP TRIGGER IF EXISTS trg_doc_email_hist_uuid;
+DROP TRIGGER IF EXISTS trg_doc_ical_token_uuid;
+DROP TRIGGER IF EXISTS trg_doc_cal_norm_uuid;
 
 DROP TABLE IF EXISTS
     -- Grupo K (Seguridad y Notificaciones)
