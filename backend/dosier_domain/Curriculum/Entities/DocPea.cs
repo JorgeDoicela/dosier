@@ -33,6 +33,7 @@ namespace dosier_domain.Curriculum.Entities
         public string? ObjetivoAsignatura { get; set; }
         public string? MetodologiaEnsenanza { get; set; }
         public string? RecursosDidacticos { get; set; }
+        public string? EvaluacionAprendizaje { get; set; }
 
         public string Estado { get; set; } = "Borrador";
         public int Version { get; set; } = 1;

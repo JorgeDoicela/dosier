@@ -18,6 +18,7 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.Paralelo).HasMaxLength(20);
             builder.Property(e => e.FuenteMalla).HasMaxLength(40);
             builder.Property(e => e.SnapshotCurricularJson).HasColumnType("json");
+            builder.Property(e => e.EvaluacionAprendizaje).HasColumnType("text");
             builder.HasIndex(e => new { e.IdAsignacion, e.Version });
 
             builder.HasMany(e => e.Unidades)

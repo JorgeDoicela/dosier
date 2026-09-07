@@ -1,10 +1,7 @@
 -- =============================================================================
--- DOSIER: ARQUITECTURA INTEGRAL DE LOS 4 DOCUMENTOS CURRICULARES ISTPET
--- 1. PEA (Programa de Estudio de la Asignatura)
--- 2. Plan Analítico o Sílabo (Matriz de 19 Semanas)
--- 3. Guías de Trabajo Práctico - Experimental (Guías APE)
--- 4. Guía de Estudio / Compendio Autónomo de la Asignatura
--- Base de datos: sigafi_es | Prefijo oficial: 'doc_'
+-- DOSIER: EXTENSIÓN CURRICULAR FUTURA (SÍLABO, GUÍAS APE Y GUÍAS DE ESTUDIO)
+-- Diseñado para acoplarse modularmente al núcleo del PEA (doc_pea)
+-- Base de datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+ | Prefijo: 'doc_'
 -- =============================================================================
 
 USE sigafi_es;
@@ -13,15 +10,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
 -- -----------------------------------------------------------------------------
--- 1. LIMPIEZA CONTROLADA DE TABLAS CURRICULARES 'doc_'
+-- LIMPIEZA PREVIA DE TABLAS DE EXTENSIÓN
 -- -----------------------------------------------------------------------------
-DROP TRIGGER IF EXISTS trg_doc_pea_uuid;
-DROP TRIGGER IF EXISTS trg_doc_pea_unidades_uuid;
-DROP TRIGGER IF EXISTS trg_doc_pea_temas_uuid;
-DROP TRIGGER IF EXISTS trg_doc_pea_rda_uuid;
-DROP TRIGGER IF EXISTS trg_doc_pea_practicas_uuid;
-DROP TRIGGER IF EXISTS trg_doc_pea_biblio_uuid;
-
 DROP TRIGGER IF EXISTS trg_doc_silabo_uuid;
 DROP TRIGGER IF EXISTS trg_doc_silabo_semanas_uuid;
 DROP TRIGGER IF EXISTS trg_doc_silabo_adapt_uuid;
@@ -61,163 +51,7 @@ DROP TABLE IF EXISTS
     doc_guias_ape,
     doc_silabo_adaptaciones,
     doc_silabo_semanas,
-    doc_silabo,
-    doc_pea_bibliografia,
-    doc_pea_actividades_practicas,
-    doc_pea_resultados_aprendizaje,
-    doc_pea_temas,
-    doc_pea_unidades,
-    doc_pea;
-
--- =============================================================================
--- DOCUMENTO 1: PEA (PROGRAMA DE ESTUDIO DE LA ASIGNATURA)
--- =============================================================================
-
-CREATE TABLE doc_pea (
-    idPea                   INT             AUTO_INCREMENT PRIMARY KEY,
-    uuid                    VARCHAR(36)     NOT NULL UNIQUE,
-    idCarrera               INT(11)         NOT NULL,
-    idAsignatura            INT(11)         NOT NULL,
-    idPeriodo               CHAR(7)         CHARACTER SET latin1 NOT NULL,
-    idDocenteElaborador     VARCHAR(20)     NULL,
-    modalidad               VARCHAR(50)     NOT NULL DEFAULT 'Presencial',
-    unidadOrganizacion      VARCHAR(100)    NULL,
-    semestreNivel           VARCHAR(20)     NULL,
-    totalHorasAsignatura    INT             NOT NULL DEFAULT 0,
-    creditos                DECIMAL(4,2)    NOT NULL DEFAULT 0.00,
-    
-    -- Componentes pedagógicos globales
-    horasContactoDocente    INT             NOT NULL DEFAULT 0 COMMENT 'CD',
-    horasPracticoExperimental INT           NOT NULL DEFAULT 0 COMMENT 'APE',
-    horasAutonomo           INT             NOT NULL DEFAULT 0 COMMENT 'AA',
-    
-    objetivoAsignatura      TEXT            NULL,
-    metodologiaEnsenanza    TEXT            NULL,
-    recursosDidacticos      TEXT            NULL,
-    
-    estado                  ENUM('Borrador', 'EnRevision', 'Aprobado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
-    version                 INT             NOT NULL DEFAULT 1,
-    activo                  TINYINT(1)      NOT NULL DEFAULT 1,
-    fechaCreacion           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fechaModificacion       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    -- Firmas institucionales
-    firmaElaboradoDocente   VARCHAR(255)    NULL,
-    fechaElaborado          DATETIME        NULL,
-    firmaRevisadoCoord      VARCHAR(255)    NULL,
-    fechaRevisadoCoord      DATETIME        NULL,
-    firmaRevisadoAcad       VARCHAR(255)    NULL,
-    fechaRevisadoAcad       DATETIME        NULL,
-    firmaAprobadoVicerrector VARCHAR(255)   NULL,
-    fechaAprobado           DATETIME        NULL,
-    
-    INDEX idx_pea_carrera_asig (idCarrera, idAsignatura, idPeriodo),
-    FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT,
-    FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura) ON DELETE RESTRICT,
-    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='PEA — Programa de Estudio de la Asignatura Oficial ISTPET';
-
-DELIMITER $$
-CREATE TRIGGER trg_doc_pea_uuid BEFORE INSERT ON doc_pea FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
-
-CREATE TABLE doc_pea_unidades (
-    idUnidad                INT             AUTO_INCREMENT PRIMARY KEY,
-    uuid                    VARCHAR(36)     NOT NULL UNIQUE,
-    idPea                   INT             NOT NULL,
-    numeroUnidad            INT             NOT NULL,
-    nombreUnidad            VARCHAR(255)    NOT NULL,
-    totalHorasUnidad        INT             NOT NULL DEFAULT 0,
-    horasDocencia           INT             NOT NULL DEFAULT 0,
-    horasPracticoExp        INT             NOT NULL DEFAULT 0,
-    horasAutonomo           INT             NOT NULL DEFAULT 0,
-    orden                   INT             NOT NULL DEFAULT 1,
-    INDEX idx_unidad_pea (idPea),
-    FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DELIMITER $$
-CREATE TRIGGER trg_doc_pea_unidades_uuid BEFORE INSERT ON doc_pea_unidades FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
-
-CREATE TABLE doc_pea_temas (
-    idTema                  INT             AUTO_INCREMENT PRIMARY KEY,
-    uuid                    VARCHAR(36)     NOT NULL UNIQUE,
-    idUnidad                INT             NOT NULL,
-    numeroTema              INT             NOT NULL,
-    tituloTema              VARCHAR(255)    NOT NULL,
-    descripcionSubtemas     TEXT            NULL,
-    orden                   INT             NOT NULL DEFAULT 1,
-    INDEX idx_tema_unidad (idUnidad),
-    FOREIGN KEY (idUnidad) REFERENCES doc_pea_unidades(idUnidad) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DELIMITER $$
-CREATE TRIGGER trg_doc_pea_temas_uuid BEFORE INSERT ON doc_pea_temas FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
-
-CREATE TABLE doc_pea_resultados_aprendizaje (
-    idRda                   INT             AUTO_INCREMENT PRIMARY KEY,
-    uuid                    VARCHAR(36)     NOT NULL UNIQUE,
-    idPea                   INT             NOT NULL,
-    tipoRda                 ENUM('Carrera', 'Asignatura') NOT NULL DEFAULT 'Asignatura',
-    codigoRda               VARCHAR(20)     NULL,
-    descripcion             TEXT            NOT NULL,
-    nivelDesarrollo         ENUM('Inicial', 'Medio', 'Alto') NOT NULL DEFAULT 'Medio',
-    orden                   INT             NOT NULL DEFAULT 1,
-    INDEX idx_rda_pea (idPea),
-    FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DELIMITER $$
-CREATE TRIGGER trg_doc_pea_rda_uuid BEFORE INSERT ON doc_pea_resultados_aprendizaje FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
-
-CREATE TABLE doc_pea_actividades_practicas (
-    idPractica              INT             AUTO_INCREMENT PRIMARY KEY,
-    uuid                    VARCHAR(36)     NOT NULL UNIQUE,
-    idPea                   INT             NOT NULL,
-    idUnidad                INT             NULL,
-    numeroPractica          INT             NOT NULL,
-    nombrePractica          VARCHAR(255)    NOT NULL,
-    caracterizacion         TEXT            NULL,
-    duracionHoras           INT             NOT NULL DEFAULT 2,
-    orden                   INT             NOT NULL DEFAULT 1,
-    INDEX idx_practica_pea (idPea),
-    FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE,
-    FOREIGN KEY (idUnidad) REFERENCES doc_pea_unidades(idUnidad) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DELIMITER $$
-CREATE TRIGGER trg_doc_pea_practicas_uuid BEFORE INSERT ON doc_pea_actividades_practicas FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
-
-CREATE TABLE doc_pea_bibliografia (
-    idBiblio                INT             AUTO_INCREMENT PRIMARY KEY,
-    uuid                    VARCHAR(36)     NOT NULL UNIQUE,
-    idPea                   INT             NOT NULL,
-    tipoBibliografia        ENUM('Basica', 'Consulta', 'Virtual') NOT NULL DEFAULT 'Basica',
-    autor                   VARCHAR(255)    NULL,
-    anio                    INT             NULL,
-    tituloLibro             VARCHAR(500)    NOT NULL,
-    editorialCiudad         VARCHAR(255)    NULL,
-    isbn                    VARCHAR(50)     NULL,
-    urlRecurso              VARCHAR(512)    NULL,
-    citaCompletaApa         TEXT            NOT NULL,
-    orden                   INT             NOT NULL DEFAULT 1,
-    INDEX idx_biblio_pea (idPea),
-    FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DELIMITER $$
-CREATE TRIGGER trg_doc_pea_biblio_uuid BEFORE INSERT ON doc_pea_bibliografia FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+    doc_silabo;
 
 -- =============================================================================
 -- DOCUMENTO 2: PLAN ANALÍTICO / SÍLABO (19 SEMANAS)
@@ -241,6 +75,7 @@ CREATE TABLE doc_silabo (
     
     aplicaAdaptacion        TINYINT(1)      NOT NULL DEFAULT 0,
     detalleAdaptacion       TEXT            NULL,
+    recursosDidacticos      TEXT            NULL,
     
     estado                  ENUM('Borrador', 'EnRevision', 'Aprobado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
     version                 INT             NOT NULL DEFAULT 1,
@@ -258,7 +93,7 @@ CREATE TABLE doc_silabo (
     INDEX idx_silabo_pea (idPea),
     FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE,
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sílabo / Plan Analítico Oficial ISTPET';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Sílabo / Plan Analítico Oficial';
 
 DELIMITER $$
 CREATE TRIGGER trg_doc_silabo_uuid BEFORE INSERT ON doc_silabo FOR EACH ROW
@@ -342,7 +177,7 @@ CREATE TABLE doc_guias_ape (
     investigacionAutonoma   TEXT            NULL COMMENT 'Preguntas de indagación y documentación previa del estudiante',
     metodologiaDidactica    TEXT            NULL,
     normasSeguridad         TEXT            NULL,
-    habilidadesBlandas      TEXT            NULL COMMENT 'Destrezas socioemocionales CACES',
+    habilidadesBlandas      TEXT            NULL COMMENT 'Destrezas socioemocionales',
     indicacionesEntrega     TEXT            NULL,
     
     estado                  ENUM('Borrador', 'EnRevision', 'Aprobado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
@@ -365,7 +200,7 @@ CREATE TABLE doc_guias_ape (
     FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura) ON DELETE RESTRICT,
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT,
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Guía de Trabajo Práctico - Experimental Oficial ISTPET';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Guía de Trabajo Práctico - Experimental Oficial';
 
 DELIMITER $$
 CREATE TRIGGER trg_doc_guias_ape_uuid BEFORE INSERT ON doc_guias_ape FOR EACH ROW
@@ -504,7 +339,7 @@ CREATE TABLE doc_guias_estudio (
     FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura) ON DELETE RESTRICT,
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT,
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Guía de Estudio y Compendio Autónomo ISTPET';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Guía de Estudio y Compendio Autónomo Oficial';
 
 DELIMITER $$
 CREATE TRIGGER trg_doc_guias_estudio_uuid BEFORE INSERT ON doc_guias_estudio FOR EACH ROW

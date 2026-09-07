@@ -126,6 +126,7 @@ namespace dosier_infrastructure.Curriculum
                 entity.ObjetivoAsignatura = dto.ObjetivoAsignatura;
                 entity.MetodologiaEnsenanza = dto.MetodologiaEnsenanza;
                 entity.RecursosDidacticos = dto.RecursosDidacticos;
+                entity.EvaluacionAprendizaje = dto.EvaluacionAprendizaje;
                 entity.FechaModificacion = DateTime.UtcNow;
 
                 _context.DocPeaBibliografias.RemoveRange(entity.Bibliografias);
@@ -153,6 +154,7 @@ namespace dosier_infrastructure.Curriculum
                     ObjetivoAsignatura = dto.ObjetivoAsignatura,
                     MetodologiaEnsenanza = dto.MetodologiaEnsenanza,
                     RecursosDidacticos = dto.RecursosDidacticos,
+                    EvaluacionAprendizaje = dto.EvaluacionAprendizaje,
                     Estado = "Borrador",
                     Version = 1,
                     Activo = true,
@@ -301,6 +303,7 @@ namespace dosier_infrastructure.Curriculum
                 ObjetivoAsignatura = pea.ObjetivoAsignatura,
                 MetodologiaEnsenanza = pea.MetodologiaEnsenanza,
                 RecursosDidacticos = pea.RecursosDidacticos,
+                EvaluacionAprendizaje = pea.EvaluacionAprendizaje,
                 Estado = pea.Estado,
                 Version = pea.Version,
                 Activo = pea.Activo,
