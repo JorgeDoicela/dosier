@@ -1,18 +1,18 @@
 # Título o tema
 
-**Sistema web para la gestión del ciclo de vida de la documentación curricular docente en instituciones de educación superior**
+**Sistema web de gestión curricular para el Programa de Estudio de la Asignatura del Instituto Superior Tecnológico Mayor Pedro Traversari**
 
 ## Planteamiento del problema
 
-- En los institutos de educación superior, la elaboración de la documentación curricular docente exige articular las disposiciones emitidas por los organismos nacionales competentes —que deben registrarse sin ser modificadas— con los instrumentos propios de la institución, la oferta académica vigente y la información registrada en los sistemas de gestión académica. El uso de archivos individuales y carpetas compartidas dificulta identificar qué normativa y versión institucional sustentaron cada documento.
+- En el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET), la elaboración del Programa de Estudio de la Asignatura (PEA) como instrumento microcurricular exige articular las disposiciones emitidas por los organismos nacionales competentes —que deben registrarse sin ser modificadas— con los instrumentos propios de la institución, la oferta académica vigente y la información registrada en los sistemas de gestión académica. El uso de archivos individuales y carpetas compartidas dificulta identificar qué normativa y versión institucional sustentaron cada documento.
 
-- Aunque los sistemas de gestión académica contienen datos oficiales sobre períodos, carreras, mallas, asignaturas, carga horaria y asignaciones docentes, no están integrados con un flujo que controle la elaboración, revisión, aprobación, firma y conservación histórica del Programa de Estudio de la Asignatura (PEA). Esto genera digitación repetida, riesgo de inconsistencias con la malla vigente y limitada capacidad de demostrar el cumplimiento de los requisitos curriculares.
+- Aunque el sistema de gestión académica institucional (SIGAFI) contiene datos oficiales sobre períodos, carreras, mallas, asignaturas, carga horaria y asignaciones docentes, no está integrado con un flujo que controle la elaboración, revisión, aprobación, firma y conservación histórica del Programa de Estudio de la Asignatura (PEA). Esto genera digitación repetida, riesgo de inconsistencias con la malla vigente y limitada capacidad de demostrar el cumplimiento de los requisitos curriculares.
 
-- El problema central es la ausencia de una plataforma que organice las fuentes externas como referencia de consulta interna, permita a la institución aplicarlas según su oferta académica e integre el ciclo completo del PEA con los datos institucionales existentes.
+- El problema central es la ausencia de una plataforma que organice las fuentes externas como referencia de consulta interna, permita a la institución aplicarlas según su oferta académica e integre el ciclo completo del PEA con los datos institucionales existentes en SIGAFI.
 
 ## Objetivo general
 
-Desarrollar un sistema web para gestionar el ciclo de vida de la documentación curricular docente, mediante el registro inalterable y versionado de fuentes externas como referencia, su vinculación con los instrumentos institucionales y la integración de solo lectura con el sistema de gestión académica, implementando de forma completa la elaboración, revisión, aprobación y emisión del Programa de Estudio de la Asignatura.
+Desarrollar un sistema web de gestión curricular para el Programa de Estudio de la Asignatura del Instituto Superior Tecnológico Mayor Pedro Traversari, mediante el registro inalterable y versionado de fuentes externas como referencia, su vinculación con los instrumentos institucionales y la integración de solo lectura con el sistema de gestión académica (SIGAFI), implementando de forma completa la elaboración, revisión, aprobación y emisión del documento oficial.
 
 ## Objetivos específicos
 

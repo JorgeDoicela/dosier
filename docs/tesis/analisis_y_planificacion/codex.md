@@ -2,6 +2,7 @@
 ## Diagnóstico Institucional, Arquitectura de Integración y Plan Maestro
 
 > **Institución:** Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET) — Quito, Ecuador  
+> **Tema de Tesis:** Sistema web de gestión curricular para el Programa de Estudio de la Asignatura del Instituto Superior Tecnológico Mayor Pedro Traversari  
 > **Sistema:** Plataforma Clean Architecture DOSIER  
 > **Base de Datos Institucional:** MySQL `sigafi_es` (Modo Solo Lectura)  
 > **Área:** Dirección Académica, Coordinaciones de Carrera y Aseguramiento de la Calidad (CACES)  
