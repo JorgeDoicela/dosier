@@ -22,16 +22,24 @@ export const useAnalyticsData = (period: string, carrera: string) => {
     const loadData = async () => {
         setRefreshing(true);
         try {
-            const [projectsRes, statsRes, groupsRes, careersRes] = await Promise.all([
-                api.get('/projects'),
-                api.get('/projects/stats'),
-                api.get('/groups'),
-                api.get('/catalogs/carreras')
+            const [projectsRes, statsRes, careersRes] = await Promise.all([
+                api.get('/projects').catch(err => {
+                    console.error("[Analytics] Error loading projects:", err);
+                    return { data: [] };
+                }),
+                api.get('/projects/stats').catch(err => {
+                    console.error("[Analytics] Error loading stats:", err);
+                    return { data: null };
+                }),
+                api.get('/catalogs/carreras').catch(err => {
+                    console.error("[Analytics] Error loading carreras:", err);
+                    return { data: [] };
+                })
             ]);
 
             if (projectsRes.data) setProjects(projectsRes.data);
             if (statsRes.data) setStats(statsRes.data);
-            if (groupsRes.data) setGroups(groupsRes.data);
+            setGroups([]); // DOSIER no gestiona grupos de investigación independientes
             if (careersRes.data) setAllCareers(careersRes.data);
 
         } catch (error) {

@@ -11,6 +11,7 @@ interface DeletedItem {
     titulo?: string;
     nombre?: string;
     codigoInstitucional?: string;
+    siglas?: string;
     estado: string;
     fechaEliminacion: string;
     eliminadoPor: string;
@@ -23,6 +24,7 @@ const RecycleBinPage: React.FC = () => {
     const [items, setItems] = useState<DeletedItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'projects'>('projects');
 
     const fetchItems = async () => {
         try {
