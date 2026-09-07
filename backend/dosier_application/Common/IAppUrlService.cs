@@ -7,9 +7,6 @@ namespace dosier_application.Common;
 /// </summary>
 public interface IAppUrlService
 {
-    /// <summary>
-    /// Obtiene la URL base del frontend sin barra al final (ej: "http://localhost:3000" o "http://192.168.7.72/dosier").
-    /// </summary>
     string GetFrontendUrl();
 
     /// <summary>
