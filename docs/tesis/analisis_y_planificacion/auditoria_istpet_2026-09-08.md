@@ -255,3 +255,112 @@ Todavía no es una lista definitiva de todo el cumplimiento legal del instituto.
 - Contrastar formatos, mallas, resoluciones, delegaciones y calendario con los documentos vigentes autorizados del ISTPET.
 - Aplicar las correcciones y probar el circuito completo en MySQL, incluida la generación y firma del PDF.
 Puedes usarlo como plan de corrección del módulo curricular. Las correcciones están documentadas; todavía no están implementadas.
+
+
+
+
+
+
+**Para guardar este PEA, la base ya cubre gran parte del formato. No necesitas rehacerla, pero sí cerrar algunos vacíos y corregir su integridad.** Contrasté el texto adjunto con los scripts actuales.
+
+| Sección del PEA | Situación actual | Qué falta |
+|---|---|---|
+| **a. Datos generales** | Existen carrera, asignatura, período, modalidad, semestre, horas y créditos. | Garantizar que correspondan a la misma malla/oferta y conservar sus nombres y códigos históricos al aprobar. |
+| **b. Objetivo** | Cubierto en `objetivoAsignatura`. | Sin tabla adicional. |
+| **c. Prerrequisitos** | Pueden quedar dentro del snapshot curricular. | Representar explícitamente **asignatura y observación**, preservando lo que figuraba en esa versión del PEA. |
+| **d. Resultados de la carrera** | Existen resultados del perfil y resultados dentro del PEA. | Vincular cada resultado seleccionado con su **resultado oficial de origen**, conservando su texto histórico. |
+| **e. Resultados de la asignatura** | Cubiertos. | Garantizar orden y pertenencia a la revisión del PEA. |
+| **f. Unidades y contenidos** | Cubiertos, incluyendo horas por componente. | Validar sumas y evitar numeración duplicada dentro del mismo padre. |
+| **g. Metodología y recursos** | Cubiertos mediante campos de texto. | No es obligatorio crear más tablas para reproducir este formato. |
+| **h. Actividades prácticas** | Cubiertas. | Garantizar que la unidad relacionada pertenezca al mismo PEA. |
+| **i. Evaluación** | Actualmente es un texto libre. | Estructurar las filas: **nota, tipo de evaluación, calificación máxima y orden**. |
+| **j. Bibliografía** | Cubiertas básica y consulta. | Mantener clasificación y orden. |
+| **k. Responsables** | Existen cuatro espacios de firma y fechas. | Vincularlos con identidad del firmante, nombre y cargo históricos, etapa y versión firmada. |
+
+**Las modificaciones concretas que haría en la base son estas:**
+
+1. **Agregar `doc_pea_prerrequisitos`.**
+   Con PEA/revisión, asignatura de origen cuando corresponda, nombre/código conservados, observación y orden. Puede alimentarse desde SIGAFI sin modificar sus prerrequisitos oficiales.
+
+2. **Agregar `doc_pea_evaluaciones`.**
+   Con PEA/revisión, denominación —por ejemplo, “Nota parcial 1”—, descripción, calificación máxima y orden. **Los tres valores 10 del formato no son porcentajes ni justifican repartir 40/30/30.**
+
+3. **Agregar la referencia al resultado oficial de carrera.**
+   En `doc_pea_resultados_aprendizaje`, incorporar el vínculo con `doc_perfil_egreso_resultados` para los resultados de tipo carrera. Ya tienes ambas tablas; falta cerrar esa relación.
+
+4. **Completar el vínculo de las cuatro responsabilidades.**
+   Reutilizar `doc_documentos_firmas`, evitando otro mecanismo paralelo. Cada registro debe identificar inequívocamente PEA, revisión, responsable y etapa. Corregir **“Comisión Académica” por “Coordinador Académico”** donde se está describiendo el cargo de este formato.
+
+5. **Definir versiones y formato utilizado.**
+   Identificar la revisión del PEA y la versión de la plantilla; conservar el contexto y contenido aprobado. El campo `version` actual, por sí solo, no impide sobrescribirlo.
+
+6. **Añadir restricciones de integridad.**
+   Horas no negativas, coherencia de componentes, numeración única por PEA/unidad, relaciones entre hijos del mismo documento y estados consistentes. Las sumas entre varias filas requieren una validación transaccional; no se resuelven únicamente con un `CHECK`.
+
+7. **Corregir la correspondencia SQL–DbContext y las migraciones.**
+   Resolver las cinco relaciones que generan columnas inexistentes y preparar una actualización que preserve datos y no altere las tablas administradas por SIGAFI.
+
+**No debes imponer tres unidades, seis temas o tres referencias como límites:** el propio adjunto aclara que son espacios del Excel. Tampoco hacen falta dos estructuras de base por las hojas «PEA» y «PEA (2)».
+
+Con esos cambios quedaría definido el almacenamiento de **este PEA**. Para llamarlo “base lista”, todavía habría que aplicar y comprobar el esquema en MySQL de pruebas. **En esta revisión no modifiqué los scripts.**
+
+
+
+
+
+
+Sí: con esas correcciones implementadas y comprobadas, la base de datos quedaría preparada para almacenar todas las secciones del PEA que compartiste, incluyendo sus cuatro responsables, versiones y relaciones curriculares.
+Para darla por lista deben cumplirse tres condiciones:
+- Scripts SQL y DbContext coinciden.
+- Se puede guardar y recuperar un PEA completo sin perder información.
+- Las restricciones rechazan datos inconsistentes y se conserva la versión aprobada.
+Ahora están identificados los cambios; todavía no están implementados. Eso cerraría el alcance de la base de datos del PEA. El funcionamiento de las aprobaciones, la firma electrónica y la generación del documento requiere completar y probar los servicios correspondientes.
+
+
+
+
+
+
+
+
+Todavía no completamente. Mi respuesta anterior se refería a la base necesaria para guardar el formato del PEA; fue demasiado amplia si se interpreta como todo el proceso oficial.
+Para que la base también soporte el proceso del CES, CACES e ISTPET, hay que incluir:
+Parte del proceso	Qué debe conservar la base
+Antecedentes oficiales	Normativa y sus reformas, resoluciones, proyecto de carrera, malla, modalidad y perfil de egreso, con versiones y vigencia.
+Vinculación curricular	Relación del PEA con esos antecedentes y con los resultados de aprendizaje de carrera.
+Revisión institucional	Elaboración docente, revisión de Coordinación de Carrera, revisión de Coordinación Académica y aprobación de Vicerrectorado; responsables y delegaciones vigentes.
+Correcciones	Observaciones, respuestas, decisiones y nuevas revisiones, conservando lo aprobado anteriormente.
+Oficialización	Versión exacta aprobada, responsables, fechas, evidencias de firma y documento final.
+Entrega y seguimiento	Evidencia de socialización y entrega, seguimiento de ejecución y vínculos con sílabo, guías y portafolio.
+Conservación y evaluación	Archivo, acceso, retención y evidencias consultables para evaluación institucional.
+
+
+Varias de estas estructuras ya existen en DOSIER; hay que completar sus relaciones y controles, no crear todo desde cero.
+Además, no corresponde inventar una aprobación del PEA por CES o CACES: el circuito de aprobación que identificamos es institucional. Las entidades externas aportan el marco regulatorio y de evaluación que debe poder demostrarse mediante evidencias.
+Por tanto, el alcance correcto sería: correcciones del formato + soporte del proceso oficial descrito arriba + concordancia SQL/DbContext + pruebas en MySQL. Eso permitiría declarar preparada la base para el proceso del PEA, sujeto a confirmar los documentos institucionales vigentes. La base por sí sola no garantiza que los permisos, firmas y procedimientos se ejecuten correctamente.
+
+
+
+
+
+
+
+
+
+
+
+
+Sí puedes empezar a programar el módulo PEA y usar el formato que compartiste como referencia para llenarlo. Pero todavía no está listo para emitirlo como documento oficial aprobado. Mis respuestas anteriores no distinguieron eso con suficiente claridad.
+La búsqueda incluyó:
+- ISTPET: normativa publicada, reglamento de seguimiento docente, modelo educativo, políticas de archivo, reglamento de prácticas, política de protección de datos, autoridades y oferta académica.
+- Entidades externas: Reglamento de Régimen Académico del CES, modelo de evaluación del CACES y resolución de 2026 sobre ese proceso, además de normativa de firmas y protección de datos.
+- Proyecto: los cuatro scripts, DbContext y configuraciones, migraciones y servicios de PEA, sílabos, guías, firmas y expedientes. También hice comprobaciones de compilación, pruebas y consistencia del modelo.
+La revisión no fue una certificación de vigencia de todos los documentos internos, ni una prueba del sistema completo contra la base desplegada. El PEA que pegaste es una transcripción; no he acreditado su versión mediante una aprobación institucional.
+La decisión práctica es esta:
+Uso	¿Puedes avanzar?
+Programar el formulario y guardar borradores con todas las secciones del PEA	Sí, corrigiendo primero el esquema identificado.
+Implementar revisión y aprobación institucional	Sí, siguiendo las responsabilidades publicadas y confirmando el procedimiento vigente.
+Presentar el documento como PEA oficial aprobado	Cuando el formato esté confirmado y el circuito de revisión, aprobación, firma y conservación funcione y haya sido probado.
+
+
+No necesitas detener el desarrollo para investigar indefinidamente. Ya existe información suficiente para construir el módulo. Lo pendiente es convertir los hallazgos en cambios concretos y comprobar con el ISTPET que el formato y procedimiento utilizados son los autorizados.
