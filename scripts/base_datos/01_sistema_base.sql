@@ -263,6 +263,8 @@ CREATE TABLE doc_notificaciones (
     idNotificacion   INT          AUTO_INCREMENT PRIMARY KEY,
     uuid             VARCHAR(36)     NOT NULL,
     idProyecto       INT          NULL,
+    idExpediente     INT          NULL         COMMENT 'Vínculo opcional al expediente curricular (PEA, Sílabo, Guías)',
+    idPea            INT          NULL         COMMENT 'Vínculo opcional al PEA notificado',
     destinatario     INT(11)      NOT NULL,
     tipoDestinatario ENUM('Usuario','Profesor','Alumno') DEFAULT 'Usuario',
     categoria        VARCHAR(50)  DEFAULT 'SISTEMA',
@@ -275,6 +277,8 @@ CREATE TABLE doc_notificaciones (
     fechaLectura     TIMESTAMP    NULL,
     version          INT          DEFAULT 1,
     UNIQUE KEY uq_notif_uuid (uuid),
+    INDEX idx_notif_exp (idExpediente),
+    INDEX idx_notif_pea (idPea),
     FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE SET NULL,
     FOREIGN KEY (destinatario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Notificaciones con prioridad y redirección (Deep Linking)';
@@ -289,6 +293,8 @@ CREATE TABLE doc_tokens_acceso (
     idToken         INT          AUTO_INCREMENT PRIMARY KEY,
     uuid            VARCHAR(36)     NOT NULL,
     idProyecto      INT          NULL,
+    idExpediente    INT          NULL         COMMENT 'Vínculo opcional al expediente curricular',
+    idPea           INT          NULL         COMMENT 'Vínculo opcional al PEA para enlace público/firma',
     token           VARCHAR(255) NOT NULL UNIQUE,
     idReferencia    INT          NOT NULL,
     tipoReferencia  VARCHAR(50)  NOT NULL DEFAULT 'Externo',
@@ -301,6 +307,8 @@ CREATE TABLE doc_tokens_acceso (
     fechaExpiracion TIMESTAMP    NULL,
     version         INT          DEFAULT 1,
     UNIQUE KEY uq_tokens_uuid (uuid),
+    INDEX idx_tokens_exp (idExpediente),
+    INDEX idx_tokens_pea (idPea),
     FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Seguridad para Pares Ciegos (Control de IPs y usos)';
 

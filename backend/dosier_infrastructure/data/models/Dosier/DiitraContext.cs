@@ -76,6 +76,7 @@ public partial class DosierContext : DbContext
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPerfilEgresoResultado> DocPerfilEgresoResultados { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocAsignaturaResultadoPerfil> DocAsignaturasResultadosPerfil { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocExpedienteCurricular> DocExpedientesCurriculares { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocExpedienteAsignacion> DocExpedienteAsignaciones { get; set; }
 
     // --- DOSIER Curricular (Los 4 Documentos Oficiales ISTPET) ---
     // 1. PEA (Programa de Estudio de la Asignatura)

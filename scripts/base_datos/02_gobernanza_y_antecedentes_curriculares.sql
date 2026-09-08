@@ -27,6 +27,7 @@ DROP TRIGGER IF EXISTS trg_doc_perfil_egreso_res_uuid;
 DROP TRIGGER IF EXISTS trg_doc_expedientes_curriculares_uuid;
 
 DROP TABLE IF EXISTS
+    doc_expediente_asignaciones,
     doc_asignatura_resultado_perfil,
     doc_perfil_egreso_resultados,
     doc_perfiles_egreso,
@@ -229,6 +230,18 @@ DELIMITER $$
 CREATE TRIGGER trg_doc_expedientes_curriculares_uuid BEFORE INSERT ON doc_expedientes_curriculares FOR EACH ROW
 BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
 DELIMITER ;
+
+-- Mapeo de asignaciones docentes y paralelos al expediente de cátedra (Cátedra Compartida)
+CREATE TABLE doc_expediente_asignaciones (
+    idExpediente            INT             NOT NULL,
+    idAsignacion            INT(11)         NOT NULL,
+    esDocenteLider          TINYINT(1)      NOT NULL DEFAULT 0,
+    fechaAsignacion         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (idExpediente, idAsignacion),
+    INDEX idx_exp_asig_id (idAsignacion),
+    FOREIGN KEY (idExpediente) REFERENCES doc_expedientes_curriculares(idExpediente) ON DELETE CASCADE,
+    FOREIGN KEY (idAsignacion) REFERENCES asignaciones_profesores(idAsignacion) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Mapeo de asignaciones docentes y paralelos al expediente de la cátedra';
 
 -- =============================================================================
 -- 5. SEMILLAS BASE: NORMAS SUPERIORES Y MODELO EDUCATIVO OFICIAL

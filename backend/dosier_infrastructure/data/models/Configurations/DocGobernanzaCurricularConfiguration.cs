@@ -183,6 +183,30 @@ namespace dosier_infrastructure.data.models.Configurations
                    .WithOne(p => p.Expediente)
                    .HasForeignKey(p => p.IdExpediente)
                    .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(e => e.Asignaciones)
+                   .WithOne(a => a.Expediente)
+                   .HasForeignKey(a => a.IdExpediente)
+                   .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+
+    public class DocExpedienteAsignacionConfiguration : IEntityTypeConfiguration<DocExpedienteAsignacion>
+    {
+        public void Configure(EntityTypeBuilder<DocExpedienteAsignacion> builder)
+        {
+            builder.ToTable("doc_expediente_asignaciones");
+            builder.HasKey(e => new { e.IdExpediente, e.IdAsignacion });
+
+            builder.Property(e => e.EsDocenteLider).HasDefaultValue(false);
+            builder.Property(e => e.FechaAsignacion).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            builder.HasIndex(e => e.IdAsignacion);
+
+            builder.HasOne(e => e.Expediente)
+                   .WithMany(exp => exp.Asignaciones)
+                   .HasForeignKey(e => e.IdExpediente)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -36,5 +36,6 @@ namespace dosier_domain.Curriculum.Entities
         public virtual DocPerfilEgreso? PerfilEgreso { get; set; }
         public virtual DocModeloEducativo? ModeloEducativo { get; set; }
         public virtual ICollection<DocPea> Peas { get; set; } = new List<DocPea>();
+        public virtual ICollection<DocExpedienteAsignacion> Asignaciones { get; set; } = new List<DocExpedienteAsignacion>();
     }
 }
