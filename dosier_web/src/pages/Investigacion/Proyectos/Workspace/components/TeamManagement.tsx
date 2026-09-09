@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Users, AlertCircle, ExternalLink, RefreshCw, X,
+    Users, AlertCircle, RefreshCw, X,
     Search, History, CheckSquare, UserPlus, Trash2, ChevronDown, ChevronUp, AlertTriangle
 } from 'lucide-react';
 
@@ -668,9 +668,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
                                                 <div className="flex items-center justify-between gap-2">
                                                     <span className="text-[10px] font-semibold text-text-main uppercase">{req.tipo} · {req.estado}</span>
                                                     <span className="text-[9px] text-text-dim">
-                                                        {req.tipo === 'CAMBIO_GRUPO'
-                                                            ? (approvedGroups.find((g: any) => g.uuid === req.cedulaObjetivo)?.siglas || 'Grupo')
-                                                            : (req.cedulaObjetivo || 'N/A')}
+                                                        {req.cedulaObjetivo || 'N/A'}
                                                     </span>
                                                 </div>
                                                 <p className="text-[10px] text-text-dim mt-1">{req.motivo}</p>

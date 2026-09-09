@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, Shield, BookOpen, Briefcase, Award, Loader, ChevronDown, Check, FileText, DollarSign, Sparkles, Lightbulb } from 'lucide-react';
+import { X, Shield, BookOpen, Briefcase, Loader, ChevronDown, Check, FileText, DollarSign } from 'lucide-react';
 import api from '../../api/axios_config';
 import { useAuth } from '../../api/AuthContext';
 import { useNotifications } from '../../api/NotificationsContext';
@@ -28,7 +28,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     restoreDraftOnOpen = false
 }) => {
     const navigate = useNavigate();
-    const { user, isDocente, isAdmin } = useAuth();
+    const { user, isDocente } = useAuth();
     const { addToast } = useNotifications();
     const confirm = useConfirm();
 
@@ -68,7 +68,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             try {
                 const parsed = JSON.parse(draftStr);
                 if (parsed) {
-                    if (parsed.modalidad) setModalidad(parsed.modalidad);
                     setTitulo(parsed.titulo || '');
                     setDescripcion(parsed.descripcion || '');
                     setPresupuestoEstimado(parsed.presupuestoEstimado || '');

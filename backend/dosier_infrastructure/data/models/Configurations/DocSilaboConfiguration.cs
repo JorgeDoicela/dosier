@@ -39,6 +39,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.ToTable("doc_silabo_semanas");
             builder.HasKey(e => e.IdSemana);
             builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+
+            builder.HasOne(e => e.Unidad)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdUnidad)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 

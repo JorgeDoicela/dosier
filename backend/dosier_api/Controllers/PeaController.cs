@@ -72,9 +72,9 @@ namespace dosier_api.Controllers
         [HttpPost("{id:int}/firmar")]
         public async Task<IActionResult> Firmar(int id, [FromBody] FirmarPeaDto dto)
         {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier) 
-                ?? User.FindFirstValue("sub") 
-                ?? User.FindFirstValue("id_usuario");
+            var userIdStr = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                ?? User.FindFirstValue("sub");
 
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int idUsuario))
                 return Unauthorized(new { message = "Sesión inválida o identificador de usuario no encontrado." });
@@ -133,7 +133,9 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> AgregarObservacion(int id, [FromBody] AgregarObservacionRequest req)
         {
             if (string.IsNullOrWhiteSpace(req.Texto)) return BadRequest("El texto de la observación no puede estar vacío.");
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
             int? idUserInt = int.TryParse(userId, out int u) ? u : null;
 
             var obs = await _peaService.AgregarObservacionAsync(id, req.RolObservador ?? "CoordinadorCarrera", req.SeccionAfectada ?? "General", req.Texto, idUserInt);
@@ -143,7 +145,9 @@ namespace dosier_api.Controllers
         [HttpPatch("observaciones/{idObs:int}/subsanar")]
         public async Task<IActionResult> SubsanarObservacion(int idObs, [FromBody] SubsanarObservacionRequest req)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
             int? idUserInt = int.TryParse(userId, out int u) ? u : null;
 
             var ok = await _peaService.SubsanarObservacionAsync(idObs, req.RespuestaDocente, idUserInt);

@@ -106,7 +106,7 @@ const PermissionRoute = ({ children, module, op }: { children: React.ReactNode; 
     return <>{children}</>;
 };
 
-const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
+export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
     const { isAuthenticated, isLoading, isAdmin, isDocente, isEstudiante, isRevisor, roles } = useAuth();
 
     if (isLoading) {

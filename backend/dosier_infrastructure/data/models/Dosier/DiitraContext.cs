@@ -88,6 +88,8 @@ public partial class DosierContext : DbContext
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaBibliografia>      DocPeaBibliografias       { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaObservacion>       DocPeaObservaciones       { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaTrazabilidad>      DocPeaTrazabilidades      { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaPrerequisito>       DocPeaPrerrequisitos      { get; set; }
+    public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaEvaluacion>         DocPeaEvaluaciones        { get; set; }
 
     // 2. Sílabo / Plan Analítico (19 Semanas)
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocSilabo>               DocSilabos                { get; set; }

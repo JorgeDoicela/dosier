@@ -326,5 +326,193 @@ namespace dosier_tests.Curriculum
             Assert.Equal(res.DocHash, verification.DocHash);
             Assert.Contains("Carlos Revisor", verification.FirmanteNombre);
         }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "FirmaCurricular")]
+        public async Task PeaFirma_CambioEnContenidoPedagogico_GeneraHashDiferente()
+        {
+            var dbName = nameof(PeaFirma_CambioEnContenidoPedagogico_GeneraHashDiferente);
+            await using var context = CreateInMemoryContext(dbName);
+            var config = CreateMockConfiguration();
+
+            var user = new User
+            {
+                IdUsuario = 601,
+                IdSigafi = "1799999999",
+                Nombre = "Profesor Prueba",
+                Contrasenia = BCrypt.Net.BCrypt.HashPassword("Pass601!"),
+                Activo = true
+            };
+            context.Users.Add(user);
+
+            var pea1 = new DocPea
+            {
+                IdPea = 10,
+                Uuid = Guid.NewGuid().ToString(),
+                Estado = "Borrador",
+                Activo = true,
+                Unidades = new List<DocPeaUnidad>
+                {
+                    new DocPeaUnidad
+                    {
+                        IdUnidad = 1,
+                        NombreUnidad = "Unidad 1 Original",
+                        Orden = 1,
+                        Temas = new List<DocPeaTema>
+                        {
+                            new DocPeaTema { IdTema = 1, TituloTema = "Tema A", Orden = 1 }
+                        }
+                    }
+                }
+            };
+            context.DocPeas.Add(pea1);
+            await context.SaveChangesAsync();
+
+            var service = CreatePeaService(context, config);
+
+            var res1 = await service.FirmarPeaAsync(10, 601, new FirmarPeaDto
+            {
+                Password = "Pass601!",
+                RolFirmante = "Docente",
+                TipoFirma = "DOSIER"
+            }, "127.0.0.1", "TestAgent");
+
+            // Crear un segundo PEA con exactamente el mismo número de unidades pero título modificado
+            var pea2 = new DocPea
+            {
+                IdPea = 11,
+                Uuid = Guid.NewGuid().ToString(),
+                Estado = "Borrador",
+                Activo = true,
+                Unidades = new List<DocPeaUnidad>
+                {
+                    new DocPeaUnidad
+                    {
+                        IdUnidad = 2,
+                        NombreUnidad = "Unidad 1 Modificada",
+                        Orden = 1,
+                        Temas = new List<DocPeaTema>
+                        {
+                            new DocPeaTema { IdTema = 2, TituloTema = "Tema A Modificado", Orden = 1 }
+                        }
+                    }
+                }
+            };
+            context.DocPeas.Add(pea2);
+            await context.SaveChangesAsync();
+
+            var res2 = await service.FirmarPeaAsync(11, 601, new FirmarPeaDto
+            {
+                Password = "Pass601!",
+                RolFirmante = "Docente",
+                TipoFirma = "DOSIER"
+            }, "127.0.0.1", "TestAgent");
+
+            Assert.NotEqual(res1.DocHash, res2.DocHash);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "FormatoOficialISTPET")]
+        public async Task Pea_PrerrequisitosYEvaluaciones_PersistenYFormanParteDelHash()
+        {
+            var dbName = nameof(Pea_PrerrequisitosYEvaluaciones_PersistenYFormanParteDelHash);
+            await using var context = CreateInMemoryContext(dbName);
+            var config = CreateMockConfiguration();
+
+            var user = new User
+            {
+                IdUsuario = 701,
+                IdSigafi = "1788888888",
+                Nombre = "Docente Titular",
+                Contrasenia = BCrypt.Net.BCrypt.HashPassword("Pass701!"),
+                Activo = true
+            };
+            context.Users.Add(user);
+
+            var pea = new DocPea
+            {
+                IdPea = 20,
+                Uuid = Guid.NewGuid().ToString(),
+                Estado = "Borrador",
+                Activo = true,
+                Prerrequisitos = new List<DocPeaPrerequisito>
+                {
+                    new DocPeaPrerequisito
+                    {
+                        CodigoAsignatura = "PROG-101",
+                        NombreAsignatura = "Fundamentos de Programación",
+                        Observacion = "Aprobada con nota mínima 7.0",
+                        Orden = 1
+                    }
+                },
+                Evaluaciones = new List<DocPeaEvaluacion>
+                {
+                    new DocPeaEvaluacion
+                    {
+                        Denominacion = "Nota parcial 1",
+                        TipoEvaluacion = "Actividades autónomas y práctico-experimentales",
+                        CalificacionMaxima = 10.0m,
+                        Orden = 1
+                    }
+                }
+            };
+            context.DocPeas.Add(pea);
+            await context.SaveChangesAsync();
+
+            var service = CreatePeaService(context, config);
+
+            var res = await service.FirmarPeaAsync(20, 701, new FirmarPeaDto
+            {
+                Password = "Pass701!",
+                RolFirmante = "Docente",
+                TipoFirma = "DOSIER"
+            }, "127.0.0.1", "TestAgent");
+
+            Assert.True(res.Exito);
+            Assert.NotEmpty(res.DocHash);
+
+            var dto = await service.GetByIdAsync(20);
+            Assert.NotNull(dto);
+            Assert.Single(dto.Prerrequisitos);
+            Assert.Equal("PROG-101", dto.Prerrequisitos[0].CodigoAsignatura);
+            Assert.Single(dto.Evaluaciones);
+            Assert.Equal("Nota parcial 1", dto.Evaluaciones[0].Denominacion);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "InmutabilidadCurricular")]
+        public async Task Pea_ModificarPeaAprobado_LanzaInvalidOperationException()
+        {
+            var dbName = nameof(Pea_ModificarPeaAprobado_LanzaInvalidOperationException);
+            await using var context = CreateInMemoryContext(dbName);
+            var config = CreateMockConfiguration();
+
+            var peaAprobado = new DocPea
+            {
+                IdPea = 30,
+                Uuid = Guid.NewGuid().ToString(),
+                Estado = "Aprobado",
+                Activo = true,
+                ObjetivoAsignatura = "Objetivo Original"
+            };
+            context.DocPeas.Add(peaAprobado);
+            await context.SaveChangesAsync();
+
+            var service = CreatePeaService(context, config);
+
+            var dtoModificado = new PeaDto
+            {
+                IdPea = 30,
+                ObjetivoAsignatura = "Intento de modificación no autorizada"
+            };
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.GuardarPeaAsync(dtoModificado, "1712345678"));
+
+            Assert.Contains("está legalmente cerrado", ex.Message);
+        }
     }
 }

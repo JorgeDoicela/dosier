@@ -17,6 +17,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.VersionFormato).IsRequired().HasMaxLength(20);
             builder.Property(e => e.TituloPractica).IsRequired().HasMaxLength(500);
 
+            builder.HasOne(e => e.Pea)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdPea)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             builder.HasMany(e => e.Objetivos)
                    .WithOne(o => o.GuiaApe)
                    .HasForeignKey(o => o.IdGuiaApe)
@@ -66,6 +71,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.ToTable("doc_guias_ape_rdas");
             builder.HasKey(e => e.IdGuiaRda);
             builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+
+            builder.HasOne(e => e.PeaResultadoAprendizaje)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdRda)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 

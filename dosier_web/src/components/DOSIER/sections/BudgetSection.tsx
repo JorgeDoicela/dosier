@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { DollarSign, Plus, Trash2 } from 'lucide-react';
 import { CoWorkField } from '../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../core/cowork/types';
 
@@ -34,11 +34,9 @@ export const BudgetSection: React.FC<BudgetSectionProps> = ({
     onUpdateNecesario,
     formData,
     onUpdate,
-    convocatorias = [],
     readOnly = false,
     config
 }) => {
-    const limit = null;
     const showDisponibles = config?.showRecursosDisponibles !== false;
     const showNecesarios = config?.showRecursosNecesarios !== false;
     const showFinanciamiento = config?.showFinanciamiento !== false;

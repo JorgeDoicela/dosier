@@ -14,6 +14,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
             builder.Property(e => e.IdPeriodo).IsRequired().HasMaxLength(7);
 
+            builder.HasOne(e => e.Pea)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdPea)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             builder.HasMany(e => e.Unidades)
                    .WithOne(u => u.GuiaEstudio)
                    .HasForeignKey(u => u.IdGuiaEstudio)

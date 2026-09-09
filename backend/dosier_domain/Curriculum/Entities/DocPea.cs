@@ -61,5 +61,7 @@ namespace dosier_domain.Curriculum.Entities
         public virtual ICollection<DocPeaObservacion> Observaciones { get; set; } = new List<DocPeaObservacion>();
         public virtual ICollection<DocPeaTrazabilidad> Trazabilidades { get; set; } = new List<DocPeaTrazabilidad>();
         public virtual ICollection<DocSilabo> Silabos { get; set; } = new List<DocSilabo>();
+        public virtual ICollection<DocPeaPrerequisito> Prerrequisitos { get; set; } = new List<DocPeaPrerequisito>();
+        public virtual ICollection<DocPeaEvaluacion> Evaluaciones { get; set; } = new List<DocPeaEvaluacion>();
     }
 }

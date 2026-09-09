@@ -32,6 +32,7 @@ export interface PeaResultadoAprendizajeDto {
     idRda?: number;
     uuid?: string;
     idPea?: number;
+    idResultadoPerfil?: number;
     tipoRda: string;
     codigoRda?: string;
     descripcion: string;
@@ -94,6 +95,27 @@ export interface PeaTrazabilidadDto {
     fechaTransicion: string;
 }
 
+export interface PeaPrerrequisitoDto {
+    idPrerequisito?: number;
+    uuid?: string;
+    idPea?: number;
+    idAsignaturaOrigen?: number;
+    codigoAsignatura?: string;
+    nombreAsignatura: string;
+    observacion?: string;
+    orden: number;
+}
+
+export interface PeaEvaluacionDto {
+    idEvaluacion?: number;
+    uuid?: string;
+    idPea?: number;
+    denominacion: string;
+    tipoEvaluacion: string;
+    calificacionMaxima: number;
+    orden: number;
+}
+
 export interface PeaDto {
     idPea: number;
     uuid: string;
@@ -146,6 +168,8 @@ export interface PeaDto {
     bibliografias: PeaBibliografiaDto[];
     observaciones: PeaObservacionDto[];
     trazabilidades: PeaTrazabilidadDto[];
+    prerrequisitos?: PeaPrerrequisitoDto[];
+    evaluaciones?: PeaEvaluacionDto[];
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -154,7 +178,7 @@ export interface PeaDto {
 
 export interface FirmarPeaDto {
     password?: string;
-    rolFirmante: 'Docente' | 'Coordinador' | 'Vicerrector';
+    rolFirmante: 'Docente' | 'Coordinador' | 'CoordinadorAcademico' | 'Vicerrector';
     tipoFirma: 'DOSIER' | 'FirmaEC';
     certificadoP12Base64?: string;
     contraseniaP12?: string;

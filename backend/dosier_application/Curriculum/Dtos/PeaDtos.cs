@@ -54,6 +54,8 @@ namespace dosier_application.Curriculum.Dtos
         public List<PeaBibliografiaDto> Bibliografias { get; set; } = new List<PeaBibliografiaDto>();
         public List<PeaObservacionDto> Observaciones { get; set; } = new List<PeaObservacionDto>();
         public List<PeaTrazabilidadDto> Trazabilidades { get; set; } = new List<PeaTrazabilidadDto>();
+        public List<PeaPrerrequisitoDto> Prerrequisitos { get; set; } = new List<PeaPrerrequisitoDto>();
+        public List<PeaEvaluacionDto> Evaluaciones { get; set; } = new List<PeaEvaluacionDto>();
     }
 
     public class PeaUnidadDto
@@ -87,6 +89,7 @@ namespace dosier_application.Curriculum.Dtos
         public int IdRda { get; set; }
         public string Uuid { get; set; } = string.Empty;
         public int IdPea { get; set; }
+        public int? IdResultadoPerfil { get; set; }
         public string TipoRda { get; set; } = "Asignatura";
         public string? CodigoRda { get; set; }
         public string Descripcion { get; set; } = string.Empty;
@@ -151,5 +154,28 @@ namespace dosier_application.Curriculum.Dtos
         public string? Motivo { get; set; }
         public string? HashIntegridadSha256 { get; set; }
         public DateTime FechaTransicion { get; set; }
+    }
+
+    public class PeaPrerrequisitoDto
+    {
+        public int IdPrerequisito { get; set; }
+        public string Uuid { get; set; } = string.Empty;
+        public int IdPea { get; set; }
+        public int? IdAsignaturaOrigen { get; set; }
+        public string? CodigoAsignatura { get; set; }
+        public string NombreAsignatura { get; set; } = string.Empty;
+        public string? Observacion { get; set; }
+        public int Orden { get; set; } = 1;
+    }
+
+    public class PeaEvaluacionDto
+    {
+        public int IdEvaluacion { get; set; }
+        public string Uuid { get; set; } = string.Empty;
+        public int IdPea { get; set; }
+        public string Denominacion { get; set; } = string.Empty;
+        public string TipoEvaluacion { get; set; } = string.Empty;
+        public decimal CalificacionMaxima { get; set; } = 10.0m;
+        public int Orden { get; set; } = 1;
     }
 }

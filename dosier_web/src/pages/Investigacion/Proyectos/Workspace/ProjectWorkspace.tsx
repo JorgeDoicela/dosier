@@ -48,14 +48,11 @@ export const ProjectWorkspace: React.FC = () => {
         isLoading,
         resolvedProjectUuid,
         subDocumentUuids,
-        resolvingDocument,
         isUnauthorized,
         isNotFound,
-        iniciandoEjecucion,
         isPreproposalState,
         fetchProject,
-        resolveDocumentInstance,
-        handleIniciarEjecucion
+        resolveDocumentInstance
     } = core;
 
     const team = useProjectTeam(

@@ -69,7 +69,7 @@ CREATE TABLE doc_pea (
     recursosDidacticos      TEXT            NULL COMMENT 'Sección g) Recursos didácticos e informatización',
     evaluacionAprendizaje   TEXT            NULL COMMENT 'Sección i) Evaluación del aprendizaje y ponderaciones',
     
-    estado                  ENUM('Borrador', 'EnRevision', 'Observado', 'Corregido', 'Aprobado', 'Publicado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
+    estado                  ENUM('Borrador', 'EnRevision', 'RevisadoCoord', 'RevisadoAcad', 'Observado', 'Corregido', 'Aprobado', 'Publicado', 'Rechazado') NOT NULL DEFAULT 'Borrador',
     version                 INT             NOT NULL DEFAULT 1,
     activo                  TINYINT(1)      NOT NULL DEFAULT 1,
     fechaCreacion           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -149,13 +149,16 @@ CREATE TABLE doc_pea_resultados_aprendizaje (
     idRda                   INT             AUTO_INCREMENT PRIMARY KEY,
     uuid                    VARCHAR(36)     NOT NULL UNIQUE,
     idPea                   INT             NOT NULL,
+    idResultadoPerfil       INT             NULL COMMENT 'FK al RDA oficial del Perfil de Egreso (solo para tipoRda=Carrera)',
     tipoRda                 ENUM('Carrera', 'Asignatura') NOT NULL DEFAULT 'Asignatura',
     codigoRda               VARCHAR(20)     NULL,
     descripcion             TEXT            NOT NULL,
     nivelDesarrollo         ENUM('Inicial', 'Medio', 'Alto') NOT NULL DEFAULT 'Medio',
     orden                   INT             NOT NULL DEFAULT 1,
     INDEX idx_rda_pea (idPea),
-    FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
+    INDEX idx_rda_perfil (idResultadoPerfil),
+    FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE,
+    FOREIGN KEY (idResultadoPerfil) REFERENCES doc_perfil_egreso_resultados(idResultadoPerfil) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DELIMITER $$

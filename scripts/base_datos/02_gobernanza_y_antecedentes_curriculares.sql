@@ -252,10 +252,10 @@ INSERT INTO doc_normativas (uuid, organismoEmisor, tipoNormativa, codigoResoluci
     UUID(),
     'CES',
     'Reglamento',
-    'RPC-SO-013-No.111-2022',
-    'Reglamento de Régimen Académico Nacional',
-    '2022-09-14',
-    '2022-10-01',
+    'RPC-SE-08-No.023-2022',
+    'Reglamento de Régimen Académico',
+    '2022-04-27',
+    '2022-05-01',
     1
 ),
 (
@@ -270,7 +270,7 @@ INSERT INTO doc_normativas (uuid, organismoEmisor, tipoNormativa, codigoResoluci
 );
 
 -- Artículos clave para el checklist del PEA
-SET @idNormativaCes = (SELECT idNormativa FROM doc_normativas WHERE codigoResolucion = 'RPC-SO-013-No.111-2022' LIMIT 1);
+SET @idNormativaCes = (SELECT idNormativa FROM doc_normativas WHERE codigoResolucion = 'RPC-SE-08-No.023-2022' LIMIT 1);
 
 INSERT INTO doc_normativa_articulos (uuid, idNormativa, numeroArticulo, titulo, contenido, requisitoCurricular, orden) VALUES
 (
@@ -285,23 +285,24 @@ INSERT INTO doc_normativa_articulos (uuid, idNormativa, numeroArticulo, titulo, 
 (
     UUID(),
     @idNormativaCes,
-    'Art. 24',
+    'Art. 27',
     'Planificación Microcurricular',
-    'Cada cátedra debe contar con una planificación que articule los contenidos, estrategias metodológicas, resultados de aprendizaje y mecanismos de evaluación.',
+    'Cada cátedra debe contar con una planificación microcurricular que articule los contenidos, estrategias metodológicas, resultados de aprendizaje y mecanismos de evaluación.',
     'Verificar la coherencia interna entre unidades temáticas, actividades prácticas y ponderaciones evaluativas.',
     2
 );
 
 -- Semilla de Modelo Educativo Institucional
+-- Inactivo (activo = 0) provisionalmente hasta verificar resolución oficial con secretaría del ISTPET
 INSERT INTO doc_modelos_educativos (uuid, codigo, nombre, version, resolucionAprobacion, fechaVigenciaDesde, activo) VALUES
 (
     UUID(),
     'MED-ISTPET-2024',
-    'Modelo Educativo Pedagógico Institucional ISTPET',
+    'Modelo Educativo Pedagógico Institucional ISTPET (Pendiente verificación)',
     '2.0',
     'RES-OCS-2024-004',
     '2024-01-01',
-    1
+    0
 );
 
 SET FOREIGN_KEY_CHECKS = 1;

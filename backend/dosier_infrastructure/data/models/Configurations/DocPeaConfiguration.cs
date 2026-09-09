@@ -65,6 +65,16 @@ namespace dosier_infrastructure.data.models.Configurations
                    .WithOne(t => t.Pea)
                    .HasForeignKey(t => t.IdPea)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.Prerrequisitos)
+                   .WithOne(p => p.Pea)
+                   .HasForeignKey(p => p.IdPea)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(e => e.Evaluaciones)
+                   .WithOne(ev => ev.Pea)
+                   .HasForeignKey(ev => ev.IdPea)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 
@@ -102,6 +112,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.ToTable("doc_pea_resultados_aprendizaje");
             builder.HasKey(e => e.IdRda);
             builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+
+            builder.HasOne(e => e.PerfilResultado)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdResultadoPerfil)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 
@@ -113,6 +128,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.HasKey(e => e.IdPractica);
             builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
             builder.Property(e => e.NombrePractica).IsRequired().HasMaxLength(255);
+
+            builder.HasOne(e => e.Unidad)
+                   .WithMany()
+                   .HasForeignKey(e => e.IdUnidad)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 
@@ -150,6 +170,31 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.EstadoAnterior).IsRequired().HasMaxLength(50);
             builder.Property(e => e.EstadoNuevo).IsRequired().HasMaxLength(50);
             builder.Property(e => e.HashIntegridadSha256).HasMaxLength(64);
+        }
+    }
+
+    public class DocPeaPrerequisitoConfiguration : IEntityTypeConfiguration<DocPeaPrerequisito>
+    {
+        public void Configure(EntityTypeBuilder<DocPeaPrerequisito> builder)
+        {
+            builder.ToTable("doc_pea_prerrequisitos");
+            builder.HasKey(e => e.IdPrerequisito);
+            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+            builder.Property(e => e.CodigoAsignatura).HasMaxLength(50);
+            builder.Property(e => e.NombreAsignatura).IsRequired().HasMaxLength(255);
+        }
+    }
+
+    public class DocPeaEvaluacionConfiguration : IEntityTypeConfiguration<DocPeaEvaluacion>
+    {
+        public void Configure(EntityTypeBuilder<DocPeaEvaluacion> builder)
+        {
+            builder.ToTable("doc_pea_evaluaciones");
+            builder.HasKey(e => e.IdEvaluacion);
+            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+            builder.Property(e => e.Denominacion).IsRequired().HasMaxLength(100);
+            builder.Property(e => e.TipoEvaluacion).IsRequired();
+            builder.Property(e => e.CalificacionMaxima).HasColumnType("decimal(4,1)");
         }
     }
 }

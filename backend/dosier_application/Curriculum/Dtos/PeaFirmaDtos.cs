@@ -5,7 +5,7 @@ namespace dosier_application.Curriculum.Dtos
     public class FirmarPeaDto
     {
         public string? Password { get; set; }
-        public string RolFirmante { get; set; } = "Docente"; // Docente, Coordinador, Vicerrector
+        public string RolFirmante { get; set; } = "Docente"; // Docente, Coordinador, CoordinadorAcademico, Vicerrector
         public string TipoFirma { get; set; } = "DOSIER"; // DOSIER (interna HMAC) o FirmaEC (P12)
         public string? CertificadoP12Base64 { get; set; }
         public string? ContraseniaP12 { get; set; }

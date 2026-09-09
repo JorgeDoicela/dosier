@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { coworkLog } from '../../../../core/cowork/utils/log';
 
 export function getMetadataSaveBlockReason(_data: any, _templateCode: string): string | null {

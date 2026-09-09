@@ -57,6 +57,8 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocPeaBibliografiaConfiguration());
         modelBuilder.ApplyConfiguration(new DocPeaObservacionConfiguration());
         modelBuilder.ApplyConfiguration(new DocPeaTrazabilidadConfiguration());
+        modelBuilder.ApplyConfiguration(new DocPeaPrerequisitoConfiguration());
+        modelBuilder.ApplyConfiguration(new DocPeaEvaluacionConfiguration());
 
         // 2. Sílabo (19 Semanas)
         modelBuilder.ApplyConfiguration(new DocSilaboConfiguration());

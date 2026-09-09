@@ -55,6 +55,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.Bibliografias)
                 .Include(p => p.Observaciones)
                 .Include(p => p.Trazabilidades)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
                 .FirstOrDefaultAsync(p => p.IdAsignacion == idAsignacion && p.Activo);
 
             if (existing != null)
@@ -120,6 +122,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.Bibliografias)
                 .Include(p => p.Observaciones)
                 .Include(p => p.Trazabilidades)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
                 .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
 
             if (pea == null) return null;
@@ -135,6 +139,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.Bibliografias)
                 .Include(p => p.Observaciones)
                 .Include(p => p.Trazabilidades)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
                 .FirstOrDefaultAsync(p => p.IdAsignatura == idAsignatura && p.IdPeriodo == idPeriodo && p.Activo);
 
             if (pea == null) return null;
@@ -154,8 +160,16 @@ namespace dosier_infrastructure.Curriculum
                     .Include(p => p.Bibliografias)
                     .Include(p => p.Observaciones)
                     .Include(p => p.Trazabilidades)
+                    .Include(p => p.Prerrequisitos)
+                    .Include(p => p.Evaluaciones)
                     .FirstOrDefaultAsync(p => p.IdPea == dto.IdPea && p.Activo)
                     ?? throw new KeyNotFoundException($"No se encontró el PEA con id {dto.IdPea}");
+
+                if (entity.Estado is "Aprobado" or "Publicado")
+                {
+                    throw new InvalidOperationException(
+                        $"El PEA id {dto.IdPea} se encuentra en estado '{entity.Estado}' y está legalmente cerrado bajo Ley 67. No puede modificarse directamente. Genere una nueva versión o use la función de clonación.");
+                }
 
                 entity.Modalidad = dto.Modalidad;
                 if (entity.IdAsignacion == null)
@@ -179,6 +193,8 @@ namespace dosier_infrastructure.Curriculum
                 _context.DocPeaResultadosAprendizaje.RemoveRange(entity.ResultadosAprendizaje);
                 _context.DocPeaActividadesPracticas.RemoveRange(entity.ActividadesPracticas);
                 _context.DocPeaBibliografias.RemoveRange(entity.Bibliografias);
+                _context.DocPeaPrerrequisitos.RemoveRange(entity.Prerrequisitos);
+                _context.DocPeaEvaluaciones.RemoveRange(entity.Evaluaciones);
             }
             else
             {
@@ -235,6 +251,7 @@ namespace dosier_infrastructure.Curriculum
             entity.ResultadosAprendizaje = dto.ResultadosAprendizaje.Select(r => new DocPeaResultadoAprendizaje
             {
                 Uuid = Guid.NewGuid().ToString(),
+                IdResultadoPerfil = r.IdResultadoPerfil,
                 TipoRda = r.TipoRda,
                 CodigoRda = r.CodigoRda,
                 Descripcion = r.Descripcion,
@@ -268,6 +285,27 @@ namespace dosier_infrastructure.Curriculum
                 Orden = b.Orden
             }).ToList();
 
+            // Prerrequisitos oficiales (Sección c)
+            entity.Prerrequisitos = dto.Prerrequisitos.Select(pr => new DocPeaPrerequisito
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdAsignaturaOrigen = pr.IdAsignaturaOrigen,
+                CodigoAsignatura = pr.CodigoAsignatura,
+                NombreAsignatura = pr.NombreAsignatura,
+                Observacion = pr.Observacion,
+                Orden = pr.Orden
+            }).ToList();
+
+            // Evaluaciones estructuradas oficiales (Sección i)
+            entity.Evaluaciones = dto.Evaluaciones.Select(ev => new DocPeaEvaluacion
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                Denominacion = ev.Denominacion,
+                TipoEvaluacion = ev.TipoEvaluacion,
+                CalificacionMaxima = ev.CalificacionMaxima,
+                Orden = ev.Orden
+            }).ToList();
+
             await _context.SaveChangesAsync();
             return await MapToDtoAsync(entity);
         }
@@ -279,6 +317,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
                 .Include(p => p.Bibliografias)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
                 .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
 
             if (entity == null) return false;
@@ -337,6 +377,8 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.Bibliografias)
                 .Include(p => p.Observaciones)
                 .Include(p => p.Trazabilidades)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
                 .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo)
                 ?? throw new KeyNotFoundException($"No se encontró el PEA con id {idPea}");
 
@@ -401,23 +443,30 @@ namespace dosier_infrastructure.Curriculum
 
                 estadoNuevo = "EnRevision";
             }
-            else if (rol.Equals("Coordinador", StringComparison.OrdinalIgnoreCase) || rol.Equals("Revisor", StringComparison.OrdinalIgnoreCase))
+            else if (rol.Equals("Coordinador", StringComparison.OrdinalIgnoreCase) || rol.Equals("Revisor", StringComparison.OrdinalIgnoreCase) || rol.Equals("CoordinadorCarrera", StringComparison.OrdinalIgnoreCase))
             {
                 if (pea.Estado != "EnRevision")
                     throw new InvalidOperationException($"El coordinador solo puede revisar PEAs en estado EnRevision. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "RevisadoCoord";
             }
-            else if (rol.Equals("Vicerrector", StringComparison.OrdinalIgnoreCase) || rol.Equals("Aprobador", StringComparison.OrdinalIgnoreCase))
+            else if (rol.Equals("CoordinadorAcademico", StringComparison.OrdinalIgnoreCase) || rol.Equals("ComisionAcademica", StringComparison.OrdinalIgnoreCase))
             {
-                if (pea.Estado != "RevisadoCoord" && pea.Estado != "EnRevision")
+                if (pea.Estado != "RevisadoCoord")
+                    throw new InvalidOperationException($"El coordinador académico solo puede revisar PEAs en estado RevisadoCoord. Estado actual: {pea.Estado}");
+
+                estadoNuevo = "RevisadoAcad";
+            }
+            else if (rol.Equals("Vicerrector", StringComparison.OrdinalIgnoreCase) || rol.Equals("Aprobador", StringComparison.OrdinalIgnoreCase) || rol.Equals("VicerrectorAcademico", StringComparison.OrdinalIgnoreCase))
+            {
+                if (pea.Estado != "RevisadoAcad" && pea.Estado != "RevisadoCoord")
                     throw new InvalidOperationException($"El vicerrector solo puede aprobar PEAs que hayan sido revisados. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "Aprobado";
             }
             else
             {
-                throw new ArgumentException($"Rol de firmante no reconocido: '{rol}'. Use Docente, Coordinador o Vicerrector.");
+                throw new ArgumentException($"Rol de firmante no reconocido: '{rol}'. Use Docente, Coordinador, CoordinadorAcademico o Vicerrector.");
             }
 
             // 3. Generación Forense del Hash SHA-256 del PEA
@@ -438,9 +487,10 @@ namespace dosier_infrastructure.Curriculum
                 cedula = user.IdSigafi,
                 cargo = perfil?.Cargo ?? rol,
                 departamento = perfil?.Departamento ?? "ISTPET",
-                rol = rol,
-                metodo = tipoFirmaNormalizado.Equals("FirmaEC", StringComparison.OrdinalIgnoreCase) ? "P12_PADES_ECUADOR" : "DOSIER_HMAC_SHA256",
-                institucion = "Instituto Superior Tecnológico Sucre (ISTPET)"
+                // NOTA TÉCNICA LEY 67: La firma PAdES completa con estampado en PDF se ejecuta en exportación documental.
+                // A nivel transaccional se valida la vigencia del certificado P12 del docente y se genera el sello HMAC institucional.
+                metodo = tipoFirmaNormalizado.Equals("FirmaEC", StringComparison.OrdinalIgnoreCase) ? "CERT_VALIDADO_HMAC_SRV" : "DOSIER_HMAC_SHA256",
+                institucion = "Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET)"
             });
 
             // 5. Registro en doc_documentos_firmas (Módulo Transversal Oficial)
@@ -475,6 +525,11 @@ namespace dosier_infrastructure.Curriculum
             {
                 pea.FirmaRevisadoCoord = firmaCode;
                 pea.FechaRevisadoCoord = firmadoEn;
+            }
+            else if (estadoNuevo == "RevisadoAcad")
+            {
+                pea.FirmaRevisadoAcad = firmaCode;
+                pea.FechaRevisadoAcad = firmadoEn;
             }
             else if (estadoNuevo == "Aprobado")
             {
@@ -535,11 +590,12 @@ namespace dosier_infrastructure.Curriculum
 
             _context.DocPeaObservaciones.Add(obs);
 
-            // Si el PEA estaba en revisión, pasa a Observado
-            if (pea.Estado == "EnRevision")
+            // Si el PEA estaba en revisión (cualquiera de las etapas colegiadas), pasa a Observado
+            if (pea.Estado == "EnRevision" || pea.Estado == "RevisadoCoord" || pea.Estado == "RevisadoAcad")
             {
+                var estadoPrevio = pea.Estado;
                 pea.Estado = "Observado";
-                await RegistrarTrazabilidadAsync(idPea, "EnRevision", "Observado", $"Observación en sección {seccion}: {texto}", null, idUsuario);
+                await RegistrarTrazabilidadAsync(idPea, estadoPrevio, "Observado", $"Observación en sección {seccion}: {texto}", null, idUsuario);
             }
 
             await _context.SaveChangesAsync();
@@ -694,12 +750,59 @@ namespace dosier_infrastructure.Curriculum
                 pea.Creditos,
                 pea.ObjetivoAsignatura,
                 pea.MetodologiaEnsenanza,
+                pea.RecursosDidacticos,
                 pea.EvaluacionAprendizaje,
-                UnidadesCount = pea.Unidades.Count,
-                RdaCount = pea.ResultadosAprendizaje.Count
+                // CONTENIDO REAL — orden determinístico por Orden
+                Unidades = pea.Unidades.OrderBy(u => u.Orden).Select(u => new
+                {
+                    u.NumeroUnidad,
+                    u.NombreUnidad,
+                    u.TotalHorasUnidad,
+                    u.HorasDocencia,
+                    u.HorasPracticoExp,
+                    u.HorasAutonomo,
+                    Temas = u.Temas.OrderBy(t => t.Orden).Select(t => new
+                    {
+                        t.NumeroTema,
+                        t.TituloTema,
+                        t.DescripcionSubtemas
+                    })
+                }),
+                Rdas = pea.ResultadosAprendizaje.OrderBy(r => r.Orden).Select(r => new
+                {
+                    r.TipoRda,
+                    r.CodigoRda,
+                    r.Descripcion,
+                    r.NivelDesarrollo
+                }),
+                Bibliografias = pea.Bibliografias.OrderBy(b => b.Orden).Select(b => new
+                {
+                    b.TipoBibliografia,
+                    b.CitaCompletaApa
+                }),
+                Practicas = pea.ActividadesPracticas.OrderBy(p => p.Orden).Select(p => new
+                {
+                    p.NumeroPractica,
+                    p.NombrePractica,
+                    p.Caracterizacion,
+                    p.DuracionHoras
+                }),
+                Prerrequisitos = pea.Prerrequisitos.OrderBy(pr => pr.Orden).Select(pr => new
+                {
+                    pr.CodigoAsignatura,
+                    pr.NombreAsignatura,
+                    pr.Observacion
+                }),
+                Evaluaciones = pea.Evaluaciones.OrderBy(ev => ev.Orden).Select(ev => new
+                {
+                    ev.Denominacion,
+                    ev.TipoEvaluacion,
+                    ev.CalificacionMaxima
+                })
             };
 
-            string json = JsonSerializer.Serialize(payload);
+            var opts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            string json = JsonSerializer.Serialize(payload, opts);
             using var sha = SHA256.Create();
             byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(json));
             return Convert.ToHexString(bytes).ToLowerInvariant();
@@ -785,6 +888,7 @@ namespace dosier_infrastructure.Curriculum
                     IdRda = r.IdRda,
                     Uuid = r.Uuid,
                     IdPea = r.IdPea,
+                    IdResultadoPerfil = r.IdResultadoPerfil,
                     TipoRda = r.TipoRda,
                     CodigoRda = r.CodigoRda,
                     Descripcion = r.Descripcion,
@@ -843,6 +947,27 @@ namespace dosier_infrastructure.Curriculum
                     Motivo = t.Motivo,
                     HashIntegridadSha256 = t.HashIntegridadSha256,
                     FechaTransicion = t.FechaTransicion
+                }).ToList(),
+                Prerrequisitos = pea.Prerrequisitos.OrderBy(pr => pr.Orden).Select(pr => new PeaPrerrequisitoDto
+                {
+                    IdPrerequisito = pr.IdPrerequisito,
+                    Uuid = pr.Uuid,
+                    IdPea = pr.IdPea,
+                    IdAsignaturaOrigen = pr.IdAsignaturaOrigen,
+                    CodigoAsignatura = pr.CodigoAsignatura,
+                    NombreAsignatura = pr.NombreAsignatura,
+                    Observacion = pr.Observacion,
+                    Orden = pr.Orden
+                }).ToList(),
+                Evaluaciones = pea.Evaluaciones.OrderBy(ev => ev.Orden).Select(ev => new PeaEvaluacionDto
+                {
+                    IdEvaluacion = ev.IdEvaluacion,
+                    Uuid = ev.Uuid,
+                    IdPea = ev.IdPea,
+                    Denominacion = ev.Denominacion,
+                    TipoEvaluacion = ev.TipoEvaluacion,
+                    CalificacionMaxima = ev.CalificacionMaxima,
+                    Orden = ev.Orden
                 }).ToList()
             };
         }

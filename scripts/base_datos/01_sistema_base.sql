@@ -995,8 +995,13 @@ CREATE INDEX idx_cal_nota_bandeja ON doc_calendario_eventos_normativos(creadoPor
 
 
 -- =================================================================================
--- ATENCIÓN: ESTE BLOQUE DEBE IR SIEMPRE AL FINAL ABSOLUTO DEL SCRIPT SQL.
--- Registra la migración inicial de EF Core para que no intente recrear las tablas.
+-- ⚠️ ADVERTENCIA OPERACIONAL CRÍTICA — EF CORE Y TABLAS SIGAFI:
+-- Este bloque registra manualmente la migración '20260720202138_InitialCreate'.
+-- NUNCA ejecute `dotnet ef database update` directamente en entornos de producción.
+-- Para validar cambios de base de datos use siempre:
+--   dotnet ef migrations script --idempotent
+-- y revise el script resultante antes de aplicarlo manualmente.
+-- Riesgo: EF Core podría intentar alterar o eliminar tablas heredadas del SIGAFI.
 -- =================================================================================
 SET @table_exists = (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '__EFMigrationsHistory');
 SET @sql_create_ef = IF(@table_exists = 0, 'CREATE TABLE `__EFMigrationsHistory` (`MigrationId` varchar(150) NOT NULL, `ProductVersion` varchar(32) NOT NULL, PRIMARY KEY (`MigrationId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4', 'SELECT 1');
