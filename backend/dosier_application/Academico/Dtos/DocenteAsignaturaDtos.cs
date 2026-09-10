@@ -51,6 +51,9 @@ public class DocenteAsignaturaDto
 
     // Estado del PEA oficial de la asignatura
     public string EstadoPea { get; set; } = "NoIniciado";
+    public int? IdPea { get; set; }
+    public string? UuidPea { get; set; }
+    public int? VersionPea { get; set; }
     public List<string> AdvertenciasContexto { get; set; } = new();
 }
 

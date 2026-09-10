@@ -133,6 +133,13 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             .ToDictionaryAsync(a => a.IdAsignatura, a => a.Asignatura1 ?? a.Codigo ?? string.Empty);
 
         var periodo = await _context.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == idPeriodo);
+
+        // Consultar estado real de PEAs existentes para estas asignaciones
+        var asignacionIds = asignaciones.Select(a => a.IdAsignacion).ToList();
+        var peasExistentes = await _context.DocPeas.AsNoTracking()
+            .Where(p => p.IdAsignacion.HasValue && asignacionIds.Contains(p.IdAsignacion.Value) && p.Activo)
+            .ToDictionaryAsync(p => p.IdAsignacion!.Value);
+
         var result = new List<DocenteAsignaturaDto>();
 
         foreach (var asig in asignaciones)
@@ -171,6 +178,8 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 ? new List<string> { "SIGAFI no tiene una malla asociada al periodo y nivel; se uso la malla activa de la carrera." }
                 : new List<string>();
 
+            peasExistentes.TryGetValue(asig.IdAsignacion, out var peaExistente);
+
             result.Add(new DocenteAsignaturaDto
             {
                 IdAsignacion = asig.IdAsignacion,
@@ -207,8 +216,11 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 Prerrequisitos = prereqList,
                 AdvertenciasContexto = warnings,
 
-                // Estado inicial del PEA para la tesis
-                EstadoPea = "NoIniciado"
+                // Estado oficial del PEA vinculado a la asignación
+                EstadoPea = peaExistente?.Estado ?? "NoIniciado",
+                IdPea = peaExistente?.IdPea,
+                UuidPea = peaExistente?.Uuid,
+                VersionPea = peaExistente?.Version
             });
         }
 
