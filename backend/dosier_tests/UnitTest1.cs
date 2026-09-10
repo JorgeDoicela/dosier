@@ -29,7 +29,7 @@ public class UnitTest1
 
     private static string GetConnectionString()
         => Environment.GetEnvironmentVariable("TEST_DB_CONNECTION")
-           ?? "Server=127.0.0.1;Port=3306;Database=sigafi_es;User=root;Password=YOUR_LOCAL_DB_PASSWORD;";
+           ?? "Server=127.0.0.1;Port=3306;Database=sigafi_es;User=root;Password=12345;";
 
     private async Task EnsureDatabaseColumnsExistAsync(DosierContext context)
     {
