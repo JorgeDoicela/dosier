@@ -4,11 +4,11 @@
 
 La capa de exposición web API (`dosier_api`) de DOSIER está construida sobre **ASP.NET Core 8.0**, proporcionando una interfaz RESTful para el consumo cliente por parte de la SPA React (`dosier_web`) y la aplicación móvil (`dosier_mobile`).
 
-El backend está compuesto por **23 controladores especializados**, organizados en subsistemas de dominio que coordinan la ejecución de los casos de uso alojados en `dosier_application`.
+El backend está compuesto por controladores especializados organizados bajo los principios de Clean Architecture, coordinando la ejecución de los casos de uso curriculares y documentales alojados en `dosier_application`.
 
 ---
 
-## 2. Políticas Globales de Serialization y Model Binding
+## 2. Políticas Globales de Serialización y Model Binding
 
 Para asegurar la interoperabilidad entre el cliente TypeScript y la API C#, el pipeline de ASP.NET Core impone convenciones de serialización y mapeo de parámetros.
 
@@ -17,21 +17,24 @@ El backend tiene configurada la propiedad `JsonNamingPolicy.SnakeCaseLower` de f
 
 ```json
 {
-  "project_uuid": "550e8400-e29b-41d4-a716-446655440000",
-  "id_tipo_resultado": 4,
-  "titulo_investigacion": "Desarrollo de Algoritmos Forenses",
-  "observacion_revision": "Aprobado sin modificaciones"
+  "id_asignacion": 1254,
+  "codigo_asignatura": "SOF-401",
+  "horas_docencia": 64,
+  "horas_ape": 32,
+  "horas_autonomo": 64,
+  "creditos": 3.33,
+  "rol_firmante": "DOSIER_DOCENTE"
 }
 ```
 
-La deserialización de .NET transforma automáticamente estas claves a sus correspondientes propiedades `PascalCase` en los DTOs de C# (`ProjectUuid`, `IdTipoResultado`, `TituloInvestigacion`, `ObservacionRevision`).
+La deserialización de .NET transforma automáticamente estas claves a sus correspondientes propiedades `PascalCase` en los DTOs de C# (`IdAsignacion`, `CodigoAsignatura`, `HorasDocencia`, `HorasApe`, `HorasAutonomo`, `Creditos`, `RolFirmante`).
 
 ### 2.2. Parámetros de Consulta y Formularios (`[FromQuery]`, `[FromForm]`)
-* **Query Parameters (`[FromQuery]`):** El enlazador de parámetros de consulta es insensible a mayúsculas/minúsculas y vincula directamente con las variables de los métodos del controlador. Por convención, se envían en **`camelCase`** (ej. `?projectId=123&includeTeam=true`).
-* **Form Data (`multipart/form-data`):** La carga de archivos e imágenes se enlaza mediante `camelCase` o el nombre exacto de la variable de tipo `IFormFile`.
+* **Query Parameters (`[FromQuery]`):** El enlazador de parámetros de consulta vincula directamente con las variables de los métodos del controlador en **`camelCase`** (ej. `?idAsignatura=12&idPeriodo=ABR2026`).
+* **Form Data (`multipart/form-data`):** La carga de certificados digitales (.p12), evidencias y archivos se procesa mediante `IFormFile`.
 
-### 2.3. Excepción de Metadatos Universales (`PascalCase`)
-Las llamadas dirigidas al endpoint de parches de instancias documentales (`/documents/instances/{uuid}/metadata`) procesan esquemas dinámicos renderizados por el motor de plantillas (Handlebars / Scriban). Para preservar la compatibilidad con el motor de compilación HTML, el payload de metadatos se envía y procesa en **`PascalCase`** (ej. `Titulo`, `PresupuestoTotal`, `Investigadores`).
+### 2.3. Excepción de Metadatos de Plantillas (`PascalCase`)
+Las llamadas dirigidas al endpoint de parches de instancias documentales (`/documents/instances/{uuid}/metadata`) procesan esquemas dinámicos renderizados por el motor de plantillas (Handlebars / Scriban). Para preservar la compatibilidad con el compilador HTML, el payload de metadatos se envía y procesa en **`PascalCase`**.
 
 ---
 
@@ -39,81 +42,69 @@ Las llamadas dirigidas al endpoint de parches de instancias documentales (`/docu
 
 | Controlador | Ruta Base HTTP | Subsistema | Responsabilidad Principal |
 | :--- | :--- | :--- | :--- |
-| `AuthController` | `/api/auth` | Seguridad | Autenticación de usuarios, login JWT, renovación de tokens, Magic Links y SSO Microsoft 365. |
-| `AdminController` | `/api/admin` | Administración | Gestión de usuarios, asignación de roles, permisos RBAC y configuraciones del sistema. |
-| `ProjectsController` | `/api/projects` | Investigación | Administración del ciclo de vida del proyecto, miembros del equipo y estados. |
-| `DocumentInstancesController` | `/api/document-instances` | Motor Documental | Instanciación de documentos, parches de metadatos, snapshots SHA-256 y renderizado PDF. |
-| `DocumentTemplatesController` | `/api/document-templates` | Motor Documental | Gestión y versionado de plantillas HTML y esquemas JSON. |
-| `DocumentsController` | `/api/documents` | Motor Documental | Almacenamiento, descarga de archivos PDF emitidos y recursos documentales. |
-| `PeerReviewsController` | `/api/peer-reviews` | Evaluación | Asignación de evaluadores ciegos, rúbricas cuantitativas y emisión de dictámenes. |
-| `CollaborationController` | `/api/collaboration` | CoWork | Orquestación de salas de edición colaborativa en vivo y control de locks. |
-| `SignaturesController` | `/api/signatures` | Criptografía | Registro de firmas electrónicas, certificados PKCS#12 y sellos de tiempo. |
-| `ConvocatoriasController` | `/api/convocatorias` | Investigación | Convocatorias públicas institucionales y fondos concursables. |
-| `InformesAvanceController` | `/api/informes-avance` | Investigación | Seguimiento de entregables técnicos/financieros e informes de avance. |
-| `GroupsController` | `/api/groups` | Investigación | Grupos de investigación, líneas, sublíneas de adscripción y miembros. |
-| `CatalogsController` | `/api/catalogs` | Catálogos | Catálogos de áreas UNESCO, carreras SIGAFI y tipos de proyectos. |
-| `LopdpController` | `/api/lopdp` | Gobernanza | Gestión de derechos ARCO, consentimientos informados y anonimización. |
+| `PeaController` | `/api/pea` | Curricular | Gestión integral del PEA: Secciones a - k, guardado, co-redacción, cambio de estados, circuito de firmas, observaciones por sección, subsanación y trazabilidad. |
+| `DocenteAsignaturasController` | `/api/docente-asignaturas` | Curricular | Consulta de asignaciones docentes reales de solo lectura desde SIGAFI, resolución de mallas por cohorte (`mallas_periodos`) y cálculo de horas oficiales. |
+| `ExpedientesController` | `/api/expedientes-curriculares` | Curricular | Expedientes Curriculares por Asignatura: vinculación de la asignación docente de SIGAFI con el período académico y el PEA oficial. |
+| `NormativasController` | `/api/normativas` | Gobernanza | Repositorio de normativas externas inalterables (CES, CACES, SENESCYT), desglose de artículos y checklist de cumplimiento pedagógico. |
+| `CurriculumCatalogController` | `/api/curriculum-catalog` | Catálogos | Catálogos de campos de formación, modelos educativos institucionales y perfiles de egreso. |
+| `DocumentInstancesController` | `/api/document-instances` | Motor Documental | Instanciación documental, snapshots forenses SHA-256, versionado y renderizado oficial a PDF. |
+| `DocumentTemplatesController` | `/api/document-templates` | Motor Documental | Gestión y versionado de plantillas institucionales HTML oficiales (PEA Institucional y formatos de acreditación). |
+| `DocumentsController` | `/api/documents` | Motor Documental | Almacenamiento, descarga de archivos PDF emitidos y verificación pública mediante QR. |
+| `CollaborationController` | `/api/collaboration` | CoWork | Orquestación de sesiones de co-redacción concurrente multi-docente y control de bloqueos de sección. |
+| `SignaturesController` | `/api/signatures` | Criptografía | Registro de firmas electrónicas, validación de certificados PKCS#12 (.p12) y estampados DFRM. |
+| `AuthController` | `/api/auth` | Seguridad | Autenticación JWT, JIT provisioning desde profesores de SIGAFI, SSO Microsoft 365 y Magic Links. |
+| `AdminController` | `/api/admin` | Administración | Gestión de usuarios, asignación de roles curriculares RBAC y auditoría administrativa. |
+| `CalendarioController` | `/api/calendario` | Planificación | Hitos académicos, semanas lectivas institucionales y alertas normativas CACES. |
+| `ReportsController` | `/api/reports` | Analítica | Reportes de cobertura curricular por carrera y tableros para acreditación institucional CACES. |
+| `LopdpController` | `/api/lopdp` | Gobernanza | Gestión de derechos ARCO, consentimientos informados y anonimización de datos personales. |
 | `NotificationsController` | `/api/notifications` | Comunicación | Notificaciones in-app, marcas de lectura y suscripciones WebPush VAPID. |
-| `EmailEngineController` | `/api/email-engine` | Comunicación | Envío de correos transaccionales con layout HTML institucional. |
-| `CalendarioController` | `/api/calendario` | Planificación | Hitos institucionales, plazos de entregables y fechas de convocatorias. |
-| `ReportsController` | `/api/reports` | Analítica | Reportes institucionales de producción científica e indicadores CACES. |
-| `RecycleBinController` | `/api/recycle-bin` | Persistencia | Gestión de la papelera de reciclaje lógica y restauración de registros. |
+| `EmailEngineController` | `/api/email-engine` | Comunicación | Envío de correos transaccionales con layout institucional para alertas de revisión y firma. |
+| `CatalogsController` | `/api/catalogs` | Catálogos | Catálogos de carreras institucionales (`esInstituto = 1`) y períodos académicos de SIGAFI. |
+| `RecycleBinController` | `/api/recycle-bin` | Persistencia | Papelera de reciclaje lógica y restauración controlada de registros. |
 | `StorageController` | `/api/storage` | Almacenamiento | Gestión de archivos temporales e imágenes institucionales. |
-| `HealthController` | `/api/health` | Monitoreo | Endpoint de verificación de estado y disponibilidad del servicio. |
+| `HealthController` | `/api/health` | Monitoreo | Verificación de estado y disponibilidad operativa del servicio. |
 
 ---
 
 ## 4. Estructura Estándar de Peticiones y Respuestas
 
-Todas las respuestas de la API siguen un formato JSON homogéneo definido en la capa de aplicación:
-
+### 4.1. Respuesta Exitosa de Consulta Curricular
 ```json
 {
-  "success": true,
-  "message": "Operación ejecutada",
-  "data": {
-    "uuid": "7a8b9c0d-1234-5678-90ab-cdef12345678",
-    "codigo_proyecto": "INV-2026-001",
-    "estado": "APROBADO"
-  },
-  "errors": null,
-  "timestamp": "2026-07-28T13:37:30Z"
-}
-```
-
-En caso de error de validación o excepción en tiempo de ejecución, la API devuelve un código de estado HTTP adecuado (400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 422 Unprocessable Entity, 500 Internal Server Error) acompañado de la estructura de fallos:
-
-```json
-{
-  "success": false,
-  "message": "Error de validación en la solicitud",
-  "data": null,
-  "errors": [
+  "id_pea": 108,
+  "id_asignatura": 45,
+  "nombre_asignatura": "PROGRAMACION ORIENTADA A OBJETOS",
+  "codigo_carrera": "SOF-2023",
+  "horas_totales": 160,
+  "horas_docencia": 64,
+  "horas_ape": 32,
+  "horas_autonomo": 64,
+  "creditos": 3.33,
+  "estado": "EnRevision",
+  "version": 1,
+  "unidades": [
     {
-      "field": "presupuesto_total",
-      "message": "El presupuesto asignado no puede ser negativo."
+      "id_unidad": 1,
+      "numero_unidad": 1,
+      "titulo": "Fundamentos de Objetos y Clases",
+      "horas_docencia": 16,
+      "horas_ape": 8,
+      "horas_autonomo": 16
     }
-  ],
-  "timestamp": "2026-07-28T13:37:30Z"
+  ]
 }
 ```
 
----
-
-## 5. Pipeline de Middlewares y Documentación OpenAPI
-
-El flujo de procesamiento de peticiones en `dosier_api` se organiza secuencialmente en `Program.cs`:
-
-```mermaid
-graph TD
-    ClientReq[Petición HTTP del Cliente] --> ExceptionMiddleware[Global Exception Handler Middleware]
-    ExceptionMiddleware --> CORSMiddleware[CORS Middleware\nOrígenes Autorizados]
-    CORSMiddleware --> AuthMiddleware[JWT Authentication Middleware]
-    AuthMiddleware --> RBACMiddleware[Custom RBAC Authorization Filter]
-    RBACMiddleware --> ValidationFilter[FluentValidation Filter]
-    ValidationFilter --> ControllerAction[Ejecución de Controller Action]
-    ControllerAction --> ResponseJSON[Respuesta HTTP JSON SnakeCase]
+### 4.2. Respuesta de Error de Validación Matemática (`400 Bad Request`)
+```json
+{
+  "status": 400,
+  "error": "Inconsistencia Matemática Curricular",
+  "message": "La suma de horas de las unidades temáticas (176h) excede el total oficial de la asignatura en la malla (160h).",
+  "detalles": {
+    "horas_malla": 160,
+    "horas_ingresadas": 176,
+    "diferencia": 16
+  }
+}
 ```
-
-### Documentación Interactivas (Swagger OpenAPI)
-La API expone la especificación OpenAPI en el ambiente de desarrollo y staging bajo la ruta `/swagger`. Incorpora esquemas de autorización mediante Security Definition JWT Bearer, permitiendo la prueba interactiva de endpoints autenticados.

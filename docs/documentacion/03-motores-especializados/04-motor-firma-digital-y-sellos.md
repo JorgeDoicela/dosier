@@ -2,9 +2,9 @@
 
 ## 1. Visión General del Subsistema de Firma
 
-El motor de firma y sellado de DOSIER (`Signatures`) proporciona la infraestructura para validar la responsabilidad autoral e institucional sobre los documentos emitidos.
+El motor de firma y sellado de DOSIER (`Signatures`) proporciona la infraestructura para validar la autoría, integridad y no repudio legal sobre los instrumentos curriculares emitidos por el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET), en estricta conformidad con la **Ley de Comercio Electrónico, Firmas Electrónicas y Mensajes de Datos (Ley 67 de la República del Ecuador)**.
 
-El subsistema integra la gestión de certificados digitales (PKCS#12 / PFX), el cálculo de hashes de integridad SHA-256, el sellado visual en páginas de PDF (`SignatureStamper`) y la estampación de sellos de tiempo UTC.
+El subsistema integra la validación de certificados digitales en formato PKCS#12 (.p12) / FirmaEC, el sellado criptográfico HMAC-SHA256 institucional, el cálculo de huellas digitales de integridad SHA-256 y el estampado visual de sellos DFRM y códigos QR en documentos PDF.
 
 ---
 
@@ -12,54 +12,68 @@ El subsistema integra la gestión de certificados digitales (PKCS#12 / PFX), el 
 
 ```mermaid
 graph TD
-    PDFIn[PDF Base Renderizado] --> HashService[SignatureHashService]
-    HashService -->|Calcula SHA-256| HashVal[Hash del Documento]
+    PDFIn[PDF Base Renderizado iText 9] --> HashService[Calculo SHA-256 Canónico]
+    HashService -->|Hash del Contenido Pedagógico| SigService[FirmaElectronicaService]
 
-    Cert[Certificado Digital PKCS#12 / PFX] --> SigService[DosierSignatureService]
-    HashVal --> SigService
+    CertChoice{Modalidad de Firma}
+    CertChoice -->|Firma Avanzada P12| P12Cert[Certificado Digital PKCS#12 / .p12]
+    CertChoice -->|Firma Institucional| CredAuth[Credenciales Validadas + Clave HMAC]
 
-    SigService -->|Genera Firma Criptográfica| Stamper[SignatureStamper]
-    Stamper -->|Inyecta Representación Visual| PDFStamped[PDF Final Firmado]
+    P12Cert --> SigService
+    CredAuth --> SigService
+
+    SigService -->|Genera Sello Digital DFRM| Stamper[SignatureStamper]
+    Stamper -->|Estampa Cuadro de Firma Oficial| PDFStamped[PDF Final Legalizado]
     Stamper -->|Inyecta Timestamp UTC| PDFStamped
-    Stamper -->|Inyecta QR de Validación| PDFStamped
+    Stamper -->|Inyecta QR de Verificación Pública| PDFStamped
+
+    PDFStamped --> DB[(Registro en doc_documentos_firmas\ny doc_pea_trazabilidad)]
 ```
 
 ---
 
-## 3. Componentes del Engine Criptográfico
+## 3. Modalidades de Firma Soportadas
 
-### 3.1. `SignatureHashService`
-Encargado del cálculo de huellas digitales en los documentos:
-* Genera el resumen hash encriptado usando el algoritmo **SHA-256**.
-* Permite comparar el hash de un documento en disco con el hash guardado en el snapshot inmutable de `DocumentInstances` para verificar si ha sufrido alteraciones.
+### 3.1. Firma Electrónica Avanzada (PKCS#12 / .p12 / FirmaEC)
+* **Mecanismo:** El docente o directivo carga su archivo de certificado digital emitido por una entidad de certificación autorizada (BCE, Security Data, ANF, UANATACA) en formato Base64 o binario, junto con su contraseña privada.
+* **Procesamiento:** `FirmaElectronicaService` utiliza **BouncyCastle** para abrir el almacén PKCS#12, validar la cadena de confianza X.509, verificar la vigencia temporal y comprobar la correspondencia del titular con el firmante en sesión.
 
-### 3.2. `DosierSignatureService`
-Gestiona las operaciones de cifrado asimétrico:
-* Procesa certificados digitales en formato PKCS#12 / PFX.
-* Utiliza las librerías criptográficas `BouncyCastle` y `BCrypt` para la verificación de cadenas de confianza y validez de los certificados.
-
-### 3.3. `SignatureStamper`
-Servicio de marcado e impresión gráfica sobre el archivo PDF:
-* Utiliza **iText 7** para abrir el documento PDF existente y añadir capas visuales en páginas específicas.
-* **Incrustación de Sello Visual:** Dibuja el cuadro de firma conteniendo el nombre del firmante, cargo institucional, fecha/hora UTC del firmado y motivo de la firma.
-* **Incrustación de Código QR:** Posiciona el código QR dinámico en el margen del documento para su lectura e inspección física.
+### 3.2. Firma Digital Institucional (Sello HMAC-SHA256)
+* **Mecanismo:** Para el flujo interno cotidiano de validación y avales en borrador, el docente autentica su identidad mediante verificación estricta de contraseña (BCrypt) contra su cuenta docente en SIGAFI.
+* **Procesamiento:** El servidor genera un token de sellado firmado con la clave criptográfica del sistema (`DosierFirma:SigningSecret`), garantizando que la firma solo pudo ser generada por el servidor tras la verificación del docente.
 
 ---
 
-## 4. Estructura del Registro de Firma
+## 4. Estampado Visual y Código DFRM (`SignatureStamper`)
 
-Cada operación de firma se registra en la base de datos conservando los metadatos criptográficos:
+El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para posicionar el sello institucional en la Sección k (Firmas de responsabilidad):
+
+* **Código Oficial DFRM:** Generación de un identificador institucional único de trazabilidad (ej. `DFRM-DOC-2026-0089`, `DFRM-VIC-2026-0042`).
+* **Datos del Sello Visual:**
+  * Nombre completo del firmante (obtenido de su registro oficial en SIGAFI).
+  * Cargo institucional formal (`Docente Elaborador`, `Coordinador de Carrera`, `Coordinación Académica`, `Vicerrectorado Académico`).
+  * Fecha y hora exacta de firmado en estándar UTC e ISO 8601.
+  * Código hash abreviado y algoritmo criptográfico utilizado.
+* **Código QR Dinámico:** Posicionado en el pie de cada página con el enlace directo al validador público descentralizado.
+
+---
+
+## 5. Estructura de Persistencia de Firmas (`doc_documentos_firmas`)
+
+Cada firma electrónica ejecutada se persiste de forma inmutable en la base de datos:
 
 ```sql
-CREATE TABLE document_signatures (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    document_instance_uuid VARCHAR(36) NOT NULL,
-    signer_uuid VARCHAR(36) NOT NULL,
-    signer_name VARCHAR(255) NOT NULL,
-    signer_role VARCHAR(100) NOT NULL,
-    sha256_signature_hash VARCHAR(64) NOT NULL,
-    timestamp_utc DATETIME NOT NULL,
-    is_valid BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (document_instance_uuid) REFERENCES document_instances(uuid)
+CREATE TABLE doc_documentos_firmas (
+    id_firma INT AUTO_INCREMENT PRIMARY KEY,
+    id_documento_instancia INT NOT NULL,
+    id_usuario INT NOT NULL,
+    rol_firmante VARCHAR(50) NOT NULL,        -- DOSIER_DOCENTE, DOSIER_COORD_CARRERA, etc.
+    tipo_firma VARCHAR(30) NOT NULL,          -- P12_PADES_ECUADOR, HMAC_SHA256_INSTITUCIONAL
+    hash_documento VARCHAR(64) NOT NULL,      -- Hash SHA-256 del contenido firmado
+    codigo_dfrm VARCHAR(50) NOT NULL,         -- Código de trazabilidad impreso
+    fecha_firma DATETIME NOT NULL,            -- Timestamp UTC
+    ip_origen VARCHAR(45) NOT NULL,
+    user_agent VARCHAR(255) NULL,
+    FOREIGN KEY (id_documento_instancia) REFERENCES doc_documentos_instancias(id_documento_instancia)
 );
 ```

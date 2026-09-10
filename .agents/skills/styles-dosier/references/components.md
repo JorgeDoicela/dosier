@@ -1,4 +1,4 @@
-﻿# components.md — DOSIER Component Classes Reference
+# components.md — DOSIER Component Classes Reference
 
 Catalogo completo de todas las clases CSS reutilizables del sistema de diseno DOSIER.
 Fuente: `src/styles/components/`
@@ -110,20 +110,24 @@ Estructura HTML esperada:
 
 ## Modales (`modals.css`)
 
+> Regla Cardinal: Los modales deben tener **fondo 100% solido y opaco** (`--surface` / `--bg` solido), prohibiendo transparencias o sangrado de texto inferior.
+
 | Clase                  | Descripcion                                                      |
 |------------------------|------------------------------------------------------------------|
 | `.modal-overlay`       | Overlay oscuro fijo `z-index: 110`, centrado con flex.           |
-| `.modal-card`          | Contenedor principal del modal. `max-width: 32rem`.              |
+| `.modal-card`          | Contenedor principal del modal. Fondo 100% solido opaco.         |
 | `.modal-card--lg`      | Variante grande. `max-width: 42rem`.                             |
-| `.modal-header`        | Cabecera del modal con borde inferior y fondo `--surface`.       |
+| `.modal-header`        | Cabecera del modal con borde inferior y fondo solido `--surface`.|
 | `.modal-body`          | Cuerpo del modal con `overflow-y: auto`.                         |
 | `.modal-footer`        | Pie del modal alineado a la derecha con gap.                     |
 
 ## Popovers y Dropdowns (`modals.css`)
 
+> Regla Cardinal: Popovers y dropdowns deben ser **100% solidos y opacos**, eliminando transparencias.
+
 | Clase                    | Descripcion                                              |
 |--------------------------|----------------------------------------------------------|
-| `.popover-vercel`        | Contenedor del dropdown. `backdrop-filter: blur(8px)`.   |
+| `.popover-vercel`        | Contenedor del dropdown con fondo 100% solido opaco.     |
 | `.popover-header-vercel` | Encabezado de grupo dentro del popover (9px uppercase).  |
 | `.popover-item-vercel`   | Item clickeable del popover con hover sutil.             |
 | `.divider-vercel`        | Linea divisora horizontal de 1px.                        |

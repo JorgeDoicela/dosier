@@ -1,91 +1,99 @@
-# Guía de Extensibilidad y Creación de Nuevos Bloques Documentales
+# Guía de Extensibilidad y Creación de Nuevos Bloques Curriculares
 
-## 1. Visión General del Patrón Metadata-Driven
+## 1. Visión General del Patrón Guiado por Metadatos Curriculares
 
-El sistema de maquetación y generación documental de DOSIER opera bajo el patrón de arquitectura guiada por metadatos (*Metadata-Driven Architecture*). Los documentos institucionales (tales como proyectos de investigación, informes de seguimiento o resoluciones) se estructuran a partir de una serie de bloques modulares e independientes (`DocumentBlock`).
+El sistema de estructuración de documentos de DOSIER opera bajo el patrón de arquitectura guiada por metadatos (*Metadata-Driven Architecture*). Los documentos académicos oficiales (Programa de Estudio de la Asignatura PEA, Sílabos de 19 semanas, Guías APE e Informes de Avance Curricular) se componen a partir de bloques modulares e independientes denominados `DocumentBlock`.
 
-Cada bloque posee una clave de tipo única (`BlockType`) y una configuración en formato JSON (`config`). La integración de un nuevo bloque requiere sincronización a lo largo de cinco componentes clave del sistema:
-
-1. **Definición de Tipos**: Declaración de la constante de tipo en el modelo TypeScript.
-2. **Catálogo de Bloques**: Registro en el catálogo del constructor de plantillas para su arrastre y configuración en la interfaz de administración.
-3. **Lienzo A4 (Canvas Renderer)**: Componente de representación visual en la hoja digital A4 del maquetador.
-4. **Workspace del Investigador**: Formularios interactivos con sincronización colaborativa en tiempo real (Yjs / SignalR).
-5. **Motor de Compilación PDF**: Generador de marcado HTML evaluado mediante Handlebars tanto en el cliente como en el backend C# (.NET 8 / PuppeteerSharp).
+Cada bloque curricular cuenta con:
+* Un identificador de tipo único (`BlockType`).
+* Una configuración en formato JSON (`config`).
+* Un renderizador visual para la vista previa de hoja A4.
+* Un componente de captura de datos con soporte de co-redacción concurrente vía `<CoWorkField>`.
+* Una plantilla de marcado HTML evaluada por el motor de compilación documental.
 
 ---
 
-## 2. Diagrama de Flujo de Integración
+## 2. Diagrama de Flujo de Extensibilidad de Bloques
 
 ```mermaid
 graph TD
-    A[1. Declaración de BlockType en types.ts] --> B[2. Registro en Catálogo availableBlocks.ts]
-    B --> C[3. Renderizador A4 en RenderProgressSections.tsx]
-    C --> D[4. Formulario Workspace en ProgressReportSection.tsx]
-    D --> E[5. Generador HTML Handlebars en reportsGenerator.ts e InformeAvance.html]
+    Step1[1. Declaración de BlockType\nen types.ts] --> Step2[2. Registro en Catálogo\nen availableBlocks.ts]
+    Step2 --> Step3[3. Renderizador Canvas A4\nen canvasRenderers/]
+    Step3 --> Step4[4. Componente de Edición\ncon CoWorkField]
+    Step4 --> Step5[5. Compilador HTML / PDF\nHandlebars & C# iText 9]
 ```
 
 ---
 
-## 3. Guía Paso a Paso de Implementación
+## 3. Guía Paso a Paso para la Creación de un Nuevo Bloque
+
+A continuación se detalla el procedimiento técnico para incorporar un nuevo bloque curricular (por ejemplo, `cur_rubrica_evaluacion_practica`):
 
 ### 3.1. Fase 1: Declaración del Tipo en TypeScript
 Ubicación: `dosier_web/src/pages/Admin/Templates/types.ts`
 
-Se añade la constante identificadora del nuevo bloque al tipo sintáctico `BlockType`:
+Se añade el identificador del bloque a la unión de tipos `BlockType`:
 
 ```typescript
 export type BlockType = 
-    | 'cover'
-    | 'header'
-    | 'progress_activity_section'
-    | 'progress_status_section'
-    | 'nombre_del_nuevo_bloque';
+    | 'pea_header_institucional'
+    | 'pea_datos_generales'
+    | 'pea_objetivos_competencias'
+    | 'pea_matriz_contenidos'
+    | 'pea_metodologia_recursos'
+    | 'pea_criterios_evaluacion'
+    | 'pea_referencias_bibliograficas'
+    | 'pea_circuito_firmas'
+    | 'cur_rubrica_evaluacion_practica'; // Nuevo bloque curricular
 ```
 
-### 3.2. Fase 2: Registro en el Catálogo del Constructor
+### 3.2. Fase 2: Registro en el Catálogo de Bloques Disponibles
 Ubicación: `dosier_web/src/pages/Admin/Templates/utils/availableBlocks.ts`
 
-Se registra la especificación del bloque en el arreglo `AVAILABLE_BLOCKS`. Esta entrada define el título predeterminado, la categoría, el icono y el objeto de configuración inicial:
+Se define la configuración inicial, categoría pedagógica, icono de Lucide y metadatos por defecto:
 
 ```typescript
 {
-    type: 'nombre_del_nuevo_bloque',
-    title: 'NUEVO BLOQUE INSTITUCIONAL',
-    category: 'Investigación',
-    description: 'Permite registrar y renderizar la información relativa a la nueva sección.',
-    icon: 'FileText',
+    type: 'cur_rubrica_evaluacion_practica',
+    title: 'RÚBRICA DE EVALUACIÓN PRÁCTICO-EXPERIMENTAL',
+    category: 'Evaluación y Acreditación',
+    description: 'Matriz de criterios, niveles de desempeño y ponderaciones para prácticas de laboratorio y talleres.',
+    icon: 'CheckSquare',
     config: {
-        customTitle: 'TÍTULO PERSONALIZADO DEL BLOQUE',
-        variant: 'default',
+        customTitle: 'RÚBRICA DE EVALUACIÓN DE TALLER / LABORATORIO',
+        scaleType: 'cuantitativa_10_puntos',
+        allowCoWork: true,
         showBorders: true,
-        maxItems: 10
+        minPassingScore: 7.0
     }
 }
 ```
 
-### 3.3. Fase 3: Renderizador para el Lienzo Visual A4
-Ubicación: `dosier_web/src/pages/Admin/Templates/components/canvasRenderers/RenderProgressSections.tsx`
+### 3.3. Fase 3: Renderizador Visual para el Lienzo A4 (Canvas Renderer)
+Ubicación: `dosier_web/src/pages/Admin/Templates/components/canvasRenderers/RenderRubricaPractica.tsx`
 
-Se crea el componente de React encargado de representar la apariencia exacta que tendrá la sección en la hoja A4 dentro del diseñador de plantillas:
+Se implementa el componente encargado de proyectar la apariencia exacta que tendrá la sección en el diseñador de plantillas, respetando la regla de fondos sólidos sin transparencias:
 
 ```tsx
-export const RenderNombreDelNuevoBloque: React.FC<{
+import React from 'react';
+
+interface RenderRubricaPracticaProps {
     config: any;
-    blockId?: string;
-    onUpdateConfig?: (blockId: string, key: string, value: any) => void;
-}> = ({ config }) => {
+}
+
+export const RenderRubricaPractica: React.FC<RenderRubricaPracticaProps> = ({ config }) => {
     const c = config || {};
-    const title = c.customTitle || 'TÍTULO PERSONALIZADO DEL BLOQUE';
+    const title = c.customTitle || 'RÚBRICA DE EVALUACIÓN PRÁCTICO-EXPERIMENTAL';
 
     return (
-        <div className="w-full text-slate-900 font-sans my-2">
-            <div className="w-full border border-slate-900 overflow-hidden rounded-xs bg-white p-4 space-y-3">
-                <p className="font-bold text-[10pt] uppercase tracking-wider text-center text-slate-900">
+        <div className="w-full text-zinc-900 font-sans my-2 bg-white">
+            <div className="w-full border border-zinc-900 overflow-hidden rounded-none bg-white p-3 space-y-2">
+                <p className="font-bold text-[10pt] uppercase tracking-wider text-center text-zinc-900 bg-zinc-100 py-1 border-b border-zinc-300">
                     {title}
                 </p>
-                <div className="border border-slate-900 p-3 text-[8.5pt] bg-white">
-                    <p className="text-slate-600 italic">
-                        [Representación previa del contenido del nuevo bloque]
+                <div className="border border-zinc-300 p-2 text-[8.5pt] bg-white">
+                    <p className="text-zinc-600 italic">
+                        [Vista previa: Matriz de criterios formativos y ponderación de prácticas APE]
                     </p>
                 </div>
             </div>
@@ -94,131 +102,47 @@ export const RenderNombreDelNuevoBloque: React.FC<{
 };
 ```
 
-Posteriormente, se agrega la bifurcación correspondiente en la función principal del lienzo en `dosier_web/src/pages/Admin/Templates/components/BlockCanvas.tsx`:
+Luego se registra en la bifurcación principal de `dosier_web/src/pages/Admin/Templates/components/BlockCanvas.tsx`:
 
 ```tsx
-case 'nombre_del_nuevo_bloque':
-    return <RenderNombreDelNuevoBloque config={block.config} />;
+case 'cur_rubrica_evaluacion_practica':
+    return <RenderRubricaPractica config={block.config} />;
 ```
 
-### 3.4. Fase 4: Formulario de Edición en el Workspace del Investigador
-Ubicación: `dosier_web/src/components/DOSIER/sections/ProgressReportSection.tsx`
+### 3.4. Fase 4: Componente de Formulario con Co-Redacción Concurrente
+Ubicación: `dosier_web/src/components/DOSIER/sections/RubricaPracticaSection.tsx`
 
-Se implementa la sección del formulario donde el docente o investigador ingresará los datos de la sección. Si se requiere edición concurrente en tiempo real, se debe hacer uso del componente `CoWorkEditor`:
+Se construye la interfaz interactiva donde los docentes de cátedra definen los criterios. Para campos de texto colaborativo, se integra el componente `<CoWorkField>`:
 
 ```tsx
-{showNuevoBloque && (
-    <div className="bg-bg-deep border border-border-thin p-6 rounded-3xl space-y-4">
-        <div className="flex items-center gap-2 border-b border-border-thin pb-3">
-            <FileText className="w-4 h-4 text-indigo-400" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-text-main">
-                Sección del Nuevo Bloque
-            </h4>
-        </div>
-        <div className="border border-border-thin rounded-2xl overflow-hidden bg-bg-deep min-h-[120px]">
-            <CoWorkEditor
-                field="CampoNuevoBloque"
-                cowork={cowork}
-                onChange={(html, meta) => onUpdate('CampoNuevoBloque', html, meta)}
+import React from 'react';
+import { CoWorkField } from '../CoWorkField';
+
+export const RubricaPracticaSection: React.FC<{ peaId: string; readOnly: boolean }> = ({ peaId, readOnly }) => {
+    return (
+        <div className="space-y-4 p-4 bg-white border border-zinc-200">
+            <h3 className="font-semibold text-zinc-900 text-sm">Criterios de Evaluación Práctica</h3>
+            <CoWorkField
+                documentId={peaId}
+                fieldKey="rubrica_practica_criterios"
+                label="Descripción de Criterios y Niveles de Desempeño"
+                readOnly={readOnly}
             />
         </div>
-    </div>
-)}
-```
-
-### 3.5. Fase 5: Generador HTML Handlebars y Plantilla Backend PDF
-
-#### A. Generador HTML Frontend
-Ubicación: `dosier_web/src/pages/Admin/Templates/utils/htmlGenerators/reportsGenerator.ts`
-
-Se escribe la función generadora que transforma el objeto del bloque en una cadena con marcado HTML estático con sintaxis Handlebars:
-
-```typescript
-export const generateNombreDelNuevoBloqueHtml = (block: DocumentBlock): string => {
-    const c: any = block.config || {};
-    const title = c.customTitle || 'TÍTULO PERSONALIZADO DEL BLOQUE';
-    return `
-  <!-- BLOQUE: NUEVO BLOQUE -->
-  <div style="margin-top: 25px; page-break-inside: avoid;">
-    <p style="font-weight: bold; font-size: 10pt; text-transform: uppercase; text-align: center; color: #000000; margin-bottom: 12px;">${title}</p>
-    <div style="padding: 8px; border: 1px solid #000000; font-size: 8.5pt; color: #000000;">
-      {{{default CampoNuevoBloque campo_nuevo_bloque ""}}}
-    </div>
-  </div>`;
+    );
 };
 ```
 
-Esta función se enlaza dentro de la función dispatch `generateHtmlFromBlock`:
+### 3.5. Fase 5: Compilación en Plantilla HTML y Motor PDF
+Ubicación: `backend/dosier_infrastructure/Documents/Templates/PeaOficial.html`
 
-```typescript
-case 'nombre_del_nuevo_bloque':
-    return generateNombreDelNuevoBloqueHtml(block);
-```
-
-#### B. Plantilla Handlebars Backend C#
-Ubicación: `backend/dosier_infrastructure/Common/Documents/Templates/Investigacion/InformeAvance.html`
-
-Se incluye la misma estructura en la plantilla Handlebars compilada por el motor de backend:
+Se agrega el fragmento evaluable por el motor de plantillas para que el documento PDF oficial compilado en el backend refleje los datos guardados:
 
 ```html
-  <!-- BLOQUE: NUEVO BLOQUE -->
-  {{#if CampoNuevoBloque}}
-  <div style="margin-top: 25px; page-break-inside: avoid;">
-    <p style="font-weight: bold; font-size: 10pt; text-transform: uppercase; text-align: center; color: #000000; margin-bottom: 12px;">TÍTULO PERSONALIZADO DEL BLOQUE</p>
-    <div style="padding: 8px; border: 1px solid #000000; font-size: 8.5pt; color: #000000;">
-      {{{default CampoNuevoBloque campo_nuevo_bloque ""}}}
+<section class="pea-section rubrica-practica">
+    <div class="section-header">{{RubricaPracticaTitle}}</div>
+    <div class="section-content">
+        {{{RubricaPracticaContenidoHtml}}}
     </div>
-  </div>
-  {{/if}}
+</section>
 ```
-
----
-
-## 4. Estrategia de Mapeo Dual de Variables (CamelCase y snake_case)
-
-Debido a que el backend de C# serializa las entidades a `snake_case` de forma global, se debe asegurar que el acceso a variables en las plantillas Handlebars sea tolerante a ambas notaciones.
-
-Para lograr esto, utilice siempre el helper `default` registrado en el motor:
-
-```html
-{{{default PropiedadCamelCase propiedad_snake_case "Valor Predeterminado"}}}
-```
-
-Para evaluaciones condicionales de igualdad, utilice la directiva resiliente `#if_eq`:
-
-```html
-{{#if_eq EstadoEjecucion "EN AVANCE"}}
-  (X)
-{{else}}
-  {{#if_eq estado_ejecucion "EN AVANCE"}}
-    (X)
-  {{/if_eq}}
-{{/if_eq}}
-```
-
----
-
-## 5. Reglas de Renderizado y Paginación
-
-1. **Evitar Saltos de Página Huérfanos**: Todo contenedor de bloque principal debe incluir la propiedad CSS `page-break-inside: avoid;`.
-2. **Estilo de Bordes Oficiales**: Las tablas institucionales deben emplear bordes negros delgados `border: 1px solid #000000;` con colapso de bordes `border-collapse: collapse;`.
-3. **Encabezados de Tabla**: El color azul marino institucional oficial utilizado en los encabezados de tabla es `#1e2a4a`.
-
----
-
-## 6. Sistema de Color Unificado y Selección Interactiva en Canvas
-
-### 6.1. Componente Reutilizable `ColorPickerField`
-Ubicación: `src/pages/Admin/Templates/components/properties/SharedColorPicker.tsx`
-
-Todos los paneles de propiedades deben implementar este componente para garantizar consistencia visual y soporte para paletas libres y predefinidas:
-
-* **Características:**
-  - Rueda de selección de color nativa (`<input type="color">`).
-  - Campo de entrada `#HEX` en mayúsculas (`w-20` con ancho estricto para evitar desbordamientos).
-  - Presets rápidos de la paleta institucional (`#1e2a4a`, `#b8912e`, `#475569`, `#065f46`, `#000000`, `#ffffff`).
-  - Compatibilidad transparente con tokens históricos mediante `resolveHeaderColor()`.
-  - Cálculo automático de contraste (`getContrastFg`) para alternar el texto del encabezado entre blanco y oscuro según la luminancia del fondo.
-
-### 6.2. Sincronización Bidireccional Canvas ↔ Propiedades
-Al hacer clic o arrastrar un elemento visual en el lienzo A4 (ej. en `RenderCover.tsx`), el renderizador emite `onUpdateConfig(blockId, '_activeCoverTab', targetTab)`. El panel de propiedades escucha este cambio mediante un `useEffect` y activa inmediatamente la subpestaña correspondiente (`institution`, `title`, `carrera` o `periodo`), agilizando el flujo de diseño del usuario.

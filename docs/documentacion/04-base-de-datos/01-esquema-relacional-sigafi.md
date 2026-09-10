@@ -1,102 +1,135 @@
 # Esquema Relacional de Base de Datos y Persistencia
 
-## 1. Visión General del Modelo de Datos
+## 1. Visión General del Modelo de Persistencia
 
-La capa de persistencia de DOSIER utiliza el motor de base de datos **MariaDB 10.5+ / MySQL 8.0+** sobre el esquema de base de datos **`sigafi_es`** (expuesto en el puerto por defecto `3306`).
+La persistencia de DOSIER opera sobre el motor relacional **MariaDB 10.5+ / MySQL 8.0+** en el esquema de base de datos **`sigafi_es`** (puerto por defecto `3306`).
 
-El mapeo objeto-relacional (ORM) es administrado por **Entity Framework Core 9.0** a través del conector `Pomelo.EntityFrameworkCore.MySql`. La base de datos almacena las entidades del dominio curricular docente (PEA, Sílabos de 19 semanas, Guías APE, Guías de Estudio), la estructura de usuarios y permisos, el motor documental, la bitácora de auditoría inmutable y las tablas de sincronización colaborativa CoWork.
+El sistema implementa una arquitectura híbrida de base de datos:
+1. **Esquema Académico Institucional Preexistente (SIGAFI - Solo Lectura):** Contiene los catálogos maestros de carreras técnicas y tecnológicas, períodos académicos semestrales, mallas curriculares aprobadas, asignaturas con distribución horaria y la nómina docente institucional.
+2. **Esquema de Gobernanza Curricular y Acreditación DOSIER (Lectura / Escritura):** Conjunto de tablas estructuradas mediante scripts DDL versionados que gestionan la formulación colaborativa del Programa de Estudio de la Asignatura (PEA), antecedentes curriculares, marcos normativos, firmas electrónicas, bitácora forense de auditoría y sincronización colaborativa en tiempo real.
+
+El mapeo objeto-relacional (ORM) es administrado por **Entity Framework Core 9.0** mediante el conector oficial `Pomelo.EntityFrameworkCore.MySql`.
 
 ---
 
-## 2. Diagrama Entidad-Relación (DER Principal)
+## 2. Diagrama de Arquitectura de Datos Híbrida
 
 ```mermaid
-erDiagram
-    USERS ||--o{ PROJECT_TEAM : docente_asignado
-    USERS ||--o{ AUDIT_LOGS : genera
-    USERS ||--o{ DOCUMENT_SIGNATURES : firma
+graph TD
+    subgraph SIGAFI_ES_READONLY ["Esquema Preexistente SIGAFI (Solo Lectura)"]
+        carreras["carreras\n(Filtro esInstituto = 1)"]
+        periodos["periodos\n(PAO Semestral)"]
+        mallas_periodos["mallas_periodos\n(Vigencia Malla)"]
+        detallemallas["detallemallas\n(Asignaturas, Horas Docencia, APE, Autónomo)"]
+        profesores["profesores\n(Cédula, Nombres, Correo)"]
+        asignacion_materias["asignacion_materias\n(Docente - Asignatura - Período)"]
+    end
 
-    PROJECTS ||--|{ PROJECT_TEAM : incluye
-    PROJECTS ||--o{ DOCUMENT_INSTANCES : vincula
-    PROJECTS ||--o{ INFORMES_AVANCE : genera
+    subgraph DOSIER_CURRICULAR ["Esquema Curricular DOSIER (Lectura / Escritura)"]
+        cur_pea["cur_pea\n(Cabecera PEA, Estado, Hash SHA-256)"]
+        cur_pea_secciones["cur_pea_seccion_b..k\n(10 Tablas Específicas por Sección A-K)"]
+        cur_pea_colaboradores["cur_pea_colaboradores\n(Co-Redacción Docente)"]
+        cur_pea_versiones["cur_pea_versiones\n(Historial e Inmutabilidad)"]
+        cur_asignaturas_antecedentes["cur_asignaturas_antecedentes\n(Matriz de Coherencia Curricular)"]
+        cur_proyectos_carrera["cur_proyectos_carrera\n(Gobernanza de Malla)"]
+    end
 
-    DOCUMENT_TEMPLATES ||--o{ DOCUMENT_INSTANCES : instancia
-    DOCUMENT_INSTANCES ||--o{ COWORK_DOCUMENTOS : sincroniza
-    DOCUMENT_INSTANCES ||--o{ DOCUMENT_SIGNATURES : contiene
+    subgraph DOSIER_SEGURIDAD_AUDITORIA ["Seguridad RBAC y Auditoría Forense"]
+        rbac_sistema["rbac_sistema\n(ID 6: DOSIER)"]
+        rbac_rol["rbac_rol\n(DOSIER_ADMIN, DOSIER_DOCENTE, etc.)"]
+        rbac_permisos["rbac_permisos\n(PEA:*, GOBERNANZA_CURRICULAR:*)"]
+        audit_logs["audit_logs\n(Diff JSON Anterior/Posterior)"]
+        document_instances["document_instances\n(Snapshot JSON, PDF, QR CACES)"]
+        document_signatures["document_signatures\n(4 Firmas: Docente, Coord, Acad, Vicerrec)"]
+        doc_cowork_documentos["doc_cowork_documentos\n(Persistencia HTML Yjs Delta)"]
+    end
 
-    USERS {
-        string uuid PK
-        string email
-        string password_hash
-        string names
-        string surnames
-        bool is_active
-    }
-
-    PROJECTS {
-        string uuid PK
-        string code "Código Asignatura / Plan"
-        string title "Nombre Asignatura / Materia"
-        string state "Estado Curricular"
-        decimal total_budget "Horas Totales / Créditos"
-        datetime created_at_utc
-    }
-
-    DOCUMENT_INSTANCES {
-        string uuid PK
-        string template_code FK "PEA, SILABO_19SEM, GUIA_APE, GUIA_ESTUDIO"
-        string entity_type "ASIGNATURA / PERIODO"
-        string entity_uuid
-        longtext data_snapshot_json
-        string sha256_hash
-        string state
-    }
-
-    COWORK_DOCUMENTOS {
-        bigint id PK
-        string entidad_uuid FK
-        string campo_nombre "Sección Sílabo / PEA"
-        longtext content_html
-        datetime updated_at_utc
-    }
+    carreras --> cur_proyectos_carrera
+    detallemallas --> cur_pea
+    detallemallas --> cur_asignaturas_antecedentes
+    profesores --> cur_pea_colaboradores
+    profesores --> document_signatures
+    cur_pea --> cur_pea_secciones
+    cur_pea --> document_instances
+    document_instances --> document_signatures
 ```
 
 ---
 
-## 3. Tablas Clave del Sistema
+## 3. Catálogo de Tablas del Sistema por Módulos
 
-### 3.1. Dominio Curricular y Gestión Docente
+### 3.1. Tablas del Esquema SIGAFI (Solo Lectura)
 
-* **`doc_proyectos` (`Projects`):** Almacena la entidad principal de planificación curricular de la asignatura (código de materia, nombre de asignatura, nivel, período académico, horas totales y estado del workflow curricular).
-* **`doc_proyecto_miembros` (`ProjectTeam`):** Relación N:M entre docentes y asignaturas/materias, especificando el rol (Docente Autor Principal, Co-Docente Materia, Revisor de Comisión Curricular), porcentaje de dedicación y estado de asignación.
-* **`doc_proyecto_cambios_equipo` (`ProjectTeamChange`):** Registro de solicitudes formales de reasignación de docentes de la materia durante el período académico.
-* **`doc_informes_avance` (`InformesAvance`):** Registro de informes de cumplimiento de avance curricular (corte de parcial 1, parcial 2 y portafolio docente de fin de período).
+* **`carreras`:** Registro institucional de carreras y programas formativos. DOSIER filtra estrictamente las carreras con `esInstituto = 1` para limitar el alcance al Instituto Superior Tecnológico Pedro Traversari.
+* **`periodos`:** Períodos Académicos Ordinarios (PAO) con sus fechas de inicio, finalización y estado administrativo.
+* **`mallas_periodos`:** Vinculación entre el período lectivo y la versión curricular aprobada por los organismos colegiados.
+* **`detallemallas`:** Registro granular de asignaturas por nivel formativo. Define las horas oficiales de docencia (CD), aprendizaje práctico-experimental (APE) y trabajo autónomo (TA), sirviendo como regla de validación matemática inviolable para la planificación curricular.
+* **`profesores`:** Catálogo del personal docente, identificadores únicos institucionales, títulos profesionales y correos electrónicos.
+* **`asignacion_materias`:** Cruce entre el docente titular, el período lectivo y la asignatura asignada para la carga académica.
 
-### 3.2. Dominio Documental y Forense
+### 3.2. Tablas del Núcleo Base Documental y Forense (`01_sistema_base.sql`)
 
-* **`document_templates` (`DocumentTemplate`):** Registro de plantillas curriculares oficiales del ISTPET (PEA, Sílabo de 19 semanas, Guía APE, Guía de Estudio Institucional), con su marcado HTML base y esquema de metadatos JSON.
-* **`document_instances` (`DocumentInstance`):** Registro inmutable de cada documento curricular emitido (UUID, asignatura vinculada, snapshot JSON `data_snapshot_json`, hash criptográfico SHA-256, código QR de verificación CACES y estado).
-* **`doc_cowork_documentos` (`DocCoworkDocumento`):** Tabla de edición colaborativa que guarda el marcado HTML resultante de las secciones curriculares co-redactadas en tiempo real mediante Yjs.
-* **`document_signatures` (`DocumentSignature`):** Bitácora de firmas electrónicas aplicadas al documento oficial (docentes autores, comisión académica, coordinador de carrera, vicerrectorado).
+* **`document_templates` (`DocumentTemplate`):** Catálogo de plantillas oficiales emitidas por la institución (PEA oficial, Sílabos, Guías APE). Almacena el marcado HTML base y el esquema JSON de metadatos.
+* **`document_instances` (`DocumentInstance`):** Instancia oficial de un documento curricular emitido. Almacena el snapshot congelado (`data_snapshot_json`), hash criptográfico SHA-256, ruta del archivo PDF firmado y código de verificación QR para acreditación CACES.
+* **`document_signatures` (`DocumentSignature`):** Registro de las firmas electrónicas aplicadas a cada documento curricular. Almacena el identificador del firmante, rol curricular, certificado PKCS#12, marca de tiempo y estado de validación.
+* **`audit_logs` (`AuditLog`):** Bitácora de auditoría forense inmutable. Cada transacción curricular genera un registro con el usuario, dirección IP, tipo de acción, entidad afectada y snapshots JSON del estado previo y posterior.
+* **`doc_cowork_documentos` (`DocCoworkDocumento`):** Tabla de persistencia para la co-redacción concurrente en tiempo real mediante Yjs y CRDT. Guarda los estados intermedios en HTML de cada sección editada simultáneamente por los docentes.
+* **`lopdp_consents` & `lopdp_arco_requests`:** Tablas de cumplimiento con la Ley Orgánica de Protección de Datos Personales del Ecuador para consentimientos informados y ejercicio de derechos ARCO.
 
-### 3.3. Dominio de Seguridad y Gobernanza
+### 3.3. Tablas de Gobernanza Curricular y Normativa (`02_gobernanza_y_antecedentes_curriculares.sql`)
 
-* **`users` (`User`):** Catálogo de usuarios institucionales (UUID, cédula, nombres, apellidos, correo institucional, password_hash BCrypt).
-* **`roles` / `permissions` / `role_permissions`:** Estructura RBAC para asignación de roles curriculares (`SuperAdmin`, `Vicerrectorado`, `CoordinadorCarrera`, `ComisionCurricular`, `Docente`).
-* **`audit_logs` (`AuditLog`):** Tabla inmutable que registra cada operación `INSERT`, `UPDATE` o `DELETE` con snapshots en JSON del estado anterior y posterior de la planificación curricular.
-* **`lopdp_consents` / `lopdp_arco_requests`:** Registro de consentimientos informados y atención a solicitudes de derechos ARCO.
+* **`cur_normativas_externas`:** Repositorio de normativas de nivel superior (Ley Orgánica de Educación Superior - LOES, Reglamento de Régimen Académico del CES, Criterios de Evaluación CACES y lineamientos SENESCYT).
+* **`cur_normativa_articulos`:** Artículos específicos y considerandos normativos vinculables a las decisiones curriculares.
+* **`cur_modelos_educativos`:** Registro de las versiones del Modelo Educativo y Pedagógico Institucional del ISTPET.
+* **`cur_proyectos_carrera`:** Proyectos de creación y rediseño de carreras aprobados por el Consejo de Educación Superior (CES), vinculando la carrera de SIGAFI con su fundamentación curricular.
+* **`cur_proyectos_carrera_normativas`:** Tabla de articulación N:M entre los proyectos de carrera y las normativas externas vigentes.
+* **`cur_asignaturas_antecedentes`:** Matriz curricular que detalla para cada asignatura de `detallemallas` su justificación epistemológica, problema pedagógico que resuelve, relación con el perfil de egreso y articulación metodológica.
+
+### 3.4. Tablas del Programa de Estudio de la Asignatura Oficial (`03_curriculum_pea_oficial.sql`)
+
+* **`cur_pea`:** Cabecera de la planificación del PEA. Almacena la relación con `detallemallas`, período académico, estado del workflow (`Borrador`, `EnRevision`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`), versión curricular, hash SHA-256 de inmutabilidad y marca de tiempo de bloqueo.
+* **`cur_pea_seccion_b_datos`:** Datos generales de la asignatura, campo de formación, créditos, prerrequisitos y correquisitos sincronizados desde SIGAFI.
+* **`cur_pea_seccion_c_objetivos`:** Objetivos de aprendizaje general y específicos de la asignatura articulados con la malla.
+* **`cur_pea_seccion_d_competencias`:** Competencias genéricas y específicas que tributan al perfil de egreso del tecnólogo.
+* **`cur_pea_seccion_e_resultados`:** Matriz de resultados de aprendizaje con niveles de logro (Inicial, Medio, Alto).
+* **`cur_pea_seccion_f_contenidos`:** Estructura modular de unidades temáticas, subtemas, horas teóricas, horas prácticas y trabajo autónomo.
+* **`cur_pea_seccion_g_metodologia`:** Estrategias metodológicas y técnicas didácticas de enseñanza-aprendizaje aplicadas.
+* **`cur_pea_seccion_h_recursos`:** Recursos didácticos, software especializado, laboratorios, talleres y equipamiento requerido.
+* **`cur_pea_seccion_i_evaluacion`:** Mecanismos de evaluación diagnóstica, formativa y sumativa con sus respectivas ponderaciones porcentuales reglamentarias.
+* **`cur_pea_seccion_j_bibliografia`:** Referencias bibliográficas básicas y complementarias normalizadas bajo normas APA 7ma edición con validación de fondos físicos y virtuales.
+* **`cur_pea_seccion_k_firmas`:** Circuito formal de 4 firmas: Elaborado (Docente/s), Revisado (Coordinador de Carrera), Verificado (Coordinador Académico) y Aprobado (Vicerrectorado).
+* **`cur_pea_colaboradores`:** Nómina de docentes autores y co-autores asignados con permisos de co-redacción concurrente.
+* **`cur_pea_versiones`:** Historial de versiones del PEA con almacenamiento de snapshot y trazabilidad de cambios por período lectivo.
+
+### 3.5. Tablas de Seguridad RBAC Curricular (`04_seguridad_rbac_roles_curriculares.sql`)
+
+* **`rbac_sistema`:** Registro de sistemas de la institución. DOSIER está formalizado con identificador primario `6` y detalle `"Gestión Curricular y Acreditación ISTPET"`.
+* **`rbac_modulos`:** Módulos funcionales: `PEA`, `GOBERNANZA_CURRICULAR`, `AUDITORIA_CACES`, `CONFIGURACION`.
+* **`rbac_rol`:** Catálogo de roles curriculares institucionales:
+  1. `DOSIER_ADMIN` (ID: 32) - Administrador General del Sistema Curricular.
+  2. `DOSIER_DOCENTE` (ID: 33) - Docente Autor y Co-Redactor de Planificación Curricular.
+  3. `DOSIER_COORD_CARRERA` (ID: 34) - Coordinador de Carrera (Revisión Técnica y Aprobación Primaria).
+  4. `DOSIER_COORD_ACAD` (ID: 35) - Coordinador Académico (Verificación Institucional).
+  5. `DOSIER_VICERRECTOR` (ID: 36) - Vicerrectorado (Aprobación Definitiva e Inmutabilidad).
+* **`rbac_permisos`:** Permisos granulares de acción sobre los módulos curriculares (`PEA:READ`, `PEA:WRITE`, `PEA:REVIEW`, `PEA:APPROVE`, `PEA:SIGN`, etc.).
+* **`rbac_rol_permisos`:** Matriz de asociación N:M entre roles y permisos.
+* **`rbac_usuario_rol`:** Asignación de docentes y directivos a los roles curriculares del sistema.
 
 ---
 
-## 4. Convenciones de Columna y Estrategia de Indexación
+## 4. Convenciones de Columnas y Reglas de Integridad
 
-1. **Identificadores Únicos (UUID v4):** Las entidades principales de negocio utilizan identificadores `VARCHAR(36)` generados en la capa de aplicación (`Guid.NewGuid()`), evitando el uso de claves secuenciales expuestas en la API.
-2. **Columnas de Auditoría Estándar:**
-   * `created_at_utc DATETIME NOT NULL`: Fecha de creación en formato UTC.
-   * `updated_at_utc DATETIME NULL`: Fecha de última modificación.
-   * `is_deleted BOOLEAN NOT NULL DEFAULT FALSE`: Indicador de borrado lógico (Soft Delete).
+1. **Claves Primarias:**
+   * Tablas maestras de negocio DOSIER: `VARCHAR(36)` con identificadores únicos universales (UUID v4) generados a nivel de aplicación mediante `Guid.NewGuid()`.
+   * Tablas de auditoría y relaciones transaccionales: `BIGINT AUTO_INCREMENT` o claves compuestas explícitas.
+2. **Campos de Auditoría Estándar:**
+   * `created_at_utc DATETIME NOT NULL`: Marca temporal de creación en tiempo universal coordinado.
+   * `updated_at_utc DATETIME NULL`: Marca temporal de última modificación.
+   * `is_deleted BOOLEAN NOT NULL DEFAULT FALSE`: Marcado para borrado lógico (Soft Delete).
    * `deleted_at_utc DATETIME NULL`: Fecha de eliminación lógica.
-3. **Estrategia de Índices:**
-   * Índices B-Tree únicos sobre `uuid`, `code` y `email`.
-   * Índices compuestos en `document_instances(entity_uuid, entity_type)` para optimizar las consultas del orquestador documental.
-   * Índices en `audit_logs(entity_uuid, timestamp_utc)` para la generación de trazas de auditoría de portafolio docente.
+3. **Manejo de Cotejamiento y Collation:**
+   * Las tablas preexistentes del esquema `sigafi_es` utilizan cotejamiento `latin1_swedish_ci`.
+   * Las tablas curriculares de DOSIER utilizan `utf8mb4_unicode_ci` para soporte de caracteres extendidos, caracteres científicos y tildes en contenidos pedagógicos.
+   * Para evitar errores 1267 de incompatibilidad en consultas que unen tablas de ambos esquemas, los controladores y servicios ejecutan conversiones explícitas (`CONVERT(col USING utf8mb4)`).
+4. **Reglas de Integridad Referencial:**
+   * No se aplican claves foráneas restrictivas directas hacia las tablas de SIGAFI (`carreras`, `detallemallas`, `profesores`) para evitar bloqueos transaccionales o fallos en cascada sobre el sistema académico principal. La consistencia se garantiza a través de la capa de dominio en EF Core y validaciones en los servicios de aplicación.

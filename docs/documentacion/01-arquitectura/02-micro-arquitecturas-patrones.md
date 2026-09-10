@@ -2,7 +2,7 @@
 
 ## 1. Visión General
 
-La plataforma DOSIER integra en su capa de infraestructura y dominio patrones y motores especializados diseñados para la gestión académica y curricular del ISTPET. Estos motores atienden el cumplimiento de normativas de acreditación institucional (CACES 2026), resiliencia forense, validación curricular de mallas SIGAFI, protección de datos (LOPDP) y co-redacción distribuida en tiempo real de programas y sílabos.
+La plataforma DOSIER integra en su capa de infraestructura y dominio patrones y motores especializados diseñados para la gestión curricular del ISTPET. Estos motores atienden el cumplimiento de normativas de acreditación institucional (CACES 2026), resiliencia forense, validación curricular de mallas SIGAFI, protección de datos (LOPDP) y co-redacción distribuida en tiempo real de programas docentes oficiales.
 
 ---
 
@@ -45,52 +45,36 @@ classDiagram
         +PrepareRequestAsync(string documentInstanceUuid, string requestedBy) Task~DocumentRequest~
     }
 
-    class PeaDataProvider {
-        +CanHandle("PEA") bool
-        +GetDocumentDataAsync()
+    class ProjectDocumentDataProvider {
+        -IProjectOrchestrator _projectOrchestrator
+        +CanHandle("Proyecto") bool
+        +GetDocumentDataAsync(string entityUuid, CancellationToken ct) Task~object~
     }
 
-    class SilaboDataProvider {
-        +CanHandle("SILABO") bool
-        +GetDocumentDataAsync()
-    }
-
-    class GuiaApeDataProvider {
-        +CanHandle("GUIA_APE") bool
-        +GetDocumentDataAsync()
-    }
-
-    class GuiaEstudioDataProvider {
-        +CanHandle("GUIA_ESTUDIO") bool
-        +GetDocumentDataAsync()
-    }
-
-    IDocumentDataProvider <|.. PeaDataProvider
-    IDocumentDataProvider <|.. SilaboDataProvider
-    IDocumentDataProvider <|.. GuiaApeDataProvider
-    IDocumentDataProvider <|.. GuiaEstudioDataProvider
+    IDocumentDataProvider <|.. ProjectDocumentDataProvider
     DocumentDataOrchestrator --> IDocumentDataProvider
 ```
 
 ### Principio de Funcionamiento
 1. El `DocumentDataOrchestrator` recibe una petición de emisión documental identificada por la instancia (`documentInstanceUuid`).
-2. Identifica el tipo de entidad curricular origen (`PEA`, `SILABO`, `GUIA_APE`, `GUIA_ESTUDIO`).
-3. Selecciona el proveedor adecuado en tiempo de ejecución (`_providers.FirstOrDefault(p => p.CanHandle(entityType))`).
-4. Extrae la información académica de la asignatura desde SIGAFI (horas, créditos, campo de formación, prerrequisitos) y la combina con el contenido colaborativo en vivo procedente del módulo CoWork, devolviendo un payload unificado (`DocumentRequest`).
+2. Identifica el tipo de entidad origen y evalúa los proveedores disponibles mediante `CanHandle(entityType)`.
+3. `ProjectDocumentDataProvider` resuelve los datos consolidados de la entidad académica (asignatura, equipo docente, períodos, fechas).
+4. Extrae la información académica de la asignatura desde SIGAFI (horas, créditos, campo de formación, prerrequisitos) y la combina con el contenido colaborativo persistido por el módulo CoWork, devolviendo un payload unificado (`DocumentRequest`) para la compilación PDF.
 
 ---
 
 ## 4. Curricular Validation Engine (Motor de Validación Matemática de Horas y Créditos)
 
-Para evitar incongruencias en la planificación docente, el sistema incorpora un motor de validación curricular que verifica las restricciones académicas antes de permitir el envío o aprobación del documento:
+Para evitar incongruencias en la planificación docente, el sistema incorpora un motor de validación curricular (`CurricularValidationEngine`) que verifica las restricciones académicas antes de permitir el guardado o envío del documento a revisión:
 
 $$\text{Horas Totales Asignatura} = \text{Horas Docencia (CD)} + \text{Horas APE (Prácticas)} + \text{Horas Autónomo (TA)}$$
-$$\sum_{w=1}^{19} (\text{Horas CD}_w + \text{Horas APE}_w + \text{Horas TA}_w) \equiv \text{Total Horas Malla SIGAFI}$$
+$$\sum_{u=1}^{n} (\text{Horas CD}_u + \text{Horas APE}_u + \text{Horas TA}_u) \equiv \text{Total Horas Malla SIGAFI}$$
 
-### Reglas de Validación Automática
-1. **Consistencia con Malla Vigente:** Las horas semanales no pueden exceder ni ser inferiores a la carga asignada en el plan de estudios aprobado por el CES/CACES.
-2. **Distribución Semanal en Sílabo:** Validación de 19 semanas lectivas estructuradas en 2 evaluaciones parciales y 1 examen/evaluación final o de recuperación.
-3. **Mapeo de Guías APE:** La suma de horas de las prácticas planificadas en las Guías APE debe coincidir exactamente con el componente APE del Sílabo.
+### Reglas de Validación Bloqueantes
+1. **Consistencia con Malla Vigente:** Las horas de las unidades temáticas y los componentes no pueden exceder ni ser inferiores a la carga oficial de `detallemallas`.
+2. **Componente APE:** Las horas asignadas a actividades prácticas no pueden superar el total de horas APE autorizadas para la materia.
+3. **Aporte al Perfil de Egreso:** Todo resultado de aprendizaje (RDA) formulado en la asignatura debe articularse obligatoriamente con al menos un RDA del Perfil de Egreso oficial de la carrera.
+4. **Bibliografía Obligatoria:** Exigencia de al menos una referencia básica con justificación pedagógica debidamente registrada.
 
 ---
 
@@ -101,50 +85,61 @@ Para responder a auditorías del CACES y validar la autenticidad del portafolio 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Docente as Docente / Comisión
-    participant Engine as DocumentEngine
-    participant Storage as Base de Datos / Storage
+    participant Docente as Docente / Autoridades
+    participant Engine as DocumentEngine / PeaService
+    participant Storage as Base de Datos / FileStorage
     participant PublicNode as Nodo de Verificación Pública (QR)
 
-    Docente->>Engine: Solicitar emisión / firma final de PEA o Sílabo
+    Docente->>Engine: Solicitar firma / aprobación final del PEA
     Engine->>Engine: Capturar congelamiento JSON (data_snapshot_json)
-    Engine->>Engine: Calcular Hash SHA-256 sobre snapshot y PDF
-    Engine->>Engine: Inyectar sello de tiempo UTC y firma electrónica (PKCS#12)
+    Engine->>Engine: Calcular Hash SHA-256 canónico sobre el contenido pedagógico
+    Engine->>Engine: Inyectar sello de tiempo UTC y código oficial DFRM-XXXX
     Engine->>Engine: Generar QR dinámico vectorial (QRCoder)
-    Engine->>Storage: Guardar registro inmutable en DocumentInstances & audit_logs
+    Engine->>Storage: Guardar registro inmutable en doc_documentos_instancias y doc_pea_trazabilidad
     Engine-->>Docente: Devolver PDF oficial compilado con QR inyectado
 
     Note over PublicNode: Proceso de Auditoría Externa CACES / Verificación
-    Auditor->>PublicNode: Escanear QR dinámico (sin credenciales)
+    Auditor->>PublicNode: Escanear QR dinámico (sin autenticación previa)
     PublicNode->>Storage: Validar Hash SHA-256 contra snapshot inmutable
     Storage-->>PublicNode: Confirmar autenticidad del documento institucional docente
 ```
 
 ### Elementos de Seguridad Forense
-* **Inmutabilidad de Datos (`data_snapshot_json`):** Aunque la asignatura cambie de docente o se ajuste la malla en períodos futuros, el documento curricular emitido conserva el snapshot exacto del período académico en que fue dictada.
-* **Firma Electrónica y Sellado (`SignatureStamper`):** Inyección de la firma electrónica de los docentes autores, miembros de la comisión de revisión curricular y el Coordinador de Carrera / Vicerrectorado.
-* **Verificación Pública mediante QR:** Permite a estudiantes, evaluadores del CACES y directivos validar el documento oficial sin requerir sesión activa.
+* **Inmutabilidad de Datos (`data_snapshot_json`):** Aunque la asignatura cambie de docente o se ajuste la malla en períodos futuros, el documento curricular emitido conserva el snapshot exacto del período académico en que fue legalizado.
+* **Firma Electrónica y Sellado (`SignatureStamper` / `FirmaElectronicaService`):** Integración de firma electrónica avanzada (PKCS#12 `.p12`) o firma digital HMAC institucional con verificación de identidad.
+* **Verificación Pública mediante QR:** Permite a estudiantes, evaluadores del CACES y directivos validar el documento oficial sin requerir sesión activa en el sistema.
 
 ---
 
-## 6. State Machine Engine & State Locking (Ciclo de Vida Curricular)
+## 6. State Machine Engine & State Locking (Ciclo de Vida Curricular del PEA)
 
-El flujo de aprobación de la documentación docente se administra a través del `WorkflowEngineService`. Las transiciones entre estados están sujetas a reglas de validación académica:
+El flujo de aprobación de la documentación docente se administra a través del circuito colegiado institucional de 4 estados:
 
-$$\text{Borrador} \xrightarrow[\text{Co-redacción}]{\text{Envío a Revisión}} \text{Revisión por Comisión/Par} \xrightarrow[\text{Aprobación}]{\text{Validación Carrera}} \text{Aprobado / Vigente} \xrightarrow[\text{Fin de Período}]{\text{Portafolio Final}}$$
+```mermaid
+stateDiagram-v2
+    [*] --> Borrador: Docente(s) elabora PEA con CoWork
+    Borrador --> EnRevision: Envío a revisión (Validación matemática OK)
+    Corregido --> EnRevision: Envío con observaciones subsanadas
+    EnRevision --> Observado: Observaciones registradas por Coordinación
+    Observado --> Corregido: Docente subsana cambios
+    EnRevision --> RevisadoCoord: Aval favorable de Coordinador de Carrera
+    RevisadoCoord --> RevisadoAcad: Aval metodológico de Coordinación Académica
+    RevisadoAcad --> Aprobado: Aprobación oficial de Vicerrectorado Académico
+    Aprobado --> [*]: Sellado SHA-256, QR y PDF emitido
+```
 
 ### Mecanismo de State Locking
-Cuando un PEA o Sílabo avanza a la etapa de revisión por comisión o aprobación por coordinación, el orquestador activa un bloqueo de escritura (*State Locking*). Las peticiones HTTP y eventos de CoWork que intenten modificar secciones durante estos estados son rechazadas automáticamente.
+Cuando el PEA avanza a la etapa `EnRevision`, `RevisadoCoord` o `Aprobado`, el orquestador activa un bloqueo estricto de escritura (*State Locking*). Las peticiones HTTP y eventos de CoWork que intenten modificar secciones durante estos estados son rechazadas automáticamente, preservando la inmutabilidad de la evidencia.
 
 ---
 
 ## 7. CRDT Realtime Collaboration Architecture (CoWork Engine para Docentes)
 
-Para permitir que los docentes que comparten una misma materia o nivel redacten el PEA y Sílabo de manera colaborativa y síncrona, el sistema utiliza una arquitectura basada en **CRDT (Conflict-free Replicated Data Types)** mediante **Yjs** y **SignalR WebSockets**.
+Para permitir que los docentes que imparten la misma materia o colaboran en su diseño redacten el PEA de manera concurrente y síncrona, el sistema utiliza una arquitectura basada en **CRDT (Conflict-free Replicated Data Types)** mediante **Yjs** y **SignalR WebSockets**.
 
 ```mermaid
 graph TD
-    UserA["Docente A (Autor Principal)\nReact SPA"]
+    UserA["Docente A (Elaborador)\nReact SPA"]
     UserB["Docente B (Co-Docente Materia)\nReact SPA"]
 
     subgraph SignalRHub [CollaborationHub Backend .NET]
@@ -157,8 +152,8 @@ graph TD
         DocCoworkDB[("Tabla 'doc_cowork_documentos'\nContenido HTML y CRDT State")]
     end
 
-    UserA -->|Edición Sección Resultados / Sync Yjs| WsGateway
-    UserB -->|Edición Sección Cronograma / Sync Yjs| WsGateway
+    UserA -->|Edición Sección Unidades / Sync Yjs| WsGateway
+    UserB -->|Edición Sección Metodología / Sync Yjs| WsGateway
 
     WsGateway --> GZipFilter
     GZipFilter --> LockManager
@@ -167,28 +162,13 @@ graph TD
 
 ### Características Técnicas
 * **Compresión GZip (`GZipHelper`):** Los paquetes binarios de actualización Yjs se comprimen antes de transmitirse sobre SignalR, permitiendo baja latencia aún en conexiones institucionales saturadas.
-* **Bloqueo Granular de Secciones (`SectionBlockGuard`):** Protege sub-secciones del plan analítico mientras son editadas activamente por un docente particular.
+* **Componente `<CoWorkField>`:** Abstrae la sincronización colaborativa en el cliente React, exponiendo un área de texto con presencia en vivo de otros autores y convergencia determinista sin colisiones.
 
 ---
 
-## 8. Privacy & Anonymization Architecture (LOPDP y Revisión Curricular Ciega)
+## 8. Privacy & Adaptaciones Curriculares (Cumplimiento LOPDP)
 
-Para cumplir la Ley Orgánica de Protección de Datos Personales (LOPDP) y facilitar revisiones objetivas de calidad académica:
+Para cumplir con la Ley Orgánica de Protección de Datos Personales (LOPDP) de la República del Ecuador:
 
-```mermaid
-graph TD
-    Request[Petición de Revisión / Auditoría Curricular] --> Router[PeerReviewPortalService / LopdpService]
-    Router --> CheckMode{¿Es Revisión Ciega o Solicitud LOPDP?}
-
-    CheckMode -->|Sí: Revisión Par Ciego| Anonymizer[Anonimizador Curricular Dinámico]
-    Anonymizer -->|Remueve datos personales de docentes| NeutralPayload[Payload Curricular Neutro]
-
-    CheckMode -->|Sí: Solicitud Derecho ARCO| ARCOHandler[Gestor de Derechos ARCO]
-    ARCOHandler -->|Anonimización de datos personales| AuditDB[Bitácora de Auditoría LOPDP]
-
-    CheckMode -->|No: Acceso Coordinación| FullPayload[Payload Completo con Firmas y Datos]
-```
-
-### Modos de Operación
-1. **Blind Mode (Revisión Curricular por Pares):** El `PeerReviewPortalService` oculta los datos de identificación del docente responsable cuando una comisión evalúa el rigor metodológico del Sílabo o Guías APE.
-2. **Cumplimiento LOPDP (`LopdpService`):** Procesa solicitudes de derechos ARCO (Acceso, Rectificación, Cancelación y Oposición), gestionando consentimientos informados y anonimización en logs de auditoría.
+1. **Aislamiento de Adaptaciones Curriculares:** La información de adaptaciones curriculares para estudiantes con necesidades educativas específicas se administra de forma segregada respecto al cuerpo general del PEA que se distribuye ampliamente.
+2. **Consentimientos y Bitácora (`LopdpService`):** Registro inalterable del consentimiento para tratamiento de firmas digitales y control de acceso granular auditado en `doc_lopdp_auditoria_datos`.

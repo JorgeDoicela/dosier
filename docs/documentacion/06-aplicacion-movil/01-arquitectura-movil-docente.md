@@ -1,42 +1,71 @@
-# Arquitectura de Aplicación Móvil Docente
+# Arquitectura de Aplicación Móvil (React Native + Expo)
 
-## 1. Visión General del Cliente Móvil
+## 1. Visión General del Proyecto Móvil (`dosier_mobile`)
 
-El proyecto `dosier_mobile` proporciona la interfaz móvil para el cuerpo docente y las autoridades del ISTT, permitiendo la consulta del estado de proyectos de investigación, la recepción de notificaciones push transaccionales, la aprobación de resoluciones y la verificación de documentos.
+El proyecto `dosier_mobile` constituye el cliente móvil del ecosistema DOSIER, desarrollado sobre el stack **React Native** con el marco de trabajo **Expo** y el enrutador basado en archivos **Expo Router** (`app/`).
 
-El cliente interactúa directamente con los controladores RESTful expuestos por `dosier_api`.
+Su estado de implementación actual se enfoca en el **Sistema de Diseño Vercel Mobile**, proporcionando una biblioteca de componentes táctiles de alta precisión, animaciones fluidas (`react-native-reanimated`) y soporte dual de temas visuales (modo claro y modo oscuro) adaptados a dispositivos móviles.
 
 ---
 
-## 2. Diagrama de Integración Móvil
+## 2. Estructura de Directorios del Código Fuente (`dosier_mobile/`)
 
-```mermaid
-graph TD
-    MobileApp["dosier_mobile\nCliente Móvil"] -->|HTTP REST / JSON| API["ASP.NET Core Web API (dosier_api)"]
-    MobileApp -->|WebPush / FCM| PushService["PushDriver\nNotificaciones Push"]
-
-    subgraph ModulosMoviles [Módulos de la Aplicación Móvil]
-        AuthModule[Módulo de Autenticación / JWT]
-        ProjectModule[Módulo de Consulta de Proyectos]
-        NotifModule[Módulo de Notificaciones In-App / Push]
-        QRModule[Módulo de Escáner QR de Verificación]
-    end
-
-    MobileApp --> ModulosMoviles
+```text
+dosier_mobile/
+├── app/                  # Enrutador basado en archivos (Expo Router)
+│   ├── (tabs)/           # Navegación por pestañas inferiores (Tab Navigator)
+│   │   ├── _layout.tsx   # Configuración de barra de pestañas e iconos
+│   │   ├── index.tsx     # Pantalla principal (Overview, métricas y Bento Cards)
+│   │   └── explore.tsx   # Pantalla de exploración y catálogo de componentes
+│   ├── _layout.tsx       # Layout raíz, inyección de fuentes y temas
+│   └── modal.tsx         # Ventana modal de interacción
+├── components/           # Componentes visuales y catálogo UI Vercel
+│   ├── ui/               # Componentes atómicos del sistema de diseño
+│   │   ├── bento-card.tsx       # Tarjetas modulares Bento Grid
+│   │   ├── vercel-button.tsx    # Botones táctiles de alta interactividad
+│   │   ├── vercel-badge.tsx     # Indicadores semánticos de estado
+│   │   ├── vercel-modal.tsx     # Modales con fondos opacos
+│   │   ├── vercel-tabs.tsx      # Selector de pestañas horizontales
+│   │   ├── vercel-toast.tsx     # Sistema de avisos y notificaciones
+│   │   ├── progress-bar.tsx     # Indicadores de avance
+│   │   ├── background-glow.tsx  # Efectos visuales de iluminación
+│   │   └── status-tag.tsx       # Etiquetas de estado
+│   ├── themed-text.tsx   # Tipografía reactiva a tema claro/oscuro
+│   └── themed-view.tsx   # Contenedores con soporte de tema y resplandor
+├── constants/            # Colores, fuentes y espaciados del sistema Geist
+├── hooks/                # Hooks personalizados (use-vercel-animations, use-color-scheme)
+└── services/             # Servicios de soporte y abstracciones locales
 ```
 
 ---
 
-## 3. Funcionalidades y Módulos de la Aplicación Móvil
+## 3. Catálogo de Componentes UI Móviles Implementados
 
-### 3.1. Autenticación y Gestión de Sesión
-* Permite el inicio de sesión mediante credenciales institucionales o Single Sign-On (SSO).
-* Almacena de forma segura el JWT AccessToken en el almacenamiento encriptado del dispositivo (`SecureStorage` / `Keychain`).
+El núcleo de la aplicación móvil reside en su catálogo de componentes en `components/ui/`, diseñado bajo las especificaciones de diseño **Vercel Geist**:
 
-### 3.2. Consulta de Proyectos y Notificaciones Push
-* Expone el panel de seguimiento de proyectos asignados al docente (como Investigador Principal o Co-Investigador).
-* Recibe notificaciones push en segundo plano enviadas a través de `PushDriver` (protocolo VAPID / FCM) ante eventos de aprobación, observaciones de evaluadores o cambios de estado.
+1. **`BentoCard`:** Contenedor modular con bordes sobrios, esquinas redondeadas y estados táctiles activos. Permite la visualización compacta de datos estadísticos y bloques de información.
+2. **`VercelButton`:** Botón accesible con soporte para múltiples variantes visuales (primario, secundario, contorno), estados deshabilitados y retroalimentación táctil inmediata.
+3. **`VercelModal`:** Ventanas modulares para confirmaciones e interacciones emergentes, implementadas con fondos sólidos y encabezados de alta legibilidad.
+4. **`VercelTabs`:** Barra de navegación segmentada que administra el intercambio ágil de vistas (`Overview`, `Analytics`, `Settings`) sin recarga de pantalla.
+5. **`VercelToast`:** Sistema de alertas efímeras para confirmar acciones del usuario en pantalla.
+6. **`use-vercel-animations`:** Integración con `react-native-reanimated` para transiciones de desvanecimiento hacia arriba (`useFadeUp`) y entradas suaves (`useFadeIn`).
 
-### 3.3. Escáner e Inspección de Documentos vía QR
-* Integra un lector de código QR con la cámara del dispositivo para la lectura instantánea de sellos institucionales.
-* Redirige al endpoint público de validación de `DocumentInstancesController` para verificar la autenticidad e integridad del hash SHA-256 del documento físico.
+---
+
+## 4. Navegación y Pantallas Actuales (`app/`)
+
+* **`HomeScreen` (`app/(tabs)/index.tsx`):**
+  * Cabecera con título institucional DOSIER y subtítulo descriptivo.
+  * Selector de pestañas (`VercelTabs`) para alternar entre vista general, métricas y ajustes.
+  * Cuadrícula de tarjetas `BentoCard` interactivas con números estadísticos (`StatNumber`) y barras de progreso activas (`ProgressBar`).
+  * Lanzadores para prueba de modales opacos (`VercelModal`) y toasts flotantes (`VercelToast`).
+* **`ExploreScreen` (`app/(tabs)/explore.tsx`):**
+  * Catálogo de inspección interactiva para validar las variantes visuales de botones, campos de texto (`VercelInput`), badges semánticos (`VercelBadge`) y divisores.
+* **`ModalScreen` (`app/modal.tsx`):**
+  * Pantalla de presentación de modales desacoplada del árbol principal de navegación.
+
+---
+
+## 5. Integración con el Ecosistema Institucional
+
+El cliente móvil utiliza TypeScript estricto y tipado compartido para mantener consistencia con los esquemas de diseño web de DOSIER, sirviendo como la base visual sobre la cual interactúa el cuerpo docente y estudiantil del ISTPET en dispositivos iOS y Android.

@@ -2,9 +2,9 @@
 
 ## 1. Visión General y Marco Legal
 
-DOSIER implementa una arquitectura de gobernanza de datos diseñada para cumplir rigurosamente con la **Ley Orgánica de Protección de Datos Personales (LOPDP)** del Ecuador y responder a los requerimientos de auditabilidad e inmutabilidad del **CACES**.
+DOSIER implementa una arquitectura de gobernanza de datos diseñada para cumplir rigurosamente con la **Ley Orgánica de Protección de Datos Personales (LOPDP)** de la República del Ecuador y responder a los requerimientos de auditabilidad, trazabilidad e inmutabilidad del **CACES**.
 
-El subsistema abarca el tratamiento seguro de datos personales de docentes e investigadores, la gestión explícita de consentimientos informados, el procesamiento de derechos ARCO y el registro inalterable de cada mutación de datos en el backend.
+El subsistema abarca el tratamiento seguro de datos personales de docentes, la gestión de consentimientos informados para firmas electrónicas, el procesamiento de derechos ARCO y el registro inalterable de cada mutación curricular en el backend.
 
 ---
 
@@ -23,64 +23,52 @@ graph TD
     ARCORouter -->|Cancelación / Supresión| AnonymizeHandler[Motor de Anonimización de Datos]
     ARCORouter -->|Oposición| OpposeHandler[Revocación de Tratos No Esenciales]
 
-    AnonymizeHandler --> AuditTrail[Registro Inmutable en Audit Logs]
+    AnonymizeHandler --> AuditTrail[Registro Inmutable en Tablas doc_lopdp_*]
 ```
 
-### 2.1. Gestión de Consentimientos Informados
-Cada docente o evaluador que interactúa con la plataforma debe aceptar explícitamente los términos de tratamiento de datos personales. El servicio `LopdpService` almacena el registro del consentimiento incluyendo:
-* Identificador único del usuario.
-* Versión exacta del aviso de privacidad aceptado.
-* Marca de tiempo UTC y dirección IP de origen.
-* Finalidades autorizadas (investigación académica, evaluación por pares, notificaciones institucionales).
+### 2.1. Gestión de Consentimientos Informados (`doc_lopdp_consentimientos`)
+Cada docente o directivo que firma o interactúa con el sistema acepta explícitamente los términos de tratamiento de datos personales y uso de certificados digitales. La tabla `doc_lopdp_consentimientos` almacena:
+* `idUsuario`: Identificador del usuario titular.
+* `versionPolitica`: Versión exacta del aviso de privacidad y política institucional aceptada.
+* `fechaConsentimiento`: Marca de tiempo UTC del consentimiento.
+* `ipAcceso` y `userAgent`: Dirección IP y dispositivo de origen.
+* `finalidadesAutorizadas`: Finalidades académicas y de acreditación CACES autorizadas.
 
-### 2.2. Atencion a Derechos ARCO (Acceso, Rectificacion, Cancelacion y Oposicion)
-* **Derecho de Acceso:** Generación de un reporte descargable en formato estructurado que recopila la totalidad de los datos personales y académicos almacenados.
-* **Derecho de Rectificación:** Canal seguro para corregir inconsistencias en nombres, títulos académicos o adscripciones institucionales.
-* **Derecho de Cancelación (Anonimización):** En caso de ejercer el derecho al olvido o baja institucional, DOSIER no elimina físicamente registros vinculados a proyectos aprobados para no romper la trazabilidad histórica de I+D+i. En su lugar, el `LopdpService` ejecuta una **pseudonimización irreversibles**, reemplazando datos identificativos por hashes irreversibles y manteniendo únicamente la estructura técnica necesaria para fines estadísticos y de acreditación.
+### 2.2. Atención a Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición)
+* **Derecho de Acceso:** Generación de un reporte estructurado con la totalidad de los datos personales, nombramientos docentes y asignaciones curriculares del titular.
+* **Derecho de Rectificación:** Canal de actualización con validación contra el registro institucional de SIGAFI.
+* **Derecho de Cancelación (Anonimización):** En caso de desvinculación institucional, DOSIER no elimina físicamente expedientes de asignaturas ya aprobadas o legalizadas, puesto que constituyen evidencia obligatoria de acreditación ante el CACES. En su lugar, el servicio ejecuta una pseudonimización, disociando los identificadores personales y preservando la integridad técnica de la planificación.
+* **Protección de Adaptaciones Curriculares:** Los datos sobre adaptaciones curriculares asociadas a necesidades educativas específicas se almacenan segregados, con acceso restringido exclusivamente a las autoridades autorizadas y fuera del documento público distribuido a estudiantes.
 
 ---
 
-## 3. Bitácora de Auditoría Inmutable (`audit_logs`)
+## 3. Bitácoras de Auditoría y Trazabilidad Forense
 
-Todas las operaciones de creación, modificación o eliminación ejecutadas en la solución backend son interceptadas y registradas de forma transparente por el servicio `AuditService`.
+Las operaciones críticas del sistema se auditan en tablas especializadas:
 
-### 3.1. Estructura de la Tabla de Auditoría
+### 3.1. Auditoría Documental (`doc_document_audit`)
+Registra cada cambio en las instancias documentales:
+* `idDocumentoInstancia`: Documento intervenido.
+* `idUsuario`: Actor que realizó la operación.
+* `accion`: Creación, actualización, envío a revisión, cambio de estado o firma.
+* `detalles`: Metadatos serializados del cambio.
+* `ip`: Dirección IP de la solicitud.
+* `fecha`: Marca de tiempo UTC inalterable.
 
-```sql
-CREATE TABLE audit_logs (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_uuid VARCHAR(36) NULL,
-    user_email VARCHAR(255) NULL,
-    action_type VARCHAR(50) NOT NULL, -- INSERT, UPDATE, DELETE, EXECUTE, SIGN
-    entity_name VARCHAR(100) NOT NULL,
-    entity_uuid VARCHAR(36) NOT NULL,
-    old_values_json LONGTEXT NULL,     -- Estado previo a la mutación
-    new_values_json LONGTEXT NULL,     -- Estado posterior a la mutación
-    ip_address VARCHAR(45) NOT NULL,
-    user_agent VARCHAR(500) NULL,
-    timestamp_utc DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-```
+### 3.2. Trazabilidad del PEA (`doc_pea_trazabilidad`)
+Soporte del ciclo de vida del Programa de Estudio de la Asignatura:
+* `idPea`: Identificador de la asignatura y su planificación.
+* `estadoAnterior` y `estadoNuevo`: Transición de estado (`Borrador` -> `EnRevision` -> `RevisadoCoord` -> `RevisadoAcad` -> `Aprobado`).
+* `motivo`: Justificación técnica de la transición o aval emitido.
+* `idUsuario`: Autoridad o docente que autorizó el cambio.
+* `hashDocumento`: Hash criptográfico SHA-256 calculado sobre el contenido curricular completo al momento de la transición.
 
-### 3.2. Características de Seguridad del Audit Trail
-* **Snapshots de Diferencia (JSON Diffs):** Ante un `UPDATE`, el backend captura exactamente el JSON previo (`old_values_json`) y el JSON resultante (`new_values_json`), permitiendo la reconstrucción histórica de cualquier entidad en un momento dado.
-* **Imposibilidad de Modificación:** Los endpoints de la API no exponen operaciones de actualización o borrado sobre la tabla `audit_logs`. Esta tabla solo permite operaciones de inserción (`APPEND-ONLY`).
+### 3.3. Auditoría LOPDP (`doc_lopdp_auditoria_datos`)
+Registro inalterable de cada acceso, consulta o exportación de datos sensibles de usuarios para inspección del CACES y entes reguladores.
 
 ---
 
-## 4. Papelera de Reciclaje Lógica y Soft Deletes
+## 4. Política de Retención y Custodia Documental
 
-Para prevenir la pérdida accidental de información y asegurar la recuperabilidad de proyectos en formulación, DOSIER aplica la estrategia de **Soft Delete**.
-
-```mermaid
-graph LR
-    DeleteReq[Solicitud de Borrado HTTP DELETE] --> Controller[ProjectsController / DocumentInstancesController]
-    Controller --> SoftDelete[Marcar is_deleted = 1 & deleted_at_utc = NOW]
-    SoftDelete --> RecycleBin[RecycleBinController]
-    RecycleBin -->|Restaurar| Restore[Restablecer is_deleted = 0]
-    RecycleBin -->|Purgar Definitivo| HardDelete[Borrado Fisico Autorizado por Admin]
-```
-
-* **Comportamiento por Defecto:** Al eliminar un registro, EF Core actualiza las columnas `is_deleted = true` y `deleted_at_utc = DateTime.UtcNow`.
-* **Filtrado Automático:** Los `DbContextQueryFilters` de EF Core excluyen automáticamente los registros marcados como eliminados en todas las consultas habituales de la API.
-* **Gestión Centralizada (`RecycleBinController`):** Proporciona a los administradores una interfaz para inspeccionar registros eliminados, evaluar el impacto de su eliminación y ejecutar acciones de restauración inmediata o purgado físico definitivo.
+1. **Inmutabilidad Post-Aprobación:** Los PEAs que alcanzan el estado `Aprobado` quedan permanentemente bloqueados para escritura (*State Locking*). Cualquier necesidad de ajuste en un período posterior genera una nueva versión formal vinculada sin sobreescribir el antecedente histórico.
+2. **Custodia de Documentos Oficiales:** Los archivos PDF vectoriales legalizados y sus firmas criptográficas se conservan en almacenamiento estructurado local, protegidos contra eliminación accidental o automática no autorizada.

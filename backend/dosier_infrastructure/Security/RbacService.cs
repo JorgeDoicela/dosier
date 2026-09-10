@@ -26,7 +26,7 @@ public class RbacService : IRbacService
         var system = await _context.Systems.FirstOrDefaultAsync(s => s.Codigo == "DOSIER");
         if (system == null)
         {
-            system = new SystemEntity { Codigo = "DOSIER", Detalle = "Dpto. Investigación e Innovación Traversari" };
+            system = new SystemEntity { Codigo = "DOSIER", Detalle = "Gestión Curricular y Acreditación ISTPET" };
             _context.Systems.Add(system);
             await _context.SaveChangesAsync();
         }
@@ -136,9 +136,10 @@ public class RbacService : IRbacService
         {
             requiredRoleCodes.Add("DOSIER_ADMIN");
         }
-        else if (user.TablaSigafi == "profesor") requiredRoleCodes.Add("DOSIER_DOCENTE");
-        else if (user.TablaSigafi == "alumno") requiredRoleCodes.Add("DOSIER_ESTUDIANTE");
-        else if (user.TablaSigafi == "otros") requiredRoleCodes.Add("DOSIER_REVISOR_EXTERNO");
+        else if (user.TablaSigafi == "profesor")
+        {
+            requiredRoleCodes.Add("DOSIER_DOCENTE");
+        }
 
         foreach (var requiredRoleCode in requiredRoleCodes)
         {
@@ -153,9 +154,10 @@ public class RbacService : IRbacService
                     {
                         CodigoRol = requiredRoleCode,
                         Nombre = requiredRoleCode == "DOSIER_ADMIN" ? "Administrador DOSIER" :
-                                 requiredRoleCode == "DOSIER_DOCENTE" ? "Docente Investigador DOSIER" :
-                                 requiredRoleCode == "DOSIER_ESTUDIANTE" ? "Estudiante DOSIER" :
-                                 requiredRoleCode == "DOSIER_REVISOR_EXTERNO" ? "Revisor Externo DOSIER" : requiredRoleCode,
+                                 requiredRoleCode == "DOSIER_DOCENTE" ? "Docente Elaborador DOSIER" :
+                                 requiredRoleCode == "DOSIER_COORD_CARRERA" ? "Coordinador de Carrera DOSIER" :
+                                 requiredRoleCode == "DOSIER_COORD_ACAD" ? "Coordinación Académica DOSIER" :
+                                 requiredRoleCode == "DOSIER_VICERRECTOR" ? "Vicerrectorado Académico DOSIER" : requiredRoleCode,
                         EsActivo = true
                     };
                     _context.Roles.Add(role);
@@ -198,22 +200,36 @@ public class RbacService : IRbacService
             bool shouldAssign = false;
             var perm = $"{op.Module.Nombre}:{op.Operation.NombreOperacion}".ToUpper();
 
-            if (role.CodigoRol == "DOSIER_ADMIN") shouldAssign = true; // Admin tiene TODO de DOSIER
+            if (role.CodigoRol == "DOSIER_ADMIN")
+            {
+                shouldAssign = true; // Admin tiene TODO de DOSIER
+            }
             else if (role.CodigoRol == "DOSIER_DOCENTE")
             {
-                // Docentes: Gestión de proyectos y bitácora, pero no administración de sistema
-                if (perm.StartsWith("PROYECTOS") || perm.StartsWith("BITACORA") || perm.StartsWith("SOLICITUDES")) shouldAssign = true;
+                if (perm == "PEA:VER" || perm == "PEA:CREAR" || perm == "PEA:EDITAR" || perm == "PEA:COWORK" || perm == "PEA:SUBSANAR" || perm == "PEA:EXPORTAR_PDF") shouldAssign = true;
+                if (perm == "GOBERNANZA_CURRICULAR:VER") shouldAssign = true;
                 if (perm == "CONFIGURACION:VER") shouldAssign = true;
             }
-            else if (role.CodigoRol == "DOSIER_ESTUDIANTE")
+            else if (role.CodigoRol == "DOSIER_COORD_CARRERA")
             {
-                // Estudiantes: Solo ver y postular
-                if (perm == "PROYECTOS:VER" || perm == "PROYECTOS:POSTULAR") shouldAssign = true;
+                if (perm == "PEA:VER" || perm == "PEA:OBSERVAR" || perm == "PEA:AVALAR_CARRERA" || perm == "PEA:EXPORTAR_PDF") shouldAssign = true;
+                if (perm == "GOBERNANZA_CURRICULAR:VER" || perm == "GOBERNANZA_CURRICULAR:GESTIONAR") shouldAssign = true;
+                if (perm == "AUDITORIA_CACES:REPORTES") shouldAssign = true;
+                if (perm == "CONFIGURACION:VER") shouldAssign = true;
             }
-            else if (role.CodigoRol == "DOSIER_REVISOR_EXTERNO")
+            else if (role.CodigoRol == "DOSIER_COORD_ACAD")
             {
-                // Revisores Externos: Solo ver proyectos asignados y realizar revisiones
-                if (perm == "PROYECTOS:VER" || perm.StartsWith("REVISIONES")) shouldAssign = true;
+                if (perm == "PEA:VER" || perm == "PEA:OBSERVAR" || perm == "PEA:AVALAR_ACADEMICO" || perm == "PEA:EXPORTAR_PDF") shouldAssign = true;
+                if (perm == "GOBERNANZA_CURRICULAR:VER" || perm == "GOBERNANZA_CURRICULAR:GESTIONAR") shouldAssign = true;
+                if (perm == "AUDITORIA_CACES:VER-AUDITORIA" || perm == "AUDITORIA_CACES:REPORTES") shouldAssign = true;
+                if (perm == "CONFIGURACION:VER") shouldAssign = true;
+            }
+            else if (role.CodigoRol == "DOSIER_VICERRECTOR")
+            {
+                if (perm == "PEA:VER" || perm == "PEA:OBSERVAR" || perm == "PEA:APROBAR" || perm == "PEA:EXPORTAR_PDF") shouldAssign = true;
+                if (perm == "GOBERNANZA_CURRICULAR:VER" || perm == "GOBERNANZA_CURRICULAR:GESTIONAR") shouldAssign = true;
+                if (perm == "AUDITORIA_CACES:VER-AUDITORIA" || perm == "AUDITORIA_CACES:REPORTES") shouldAssign = true;
+                if (perm == "CONFIGURACION:VER" || perm == "CONFIGURACION:EDITAR") shouldAssign = true;
             }
 
             if (shouldAssign)

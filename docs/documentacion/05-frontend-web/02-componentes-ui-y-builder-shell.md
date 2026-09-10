@@ -1,44 +1,75 @@
-# Componentes UI Especializados, Sistema de Diseño Geist y Shell Curricular
+# Componentes UI Especializados, Sistema Geist y Shell del PEA
 
-## 1. Visión General de Componentes UI
+## 1. Visión General del Constructor Curricular
 
-La interfaz de usuario de DOSIER (`dosier_web/src/components/`) implementa el sistema de diseño **Vercel Geist**, proporcionando un catálogo de componentes accesibles, modulares y de alto rendimiento diseñados específicamente para la formulación curricular, co-redacción en tiempo real, validación de horas y renderizado Canvas de plantillas.
+La experiencia de usuario de DOSIER se centra en el **Constructor del Programa de Estudio de la Asignatura (PEA)**, una interfaz avanzada diseñada para simplificar la planificación pedagógica docente, validar restricciones matemáticas de carga horaria en tiempo real y permitir la co-redacción concurrente entre docentes de cátedra.
+
+El sistema de componentes se rige por el catálogo de diseño **Vercel Geist**, asegurando alta densidad informativa, legibilidad y un cumplimiento estricto de la regla de **fondos 100% sólidos sin transparencias**.
 
 ---
 
-## 2. Jerarquía de Componentes del Constructor Curricular
+## 2. Diagrama de Jerarquía del Shell Curricular
 
 ```mermaid
 graph TD
-    Shell[DOSIERBuilderShell\nContenedor Principal Curricular] --> SectionGuard[SectionBlockGuard\nControl de Bloqueos CoWork]
-    Shell --> CoWork[CoWorkField\nEditor Colaborativo Yjs]
-    Shell --> CollabSidebar[CollaborationSidebar\nPresencia Docente en Vivo]
-    Shell --> SecGen[GeneralSection\nMetadatos de Asignatura & Malla]
-    Shell --> SecTeam[TeamSection / MemberSearchSelector\nDocentes de la Materia & Comisiones]
-    Shell --> DocTray[DocumentTray\nCompilación PDF & Exportación]
-    Shell --> SigBlock[SignatureBlock / FirmaModal\nFirma Electrónica PKCS#12]
+    Shell[DOSIERBuilderShell\nContenedor Principal del PEA] --> Stepper[WorkflowStepper\nBorrador - EnRevisión - RevisadoCoord - RevisadoAcad - Aprobado]
+    Shell --> LockGuard[StateLockingGuard\nProtección de Inmutabilidad]
+    Shell --> CollabBar[CollaborationHeader\nDocentes en Vivo y Estado de Sincronización]
+    Shell --> TabsNav[SectionsTabNav\nNavegación Modular Secciones A - K]
+
+    TabsNav --> SecA[Sección A: Carátula e Institución]
+    TabsNav --> SecB[Sección B: Datos Generales & Horas SIGAFI]
+    TabsNav --> SecC[Sección C: Objetivos de Aprendizaje]
+    TabsNav --> SecD[Sección D: Competencias]
+    TabsNav --> SecE[Sección E: Resultados de Aprendizaje]
+    TabsNav --> SecF[Sección F: Contenidos Temáticos & Horas]
+    TabsNav --> SecG[Sección G: Estrategias Metodológicas]
+    TabsNav --> SecH[Sección H: Recursos y Laboratorios]
+    TabsNav --> SecI[Sección I: Criterios de Evaluación]
+    TabsNav --> SecJ[Sección J: Bibliografía APA 7ma]
+    TabsNav --> SecK[Sección K: Circuito de 4 Firmas]
+
+    SecF --> CoWork[CoWorkField\nEditor Colaborativo Yjs]
+    SecG --> CoWork
+    SecK --> FirmaModal[FirmaModal\nCarga Certificado PKCS#12]
 ```
 
 ---
 
-## 3. Catálogo de Componentes UI y Geist Design System
+## 3. Desglose de Secciones Modulares del PEA Oficial (A - K)
 
-### 3.1. Componentes Base Geist (`src/components/Common/`)
-* **`GeistCalendar.tsx` & `GeistDatePicker.tsx`:** Calendario interactivo y selector de fechas con navegación mensual/anual rápida, estados disabled y estética minimalista Geist. Utilizado para fijar plazos de entrega y fechas de evaluaciones parciales.
-* **`GeistSelect.tsx`:** Selector desplegable con soporte para búsqueda interna, badges semánticos y estados controlados.
-* **`MemberSearchSelector.tsx`:** Selector de búsqueda en tiempo real para asignación de docentes de la materia y miembros de comisiones curriculares con prevención de duplicados.
+| Sección | Componente React | Funcionalidad y Validación |
+| :--- | :--- | :--- |
+| **Sección A: Carátula** | `SectionACover.tsx` | Presentación formal institucional del ISTPET, logotipos, carrera, período lectivo y código de verificación. |
+| **Sección B: Datos Generales** | `SectionBGeneralData.tsx` | Muestra código, nivel, campo de formación, créditos y horas (CD, APE, TA). Sincronizado directamente desde `detallemallas` de SIGAFI. |
+| **Sección C: Objetivos** | `SectionCObjectives.tsx` | Registro del objetivo general y específicos de la asignatura articulados con la titulación. |
+| **Sección D: Competencias** | `SectionDCompetencies.tsx` | Competencias genéricas institucionales y específicas del perfil profesional. |
+| **Sección E: Resultados** | `SectionELearningOutcomes.tsx` | Formulación de resultados de aprendizaje con ponderación y niveles de logro (Inicial, Medio, Alto). |
+| **Sección F: Contenidos Temáticos** | `SectionFContents.tsx` | Matriz modular de unidades, temas y distribución horaria. Valida en tiempo real que la sumatoria de horas coincida con la malla de SIGAFI. Soporta co-redacción con `<CoWorkField>`. |
+| **Sección G: Metodología** | `SectionGMethodology.tsx` | Selección de métodos didácticos alineados con el Modelo Educativo Institucional del ISTPET. |
+| **Sección H: Recursos** | `SectionHResources.tsx` | Equipamiento de talleres, laboratorios tecnológicos y software requerido para la cátedra. |
+| **Sección I: Evaluación** | `SectionIEvaluation.tsx` | Criterios y ponderaciones de evaluación sumativa y formativa reglamentadas por el ISTPET. |
+| **Sección J: Bibliografía** | `SectionJBibliography.tsx` | Catálogo de textos básicos y complementarios con validación de normas APA 7ma edición y disponibilidad bibliotecaria. |
+| **Sección K: Firmas Oficiales** | `SectionKSignatures.tsx` | Visualización del estado del circuito formal de 4 firmas con sellos de tiempo y validez criptográfica. |
 
-### 3.2. Constructor Curricular (`src/components/DOSIER/`)
-* **`DOSIERBuilderShell.tsx`:** Shell principal para la estructuración y redacción de PEAs y Sílabos (19 semanas). Administra pestañas por bloques, guardado de borradores y compilación previa.
-* **`CoWorkField.tsx`:** Componente de co-redacción en tiempo real conectado al Hub de SignalR mediante CRDT (Yjs). Muestra cursores remotos, avatares de docentes activos y sincronización delta sin colisiones.
-* **`SectionBlockGuard.tsx`:** Bloquea campos cuando otro docente está editando o cuando el documento se encuentra en estado inmutable (`State Locking`).
-* **`TeamSection.tsx`:** Gestión del equipo docente de la materia con roles (Autor Principal, Co-Docente, Revisor), validación de dedicación horaria y selectores Geist.
+---
 
-### 3.3. Motores de Renderizado Canvas de Plantillas (`src/pages/Admin/Templates/components/canvasRenderers/`)
-* **`RenderSections.tsx`:** Generador dinámico de secciones curriculares y bloques colapsables a partir del esquema JSON de la plantilla.
-* **`RenderProgressSections.tsx`:** Renderizador de barras e indicadores de avance curricular para seguimiento de cumplimiento de horas y semanas.
-* **`RenderTables.tsx`:** Generador de tablas matriciales para la distribución semanal de contenidos (CD, APE, TA), resultados de aprendizaje y rúbricas de evaluación.
+## 4. Componentes UI Especializados y Regla de Opacidad Sólida
 
-### 3.4. Firma Electrónica y Certificados (`SignatureBlock.tsx` / `FirmaModal.tsx`)
-* `SignatureBlock.tsx`: Renderiza el recuadro visual de firma en el documento oficial con sellos de tiempo y metadatos del firmante.
-* `FirmaModal.tsx`: Modal para carga de archivo de firma digital (`.p12` / `.pfx`), ingreso de clave privada y despacho seguro al backend.
+### 4.1. `<CoWorkField>`: Co-Redacción Concurrente en Tiempo Real
+* **Ubicación:** `src/components/DOSIER/CoWorkField.tsx`
+* **Mecanismo:** Utiliza la librería **Yjs** junto con el proveedor de transporte WebSocket vía **SignalR**.
+* **Características:**
+  * Edición simultánea sin conflictos gracias al algoritmo CRDT (*Conflict-free Replicated Data Type*).
+  * Renderizado de cursores remotos identificados por colores distintivos y etiquetas con los nombres de los co-docentes.
+  * Autoguardado silencioso con debounce hacia la tabla `cowork_documentos` del backend.
+
+### 4.2. `StateLockingGuard.tsx`: Control de Inmutabilidad Curricular
+* Evalúa el estado del workflow del PEA. Si el estado se encuentra en `RevisadoCoord`, `RevisadoAcad` o `Aprobado`, deshabilita de manera global todos los campos de entrada, botones de edición y acciones de modificación en el formulario, previniendo alteraciones no autorizadas en fases colegiadas.
+
+### 4.3. Componentes Geist con Fondos 100% Sólidos (`src/components/Common/`)
+
+* **`GeistSelect.tsx`:** Selector desplegable accesible. Su menú flotante utiliza exclusivamente la clase `bg-white dark:bg-zinc-950` con bordes nítidos `border border-zinc-200 dark:border-zinc-800`, eliminando transparencias para garantizar contraste óptimo.
+* **`GeistDatePicker.tsx` & `GeistCalendar.tsx`:** Selectores de fecha para cronogramas y fechas de evaluación. Los paneles desplegables tienen fondo sólido opaco, evitando que las tablas o textos de la página se visualicen por debajo.
+* **`MemberSearchSelector.tsx`:** Buscador dinámico de co-docentes y revisores institucionales. Presenta una lista de resultados con fondo completamente opaco y navegación por teclado.
+* **`FirmaModal.tsx`:** Ventana modal de alta seguridad para la firma electrónica. Fondo modal 100% sólido, carga del archivo PKCS#12 (`.p12` o `.pfx`), campo de contraseña enmascarado y validación de certificado ante el backend.

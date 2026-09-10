@@ -1,61 +1,114 @@
-# Arquitectura Frontend Web (React SPA + Vite)
+# Arquitectura Frontend Web (React 18 + Vite + TypeScript)
 
 ## 1. Visión General del Cliente Web
 
-El cliente web de DOSIER (`dosier_web`) es una aplicación de página única (**SPA**) construida sobre **React 18**, **TypeScript**, **Vite** y el sistema de diseño **Vercel Geist**.
+El cliente web de DOSIER (`dosier_web`) es una aplicación de página única (**SPA**) de alto rendimiento construida con:
+* **React 18** y **TypeScript 5.x**.
+* **Vite** como empaquetador ultrarrápido y servidor de desarrollo local.
+* **Tailwind CSS v4** integrado nativamente con variables semánticas en `src/styles/base.css`.
+* **Vercel Geist Design System**: Lenguaje visual sobrio, minimalista, enfocado en tipografía de alta legibilidad (`Geist Sans` / `Geist Mono`), bordes definidos y jerarquía visual estricta.
 
-La aplicación proporciona la interfaz de usuario para la planificación curricular, co-redacción en tiempo real de PEAs y Sílabos (19 semanas), elaboración de Guías APE, validación por comisiones académicas, firma electrónica y gestión del portafolio docente.
+La plataforma proporciona a la comunidad académica del Instituto Superior Tecnológico Pedro Traversari una herramienta profesional para la planificación del Programa de Estudio de la Asignatura (PEA), co-redacción en tiempo real, revisión colegiada por comisiones de carrera, firma electrónica y verificación pública de acreditación.
 
 ---
 
-## 2. Estructura de Directorios del Código Fuente (`src/`)
+## 2. Regla Cardinal de Diseño Visual: Cero Transparencias y Fondos 100% Sólidos
 
-El código fuente del frontend se organiza en módulos dentro de `dosier_web/src/`:
+Por directriz de diseño institucional y usabilidad técnica, el frontend implementa la siguiente norma obligatoria y no negociable:
+
+> [!IMPORTANT]
+> **Prohibición Total de Transparencias en Componentes Flotantes y Superpuestos:**
+> Todos los modales, popovers, menús desplegables (`GeistSelect`), selectores de fechas (`GeistDatePicker`), drawers, tooltips y paneles de diálogo deben poseer fondos **100% sólidos y opacos**.
+> * Modo Claro: Fondo sólido `bg-white` (`#FFFFFF`).
+> * Modo Oscuro: Fondo sólido `bg-zinc-950` (`#09090b`) o `bg-black` (`#000000`).
+> * Queda estrictamente prohibido el uso de clases translúcidas con opacidades intermedias (como `bg-white/80`, `bg-black/60` o `backdrop-blur-md` sin color de fondo pleno) en elementos de interacción, a fin de evitar el sangrado de texto (*text bleed-through*) y la contaminación visual de elementos subyacentes.
+
+---
+
+## 3. Estructura de Directorios del Código Fuente (`src/`)
 
 ```text
 dosier_web/src/
-├── api/             # Configuración del cliente HTTP Axios e interceptores (snake_case)
-├── components/      # Componentes UI reutilizables y específicos de DOSIER
-│   ├── Common/      # GeistCalendar, GeistDatePicker, GeistSelect, MemberSearchSelector, modales
-│   ├── DOSIER/      # Componentes del constructor curricular (DOSIERBuilderShell, CollaborationSidebar)
-│   │   └── sections/# Secciones de formulario (GeneralSection, TeamSection, ObjectivesSection, etc.)
-│   └── Layout/      # Barras de navegación, cabeceras y estructura de página
-├── core/            # Configuración de context providers e instancias globales
-├── hooks/           # Custom React Hooks (autenticación, WebSocket SignalR, formularios)
-├── pages/           # Vistas principales del enrutador React Router
-│   ├── Admin/       # Vistas de administración, plantillas y Canvas Builder
-│   ├── Analytics/   # Indicadores y reportes de cumplimiento curricular
-│   ├── Auth/        # Vistas de login, autenticación y recuperación
-│   ├── Dashboard/   # Panel principal según rol (Docente, Coordinador, Comisión, Admin)
-│   ├── Documentacion/ # Vistas de asignaturas, PEA, Sílabos e informes de avance
-│   └── Lopdp/       # Formularios de consentimiento y solicitudes ARCO
-├── services/        # Capa de comunicación REST con los controladores del backend
-├── styles/          # Hojas de estilo CSS y catálogo Geist Design System (base.css)
-└── utils/           # Helper functions, generadores HTML, formateadores y constantes
+├── api/             # Instancia de Axios configurada, interceptores JWT y serialización snake_case
+├── components/      # Componentes UI reutilizables y modulares
+│   ├── Common/      # Modales, GeistSelect, GeistDatePicker, MemberSearchSelector, botones Geist
+│   ├── DOSIER/      # Shell curricular, CoWorkField, Stepper de 4 estados, pestañas Secciones A-K
+│   │   └── sections/# Componentes individuales para cada sección del PEA oficial
+│   └── Layout/      # Header institucional, barra lateral de navegación, pie de página y breadcrumbs
+├── context/         # Contextos globales de React (AuthContext, ThemeContext, NotificationContext)
+├── hooks/           # Custom React Hooks (useAuth, useCoWork, useSignalR, useDebounce)
+├── pages/           # Vistas principales del enrutador de React (App.tsx)
+│   ├── Admin/       # Usuarios, Auditoría, Mantenimiento Documental, Plantillas Canvas
+│   ├── Analytics/   # Métricas e indicadores de cumplimiento institucional
+│   ├── Auth/        # Vistas de autenticación institucional, contraseñas y alertas
+│   ├── Calendario/  # Calendario académico y cronograma institucional
+│   ├── Dashboard/   # Panel de control interactivo según el rol autenticado
+│   ├── Investigacion/ # Expedientes y Proyectos (Workspace, Monitoreo, Revisión Técnica)
+│   ├── Landing/     # Página pública institucional
+│   ├── Login/       # Acceso estándar, Magic Links, Microsoft SSO y PIN
+│   ├── Lopdp/       # Formularios de consentimiento y administración LOPDP
+│   ├── Notificaciones/ # Bandeja de alertas y eventos transaccionales
+│   ├── Public/      # Verificación forense pública de documentos vía código QR
+│   ├── RecycleBin/  # Papelera de reciclaje y recuperación de registros
+│   └── Settings/    # Configuración de cuenta y parámetros normativos
+├── services/        # Capa de abstracción REST para comunicación con los 23 controladores del backend
+├── styles/          # base.css con tokens HSL, variables Geist y utilidades semánticas
+└── types/           # Definiciones de tipos e interfaces TypeScript (PEA, Malla, RBAC, LOPDP)
 ```
 
 ---
 
-## 3. Enrutamiento y Gestión de Estado
+## 4. Enrutamiento y Control de Acceso por Roles (RBAC)
 
-### 3.1. Enrutamiento (`App.tsx`)
-El enrutamiento de la aplicación utiliza **React Router**. Las rutas se dividen en categorías protegidas por roles y permisos:
+El enrutamiento se gestiona a través de **React Router v6** en `src/App.tsx`. El componente de guardia `ProtectedRoute` y los evaluadores de rol (`RoleRoute`, `AdminRoute`, `PermissionRoute`, `ResearcherRoute`) controlan la navegación:
 
 ```mermaid
 graph TD
-    UserAccess[Acceso del Docente / Directivo] --> RouterCheck{¿Estado de Autenticación?}
+    Request[Acceso a Ruta / URL] --> AuthCheck{¿Usuario Autenticado?}
 
-    RouterCheck -->|No Autenticado| PublicRoutes[Rutas Públicas\nLanding / Login / Verificación QR]
-    RouterCheck -->|Autenticado| ProtectedRoutes{¿Rol / Permisos?}
+    AuthCheck -->|No| PublicRoute[Rutas Públicas\n/login, /verificacion/:code]
+    AuthCheck -->|Sí| LOPDPCheck{¿Aceptó LOPDP?}
 
-    ProtectedRoutes -->|Docente Materia| DocenteViews[Dashboard / Mis Asignaturas / PEA & Sílabo Builder]
-    ProtectedRoutes -->|Comisión / Par Revisor| RevisorViews[Portal de Revisión Curricular]
-    ProtectedRoutes -->|Coordinador de Carrera| CoordViews[Mallas / Asignaciones / Aprobación Curricular]
-    ProtectedRoutes -->|Administrador| AdminViews[Gestión de Usuarios / Plantillas Canvas / Auditoría]
+    LOPDPCheck -->|No| ConsentRoute[/consentimiento-lopdp]
+    LOPDPCheck -->|Sí| RoleCheck{Evaluación de Rol RBAC}
+
+    RoleCheck -->|Docente| DocenteViews[/documentacion/mis-proyectos\n/documentacion/workspace/:templateCode/:projectUuid]
+    RoleCheck -->|Revisores / Coordinación| RevisorViews[/documentacion/revision-tecnica/:projectUuid]
+    RoleCheck -->|Supervisión / Admin| AdminViews[/documentacion\n/plantillas, /usuarios, /auditoria, /analiticas]
 ```
 
-### 3.2. Gestión de Estado
-La aplicación utiliza una estrategia de estado híbrida y desacoplada:
-* **Estado Local (`useState` / `useReducer`):** Para el control de formularios, bloques dinámicos y modales.
-* **Context API (`useContext`):** Para la sesión del usuario autenticado, roles, estado del tema visual y notificaciones en tiempo real.
-* **Estado Colaborativo (Yjs CRDT + `<CoWorkField>`):** Para la edición concurrente de secciones curriculares en tiempo real.
+### Matriz de Rutas Oficiales en el Cliente Web (`App.tsx`)
+
+| Ruta Frontend | Rol / Guardia | Funcionalidad Principal |
+| :--- | :--- | :--- |
+| `/login` | Público (`AuthenticatedRedirect`) | Acceso institucional con credenciales locales, Magic Links o Microsoft 365. |
+| `/verificacion/:code` | Público | Comprobación forense de autenticidad, firmas y hash SHA-256 mediante código QR. |
+| `/dashboard` | Autenticado | Panel de bienvenida, accesos rápidos y estado institucional. |
+| `/documentacion/mis-proyectos` | `ResearcherRoute` (Docentes) | Listado de asignaturas y expedientes asignados al docente autenticado. |
+| `/documentacion/workspace/:templateCode/:projectUuid` | Autenticado | Entorno de trabajo para estructuración y co-redacción concurrente con Yjs. |
+| `/documentacion/revision-tecnica/:projectUuid` | Autenticado | Portal de revisión colegiada, formulación de observaciones técnicas y dictámenes. |
+| `/documentacion/monitoreo/:projectUuid` | Autenticado | Seguimiento del estado del flujo curricular y avances. |
+| `/documentacion` | `AdminRoute` | Consola de supervisión y gestión integral de expedientes curriculares. |
+| `/plantillas` | `AdminRoute` | Maquetador visual de bloques de plantillas (Canvas Template Builder). |
+| `/usuarios` | `PermissionRoute("USUARIOS", "VER")` | Administración de usuarios institucionales, sincronización SIGAFI y roles. |
+| `/auditoria` | `AdminRoute` | Bitácora forense de transacciones con filtros de fecha, usuario e IP. |
+| `/lopdp` | `AdminRoute` | Supervisión de consentimientos y gestión de solicitudes de derechos ARCO. |
+| `/consentimiento-lopdp` | Autenticado | Aceptación obligatoria de términos conforme a la Ley de Protección de Datos. |
+| `/analiticas` | `AdminRoute` | Métricas estadísticas de cumplimiento y cobertura. |
+| `/notificaciones` | Autenticado | Centro de notificaciones in-app recibidas vía SignalR. |
+| `/calendario` | Autenticado | Calendario de eventos y fechas límite de planificación curricular. |
+| `/emails` | `AdminRoute` | Configuración de plantillas de correo y pruebas de despacho SMTP. |
+
+---
+
+## 5. Gestión del Estado de la Aplicación
+
+La aplicación implementa una estrategia de arquitectura de estado por capas:
+
+1. **Estado de Sesión Global (`AuthContext`):**
+   * Almacena los datos del usuario activo, identificador único, nombres, apellidos, correo institucional y el arreglo de roles activos (`DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, etc.).
+   * Administra la persistencia segura del JWT en almacenamiento local y la sincronización con los interceptores de Axios.
+2. **Estado Local de Formulario (`useState` / `useReducer`):**
+   * Maneja los valores transitorios de las secciones del PEA durante la edición activa antes del guardado formal en base de datos.
+3. **Estado Colaborativo Distribuido (Yjs CRDT + SignalR):**
+   * Gestiona la sincronización concurrente en campos de texto enriquecido mediante el componente `<CoWorkField>`. El estado no sufre bloqueos pesimistas, garantizando que dos docentes puedan trabajar en la misma unidad curricular sin sobreescritura de datos.

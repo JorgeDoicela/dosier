@@ -6,40 +6,48 @@ description: Extiende la skill global de backend con convenciones y restriccione
 
 > **Orquestación:** Esta skill **extiende y complementa** las directrices globales de `desarrollo-backend`. Debe cargarse siempre junto con los principios globales (arquitectura limpia, inyección de dependencias, logging, commits semánticos).
 
+## 1. Convenciones de Base de Datos y Persistencia
 
-## 1. Convenciones de Base de Datos (DOSIER)
+* **Tablas Institucionales SIGAFI — Estrictamente Solo Lectura:** Las tablas preexistentes del sistema académico institucional (`carreras`, `periodos`, `mallas_periodos`, `detallemallas`, `profesores`, `asignacion_materias`) residen en la base de datos `sigafi_es` y son de **estricta solo lectura** para la API de DOSIER.
+  * Al consultar carreras, aplica siempre el filtro institucional `esInstituto = 1` para limitar el alcance al Instituto Superior Tecnológico Pedro Traversari.
+  * Usa `.AsNoTracking()` en todas las consultas sobre entidades de SIGAFI.
+* **Tablas del Núcleo Curricular DOSIER (Lectura / Escritura):** Gestionadas mediante los 4 scripts SQL oficiales en `scripts/base_datos/`:
+  1. `01_sistema_base.sql`: `document_templates`, `document_instances`, `document_signatures`, `audit_logs`, `doc_cowork_documentos`, tablas LOPDP.
+  2. `02_gobernanza_y_antecedentes_curriculares.sql`: `cur_normativas_externas`, `cur_normativa_articulos`, `cur_modelos_educativos`, `cur_proyectos_carrera`, `cur_asignaturas_antecedentes`.
+  3. `03_curriculum_pea_oficial.sql`: `cur_pea`, `cur_pea_seccion_b..k` (10 tablas por sección A-K), `cur_pea_colaboradores`, `cur_pea_versiones`.
+  4. `04_seguridad_rbac_roles_curriculares.sql`: Sistema ID 6 (`DOSIER`), módulos curriculares, permisos y los 5 roles oficiales.
 
-* **Tablas del Módulo Académico y Curricular:** Todas las tablas nativas del portafolio docente (PEA, Sílabo 19 semanas, Guías APE, Guías de Estudio) se gestionan a través de EF Core manteniendo integridad relacional y llaves foráneas explícitas.
-* **Tablas Institucionales (`sigafi`) — Estrictamente Solo Lectura:** Las tablas del sistema institucional (`malla`, `detalle_malla`, `prerequisito`, `parcial`, `parcial_modalidad_fecha`, `profesor`, `asignatura`, `carrera`, `periodo`) pertenecen a `sigafi_es` y son de **solo lectura** para la API de DOSIER. Nunca generes consultas que intenten escribir en estos registros.
+## 2. Seguridad RBAC y Control de Acceso Curricular
 
-## 2. Consultas EF Core — DOSIER
+* **Sistema Oficial:** Registrado con `idSistema = 6` en `rbac_sistema` con detalle `"Gestión Curricular y Acreditación ISTPET"`.
+* **Catálogo de 5 Roles Curriculares Oficiales:**
+  1. `DOSIER_ADMIN` (idRol: 32) - Administrador general y gestión de calidad.
+  2. `DOSIER_DOCENTE` (idRol: 33) - Docente autor y co-redactor de PEAs.
+  3. `DOSIER_COORD_CARRERA` (idRol: 34) - Coordinador de Carrera (revisión disciplinar y aval).
+  4. `DOSIER_COORD_ACAD` (idRol: 35) - Coordinador Académico (verificación metodológica e institucional).
+  5. `DOSIER_VICERRECTOR` (idRol: 36) - Vicerrectorado (aprobación definitiva y legalización forense).
+* **Módulos Curriculares:** `PEA`, `GOBERNANZA_CURRICULAR`, `AUDITORIA_CACES`, `CONFIGURACION`.
+* En servicios y controladores, valida la pertenencia al rol mediante `RbacService` o los atributos `[Authorize(Policy = "...")]`.
 
-* Al consultar mallas, asignaturas y prerrequisitos, incluye siempre las entidades navegacionales:
-  ```csharp
-  .Include(m => m.DetalleMalla)
-      .ThenInclude(d => d.Asignatura)
-  ```
-* Usa `.AsNoTracking()` en todas las consultas de solo lectura para optimizar memoria.
+## 3. Máquina de Estados y Circuito de Firmas del PEA
 
-## 3. Mapeo Completo de DTOs — DOSIER
+* El ciclo de vida oficial del PEA se gestiona mediante el servicio `PeaService`:
+  $$\text{Borrador} \longrightarrow \text{EnRevision} \longrightarrow \text{RevisadoCoord} \longrightarrow \text{RevisadoAcad} \longrightarrow \text{Aprobado}$$
+* **Flujo de Observaciones:** En estado `EnRevision`, las comisiones pueden registrar observaciones por sección (`AgregarObservacionAsync`), devolviendo el documento a estado `Observado` para que el docente autor subsane los requerimientos (`SubsanarObservacionAsync`) antes del reenvío.
+* **Bloqueo Inmutable (*State Locking*):** Al pasar a `Aprobado` tras la firma de Vicerrectorado, el documento se congela irrevocablemente en `document_instances.data_snapshot_json` y se sella con hash criptográfico SHA-256.
 
-* En métodos `GetAll` o listados de asignaturas y portafolios, incluye **todas** las horas desglosadas (`HorasDocencia`, `HorasApe`, `HorasAutonomo`, `Creditos`) requeridas por el frontend para validación matemática en tiempo real.
+## 4. Validación Matemática de Horas y Créditos
 
-## 4. Seguridad y Gobernanza
+* En todo guardado o cambio de estado de un PEA, el sistema valida que la distribución de horas en la Sección F de contenidos coincida exactamente con las horas normadas en `detallemallas` de SIGAFI:
+  $$\text{Horas Docencia (CD)} + \text{Horas APE} + \text{Horas Autónomo (TA)} \equiv \text{Total Horas Asignatura}$$
+* 1 Crédito Académico equivale exactamente a 48 horas de trabajo del estudiante.
 
-* Aplica siempre las reglas de la skill global `gobernanza-datos-segura` para cualquier operación que involucre credenciales, roles, permisos o tablas de usuarios de `sigafi`.
+## 5. Convenciones de Controladores y Rutas API
 
-## 5. Convenciones de Rutas y Controladores API
-
-* **Prefijo de Ruta y Nombres:** Todas las rutas de controladores API deben mantener el prefijo `/api/[controller]` usando sustantivos en inglés o kebab-case (ej: `/api/docente-asignaturas`, `/api/document-instances`, `/api/document-templates`).
-* **Verbos HTTP:** Respeta estrictamente los verbos REST estándar (`GET` para lectura, `POST` para creación, `PUT` para actualización completa, `PATCH` para parcial, `DELETE` para eliminación).
-* **Respuestas Uniformes:** Devuelve respuestas estructuradas con códigos HTTP adecuados (`200 OK`, `201 Created`, `400 BadRequest`, `404 NotFound`, `500 InternalServerError`).
-
-## 6. Motor Documental — Patrón Molde vs Instancia (Inmutabilidad)
-
-* **Separación Estricta:**
-  - `document_templates` (Molde Maestro): Plantillas de los 4 entregables oficiales (PEA, Sílabo, Guías APE, Guías de Estudio).
-  - `document_instances` (Instancia de Asignatura): Al iniciar la planificación de una materia, `DocumentInstanceService` clona la versión y guarda el `TemplateConfigSnapshotJson`.
-* **Protección de Datos Docentes en Producción:**
-  - Los documentos aprobados o legalizados leen **exclusivamente su Snapshot**.
-  - Los datos de redacción colaborativa se almacenan indexados por claves de campo (`field_key`), desacoplados de la presentación visual.
+* **Controladores Principales:**
+  * `PeaController` (`/api/pea`): Operaciones sobre el PEA oficial, 11 secciones, firmas, observaciones y clonación.
+  * `DocenteAsignaturasController` (`/api/docente-asignaturas`): Asignaciones docentes y contexto académico desde SIGAFI.
+  * `NormativasController` (`/api/normativas`): Normativas externas CES/CACES, modelos educativos y perfiles de egreso.
+  * `ExpedientesController` (`/api/expedientes-curriculares`): Vinculación de asignación con período académico y PEA.
+  * `DocumentInstancesController` (`/api/document-instances`): Compilación PDF, snapshots y comprobación pública QR.
+* **Serialización:** Todas las respuestas JSON del backend deben serializarse en `lower_snake_case` globalmente.

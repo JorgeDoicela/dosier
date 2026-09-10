@@ -1,77 +1,120 @@
-# Integración con API, Resiliencia y Tolerancia a Discrepancias
+# Integración con API REST, Convenciones de Casing y Resiliencia
 
-## 1. Visión General del Cliente HTTP
+## 1. Visión General del Cliente HTTP Centralizado
 
-La comunicación entre el cliente React (`dosier_web`) y la API backend (`dosier_api`) se administra mediante una instancia centralizada de **Axios** ubicada en `dosier_web/src/api/axios.ts`.
+La capa de comunicación entre el frontend React (`dosier_web`) y la API backend (`dosier_api`) opera a través de un cliente HTTP centralizado basado en **Axios** (`src/api/axios.ts`).
 
-El módulo incluye interceptores para la inyección de tokens de autorización JWT, renovación automática de sesión, manejo global de errores y patrones defensivos de lectura de propiedades JSON.
+Este cliente administra automáticamente:
+1. La inyección de credenciales mediante encabezados `Authorization: Bearer <token>`.
+2. El refresco proactivo y reactivo del token JWT.
+3. La normalización de respuestas según la convención `lower_snake_case` global del backend.
+4. El manejo estructurado de excepciones de red, validaciones de dominio (códigos HTTP 400 y 422) y control de autorizaciones (HTTP 401 y 403).
 
 ---
 
-## 2. Interceptores de Axios y Flujo de Autenticación
+## 2. Flujo de Interceptores y Gestión de Sesión
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant UI as Componente React
-    participant Axios as Cliente Axios (Interceptor)
-    participant API as Backend API Gateway
-    participant Storage as LocalStorage / SessionStorage
+    participant Axios as Interceptor Axios
+    participant Backend as dosier_api (.NET 8)
+    participant Storage as Almacenamiento Local Seguro
 
-    UI->>Axios: Ejecutar Petición (ej. getProjects())
-    Axios->>Storage: Obtener AccessToken JWT
-    Axios->>Axios: Inyectar Header 'Authorization: Bearer <token>'
-    Axios->>API: Despachar Petición HTTP
-    API-->>Axios: Respuesta HTTP (200 OK / 401 Unauthorized)
+    UI->>Axios: Despacha Solicitud (ej. getPeaDetails(id))
+    Axios->>Storage: Recupera AccessToken JWT
+    Axios->>Axios: Agrega Encabezado Authorization: Bearer
+    Axios->>Backend: Envía Petición HTTP
+    Backend-->>Axios: Respuesta HTTP
 
-    alt Token Expirado (HTTP 401)
-        Axios->>API: Despachar Petición /api/auth/refresh-token
-        API-->>Axios: Nuevo AccessToken JWT
-        Axios->>Storage: Actualizar Token en Storage
-        Axios->>API: Re-intentar Petición HTTP Original
-        API-->>Axios: Respuesta HTTP 200 OK
+    alt Sesión Válida (HTTP 200 OK)
+        Axios-->>UI: Retorna Datos Tipados
+    else Token Expirado (HTTP 401 Unauthorized)
+        Axios->>Backend: Solicita Renovación /api/auth/refresh-token
+        alt Renovación Exitosa
+            Backend-->>Axios: Nuevo AccessToken y RefreshToken
+            Axios->>Storage: Actualiza Tokens
+            Axios->>Backend: Reintenta Petición Original
+            Backend-->>Axios: Respuesta HTTP 200 OK
+            Axios-->>UI: Retorna Datos Tipados
+        else Fallo de Renovación
+            Axios->>Storage: Purga Sesión
+            Axios->>UI: Redirige a /login con Notificación
+        end
     end
-
-    Axios-->>UI: Retornar Datos Procesados
 ```
 
 ---
 
-## 3. Patrón de Tolerancia a Discrepancias de Casing (Local Fallback Pattern)
+## 3. Convenciones de Serialización y Patrón de Fallback Dual
 
-Dado que la API backend deserializa payloads `[FromBody]` en `lower_snake_case`, parámetros query en `camelCase` y metadatos universales en `PascalCase`, el frontend aplica el patrón de tolerancia defensiva mediante operadores de coalescencia (`||`) o helpers de lectura.
+El backend de DOSIER utiliza una política global de serialización JSON que transforma todas las claves de propiedades a formato **`lower_snake_case`**.
 
-### 3.1. Ejemplo de Lectura Tolerante de Snapshot JSON
+### 3.1. Reglas para Peticiones Salientes (Frontend a Backend)
+* Toda carga útil (`payload`) enviada mediante métodos `POST`, `PUT` o `PATCH` debe formatearse en **`lower_snake_case`**.
+* Ejemplo de estructura:
+  ```json
+  {
+    "id_detallemalla": 1420,
+    "periodo_academico_id": 15,
+    "objetivo_general": "Desarrollar aplicaciones empresariales seguras...",
+    "horas_docencia": 64,
+    "horas_ape": 32,
+    "horas_autonomas": 48
+  }
+  ```
 
-Al procesar campos que pueden variar su formato según la procedencia de la respuesta (API REST directa, WebSocket o snapshot inmutable), los servicios del frontend leen las propiedades evaluando las distintas convenciones:
+### 3.2. Reglas para Recepción de Respuestas (Patrón Dual Fallback)
+Al consumir respuestas del backend o eventos de sincronización que puedan incluir datos mixtos o snapshots archivados, los componentes y servicios de React aplican el patrón de fallback defensivo para asegurar la estabilidad:
 
 ```typescript
-// Ejemplo de lectura defensiva en servicio de frontend (ts)
-export const parseProjectSnapshot = (responseData: any) => {
-  const snapshotStr = 
-    responseData.data_snapshot_json || 
-    responseData.dataSnapshotJson || 
-    responseData.DataSnapshotJson;
-
-  const projectUuid = 
-    responseData.project_uuid || 
-    responseData.projectUuid || 
-    responseData.ProjectUuid;
-
+// Patrón de acceso defensivo en servicios y componentes de React
+export const parsePeaHeader = (data: any) => {
   return {
-    snapshot: typeof snapshotStr === 'string' ? JSON.parse(snapshotStr) : snapshotStr,
-    projectUuid
+    id: data.id ?? data.Id,
+    idDetallemalla: data.id_detallemalla ?? data.idDetallemalla,
+    codigoAsignatura: data.codigo_asignatura ?? data.codigoAsignatura,
+    nombreAsignatura: data.nombre_asignatura ?? data.nombreAsignatura,
+    estadoWorkflow: data.estado_workflow ?? data.estadoWorkflow ?? 'Borrador',
+    hashSha256: data.hash_sha256 ?? data.hashSha256,
+    hasTemplateUpdate: data.has_template_update ?? data.hasTemplateUpdate ?? false
   };
 };
 ```
 
-### 3.2. Reglas de Despacho desde el Frontend
-* **Peticiones `POST`, `PUT`, `PATCH`:** Las funciones de servicio en `src/services/` convierten las claves de los DTOs salientes a **`lower_snake_case`** antes de enviarlas a la API.
-* **Metadatos Documentales:** Los payloads enviados a `/documents/instances/{uuid}/metadata` se formatean en **`PascalCase`** para coincidir con las variables de las plantillas Handlebars/Scriban.
+---
+
+## 4. Mapeo de Roles Curriculares en el Contexto de Autenticación
+
+El `AuthContext` decodifica las demandas (*claims*) del JWT emitido por `dosier_api` y las sincroniza con los 5 roles curriculares oficiales de DOSIER:
+
+```typescript
+export interface AuthUser {
+  uuid: string;
+  cedula: string;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  roles: CurricularRole[];
+}
+
+export type CurricularRole = 
+  | 'DOSIER_ADMIN'
+  | 'DOSIER_DOCENTE'
+  | 'DOSIER_COORD_CARRERA'
+  | 'DOSIER_COORD_ACAD'
+  | 'DOSIER_VICERRECTOR';
+```
+
+### Funciones de Guardia en React
+* `hasRole(role: CurricularRole): boolean`: Comprueba si el usuario autenticado posee un rol curricular específico.
+* `canSignPea(stage: 'docente' | 'coordinador' | 'academico' | 'vicerrector'): boolean`: Verifica si el usuario cuenta con las credenciales reglamentarias para aplicar su firma electrónica en la etapa correspondiente del flujo curricular.
 
 ---
 
-## 4. Control de Errores y Resiliencia de UI (`ErrorBoundary`)
+## 5. Resiliencia de Red y Manejo de Excepciones
 
-* **Capas de Captura:** `ErrorBoundary.tsx` envuelve los módulos de la aplicación para evitar el colapso total del árbol de componentes de React ante un fallo en un componente hijo.
-* **Notificación de Errores de API:** Las respuestas con códigos de error HTTP 400, 422 o 500 son formateadas por los interceptores de Axios y desplegadas mediante un sistema de alertas flotantes (Toasts / Notifications) en la interfaz de usuario.
+1. **Captura Global con `ErrorBoundary`:** Envoltorio que atrapa fallos de renderizado en React, evitando que errores locales en un campo afecten la disponibilidad del formulario completo.
+2. **Notificaciones Semánticas Geist:** Notificaciones no intrusivas con fondos sólidos opacos (`bg-zinc-900 text-white` o `bg-white text-zinc-900` con bordes contrastantes) que comunican claramente al usuario el resultado de sus acciones (guardado exitoso, validación horaria incorrecta o fallo de conexión).
+3. **Reintentos Idempotentes:** Para operaciones de guardado de borradores curriculares, el cliente implementa reintentos con retraso exponencial ante pérdidas momentáneas de conectividad a internet.
