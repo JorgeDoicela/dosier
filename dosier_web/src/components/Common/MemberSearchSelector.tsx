@@ -307,7 +307,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                         <div className="space-y-2 mt-4">
                             <div className="flex items-center justify-between px-1">
                                 <p className="text-[10px] font-black text-text-dim uppercase tracking-widest">
-                                    {selectedType === 'DOCENTE' ? 'Docentes con Carga Docente / Cátedras' : 'Estudiantes Matriculados'} ({results.length})
+                                    {selectedType === 'DOCENTE' ? 'Docentes con Carga Docente / Materias' : 'Estudiantes Matriculados'} ({results.length})
                                 </p>
                                 {isSearching && (
                                     <span className="text-[10px] text-text-dim flex items-center gap-1.5 animate-pulse">

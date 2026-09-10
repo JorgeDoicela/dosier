@@ -620,12 +620,12 @@ public class AdminService : IAdminService
                 var pId = p.IdProfesor.Trim();
                 var contract = contracts.FirstOrDefault(c => c.IdProfesor == pId);
 
-                // Cálculo de horas docentes y cátedras asignadas
+                // Cálculo de horas docentes y materias asignadas
                 var profActividades = teachingHoursData.Where(h => h.IdProfesor == pId).ToList();
                 var horasClase = profActividades.Where(h => h.IdSubcategoria == 1).Sum(h => h.HorasSemana);
                 var horasDocenciaTotal = profActividades.Where(h => docenciaSubcats.Contains(h.IdSubcategoria)).Sum(h => h.HorasSemana);
                 if (horasDocenciaTotal == 0 && horasClase > 0) horasDocenciaTotal = horasClase;
-                var numCatedras = activeAssignments.Count(a => a.IdProfesor == pId);
+                var numMaterias = activeAssignments.Count(a => a.IdProfesor == pId);
 
                 var roleInfo = userRoles.Where(ur => ur.IdSigafi == pId).ToList();
                 var linkedUser = linkedUsers.FirstOrDefault(u => u.IdSigafi == pId);
@@ -656,9 +656,10 @@ public class AdminService : IAdminService
                     FirmaHabilitada = userMeta?.AceptoTerminosFirma ?? false,
                     Carrera = carreraNom,
                     Nivel = "N/A",
-                    HorasDocente = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : (numCatedras > 0 ? (decimal?)numCatedras : null)),
+                    HorasDocente = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : (numMaterias > 0 ? (decimal?)numMaterias : null)),
                     HorasClase = horasClase > 0 ? horasClase : (decimal?)null,
-                    CatedrasAsignadas = numCatedras,
+                    MateriasAsignadas = numMaterias,
+                    CatedrasAsignadas = numMaterias,
                     HorasInvestigacion = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : 0),
                     HorasAsignadas = assignedHours,
                     Departamento = contract?.Departamento,

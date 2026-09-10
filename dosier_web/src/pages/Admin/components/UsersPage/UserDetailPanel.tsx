@@ -84,10 +84,10 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="section-label text-text-dim mb-1">Cátedras Asignadas</p>
+                                    <p className="section-label text-text-dim mb-1">Materias Asignadas</p>
                                     <div className="flex items-center gap-1.5 text-sm font-semibold text-text-main">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${(detailUser.catedras_asignadas || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
-                                        {detailUser.catedras_asignadas || 0} paralelos
+                                        <span className={`w-1.5 h-1.5 rounded-full ${((detailUser.materias_asignadas ?? detailUser.catedras_asignadas) || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
+                                        {detailUser.materias_asignadas ?? detailUser.catedras_asignadas ?? 0} paralelos
                                     </div>
                                 </div>
                                 {detailUser.horas_clase && (

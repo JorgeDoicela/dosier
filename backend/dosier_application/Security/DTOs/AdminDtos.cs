@@ -20,8 +20,9 @@ public class UserManagementDto
     // Carga Docente y Portafolio Curricular (DOSIER)
     public decimal? HorasDocente { get; set; }
     public decimal? HorasClase { get; set; }
-    public int CatedrasAsignadas { get; set; }
-    public bool TieneCargaDocente => (HorasDocente ?? 0) > 0 || CatedrasAsignadas > 0;
+    public int MateriasAsignadas { get; set; }
+    public int CatedrasAsignadas { get => MateriasAsignadas; set => MateriasAsignadas = value; }
+    public bool TieneCargaDocente => (HorasDocente ?? 0) > 0 || MateriasAsignadas > 0;
 
     // Retrocompatibilidad con vistas previas
     public decimal? HorasInvestigacion { get; set; }

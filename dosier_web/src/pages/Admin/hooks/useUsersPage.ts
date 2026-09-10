@@ -13,6 +13,7 @@ export interface ManagedUser {
     firma_habilitada: boolean;
     horas_docente?: number;
     horas_clase?: number;
+    materias_asignadas?: number;
     catedras_asignadas?: number;
     tiene_carga_docente?: boolean;
     horas_investigacion?: number;
