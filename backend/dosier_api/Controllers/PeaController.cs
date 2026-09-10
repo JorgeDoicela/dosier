@@ -57,6 +57,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [Authorize(Roles = "DOSIER_ADMIN")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] CambiarEstadoRequest req)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
@@ -68,6 +69,7 @@ namespace dosier_api.Controllers
         /// <summary>
         /// Firma electrónica oficial del PEA (Ley 67 Ecuador).
         /// Conecta con el subsistema criptográfico transversal (HMAC-SHA256 y FirmaEC P12).
+        /// Valida roles y pertenencia institucional de forma estricta por etapa.
         /// </summary>
         [HttpPost("{id:int}/firmar")]
         public async Task<IActionResult> Firmar(int id, [FromBody] FirmarPeaDto dto)
@@ -110,6 +112,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpPost("{id}/clonar")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_DOCENTE,DOSIER_COORD_CARRERA")]
         public async Task<IActionResult> Clonar(int id, [FromQuery] string nuevoPeriodo)
         {
             if (string.IsNullOrEmpty(nuevoPeriodo)) return BadRequest("Debe especificar el nuevo período académico.");
@@ -130,6 +133,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpPost("{id:int}/observaciones")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         public async Task<IActionResult> AgregarObservacion(int id, [FromBody] AgregarObservacionRequest req)
         {
             if (string.IsNullOrWhiteSpace(req.Texto)) return BadRequest("El texto de la observación no puede estar vacío.");
@@ -143,6 +147,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpPatch("observaciones/{idObs:int}/subsanar")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_DOCENTE")]
         public async Task<IActionResult> SubsanarObservacion(int idObs, [FromBody] SubsanarObservacionRequest req)
         {
             var userId = User.FindFirstValue("id_usuario")

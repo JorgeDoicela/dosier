@@ -126,3 +126,17 @@ classDiagram
 
 ### 3.3. Sincronización Automática en la Capa de Infraestructura
 La clase `RbacService` asegura que al arrancar el sistema o registrarse un nuevo usuario docente, la estructura del sistema `DOSIER` (ID 6) en `rbac_sistema`, sus módulos en `rbac_modulos`, sus operaciones en `rbac_modulos_operaciones` y la asignación por defecto a `rbac_rol_modulo_operacion` se mantengan íntegras de manera automática e idempotente.
+
+### 3.4. Matriz de Autorización en el Ciclo de Vida y Firma del PEA
+
+El backend en `PeaService.FirmarPeaAsync`, `AgregarObservacionAsync` y `SubsanarObservacionAsync` ejecuta una validación de autorización estricta consultando los roles activos en `rbac_usuario_rol` de la base de datos, imposibilitando la suplantación de identidad o salto no autorizado de etapas:
+
+| Transición / Operación | Estado Previo | Estado Resultante | Rol Curricular Requerido | Endpoint de API |
+| :--- | :--- | :--- | :--- | :--- |
+| **Firma Elaboración** | `Borrador` / `Corregido` | `EnRevision` | `DOSIER_DOCENTE` (o `DOSIER_ADMIN`) | `POST /api/pea/{id}/firmar` |
+| **Aval Curricular de Carrera** | `EnRevision` | `RevisadoCoord` | `DOSIER_COORD_CARRERA` (o `DOSIER_ADMIN`) | `POST /api/pea/{id}/firmar` |
+| **Aval Metodológico Académico** | `RevisadoCoord` | `RevisadoAcad` | `DOSIER_COORD_ACAD` (o `DOSIER_ADMIN`) | `POST /api/pea/{id}/firmar` |
+| **Aprobación y Legalización Final** | `RevisadoAcad` | `Aprobado` | `DOSIER_VICERRECTOR` (o `DOSIER_ADMIN`) | `POST /api/pea/{id}/firmar` |
+| **Registro de Observaciones** | `EnRevision`, `RevisadoCoord`, `RevisadoAcad` | `Observado` | `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN` | `POST /api/pea/{id}/observaciones` |
+| **Subsanación de Observaciones** | `Observado` | `Corregido` | `DOSIER_DOCENTE` (o `DOSIER_ADMIN`) | `PATCH /api/pea/observaciones/{id}/subsanar` |
+| **Transición Administrativa Forzada** | Cualquier estado | Cualquier estado | Exclusivo `DOSIER_ADMIN` | `PATCH /api/pea/{id}/estado` |

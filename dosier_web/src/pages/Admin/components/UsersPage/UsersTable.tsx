@@ -182,14 +182,20 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                         {userActiveRoles.length > 0 ? (
                                             userActiveRoles.map(r => {
                                                 const isBrand = r.codigo_rol === 'DOSIER_ADMIN';
-                                                const isViolet = r.codigo_rol === 'DOSIER_DOCENTE';
-                                                const isInfo = r.codigo_rol === 'DOSIER_ESTUDIANTE';
+                                                const isDocente = r.codigo_rol === 'DOSIER_DOCENTE';
+                                                const isCoordCarrera = r.codigo_rol === 'DOSIER_COORD_CARRERA';
+                                                const isCoordAcad = r.codigo_rol === 'DOSIER_COORD_ACAD';
+                                                const isVicerrector = r.codigo_rol === 'DOSIER_VICERRECTOR';
                                                 const badgeClass = isBrand 
                                                     ? 'badge-vercel-info' 
-                                                    : isViolet 
+                                                    : isVicerrector 
+                                                    ? 'badge-vercel-amber' 
+                                                    : isCoordAcad 
+                                                    ? 'badge-vercel-cyan' 
+                                                    : isCoordCarrera 
                                                     ? 'badge-vercel-violet' 
-                                                    : isInfo 
-                                                    ? 'badge-vercel-success' 
+                                                    : isDocente 
+                                                    ? 'badge-vercel-neutral' 
                                                     : 'badge-vercel-neutral';
 
                                                 return (

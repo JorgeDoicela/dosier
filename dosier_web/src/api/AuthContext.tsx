@@ -33,6 +33,9 @@ interface AuthContextType {
     roles: string[];
     isAdmin: boolean;
     isDocente: boolean;
+    isCoordCarrera: boolean;
+    isCoordAcad: boolean;
+    isVicerrector: boolean;
     isEstudiante: boolean;
     isRevisor: boolean;
     roleDisplayName: string;
@@ -199,28 +202,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user]);
 
     const isAdmin = React.useMemo(() => {
-        return user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('DOSIER_ADMIN');
+        return Boolean(user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('ADMIN'));
     }, [user, roles]);
 
     const isDocente = React.useMemo(() => {
-        return roles.includes('DOSIER_DOCENTE') || roles.includes('DOSIER_DOCENTE') || roles.includes('DOCENTE');
+        return roles.includes('DOSIER_DOCENTE') || roles.includes('DOCENTE');
+    }, [roles]);
+
+    const isCoordCarrera = React.useMemo(() => {
+        return roles.includes('DOSIER_COORD_CARRERA') || roles.includes('COORDINADOR_CARRERA');
+    }, [roles]);
+
+    const isCoordAcad = React.useMemo(() => {
+        return roles.includes('DOSIER_COORD_ACAD') || roles.includes('COORDINADOR_ACADEMICO');
+    }, [roles]);
+
+    const isVicerrector = React.useMemo(() => {
+        return roles.includes('DOSIER_VICERRECTOR') || roles.includes('VICERRECTOR');
     }, [roles]);
 
     const isEstudiante = React.useMemo(() => {
-        return roles.includes('DOSIER_ESTUDIANTE') || roles.includes('DOSIER_ESTUDIANTE') || roles.includes('ESTUDIANTE');
+        return roles.includes('DOSIER_ESTUDIANTE') || roles.includes('ESTUDIANTE');
     }, [roles]);
 
     const isRevisor = React.useMemo(() => {
-        return roles.includes('DOSIER_REVISOR') || roles.includes('DOSIER_REVISOR_EXTERNO') || roles.includes('DOSIER_REVISOR') || roles.includes('DOSIER_EXTERNO') || roles.includes('COORDINADOR');
-    }, [roles]);
+        return isCoordCarrera || isCoordAcad || isVicerrector || roles.includes('DOSIER_REVISOR') || roles.includes('DOSIER_REVISOR_EXTERNO');
+    }, [isCoordCarrera, isCoordAcad, isVicerrector, roles]);
 
     const roleDisplayName = React.useMemo(() => {
-        if (isAdmin) return 'Administrador';
-        if (isDocente) return 'Docente';
+        if (isVicerrector) return 'Vicerrectorado Académico';
+        if (isCoordAcad) return 'Coordinación Académica';
+        if (isCoordCarrera) return 'Coordinador de Carrera';
+        if (isAdmin) return 'Administrador Institucional';
+        if (isDocente) return 'Docente Titular';
         if (isEstudiante) return 'Estudiante';
-        if (isRevisor) return 'Revisor / Coordinador';
-        return 'Usuario';
-    }, [isAdmin, isDocente, isEstudiante, isRevisor]);
+        return 'Usuario Institucional';
+    }, [isVicerrector, isCoordAcad, isCoordCarrera, isAdmin, isDocente, isEstudiante]);
 
     return (
         <AuthContext.Provider value={{
@@ -238,6 +255,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             roles,
             isAdmin,
             isDocente,
+            isCoordCarrera,
+            isCoordAcad,
+            isVicerrector,
             isEstudiante,
             isRevisor,
             roleDisplayName

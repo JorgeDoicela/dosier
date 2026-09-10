@@ -675,12 +675,13 @@ public class AdminService : IAdminService
     public async Task<List<RoleDto>> GetAvailableRolesAsync()
     {
         return await _context.Roles.AsNoTracking()
-            .Where(r => r.RoleModuleOperations.Any(rmo => rmo.ModuleOperation.Module.Sistema.Codigo == "DOSIER"))
+            .Where(r => (r.EsActivo ?? true) && (r.CodigoRol.StartsWith("DOSIER_") || r.RoleModuleOperations.Any(rmo => rmo.ModuleOperation.Module.Sistema.Codigo == "DOSIER")))
             .Select(r => new RoleDto {
                 IdRol = r.IdRol,
                 Nombre = r.Nombre,
                 CodigoRol = r.CodigoRol
             })
+            .Distinct()
             .ToListAsync();
     }
 
@@ -785,9 +786,10 @@ public class AdminService : IAdminService
             {
                 CodigoRol = roleCode,
                 Nombre = roleCode == "DOSIER_ADMIN" ? "Administrador DOSIER" :
-                         roleCode == "DOSIER_DOCENTE" ? "Docente Investigador DOSIER" :
-                         roleCode == "DOSIER_ESTUDIANTE" ? "Estudiante DOSIER" : 
-                         roleCode == "DOSIER_REVISOR_EXTERNO" ? "Revisor Externo DOSIER" : roleCode,
+                         roleCode == "DOSIER_DOCENTE" ? "Docente Elaborador DOSIER" :
+                         roleCode == "DOSIER_COORD_CARRERA" ? "Coordinador de Carrera DOSIER" :
+                         roleCode == "DOSIER_COORD_ACAD" ? "Coordinación Académica DOSIER" :
+                         roleCode == "DOSIER_VICERRECTOR" ? "Vicerrectorado Académico DOSIER" : roleCode,
                 EsActivo = true
             };
             _context.Roles.Add(role);

@@ -33,9 +33,9 @@ interface GlobalStats {
 }
 
 export const AdminDashboard: React.FC = () => {
-    const { user } = useAuth();
+    const { user, roleDisplayName } = useAuth();
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-    const firstName = user?.nombre_completo ? capitalize(user.nombre_completo.split(' ')[0]) : 'Admin';
+    const firstName = user?.nombre_completo ? capitalize(user.nombre_completo.split(' ')[0]) : 'Colega';
     const [stats, setStats] = useState<GlobalStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC = () => {
             <DashboardHeader
                 title={`Panel de Control, ${firstName}`}
                 subtitle="Supervisión global de DOSIER · Portafolio Docente y Cumplimiento CACES."
-                roleName="Director / Administrador"
+                roleName={roleDisplayName}
                 actions={
                     <>
                         <Link

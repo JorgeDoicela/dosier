@@ -88,13 +88,13 @@ graph TD
 | `/documentacion/workspace/:templateCode/:projectUuid` | Autenticado | Entorno de trabajo para estructuración y co-redacción concurrente con Yjs. |
 | `/documentacion/revision-tecnica/:projectUuid` | Autenticado | Portal de revisión colegiada, formulación de observaciones técnicas y dictámenes. |
 | `/documentacion/monitoreo/:projectUuid` | Autenticado | Seguimiento del estado del flujo curricular y avances. |
-| `/documentacion` | `AdminRoute` | Consola de supervisión y gestión integral de expedientes curriculares. |
+| `/documentacion` | `RoleRoute` (Admin, Coordinadores, Vicerrector) | Consola de supervisión y gestión integral de expedientes curriculares. |
 | `/plantillas` | `AdminRoute` | Maquetador visual de bloques de plantillas (Canvas Template Builder). |
 | `/usuarios` | `PermissionRoute("USUARIOS", "VER")` | Administración de usuarios institucionales, sincronización SIGAFI y roles. |
-| `/auditoria` | `AdminRoute` | Bitácora forense de transacciones con filtros de fecha, usuario e IP. |
+| `/auditoria` | `RoleRoute` (Admin, Coord. Académica, Vicerrector) | Bitácora forense de transacciones con filtros de fecha, usuario e IP. |
 | `/lopdp` | `AdminRoute` | Supervisión de consentimientos y gestión de solicitudes de derechos ARCO. |
 | `/consentimiento-lopdp` | Autenticado | Aceptación obligatoria de términos conforme a la Ley de Protección de Datos. |
-| `/analiticas` | `AdminRoute` | Métricas estadísticas de cumplimiento y cobertura. |
+| `/analiticas` | `RoleRoute` (Admin, Coordinadores, Vicerrector) | Métricas estadísticas de cumplimiento y cobertura CACES. |
 | `/notificaciones` | Autenticado | Centro de notificaciones in-app recibidas vía SignalR. |
 | `/calendario` | Autenticado | Calendario de eventos y fechas límite de planificación curricular. |
 | `/emails` | `AdminRoute` | Configuración de plantillas de correo y pruebas de despacho SMTP. |

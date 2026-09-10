@@ -6,17 +6,17 @@ import { EstudianteDashboard } from './Roles/EstudianteDashboard';
 import { FullscreenLoader } from '../../components/Common/FullscreenLoader';
 
 const Dashboard: React.FC = () => {
-    const { isAdmin, isDocente, isEstudiante, isLoading } = useAuth();
+    const { isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isEstudiante, isLoading } = useAuth();
 
     const roleDashboard = useMemo(() => {
         if (isLoading) return null;
         
-        if (isAdmin) return <AdminDashboard />;
+        if (isAdmin || isVicerrector || isCoordAcad || isCoordCarrera) return <AdminDashboard />;
         if (isDocente) return <DocenteDashboard />;
         if (isEstudiante) return <EstudianteDashboard />;
         
         return <DocenteDashboard />; // Global Fallback
-    }, [isAdmin, isDocente, isEstudiante, isLoading]);
+    }, [isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isEstudiante, isLoading]);
 
     if (isLoading) {
         return <FullscreenLoader message="Cargando panel de control..." />;

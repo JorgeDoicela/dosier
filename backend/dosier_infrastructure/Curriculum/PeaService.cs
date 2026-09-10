@@ -431,42 +431,74 @@ namespace dosier_infrastructure.Curriculum
                     throw new UnauthorizedAccessException("Contraseña incorrecta. La firma requiere verificación estricta de identidad.");
             }
 
-            // 2. Validación de Workflow y Determinación de la Transición de Estado
+            // 2. Validación de Roles Institucionales y Workflow Oficial
+            var userRoles = await _context.UserRoles
+                .AsNoTracking()
+                .Include(ur => ur.Role)
+                .Where(ur => ur.IdUsuario == idUsuario && (ur.EsActivo ?? true))
+                .Select(ur => ur.Role.CodigoRol)
+                .ToListAsync();
+
+            bool isAdmin = user.Administrador || userRoles.Contains("DOSIER_ADMIN");
+
             string estadoAnterior = pea.Estado;
             string estadoNuevo;
             string rol = (dto.RolFirmante ?? "Docente").Trim();
 
-            if (rol.Equals("Docente", StringComparison.OrdinalIgnoreCase) || rol.Equals("Elaborador", StringComparison.OrdinalIgnoreCase))
+            if (rol.Equals("Docente", StringComparison.OrdinalIgnoreCase) || 
+                rol.Equals("Elaborador", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrEmpty(rol))
             {
+                if (!isAdmin && !userRoles.Contains("DOSIER_DOCENTE"))
+                    throw new UnauthorizedAccessException("El usuario no posee el rol de Docente (DOSIER_DOCENTE) para firmar la elaboración del PEA.");
+
                 if (pea.Estado != "Borrador" && pea.Estado != "Corregido")
                     throw new InvalidOperationException($"El docente solo puede firmar PEAs en estado Borrador o Corregido. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "EnRevision";
+                rol = "Docente";
             }
-            else if (rol.Equals("Coordinador", StringComparison.OrdinalIgnoreCase) || rol.Equals("Revisor", StringComparison.OrdinalIgnoreCase) || rol.Equals("CoordinadorCarrera", StringComparison.OrdinalIgnoreCase))
+            else if (rol.Equals("Coordinador", StringComparison.OrdinalIgnoreCase) || 
+                     rol.Equals("Revisor", StringComparison.OrdinalIgnoreCase) || 
+                     rol.Equals("CoordinadorCarrera", StringComparison.OrdinalIgnoreCase))
             {
+                if (!isAdmin && !userRoles.Contains("DOSIER_COORD_CARRERA"))
+                    throw new UnauthorizedAccessException("El usuario no posee el rol de Coordinador de Carrera (DOSIER_COORD_CARRERA) para emitir el aval curricular.");
+
                 if (pea.Estado != "EnRevision")
-                    throw new InvalidOperationException($"El coordinador solo puede revisar PEAs en estado EnRevision. Estado actual: {pea.Estado}");
+                    throw new InvalidOperationException($"El coordinador de carrera solo puede revisar PEAs en estado EnRevision. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "RevisadoCoord";
+                rol = "CoordinadorCarrera";
             }
-            else if (rol.Equals("CoordinadorAcademico", StringComparison.OrdinalIgnoreCase) || rol.Equals("ComisionAcademica", StringComparison.OrdinalIgnoreCase))
+            else if (rol.Equals("CoordinadorAcademico", StringComparison.OrdinalIgnoreCase) || 
+                     rol.Equals("ComisionAcademica", StringComparison.OrdinalIgnoreCase))
             {
+                if (!isAdmin && !userRoles.Contains("DOSIER_COORD_ACAD"))
+                    throw new UnauthorizedAccessException("El usuario no posee el rol de Coordinación Académica (DOSIER_COORD_ACAD) para emitir el aval institucional.");
+
                 if (pea.Estado != "RevisadoCoord")
-                    throw new InvalidOperationException($"El coordinador académico solo puede revisar PEAs en estado RevisadoCoord. Estado actual: {pea.Estado}");
+                    throw new InvalidOperationException($"La coordinación académica solo puede revisar PEAs en estado RevisadoCoord. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "RevisadoAcad";
+                rol = "CoordinadorAcademico";
             }
-            else if (rol.Equals("Vicerrector", StringComparison.OrdinalIgnoreCase) || rol.Equals("Aprobador", StringComparison.OrdinalIgnoreCase) || rol.Equals("VicerrectorAcademico", StringComparison.OrdinalIgnoreCase))
+            else if (rol.Equals("Vicerrector", StringComparison.OrdinalIgnoreCase) || 
+                     rol.Equals("Aprobador", StringComparison.OrdinalIgnoreCase) || 
+                     rol.Equals("VicerrectorAcademico", StringComparison.OrdinalIgnoreCase))
             {
+                if (!isAdmin && !userRoles.Contains("DOSIER_VICERRECTOR"))
+                    throw new UnauthorizedAccessException("El usuario no posee el rol de Vicerrectorado Académico (DOSIER_VICERRECTOR) para la aprobación final del PEA.");
+
                 if (pea.Estado != "RevisadoAcad" && pea.Estado != "RevisadoCoord")
-                    throw new InvalidOperationException($"El vicerrector solo puede aprobar PEAs que hayan sido revisados. Estado actual: {pea.Estado}");
+                    throw new InvalidOperationException($"El vicerrector solo puede aprobar PEAs que hayan cumplido con la fase de revisión previa. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "Aprobado";
+                rol = "Vicerrector";
             }
             else
             {
-                throw new ArgumentException($"Rol de firmante no reconocido: '{rol}'. Use Docente, Coordinador, CoordinadorAcademico o Vicerrector.");
+                throw new ArgumentException($"Rol de firmante no reconocido: '{rol}'. Roles institucionales válidos: Docente, CoordinadorCarrera, CoordinadorAcademico, Vicerrector.");
             }
 
             // 3. Generación Forense del Hash SHA-256 del PEA
@@ -573,6 +605,33 @@ namespace dosier_infrastructure.Curriculum
 
         public async Task<PeaObservacionDto> AgregarObservacionAsync(int idPea, string rolObservador, string seccion, string texto, int? idUsuario)
         {
+            if (!idUsuario.HasValue)
+                throw new UnauthorizedAccessException("Se requiere una sesión autenticada para registrar observaciones al PEA.");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == idUsuario.Value)
+                ?? throw new UnauthorizedAccessException("Usuario observador no encontrado.");
+
+            var userRoles = await _context.UserRoles
+                .AsNoTracking()
+                .Include(ur => ur.Role)
+                .Where(ur => ur.IdUsuario == idUsuario.Value && (ur.EsActivo ?? true))
+                .Select(ur => ur.Role.CodigoRol)
+                .ToListAsync();
+
+            bool isAdmin = user.Administrador || userRoles.Contains("DOSIER_ADMIN");
+            bool isCoordCarrera = userRoles.Contains("DOSIER_COORD_CARRERA");
+            bool isCoordAcad = userRoles.Contains("DOSIER_COORD_ACAD");
+            bool isVicerrector = userRoles.Contains("DOSIER_VICERRECTOR");
+
+            if (!isAdmin && !isCoordCarrera && !isCoordAcad && !isVicerrector)
+            {
+                throw new UnauthorizedAccessException("El usuario no posee permisos ni roles de revisión curricular para observar este PEA.");
+            }
+
+            string rolEfectivo = isAdmin ? "Administrador" :
+                                 isVicerrector ? "Vicerrector" :
+                                 isCoordAcad ? "CoordinadorAcademico" : "CoordinadorCarrera";
+
             var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo)
                 ?? throw new KeyNotFoundException($"No se encontró el PEA con id {idPea}");
 
@@ -581,7 +640,7 @@ namespace dosier_infrastructure.Curriculum
                 Uuid = Guid.NewGuid().ToString(),
                 IdPea = idPea,
                 IdUsuarioObservador = idUsuario,
-                RolObservador = rolObservador,
+                RolObservador = rolEfectivo,
                 SeccionAfectada = seccion,
                 TextoObservacion = texto,
                 Estado = "Pendiente",
@@ -616,6 +675,27 @@ namespace dosier_infrastructure.Curriculum
 
         public async Task<bool> SubsanarObservacionAsync(int idObservacion, string respuestaDocente, int? idUsuario)
         {
+            if (!idUsuario.HasValue)
+                throw new UnauthorizedAccessException("Se requiere una sesión autenticada para subsanar observaciones.");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == idUsuario.Value)
+                ?? throw new UnauthorizedAccessException("Usuario docente no encontrado.");
+
+            var userRoles = await _context.UserRoles
+                .AsNoTracking()
+                .Include(ur => ur.Role)
+                .Where(ur => ur.IdUsuario == idUsuario.Value && (ur.EsActivo ?? true))
+                .Select(ur => ur.Role.CodigoRol)
+                .ToListAsync();
+
+            bool isAdmin = user.Administrador || userRoles.Contains("DOSIER_ADMIN");
+            bool isDocente = userRoles.Contains("DOSIER_DOCENTE");
+
+            if (!isAdmin && !isDocente)
+            {
+                throw new UnauthorizedAccessException("Solo el docente elaborador o un administrador pueden subsanar observaciones del PEA.");
+            }
+
             var obs = await _context.DocPeaObservaciones.FirstOrDefaultAsync(o => o.IdObservacion == idObservacion);
             if (obs == null) return false;
 

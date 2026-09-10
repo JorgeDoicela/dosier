@@ -177,7 +177,7 @@ const HighlightedText = ({
 // ─── Role filter ──────────────────────────────────────────────────────────────
 
 function useRoleFilter() {
-    const { isAdmin, isDocente, isEstudiante, isRevisor, roles, hasPermission } = useAuth();
+    const { isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, roles, hasPermission } = useAuth();
     return useCallback((item: SearchItem): boolean => {
         if (item.id === 'derechos-arco' && isAdmin) return false;
         if (isAdmin) return true;
@@ -189,12 +189,15 @@ function useRoleFilter() {
             if (item.roles.includes('ANY')) return true;
             const checkRoles = item.roles.map(r => r.toUpperCase());
             if (checkRoles.includes('DOSIER_DOCENTE') && isDocente) return true;
+            if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
+            if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
+            if (checkRoles.includes('DOSIER_VICERRECTOR') && isVicerrector) return true;
             if (checkRoles.includes('DOSIER_ESTUDIANTE') && isEstudiante) return true;
             if (checkRoles.includes('DOSIER_REVISOR_EXTERNO') && isRevisor) return true;
             return item.roles.some(r => roles.includes(r.toUpperCase()));
         }
         return true;
-    }, [isAdmin, isDocente, isEstudiante, isRevisor, roles, hasPermission]);
+    }, [isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, roles, hasPermission]);
 }
 
 // ─── Static catalog ───────────────────────────────────────────────────────────
@@ -203,21 +206,21 @@ function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boo
     return [
         // ── Navegación ──────────────────────────────────────────────────
         { id: 'dashboard', label: 'Tablero Principal', description: 'Vista general con métricas y actividad reciente', category: 'Navegación', icon: LayoutDashboard, path: '/dashboard', shortcut: 'D', roles: ['ANY'], keywords: ['inicio', 'home', 'panel', 'resumen'], boost: 8 },
-        { id: 'documentacion', label: 'Portafolio y Documentación', description: 'Repositorio documental de proyectos e informes institucionales', category: 'Navegación', icon: ClipboardList, path: '/documentacion', shortcut: 'P', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], keywords: ['proyectos', 'documentacion', 'portafolio', 'informes', 'expedientes'], boost: 9 },
+        { id: 'documentacion', label: 'Portafolio y Documentación', description: 'Repositorio documental de proyectos e informes institucionales', category: 'Navegación', icon: ClipboardList, path: '/documentacion', shortcut: 'P', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['proyectos', 'documentacion', 'portafolio', 'informes', 'expedientes'], boost: 9 },
         { id: 'mis-proyectos', label: 'Mis Proyectos y Documentos', description: 'Portafolios y expedientes en los que participas directamente', category: 'Navegación', icon: ListChecks, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ESTUDIANTE'], keywords: ['mis proyectos', 'mis documentos', 'colaboraciones', 'expediente'], boost: isDocente || isEstudiante ? 10 : 5 },
         { id: 'convocatorias', label: 'Convocatorias Activas', description: 'Postulaciones abiertas para proyectos y fondos institucionales', category: 'Navegación', icon: PenTool, path: '/convocatorias', shortcut: 'G', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], keywords: ['convocatoria', 'postular', 'aplicar', 'call', 'becas'], boost: 7 },
         { id: 'notificaciones', label: 'Centro de Notificaciones', description: 'Historial completo de alertas y mensajes del sistema', category: 'Navegación', icon: Bell, path: '/notificaciones', roles: ['ANY'], keywords: ['notificacion', 'alertas', 'mensajes', 'inbox'], boost: 5 },
         { id: 'verificar', label: 'Verificar Documento', description: 'Comprueba la autenticidad con código QR o de verificación', category: 'Navegación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], keywords: ['verificar', 'verificacion', 'documento', 'validar', 'hash', 'qr', 'trazabilidad'], boost: 4 },
         { id: 'grupos', label: 'Comités y Grupos Documentales', description: 'Comités y colectivos de trabajo registrados', category: 'Navegación', icon: Award, path: '/grupos', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], keywords: ['grupos', 'comites', 'equipos', 'colectivos', 'team'], boost: 6 },
         // ── Administración ────────────────────────────────────────────
-        { id: 'analiticas', label: 'Analíticas de Investigación', description: 'Métricas CACES, indicadores y producción académica', category: 'Administración', icon: BarChart3, path: '/analiticas', shortcut: 'A', roles: ['DOSIER_ADMIN'], keywords: ['analitica', 'metricas', 'estadisticas', 'caces', 'kpi', 'reporte'], boost: isAdmin ? 9 : 0 },
+        { id: 'analiticas', label: 'Analíticas de Investigación', description: 'Métricas CACES, indicadores y producción académica', category: 'Administración', icon: BarChart3, path: '/analiticas', shortcut: 'A', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['analitica', 'metricas', 'estadisticas', 'caces', 'kpi', 'reporte'], boost: isAdmin ? 9 : 0 },
         { id: 'analiticas-general', label: 'Métricas Generales I+D', description: 'Indicadores y tendencias de producción investigativa', category: 'Administración', icon: TrendingUp, path: '/analiticas?tab=general', roles: ['DOSIER_ADMIN'], keywords: ['metricas', 'generales', 'tendencias'], boost: 4 },
-        { id: 'analiticas-caces', label: 'Cumplimiento CACES', description: 'Indicadores de evaluación y acreditación institucional', category: 'Administración', icon: ShieldCheck, path: '/analiticas?tab=caces', roles: ['DOSIER_ADMIN'], keywords: ['caces', 'acreditacion', 'cumplimiento', 'ceaaces'], boost: 5 },
+        { id: 'analiticas-caces', label: 'Cumplimiento CACES', description: 'Indicadores de evaluación y acreditación institucional', category: 'Administración', icon: ShieldCheck, path: '/analiticas?tab=caces', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['caces', 'acreditacion', 'cumplimiento', 'ceaaces'], boost: 5 },
         { id: 'usuarios', label: 'Gestión de Usuarios', description: 'Administrar cuentas de docentes, estudiantes y externos', category: 'Administración', icon: Users, path: '/usuarios', shortcut: 'U', permission: 'USUARIOS:VER', keywords: ['usuarios', 'cuentas', 'personas', 'perfiles'], boost: isAdmin ? 8 : 0 },
         { id: 'usuarios-docentes', label: 'Usuarios: Docentes', description: 'Lista de docentes e investigadores registrados', category: 'Administración', icon: GraduationCap, path: '/usuarios?type=DOCENTE', permission: 'USUARIOS:VER', keywords: ['docentes', 'profesores', 'planta docente'], boost: 3 },
         { id: 'usuarios-estudiantes', label: 'Usuarios: Estudiantes', description: 'Lista de estudiantes colaboradores', category: 'Administración', icon: Users, path: '/usuarios?type=ESTUDIANTE', permission: 'USUARIOS:VER', keywords: ['estudiantes', 'alumnos', 'colaboradores'], boost: 3 },
         { id: 'usuarios-externos', label: 'Usuarios: Externos', description: 'Revisores externos y usuarios fuera de la institución', category: 'Administración', icon: Globe, path: '/usuarios?type=EXTERNO', permission: 'USUARIOS:VER', keywords: ['externos', 'revisores', 'externo'], boost: 3 },
-        { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro de acciones y cambios en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
+        { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro de acciones y cambios en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
         { id: 'lopdp-admin', label: 'Panel LOPDP', description: 'Gestión de consentimientos y cumplimiento de protección de datos', category: 'Administración', icon: ShieldCheck, path: '/lopdp', roles: ['DOSIER_ADMIN'], keywords: ['lopdp', 'proteccion datos', 'consentimiento', 'rgpd'], boost: 4 },
         { id: 'plantillas', label: 'Editor de Plantillas', description: 'Diseñar y maquetar plantillas de documentos oficiales', category: 'Administración', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN'], keywords: ['plantillas', 'templates', 'formatos', 'editor', 'documentos'], boost: isAdmin ? 6 : 0 },
         { id: 'correos', label: 'Correos institucionales', description: 'Administrar y enviar plantillas de correo del sistema', category: 'Administración', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], keywords: ['correos', 'emails', 'plantillas', 'smtp'], boost: 4 },

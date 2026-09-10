@@ -107,7 +107,7 @@ const PermissionRoute = ({ children, module, op }: { children: React.ReactNode; 
 };
 
 export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
-    const { isAuthenticated, isLoading, isAdmin, isDocente, isEstudiante, isRevisor, roles } = useAuth();
+    const { isAuthenticated, isLoading, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, roles } = useAuth();
 
     if (isLoading) {
         return <PageLoader />;
@@ -117,21 +117,27 @@ export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNod
 
     if (allowedRoles.includes('ANY')) return <>{children}</>;
 
-    if (isAdmin && allowedRoles.includes('DOSIER_ADMIN')) return <>{children}</>;
+    if (isAdmin) return <>{children}</>;
 
     if (roles.some(r => allowedRoles.map(a => a.toUpperCase()).includes(r.toUpperCase()))) return <>{children}</>;
 
     if (isDocente && allowedRoles.includes('DOSIER_DOCENTE')) return <>{children}</>;
 
-    if (isEstudiante && allowedRoles.includes('DOSIER_ESTUDIANTE')) return <>{children}</>;
+    if (isCoordCarrera && allowedRoles.includes('DOSIER_COORD_CARRERA')) return <>{children}</>;
 
-    if (isRevisor && allowedRoles.includes('DOSIER_REVISOR_EXTERNO')) return <>{children}</>;
+    if (isCoordAcad && allowedRoles.includes('DOSIER_COORD_ACAD')) return <>{children}</>;
+
+    if (isVicerrector && allowedRoles.includes('DOSIER_VICERRECTOR')) return <>{children}</>;
+
+    if (isRevisor && (allowedRoles.includes('DOSIER_REVISOR') || allowedRoles.includes('DOSIER_REVISOR_EXTERNO'))) return <>{children}</>;
+
+    if (isEstudiante && allowedRoles.includes('DOSIER_ESTUDIANTE')) return <>{children}</>;
 
     return <Navigate to="/dashboard" replace />;
 };
 
 const ResearcherRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated, isLoading, isAdmin } = useAuth();
+    const { isAuthenticated, isLoading, isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
 
     if (isLoading) {
         return <PageLoader />;
@@ -139,33 +145,34 @@ const ResearcherRoute = ({ children }: { children: React.ReactNode }) => {
 
     if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-    // Si es Administrador, lo redirigimos a la consola institucional de administración
-    if (isAdmin) {
+    // Si es Administrador o autoridad curricular, lo redirigimos a la consola institucional de supervisión
+    if (isAdmin || isCoordCarrera || isCoordAcad || isVicerrector) {
         return <Navigate to="/documentacion" replace />;
     }
 
     return <>{children}</>;
 };
 
-
-
 const NavigateToProjectDetail = () => {
     const { projectUuid } = useParams();
-    const { isAdmin } = useAuth();
-    const prefix = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
+    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
+    const prefix = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={`${prefix}/monitoreo/${projectUuid}`} replace />;
 };
 
 const NavigateToWorkspaceDetail = () => {
     const { projectUuid } = useParams();
-    const { isAdmin } = useAuth();
-    const prefix = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
+    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
+    const prefix = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', projectUuid!, '', prefix)} replace />;
 };
 
 const NavigateToResearchProjects = () => {
-    const { isAdmin } = useAuth();
-    const target = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
+    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
+    const target = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={target} replace />;
 };
 
@@ -243,10 +250,10 @@ function App() {
                             <Route path="/settings" element={<RedirectPreserveSearch to="/configuracion" />} />
                             <Route path="/derechos-arco" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/lopdp" element={<AdminRoute><LopdpAdminPage /></AdminRoute>} />
-                            <Route path="/analiticas" element={<AdminRoute><AnalyticsPage /></AdminRoute>} />
+                            <Route path="/analiticas" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><AnalyticsPage /></RoleRoute>} />
                             <Route path="/notificaciones" element={<NotificationsPage />} />
                             <Route path="/usuarios" element={<PermissionRoute module="USUARIOS" op="VER"><UsersPage /></PermissionRoute>} />
-                            <Route path="/auditoria" element={<AdminRoute><AuditPage /></AdminRoute>} />
+                            <Route path="/auditoria" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><AuditPage /></RoleRoute>} />
                             <Route path="/parametros-normativos" element={<Navigate to="/configuracion?tab=parametros" replace />} />
                              <Route path="/emails" element={<AdminRoute><EmailEnginePage /></AdminRoute>} />
                              <Route path="/admin/documentos" element={<AdminRoute><DocumentMaintenancePage /></AdminRoute>} />
@@ -265,16 +272,16 @@ function App() {
                             <Route path="/lopdp/arco" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/lopdp/admin" element={<Navigate to="/lopdp" replace />} />
                             
-                            {/* Supervision Context (Admin Only) */}
-                            <Route path="/documentacion" element={<AdminRoute><ResearchProjectsPage /></AdminRoute>} />
+                            {/* Supervision Context (Admin, Coordinadores, Vicerrector) */}
+                            <Route path="/documentacion" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><ResearchProjectsPage /></RoleRoute>} />
                             <Route path="/documentacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
-                            <Route path="/documentacion/monitoreo/:projectUuid" element={<AdminRoute><MonitoringPage /></AdminRoute>} />
+                            <Route path="/documentacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoringPage /></RoleRoute>} />
                             <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
 
                             {/* Retrocompatibilidad /investigacion */}
                             <Route path="/investigacion" element={<RedirectPreserveSearch to="/documentacion" />} />
                             <Route path="/investigacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
-                            <Route path="/investigacion/monitoreo/:projectUuid" element={<AdminRoute><MonitoringPage /></AdminRoute>} />
+                            <Route path="/investigacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoringPage /></RoleRoute>} />
                             <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
                             
                             {/* Author / Docente Context */}
