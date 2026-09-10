@@ -91,30 +91,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaPrerequisito>       DocPeaPrerrequisitos      { get; set; }
     public virtual DbSet<dosier_domain.Curriculum.Entities.DocPeaEvaluacion>         DocPeaEvaluaciones        { get; set; }
 
-    // 2. Sílabo / Plan Analítico (19 Semanas)
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocSilabo>               DocSilabos                { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocSilaboSemana>         DocSilaboSemanas          { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocSilaboAdaptacion>     DocSilaboAdaptaciones     { get; set; }
-
-    // 3. Guías de Trabajo Práctico - Experimental (Guías APE)
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApe>              DocGuiasApe               { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApeObjetivo>      DocGuiasApeObjetivos      { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApeRda>           DocGuiasApeRdas           { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApeCriterio>      DocGuiasApeCriterios      { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApePreparacion>   DocGuiasApePreparaciones  { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApeProcedimiento> DocGuiasApeProcedimientos{ get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaApeReferencia>   DocGuiasApeReferencias    { get; set; }
-
-    // 4. Guía de Estudio / Compendio Autónomo de la Asignatura
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudio>          DocGuiasEstudio           { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioUnidad>    DocGuiasEstudioUnidades   { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioTema>      DocGuiasEstudioTemas      { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioSubtema>   DocGuiasEstudioSubtemas   { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioPreguntaGuia> DocGuiasEstudioPreguntasGuia { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioGlosario>  DocGuiasEstudioGlosarios  { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioActividad> DocGuiasEstudioActividades { get; set; }
-    public virtual DbSet<dosier_domain.Curriculum.Entities.DocGuiaEstudioReferencia>DocGuiasEstudioReferencias { get; set; }
-
     // ============================================================
     // TABLAS DE SIGAFI (solo lectura recomendada)
     // Los investigadores, alumnos, periodos, horarios y carreras 

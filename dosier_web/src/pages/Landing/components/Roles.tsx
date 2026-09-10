@@ -108,32 +108,32 @@ const Roles: React.FC = () => {
             case 0:
                 return [
                     { 
-                        name: 'Elaborar PEA curricular', 
-                        duration: '2d', 
+                        name: 'Elaborar y Co-redactar PEA (Secciones a–j)', 
+                        duration: '3d', 
                         startPercent: '0%', 
-                        widthPercent: '30%', 
-                        permission: 'PEA:CREAR',
-                        desc: 'Borrador inicial del PEA alineado a la malla de SIGAFI.',
+                        widthPercent: '40%', 
+                        permission: 'PEA:ELABORAR',
+                        desc: 'Borrador colaborativo del PEA con horas oficiales y contenidos de SIGAFI.',
                         colorClass: 'bg-success/10 border-l-2 border-success text-success shadow-[inset_1px_0_0_rgba(0,224,84,0.1)] hover:bg-success/20 cursor-pointer' 
                     },
                     { 
-                        name: 'Planificar Sílabo (19 semanas)', 
-                        duration: '3d', 
-                        startPercent: '30%', 
-                        widthPercent: '50%', 
-                        permission: 'SILABO:GESTIONAR',
-                        desc: 'Matriz semanal detallada con fechas oficiales de parciales 1 y 2.',
+                        name: 'Definir Evaluación y Prerrequisitos', 
+                        duration: '2d', 
+                        startPercent: '40%', 
+                        widthPercent: '35%', 
+                        permission: 'PEA:EVALUACION',
+                        desc: 'Matriz oficial de evaluación continua (Docencia, APE, Autónomo, Examen = 10.0).',
                         colorClass: 'bg-brand/10 border-l-2 border-brand text-brand shadow-[inset_1px_0_0_rgba(0,112,243,0.1)] hover:bg-brand/20 cursor-pointer' 
                     },
                     { 
                         name: hitoProgress === 100 
-                            ? 'Guías APE y Estudio (Completado ✓)' 
-                            : `Guías APE y Estudio (${hitoProgress}%)`, 
+                            ? 'Firma Digital DFRM (Completado ✓)' 
+                            : `Firma Digital DFRM (${hitoProgress}%)`, 
                         duration: '1d', 
-                        startPercent: '80%', 
-                        widthPercent: `${(hitoProgress / 100) * 20}%`, 
-                        permission: 'GUIAS:EDITAR',
-                        desc: 'Micro-planificación práctica de laboratorios y compendios teóricos.',
+                        startPercent: '75%', 
+                        widthPercent: `${(hitoProgress / 100) * 25}%`, 
+                        permission: 'PEA:FIRMAR',
+                        desc: 'Estampado de firma digital, hash SHA-256 y remisión a Coordinación.',
                         colorClass: hitoProgress === 100
                             ? 'bg-success/10 border-l-2 border-success text-success transition-all duration-300 hover:bg-success/20 cursor-pointer'
                             : 'bg-warning/10 border-l-2 border-warning text-warning transition-all duration-300 hover:bg-warning/20 cursor-pointer' 

@@ -276,12 +276,9 @@ builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.INormativaSe
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IPerfilEgresoService, dosier_infrastructure.Curriculum.PerfilEgresoService>();
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IExpedienteCurricularService, dosier_infrastructure.Curriculum.ExpedienteCurricularService>();
 
-// Servicios Curriculares Oficiales ISTPET (Los 4 Documentos)
+// Servicios Curriculares Oficiales ISTPET (Programa de Estudio de la Asignatura - PEA)
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.ICurriculumCatalogService, dosier_infrastructure.Curriculum.CurriculumCatalogService>();
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IPeaService, dosier_infrastructure.Curriculum.PeaService>();
-builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.ISilaboService, dosier_infrastructure.Curriculum.SilaboService>();
-builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IGuiaApeService, dosier_infrastructure.Curriculum.GuiaApeService>();
-builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.IGuiaEstudioService, dosier_infrastructure.Curriculum.GuiaEstudioService>();
 
 builder.Services.AddSingleton<dosier_api.Services.BackupBackgroundService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<dosier_api.Services.BackupBackgroundService>());

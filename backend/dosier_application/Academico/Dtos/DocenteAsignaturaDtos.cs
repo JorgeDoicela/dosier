@@ -49,11 +49,8 @@ public class DocenteAsignaturaDto
     // Prerrequisitos de la asignatura
     public List<string> Prerrequisitos { get; set; } = new();
 
-    // Estados de documentación docente de la tesis
+    // Estado del PEA oficial de la asignatura
     public string EstadoPea { get; set; } = "NoIniciado";
-    public string EstadoSilabo { get; set; } = "NoIniciado";
-    public int TotalGuiasApe { get; set; } = 0;
-    public string EstadoGuiaEstudio { get; set; } = "NoIniciado";
     public List<string> AdvertenciasContexto { get; set; } = new();
 }
 
@@ -89,7 +86,7 @@ public class PrerrequisitoItemDto
 }
 
 /// <summary>
-/// Contexto academico oficial que comparten PEA, silabo y guias.
+/// Contexto academico oficial para el PEA.
 /// Los valores curriculares proceden de SIGAFI y no deben editarse desde DOSIER.
 /// </summary>
 public class AcademicContextDto

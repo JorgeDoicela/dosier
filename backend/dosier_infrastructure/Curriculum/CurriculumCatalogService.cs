@@ -145,29 +145,10 @@ namespace dosier_infrastructure.Curriculum
                 .Where(p => p.IdCarrera == idCarrera && p.IdPeriodo == periodoActivo && p.Activo)
                 .ToListAsync();
 
-            var silabosExistentes = await _context.DocSilabos
-                .AsNoTracking()
-                .Where(s => s.IdPeriodo == periodoActivo && s.Activo)
-                .ToListAsync();
-
-            var guiasApeExistentes = await _context.DocGuiasApe
-                .AsNoTracking()
-                .Where(g => g.IdCarrera == idCarrera && g.IdPeriodo == periodoActivo && g.Activo)
-                .ToListAsync();
-
-            var guiasEstudioExistentes = await _context.DocGuiasEstudio
-                .AsNoTracking()
-                .Where(ge => ge.IdCarrera == idCarrera && ge.IdPeriodo == periodoActivo && ge.Activo)
-                .ToListAsync();
-
             var resultado = new List<DocenteAsignaturaMallaDto>();
             foreach (var dm in detallesMalla)
             {
                 var pea = peasExistentes.FirstOrDefault(p => p.IdAsignatura == dm.IdAsignatura);
-                var silabo = pea != null ? silabosExistentes.FirstOrDefault(s => s.IdPea == pea.IdPea) : null;
-                var guiasApe = guiasApeExistentes.Where(g => g.IdAsignatura == dm.IdAsignatura).ToList();
-                var guiaEstudio = guiasEstudioExistentes.FirstOrDefault(ge => ge.IdAsignatura == dm.IdAsignatura);
-
                 prerequisitosPorDetalle.TryGetValue(dm.IdDetalleMalla, out var prereqs);
 
                 resultado.Add(new DocenteAsignaturaMallaDto
@@ -185,12 +166,7 @@ namespace dosier_infrastructure.Curriculum
                     HorasAutonomas = Math.Max(0, dm.HorasAutonomas),
                     Prerrequisitos = prereqs ?? new List<string>(),
                     IdPeaExistente = pea?.IdPea,
-                    PeaEstado = pea?.Estado,
-                    IdSilaboExistente = silabo?.IdSilabo,
-                    SilaboEstado = silabo?.Estado,
-                    TotalGuiasApe = guiasApe.Count,
-                    IdGuiaEstudioExistente = guiaEstudio?.IdGuiaEstudio,
-                    GuiaEstudioEstado = guiaEstudio?.Estado
+                    PeaEstado = pea?.Estado
                 });
             }
 

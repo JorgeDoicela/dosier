@@ -63,7 +63,7 @@ export const SenadiWidget: React.FC<SenadiWidgetProps> = ({
 
                 {Object.keys(downloadStates).map((fileName) => {
                     const state = downloadStates[fileName];
-                    const displayFileName = fileName.includes('SENADI') ? 'Guia_Practica_APE_01.pdf' : 'Rubrica_Evaluacion_APE.pdf';
+                    const displayFileName = fileName.includes('SENADI') ? 'PEA_Programa_Estudio_2026.pdf' : 'PEA_Matriz_Evaluacion.pdf';
                     return (
                         <button
                             key={fileName}

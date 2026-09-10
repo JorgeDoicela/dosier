@@ -31,7 +31,7 @@ export const FirmaElectronicaWidget: React.FC<FirmaElectronicaWidgetProps> = ({
                 {/* Folio del Documento Digital Interactivo */}
                 <div className="bg-surface/30 p-2 rounded border border-border-thin/30 text-left font-mono mb-2">
                     <div className="flex justify-between items-center text-[8.5px] border-b border-border-thin/20 pb-1.5 mb-1">
-                        <span className="font-bold text-text-main">DOCUMENTO: pea_silabo_oficial_2026.pdf</span>
+                        <span className="font-bold text-text-main">DOCUMENTO: pea_oficial_2026.pdf</span>
                         <span className={`text-[7.5px] px-1.5 py-0.5 rounded-full font-bold font-sans uppercase tracking-wider ${signState === 'signed' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning animate-pulse'
                             }`}>
                             {signState === 'signed' ? 'FIRMADO' : 'PENDIENTE FIRMA'}

@@ -207,11 +207,8 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 Prerrequisitos = prereqList,
                 AdvertenciasContexto = warnings,
 
-                // Estados iniciales para la tesis
-                EstadoPea = "NoIniciado",
-                EstadoSilabo = "NoIniciado",
-                TotalGuiasApe = 0,
-                EstadoGuiaEstudio = "NoIniciado"
+                // Estado inicial del PEA para la tesis
+                EstadoPea = "NoIniciado"
             });
         }
 

@@ -24,7 +24,7 @@ public class DocenteAsignaturasController : ControllerBase
 
     /// <summary>
     /// Resuelve el contexto curricular oficial de una asignacion docente.
-    /// Este contexto es compartido por PEA, silabo y guias y sus datos son de solo lectura.
+    /// Este contexto es utilizado por el PEA y sus datos son de solo lectura.
     /// </summary>
     [HttpGet("contexto/{idAsignacion:int}")]
     public async Task<IActionResult> GetContextoAcademico(int idAsignacion, CancellationToken cancellationToken)

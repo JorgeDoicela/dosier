@@ -51,11 +51,6 @@ namespace dosier_infrastructure.data.models.Configurations
                    .HasForeignKey(b => b.IdPea)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(e => e.Silabos)
-                   .WithOne(s => s.Pea)
-                   .HasForeignKey(s => s.IdPea)
-                   .OnDelete(DeleteBehavior.Cascade);
-
             builder.HasMany(e => e.Observaciones)
                    .WithOne(o => o.Pea)
                    .HasForeignKey(o => o.IdPea)

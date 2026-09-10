@@ -59,29 +59,5 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocPeaTrazabilidadConfiguration());
         modelBuilder.ApplyConfiguration(new DocPeaPrerequisitoConfiguration());
         modelBuilder.ApplyConfiguration(new DocPeaEvaluacionConfiguration());
-
-        // 2. Sílabo (19 Semanas)
-        modelBuilder.ApplyConfiguration(new DocSilaboConfiguration());
-        modelBuilder.ApplyConfiguration(new DocSilaboSemanaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocSilaboAdaptacionConfiguration());
-
-        // 3. Guías APE
-        modelBuilder.ApplyConfiguration(new DocGuiaApeConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaApeObjetivoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaApeRdaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaApeCriterioConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaApePreparacionConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaApeProcedimientoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaApeReferenciaConfiguration());
-
-        // 4. Guía de Estudio / Compendio Autónomo
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioUnidadConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioTemaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioSubtemaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioPreguntaGuiaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioGlosarioConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioActividadConfiguration());
-        modelBuilder.ApplyConfiguration(new DocGuiaEstudioReferenciaConfiguration());
     }
 }

@@ -60,7 +60,7 @@ export const AcreditacionWidget: React.FC<AcreditacionWidgetProps> = ({
                 <div className="flex justify-between items-center p-3 rounded-lg border border-brand/20 bg-brand-subtle text-left mt-2">
                     <div className="flex items-center gap-2 text-brand">
                         <FileSignature size={14} className="opacity-90" />
-                        <span className="text-[10px] font-semibold font-mono truncate max-w-[190px]">Guia_De_Estudio_Compendio.pdf</span>
+                        <span className="text-[10px] font-semibold font-mono truncate max-w-[190px]">PEA_Programa_Estudio_Oficial.pdf</span>
                     </div>
                     <button
                         onClick={handleExportSiies}
@@ -74,7 +74,7 @@ export const AcreditacionWidget: React.FC<AcreditacionWidgetProps> = ({
                     >
                         {exportState === 'loading' && <Loader2 size={10} className="animate-spin mr-1.5" />}
                         {exportState === 'success' && <Check size={10} className="mr-1" />}
-                        {exportState === 'loading' ? 'COMPILANDO...' : exportState === 'success' ? 'GENERADO ✓' : 'COMPILAR GUÍA'}
+                        {exportState === 'loading' ? 'COMPILANDO...' : exportState === 'success' ? 'GENERADO ✓' : 'COMPILAR PEA'}
                     </button>
                 </div>
 

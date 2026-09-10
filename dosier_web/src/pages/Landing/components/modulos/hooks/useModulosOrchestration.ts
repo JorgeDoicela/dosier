@@ -273,10 +273,10 @@ export const useModulosOrchestration = () => {
     const hitosCompletedCount = hitos.filter(h => h.completed).length;
     const hitosTotalCount = hitos.length;
 
-    // Módulo 3: Descargas de Guías APE y Rúbricas
+    // Módulo 3: Descargas de Instrumentos PEA y Rúbricas
     const [downloadStates, setDownloadStates] = useState<{ [key: string]: 'idle' | number | 'success' }>({
-        'Guia_Practica_APE_01.pdf': 'idle',
-        'Rubrica_Evaluacion_APE.pdf': 'idle'
+        'PEA_Programa_Estudio_2026.pdf': 'idle',
+        'PEA_Matriz_Evaluacion.pdf': 'idle'
     });
 
     const triggerDownload = (fileName: string) => {
