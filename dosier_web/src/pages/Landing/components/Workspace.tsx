@@ -180,7 +180,7 @@ const Workspace: React.FC = () => {
         <section id="workspace" className="py-20 lg:-ml-24 lg:-mr-24 relative">
             {/* Título superior al estilo Vercel */}
             <h2 className="text-4xl md:text-5xl lg:text-[56px] font-bold tracking-tighter leading-[0.95] text-text-main max-w-3xl mb-16">
-                Un espacio de trabajo <br className="hidden md:inline" /> para el docente y la cátedra
+                Un espacio de trabajo <br className="hidden md:inline" /> para el docente y la materia
             </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 items-start relative">
@@ -297,7 +297,7 @@ const Workspace: React.FC = () => {
                                                 <Users size={16} />
                                             </div>
                                             <div className="text-xs">
-                                                <p className="text-text-main font-semibold font-mono">Docentes de Cátedra</p>
+                                                <p className="text-text-main font-semibold font-mono">Docentes de Materia</p>
                                                 <p className="text-text-dim">Ing. M. Cevallos, Ing. J. Doicela (ISTPET)</p>
                                             </div>
                                         </div>

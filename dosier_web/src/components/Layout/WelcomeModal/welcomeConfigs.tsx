@@ -27,7 +27,7 @@ export const ADMIN_WELCOME: RoleWelcomeConfig = {
         },
         {
             title: 'Gobernanza y Usuarios',
-            description: 'Gestiona roles, asignaciones de cátedra y accesos institucionales para coordinadores y docentes.',
+            description: 'Gestiona roles, asignaciones de materias y accesos institucionales para coordinadores y docentes.',
             tag: 'Gobernanza',
             path: '/usuarios'
         }
@@ -38,14 +38,14 @@ export const ADMIN_WELCOME: RoleWelcomeConfig = {
 
 export const DOCENTE_WELCOME: RoleWelcomeConfig = {
     role: 'docente',
-    roleLabel: 'Docente de Cátedra',
+    roleLabel: 'Docente de Materia',
     greeting: 'Bienvenido a DOSIER',
     systemDescription: '¡Te damos la bienvenida a tu espacio de gestión y redacción curricular! Aquí puedes elaborar tus PEAs, planificar tu cronograma semanal de 19 semanas, diseñar tus guías de práctica APE y compilar tu portafolio oficial.',
     sectionTitle: 'Espacios diseñados para tu labor',
     benefits: [
         {
             title: 'Co-Redacción en Vivo (PEA y Sílabo)',
-            description: 'Escribe y estructura tus entregables curriculares en tiempo real junto a tus docentes de cátedra con plantillas oficiales.',
+            description: 'Escribe y estructura tus entregables curriculares en tiempo real junto a tus docentes de materia con plantillas oficiales.',
             tag: 'Colaboración',
             path: '/dashboard'
         },

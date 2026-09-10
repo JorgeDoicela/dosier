@@ -32,7 +32,7 @@ Esta skill documenta de forma exacta las convenciones de diseño del sistema DOS
   * Mantener siempre una jerarquía visual limpia de **1 sola capa contenedora directa**, espaciosa y con suficiente margen de respiración.
 
 ### 1.3. Jerarquía Tipográfica y Metadatos Clave
-* Los datos institucionales de alto impacto (Código de Asignatura, Horas Malla, Período Académico, Docentes de Cátedra) deben tener presencia y jerarquía destacada:
+* Los datos institucionales de alto impacto (Código de Asignatura, Horas Malla, Período Académico, Docentes de la Materia) deben tener presencia y jerarquía destacada:
   * Título principal: `text-xl` o `text-2xl font-bold tracking-tight text-text-main`.
   * Horas y fechas: `text-sm` a `text-[15px] font-bold font-mono text-text-main` organizados en cuadrículas limpias con labels monospaciados en mayúsculas pequeñas (`text-[10.5px] font-bold text-text-dim uppercase tracking-widest`).
 

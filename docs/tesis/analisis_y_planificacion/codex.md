@@ -281,7 +281,7 @@ Unifica toda la documentación de una asignatura en un período académico:
 * **Regla de oro:** Una revisión aprobada jamás se modifica. Si un revisor formula observaciones, se genera una nueva revisión vinculada (`numero_revision + 1`) manteniendo la anterior intacta para auditoría.
 
 ### 5.3. Motor CoWork Concurrente (SignalR + Yjs CRDT)
-* Edición colaborativa simultánea para docentes de la misma cátedra.
+* Edición colaborativa simultánea para docentes de la misma materia.
 * Empleo de CRDT para garantizar convergencia matemática sin colisiones de redacción ni sobrescrituras accidentales.
 
 ### 5.4. Sello Forense e Inmutabilidad Oficial

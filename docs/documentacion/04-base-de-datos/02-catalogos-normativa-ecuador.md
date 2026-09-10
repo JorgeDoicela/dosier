@@ -43,6 +43,6 @@ graph LR
 * **Tablas:** `cat_carreras`, `cat_mallas_curriculares`, `cat_asignaturas`.
 * **Sincronización:** Mantiene la relación de carreras técnicas y tecnológicas del ISTPET, los niveles formativos, las asignaturas, sus prerrequisitos y correquisitos.
 
-### 3.2. Períodos Académicos y Cátedras
+### 3.2. Períodos Académicos y Materias
 * **Tablas:** `cat_periodos_academicos`, `cat_asignacion_docente`.
-* **Estructura:** Permite instanciar y duplicar los Sílabos y PEAs entre períodos académicos, heredando la estructura base aprobada y asignando a los docentes responsables de cada cátedra.
+* **Estructura:** Permite instanciar y duplicar los Sílabos y PEAs entre períodos académicos, heredando la estructura base aprobada y asignando a los docentes responsables de cada materia.

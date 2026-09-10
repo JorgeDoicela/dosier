@@ -43,7 +43,7 @@ const Caces: React.FC = () => {
             tabId: 4,
             title: 'Firmas de Responsabilidad',
             desc: 'Flujo jerárquico docente, coordinación y vicerrectorado.',
-            items: ['DOCENTE DE CÁTEDRA', 'COORDINADOR DE CARRERA', 'VICERRECTORADO', 'FIRMA ELECTRÓNICA P12']
+            items: ['DOCENTE DE MATERIA', 'COORDINADOR DE CARRERA', 'VICERRECTORADO', 'FIRMA ELECTRÓNICA P12']
         }
     ];
 

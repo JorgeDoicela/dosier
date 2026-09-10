@@ -36,7 +36,7 @@ erDiagram
     PROJECTS {
         string uuid PK
         string code "Código Asignatura / Plan"
-        string title "Nombre Asignatura / Cátedra"
+        string title "Nombre Asignatura / Materia"
         string state "Estado Curricular"
         decimal total_budget "Horas Totales / Créditos"
         datetime created_at_utc
@@ -68,8 +68,8 @@ erDiagram
 ### 3.1. Dominio Curricular y Gestión Docente
 
 * **`doc_proyectos` (`Projects`):** Almacena la entidad principal de planificación curricular de la asignatura (código de materia, nombre de asignatura, nivel, período académico, horas totales y estado del workflow curricular).
-* **`doc_proyecto_miembros` (`ProjectTeam`):** Relación N:M entre docentes y asignaturas/cátedras, especificando el rol (Docente Autor Principal, Co-Docente Cátedra, Revisor de Comisión Curricular), porcentaje de dedicación y estado de asignación.
-* **`doc_proyecto_cambios_equipo` (`ProjectTeamChange`):** Registro de solicitudes formales de reasignación de docentes de cátedra durante el período académico.
+* **`doc_proyecto_miembros` (`ProjectTeam`):** Relación N:M entre docentes y asignaturas/materias, especificando el rol (Docente Autor Principal, Co-Docente Materia, Revisor de Comisión Curricular), porcentaje de dedicación y estado de asignación.
+* **`doc_proyecto_cambios_equipo` (`ProjectTeamChange`):** Registro de solicitudes formales de reasignación de docentes de la materia durante el período académico.
 * **`doc_informes_avance` (`InformesAvance`):** Registro de informes de cumplimiento de avance curricular (corte de parcial 1, parcial 2 y portafolio docente de fin de período).
 
 ### 3.2. Dominio Documental y Forense

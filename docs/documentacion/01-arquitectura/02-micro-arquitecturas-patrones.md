@@ -140,12 +140,12 @@ Cuando un PEA o Sílabo avanza a la etapa de revisión por comisión o aprobaci�
 
 ## 7. CRDT Realtime Collaboration Architecture (CoWork Engine para Docentes)
 
-Para permitir que los docentes que comparten una misma cátedra o nivel redacten el PEA y Sílabo de manera colaborativa y síncrona, el sistema utiliza una arquitectura basada en **CRDT (Conflict-free Replicated Data Types)** mediante **Yjs** y **SignalR WebSockets**.
+Para permitir que los docentes que comparten una misma materia o nivel redacten el PEA y Sílabo de manera colaborativa y síncrona, el sistema utiliza una arquitectura basada en **CRDT (Conflict-free Replicated Data Types)** mediante **Yjs** y **SignalR WebSockets**.
 
 ```mermaid
 graph TD
     UserA["Docente A (Autor Principal)\nReact SPA"]
-    UserB["Docente B (Co-Docente Cátedra)\nReact SPA"]
+    UserB["Docente B (Co-Docente Materia)\nReact SPA"]
 
     subgraph SignalRHub [CollaborationHub Backend .NET]
         WsGateway["WebSocket Gateway / SignalR"]

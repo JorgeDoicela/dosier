@@ -6,7 +6,7 @@
 
 ## 1. Documentos Oficiales Soportados
 
-La plataforma estandariza la producción de los cuatro (4) entregables curriculares obligatorios por cátedra:
+La plataforma estandariza la producción de los cuatro (4) entregables curriculares obligatorios por materia:
 
 1. **PEA (Programa de Estudio de la Asignatura):**
    * Caracterización, objetivos, resultados de aprendizaje (RDA) y distribución matemática de horas (`Docencia`, `Práctico-Experimental / APE`, `Trabajo Autónomo`).

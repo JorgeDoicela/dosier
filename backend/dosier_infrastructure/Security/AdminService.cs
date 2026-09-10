@@ -489,7 +489,7 @@ public class AdminService : IAdminService
                  || _context.ProfesoresActividades.Any(pa => pa.IdProfesor == p.IdProfesor)
                 ));
 
-            // Filtrar por docentes que tengan cátedras asignadas o carga docente en el periodo actual SOLO si soloConHoras es true
+            // Filtrar por docentes que tengan materias asignadas o carga docente en el periodo actual SOLO si soloConHoras es true
             if (soloConHoras && !string.IsNullOrEmpty(periodId))
             {
                 query = query.Where(p =>
@@ -562,7 +562,7 @@ public class AdminService : IAdminService
                 .Select(pa => new { IdProfesor = pa.IdProfesor.Trim(), pa.IdSubcategoria, pa.HorasSemana })
                 .ToListAsync();
 
-            // Obtener asignaciones activas a cátedras en el período (asignaciones_profesores)
+            // Obtener asignaciones activas a materias en el período (asignaciones_profesores)
             var activeAssignments = await _context.AsignacionesProfesores.AsNoTracking()
                 .Where(ap => ids.Contains(ap.IdProfesor.Trim()) && (string.IsNullOrEmpty(periodId) || ap.IdPeriodo == periodId) && ap.Activo == 1)
                 .Select(ap => new { IdProfesor = ap.IdProfesor.Trim(), ap.IdAsignacion })

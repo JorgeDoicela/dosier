@@ -3,7 +3,7 @@ using System;
 namespace dosier_domain.Curriculum.Entities
 {
     /// <summary>
-    /// Relación N:M entre el Expediente Curricular Maestro y las asignaciones docentes / paralelos de SIGAFI (Cátedra Compartida)
+    /// Relación N:M entre el Expediente Curricular Maestro y las asignaciones docentes / paralelos de SIGAFI (Materia Compartida)
     /// </summary>
     public class DocExpedienteAsignacion
     {

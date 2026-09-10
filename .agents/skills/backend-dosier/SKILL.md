@@ -39,7 +39,7 @@ description: Extiende la skill global de backend con convenciones y restriccione
 
 * **Separación Estricta:**
   - `document_templates` (Molde Maestro): Plantillas de los 4 entregables oficiales (PEA, Sílabo, Guías APE, Guías de Estudio).
-  - `document_instances` (Instancia de Asignatura): Al iniciar la planificación de una cátedra, `DocumentInstanceService` clona la versión y guarda el `TemplateConfigSnapshotJson`.
+  - `document_instances` (Instancia de Asignatura): Al iniciar la planificación de una materia, `DocumentInstanceService` clona la versión y guarda el `TemplateConfigSnapshotJson`.
 * **Protección de Datos Docentes en Producción:**
   - Los documentos aprobados o legalizados leen **exclusivamente su Snapshot**.
   - Los datos de redacción colaborativa se almacenan indexados por claves de campo (`field_key`), desacoplados de la presentación visual.

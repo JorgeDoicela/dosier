@@ -48,7 +48,7 @@ graph TD
     RouterCheck -->|No Autenticado| PublicRoutes[Rutas Públicas\nLanding / Login / Verificación QR]
     RouterCheck -->|Autenticado| ProtectedRoutes{¿Rol / Permisos?}
 
-    ProtectedRoutes -->|Docente Cátedra| DocenteViews[Dashboard / Mis Asignaturas / PEA & Sílabo Builder]
+    ProtectedRoutes -->|Docente Materia| DocenteViews[Dashboard / Mis Asignaturas / PEA & Sílabo Builder]
     ProtectedRoutes -->|Comisión / Par Revisor| RevisorViews[Portal de Revisión Curricular]
     ProtectedRoutes -->|Coordinador de Carrera| CoordViews[Mallas / Asignaciones / Aprobación Curricular]
     ProtectedRoutes -->|Administrador| AdminViews[Gestión de Usuarios / Plantillas Canvas / Auditoría]
