@@ -72,31 +72,33 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                     {detailUser.type === 'DOCENTE' && (
                         <div className="bento-card static p-4 space-y-3">
                             <label className="section-label text-text-main">
-                                <Activity size={12} /> Capacidades Docentes
+                                <Activity size={12} /> Carga Docente y Distributivo
                             </label>
                             <div className="divider-vercel !my-0" />
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="section-label text-text-dim mb-1">Horas Distributivo</p>
+                                    <p className="section-label text-text-dim mb-1">Horas Docencia Total</p>
                                     <div className="flex items-center gap-1.5 text-sm font-semibold text-text-main">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${(detailUser.horas_investigacion || 0) > 0 ? 'bg-success' : 'bg-error'}`} />
-                                        {detailUser.horas_investigacion || 0}h
+                                        <span className={`w-1.5 h-1.5 rounded-full ${((detailUser.horas_docente ?? detailUser.horas_clase ?? detailUser.horas_investigacion) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
+                                        {(detailUser.horas_docente ?? detailUser.horas_clase ?? detailUser.horas_investigacion) || 0}h/sem
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="section-label text-text-dim mb-1">Horas Asignadas</p>
+                                    <p className="section-label text-text-dim mb-1">Cátedras Asignadas</p>
                                     <div className="flex items-center gap-1.5 text-sm font-semibold text-text-main">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${(detailUser.horas_asignadas || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
-                                        {detailUser.horas_asignadas || 0}h
+                                        <span className={`w-1.5 h-1.5 rounded-full ${(detailUser.catedras_asignadas || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
+                                        {detailUser.catedras_asignadas || 0} paralelos
                                     </div>
                                 </div>
-                                <div className="col-span-2">
-                                    <p className="section-label text-text-dim mb-1">Horas Disponibles</p>
-                                    <div className="flex items-center gap-1.5 text-sm font-semibold text-text-main">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${((detailUser.horas_investigacion || 0) - (detailUser.horas_asignadas || 0)) > 0 ? 'bg-success' : 'bg-error'}`} />
-                                        {Math.max(0, (detailUser.horas_investigacion || 0) - (detailUser.horas_asignadas || 0))}h
+                                {detailUser.horas_clase && (
+                                    <div className="col-span-2">
+                                        <p className="section-label text-text-dim mb-1">Horas Clase Frente a Aula</p>
+                                        <div className="flex items-center gap-1.5 text-sm font-semibold text-text-main">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+                                            {detailUser.horas_clase}h semanales
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                                 <div className="col-span-2">
                                     <p className="section-label text-text-dim mb-1">Carrera / Tecnología</p>
                                     <p className="text-sm font-bold text-text-main flex items-center gap-1.5">

@@ -46,11 +46,11 @@ public class AdminService : IAdminService
             .Select(p => p.IdPeriodo)
             .FirstOrDefaultAsync();
 
-        var researchSubcatId = await _context.SubcategoriasActividades.AsNoTracking()
-            .Where(s => s.Subcategoria == "INVESTIGACION")
+        var docenciaSubcats = await _context.SubcategoriasActividades.AsNoTracking()
+            .Where(s => s.Subcategoria == "HORAS CLASES" || s.IdCategoria == 1 || s.EsDocencia == 1)
             .Select(s => s.IdSubcategoria)
-            .FirstOrDefaultAsync();
-        if (researchSubcatId == 0) researchSubcatId = 7;
+            .ToListAsync();
+        if (!docenciaSubcats.Any()) docenciaSubcats = new List<int> { 1, 4 };
 
         var result = new PagedResult<UserManagementDto>
         {
@@ -489,13 +489,12 @@ public class AdminService : IAdminService
                  || _context.ProfesoresActividades.Any(pa => pa.IdProfesor == p.IdProfesor)
                 ));
 
-            // Filtrar por docentes que tengan actividades de investigación (idSubcategoria = researchSubcatId) en el periodo actual SOLO si soloConHoras es true
+            // Filtrar por docentes que tengan cátedras asignadas o carga docente en el periodo actual SOLO si soloConHoras es true
             if (soloConHoras && !string.IsNullOrEmpty(periodId))
             {
-                query = query.Where(p => _context.ProfesoresActividades.Any(pa =>
-                    pa.IdProfesor == p.IdProfesor &&
-                    pa.IdSubcategoria == researchSubcatId &&
-                    pa.IdPeriodo == periodId));
+                query = query.Where(p =>
+                    _context.AsignacionesProfesores.Any(ap => ap.IdProfesor == p.IdProfesor && ap.IdPeriodo == periodId && ap.Activo == 1) ||
+                    _context.ProfesoresActividades.Any(pa => pa.IdProfesor == p.IdProfesor && docenciaSubcats.Contains(pa.IdSubcategoria) && pa.IdPeriodo == periodId));
             }
 
             if (!string.IsNullOrEmpty(carrera))
@@ -557,10 +556,16 @@ public class AdminService : IAdminService
                 .Select(u => new { u.IdUsuario, IdSigafi = u.IdSigafi.Trim(), u.EmailInstitucional })
                 .ToListAsync();
 
-            // Obtener horas de investigación (idSubcategoria = researchSubcatId)
-            var researchHours = await _context.ProfesoresActividades.AsNoTracking()
-                .Where(pa => ids.Contains(pa.IdProfesor) && pa.IdSubcategoria == researchSubcatId && (string.IsNullOrEmpty(periodId) || pa.IdPeriodo == periodId))
-                .Select(pa => new { IdProfesor = pa.IdProfesor.Trim(), pa.HorasSemana })
+            // Obtener horas de docencia y actividades académicas (profesores_actividades)
+            var teachingHoursData = await _context.ProfesoresActividades.AsNoTracking()
+                .Where(pa => ids.Contains(pa.IdProfesor) && (string.IsNullOrEmpty(periodId) || pa.IdPeriodo == periodId))
+                .Select(pa => new { IdProfesor = pa.IdProfesor.Trim(), pa.IdSubcategoria, pa.HorasSemana })
+                .ToListAsync();
+
+            // Obtener asignaciones activas a cátedras en el período (asignaciones_profesores)
+            var activeAssignments = await _context.AsignacionesProfesores.AsNoTracking()
+                .Where(ap => ids.Contains(ap.IdProfesor.Trim()) && (string.IsNullOrEmpty(periodId) || ap.IdPeriodo == periodId) && ap.Activo == 1)
+                .Select(ap => new { IdProfesor = ap.IdProfesor.Trim(), ap.IdAsignacion })
                 .ToListAsync();
 
             // Obtener horas comprometidas en proyectos activos/enviados
@@ -614,7 +619,14 @@ public class AdminService : IAdminService
             result.Items = professors.Select(p => {
                 var pId = p.IdProfesor.Trim();
                 var contract = contracts.FirstOrDefault(c => c.IdProfesor == pId);
-                var hours = researchHours.Where(h => h.IdProfesor == pId).Sum(h => h.HorasSemana);
+
+                // Cálculo de horas docentes y cátedras asignadas
+                var profActividades = teachingHoursData.Where(h => h.IdProfesor == pId).ToList();
+                var horasClase = profActividades.Where(h => h.IdSubcategoria == 1).Sum(h => h.HorasSemana);
+                var horasDocenciaTotal = profActividades.Where(h => docenciaSubcats.Contains(h.IdSubcategoria)).Sum(h => h.HorasSemana);
+                if (horasDocenciaTotal == 0 && horasClase > 0) horasDocenciaTotal = horasClase;
+                var numCatedras = activeAssignments.Count(a => a.IdProfesor == pId);
+
                 var roleInfo = userRoles.Where(ur => ur.IdSigafi == pId).ToList();
                 var linkedUser = linkedUsers.FirstOrDefault(u => u.IdSigafi == pId);
                 var firstUserId = linkedUser?.IdUsuario ?? roleInfo.FirstOrDefault()?.IdUsuario;
@@ -644,7 +656,10 @@ public class AdminService : IAdminService
                     FirmaHabilitada = userMeta?.AceptoTerminosFirma ?? false,
                     Carrera = carreraNom,
                     Nivel = "N/A",
-                    HorasInvestigacion = hours,
+                    HorasDocente = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : (numCatedras > 0 ? (decimal?)numCatedras : null)),
+                    HorasClase = horasClase > 0 ? horasClase : (decimal?)null,
+                    CatedrasAsignadas = numCatedras,
+                    HorasInvestigacion = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : 0),
                     HorasAsignadas = assignedHours,
                     Departamento = contract?.Departamento,
                     CargoInstituto = contract?.CargoInstituto,

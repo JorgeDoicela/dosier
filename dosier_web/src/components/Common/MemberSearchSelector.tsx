@@ -307,7 +307,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                         <div className="space-y-2 mt-4">
                             <div className="flex items-center justify-between px-1">
                                 <p className="text-[10px] font-black text-text-dim uppercase tracking-widest">
-                                    {selectedType === 'DOCENTE' ? 'Docentes con Horas de Investigación' : 'Estudiantes Matriculados'} ({results.length})
+                                    {selectedType === 'DOCENTE' ? 'Docentes con Carga Docente / Cátedras' : 'Estudiantes Matriculados'} ({results.length})
                                 </p>
                                 {isSearching && (
                                     <span className="text-[10px] text-text-dim flex items-center gap-1.5 animate-pulse">
@@ -326,7 +326,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                     <p className="font-bold uppercase tracking-wider text-text-main">Sin resultados</p>
                                     <p className="text-[11px]">
                                         {selectedType === 'DOCENTE'
-                                            ? 'No se encontraron docentes con horas de investigación asignadas en el período activo.'
+                                            ? 'No se encontraron docentes con carga docente asignada en el período activo.'
                                             : 'No se encontraron estudiantes con matrícula activa en el período actual.'}
                                     </p>
                                 </div>
@@ -365,9 +365,9 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                                 </div>
 
                                                 <div className="shrink-0 flex items-center gap-2">
-                                                    {candidate.horas_investigacion !== undefined && candidate.horas_investigacion > 0 && (
+                                                    {((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) || 0) > 0) && (
                                                         <span className="badge-vercel badge-vercel-success text-[9px] px-2 py-0.5 font-mono">
-                                                            {candidate.horas_investigacion}h Distributivo
+                                                            {candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia
                                                         </span>
                                                     )}
                                                     {candidate.type === 'ESTUDIANTE' && candidate.es_graduado === false && (
@@ -422,9 +422,9 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                                 <div className="space-y-0.5 min-w-0">
                                                     <p className="font-semibold text-text-main text-xs flex items-center gap-2 truncate">
                                                         <span>{formatNombre(candidate.nombre_completo || candidate.nombre)}</span>
-                                                        {candidate.horas_investigacion !== undefined && candidate.horas_investigacion > 0 && (
+                                                        {((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) || 0) > 0) && (
                                                             <span className="badge-vercel badge-vercel-success text-[9px] px-1.5 py-0.5">
-                                                                {candidate.horas_investigacion}h SIGAFI
+                                                                {candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia
                                                             </span>
                                                         )}
                                                     </p>

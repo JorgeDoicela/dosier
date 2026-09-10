@@ -16,9 +16,17 @@ public class UserManagementDto
 
     // Metadata resumida para la lista
     public bool FirmaHabilitada { get; set; }
+
+    // Carga Docente y Portafolio Curricular (DOSIER)
+    public decimal? HorasDocente { get; set; }
+    public decimal? HorasClase { get; set; }
+    public int CatedrasAsignadas { get; set; }
+    public bool TieneCargaDocente => (HorasDocente ?? 0) > 0 || CatedrasAsignadas > 0;
+
+    // Retrocompatibilidad con vistas previas
     public decimal? HorasInvestigacion { get; set; }
     public decimal? HorasAsignadas { get; set; }
-    public bool TieneHorasInvestigacion => (HorasInvestigacion ?? 0) > 0;
+    public bool TieneHorasInvestigacion => (HorasInvestigacion ?? 0) > 0 || TieneCargaDocente;
     
     // Contexto Laboral e Institucional (Contratos / Cargos)
     public string? Departamento { get; set; }

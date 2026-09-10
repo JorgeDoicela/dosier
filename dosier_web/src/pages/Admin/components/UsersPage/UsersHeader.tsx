@@ -143,7 +143,7 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
                                 onClick={() => setSoloConHoras(true)}
                                 className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${soloConHoras ? 'bg-brand/15 text-brand border border-brand/30 shadow-xs' : 'text-text-dim hover:text-text-main'}`}
                             >
-                                Con Horas de Investigación (CACES)
+                                Con Carga Docente Activa
                             </button>
                             <button
                                 type="button"

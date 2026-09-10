@@ -11,6 +11,10 @@ export interface ManagedUser {
     roles: string[];
     role_codes: string[];
     firma_habilitada: boolean;
+    horas_docente?: number;
+    horas_clase?: number;
+    catedras_asignadas?: number;
+    tiene_carga_docente?: boolean;
     horas_investigacion?: number;
     horas_asignadas?: number;
     tiene_horas_investigacion?: boolean;

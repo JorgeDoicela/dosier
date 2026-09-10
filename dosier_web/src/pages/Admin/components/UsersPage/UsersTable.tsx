@@ -106,13 +106,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                     {u.type === 'DOCENTE' ? (
                                         <div className="space-y-1">
                                             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
-                                                <span className="text-text-dim flex items-center gap-1.5" title="Horas Distributivo (SIGAFI)">
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${(u.horas_investigacion || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
-                                                    SIGAFI: <span className="font-semibold text-text-main">{u.horas_investigacion || 0}h</span>
+                                                <span className="text-text-dim flex items-center gap-1.5" title="Horas de Docencia / Clases en Distributivo (SIGAFI)">
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${((u.horas_docente ?? u.horas_clase ?? u.horas_investigacion) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
+                                                    Docencia: <span className="font-semibold text-text-main">{u.horas_docente ?? u.horas_clase ?? u.horas_investigacion ?? 0}h/sem</span>
                                                 </span>
-                                                <span className="text-text-dim flex items-center gap-1.5" title="Horas Comprometidas en Proyectos (DOSIER)">
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${(u.horas_asignadas || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
-                                                    Asig: <span className="font-semibold text-text-main">{u.horas_asignadas || 0}h</span>
+                                                <span className="text-text-dim flex items-center gap-1.5" title="Cátedras / Paralelos Activos asignados en el Período">
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${(u.catedras_asignadas || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
+                                                    Cátedras: <span className="font-semibold text-text-main">{u.catedras_asignadas || 0}</span>
                                                 </span>
                                             </div>
                                             <div className="text-[10px] text-text-dim font-medium tracking-wide">
