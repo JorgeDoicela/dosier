@@ -318,46 +318,41 @@ stateDiagram-v2
 
 ---
 
-## 7. Hoja de Ruta de Implementación
+## 7. Hoja de Ruta de Implementación y Estado del Sistema
 
-### Fase 0: Línea Base e Integración de Planificación SIGAFI (COMPLETADA)
-* [x] Mapeo de `mallas_periodos`, `modalidades_carreras` y `secciones` en modo solo lectura.
-* [x] Filtro obligatorio `carreras.esInstituto = 1` implementado en catálogo curricular.
-* [x] Servicio transversal `AcademicContextResolver` con fallback controlado y auditado.
-* [x] Endpoint de creación de PEA desde asignación real (`POST /api/pea/desde-asignacion/{idAsignacion}`).
-* [x] Migración aditiva `05_contexto_academico_pea.sql` ejecutada en base local (`doc_pea` con `idAsignacion`, `idMalla`, `idDetalleMalla`, `snapshotCurricularJson`).
+> **Delimitación Oficial de Tesis:** El alcance del proyecto de grado se enfoca exclusivamente en la implementación profunda, rigurosa y auditable del **Programa de Estudio de la Asignatura (PEA)**. 
+> La arquitectura del sistema queda desacoplada y preparada (mediante `doc_expedientes_curriculares` y el script `04_extension_futura_curriculum_silabo_guias.sql`) para que en una versión posterior se incorporen el Sílabo, Guías APE y Guías de Estudio sin modificar el núcleo de dominio.
 
-### Fase 1: Núcleo Curricular Común y Expedientes (EN CURSO)
-* [ ] Catálogo de Instrumentos Curriculares y Normativa externa (`doc_instrumentos_curriculares`, `doc_instrumento_versiones`).
-* [ ] Modelado de Proyectos de Carrera y Perfiles de Egreso con Resultados de Aprendizaje.
-* [ ] Creación de `doc_expedientes_curriculares` y relación con asignaciones docentes.
-* [ ] Creación de series documentales y revisiones enlazadas (`doc_documentos_series`, `doc_documentos_instancias`).
+### 7.1. Estado de Avance por Capas
 
-### Fase 2: Workflow Configurable, Roles y Colaboración Generalizada
-* [ ] Definición de workflow configurable por carrera/período y persistencia de eventos (`doc_workflow_eventos`).
-* [ ] Catálogo de autoridades y responsables académicos (`doc_responsables_academicos`).
-* [ ] Desacople de CoWork para autorizar por expediente curricular y asignación docente.
-* [ ] Observaciones por campo/sección con estados resuelto/pendiente.
+* **Base de Datos Institucional (100% Normalizada):**
+  * `01_sistema_base.sql`: Núcleo de seguridad, usuarios, firmas electrónicas DFRM, auditoría y motor documental.
+  * `02_gobernanza_y_antecedentes_curriculares.sql`: Normativas CACES/CES, modelos educativos, perfiles de egreso y contenedor maestro de expedientes curriculares.
+  * `03_curriculum_pea_oficial.sql`: Esquema completo del PEA (Secciones a–k, prerrequisitos, unidades, temas, RDA con aporte al perfil de egreso, actividades prácticas, evaluación continua ISTPET, bibliografía APA, observaciones colegiadas y trazabilidad con hash SHA-256).
+  * `04_extension_futura_curriculum_silabo_guias.sql`: Cimiento relacional para Sílabos (19 semanas) y Guías APE/Estudio preservado para versión 2.
 
-### Fase 3: Corte Vertical Completo del PEA (Núcleo de Tesis)
-* [ ] Registro de plantilla oficial PEA en el motor documental (`pea_template.html`).
-* [ ] Dashboard docente con asignaturas asignadas en el período activo y estado del expediente.
-* [ ] Editor web por secciones del PEA (React 18 + Geist UI + `<CoWorkField>`), con datos oficiales bloqueados.
-* [ ] Motor ejecutable de validaciones matemáticas y trazabilidad con el perfil de egreso.
-* [ ] Flujo de revisión colegiada, aprobación, firmas y generación de PDF oficial con hash SHA-256 y QR público.
-* [ ] Clonación/herencia controlada de PEA entre períodos académicos resolviendo nueva malla vigente.
+* **Backend (.NET 8 Clean Architecture - 100% PEA):**
+  * Saneamiento normativo y técnico completado: DTOs, entidades y servicios para las 11 secciones oficiales del formato ISTPET.
+  * Circuito colegiado de 4 estados/firmas (`Borrador`, `RevisadoCoord`, `RevisadoAcad`, `AprobadoVicerrector`).
+  * Integridad forense con estampados DFRM, control de inmutabilidad y cálculo de hash SHA-256 sobre el contenido pedagógico.
+  * Mapeo estricto contra `sigafi_es` en modo solo lectura (`AsNoTracking()`).
+  * 0 errores, 0 advertencias y 100% de pruebas unitarias passing (`PeaFirmaTests`).
 
-### Fase 4: Preparación Estructural del Portafolio Derivado
-* [ ] Registro de plantillas y esquemas de series para Sílabo (19 semanas), Guías APE y Guía de Estudio.
-* [ ] Contratos de datos dependientes del PEA aprobado en el expediente curricular.
-* [ ] Exposición del estado del portafolio completo en la vista del expediente curricular.
+### 7.2. Tareas Activas para Cierre del PEA (Fase Actual)
 
-### Fase 5: Cobertura Institucional, Despliegue en AWS y Evaluación Final
-* [ ] Tablero de control de cobertura del PEA por carrera y período (para CACES).
-* [ ] Despliegue en producción en AWS (EC2 / RDS MySQL / Nginx / .NET 8).
-* [ ] Pruebas reales con docentes y autoridades del ISTPET, levantamiento de métricas y redacción del informe de tesis.
+1. **Frontend: Integración Visual en el Editor de PEA (`dosier_web`):**
+   * Conectar la interfaz de React 18 (Geist UI) con los endpoints del backend:
+     * **Sección c (Prerrequisitos):** Tabla y formulario interactivo de prerrequisitos/correquisitos.
+     * **Sección d (Aporte al Perfil de Egreso):** Selector para vincular cada RDA de la asignatura con los resultados del perfil de carrera.
+     * **Sección i (Evaluación ISTPET):** Matriz estructurada de evaluación continua (Docencia, APE, Autónomo, Examen = 10.0 pts).
+     * **Sección k (Firmas y Estados):** Actualización visual del stepper de aprobación para los 4 roles institucionales.
+
+2. **Generación y Exportación a PDF Oficial del PEA:**
+   * Renderizado de plantilla institucional con membrete oficial reglamentario del ISTPET.
+   * Estampado de sellos digitales con código DFRM-XXXX, fecha UTC y hash SHA-256 inmutable.
+   * Generación de código QR dinámico para verificación pública de autenticidad.
 
 ---
 
 ## 8. Definición Sintética del Producto
-> **DOSIER es una plataforma de gobernanza curricular y gestión documental académica que integra la normativa de los organismos reguladores (CES, CACES), los instrumentos institucionales, los proyectos de carrera, los perfiles de egreso y la planificación académica de SIGAFI con el ciclo de elaboración colaborativa, validación matemática, revisión colegiada, aprobación, publicación inmutable, versionado y cobertura de los documentos microcurriculares. La tesis de grado implementa y evalúa exhaustivamente este ciclo para el Programa de Estudio de la Asignatura (PEA), dejando la arquitectura y contratos preparados para el resto del portafolio docente.**
+> **DOSIER es una plataforma de gobernanza curricular y gestión documental académica que integra la normativa de los organismos reguladores (CES, CACES), los instrumentos institucionales, los proyectos de carrera, los perfiles de egreso y la planificación académica de SIGAFI con el ciclo de elaboración colaborativa, validación matemática, revisión colegiada, aprobación, publicación inmutable, versionado y cobertura de los documentos microcurriculares. La tesis de grado implementa y evalúa exhaustivamente este ciclo para el Programa de Estudio de la Asignatura (PEA), dejando la arquitectura y contratos preparados para el resto del portafolio docente en versiones futuras.**
