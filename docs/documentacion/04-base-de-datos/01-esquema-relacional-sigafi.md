@@ -133,3 +133,20 @@ graph TD
    * Para evitar errores 1267 de incompatibilidad en consultas que unen tablas de ambos esquemas, los controladores y servicios ejecutan conversiones explícitas (`CONVERT(col USING utf8mb4)`).
 4. **Reglas de Integridad Referencial:**
    * No se aplican claves foráneas restrictivas directas hacia las tablas de SIGAFI (`carreras`, `detallemallas`, `profesores`) para evitar bloqueos transaccionales o fallos en cascada sobre el sistema académico principal. La consistencia se garantiza a través de la capa de dominio en EF Core y validaciones en los servicios de aplicación.
+
+---
+
+## 5. Script Consolidado para Modelado Curricular (PEA Oficial)
+
+Para sesiones de levantamiento de requerimientos, modelado relacional y presentación técnica ante comisiones directivas, se dispone del script maestro:
+* **Archivo:** `scripts/base_datos/00_dosier_curriculum_pea_consolidado.sql`
+* **Alcance:** Integra en un único modelo relacional de 20 tablas el ciclo de vida íntegro del PEA y la gobernanza curricular:
+  1. *Marco y Gobernanza:* `doc_normativas`, `doc_normativa_articulos`, `doc_modelos_educativos`, `doc_proyectos_curriculares`, `doc_perfiles_egreso`, `doc_perfil_egreso_resultados`, `doc_asignatura_resultado_perfil`.
+  2. *Expediente Académico:* `doc_expedientes_curriculares`, `doc_expediente_asignaciones`.
+  3. *Arquitectura del PEA (11 Secciones):* `doc_pea`, `doc_pea_prerrequisitos`, `doc_pea_unidades`, `doc_pea_temas`, `doc_pea_resultados_aprendizaje`, `doc_pea_actividades_practicas`, `doc_pea_evaluaciones`, `doc_pea_bibliografia`.
+  4. *Circuito de Calidad y Firmas:* `doc_pea_observaciones`, `doc_pea_trazabilidad`, `doc_documentos_firmas`.
+* **Criterios de Depuración Aplicados:**
+  * Empleo exclusivo de claves primarias autoincrementales enteras (`INT AUTO_INCREMENT`) sin columnas UUID.
+  * Supresión de triggers automáticos, vistas y sentencias de inserción de datos (seeders).
+  * Exclusión de tablas efímeras de sincronización en tiempo real (WebSockets / CoWork), enlaces de un solo uso (Magic Links) y módulos ajenos a la planificación del PEA.
+
