@@ -109,7 +109,7 @@ CREATE TABLE doc_proyectos_curriculares (
     fechaAprobacion         DATE            NULL COMMENT 'Fecha oficial de aprobación en el CES',
     activo                  TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '1 = Carrera activa con estudiantes, 0 = No vigente',
     fechaRegistro           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de registro',
-
+--idmodalidad
     INDEX idx_proy_carrera_malla (idCarrera, idMalla),
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT,
     FOREIGN KEY (idMalla) REFERENCES mallas(idMalla) ON DELETE RESTRICT
@@ -454,13 +454,13 @@ CREATE TABLE doc_documentos_firmas (
 -- BLOQUE 5: SEGURIDAD RBAC CURRICULAR INSTITUCIONAL
 -- =============================================================================
 -- La seguridad se encuentra integrada en las tablas del sistema base `sigafi_es`:
--- 1. Sistema ID = 6: 'DOSIER' - "Gestión Curricular y Acreditación ISTPET"
--- 2. Cinco Roles:
---    - DOSIER_ADMIN: Administrador general.
---    - DOSIER_DOCENTE: Docente elaborador y autor del PEA.
---    - DOSIER_COORD_CARRERA: Coordinador de Carrera.
---    - DOSIER_COORD_ACAD: Coordinación Académica.
---    - DOSIER_VICERRECTOR: Vicerrectorado.
+-- 1. Sistema: 'DOSIER' - "Gestión Curricular"
+-- 2. Roles:
+--    - dosier_docente: Docente elaborador y autor del PEA.
+--    - dosier_coord_carrera: Coordinador de Carrera.
+--    - dosier_coord_acad: Coordinación Académica.
+--    - dosier_vicerrector: Vicerrectorado.
+--    - dosier_admin: Administrador general.
 -- =============================================================================
 
 SET FOREIGN_KEY_CHECKS = 1;
