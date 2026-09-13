@@ -79,3 +79,15 @@ graph TD
 * **Servicio:** `src/services/normativaService.ts` conectado a `/api/normativas/checklist`.
 * **Propósito:** Permite la consulta contextual inalterable de resoluciones vigentes del Consejo de Educación Superior (CES Art. 21 y 27), Modelo de Evaluación Externa CACES y Modelo Educativo Institucional (MED) durante la redacción del PEA.
 * **Estándar Visual:** Panel deslizable con fondo 100% sólido (`bg-white dark:bg-zinc-950`), overlay opaco sin `backdrop-blur` y búsqueda en tiempo real por artículos y requisitos microcurriculares.
+
+### 4.5. `<CreateProjectModal>`: Registro Ágil de Instrumentos Curriculares
+* **Ubicación:** `src/components/DOSIER/CreateProjectModal.tsx`
+* **Desacople Curricular:** Formulario orientado exclusivamente a la apertura de instrumentos PEA por carrera y asignatura institucional, eliminando campos de índole financiera o presupuestaria.
+* **Resiliencia y Borradores:** Implementa guardado automático en `localStorage` con debounce y detección de cambios sin guardar (`hasUnsavedChanges`) mediante `useRef`, previniendo la pérdida de información pedagógica formulada.
+
+### 4.6. Tableros Analíticos Curriculares e Indicadores CACES
+* **Ubicación:** `src/pages/Analytics/components/` (`AnalyticsOverviewTab.tsx`, `AnalyticsProjectsTab.tsx`, `AnalyticsCacesTab.tsx`, `cacesCalculator.ts`).
+* **Métricas Pedagógicas:** En lugar de métricas financieras de gasto o presupuestos, el sistema cuantifica:
+  1. **Cobertura Curricular:** Porcentaje de asignaturas con PEA formulado y aprobado frente a la malla vigente.
+  2. **Conformidad Horaria Art. 21 CES:** Consistencia de horas asignadas en Docencia (CD), Prácticas (APE) y Trabajo Autónomo (AA).
+  3. **Circuito Colegiado de Firmas (Ley 67):** Tasa de instrumentos con dictamen favorable y firmas digitales formalizadas.
