@@ -2,21 +2,19 @@ import React, { useMemo } from 'react';
 import { useAuth } from '../../api/AuthContext';
 import { AdminDashboard } from './Roles/AdminDashboard';
 import { DocenteDashboard } from './Roles/DocenteDashboard';
-import { EstudianteDashboard } from './Roles/EstudianteDashboard';
 import { FullscreenLoader } from '../../components/Common/FullscreenLoader';
 
 const Dashboard: React.FC = () => {
-    const { isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isEstudiante, isLoading } = useAuth();
+    const { isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isLoading } = useAuth();
 
     const roleDashboard = useMemo(() => {
         if (isLoading) return null;
         
         if (isAdmin || isVicerrector || isCoordAcad || isCoordCarrera) return <AdminDashboard />;
         if (isDocente) return <DocenteDashboard />;
-        if (isEstudiante) return <EstudianteDashboard />;
         
         return <DocenteDashboard />; // Global Fallback
-    }, [isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isEstudiante, isLoading]);
+    }, [isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isLoading]);
 
     if (isLoading) {
         return <FullscreenLoader message="Cargando panel de control..." />;

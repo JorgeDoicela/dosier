@@ -60,202 +60,10 @@ public class AdminService : IAdminService
 
         if (type == "ESTUDIANTE")
         {
-            var query = _context.Alumnos.AsNoTracking().AsQueryable();
-
-            // Segmentación por estado de estudiante (Activo matriculado vs Graduado / Histórico)
-            if (!string.IsNullOrEmpty(periodId) && estadoEstudiante == "ACTIVO")
-            {
-                query = query.Where(a => _context.Matriculas.Any(m =>
-                    m.IdAlumno == a.IdAlumno &&
-                    m.IdPeriodo == periodId &&
-                    (m.Retirado == null || m.Retirado == false) &&
-                    (m.Valida == 1)));
-            }
-            else if (!string.IsNullOrEmpty(periodId) && estadoEstudiante == "GRADUADO")
-            {
-                query = query.Where(a => !_context.Matriculas.Any(m =>
-                    m.IdAlumno == a.IdAlumno &&
-                    m.IdPeriodo == periodId &&
-                    (m.Retirado == null || m.Retirado == false) &&
-                    (m.Valida == 1)));
-            }
-
-            // Segmentación por origen de estudiante: Instituto vs Escuela de Conducción
-            if (origenEstudiante == "INSTITUTO")
-            {
-                if (estadoEstudiante == "ACTIVO" && !string.IsNullOrEmpty(periodId))
-                {
-                    query = query.Where(a => _context.Matriculas.Any(m =>
-                        m.IdAlumno == a.IdAlumno &&
-                        m.IdPeriodo == periodId &&
-                        (m.Retirado == null || m.Retirado == false) &&
-                        m.Valida == 1 &&
-                        _context.Cursos.Any(c => c.IdNivel == m.IdNivel &&
-                            _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && car.EsInstituto == 1))));
-                }
-                else
-                {
-                    // Graduados o Todos: Basado en su IdNivel asignado en alumnos o matrículas del instituto sin cursos de conducción
-                    query = query.Where(a =>
-                        (a.IdNivel != null && _context.Cursos.Any(c => c.IdNivel == a.IdNivel && _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && car.EsInstituto == 1)))
-                        ||
-                        (!_context.Cursos.Any(c => c.IdNivel == a.IdNivel && _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && (car.EsInstituto == 0 || car.EsInstituto == null))) &&
-                         _context.Matriculas.Any(m => m.IdAlumno == a.IdAlumno && m.Valida == 1 &&
-                            _context.Cursos.Any(c => c.IdNivel == m.IdNivel && _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && car.EsInstituto == 1))))
-                    );
-                }
-            }
-            else if (origenEstudiante == "CONDUCCION")
-            {
-                if (estadoEstudiante == "ACTIVO" && !string.IsNullOrEmpty(periodId))
-                {
-                    query = query.Where(a => _context.Matriculas.Any(m =>
-                        m.IdAlumno == a.IdAlumno &&
-                        m.IdPeriodo == periodId &&
-                        (m.Retirado == null || m.Retirado == false) &&
-                        m.Valida == 1 &&
-                        _context.Cursos.Any(c => c.IdNivel == m.IdNivel &&
-                            _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && (car.EsInstituto == 0 || car.EsInstituto == null)))));
-                }
-                else
-                {
-                    query = query.Where(a =>
-                        (a.IdNivel != null && _context.Cursos.Any(c => c.IdNivel == a.IdNivel && _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && (car.EsInstituto == 0 || car.EsInstituto == null))))
-                        ||
-                        _context.Matriculas.Any(m => m.IdAlumno == a.IdAlumno && m.Valida == 1 &&
-                            _context.Cursos.Any(c => c.IdNivel == m.IdNivel && _context.Carreras.Any(car => car.IdCarrera == c.IdCarrera && (car.EsInstituto == 0 || car.EsInstituto == null))))
-                    );
-                }
-            }
-
-            if (!string.IsNullOrEmpty(carrera))
-            {
-                var carreraLower = carrera.ToLower();
-                var matchingCarreraIds = await _context.Carreras.AsNoTracking()
-                    .Where(c => (c.Carrera1 != null && c.Carrera1.ToLower().Contains(carreraLower)) || (c.AliasCarrera != null && c.AliasCarrera.ToLower().Contains(carreraLower)))
-                    .Select(c => c.IdCarrera)
-                    .ToListAsync();
-
-                query = query.Where(a => _context.Matriculas.Any(m =>
-                    m.IdAlumno == a.IdAlumno &&
-                    (m.Retirado == null || m.Retirado == false) &&
-                    m.Valida == 1 &&
-                    _context.Cursos.Any(c => c.IdNivel == m.IdNivel && matchingCarreraIds.Contains(c.IdCarrera))));
-            }
-
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                var terms = searchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var term in terms)
-                {
-                    query = query.Where(a =>
-                        (a.IdAlumno != null && a.IdAlumno.Contains(term)) ||
-                        (a.PrimerNombre != null && a.PrimerNombre.ToLower().Contains(term)) ||
-                        (a.SegundoNombre != null && a.SegundoNombre.ToLower().Contains(term)) ||
-                        (a.ApellidoPaterno != null && a.ApellidoPaterno.ToLower().Contains(term)) ||
-                        (a.ApellidoMaterno != null && a.ApellidoMaterno.ToLower().Contains(term)) ||
-                        (a.EmailInstitucional != null && a.EmailInstitucional.ToLower().Contains(term)) ||
-                        (a.Email != null && a.Email.ToLower().Contains(term))
-                    );
-                }
-            }
-
-            result.TotalCount = await query.CountAsync();
-
-            var students = await query
-                .OrderBy(a => a.ApellidoPaterno)
-                .ThenBy(a => a.PrimerNombre)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var ids = students.Select(s => s.IdAlumno.Trim()).ToList();
-
-            // Obtener datos académicos extra de forma optimizada
-            var currentMatriculas = await _context.Matriculas.AsNoTracking()
-                .Where(m => ids.Contains(m.IdAlumno) && (string.IsNullOrEmpty(periodId) || m.IdPeriodo == periodId) && m.Valida == 1)
-                .Select(m => new { m.IdAlumno, m.IdNivel })
-                .ToListAsync();
-
-            // Pre-cargar información de Cursos exclusivamente para los niveles presentes
-            var levelIds = currentMatriculas.Select(m => (int?)m.IdNivel)
-                .Concat(students.Select(s => s.IdNivel))
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .Distinct()
-                .ToList();
-
-            var relevantCursos = await _context.Cursos.AsNoTracking()
-                .Where(c => levelIds.Contains(c.IdNivel))
-                .Select(c => new { c.IdNivel, c.IdCarrera, c.Nivel })
-                .ToListAsync();
-
-            var relevantCarreraIds = relevantCursos.Select(c => c.IdCarrera).Distinct().ToList();
-            var careers = await _context.Carreras.AsNoTracking()
-                .Where(c => relevantCarreraIds.Contains(c.IdCarrera))
-                .Select(c => new { c.IdCarrera, c.Carrera1, c.EsInstituto })
-                .ToListAsync();
-
-            var userRoles = await _context.UserRoles.AsNoTracking()
-                .Where(ur => ur.User != null && ids.Contains(ur.User.IdSigafi) && (ur.EsActivo ?? true))
-                .Where(ur => ur.Role.RoleModuleOperations.Any(rmo => rmo.ModuleOperation.Module.Sistema.Codigo == "DOSIER"))
-                .Select(ur => new {
-                    IdUsuario = ur.IdUsuario,
-                    IdSigafi = ur.User!.IdSigafi.Trim(),
-                    RoleNombre = ur.Role.Nombre,
-                    RoleCodigo = ur.Role.CodigoRol
-                })
-                .ToListAsync();
-
-            var linkedUsers = await _context.Users.AsNoTracking()
-                .Where(u => ids.Contains(u.IdSigafi.Trim()))
-                .Select(u => new { u.IdUsuario, IdSigafi = u.IdSigafi.Trim(), u.EmailInstitucional })
-                .ToListAsync();
-
-            var userIds = linkedUsers.Select(u => u.IdUsuario)
-                .Concat(userRoles.Select(ur => ur.IdUsuario))
-                .Distinct()
-                .ToList();
-
-            var metadatas = await _context.DocUsuariosMetadata.AsNoTracking()
-                .Where(m => userIds.Contains(m.IdUsuario))
-                .Select(m => new { m.IdUsuario, m.Uuid, m.AceptoTerminosFirma })
-                .ToListAsync();
-
-            result.Items = students.Select(s => {
-                var sId = s.IdAlumno.Trim();
-                var roleInfo = userRoles.Where(ur => ur.IdSigafi == sId).ToList();
-                var linkedUser = linkedUsers.FirstOrDefault(u => u.IdSigafi == sId);
-                var firstUserId = linkedUser?.IdUsuario ?? roleInfo.FirstOrDefault()?.IdUsuario;
-                var userMeta = firstUserId.HasValue ? metadatas.FirstOrDefault(m => m.IdUsuario == firstUserId.Value) : null;
-
-                var matricula = currentMatriculas.FirstOrDefault(m => m.IdAlumno.Trim() == sId);
-
-                // Lógica de descubrimiento de datos académicos vía tabla 'cursos'
-                var idNivelTarget = matricula?.IdNivel ?? s.IdNivel;
-                var cursoInfo = relevantCursos.FirstOrDefault(c => c.IdNivel == idNivelTarget);
-
-                var carreraObj = careers.FirstOrDefault(c => c.IdCarrera == cursoInfo?.IdCarrera);
-                var carreraNom = carreraObj?.Carrera1;
-                var nivelNom = cursoInfo?.Nivel;
-
-                return new UserManagementDto
-                {
-                    IdUsuario = firstUserId,
-                    IdProfesor = sId,
-                    NombreCompleto = $"{s.PrimerNombre} {s.SegundoNombre} {s.ApellidoPaterno} {s.ApellidoMaterno}".Replace("  ", " ").Trim(),
-                    Email = ResolveContactEmail(s.EmailInstitucional, s.Email, linkedUser?.EmailInstitucional),
-                    UserUuid = userMeta?.Uuid.ToString() ?? "",
-                    Type = "ESTUDIANTE",
-                    Roles = roleInfo.Select(ur => ur.RoleNombre).ToList(),
-                    RoleCodes = roleInfo.Select(ur => ur.RoleCodigo).ToList(),
-                    FirmaHabilitada = userMeta?.AceptoTerminosFirma ?? false,
-                    Carrera = carreraNom ?? "No vinculada",
-                    Nivel = nivelNom ?? "N/A",
-                    EsGraduado = matricula == null,
-                    EsInstituto = carreraObj?.EsInstituto == 1
-                };
-            }).ToList();
+            // En DOSIER no se gestionan estudiantes; el sistema es exclusivo para gestión curricular docente y directiva
+            result.TotalCount = 0;
+            result.Items = new List<UserManagementDto>();
+            return result;
         }
         else if (type == "EXTERNO")
         {
@@ -312,27 +120,16 @@ public class AdminService : IAdminService
                 })
                 .ToListAsync();
 
-            var fallbackStudents = await _context.Alumnos.AsNoTracking()
-                .Where(a => externalIds.Contains(a.IdAlumno.Trim()))
-                .Select(a => new {
-                    IdAlumno = a.IdAlumno.Trim(),
-                    NombreCompleto = $"{a.PrimerNombre} {a.SegundoNombre} {a.ApellidoPaterno} {a.ApellidoMaterno}".Replace("  ", " ").Trim()
-                })
-                .ToListAsync();
-
             result.Items = externalUsers.Select(u => {
                 var sId = u.IdSigafi.Trim();
                 var roleInfo = userRoles.Where(ur => ur.IdUsuario == u.IdUsuario).ToList();
                 var userMeta = metadatas.FirstOrDefault(m => m.IdUsuario == u.IdUsuario);
 
                 var prof = fallbackProfs.FirstOrDefault(p => p.IdProfesor == sId);
-                var student = fallbackStudents.FirstOrDefault(a => a.IdAlumno == sId);
                 
                 string nombreCompleto = u.Nombre ?? "";
                 if (prof != null) {
                     nombreCompleto = prof.NombreCompleto;
-                } else if (student != null) {
-                    nombreCompleto = student.NombreCompleto;
                 }
 
                 if (string.IsNullOrWhiteSpace(nombreCompleto)) {
@@ -801,32 +598,20 @@ public class AdminService : IAdminService
         {
             if (userType == "DOSIER_ESTUDIANTE" || userType == "ESTUDIANTE")
             {
-                var s = await _context.Alumnos.FirstOrDefaultAsync(a => a.IdAlumno == idUsuario);
-                if (s == null) return false;
-                string fullNombre = $"{s.PrimerNombre} {s.SegundoNombre} {s.ApellidoPaterno} {s.ApellidoMaterno}".Replace("  ", " ").Trim();
-                user = new User {
-                    IdSigafi = idUsuario,
-                    Nombre = fullNombre,
-                    Contrasenia = BCrypt.Net.BCrypt.HashPassword(s.Password ?? "cambiame", 11),
-                    Activo = true,
-                    TablaSigafi = "alumno",
-                    EmailInstitucional = s.EmailInstitucional ?? s.Email
-                };
+                return false; // Los estudiantes no tienen acceso a roles ni gestión en DOSIER
             }
-            else
-            {
-                var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == idUsuario);
-                if (p == null) return false;
-                string fullNombre = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim();
-                user = new User {
-                    IdSigafi = idUsuario,
-                    Nombre = fullNombre,
-                    Contrasenia = BCrypt.Net.BCrypt.HashPassword(p.Clave ?? "cambiame", 11),
-                    Activo = true,
-                    TablaSigafi = "profesor",
-                    EmailInstitucional = p.EmailInstitucional ?? p.Email
-                };
-            }
+
+            var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == idUsuario);
+            if (p == null) return false;
+            string fullNombre = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim();
+            user = new User {
+                IdSigafi = idUsuario,
+                Nombre = fullNombre,
+                Contrasenia = BCrypt.Net.BCrypt.HashPassword(p.Clave ?? "cambiame", 11),
+                Activo = true,
+                TablaSigafi = "profesor",
+                EmailInstitucional = p.EmailInstitucional ?? p.Email
+            };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();

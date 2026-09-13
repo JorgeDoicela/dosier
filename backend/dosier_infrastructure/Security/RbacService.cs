@@ -15,7 +15,7 @@ public class RbacService : IRbacService
     public RbacService(DosierContext context, IConfiguration configuration)
     {
         _context = context;
-        _masterAdminId = configuration["Security:MasterAdminId"] ?? "0302144159";
+        _masterAdminId = configuration["Security:MasterAdminId"]?.Trim() ?? string.Empty;
     }
 
     public async Task SeedRbacStructureAsync()
@@ -132,7 +132,17 @@ public class RbacService : IRbacService
         var requiredRoleCodes = new List<string>();
 
         // Reglas de negocio para roles automáticos
-        if (user.IdSigafi == _masterAdminId || user.Administrador)
+        if (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId)
+        {
+            if (!user.Administrador || user.TablaSigafi == "alumno")
+            {
+                user.Administrador = true;
+                if (user.TablaSigafi == "alumno") user.TablaSigafi = "otros";
+                await _context.SaveChangesAsync();
+            }
+            requiredRoleCodes.Add("DOSIER_ADMIN");
+        }
+        else if (user.Administrador)
         {
             requiredRoleCodes.Add("DOSIER_ADMIN");
         }

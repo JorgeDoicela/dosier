@@ -3,14 +3,14 @@ import { UserPlus, Search, X } from 'lucide-react';
 import { PageHeader } from '../../../../components/Common/PageHeader';
 
 interface UsersHeaderProps {
-    userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO';
-    setUserType: (type: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO') => void;
+    userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO';
+    setUserType: (type: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO') => void;
     soloConHoras: boolean;
     setSoloConHoras: (val: boolean) => void;
-    estadoEstudiante: 'ACTIVO' | 'GRADUADO' | 'TODOS';
-    setEstadoEstudiante: (val: 'ACTIVO' | 'GRADUADO' | 'TODOS') => void;
-    origenEstudiante: 'INSTITUTO' | 'CONDUCCION' | 'TODOS';
-    setOrigenEstudiante: (val: 'INSTITUTO' | 'CONDUCCION' | 'TODOS') => void;
+    estadoEstudiante?: 'ACTIVO' | 'GRADUADO' | 'TODOS';
+    setEstadoEstudiante?: (val: 'ACTIVO' | 'GRADUADO' | 'TODOS') => void;
+    origenEstudiante?: 'INSTITUTO' | 'CONDUCCION' | 'TODOS';
+    setOrigenEstudiante?: (val: 'INSTITUTO' | 'CONDUCCION' | 'TODOS') => void;
     departamento: string;
     setDepartamento: (val: string) => void;
     availableDepartments?: string[];
@@ -72,12 +72,6 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
                             className={`flex-1 whitespace-nowrap px-3.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${userType === 'ADMINISTRATIVO' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
                         >
                             Administrativos
-                        </button>
-                        <button
-                            onClick={() => setUserType('ESTUDIANTE')}
-                            className={`flex-1 whitespace-nowrap px-3.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${userType === 'ESTUDIANTE' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                        >
-                            Alumnos
                         </button>
                         <button
                             onClick={() => setUserType('EXTERNO')}
@@ -186,66 +180,6 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
                                     <X size={11} /> Limpiar
                                 </button>
                             )}
-                        </div>
-                    </div>
-                )}
-
-                {userType === 'ESTUDIANTE' && (
-                    <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-border-thin/40 text-[11px]">
-                        {/* Dependencia */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-text-dim font-medium">Dependencia:</span>
-                            <div className="flex items-center gap-1 bg-surface border border-border-thin p-0.5 rounded-md">
-                                <button
-                                    type="button"
-                                    onClick={() => setOrigenEstudiante('INSTITUTO')}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${origenEstudiante === 'INSTITUTO' ? 'bg-brand/15 text-brand border border-brand/30 shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                                >
-                                    Instituto ISTPET
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setOrigenEstudiante('CONDUCCION')}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${origenEstudiante === 'CONDUCCION' ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                                >
-                                    Escuela de Conducción
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setOrigenEstudiante('TODOS')}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${origenEstudiante === 'TODOS' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                                >
-                                    Todos
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Condición Académica */}
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-text-dim font-medium">Condición:</span>
-                            <div className="flex items-center gap-1 bg-surface border border-border-thin p-0.5 rounded-md">
-                                <button
-                                    type="button"
-                                    onClick={() => setEstadoEstudiante('ACTIVO')}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${estadoEstudiante === 'ACTIVO' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                                >
-                                    Matriculados Activos
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setEstadoEstudiante('GRADUADO')}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${estadoEstudiante === 'GRADUADO' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                                >
-                                    Graduados / Egresados
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setEstadoEstudiante('TODOS')}
-                                    className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${estadoEstudiante === 'TODOS' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                                >
-                                    Todos
-                                </button>
-                            </div>
                         </div>
                     </div>
                 )}

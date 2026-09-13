@@ -221,9 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return roles.includes('DOSIER_VICERRECTOR') || roles.includes('VICERRECTOR');
     }, [roles]);
 
-    const isEstudiante = React.useMemo(() => {
-        return roles.includes('DOSIER_ESTUDIANTE') || roles.includes('ESTUDIANTE');
-    }, [roles]);
+    const isEstudiante = false;
 
     const isRevisor = React.useMemo(() => {
         return isCoordCarrera || isCoordAcad || isVicerrector || roles.includes('DOSIER_REVISOR') || roles.includes('DOSIER_REVISOR_EXTERNO');
@@ -235,9 +233,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isCoordCarrera) return 'Coordinador de Carrera';
         if (isAdmin) return 'Administrador Institucional';
         if (isDocente) return 'Docente Titular';
-        if (isEstudiante) return 'Estudiante';
         return 'Usuario Institucional';
-    }, [isVicerrector, isCoordAcad, isCoordCarrera, isAdmin, isDocente, isEstudiante]);
+    }, [isVicerrector, isCoordAcad, isCoordCarrera, isAdmin, isDocente]);
 
     return (
         <AuthContext.Provider value={{

@@ -406,7 +406,6 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                         <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
                             {[
                                 { name: 'Docentes', path: '/usuarios?type=DOCENTE', icon: GraduationCap },
-                                { name: 'Alumnos', path: '/usuarios?type=ESTUDIANTE', icon: Users },
                                 { name: 'Externos', path: '/usuarios?type=EXTERNO', icon: Globe }
                             ].map((subItem) => {
                                 const isSubActive = location.pathname === '/usuarios' && (

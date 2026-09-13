@@ -7,7 +7,7 @@ interface UsersTableProps {
     users: ManagedUser[];
     roles: Role[];
     search: string;
-    userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO';
+    userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO';
     page: number;
     setPage: React.Dispatch<React.SetStateAction<number>> | ((page: number | ((p: number) => number)) => void);
     pageSize: number;
@@ -51,7 +51,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                     <tr className="bg-surface/50 border-b border-border-thin text-[10px] font-mono text-text-dim uppercase">
                         <th className="p-4 font-semibold tracking-widest">Usuario / Identificación</th>
                         <th className="p-4 font-semibold tracking-widest">
-                            {userType === 'DOCENTE' ? 'Horas / Carrera' : userType === 'ADMINISTRATIVO' ? 'Departamento / Cargo' : userType === 'ESTUDIANTE' ? 'Carrera / Estado' : 'Validación Perfil'}
+                            {userType === 'DOCENTE' ? 'Horas / Carrera' : userType === 'ADMINISTRATIVO' ? 'Departamento / Cargo' : 'Validación Perfil'}
                         </th>
                         <th className="p-4 font-semibold tracking-widest">Roles en el Sistema</th>
                         <th className="p-4 font-semibold tracking-widest text-right">Acciones</th>
@@ -139,35 +139,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                                     </span>
                                                 )}
                                             </p>
-                                        </div>
-                                    ) : u.type === 'ESTUDIANTE' ? (
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] text-text-dim font-medium tracking-wide truncate max-w-[210px]" title={u.carrera}>
-                                                {highlightText(formatCarrera(u.carrera), search)}
-                                            </p>
-                                            <div className="flex flex-wrap items-center gap-1.5">
-                                                <span className="text-[9px] text-text-dim font-bold uppercase tracking-widest opacity-70">
-                                                    {u.nivel || 'Nivel no definido'}
-                                                </span>
-                                                {u.es_instituto === false ? (
-                                                    <span className="badge-vercel badge-vercel-info !text-[8px] !py-0 !px-1.5">
-                                                        Conducción
-                                                    </span>
-                                                ) : (
-                                                    <span className="badge-vercel badge-vercel-violet !text-[8px] !py-0 !px-1.5">
-                                                        ISTPET
-                                                    </span>
-                                                )}
-                                                {u.es_graduado ? (
-                                                    <span className="badge-vercel badge-vercel-warning !text-[8px] !py-0 !px-1.5">
-                                                        Graduado
-                                                    </span>
-                                                ) : (
-                                                    <span className="badge-vercel badge-vercel-success !text-[8px] !py-0 !px-1.5">
-                                                        Matriculado
-                                                    </span>
-                                                )}
-                                            </div>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center gap-1">

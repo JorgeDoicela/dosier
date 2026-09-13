@@ -25,7 +25,7 @@ interface UseSidebarProps {
 }
 
 export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProps) => {
-    const { logout, hasPermission, roles, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, user, roleDisplayName } = useAuth();
+    const { logout, hasPermission, roles, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isRevisor, user, roleDisplayName } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -259,7 +259,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Calendario', icon: Calendar, path: '/calendario', roles: ['ANY'], group: 1 },
         // ── Ciclo documental y gestión académica (inicio → formulación → revisión → aprobación) ──
         { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 1, hasChevron: true },
-        { name: 'Mis Instrumentos PEA', icon: ClipboardList, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ESTUDIANTE'], group: 1, hasChevron: true },
+        { name: 'Mis Instrumentos PEA', icon: ClipboardList, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE'], group: 1, hasChevron: true },
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2, hasChevron: true },
@@ -287,7 +287,6 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
             if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
             if (checkRoles.includes('DOSIER_VICERRECTOR') && isVicerrector) return true;
-            if (checkRoles.includes('DOSIER_ESTUDIANTE') && isEstudiante) return true;
             if (checkRoles.includes('DOSIER_REVISOR_EXTERNO') && isRevisor) return true;
             return item.roles.some(r => roles.includes(r.toUpperCase()));
         }

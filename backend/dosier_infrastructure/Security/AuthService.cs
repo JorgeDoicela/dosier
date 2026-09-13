@@ -46,7 +46,7 @@ public class AuthService : IAuthService
         _magicLinkService = magicLinkService;
         _microsoftAuthService = microsoftAuthService;
         _passwordRecoveryService = passwordRecoveryService;
-        _masterAdminId = configuration["Security:MasterAdminId"] ?? "0302144159";
+        _masterAdminId = configuration["Security:MasterAdminId"]?.Trim() ?? string.Empty;
     }
 
 
@@ -68,6 +68,13 @@ public class AuthService : IAuthService
 
         if (user != null)
         {
+            // Restricción institucional: En DOSIER solo ingresa personal docente y directivo/administrativo
+            if (user.TablaSigafi == "alumno" && !user.Administrador && (string.IsNullOrEmpty(_masterAdminId) || user.IdSigafi != _masterAdminId))
+            {
+                await _auditService.LogActionAsync(user.IdUsuario, "LOGIN_DENIED", "Acceso denegado: los estudiantes no tienen acceso a la plataforma curricular DOSIER", "SEGURIDAD");
+                return (null, null);
+            }
+
             var userKey = user.IdSigafi.ToLower();
             _userLockouts.TryGetValue(userKey, out var lockout);
 
@@ -142,19 +149,6 @@ public class AuthService : IAuthService
             }
         }
 
-        // ── 3. JIT Provisioning: Alumnos (por UserAlumno o por Email) ───────────
-        var alumno = await _context.Alumnos
-            .FirstOrDefaultAsync(a => (a.UserAlumno == username || a.EmailInstitucional == username || a.Email == username) && a.Password == password);
-
-        if (alumno != null)
-        {
-            string fullNombre = $"{alumno.PrimerNombre} {alumno.SegundoNombre} {alumno.ApellidoPaterno} {alumno.ApellidoMaterno}".Replace("  ", " ").Trim();
-            user = await ProvisionUserAsync(alumno.IdAlumno, fullNombre, password, "alumno", alumno.IdAlumno);
-            var response = await GetAuthResponseAsync(user);
-            await _auditService.LogActionAsync(user.IdUsuario, "LOGIN", "Inicio de sesión exitoso (JIT Alumno)", "SEGURIDAD");
-            return (response, null);
-        }
-
         return (null, null);
     }
 
@@ -175,14 +169,6 @@ public class AuthService : IAuthService
             string fullNombre = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim();
             string pwd = !string.IsNullOrEmpty(p.Clave) ? p.Clave : "cambiame";
             return await ProvisionUserAsync(cedula, fullNombre, pwd, "profesor", cedula);
-        }
-
-        var a = await _context.Alumnos.FirstOrDefaultAsync(alum => alum.IdAlumno == cedula);
-        if (a != null)
-        {
-            string fullNombre = $"{a.PrimerNombre} {a.SegundoNombre} {a.ApellidoPaterno} {a.ApellidoMaterno}".Replace("  ", " ").Trim();
-            string pwd = !string.IsNullOrEmpty(a.Password) ? a.Password : "cambiame";
-            return await ProvisionUserAsync(cedula, fullNombre, pwd, "alumno", cedula);
         }
 
         return null;
@@ -215,11 +201,6 @@ public class AuthService : IAuthService
             var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == sigafiId);
             if (p != null) email = p.EmailInstitucional ?? p.Email;
         }
-        else if (table == "alumno")
-        {
-            var a = await _context.Alumnos.FirstOrDefaultAsync(al => al.IdAlumno == sigafiId);
-            if (a != null) email = a.EmailInstitucional ?? a.Email;
-        }
 
         var user = new User
         {
@@ -227,7 +208,7 @@ public class AuthService : IAuthService
             Nombre = name.Trim(),
             Contrasenia = contraseniaHash,
             Activo = true,
-            Administrador = (username == _masterAdminId),
+            Administrador = (!string.IsNullOrEmpty(_masterAdminId) && username == _masterAdminId),
             TablaSigafi = table,
             EmailInstitucional = email
         };
@@ -309,7 +290,7 @@ public class AuthService : IAuthService
             RoleCodes = roleCodes,
             TipoUsuario = user.TablaSigafi,
             Permissions = permissions,
-            Administrador = (user.IdSigafi == _masterAdminId) || user.Administrador,
+            Administrador = user.Administrador || (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId),
             Email = user.EmailInstitucional ?? "",
             Sistemas = systemsClaim,
             AceptoLopdp = hasAcceptedLopdp

@@ -72,8 +72,8 @@ export const useUsersPage = () => {
     const openedAtRef = useRef<number>(0);
     const isOverlayMouseDownRef = useRef(false);
     const typeParam = searchParams.get('type');
-    const userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO' = 
-        (typeParam === 'DOCENTE' || typeParam === 'ADMINISTRATIVO' || typeParam === 'ESTUDIANTE' || typeParam === 'EXTERNO') ? typeParam : 'DOCENTE';
+    const userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO' = 
+        (typeParam === 'DOCENTE' || typeParam === 'ADMINISTRATIVO' || typeParam === 'EXTERNO') ? typeParam : 'DOCENTE';
     const openUuid = searchParams.get('open');
 
     // Subfiltros de segmentación
@@ -82,7 +82,7 @@ export const useUsersPage = () => {
     const [origenEstudiante, setOrigenEstudiante] = useState<'INSTITUTO' | 'CONDUCCION' | 'TODOS'>('INSTITUTO');
     const [departamento, setDepartamento] = useState('');
 
-    const setUserType = (type: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO') => {
+    const setUserType = (type: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO') => {
         setSearch('');
         setDetailUser(null);
         setPage(1);

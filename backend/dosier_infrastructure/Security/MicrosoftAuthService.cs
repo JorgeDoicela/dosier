@@ -99,28 +99,17 @@ public class MicrosoftAuthService : IMicrosoftAuthService
                 user = await authService.ProvisionUserAsync(emailPrefix, name, Guid.NewGuid().ToString("N"), "profesor", profesor.IdProfesor.Trim());
                 await _auditService.LogActionAsync(user.IdUsuario, "LOGIN", "Inicio de sesión exitoso (JIT Profesor vía Microsoft SSO)", "SEGURIDAD");
             }
-            else
-            {
-                // 3. Intentar buscar en Alumnos para JIT Provisioning
-                var alumno = await _context.Alumnos.FirstOrDefaultAsync(a =>
-                    ((a.EmailInstitucional != null && a.EmailInstitucional.ToLower() == email) ||
-                     (a.Email != null && a.Email.ToLower() == email) ||
-                     a.IdAlumno.Trim() == emailPrefix ||
-                     (a.UserAlumno != null && a.UserAlumno.Trim() == emailPrefix)));
-
-                if (alumno != null)
-                {
-                    string name = $"{alumno.PrimerNombre} {alumno.SegundoNombre} {alumno.ApellidoPaterno} {alumno.ApellidoMaterno}".Replace("  ", " ").Trim();
-                    if (string.IsNullOrEmpty(name)) name = fullName;
-
-                    user = await authService.ProvisionUserAsync(emailPrefix, name, Guid.NewGuid().ToString("N"), "alumno", alumno.IdAlumno.Trim());
-                    await _auditService.LogActionAsync(user.IdUsuario, "LOGIN", "Inicio de sesión exitoso (JIT Alumno vía Microsoft SSO)", "SEGURIDAD");
-                }
-            }
         }
         else
         {
-            // Si el usuario existe, registrar auditoría de login
+            // Restricción institucional: En DOSIER los estudiantes no tienen acceso
+            if (user.TablaSigafi == "alumno")
+            {
+                await _auditService.LogActionAsync(user.IdUsuario, "LOGIN_DENIED", "Acceso denegado: estudiante no autorizado vía Microsoft SSO en DOSIER", "SEGURIDAD");
+                return null;
+            }
+
+            // Si el usuario existe y no es alumno, registrar auditoría de login
             await _auditService.LogActionAsync(user.IdUsuario, "LOGIN", "Inicio de sesión exitoso (Usuario DOSIER vía Microsoft SSO)", "SEGURIDAD");
         }
 

@@ -67,7 +67,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         // 1. Buscar coincidencias por correo o identificación
         var userList = await _context.Users
-            .Where(u => u.Activo &&
+            .Where(u => u.Activo && u.TablaSigafi != "alumno" &&
                 (u.IdSigafi.ToLower() == identificador || (u.EmailInstitucional != null && u.EmailInstitucional.ToLower() == identificador)))
             .ToListAsync();
 
@@ -245,14 +245,6 @@ public class PasswordRecoveryService : IPasswordRecoveryService
                 else
                     passwordOriginal = profesor.Clave;
             }
-        }
-        else if (user.TablaSigafi == "alumno")
-        {
-            var alumno = await _context.Alumnos
-                .FirstOrDefaultAsync(a => a.IdAlumno == user.IdSigafi);
-
-            if (!string.IsNullOrEmpty(alumno?.Password))
-                passwordOriginal = alumno.Password;
         }
 
         if (passwordOriginal == null && !esHashInaccesible)
