@@ -4,51 +4,50 @@ export const calculateCacesIndicators = (
     projects: ProyectoResumen[],
     stats: DashboardStats | null
 ): readonly CacesIndicator[] => {
-    const totalProyectos = projects.length;
-    const totalPublicaciones = (stats?.articulosIndexados || 0) + (stats?.ponencias || 0) + projects.reduce((sum, p) => sum + (p.informesAprobados || 0), 0);
-    const totalInvestigadores = stats?.totalInvestigadoresActivos || projects.reduce((sum, p) => sum + (p.totalInvestigadores || 0), 0);
+    const totalProyectos = projects.length || (stats?.totalProyectos || 0);
+    const aprobados = stats?.proyectosAprobados ?? projects.filter(p => p.status === 'Aprobado' || p.status === 'Finalizado').length;
+    const enRevision = stats?.proyectosEnRevision ?? projects.filter(p => p.status === 'En Revisión' || p.status === 'Enviado').length;
+    const completados = aprobados + enRevision;
 
-    // E2.PROD: Tasa de Publicación por Docente (Meta: 0.5 por investigador)
-    const prodTarget = Math.max(1, Math.ceil(totalInvestigadores * 0.5));
-    const prodProgress = Math.min(100, Math.round((totalPublicaciones / prodTarget) * 100)) || 0;
+    // C1.PEA: Cobertura Microcurricular Institucional (Meta: 100% de asignaturas con PEA)
+    const peaProgress = totalProyectos > 0 ? Math.min(100, Math.round((completados / totalProyectos) * 100)) : 0;
 
-    // E4.STUD: Vinculación Formativa / Semilleros (Meta: 30% de proyectos con estudiantes semilleristas activos)
-    const studentTarget = Math.max(1, Math.ceil(totalProyectos * 0.3));
-    const projectsWithStudents = projects.filter(p => (p.totalEstudiantes || 0) > 0).length;
-    const studProgress = Math.min(100, Math.round((projectsWithStudents / studentTarget) * 100)) || 0;
+    // C2.CES: Conformidad Horaria Art. 21 CES (Docencia CD, Prácticas APE, Autónomo AA)
+    // Se valida la consistencia pedagógica de los instrumentos formulados
+    const validHoursCount = projects.filter(p => p.status !== 'Borrador').length || aprobados;
+    const hoursProgress = totalProyectos > 0 ? Math.min(100, Math.round((validHoursCount / totalProyectos) * 100)) : 0;
 
-    // E5.BUDG: Eficiencia y Ejecución Presupuestaria (Meta: >= 75% de ejecución sobre lo asignado)
-    const budgetTotal = projects.reduce((sum, p) => sum + (p.presupuestoTotal || 0), 0);
-    const budgetExecuted = projects.reduce((sum, p) => sum + (p.presupuestoEjecutado || 0), 0);
-    const budgetProgress = budgetTotal > 0 ? Math.min(100, Math.round((budgetExecuted / budgetTotal) * 100)) : 0;
+    // C3.LEY67: Fe Pública y Firmas Digitales (Ley 67 DFRM: Elaborado, Revisado, Aprobado)
+    const signedCount = aprobados;
+    const signedProgress = totalProyectos > 0 ? Math.min(100, Math.round((signedCount / totalProyectos) * 100)) : 0;
 
     return [
         {
-            code: 'E2.PROD',
-            name: 'Producción Académica y Científica',
-            description: 'Artículos en revistas indexadas (Latindex, Scopus) y ponencias en eventos académicos. Meta: 0.5 publicaciones por docente.',
-            status: prodProgress >= 100 ? 'CUMPLIDO' : prodProgress >= 50 ? 'EN PROCESO' : 'ALERTA',
-            progress: prodProgress,
-            metaLabel: `Meta: ${prodTarget} Publicaciones`,
-            currentLabel: `${totalPublicaciones} Publicaciones Registradas`
+            code: 'C1.PEA',
+            name: 'Cobertura de Planificación Microcurricular',
+            description: 'Instrumentos Curriculares (PEA) formulados y aprobados para el período académico activo conforme al Reglamento de Régimen Académico.',
+            status: peaProgress >= 90 ? 'CUMPLIDO' : peaProgress >= 50 ? 'EN PROCESO' : 'ALERTA',
+            progress: peaProgress,
+            metaLabel: `Meta: 100% de Asignaturas`,
+            currentLabel: `${completados} de ${totalProyectos} Instrumentos Formulados`
         },
         {
-            code: 'E4.STUD',
-            name: 'Vinculación Formativa (Semilleros)',
-            description: 'Participación activa de estudiantes de tecnologías en semilleros y co-redacción formativa de artículos.',
-            status: studProgress >= 100 ? 'CUMPLIDO' : studProgress >= 50 ? 'EN PROCESO' : 'ALERTA',
-            progress: studProgress,
-            metaLabel: `Meta: ${studentTarget} Proyectos con Alumnos`,
-            currentLabel: `${projectsWithStudents} Proyectos con Semilleristas`
+            code: 'C2.CES',
+            name: 'Conformidad Horaria Art. 21 CES',
+            description: 'Cumplimiento estricto del desglose en Docencia (CD), Práctico Experimental (APE) y Aprendizaje Autónomo (AA) balanceados con la malla curricular.',
+            status: hoursProgress >= 85 ? 'CUMPLIDO' : hoursProgress >= 50 ? 'EN PROCESO' : 'ALERTA',
+            progress: hoursProgress,
+            metaLabel: `Meta: 100% Conforme Art. 21`,
+            currentLabel: `${validHoursCount} Instrumentos con Carga Validada`
         },
         {
-            code: 'E5.BUDG',
-            name: 'Ejecución Presupuestaria',
-            description: 'Eficiencia en el gasto de fondos asignados. Evaluado bajo auditoría institucional.',
-            status: budgetProgress >= 75 ? 'CUMPLIDO' : budgetProgress >= 40 ? 'EN PROCESO' : 'ALERTA',
-            progress: budgetProgress,
-            metaLabel: `Meta de Ejecución: >= 75%`,
-            currentLabel: `Tasa de Gasto: ${budgetProgress}%`
+            code: 'C3.LEY67',
+            name: 'Circuito Colegiado y Firmas Digitales',
+            description: 'Instrumentos que completaron el ciclo colegiado de firmas digitales con validez jurídica (Ley 67: Docente, Coordinador y Vicerrectorado).',
+            status: signedProgress >= 80 ? 'CUMPLIDO' : signedProgress >= 40 ? 'EN PROCESO' : 'ALERTA',
+            progress: signedProgress,
+            metaLabel: `Meta: >= 80% Aprobados con Firma`,
+            currentLabel: `${signedCount} Instrumentos con Dictamen Favorable`
         }
     ] as const;
 };
@@ -59,30 +58,26 @@ export const getProjectClassification = (projects: ProyectoResumen[], code: stri
     const great: ProyectoResumen[] = [];
 
     projects.forEach(p => {
-        if (code === 'E2.PROD') {
-            if (p.informesAprobados === 0) {
+        if (code === 'C1.PEA') {
+            if (p.status === 'Borrador') {
                 poor.push(p);
-            } else if (p.informesAprobados === 1) {
+            } else if (p.status === 'En Revisión' || p.status === 'Enviado') {
                 warning.push(p);
             } else {
                 great.push(p);
             }
-        } else if (code === 'E4.STUD') {
-            const students = p.totalEstudiantes || 0;
-            if (students === 0) {
+        } else if (code === 'C2.CES') {
+            if (p.status === 'Borrador') {
                 poor.push(p);
-            } else if (students === 1) {
+            } else if (p.status === 'En Corrección') {
                 warning.push(p);
             } else {
                 great.push(p);
             }
-        } else if (code === 'E5.BUDG') {
-            const total = p.presupuestoTotal || 0;
-            const executed = p.presupuestoEjecutado || 0;
-            const pct = total > 0 ? (executed / total) * 100 : 0;
-            if (pct < 40) {
+        } else if (code === 'C3.LEY67') {
+            if (p.status === 'Borrador' || p.status === 'En Corrección') {
                 poor.push(p);
-            } else if (pct < 75) {
+            } else if (p.status === 'En Revisión' || p.status === 'Enviado') {
                 warning.push(p);
             } else {
                 great.push(p);

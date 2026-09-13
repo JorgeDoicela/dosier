@@ -2,10 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
     CheckCircle2, FileText,
-    AlertCircle, Shield, Clock
+    AlertCircle, Shield, Clock, Scale, ChevronRight
 } from 'lucide-react';
 import api from '../../../../../api/axios_config';
 import { buildWorkspacePath, templateCodeToEditParam } from '../../../../../core/documents/templateUrl';
+import { NormativaDrawer } from './NormativaDrawer';
 
 const WorkflowPhases = [
     { id: 'Borrador', label: 'Formulación', icon: FileText },
@@ -49,6 +50,7 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
     navigate
 }) => {
     const [asyncProtocoloSigned, setAsyncProtocoloSigned] = useState(false);
+    const [isNormativaDrawerOpen, setIsNormativaDrawerOpen] = useState(false);
 
     const isDocValidlySigned = (doc: any): boolean => {
         if (!doc) return false;
@@ -305,6 +307,27 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                     );
                 })}
             </div>
+
+            {/* Acceso a Marco Normativo y Acreditación (CES / CACES / MED) */}
+            <div className="pt-4 mt-4 border-t border-border-thin">
+                <button
+                    type="button"
+                    onClick={() => setIsNormativaDrawerOpen(true)}
+                    className="w-full py-2.5 px-3 rounded-xl border border-border-thin bg-surface hover:bg-surface-hover text-text-main text-xs font-medium flex items-center justify-between transition-colors group/norm"
+                >
+                    <div className="flex items-center gap-2">
+                        <Scale size={14} className="text-brand group-hover/norm:scale-110 transition-transform shrink-0" />
+                        <span className="font-semibold text-text-main">Marco Normativo CES / CACES</span>
+                    </div>
+                    <ChevronRight size={13} className="text-text-dim group-hover/norm:translate-x-0.5 transition-transform" />
+                </button>
+            </div>
+
+            {/* Modal Drawer 100% Sólido sin transparencias */}
+            <NormativaDrawer
+                isOpen={isNormativaDrawerOpen}
+                onClose={() => setIsNormativaDrawerOpen(false)}
+            />
         </div>
     );
 };

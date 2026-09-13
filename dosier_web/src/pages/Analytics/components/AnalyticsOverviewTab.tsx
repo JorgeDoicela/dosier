@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    BarChart3, PieChart, TrendingUp, DollarSign, Users,
+    BarChart3, PieChart, TrendingUp, CheckCircle2, Users,
     Clock, ArrowUpRight, BookOpen, Cpu, FileText, Globe
 } from 'lucide-react';
 import { KPICard } from './KPICard';
@@ -12,7 +12,7 @@ import type {
     LineaInvestigacionData,
     EstadoConteo
 } from '../types/analytics.types';
-import { formatCurrency, formatDate } from '../utils/cacesCalculator';
+import { formatDate } from '../utils/cacesCalculator';
 
 export interface AnalyticsOverviewTabProps {
     filteredProjects: ProyectoResumen[];
@@ -21,8 +21,6 @@ export interface AnalyticsOverviewTabProps {
     groups: GrupoInvestigacion[];
     linesData: LineaInvestigacionData[];
     proyectosPorEstado: EstadoConteo[];
-    budgetTotal: number;
-    budgetExecuted: number;
     selectedChartSegment: string | null;
     setSelectedChartSegment: (seg: string | null) => void;
 }
@@ -34,8 +32,6 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
     groups,
     linesData,
     proyectosPorEstado,
-    budgetTotal,
-    budgetExecuted,
     selectedChartSegment,
     setSelectedChartSegment
 }) => {
@@ -68,14 +64,14 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     ]}
                 />
                 <KPICard
-                    title="Presupuesto Asignado"
-                    value={formatCurrency(budgetTotal)}
-                    icon={<DollarSign size={14} />}
+                    title="Cobertura Curricular"
+                    value={`${filteredProjects.length > 0 ? Math.round((filteredProjects.filter(p => p.estado === 'Aprobado' || p.estado === 'Finalizado').length / filteredProjects.length) * 100) : 100}%`}
+                    icon={<CheckCircle2 size={14} />}
                     accentColor="warning"
-                    subText={`${budgetTotal > 0 ? Math.round((budgetExecuted / budgetTotal) * 100) : 0}% de ejecución`}
+                    subText="Conformidad RRA Art. 21 / 27"
                     footerItems={[
-                        { label: 'Ejecutado', value: formatCurrency(budgetExecuted), valueColorClass: 'text-warning font-semibold' },
-                        { label: 'Restante', value: formatCurrency(budgetTotal - budgetExecuted) }
+                        { label: 'Revisados / Aprobados', value: filteredProjects.filter(p => p.estado === 'Aprobado' || p.estado === 'Finalizado' || p.estado === 'En Revisión').length, valueColorClass: 'text-success font-semibold' },
+                        { label: 'En Formulación', value: filteredProjects.filter(p => p.estado === 'Borrador').length }
                     ]}
                 />
                 <KPICard
@@ -153,7 +149,7 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                     <Cpu size={11} key={2} />,
                                     <TrendingUp size={11} key={3} />,
                                     <Users size={11} key={4} />,
-                                    <DollarSign size={11} key={5} />,
+                                    <CheckCircle2 size={11} key={5} />,
                                     <Globe size={11} key={6} />
                                 ];
                                 return (
@@ -169,7 +165,7 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <span className="text-text-main font-mono block">{line.proyectos} {line.proyectos === 1 ? 'Instrumento' : 'Instrumentos'}</span>
-                                                <span className="text-text-dim font-mono text-[8px] block">{formatCurrency(line.pres)}</span>
+                                                <span className="text-text-dim font-mono text-[8px] block">{line.pct}% del total</span>
                                             </div>
                                         </div>
                                         <div className="w-full bg-border-thin/35 h-1 rounded-full overflow-hidden">

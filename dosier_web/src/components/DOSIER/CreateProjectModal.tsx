@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, Shield, BookOpen, Briefcase, Loader, ChevronDown, Check, FileText, DollarSign } from 'lucide-react';
+import { X, Shield, BookOpen, Briefcase, Loader, ChevronDown, Check, FileText } from 'lucide-react';
 import api from '../../api/axios_config';
 import { useAuth } from '../../api/AuthContext';
 import { useNotifications } from '../../api/NotificationsContext';
@@ -12,16 +12,6 @@ interface CreateProjectModalProps {
     onClose: () => void;
     restoreDraftOnOpen?: boolean;
 }
-
-const formatCurrency = (val: string) => {
-    const num = parseFloat(val);
-    if (isNaN(num) || num <= 0) return '';
-    return new Intl.NumberFormat('es-EC', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(num);
-};
 
 export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     onClose,
@@ -34,7 +24,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
     const [titulo, setTitulo] = useState('');
     const [descripcion, setDescripcion] = useState('');
-    const [presupuestoEstimado, setPresupuestoEstimado] = useState<string>('');
     const [idCarrera, setIdCarrera] = useState<number>(0);
     const [careerLocked, setCareerLocked] = useState(false);
 
@@ -70,7 +59,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 if (parsed) {
                     setTitulo(parsed.titulo || '');
                     setDescripcion(parsed.descripcion || '');
-                    setPresupuestoEstimado(parsed.presupuestoEstimado || '');
                     if (!careerLocked && parsed.idCarrera) {
                         setIdCarrera(parsed.idCarrera);
                     }
@@ -120,21 +108,19 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         const hasChanges =
             titulo.trim() !== '' ||
             descripcion.trim() !== '' ||
-            presupuestoEstimado.trim() !== '' ||
             (!careerLocked && idCarrera !== 0);
 
         if (hasChanges) {
             const draftData = {
                 titulo,
                 descripcion,
-                presupuestoEstimado,
                 idCarrera
             };
 
             localStorage.setItem('preproposal_form_draft', JSON.stringify(draftData));
 
             const meta = {
-                titulo: titulo || 'Postulación sin título',
+                titulo: titulo || 'Instrumento sin título',
                 timestamp: Date.now()
             };
             localStorage.setItem('preproposal_draft_metadata', JSON.stringify(meta));
@@ -142,7 +128,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             localStorage.removeItem('preproposal_form_draft');
             localStorage.removeItem('preproposal_draft_metadata');
         }
-    }, [titulo, descripcion, presupuestoEstimado, idCarrera, careerLocked]);
+    }, [titulo, descripcion, idCarrera, careerLocked]);
 
     const handleDiscardDraft = async () => {
         if (await confirm({
@@ -165,17 +151,16 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     };
 
     // Tracking inputs for unsaved changes checks on close
-    const stateRef = useRef({ titulo, descripcion, presupuestoEstimado, idCarrera });
+    const stateRef = useRef({ titulo, descripcion, idCarrera });
     useEffect(() => {
-        stateRef.current = { titulo, descripcion, presupuestoEstimado, idCarrera };
-    }, [titulo, descripcion, presupuestoEstimado, idCarrera]);
+        stateRef.current = { titulo, descripcion, idCarrera };
+    }, [titulo, descripcion, idCarrera]);
 
     const hasUnsavedChanges = () => {
         const current = stateRef.current;
         return (
             current.titulo.trim() !== '' ||
             current.descripcion.trim() !== '' ||
-            current.presupuestoEstimado.trim() !== '' ||
             (!careerLocked && current.idCarrera !== 0)
         );
     };
@@ -259,13 +244,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!titulo.trim()) return setError("El título / tema del proyecto es obligatorio.");
-        if (!descripcion.trim()) return setError("La descripción de la prepropuesta es obligatoria.");
+        if (!titulo.trim()) return setError("El título / tema de la asignatura o instrumento es obligatorio.");
+        if (!descripcion.trim()) return setError("La descripción / justificación curricular es obligatoria.");
 
-        const parsedBudget = parseFloat(presupuestoEstimado);
-        if (isNaN(parsedBudget) || parsedBudget <= 0) {
-            return setError("Debe ingresar un presupuesto estimado válido y mayor a cero.");
-        }
         if (idCarrera === 0) {
             return setError(carreras.length > 0
                 ? "Debe seleccionar una carrera para su postulación."
@@ -302,12 +283,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 IdCarrera: idCarrera,
                 DirectorProyecto: user?.nombre_completo || '',
                 DescripcionProyecto: descripcion.trim(),
-                CostoTotal: parsedBudget,
-                costoTotal: parsedBudget,
-                costo_total: parsedBudget,
-                PresupuestoEstimado: parsedBudget,
-                presupuestoEstimado: parsedBudget,
-                presupuesto_estimado: parsedBudget,
+                CostoTotal: 0,
+                costoTotal: 0,
+                costo_total: 0,
+                PresupuestoEstimado: 0,
+                presupuestoEstimado: 0,
+                presupuesto_estimado: 0,
                 Estado: 'Prepropuesta'
             };
 
@@ -475,32 +456,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                                     className="input-vercel !h-24 !text-xs resize-none !placeholder:text-text-dim/30"
                                     required
                                 />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-[9px] font-black text-text-dim uppercase tracking-widest ml-1">
-                                    <DollarSign size={10} className="text-text-dim" />
-                                    Presupuesto Estimado (USD)
-                                </label>
-                                <div className="relative flex items-center">
-                                    <span className="absolute left-3 text-xs font-bold text-text-dim/60 select-none">$</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
-                                        value={presupuestoEstimado}
-                                        onChange={(e) => setPresupuestoEstimado(e.target.value)}
-                                        placeholder="15000.00"
-                                        className="input-vercel !pl-7 !text-xs !font-bold !placeholder:text-text-dim/30"
-                                        required
-                                    />
-                                </div>
-
-                                {presupuestoEstimado && !isNaN(parseFloat(presupuestoEstimado)) && parseFloat(presupuestoEstimado) > 0 && (
-                                    <div className="text-[11px] font-medium text-text-dim/90 ml-1 mt-1.5 p-2 bg-bg-deep/80 border border-border-thin rounded animate-fade-in w-fit">
-                                        <span>Valor: {formatCurrency(presupuestoEstimado)} USD</span>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="space-y-2" ref={carreraRef}>

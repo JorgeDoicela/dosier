@@ -222,13 +222,13 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                         <div className="p-4 flex-1 overflow-y-auto max-h-[300px] space-y-3 custom-scrollbar">
                             {poor.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 opacity-70">
-                                    <p className="text-[10px] text-text-dim italic">No hay proyectos en estado crítico para esta métrica.</p>
+                                    <p className="text-[10px] text-text-dim italic">No hay instrumentos en estado de observación para esta métrica.</p>
                                 </div>
                             ) : (
                                 poor.map(p => (
                                     <div key={p.uuid} className="p-3 bg-bg-deep/30 hover:bg-bg-deep/60 border border-border-thin rounded-xl transition-all flex flex-col gap-1.5">
                                         <span className="text-[9px] font-medium text-brand uppercase tracking-wider font-mono">
-                                            {p.codigoInstitucional || `PROY-${p.uuid.substring(0, 5).toUpperCase()}`}
+                                            {p.codigoInstitucional || `PEA-${p.uuid.substring(0, 5).toUpperCase()}`}
                                         </span>
                                         <p className="text-[11px] font-medium text-text-main leading-normal line-clamp-2" title={p.titulo}>
                                             {p.titulo}
@@ -257,13 +257,13 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                         <div className="p-4 flex-1 overflow-y-auto max-h-[300px] space-y-3 custom-scrollbar">
                             {warning.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 opacity-70">
-                                    <p className="text-[10px] text-text-dim italic">No hay proyectos intermedios registrados.</p>
+                                    <p className="text-[10px] text-text-dim italic">No hay instrumentos en progreso registrados.</p>
                                 </div>
                             ) : (
                                 warning.map(p => (
                                     <div key={p.uuid} className="p-3 bg-bg-deep/30 hover:bg-bg-deep/60 border border-border-thin rounded-xl transition-all flex flex-col gap-1.5">
                                         <span className="text-[9px] font-medium text-brand uppercase tracking-wider font-mono">
-                                            {p.codigoInstitucional || `PROY-${p.uuid.substring(0, 5).toUpperCase()}`}
+                                            {p.codigoInstitucional || `PEA-${p.uuid.substring(0, 5).toUpperCase()}`}
                                         </span>
                                         <p className="text-[11px] font-medium text-text-main leading-normal line-clamp-2" title={p.titulo}>
                                             {p.titulo}
@@ -283,7 +283,7 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                         <div className="flex items-center justify-between px-5 py-4 border-b border-border-thin bg-success/5 select-none">
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-success" />
-                                <span className="text-[10px] font-medium text-success uppercase tracking-wider">Excelente</span>
+                                <span className="text-[10px] font-medium text-success uppercase tracking-wider">Aprobado / Conforme</span>
                             </div>
                             <span className="text-[9.5px] font-mono font-medium text-text-dim">
                                 {great.length}
@@ -292,13 +292,13 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                         <div className="p-4 flex-1 overflow-y-auto max-h-[300px] space-y-3 custom-scrollbar">
                             {great.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center py-10 opacity-70">
-                                    <p className="text-[10px] text-text-dim italic">Ningún proyecto ha alcanzado la excelencia para esta métrica aún.</p>
+                                    <p className="text-[10px] text-text-dim italic">Ningún instrumento ha alcanzado la aprobación definitiva aún.</p>
                                 </div>
                             ) : (
                                 great.map(p => (
                                     <div key={p.uuid} className="p-3 bg-bg-deep/30 hover:bg-bg-deep/60 border border-border-thin rounded-xl transition-all flex flex-col gap-1.5">
                                         <span className="text-[9px] font-medium text-brand uppercase tracking-wider font-mono">
-                                            {p.codigoInstitucional || `PROY-${p.uuid.substring(0, 5).toUpperCase()}`}
+                                            {p.codigoInstitucional || `PEA-${p.uuid.substring(0, 5).toUpperCase()}`}
                                         </span>
                                         <p className="text-[11px] font-medium text-text-main leading-normal line-clamp-2" title={p.titulo}>
                                             {p.titulo}

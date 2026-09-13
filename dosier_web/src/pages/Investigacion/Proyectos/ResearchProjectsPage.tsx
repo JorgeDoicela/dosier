@@ -209,8 +209,8 @@ const ResearchProjectsPage = () => {
                 if (sortBy === 'titulo') {
                     return (a.titulo || '').localeCompare(b.titulo || '');
                 }
-                if (sortBy === 'presupuesto') {
-                    return (b.presupuesto_total || 0) - (a.presupuesto_total || 0);
+                if (sortBy === 'codigo') {
+                    return (a.codigo_institucional || '').localeCompare(b.codigo_institucional || '');
                 }
                 return 0;
             });
@@ -393,7 +393,7 @@ const ResearchProjectsPage = () => {
                                 <option value="recientes">Modificados recientemente</option>
                                 <option value="antiguos">Más antiguos</option>
                                 <option value="titulo">Título (A-Z)</option>
-                                <option value="presupuesto">Presupuesto mayor</option>
+                                <option value="codigo">Código institucional</option>
                             </select>
                             {hasActiveFilters && (
                                 <button
@@ -466,9 +466,6 @@ const ResearchProjectsPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-up [animation-delay:100ms]">
                     {filteredProjects.map((p) => {
                         const cfg = getEstadoConfig(p.estado);
-                        const presupuestoPorc = p.presupuesto_total && p.presupuesto_ejecutado
-                            ? Math.min(100, (p.presupuesto_ejecutado / p.presupuesto_total) * 100)
-                            : 0;
 
                         return (
                             <div
@@ -582,24 +579,6 @@ const ResearchProjectsPage = () => {
                                             <span className="text-[10px]">informes</span>
                                         </span>
                                     </div>
-
-                                    {p.presupuesto_total !== undefined && p.presupuesto_total > 0 && (
-                                        <div className="space-y-1 pt-1">
-                                            <div className="flex justify-between text-[10px] font-mono text-text-dim">
-                                                <span>Presupuesto</span>
-                                                <span className="text-text-main font-medium">
-                                                    ${(p.presupuesto_ejecutado ?? 0).toLocaleString('es-EC')} / ${(p.presupuesto_total).toLocaleString('es-EC')}
-                                                    <span className="text-text-dim ml-1">({presupuestoPorc.toFixed(0)}%)</span>
-                                                </span>
-                                            </div>
-                                            <div className="w-full h-1 bg-border-thin rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-brand rounded-full transition-all duration-500"
-                                                    style={{ width: `${Math.min(100, presupuestoPorc)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between pt-3 border-t border-border-thin mt-4 text-[10px] text-text-dim">

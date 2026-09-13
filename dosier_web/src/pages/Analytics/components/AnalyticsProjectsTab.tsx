@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ProyectoResumen } from '../types/analytics.types';
-import { formatCurrency } from '../utils/cacesCalculator';
+import { formatDate } from '../utils/cacesCalculator';
 
 export interface AnalyticsProjectsTabProps {
     filteredProjects: ProyectoResumen[];
@@ -15,21 +15,26 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
 }) => {
     const selectedProj = filteredProjects.find(p => p.uuid === (activeProjectUuid || filteredProjects[0]?.uuid)) || filteredProjects[0];
 
+    const getProgressPct = (estado?: string) => {
+        if (estado === 'Aprobado' || estado === 'Finalizado') return 100;
+        if (estado === 'En Revisión' || estado === 'Enviado') return 65;
+        if (estado === 'En Corrección') return 45;
+        return 25;
+    };
+
     return (
         <div className="space-y-6 animate-fade-up">
             {/* Layout estilo Vercel de Instrumentos y Documentación Curricular */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
                 
-                {/* Menú Lateral Izquierdo: Selector de Proyectos */}
+                {/* Menú Lateral Izquierdo: Selector de Instrumentos */}
                 <div className="space-y-2 lg:col-span-1 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
                     <span className="text-[9px] font-medium uppercase tracking-widest text-text-dim block mb-3 pl-1 font-mono">
                         Instrumentos en Portafolio
                     </span>
                     {filteredProjects.map((p) => {
                         const isActive = (activeProjectUuid || filteredProjects[0]?.uuid) === p.uuid;
-                        const pctGasto = p.presupuestoTotal && p.presupuestoTotal > 0
-                            ? Math.min(100, Math.round(((p.presupuestoEjecutado || 0) / p.presupuestoTotal) * 100))
-                            : 0;
+                        const pctAvance = getProgressPct(p.estado);
 
                         return (
                             <button
@@ -46,10 +51,10 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                 )}
                                 <div className="flex items-center justify-between gap-1 w-full text-[9px] font-medium">
                                     <span className="font-mono text-brand truncate">
-                                        {p.codigoInstitucional || `PROY-${p.uuid.substring(0, 5).toUpperCase()}`}
+                                        {p.codigoInstitucional || `PEA-${p.uuid.substring(0, 5).toUpperCase()}`}
                                     </span>
-                                    <span className="text-text-dim">
-                                        Gasto: {pctGasto}%
+                                    <span className="text-text-dim font-mono">
+                                        {p.estado}
                                     </span>
                                 </div>
                                 <h5 className="text-[10.5px] font-medium text-text-main line-clamp-2 leading-snug group-hover:text-brand transition-colors" title={p.titulo}>
@@ -58,7 +63,7 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                 <div className="w-full bg-border-thin/35 h-0.5 rounded-full overflow-hidden mt-1">
                                     <div 
                                         className="h-full rounded-full bg-brand" 
-                                        style={{ width: `${pctGasto}%` }} 
+                                        style={{ width: `${pctAvance}%` }} 
                                     />
                                 </div>
                             </button>
@@ -66,21 +71,19 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                     })}
                 </div>
 
-                {/* Panel Central de Detalle del Proyecto Seleccionado */}
+                {/* Panel Central de Detalle del Instrumento Seleccionado */}
                 {selectedProj && (
                     (() => {
-                        const pctGasto = selectedProj.presupuestoTotal && selectedProj.presupuestoTotal > 0
-                            ? Math.min(100, Math.round(((selectedProj.presupuestoEjecutado || 0) / selectedProj.presupuestoTotal) * 100))
-                            : 0;
+                        const pctAvance = getProgressPct(selectedProj.estado);
 
                         return (
                             <div className="lg:col-span-3 bento-card static p-6 flex flex-col justify-between h-auto min-h-[400px] bg-surface border border-border-thin shadow-sm rounded-xl space-y-6">
-                                {/* Header Proyecto */}
+                                {/* Header Instrumento */}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-thin/50 pb-4">
                                     <div className="space-y-1.5">
                                         <div className="flex flex-wrap items-center gap-1.5">
                                             <span className="text-[10px] font-semibold font-mono text-brand uppercase tracking-wider">
-                                                {selectedProj.codigoInstitucional || `PROY-${selectedProj.uuid.substring(0, 5).toUpperCase()}`}
+                                                {selectedProj.codigoInstitucional || `PEA-${selectedProj.uuid.substring(0, 5).toUpperCase()}`}
                                             </span>
                                             <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold ${
                                                 selectedProj.estado === 'Aprobado' || selectedProj.estado === 'En Ejecución'
@@ -95,30 +98,30 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                         </h3>
                                     </div>
                                     <div className="text-left sm:text-right shrink-0 bg-bg-deep/50 border border-border-thin px-4 py-2.5 rounded-xl">
-                                        <span className="text-[8px] font-medium uppercase text-text-dim block tracking-wider">Presupuesto Asignado</span>
-                                        <span className="text-xl font-semibold font-mono text-text-main">{formatCurrency(selectedProj.presupuestoTotal || 0)}</span>
+                                        <span className="text-[8px] font-medium uppercase text-text-dim block tracking-wider">Período Académico</span>
+                                        <span className="text-sm font-semibold font-mono text-text-main">{selectedProj.periodoConvocatoria || selectedProj.periodo || 'Período Vigente'}</span>
                                     </div>
                                 </div>
 
                                 {/* Fila Detalle KPIs */}
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-bg-deep/20 border border-border-thin/40 rounded-2xl select-none">
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Gasto Ejecutado</span>
-                                        <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{formatCurrency(selectedProj.presupuestoEjecutado || 0)}</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Estado Curricular</span>
+                                        <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.estado}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Estudiantes / Participantes</span>
-                                        <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.totalEstudiantes || 0} estudiantes</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Docentes Asignados</span>
+                                        <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.totalInvestigadores || 1} docente(s)</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Revisiones Aprobadas</span>
-                                        <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.informesAprobados || 0} / {selectedProj.totalInformes || 0}</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Revisiones Técnicas</span>
+                                        <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.informesAprobados || 0} / {selectedProj.totalInformes || 0} completadas</span>
                                     </div>
                                 </div>
 
                                 {/* Visual Progress Scale */}
                                 <div className="p-5 bg-bg-deep/30 border border-border-thin/40 rounded-2xl flex flex-col sm:flex-row items-center justify-around gap-6 select-none animate-fade-up">
-                                    {/* Circular Gasto Progress */}
+                                    {/* Circular Progress */}
                                     <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
                                         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                                             <circle
@@ -136,31 +139,31 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                                 className="fill-none transition-all duration-1000"
                                                 stroke="var(--brand)"
                                                 strokeWidth="2.8"
-                                                strokeDasharray={`${pctGasto} ${100 - pctGasto}`}
+                                                strokeDasharray={`${pctAvance} ${100 - pctAvance}`}
                                                 strokeDashoffset="0"
                                                 strokeLinecap="round"
                                             />
                                         </svg>
                                         <div className="absolute flex flex-col items-center justify-center text-center">
                                             <span className="text-xl font-black text-text-main font-mono leading-none">
-                                                {pctGasto}%
+                                                {pctAvance}%
                                             </span>
                                             <span className="text-[7.5px] font-black text-text-dim uppercase tracking-wider mt-1">
-                                                GASTO REALIZADO
+                                                AVANCE TÉCNICO
                                             </span>
                                         </div>
                                     </div>
 
-                                    {/* Línea de Investigación de Respaldo */}
+                                    {/* Campo Curricular y Carrera */}
                                     <div className="space-y-3.5 flex-1 max-w-md w-full">
                                         <div className="space-y-0.5">
-                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Línea de Investigación</span>
+                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Área / Campo Curricular</span>
                                             <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.lineaInvestigacion || 'General'}>
-                                                {selectedProj.lineaInvestigacion || 'Línea General / Institucional'}
+                                                {selectedProj.lineaInvestigacion || 'Campo de Formación Profesional'}
                                             </p>
                                         </div>
                                         <div className="space-y-0.5">
-                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Carrera / Unidad</span>
+                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Carrera / Unidad Académica</span>
                                             <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.carrera || 'Institucional'}>
                                                 {selectedProj.carrera || 'Asignación Institucional'}
                                             </p>

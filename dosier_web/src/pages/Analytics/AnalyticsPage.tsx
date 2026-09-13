@@ -63,8 +63,6 @@ const AnalyticsPage: React.FC = () => {
         filteredProjects,
         linesData,
         proyectosPorEstado,
-        budgetTotal,
-        budgetExecuted,
         cacesIndicators,
         dbPeriods,
         dbCareers
@@ -97,59 +95,75 @@ const AnalyticsPage: React.FC = () => {
                 setActiveTab={setActiveTab}
             />
 
-            {/* ZONA DE PROYECTOS VACÍOS (EMPTY STATE EXTREMO PREMIUM) */}
-            {filteredProjects.length === 0 ? (
-                <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
-                    <div className="p-4 bg-surface rounded-full border border-border-thin">
-                        <FolderOpen size={32} className="text-text-dim/60" />
+            {/* Renderizado de Pestañas Específicas */}
+            {activeTab === 'general' && (
+                filteredProjects.length === 0 && !stats ? (
+                    <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
+                        <div className="p-4 bg-surface rounded-full border border-border-thin">
+                            <FolderOpen size={32} className="text-text-dim/60" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
+                            <p className="text-xs text-text-dim max-w-sm leading-relaxed">
+                                No se encontraron instrumentos curriculares o PEA registrados en el sistema para el período o carrera seleccionada.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => { setPeriod('TODOS'); setCarrera('TODAS'); }}
+                            className="btn-vercel-secondary text-[9px]"
+                        >
+                            Restablecer Filtros
+                        </button>
                     </div>
-                    <div className="space-y-1">
-                        <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
-                        <p className="text-xs text-text-dim max-w-sm leading-relaxed">
-                            No se encontraron proyectos de investigación registrados en el sistema para el periodo o carrera seleccionada.
-                        </p>
+                ) : (
+                    <AnalyticsOverviewTab
+                        filteredProjects={filteredProjects}
+                        allProjects={projects}
+                        stats={stats}
+                        groups={groups}
+                        linesData={linesData}
+                        proyectosPorEstado={proyectosPorEstado}
+                        selectedChartSegment={selectedChartSegment}
+                        setSelectedChartSegment={setSelectedChartSegment}
+                    />
+                )
+            )}
+
+            {activeTab === 'caces' && (
+                <AnalyticsCacesTab
+                    filteredProjects={filteredProjects}
+                    cacesIndicators={cacesIndicators}
+                    activeCacesCode={activeCacesCode}
+                    setActiveCacesCode={setActiveCacesCode}
+                />
+            )}
+
+            {activeTab === 'proyectos' && (
+                filteredProjects.length === 0 ? (
+                    <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
+                        <div className="p-4 bg-surface rounded-full border border-border-thin">
+                            <FolderOpen size={32} className="text-text-dim/60" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
+                            <p className="text-xs text-text-dim max-w-sm leading-relaxed">
+                                No se encontraron instrumentos curriculares o PEA registrados en el sistema para el período o carrera seleccionada.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => { setPeriod('TODOS'); setCarrera('TODAS'); }}
+                            className="btn-vercel-secondary text-[9px]"
+                        >
+                            Restablecer Filtros
+                        </button>
                     </div>
-                    <button
-                        onClick={() => { setPeriod('TODOS'); setCarrera('TODAS'); }}
-                        className="btn-vercel-secondary text-[9px]"
-                    >
-                        Restablecer Filtros
-                    </button>
-                </div>
-            ) : (
-                <>
-                    {activeTab === 'general' && (
-                        <AnalyticsOverviewTab
-                            filteredProjects={filteredProjects}
-                            allProjects={projects}
-                            stats={stats}
-                            groups={groups}
-                            linesData={linesData}
-                            proyectosPorEstado={proyectosPorEstado}
-                            budgetTotal={budgetTotal}
-                            budgetExecuted={budgetExecuted}
-                            selectedChartSegment={selectedChartSegment}
-                            setSelectedChartSegment={setSelectedChartSegment}
-                        />
-                    )}
-
-                    {activeTab === 'caces' && (
-                        <AnalyticsCacesTab
-                            filteredProjects={filteredProjects}
-                            cacesIndicators={cacesIndicators}
-                            activeCacesCode={activeCacesCode}
-                            setActiveCacesCode={setActiveCacesCode}
-                        />
-                    )}
-
-                    {activeTab === 'proyectos' && (
-                        <AnalyticsProjectsTab
-                            filteredProjects={filteredProjects}
-                            activeProjectUuid={activeProjectUuid}
-                            setActiveProjectUuid={setActiveProjectUuid}
-                        />
-                    )}
-                </>
+                ) : (
+                    <AnalyticsProjectsTab
+                        filteredProjects={filteredProjects}
+                        activeProjectUuid={activeProjectUuid}
+                        setActiveProjectUuid={setActiveProjectUuid}
+                    />
+                )
             )}
         </main>
     );
