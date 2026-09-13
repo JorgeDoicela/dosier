@@ -28,18 +28,38 @@ namespace dosier_infrastructure.Research.Subservices
                 .Select(g => new { Estado = g.Key ?? "Borrador", Cantidad = g.Count() })
                 .ToListAsync();
 
-            var conteoDict = conteoEstados.ToDictionary(x => x.Estado, x => x.Cantidad, StringComparer.OrdinalIgnoreCase);
+            // Consultar también los PEAs registrados oficialmente
+            var conteoPeas = await _context.DocPeas
+                .Where(p => p.Activo)
+                .GroupBy(p => p.Estado)
+                .Select(g => new { Estado = g.Key ?? "Borrador", Cantidad = g.Count() })
+                .ToListAsync();
+
+            // Combinar conteos por estado
+            var conteoDict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in conteoEstados)
+            {
+                conteoDict[item.Estado] = conteoDict.GetValueOrDefault(item.Estado, 0) + item.Cantidad;
+            }
+            foreach (var item in conteoPeas)
+            {
+                conteoDict[item.Estado] = conteoDict.GetValueOrDefault(item.Estado, 0) + item.Cantidad;
+            }
 
             stats.TotalProyectos = conteoDict.Values.Sum();
             stats.ProyectosBorrador = conteoDict.GetValueOrDefault("Borrador", 0);
-            stats.ProyectosEnRevision = conteoDict.GetValueOrDefault("En Revisión", 0) + conteoDict.GetValueOrDefault("Enviado", 0);
+            stats.ProyectosEnRevision = conteoDict.GetValueOrDefault("En Revisión", 0) + conteoDict.GetValueOrDefault("Enviado", 0) + conteoDict.GetValueOrDefault("Revisión Técnica", 0);
             stats.ProyectosAprobados = conteoDict.GetValueOrDefault("Aprobado", 0);
             stats.ProyectosEnEjecucion = conteoDict.GetValueOrDefault("En Ejecución", 0);
             stats.ProyectosFinalizados = conteoDict.GetValueOrDefault("Finalizado", 0);
 
-            stats.ArticulosIndexados = 0;
-            stats.Prototipos = 0;
-            stats.Ponencias = 0;
+            // Mapear métricas para los widgets del dashboard curricular:
+            // ArticulosIndexados -> Instrumentos Aprobados
+            // Prototipos -> En Revisión Colegiada
+            // Ponencias -> En Elaboración / Borrador
+            stats.ArticulosIndexados = stats.ProyectosAprobados;
+            stats.Prototipos = stats.ProyectosEnRevision;
+            stats.Ponencias = stats.ProyectosBorrador;
 
             stats.TotalInvestigadoresActivos = await _context.DocProyectoParticipantes
                 .Where(pp => pp.Activo != false && pp.IdProyectoNavigation!.Estado != "Borrador" && pp.IdProyectoNavigation.Estado != "Rechazado" && pp.IdProyectoNavigation.Estado != "Anulado")
@@ -52,18 +72,19 @@ namespace dosier_infrastructure.Research.Subservices
                 { "Borrador", "#6B7280" },
                 { "Enviado", "#3B82F6" },
                 { "En Revisión", "#F59E0B" },
+                { "Revisión Técnica", "#F59E0B" },
                 { "Aprobado", "#10B981" },
                 { "En Ejecución", "#8B5CF6" },
                 { "Finalizado", "#059669" },
                 { "Rechazado", "#EF4444" }
             };
 
-            stats.ProyectosPorEstado = conteoEstados
+            stats.ProyectosPorEstado = conteoDict
                 .Select(x => new EstadoConteoDto
                 {
-                    Estado = x.Estado,
-                    Cantidad = x.Cantidad,
-                    Color = colorMap.TryGetValue(x.Estado, out var col) ? col : "#6B7280"
+                    Estado = x.Key,
+                    Cantidad = x.Value,
+                    Color = colorMap.TryGetValue(x.Key, out var col) ? col : "#6B7280"
                 })
                 .ToList();
 
@@ -77,17 +98,34 @@ namespace dosier_infrastructure.Research.Subservices
                 var misIds = _context.DocProyectoParticipantes
                     .Where(pp => pp.IdUsuario == userId.Value).Select(pp => pp.IdProyecto);
 
-                stats.MisProyectosActivos = await _context.DocProyectos
+                var misProyectosActivos = await _context.DocProyectos
                     .Where(p => misIds.Contains(p.IdProyecto) && (p.Estado == "En Ejecución" || p.Estado == "Aprobado"))
                     .CountAsync();
 
-                stats.MisProyectosBorrador = await _context.DocProyectos
+                var misProyectosBorrador = await _context.DocProyectos
                     .Where(p => misIds.Contains(p.IdProyecto) && p.Estado == "Borrador")
                     .CountAsync();
 
-                stats.MisProyectosEnRevision = await _context.DocProyectos
+                var misProyectosEnRevision = await _context.DocProyectos
                     .Where(p => misIds.Contains(p.IdProyecto) && (p.Estado == "En Revisión" || p.Estado == "Enviado"))
                     .CountAsync();
+
+                // Sumar los PEAs asignados al docente
+                var misPeasActivos = await _context.DocPeas
+                    .Where(p => p.IdDocenteElaborador == userIdReferencia.Trim() && p.Activo && (p.Estado == "Aprobado" || p.Estado == "En Ejecución"))
+                    .CountAsync();
+
+                var misPeasBorrador = await _context.DocPeas
+                    .Where(p => p.IdDocenteElaborador == userIdReferencia.Trim() && p.Activo && p.Estado == "Borrador")
+                    .CountAsync();
+
+                var misPeasEnRevision = await _context.DocPeas
+                    .Where(p => p.IdDocenteElaborador == userIdReferencia.Trim() && p.Activo && (p.Estado == "En Revisión" || p.Estado == "Enviado"))
+                    .CountAsync();
+
+                stats.MisProyectosActivos = misProyectosActivos + misPeasActivos;
+                stats.MisProyectosBorrador = misProyectosBorrador + misPeasBorrador;
+                stats.MisProyectosEnRevision = misProyectosEnRevision + misPeasEnRevision;
 
                 stats.MisInformesPendientes = 0;
 
@@ -141,7 +179,31 @@ namespace dosier_infrastructure.Research.Subservices
                 })
                 .ToListAsync();
 
-            stats.ActividadReciente = ultimosProyectos;
+            var ultimosPeasQuery = _context.DocPeas.Where(p => p.Activo);
+
+            if (!isAdmin)
+            {
+                ultimosPeasQuery = ultimosPeasQuery.Where(p => p.IdDocenteElaborador == userIdReferencia.Trim());
+            }
+
+            var ultimosPeas = await ultimosPeasQuery
+                .OrderByDescending(p => p.FechaModificacion)
+                .Take(8)
+                .Select(p => new ActividadRecienteDto
+                {
+                    Tipo = "pea",
+                    Descripcion = p.ObjetivoAsignatura ?? $"PEA Asignatura #{p.IdAsignatura}",
+                    Fecha = p.FechaModificacion,
+                    Uuid = p.Uuid,
+                    Estado = p.Estado
+                })
+                .ToListAsync();
+
+            stats.ActividadReciente = ultimosProyectos
+                .Concat(ultimosPeas)
+                .OrderByDescending(a => a.Fecha)
+                .Take(8)
+                .ToList();
 
             return stats;
         }

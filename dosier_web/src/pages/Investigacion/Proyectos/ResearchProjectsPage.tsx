@@ -334,13 +334,13 @@ const ResearchProjectsPage = () => {
     return (
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-10">
             <PageHeader
-                kicker="Revisión Institucional de Expedientes"
+                kicker="Gestión Curricular Institucional"
                 icon={ClipboardList}
-                title="Supervisión de Documentación y Portafolios"
+                title="Supervisión de Documentación y Planificación PEA"
                 description={
                     <span className="flex flex-col md:flex-row md:items-center gap-x-2 gap-y-1">
                         <span>
-                            Administre y califique los proyectos y portafolios documentales registrados en el sistema, supervise su presupuesto y valide su avance.
+                            Supervise los instrumentos curriculares PEA y portafolios docentes registrados en el sistema, valide su avance y estados colegiados.
                         </span>
                         {refreshing && (
                             <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse shrink-0">
@@ -357,7 +357,7 @@ const ResearchProjectsPage = () => {
                         className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
                     >
                         <Plus size={14} strokeWidth={3} />
-                        Nueva Postulación
+                        Nuevo Instrumento PEA
                     </button>
                 </div>
             </PageHeader>

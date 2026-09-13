@@ -124,7 +124,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                             <span className="section-label text-warning">Correcciones Requeridas</span>
                         </div>
                         <p className="text-xs text-text-dim leading-relaxed">
-                            El administrador ha retornado el proyecto con observaciones técnicas que deben ser atendidas en su protocolo.
+                            El revisor ha retornado el instrumento con observaciones que deben ser atendidas en su contenido curricular.
                         </p>
                     </div>
                     <div className="mt-4">
@@ -166,7 +166,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                         </span>
                     </div>
                     <p className="text-xs text-text-dim leading-relaxed">
-                        Seguimiento del cronograma, avance de hitos y temporalidad de la investigación.
+                        Seguimiento del cronograma, avance de hitos y temporalidad de la planificación curricular.
                     </p>
                     <Link
                         to={monitoringUrl}

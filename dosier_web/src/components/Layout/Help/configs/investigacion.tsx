@@ -5,42 +5,42 @@ import type { HelpConfig, MockupProps } from '../types';
 
 export const INVESTIGACION_CONFIG: HelpConfig = {
     icon: <PenTool size={24} className="text-brand" />,
-    title: "Propuestas y proyectos de investigación",
-    summary: "Módulo administrativo central para la formulación, registro y postulación de protocolos de investigación y desarrollo.",
-    description: "Esta consola proporciona un entorno estructurado para la planificación y postulación de proyectos científicos y tecnológicos de la institución. Permite a los investigadores completar el formulario digital, estructurar los presupuestos detallados por partidas, conformar el equipo de coinvestigadores y adjuntar documentos anexos requeridos por las bases de las convocatorias.",
+    title: "Supervisión de Documentación y Planificación PEA",
+    summary: "Módulo administrativo central para la formulación, registro y supervisión de instrumentos curriculares oficiales PEA.",
+    description: "Esta consola proporciona un entorno estructurado para la planificación y seguimiento de los instrumentos curriculares de la institución. Permite a directivos y coordinadores supervisar el estado de formulación, revisar las cargas horarias, conformar equipos docentes y verificar el cumplimiento curricular institucional.",
     steps: [
         {
-            title: "Creación y formulación de propuestas de investigación",
-            description: "Usa el botón de acción principal 'Nueva Postulación' para lanzar el asistente interactivo. Este formulario te guiará en la definición del título del proyecto, el resumen científico, la justificación metodológica, la selección de la línea de investigación oficial de la institución, el cronograma detallado de entregables y la distribución de recursos económicos por categorías presupuestarias.",
+            title: "Creación y registro de instrumentos PEA",
+            description: "Usa el botón de acción principal '+ Nuevo Instrumento PEA' para iniciar el asistente interactivo. Este formulario te guiará en la definición de la asignatura, el campo de conocimiento, la justificación pedagógica y las horas curriculares.",
             highlight: 'content-top'
         },
         {
-            title: "Buzón de expedientes y contratos firmados",
-            description: "Inspecciona el buzón inferior de documentos generados por el sistema. Aquí se listan en tiempo real los contratos de asignación de fondos, resoluciones del comité científico y actas de aceptación. Todos incorporan firma electrónica válida y certificados de validación en formato PDF/A.",
+            title: "Buzón de expedientes e instrumentos firmados",
+            description: "Inspecciona el buzón inferior de documentos generados por el sistema. Aquí se listan en tiempo real los PEAs aprobados, resoluciones académicas y actas institucionales. Todos incorporan firma electrónica válida y certificados de validación en formato PDF/A.",
             highlight: 'content-bottom'
         },
         {
-            title: "Compilación y seguimiento de Informes de Avance",
-            description: "Durante el cronograma, utiliza la herramienta de seguimiento para generar tus Informes de Avance. El sistema compilará automáticamente los entregables aprobados y te permitirá adjuntar las evidencias físicas antes de enviarlo al comité evaluador.",
+            title: "Seguimiento y control de avance curricular",
+            description: "Durante el período académico, utiliza las herramientas de seguimiento para supervisar el avance de las unidades temáticas y el cumplimiento de resultados de aprendizaje.",
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Alineado con el Criterio B.1 del CACES (Planificación y Producción Científica Institucional), garantizando la trazabilidad integral de los fondos y los compromisos de entrega de los investigadores.",
+    compliance: "Alineado con los estándares del CACES y el modelo curricular institucional del ISTPET, garantizando la trazabilidad integral de la planificación académica.",
     tips: [
-        "Asegúrate de que las partidas presupuestarias no superen los topes máximos establecidos en las bases de la convocatoria antes de enviar tu propuesta a revisión.",
-        "Descarga una copia de seguridad de tu contrato firmado una vez que el estado del proyecto cambie a 'Aprobado y en Ejecución'."
+        "Asegúrate de que la distribución horaria (docencia, prácticas y trabajo autónomo) cumpla con los créditos establecidos en la malla curricular oficial.",
+        "Descarga una copia oficial en PDF del PEA firmado una vez que el instrumento cambie a 'Aprobado'."
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
             {/* Header & Controls Area */}
             <div className={`rounded-lg border p-1.5 flex justify-between items-center transition-all duration-300 shrink-0 ${highlightTopClass}`}>
                 <div className="flex flex-col gap-0.5">
-                    <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Investigación</span>
-                    <span className="text-[7px] text-text-main font-bold">Consola del Investigador</span>
+                    <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Documentación</span>
+                    <span className="text-[7px] text-text-main font-bold">Consola de Supervisión PEA</span>
                 </div>
                 <div className="flex gap-1">
                     <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold shadow-sm">
-                        + Nueva Postulación
+                        + Nuevo Instrumento PEA
                     </div>
                 </div>
             </div>
@@ -92,30 +92,30 @@ export const INVESTIGACION_CONFIG: HelpConfig = {
 
 export const MIS_PROYECTOS_CONFIG: HelpConfig = {
     icon: <BookOpen size={24} className="text-brand" />,
-    title: "Mis Proyectos de Investigación",
-    summary: "Gestión centralizada, edición de protocolos y seguimiento del ciclo de vida de los proyectos postulados.",
-    description: "Tablero principal para la administración de todas las propuestas enviadas y proyectos activos. Muestra tarjetas con métricas en tiempo real sobre el porcentaje de ejecución presupuestaria, estados de revisión técnica y accesos directos al editor interactivo del protocolo institucional.",
+    title: "Mis Instrumentos Curriculares y PEA",
+    summary: "Gestión docente centralizada, co-redacción y seguimiento del ciclo de vida de los PEAs asignados.",
+    description: "Tablero docente principal para la administración de todas las asignaturas e instrumentos PEA asignados. Muestra tarjetas con métricas en tiempo real sobre estados de revisión colegiada, aprobación de autoridades y accesos directos al espacio de co-redacción concurrente.",
     steps: [
         {
-            title: "Listado interactivo de proyectos y estado de dictamen",
-            description: "Visualiza de forma clara el estado actual de cada propuesta (Borrador, En Revisión, En Corrección, Aprobado o En Ejecución). El distintivo de color te permite identificar de un vistazo si se requieren ajustes solicitados por la comisión técnica.",
+            title: "Listado interactivo de asignaturas y estado curricular",
+            description: "Visualiza de forma clara el estado actual de cada instrumento curricular (Borrador, En Revisión, En Corrección, Aprobado). El distintivo de color te permite identificar de un vistazo si existen observaciones de la coordinación de carrera.",
             highlight: 'content-bottom'
         },
         {
-            title: "Acceso al espacio de trabajo y editor del protocolo",
-            description: "Haz clic en cualquier tarjeta de proyecto para abrir el Espacio de Trabajo. Podrás acceder al editor TipTap en tiempo real, visualizar el diagrama de Gantt de entregables, y verificar la consistencia de las horas asignadas a los investigadores.",
+            title: "Acceso al espacio de trabajo y editor curricular",
+            description: "Haz clic en cualquier tarjeta para abrir el Espacio de Trabajo. Podrás acceder al editor TipTap colaborativo en tiempo real, redactar los resultados de aprendizaje y verificar la consistencia de las horas asignadas.",
             highlight: 'content-bottom'
         },
         {
-            title: "Seguimiento presupuestario y de entregables",
-            description: "Monitorea la barra de progreso financiero y los entregables para comprobar que tu proyecto avanza de acuerdo a los plazos previstos en la planificación inicial.",
+            title: "Seguimiento pedagógico y unidades temáticas",
+            description: "Monitorea la barra de avance y las unidades temáticas para comprobar que tu instrumento curricular cumple con la planificación del período académico.",
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Garantiza el cumplimiento de las metas anuales de producción científica y vinculación según la normativa institucional y los estándares CACES.",
+    compliance: "Garantiza el cumplimiento de las metas curriculares de la asignatura según la normativa institucional y los estándares CACES.",
     tips: [
-        "Revisa periódicamente la pestaña 'En Corrección' para responder a tiempo a las observaciones técnicas y no perder la postulación.",
-        "Utiliza la opción de descarga rápida para exportar el protocolo completo en formato PDF oficial en cualquier momento."
+        "Revisa periódicamente las observaciones en caso de devolución para ajustar oportunamente los contenidos de la asignatura.",
+        "Utiliza la opción de descarga para exportar el PEA completo en formato PDF institucional en cualquier momento."
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
@@ -123,11 +123,11 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
             <div className={`rounded-lg border p-1.5 flex flex-col gap-1 transition-all duration-300 shrink-0 ${highlightTopClass}`}>
                 <div className="flex justify-between items-center">
                     <div className="flex flex-col">
-                        <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Mis Investigaciones</span>
-                        <span className="text-[7px] text-text-main font-bold">Mis proyectos de investigación</span>
+                        <span className="text-[4px] text-brand uppercase font-mono tracking-wider font-semibold">Mis Asignaturas</span>
+                        <span className="text-[7px] text-text-main font-bold">Mis instrumentos curriculares</span>
                     </div>
                     <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold">
-                        + Nueva Postulación
+                        + Nuevo Instrumento PEA
                     </div>
                 </div>
                 <div className="flex gap-1">
@@ -268,30 +268,30 @@ export const MIS_PROYECTOS_CONFIG: HelpConfig = {
 
 export const MONITOREO_CONFIG: HelpConfig = {
     icon: <Activity size={24} className="text-brand" />,
-    title: "Monitoreo de Proyectos",
-    summary: "Consola de seguimiento técnico y financiero, cronograma de entregables y carga de evidencias en tiempo real.",
-    description: "Interfaz integral para supervisar la ejecución física y financiera de los proyectos de investigación activos. Permite al docente reportar avances semanales, registrar bitácoras, subir archivos de evidencias y solicitar modificaciones presupuestarias o extensiones de plazo.",
+    title: "Monitoreo Curricular y Planificación",
+    summary: "Consola de seguimiento curricular, cronograma de unidades temáticas y registro de avance en tiempo real.",
+    description: "Interfaz integral para supervisar la ejecución pedagógica y temporal de las asignaturas activas. Permite a los docentes y coordinadores registrar avances, verificar hitos del período académico y asegurar la cobertura de contenidos.",
     steps: [
         {
-            title: "Control del cronograma físico e hitos de actividades",
-            description: "Monitorea el progreso de cada actividad planificada en tu propuesta original. Marca hitos como completados y sube los entregables correspondientes para la validación del analista de investigación.",
+            title: "Control del cronograma e hitos curriculares",
+            description: "Monitorea el progreso de cada unidad temática planificada en el PEA. Marca hitos como completados y registra las actividades prácticas ejecutadas.",
             highlight: 'content-top'
         },
         {
-            title: "Carga de evidencias y justificación de entregables",
-            description: "Sube los soportes que respaldan tus avances (informes de laboratorio, actas de encuestas, borradores de artículos). Todos los documentos son almacenados de forma segura con firma del investigador.",
+            title: "Carga de evidencias y rúbricas de evaluación",
+            description: "Adjunta soportes de actividades prácticas, talleres y evaluaciones para respaldar el cumplimiento de los resultados de aprendizaje.",
             highlight: 'content-bottom'
         },
         {
-            title: "Bitácora de campo y registro de egresos financieros",
-            description: "Registra detalladamente las horas invertidas y los gastos ejecutados en base al presupuesto del proyecto, adjuntando facturas y justificativos de viáticos u adquisiciones de insumos.",
+            title: "Bitácora pedagógica y horas impartidas",
+            description: "Registra detalladamente las horas impartidas de docencia presencial, prácticas y tutorías en base a la carga horaria establecida.",
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Asegura el cumplimiento del Criterio de Control Financiero y Evaluación de Avances del CACES, justificando cuantitativa y documentalmente cada recurso y hora docente invertida en investigación.",
+    compliance: "Asegura el cumplimiento de los estándares de aseguramiento de la calidad del CACES, certificando el avance del programa de estudio.",
     tips: [
-        "Sube tus evidencias inmediatamente al completar un hito para agilizar el desembolso de los siguientes tramos de financiamiento del proyecto.",
-        "Usa el chat de soporte interno del proyecto para solventar dudas metodológicas directamente con el analista asignado a tu seguimiento."
+        "Actualiza el avance de tus unidades temáticas semanalmente para mantener al día el portafolio docente institucional.",
+        "Consulta el estado de revisión colegiada para validar el cumplimiento de las observaciones de carrera."
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
@@ -353,25 +353,25 @@ export const MONITOREO_CONFIG: HelpConfig = {
 
 export const INFORMES_AVANCE_CONFIG: HelpConfig = {
     icon: <BookOpen size={24} className="text-brand" />,
-    title: "Bandeja de Informes de Avance",
-    summary: "Consola de revisión y validación de informes técnicos y financieros periódicos de proyectos activos.",
-    description: "Espacio centralizado donde la Dirección de Investigación y los analistas técnicos revisan, aprueban o devuelven los informes parciales presentados por los directores de proyectos para asegurar el cumplimiento del cronograma.",
+    title: "Bandeja de Revisiones Curriculares",
+    summary: "Consola de revisión y validación de instrumentos curriculares y PEAs institucionales.",
+    description: "Espacio centralizado donde la Coordinación de Carrera, Coordinación Académica y Vicerrectorado revisan, aprueban o devuelven los PEAs presentados por los docentes para asegurar la calidad académica.",
     steps: [
         {
-            title: "Revisión técnica de informes e hitos declarados",
-            description: "Examina la documentación y evidencias cargadas por los investigadores para cada hito del cronograma del proyecto. Valida si la calidad y formato del entregable cumple con los estándares exigidos.",
+            title: "Revisión técnica y metodológica del PEA",
+            description: "Examina los contenidos, unidades temáticas, bibliografía y metodología del PEA para validar su correspondencia con la malla curricular.",
             highlight: 'content-bottom'
         },
         {
-            title: "Gestión de observaciones y re-envíos",
-            description: "En caso de inconsistencias técnicas o falta de evidencias, emite observaciones detalladas y devuelve el informe al docente, estableciendo un plazo de subsanación automatizado.",
+            title: "Gestión de observaciones colegiadas",
+            description: "En caso de observaciones, emite comentarios contextuales y devuelve el instrumento al docente con plazo de subsanación.",
             highlight: 'content-top'
         }
     ],
-    compliance: "Respalda los procesos de auditoría y control de calidad académica requeridos en los modelos de acreditación institucional del CACES, certificando la supervisión formal de los recursos públicos.",
+    compliance: "Respalda los procesos de auditoría y calidad académica requeridos en los modelos de acreditación del CACES.",
     tips: [
-        "Sé específico en tus observaciones textuales para que el docente sepa exactamente qué corregir y se eviten múltiples iteraciones de devolución.",
-        "Utiliza los filtros de fecha de vencimiento para dar prioridad a la revisión de informes cuyos plazos de desembolso estén próximos."
+        "Sé específico en las observaciones para que el docente pueda realizar los ajustes pedagógicos rápidamente.",
+        "Verifica que las firmas electrónicas institucionales se apliquen en el orden reglamentario."
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>

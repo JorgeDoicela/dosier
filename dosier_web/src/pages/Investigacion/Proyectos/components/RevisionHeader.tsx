@@ -44,8 +44,8 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
         link.href = pdfUrl;
         const safeName = projectTitle
             ? projectTitle.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50)
-            : 'Protocolo_Investigacion';
-        link.download = `Protocolo_${safeName}.pdf`;
+            : 'Instrumento_Curricular';
+        link.download = `Instrumento_${safeName}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -93,7 +93,7 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                             {getStatusBadge()}
                         </div>
                         <p className="text-[8px] text-text-dim font-bold uppercase tracking-widest mt-1 truncate">
-                            Revisión Técnica del Protocolo de Investigación
+                            Revisión Técnica del Instrumento Curricular
                         </p>
                     </div>
                 </div>

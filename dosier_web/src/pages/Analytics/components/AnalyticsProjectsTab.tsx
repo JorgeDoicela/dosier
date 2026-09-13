@@ -17,13 +17,13 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
 
     return (
         <div className="space-y-6 animate-fade-up">
-            {/* Layout estilo Vercel de Proyectos e I+D */}
+            {/* Layout estilo Vercel de Instrumentos y Documentación Curricular */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
                 
                 {/* Menú Lateral Izquierdo: Selector de Proyectos */}
                 <div className="space-y-2 lg:col-span-1 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
                     <span className="text-[9px] font-medium uppercase tracking-widest text-text-dim block mb-3 pl-1 font-mono">
-                        Proyectos en Portafolio
+                        Instrumentos en Portafolio
                     </span>
                     {filteredProjects.map((p) => {
                         const isActive = (activeProjectUuid || filteredProjects[0]?.uuid) === p.uuid;
@@ -107,11 +107,11 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                         <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{formatCurrency(selectedProj.presupuestoEjecutado || 0)}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Semilleristas (Alumnos)</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Estudiantes / Participantes</span>
                                         <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.totalEstudiantes || 0} estudiantes</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Informes Aprobados</span>
+                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Revisiones Aprobadas</span>
                                         <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.informesAprobados || 0} / {selectedProj.totalInformes || 0}</span>
                                     </div>
                                 </div>

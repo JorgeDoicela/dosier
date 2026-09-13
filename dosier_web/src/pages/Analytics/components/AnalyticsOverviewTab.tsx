@@ -44,11 +44,11 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
             {/* Bento Grid: KPIs Principales */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-up">
                 <KPICard
-                    title="Proyectos de Investigación"
+                    title="Instrumentos Curriculares"
                     value={filteredProjects.length}
                     icon={<BarChart3 size={14} />}
                     accentColor="brand"
-                    subText="Portafolio del corte"
+                    subText="Portafolio PEA del corte"
                     badgeText={`Total: ${allProjects.length}`}
                     footerItems={[
                         { label: 'En Ejecución', value: filteredProjects.filter(p => p.estado === 'En Ejecución').length },
@@ -56,15 +56,15 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     ]}
                 />
                 <KPICard
-                    title="Producción Académica"
+                    title="Documentación Curricular"
                     value={(stats?.articulosIndexados || 0) + (stats?.ponencias || 0)}
                     icon={<BookOpen size={14} />}
                     accentColor="success"
-                    subText="Publicaciones y ponencias"
-                    badgeText={`Indexados: ${stats?.articulosIndexados || 0}`}
+                    subText="Instrumentos aprobados y vigentes"
+                    badgeText={`Aprobados: ${stats?.articulosIndexados || 0}`}
                     footerItems={[
-                        { label: 'Artículos Indexados', value: stats?.articulosIndexados || 0, valueColorClass: 'text-success font-semibold' },
-                        { label: 'Ponencias / Difusión', value: stats?.ponencias || 0 }
+                        { label: 'Instrumentos Aprobados', value: stats?.articulosIndexados || 0, valueColorClass: 'text-success font-semibold' },
+                        { label: 'En Elaboración', value: stats?.ponencias || 0 }
                     ]}
                 />
                 <KPICard
@@ -83,7 +83,7 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     value={stats?.totalInvestigadoresActivos || 0}
                     icon={<Users size={14} />}
                     accentColor="violet"
-                    subText="Docentes e Investigadores"
+                    subText="Docentes registrados"
                     footerItems={[
                         { label: 'Docentes Activos', value: stats?.totalInvestigadoresActivos || 0 },
                         { label: 'En Ejecución', value: stats?.proyectosEnEjecucion || 0 }
@@ -97,10 +97,10 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                 <div className="bento-card static p-5 flex flex-col justify-between h-[360px] border border-border-thin hover:border-brand/20 transition-all duration-300">
                     <div>
                         <div className="flex items-center justify-between">
-                            <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">Estado de Proyectos</h4>
+                            <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">Estado de Instrumentos PEA</h4>
                             <PieChart size={13} className="text-brand" />
                         </div>
-                        <p className="text-xs text-text-dim mt-1 font-medium font-sans">Estado del portafolio actual</p>
+                        <p className="text-xs text-text-dim mt-1 font-medium font-sans">Estado de la documentación curricular</p>
                     </div>
 
                     <DonutChart
@@ -134,11 +134,11 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     <div>
                         <div className="flex items-center justify-between">
                             <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">
-                                Distribución por Línea de Investigación
+                                Distribución por Campo / Área Curricular
                             </h4>
                             <TrendingUp size={13} className="text-emerald-500" />
                         </div>
-                        <p className="text-xs text-text-dim mt-1 font-medium font-sans">Proyectos asociados a líneas oficiales del instituto</p>
+                        <p className="text-xs text-text-dim mt-1 font-medium font-sans">Instrumentos curriculares asociados a áreas del instituto</p>
                     </div>
 
                     <div className="space-y-2.5 flex-1 justify-center flex flex-col overflow-y-auto custom-scrollbar pr-1 mt-4">
@@ -168,7 +168,7 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                                 </span>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <span className="text-text-main font-mono block">{line.proyectos} {line.proyectos === 1 ? 'Proyecto' : 'Proyectos'}</span>
+                                                <span className="text-text-main font-mono block">{line.proyectos} {line.proyectos === 1 ? 'Instrumento' : 'Instrumentos'}</span>
                                                 <span className="text-text-dim font-mono text-[8px] block">{formatCurrency(line.pres)}</span>
                                             </div>
                                         </div>
@@ -191,8 +191,8 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                 {/* Actividad */}
                 <div className="bento-card static p-5 lg:col-span-2 space-y-4 border border-border-thin hover:border-brand/20 transition-all duration-300">
                     <div>
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">Bitácora Técnica de Investigación</h4>
-                        <p className="text-xs text-text-dim mt-1 font-medium font-sans">Historial reciente de auditoría de proyectos y entregables</p>
+                        <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">Bitácora de Gestión Curricular</h4>
+                        <p className="text-xs text-text-dim mt-1 font-medium font-sans">Historial reciente de auditoría y actualizaciones curriculares</p>
                     </div>
 
                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">

@@ -19,10 +19,10 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
 }) => {
     return (
         <PageHeader
-            kicker="CACES Acreditación — IST Traversari"
+            kicker="Gestión Curricular Institucional — IST Traversari"
             icon={BarChart2}
-            title="Analíticas de Investigación e Innovación"
-            description="Consola directiva en tiempo real. Seguimiento actualizado de proyectos y cumplimiento de estándares del CACES."
+            title="Analíticas de Documentación y Planificación Curricular"
+            description="Consola directiva en tiempo real. Seguimiento actualizado de instrumentos PEA y cumplimiento de estándares curriculares institucionales."
         >
             <div className="flex flex-col items-end gap-1">
                 <div className="flex items-center gap-2 shrink-0">

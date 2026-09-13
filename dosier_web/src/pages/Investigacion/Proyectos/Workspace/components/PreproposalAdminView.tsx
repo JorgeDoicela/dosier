@@ -110,8 +110,8 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                     >
                         <div className="border-b border-border pb-4 flex justify-between items-center gap-4">
                             <div>
-                                <h3 className="text-sm font-black text-text-main uppercase tracking-widest">Detalle de la Prepropuesta</h3>
-                                <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">Docente Proponente: {currentProject.directorProyecto || 'No asignado'}</p>
+                                <h3 className="text-sm font-black text-text-main uppercase tracking-widest">Detalle del Instrumento Curricular</h3>
+                                <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest mt-1">Docente Elaborador: {currentProject.directorProyecto || 'No asignado'}</p>
                             </div>
                             {isEvaluating && feedbackMode === 'general' && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse shrink-0" />
@@ -172,7 +172,7 @@ export const PreproposalAdminView: React.FC<PreproposalAdminViewProps> = ({
                                     data-field-anchor="carrera"
                                 >
                                     <label className={`text-[10px] font-bold uppercase tracking-widest ml-1 ${isEvaluating ? 'text-text-dim cursor-pointer transition-colors group-hover:text-text-main' : 'text-text-dim'}`}>
-                                        Carrera / Unidad Postulante
+                                        Carrera / Unidad Académica
                                     </label>
                                     {isEvaluating && feedbackMode === 'secciones' && activeSectionTab === 'carrera' && (
                                         <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />

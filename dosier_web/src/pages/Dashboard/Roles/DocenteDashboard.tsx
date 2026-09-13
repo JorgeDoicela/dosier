@@ -32,7 +32,7 @@ interface DashboardStats {
 export const DocenteDashboard: React.FC = () => {
     const { user } = useAuth();
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-    const firstName = user?.nombre_completo ? capitalize(user.nombre_completo.split(' ')[0]) : 'Investigador';
+    const firstName = user?.nombre_completo ? capitalize(user.nombre_completo.split(' ')[0]) : 'Docente';
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [animate, setAnimate] = useState(false);
@@ -298,34 +298,34 @@ export const DocenteDashboard: React.FC = () => {
                         <ProximosEventosWidget />
 
                         <VercelUsageCard
-                            title="Resumen del Periodo"
+                            title="Resumen Curricular"
                             animate={animate}
                             items={[
                                 {
-                                    label: 'Mis Proyectos Activos',
+                                    label: 'Mis Instrumentos PEA',
                                     value: stats?.mis_proyectos_activos ?? 0,
-                                    suffix: 'proyectos',
+                                    suffix: 'instrumentos',
                                     max: 5,
                                     color: 'var(--success)'
                                 },
                                 {
-                                    label: 'Proyectos en Revisión',
+                                    label: 'PEAs en Revisión',
                                     value: stats?.mis_proyectos_en_revision ?? 0,
                                     suffix: 'en trámite',
                                     max: 5,
                                     color: 'var(--brand)'
                                 },
                                 {
-                                    label: 'Horas de Investigación',
+                                    label: 'Horas Curriculares',
                                     value: stats?.mis_horas_investigacion ?? 0,
                                     suffix: 'hrs / sem',
                                     max: stats?.horas_disponibles_distributivo || 20,
                                     color: 'var(--info)'
                                 },
                                 {
-                                    label: 'Informes Pendientes',
+                                    label: 'Observaciones Pendientes',
                                     value: stats?.mis_informes_pendientes ?? 0,
-                                    suffix: 'por entregar',
+                                    suffix: 'por subsanar',
                                     max: 5,
                                     color: (stats?.mis_informes_pendientes ?? 0) > 0 ? 'var(--warning)' : 'var(--success)'
                                 }
@@ -342,7 +342,7 @@ export const DocenteDashboard: React.FC = () => {
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-1.5">
                                             <ClipboardList size={14} className="text-info" />
-                                            <span className="text-[13px] font-semibold text-text-main">Carga Horaria Semanal</span>
+                                            <span className="text-[13px] font-semibold text-text-main">Carga Curricular Semanal</span>
                                         </div>
                                         <span className="font-mono text-[13px] font-semibold text-info">
                                             <AnimatedNumber value={stats.mis_horas_investigacion} /> / {maxHours} hrs
@@ -360,13 +360,13 @@ export const DocenteDashboard: React.FC = () => {
                                                 />
                                             </div>
                                             <span className="text-[10px] text-text-dim mt-2 block font-medium leading-relaxed">
-                                                Dedicación de investigación ({stats.mis_horas_investigacion}h) asignada de un máximo de {maxHours}h semanales según tu distributivo.
+                                                Dedicación docente ({stats.mis_horas_investigacion}h) vinculada a tus asignaturas según el distributivo institucional.
                                             </span>
                                         </>
                                     ) : (
-                                        <div className="mt-2 text-[10px] text-error bg-error-subtle/10 border border-error/20 rounded-lg p-2.5 font-medium leading-relaxed flex items-center gap-1.5">
-                                            <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-red-500" />
-                                            <span>No tienes registradas horas de investigación en tu distributivo académico para el período actual.</span>
+                                        <div className="mt-2 text-[10px] text-text-dim bg-surface-hover/30 border border-border-thin rounded-lg p-2.5 font-medium leading-relaxed flex items-center gap-1.5">
+                                            <ClipboardList className="w-3.5 h-3.5 shrink-0 text-brand" />
+                                            <span>Planificación curricular asignada a las materias del período lectivo vigente.</span>
                                         </div>
                                     )}
                                 </div>

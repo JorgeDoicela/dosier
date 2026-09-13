@@ -280,7 +280,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         try {
             const templateCode = 'PROTOCOLO_INVESTIGACION';
 
-            setCreationStepMsg("Creando el expediente digital de investigación...");
+            setCreationStepMsg("Creando el expediente digital curricular...");
 
             const response = await api.post('/documents/instances', {
                 templateCode,
@@ -293,7 +293,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 throw new Error("No se recibió el identificador único del proyecto.");
             }
 
-            setCreationStepMsg("Estructurando secciones CACES...");
+            setCreationStepMsg("Estructurando secciones del instrumento...");
 
             const initialMetadata = {
                 ...DocumentTemplateRegistry.PROTOCOLO_INVESTIGACION.schema,
@@ -313,13 +313,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
             await api.patch(`/documents/instances/${newUuid}/metadata`, initialMetadata);
 
-            setCreationStepMsg("Enviando prepropuesta a revisión institucional...");
+            setCreationStepMsg("Enviando instrumento a revisión curricular...");
 
             clearDraft();
 
             addToast(
-                "Prepropuesta de Investigación Enviada",
-                "Su prepropuesta de investigación ha sido registrada y enviada para revisión institucional.",
+                "Instrumento Curricular Registrado",
+                "El instrumento curricular ha sido registrado y enviado para revisión curricular.",
                 "success"
             );
 
@@ -331,7 +331,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
         } catch (err: any) {
             console.error("[DOSIER] Error creating proposal:", err);
-            setError(err.response?.data?.message || "Ocurrió un error inesperado al iniciar la postulación.");
+            setError(err.response?.data?.message || "Ocurrió un error inesperado al registrar el instrumento.");
             setIsCreating(false);
         }
     };
@@ -354,8 +354,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                             <Shield size={20} />
                         </div>
                         <div>
-                            <span className="section-label text-text-dim !gap-0">Nueva postulación</span>
-                            <h3 className="text-sm font-black text-text-main uppercase tracking-widest leading-none mt-1">Iniciar Nueva Postulación</h3>
+                            <span className="section-label text-text-dim !gap-0">Nuevo Instrumento</span>
+                            <h3 className="text-sm font-black text-text-main uppercase tracking-widest leading-none mt-1">Registrar Nuevo Instrumento Curricular</h3>
                         </div>
                     </div>
                     {!isCreating && (
@@ -373,14 +373,14 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                         <div className="py-16 flex flex-col items-center justify-center gap-6 animate-fade-in text-center">
                             <div className="w-10 h-10 border-2 border-text-main border-t-transparent rounded-full animate-spin" />
                             <div className="space-y-1">
-                                <h4 className="text-xs font-black text-text-main uppercase tracking-widest">Creando Proyecto</h4>
+                                <h4 className="text-xs font-black text-text-main uppercase tracking-widest">Creando Instrumento Curricular</h4>
                                 <p className="text-[10px] text-text-dim font-bold uppercase tracking-wider px-4">{creationStepMsg}</p>
                             </div>
                         </div>
                     ) : isLoadingCatalogs ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4 text-text-dim font-mono text-[10px] uppercase tracking-widest">
                             <Loader className="animate-spin text-text-main" size={20} />
-                            <span>Cargando catálogos de investigación...</span>
+                            <span>Cargando catálogos curriculares...</span>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-5">
@@ -448,16 +448,16 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                                 </div>
                             )}
 
-                            {/* Selector de Modalidad: Investigación vs Innovación */}
+                            {/* Selector de Modalidad */}
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-[9px] font-black text-text-dim uppercase tracking-widest ml-1">
                                     <BookOpen size={10} className="text-text-dim" />
-                                    Tema / Nombre del Proyecto (Mayúsculas)
+                                    Nombre del Instrumento / Asignatura (Mayúsculas)
                                 </label>
                                 <textarea
                                     value={titulo}
                                     onChange={(e) => setTitulo(e.target.value)}
-                                    placeholder="EJ: AUTOMATIZACIÓN DEL DEPARTAMENTO DE INVESTIGACIÓN MEDIANTE PLATAFORMA DIGITAL..."
+                                    placeholder="EJ: PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA) - DESARROLLO DE SOFTWARE..."
                                     className="input-vercel !h-20 !font-bold !text-xs uppercase resize-none !placeholder:text-text-dim/30"
                                     required
                                 />
@@ -466,12 +466,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-[9px] font-black text-text-dim uppercase tracking-widest ml-1">
                                     <FileText size={10} className="text-text-dim" />
-                                    Descripción / Justificación de la Idea (Prepropuesta)
+                                    Descripción / Justificación del Instrumento
                                 </label>
                                 <textarea
                                     value={descripcion}
                                     onChange={(e) => setDescripcion(e.target.value)}
-                                    placeholder="Describa brevemente de qué se trata su propuesta de investigación, la problemática que resuelve y el impacto esperado..."
+                                    placeholder="Describa brevemente el alcance del instrumento curricular, su justificación pedagógica y los objetivos de aprendizaje..."
                                     className="input-vercel !h-24 !text-xs resize-none !placeholder:text-text-dim/30"
                                     required
                                 />
@@ -563,7 +563,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                                     type="submit"
                                     className="btn-vercel-primary flex-1 py-3"
                                 >
-                                    Enviar Prepropuesta
+                                    Registrar Instrumento
                                 </button>
                             </div>
                         </form>

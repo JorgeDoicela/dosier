@@ -85,7 +85,7 @@ export const MonitoringPage: React.FC = () => {
                     <div>
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-dim uppercase tracking-[0.3em]">
                             <Activity size={10} className="text-brand animate-pulse" />
-                            <span>Módulo de Monitoreo & Ejecución · IST Traversari</span>
+                            <span>Módulo de Monitoreo Curricular · IST Traversari</span>
                         </div>
                         <h1 className="text-2xl font-semibold tracking-tight mt-0.5">{projectDetail.titulo}</h1>
                     </div>
@@ -95,12 +95,12 @@ export const MonitoringPage: React.FC = () => {
             {/* Ficha Rápida del Proyecto en Bento */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 animate-fade-up">
                 <div className="bento-card static p-5 space-y-1">
-                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Director de Proyecto</span>
+                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Docente Responsable</span>
                     <p className="text-sm font-semibold text-text-main truncate">{projectDetail.directorProyecto || 'Jorge Doicela'}</p>
                 </div>
                 <div className="bento-card static p-5 space-y-1">
-                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Línea de Investigación</span>
-                    <p className="text-sm font-semibold text-text-main truncate">{projectDetail.lineaInvestigacion || 'No especificada'}</p>
+                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Área Curricular</span>
+                    <p className="text-sm font-semibold text-text-main truncate">{projectDetail.lineaInvestigacion || 'General'}</p>
                 </div>
                 <div className="bento-card static p-5 space-y-1">
                     <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Estado de Ciclo de Vida</span>

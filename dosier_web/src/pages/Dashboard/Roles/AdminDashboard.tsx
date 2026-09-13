@@ -55,7 +55,7 @@ export const AdminDashboard: React.FC = () => {
         } catch (e) {
             console.error('[DOSIER] Error al cargar datos:', e);
             if (!silent) {
-                setError('No se pudieron obtener las estadísticas de investigación de la base de datos. Por favor, comprueba que el servidor esté activo o intenta de nuevo.');
+                setError('No se pudieron obtener las estadísticas curriculares de la base de datos. Por favor, comprueba que el servidor esté activo o intenta de nuevo.');
             }
         } finally {
             if (!silent) {
@@ -162,11 +162,11 @@ export const AdminDashboard: React.FC = () => {
                         {/* Status Grid: proyectos por estado */}
                         <div className="grid grid-cols-1 gap-6">
 
-                            {/* Proyectos por estado */}
+                            {/* Instrumentos PEA por estado */}
                             <div className="bento-card static flex flex-col justify-between bg-surface border border-border-thin shadow-sm rounded-xl overflow-hidden">
                                 <div className="p-6">
                                     <div className="flex items-center justify-between mb-5">
-                                        <span className="text-sm font-medium text-text-dim">Proyectos por estado</span>
+                                        <span className="text-sm font-medium text-text-dim">Instrumentos PEA por estado</span>
                                     </div>
 
                                     <div className="space-y-4">
@@ -194,7 +194,7 @@ export const AdminDashboard: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="border-t border-border-thin bg-bg-deep/40 px-6 py-3 flex justify-between items-center text-xs font-medium">
-                                    <span className="text-text-dim">Total proyectos</span>
+                                    <span className="text-text-dim">Total PEAs en el período</span>
                                     <span className="font-mono font-medium text-text-main">
                                         <AnimatedNumber value={stats?.total_proyectos ?? 0} />
                                     </span>
@@ -308,58 +308,58 @@ export const AdminDashboard: React.FC = () => {
                         <ProximosEventosWidget style={{ maxHeight: '392px' }} />
 
                         <VercelUsageCard
-                            title="Resumen Institucional"
+                            title="Resumen Curricular"
                             animate={animate}
                             items={[
                                 {
-                                    label: 'Proyectos Aprobados',
+                                    label: 'Instrumentos Aprobados',
                                     value: stats?.proyectos_aprobados ?? 0,
                                     suffix: 'aprobados',
                                     max: 20,
                                     color: 'var(--success)'
                                 },
                                 {
-                                    label: 'Investigadores Activos',
+                                    label: 'Docentes Registrados',
                                     value: stats?.total_investigadores_activos ?? 0,
-                                    suffix: 'miembros',
+                                    suffix: 'docentes',
                                     max: 50,
                                     color: 'var(--brand)'
                                 },
                                 {
-                                    label: 'Proyectos en Ejecución',
+                                    label: 'En Elaboración / Trámite',
                                     value: stats?.proyectos_en_ejecucion ?? 0,
-                                    suffix: 'activos',
+                                    suffix: 'en curso',
                                     max: 20,
                                     color: 'var(--info)'
                                 }
                             ]}
                         />
 
-                        {/* Producción Científica breakdown card */}
+                        {/* Resumen Curricular PEA breakdown card */}
                         {stats && (
                             <div className="bento-card static p-5 relative overflow-hidden bg-surface border border-border-thin shadow-sm rounded-xl space-y-4">
                                 <div className="flex items-center gap-2 pb-1 border-b border-border-thin/50">
                                     <BarChart3 size={14} className="text-text-dim" />
-                                    <span className="text-[13px] font-semibold text-text-main">Producción Científica</span>
+                                    <span className="text-[13px] font-semibold text-text-main">Resumen Curricular PEA</span>
                                 </div>
 
                                 <div className="space-y-3">
                                     <div className="flex justify-between text-[11px] font-medium">
-                                        <span className="text-text-dim">Artículos Indexados</span>
+                                        <span className="text-text-dim">Instrumentos en Borrador</span>
                                         <span className="font-semibold text-text-main font-mono">
-                                            <AnimatedNumber value={stats.articulos_indexados ?? 0} />
+                                            <AnimatedNumber value={stats.proyectos_borrador ?? 0} />
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-[11px] font-medium">
-                                        <span className="text-text-dim">Prototipos e Innovación</span>
+                                        <span className="text-text-dim">En Revisión Colegiada</span>
                                         <span className="font-semibold text-text-main font-mono">
-                                            <AnimatedNumber value={stats.prototipos ?? 0} />
+                                            <AnimatedNumber value={stats.proyectos_en_revision ?? 0} />
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-[11px] font-medium">
-                                        <span className="text-text-dim">Ponencias y Difusión</span>
+                                        <span className="text-text-dim">Instrumentos Aprobados</span>
                                         <span className="font-semibold text-text-main font-mono">
-                                            <AnimatedNumber value={stats.ponencias ?? 0} />
+                                            <AnimatedNumber value={stats.proyectos_aprobados ?? 0} />
                                         </span>
                                     </div>
                                 </div>

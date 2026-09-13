@@ -62,7 +62,7 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
                                 Documento en Edición
                             </h3>
                             <p className="text-xs text-text-dim mt-1.5 leading-relaxed">
-                                Estás en el espacio de trabajo de este proyecto. Puedes continuar completando los campos colaborativos del documento o revisar el estado institucional abajo.
+                                Estás en el espacio de trabajo de este instrumento curricular. Puedes continuar completando los campos colaborativos del documento o revisar el estado institucional abajo.
                             </p>
                         </div>
                     </div>

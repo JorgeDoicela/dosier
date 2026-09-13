@@ -17,21 +17,21 @@ export const AnalyticsTabs: React.FC<AnalyticsTabsProps> = ({
                 className={`tab-vercel-item ${activeTab === 'general' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
                 id="tab-general"
             >
-                Métricas de I+D
+                Métricas Curriculares
             </button>
             <button
                 onClick={() => setActiveTab('caces')}
                 className={`tab-vercel-item ${activeTab === 'caces' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
                 id="tab-caces"
             >
-                Cumplimiento CACES
+                Cumplimiento Curricular
             </button>
             <button
                 onClick={() => setActiveTab('proyectos')}
                 className={`tab-vercel-item ${activeTab === 'proyectos' ? 'active' : ''} text-[10px] font-black uppercase tracking-widest`}
                 id="tab-proyectos"
             >
-                Portafolio de Proyectos
+                Portafolio de Instrumentos
             </button>
         </div>
     );

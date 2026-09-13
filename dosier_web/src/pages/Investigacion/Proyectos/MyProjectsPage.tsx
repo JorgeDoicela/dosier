@@ -289,13 +289,13 @@ const MyProjectsPage: React.FC = () => {
     return (
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto">
             <PageHeader
-                kicker="Portafolio Docente y Documental"
+                kicker="Portafolio Docente Institucional"
                 icon={ClipboardList}
-                title="Mis Proyectos y Documentos"
+                title="Mis Instrumentos Curriculares y PEA"
                 description={
                     <span className="flex items-center gap-2">
                         <span>
-                            {proyectos.length} proyecto{proyectos.length !== 1 ? 's' : ''} y expedientes en tu portafolio institucional.
+                            {proyectos.length} instrumento{proyectos.length !== 1 ? 's' : ''} y planificaciones PEA en tu portafolio docente.
                         </span>
                         {refreshing && (
                             <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse">
@@ -312,7 +312,7 @@ const MyProjectsPage: React.FC = () => {
                         className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
                     >
                         <Plus size={14} strokeWidth={3} />
-                        Nueva Propuesta
+                        Nuevo Instrumento PEA
                     </button>
                 </div>
             </PageHeader>

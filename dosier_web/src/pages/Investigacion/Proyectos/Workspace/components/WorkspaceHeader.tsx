@@ -20,8 +20,8 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
     urlPrefix,
 }) => {
     const returnPath = urlPrefix;
-    const returnLabel = urlPrefix.endsWith('mis-proyectos') ? 'Mis Proyectos' : 'Investigación';
-    const projectCode = (currentProject as any).codigo_institucional || (currentProject as any).codigo || `Proyecto #${currentProject.id}`;
+    const returnLabel = urlPrefix.endsWith('mis-proyectos') ? 'Mis Instrumentos PEA' : 'Documentación Curricular';
+    const projectCode = (currentProject as any).codigo_institucional || (currentProject as any).codigo || `Instrumento #${currentProject.id}`;
 
     return (
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 sm:px-10 py-3.5 bg-bg-deep border-b border-border-thin z-50 gap-4 sm:gap-0">

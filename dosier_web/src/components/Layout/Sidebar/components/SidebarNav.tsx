@@ -100,7 +100,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 }) => {
     const renderMenuItem = (item: MenuItem) => {
         const isActive = item === activeItem;
-        const isDocumentacion = item.name === 'Documentación' || item.name === 'Investigación';
+        const isDocumentacion = item.name === 'Documentación' || item.name === 'Investigación' || item.name === 'Mis Instrumentos PEA' || item.path.startsWith('/documentacion');
 
         if (isDocumentacion) {
             const isMenuOpen = (item.path === '/documentacion' || item.path === '/investigacion') ? isInvestigacionOpen : isMisProyectosOpen;
@@ -133,7 +133,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             to={targetBasePath}
                             onClick={(e) => {
                                 if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                                    if (item.name === 'Documentación' || item.name === 'Investigación') {
+                                    if (item.path === '/documentacion' || item.path === '/investigacion') {
                                         setIsInvestigacionOpen(true);
                                     } else {
                                         setIsMisProyectosOpen(true);
@@ -179,7 +179,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     <div className="w-7 h-7 flex items-center justify-center shrink-0">
                                         <BookOpen size={13} strokeWidth={1} className="shrink-0 opacity-40" />
                                     </div>
-                                    <span>Sin proyectos</span>
+                                    <span>Sin instrumentos</span>
                                 </div>
                             ) : (
                                 <>
@@ -314,9 +314,9 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                     {isMenuOpen && (
                         <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
                             {[
-                                { name: 'Métricas de I+D', path: '/analiticas?tab=general', icon: TrendingUp },
-                                { name: 'Cumplimiento CACES', path: '/analiticas?tab=caces', icon: ShieldCheck },
-                                { name: 'Portafolio de Proyectos', path: '/analiticas?tab=proyectos', icon: ClipboardList }
+                                { name: 'Métricas Curriculares', path: '/analiticas?tab=general', icon: TrendingUp },
+                                { name: 'Cumplimiento Curricular', path: '/analiticas?tab=caces', icon: ShieldCheck },
+                                { name: 'Portafolio de Instrumentos', path: '/analiticas?tab=proyectos', icon: ClipboardList }
                             ].map((subItem) => {
                                 const isSubActive = location.pathname === '/analiticas' && (
                                     (subItem.path.includes('tab=general') && (!location.search || location.search.includes('tab=general'))) ||
