@@ -50,7 +50,16 @@ export type BlockType =
     | 'signatures'
     | 'project_general_section'
     | 'project_technical_section'
-    | 'impacts';
+    | 'impacts'
+    | 'pea_general_section'
+    | 'pea_characterization_section'
+    | 'pea_competencies_rda_section'
+    | 'pea_contents_section'
+    | 'pea_methodology_section'
+    | 'pea_resources_section'
+    | 'pea_evaluation_section'
+    | 'pea_bibliography_section'
+    | 'pea_signatures_section';
 
 export interface BlockMetaInfo {
     label: string;
@@ -71,7 +80,17 @@ export const BLOCK_METADATA: Record<BlockType, BlockMetaInfo> = {
     researchers_table: { label: 'Investigadores', defaultTitle: '2. INVESTIGADORES', category: 'Base de Datos' },
     project_technical_section: { label: 'Especificación Técnica', defaultTitle: '3. ESPECIFICACIÓN TÉCNICA', category: 'Base de Datos' },
     impacts: { label: 'Matriz de Impactos', defaultTitle: '6. MATRIZ DE IMPACTOS', category: 'Base de Datos' },
-    signatures: { label: 'Firmas de Responsabilidad', defaultTitle: 'FIRMAS DE RESPONSABILIDAD', category: 'Base de Datos' }
+    signatures: { label: 'Firmas de Responsabilidad', defaultTitle: 'FIRMAS DE RESPONSABILIDAD', category: 'Base de Datos' },
+    // Bloques Curriculares Oficiales PEA (RRA Art. 21 / ISTPET) - Secciones a) a k)
+    pea_general_section: { label: 'a) Datos Generales de la Asignatura', defaultTitle: 'a) DATOS GENERALES DE LA ASIGNATURA', category: 'Curricular (PEA)' },
+    pea_characterization_section: { label: 'b) Objetivo y c) Prerrequisitos', defaultTitle: 'b) OBJETIVO DE LA ASIGNATURA Y c) PRERREQUISITOS', category: 'Curricular (PEA)' },
+    pea_competencies_rda_section: { label: 'd) RDAs Carrera y e) RDAs Asignatura', defaultTitle: 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA Y e) DE LA ASIGNATURA', category: 'Curricular (PEA)' },
+    pea_contents_section: { label: 'f) Contenidos de Enseñanza (Unidades)', defaultTitle: 'f) CONTENIDOS DE ENSEÑANZA', category: 'Curricular (PEA)' },
+    pea_methodology_section: { label: 'g) Metodología y Recursos Didácticos', defaultTitle: 'g) METODOLOGÍA DE ENSEÑANZA', category: 'Curricular (PEA)' },
+    pea_resources_section: { label: 'h) Actividades Prácticas', defaultTitle: 'h) ACTIVIDADES PRÁCTICAS', category: 'Curricular (PEA)' },
+    pea_evaluation_section: { label: 'i) Evaluación del Aprendizaje', defaultTitle: 'i) EVALUACIÓN DEL APRENDIZAJE', category: 'Curricular (PEA)' },
+    pea_bibliography_section: { label: 'j) Bibliografía Básica y Consulta', defaultTitle: 'j) BIBLIOGRAFÍA', category: 'Curricular (PEA)' },
+    pea_signatures_section: { label: 'k) Firmas de Responsabilidad (4 Niveles)', defaultTitle: 'k) FIRMAS DE RESPONSABILIDAD', category: 'Curricular (PEA)' }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

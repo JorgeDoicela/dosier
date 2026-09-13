@@ -220,5 +220,8 @@ namespace Dosier.Domain.Common.Documents
 
         // Administrativos
         ResolucionCargaHoraria = 80,
+
+        // Curricular (PEA - RRA Art. 21)
+        PeaCurricular = 90,
     }
 }

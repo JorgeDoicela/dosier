@@ -55,6 +55,23 @@ namespace Dosier.Infrastructure.Common.Documents
                 requiresSignature: false,
                 version: 20);
 
+            // ══════════════════════════════════════════════════════════════
+            // ÁREA: CURRÍCULO ACADÉMICO (PEA OFICIAL)
+            // ══════════════════════════════════════════════════════════════
+            yield return DocumentTemplate.Create(
+                code: "PEA_OFICIAL",
+                name: "Programa de Estudio de la Asignatura (PEA)",
+                description: "Formato institucional oficial del Programa de Estudio de la Asignatura (PEA) para carreras del ISTPET. Estructura curricular oficial secciones A a K según el Modelo Educativo.",
+                category: DocumentCategory.PeaCurricular,
+                htmlContent: "<!-- Plantilla oficial de fábrica PEA ISTPET -->",
+                requiresLopdp: true,
+                supportsBlind: false,
+                requiresTraceability: true,
+                requiresSignature: true,
+                signatureType: "DOSIER",
+                collaborativeFields: "[\"objetivo_asignatura\", \"prerrequisitos\", \"rdas_carrera\", \"rdas_asignatura\", \"contenidos_unidades\", \"metodologia_propuesta\", \"recursos_didacticos\", \"actividades_practicas\", \"sistema_evaluacion\", \"bibliografia_basica\", \"bibliografia_consulta\"]",
+                version: 1);
+
 
 
 

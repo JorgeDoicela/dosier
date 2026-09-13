@@ -11,18 +11,47 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.ToTable("doc_pea");
             builder.HasKey(e => e.IdPea);
 
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.IdPeriodo).IsRequired().HasMaxLength(7);
-            builder.Property(e => e.Modalidad).IsRequired().HasMaxLength(50);
-            builder.Property(e => e.Creditos).HasColumnType("decimal(4,2)");
-            builder.Property(e => e.Paralelo).HasMaxLength(20);
-            builder.Property(e => e.FuenteMalla).HasMaxLength(40);
-            builder.Property(e => e.SnapshotCurricularJson).HasColumnType("json");
-            builder.Property(e => e.EvaluacionAprendizaje).HasColumnType("text");
-            builder.Property(e => e.FirmaElaboradoDocente).HasMaxLength(255);
-            builder.Property(e => e.FirmaRevisadoCoord).HasMaxLength(255);
-            builder.Property(e => e.FirmaRevisadoAcad).HasMaxLength(255);
-            builder.Property(e => e.FirmaAprobadoVicerrector).HasMaxLength(255);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdExpediente).HasColumnName("idExpediente");
+            builder.Property(e => e.IdCarrera).HasColumnName("idCarrera");
+            builder.Property(e => e.IdAsignatura).HasColumnName("idAsignatura");
+            builder.Property(e => e.IdPeriodo).HasColumnName("idPeriodo").IsRequired().HasMaxLength(7);
+            builder.Property(e => e.IdAsignacion).HasColumnName("idAsignacion");
+            builder.Property(e => e.IdMalla).HasColumnName("idMalla");
+            builder.Property(e => e.IdDetalleMalla).HasColumnName("idDetalleMalla");
+            builder.Property(e => e.IdNivel).HasColumnName("idNivel");
+            builder.Property(e => e.IdModalidad).HasColumnName("idModalidad");
+            builder.Property(e => e.IdSeccion).HasColumnName("idSeccion");
+            builder.Property(e => e.Paralelo).HasColumnName("paralelo").HasMaxLength(20);
+            builder.Property(e => e.FuenteMalla).HasColumnName("fuenteMalla").HasMaxLength(40);
+            builder.Property(e => e.SnapshotCurricularJson).HasColumnName("snapshotCurricularJson").HasColumnType("json");
+            builder.Property(e => e.IdDocenteElaborador).HasColumnName("idDocenteElaborador").HasMaxLength(20);
+            builder.Property(e => e.Modalidad).HasColumnName("modalidad").IsRequired().HasMaxLength(50);
+            builder.Property(e => e.UnidadOrganizacion).HasColumnName("unidadOrganizacion").HasMaxLength(100);
+            builder.Property(e => e.SemestreNivel).HasColumnName("semestreNivel").HasMaxLength(20);
+            builder.Property(e => e.TotalHorasAsignatura).HasColumnName("totalHorasAsignatura");
+            builder.Property(e => e.Creditos).HasColumnName("creditos").HasColumnType("decimal(4,2)");
+            builder.Property(e => e.HorasContactoDocente).HasColumnName("horasContactoDocente");
+            builder.Property(e => e.HorasPracticoExperimental).HasColumnName("horasPracticoExperimental");
+            builder.Property(e => e.HorasAutonomo).HasColumnName("horasAutonomo");
+            builder.Property(e => e.ObjetivoAsignatura).HasColumnName("objetivoAsignatura").HasColumnType("text");
+            builder.Property(e => e.MetodologiaEnsenanza).HasColumnName("metodologiaEnsenanza").HasColumnType("text");
+            builder.Property(e => e.RecursosDidacticos).HasColumnName("recursosDidacticos").HasColumnType("text");
+            builder.Property(e => e.EvaluacionAprendizaje).HasColumnName("evaluacionAprendizaje").HasColumnType("text");
+            builder.Property(e => e.Estado).HasColumnName("estado");
+            builder.Property(e => e.Version).HasColumnName("version");
+            builder.Property(e => e.Activo).HasColumnName("activo");
+            builder.Property(e => e.FechaCreacion).HasColumnName("fechaCreacion");
+            builder.Property(e => e.FechaModificacion).HasColumnName("fechaModificacion");
+            builder.Property(e => e.FirmaElaboradoDocente).HasColumnName("firmaElaboradoDocente").HasMaxLength(255);
+            builder.Property(e => e.FechaElaborado).HasColumnName("fechaElaborado");
+            builder.Property(e => e.FirmaRevisadoCoord).HasColumnName("firmaRevisadoCoord").HasMaxLength(255);
+            builder.Property(e => e.FechaRevisadoCoord).HasColumnName("fechaRevisadoCoord");
+            builder.Property(e => e.FirmaRevisadoAcad).HasColumnName("firmaRevisadoAcad").HasMaxLength(255);
+            builder.Property(e => e.FechaRevisadoAcad).HasColumnName("fechaRevisadoAcad");
+            builder.Property(e => e.FirmaAprobadoVicerrector).HasColumnName("firmaAprobadoVicerrector").HasMaxLength(255);
+            builder.Property(e => e.FechaAprobado).HasColumnName("fechaAprobado");
             builder.HasIndex(e => new { e.IdAsignacion, e.Version });
             builder.HasIndex(e => e.IdExpediente);
 
@@ -79,8 +108,16 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_unidades");
             builder.HasKey(e => e.IdUnidad);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.NombreUnidad).IsRequired().HasMaxLength(255);
+            builder.Property(e => e.IdUnidad).HasColumnName("idUnidad");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.NumeroUnidad).HasColumnName("numeroUnidad");
+            builder.Property(e => e.NombreUnidad).HasColumnName("nombreUnidad").IsRequired().HasMaxLength(255);
+            builder.Property(e => e.TotalHorasUnidad).HasColumnName("totalHorasUnidad");
+            builder.Property(e => e.HorasDocencia).HasColumnName("horasDocencia");
+            builder.Property(e => e.HorasPracticoExp).HasColumnName("horasPracticoExp");
+            builder.Property(e => e.HorasAutonomo).HasColumnName("horasAutonomo");
+            builder.Property(e => e.Orden).HasColumnName("orden");
 
             builder.HasMany(e => e.Temas)
                    .WithOne(t => t.Unidad)
@@ -95,8 +132,18 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_temas");
             builder.HasKey(e => e.IdTema);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.TituloTema).IsRequired().HasMaxLength(255);
+            builder.Property(e => e.IdTema).HasColumnName("idTema");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdUnidad).HasColumnName("idUnidad");
+            builder.Property(e => e.NumeroTema).HasColumnName("numeroTema");
+            builder.Property(e => e.TituloTema).HasColumnName("tituloTema").IsRequired().HasMaxLength(255);
+            builder.Property(e => e.DescripcionSubtemas).HasColumnName("descripcionSubtemas").HasColumnType("text");
+            builder.Property(e => e.Orden).HasColumnName("orden");
+
+            builder.HasOne(e => e.Unidad)
+                   .WithMany(u => u.Temas)
+                   .HasForeignKey(e => e.IdUnidad)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 
@@ -106,7 +153,15 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_resultados_aprendizaje");
             builder.HasKey(e => e.IdRda);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdRda).HasColumnName("idRda");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.IdResultadoPerfil).HasColumnName("idResultadoPerfil");
+            builder.Property(e => e.TipoRda).HasColumnName("tipoRda");
+            builder.Property(e => e.CodigoRda).HasColumnName("codigoRda").HasMaxLength(20);
+            builder.Property(e => e.Descripcion).HasColumnName("descripcion").HasColumnType("text");
+            builder.Property(e => e.NivelDesarrollo).HasColumnName("nivelDesarrollo");
+            builder.Property(e => e.Orden).HasColumnName("orden");
 
             builder.HasOne(e => e.PerfilResultado)
                    .WithMany()
@@ -121,11 +176,18 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_actividades_practicas");
             builder.HasKey(e => e.IdPractica);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.NombrePractica).IsRequired().HasMaxLength(255);
+            builder.Property(e => e.IdPractica).HasColumnName("idPractica");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.IdUnidad).HasColumnName("idUnidad");
+            builder.Property(e => e.NumeroPractica).HasColumnName("numeroPractica");
+            builder.Property(e => e.NombrePractica).HasColumnName("nombrePractica").IsRequired().HasMaxLength(255);
+            builder.Property(e => e.Caracterizacion).HasColumnName("caracterizacion").HasColumnType("text");
+            builder.Property(e => e.DuracionHoras).HasColumnName("duracionHoras");
+            builder.Property(e => e.Orden).HasColumnName("orden");
 
             builder.HasOne(e => e.Unidad)
-                   .WithMany()
+                   .WithMany(u => u.ActividadesPracticas)
                    .HasForeignKey(e => e.IdUnidad)
                    .OnDelete(DeleteBehavior.SetNull);
         }
@@ -137,7 +199,18 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_bibliografia");
             builder.HasKey(e => e.IdBiblio);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdBiblio).HasColumnName("idBiblio");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.TipoBibliografia).HasColumnName("tipoBibliografia");
+            builder.Property(e => e.Autor).HasColumnName("autor").HasMaxLength(255);
+            builder.Property(e => e.Anio).HasColumnName("anio");
+            builder.Property(e => e.TituloLibro).HasColumnName("tituloLibro").IsRequired().HasMaxLength(500);
+            builder.Property(e => e.EditorialCiudad).HasColumnName("editorialCiudad").HasMaxLength(255);
+            builder.Property(e => e.Isbn).HasColumnName("isbn").HasMaxLength(50);
+            builder.Property(e => e.UrlRecurso).HasColumnName("urlRecurso").HasMaxLength(512);
+            builder.Property(e => e.CitaCompletaApa).HasColumnName("citaCompletaApa").HasColumnType("text");
+            builder.Property(e => e.Orden).HasColumnName("orden");
         }
     }
 
@@ -147,11 +220,17 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_observaciones");
             builder.HasKey(e => e.IdObservacion);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.RolObservador).IsRequired().HasMaxLength(50);
-            builder.Property(e => e.SeccionAfectada).IsRequired().HasMaxLength(100);
-            builder.Property(e => e.TextoObservacion).IsRequired();
-            builder.Property(e => e.Estado).IsRequired().HasMaxLength(20);
+            builder.Property(e => e.IdObservacion).HasColumnName("idObservacion");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.IdUsuarioObservador).HasColumnName("idUsuarioObservador");
+            builder.Property(e => e.RolObservador).HasColumnName("rolObservador").IsRequired().HasMaxLength(50);
+            builder.Property(e => e.SeccionAfectada).HasColumnName("seccionAfectada").IsRequired().HasMaxLength(100);
+            builder.Property(e => e.TextoObservacion).HasColumnName("textoObservacion").IsRequired();
+            builder.Property(e => e.Estado).HasColumnName("estado").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.RespuestaDocente).HasColumnName("respuestaDocente");
+            builder.Property(e => e.FechaObservacion).HasColumnName("fechaObservacion");
+            builder.Property(e => e.FechaResolucion).HasColumnName("fechaResolucion");
         }
     }
 
@@ -161,10 +240,15 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_trazabilidad");
             builder.HasKey(e => e.IdTrazabilidad);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.EstadoAnterior).IsRequired().HasMaxLength(50);
-            builder.Property(e => e.EstadoNuevo).IsRequired().HasMaxLength(50);
-            builder.Property(e => e.HashIntegridadSha256).HasMaxLength(64);
+            builder.Property(e => e.IdTrazabilidad).HasColumnName("idTrazabilidad");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.IdUsuario).HasColumnName("idUsuario");
+            builder.Property(e => e.EstadoAnterior).HasColumnName("estadoAnterior").IsRequired().HasMaxLength(50);
+            builder.Property(e => e.EstadoNuevo).HasColumnName("estadoNuevo").IsRequired().HasMaxLength(50);
+            builder.Property(e => e.Motivo).HasColumnName("motivo");
+            builder.Property(e => e.HashIntegridadSha256).HasColumnName("hashIntegridadSha256").HasMaxLength(64);
+            builder.Property(e => e.FechaTransicion).HasColumnName("fechaTransicion");
         }
     }
 
@@ -174,9 +258,14 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_prerrequisitos");
             builder.HasKey(e => e.IdPrerequisito);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.CodigoAsignatura).HasMaxLength(50);
-            builder.Property(e => e.NombreAsignatura).IsRequired().HasMaxLength(255);
+            builder.Property(e => e.IdPrerequisito).HasColumnName("idPrerequisito");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.IdAsignaturaOrigen).HasColumnName("idAsignaturaOrigen");
+            builder.Property(e => e.CodigoAsignatura).HasColumnName("codigoAsignatura").HasMaxLength(50);
+            builder.Property(e => e.NombreAsignatura).HasColumnName("nombreAsignatura").IsRequired().HasMaxLength(255);
+            builder.Property(e => e.Observacion).HasColumnName("observacion");
+            builder.Property(e => e.Orden).HasColumnName("orden");
         }
     }
 
@@ -186,10 +275,13 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_pea_evaluaciones");
             builder.HasKey(e => e.IdEvaluacion);
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.Denominacion).IsRequired().HasMaxLength(100);
-            builder.Property(e => e.TipoEvaluacion).IsRequired();
-            builder.Property(e => e.CalificacionMaxima).HasColumnType("decimal(4,1)");
+            builder.Property(e => e.IdEvaluacion).HasColumnName("idEvaluacion");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdPea).HasColumnName("idPea");
+            builder.Property(e => e.Denominacion).HasColumnName("denominacion").IsRequired().HasMaxLength(100);
+            builder.Property(e => e.TipoEvaluacion).HasColumnName("tipoEvaluacion").IsRequired();
+            builder.Property(e => e.CalificacionMaxima).HasColumnName("calificacionMaxima").HasColumnType("decimal(4,1)");
+            builder.Property(e => e.Orden).HasColumnName("orden");
         }
     }
 }

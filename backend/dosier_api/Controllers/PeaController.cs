@@ -20,11 +20,19 @@ namespace dosier_api.Controllers
             _peaService = peaService;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var pea = await _peaService.GetByIdAsync(id);
             if (pea == null) return NotFound($"No se encontró el PEA con id {id}");
+            return Ok(pea);
+        }
+
+        [HttpGet("uuid/{uuid}")]
+        public async Task<IActionResult> GetByUuid(string uuid)
+        {
+            var pea = await _peaService.GetByUuidAsync(uuid);
+            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
             return Ok(pea);
         }
 

@@ -10,6 +10,7 @@ import { GanttProperties } from './properties/GanttProperties';
 import { ProjectGeneralProperties } from './properties/ProjectGeneralProperties';
 import { ProjectTechnicalProperties } from './properties/ProjectTechnicalProperties';
 import { ImpactsProperties } from './properties/ImpactsProperties';
+import { PeaGeneralProperties } from './properties/PeaGeneralProperties';
 import { ThemeEditorTab } from './ThemeEditorTab';
 import { CoverProperties } from './properties/CoverProperties';
 
@@ -446,6 +447,11 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                             {/* ── MATRIZ DE IMPACTO ───────────────────────────────────────── */}
                             {activeBlock.type === 'impacts' && (
                                 <ImpactsProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+
+                            {/* ── METADATOS PEA OFICIAL ────────────────────────────────────── */}
+                            {activeBlock.type === 'pea_general_section' && (
+                                <PeaGeneralProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
                             )}
                         </div>
                     )}

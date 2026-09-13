@@ -36,7 +36,16 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'researchers_table',
     'gantt',
     'impacts',
-    'signatures'
+    'signatures',
+    'pea_general_section',
+    'pea_characterization_section',
+    'pea_competencies_rda_section',
+    'pea_contents_section',
+    'pea_methodology_section',
+    'pea_resources_section',
+    'pea_evaluation_section',
+    'pea_bibliography_section',
+    'pea_signatures_section'
 ];
 
 export const DocumentTemplatesPage: React.FC = () => {

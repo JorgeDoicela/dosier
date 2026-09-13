@@ -21,6 +21,17 @@ import {
     RenderProjectTechnicalSection,
     RenderImpacts,
 } from './canvasRenderers/RenderSections';
+import {
+    RenderPeaGeneralSection,
+    RenderPeaCharacterizationSection,
+    RenderPeaCompetenciesRdaSection,
+    RenderPeaContentsSection,
+    RenderPeaMethodologySection,
+    RenderPeaResourcesSection,
+    RenderPeaEvaluationSection,
+    RenderPeaBibliographySection,
+    RenderPeaSignaturesSection,
+} from './canvasRenderers/RenderPeaSections';
 
 /** Tipos de bloques de los que solo se permite una única instancia */
 const UNIQUE_BLOCK_TYPES: BlockType[] = [
@@ -31,6 +42,15 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'gantt',
     'signatures',
     'impacts',
+    'pea_general_section',
+    'pea_characterization_section',
+    'pea_competencies_rda_section',
+    'pea_contents_section',
+    'pea_methodology_section',
+    'pea_resources_section',
+    'pea_evaluation_section',
+    'pea_bibliography_section',
+    'pea_signatures_section',
 ];
 
 interface SortableBlockItemProps {
@@ -100,6 +120,24 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 return <RenderProjectTechnicalSection config={block.config} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'impacts':
                 return <RenderImpacts config={block.config} />;
+            case 'pea_general_section':
+                return <RenderPeaGeneralSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_characterization_section':
+                return <RenderPeaCharacterizationSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_competencies_rda_section':
+                return <RenderPeaCompetenciesRdaSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_contents_section':
+                return <RenderPeaContentsSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_methodology_section':
+                return <RenderPeaMethodologySection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_resources_section':
+                return <RenderPeaResourcesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_evaluation_section':
+                return <RenderPeaEvaluationSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_bibliography_section':
+                return <RenderPeaBibliographySection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_signatures_section':
+                return <RenderPeaSignaturesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'page_break':
                 return (
                     <div className="w-full flex items-center justify-between py-2 select-none">

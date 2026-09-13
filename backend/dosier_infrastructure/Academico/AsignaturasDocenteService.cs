@@ -85,9 +85,12 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
         var asignaturasMap = await _context.Asignaturas.AsNoTracking()
             .Where(a => asignaturaIds.Contains(a.IdAsignatura))
             .ToDictionaryAsync(a => a.IdAsignatura);
-        var cursosMap = await _context.Cursos.AsNoTracking()
+        var cursosList = await _context.Cursos.AsNoTracking()
             .Where(c => nivelIds.Contains(c.IdNivel))
-            .ToDictionaryAsync(c => c.IdNivel);
+            .ToListAsync();
+        var cursosMap = cursosList
+            .GroupBy(c => c.IdNivel)
+            .ToDictionary(g => g.Key, g => g.First());
         var carreraIds = cursosMap.Values.Select(c => c.IdCarrera).Distinct().ToList();
         var carrerasMap = await _context.Carreras.AsNoTracking()
             .Where(c => carreraIds.Contains(c.IdCarrera) && c.EsInstituto == 1)
@@ -136,9 +139,12 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
 
         // Consultar estado real de PEAs existentes para estas asignaciones
         var asignacionIds = asignaciones.Select(a => a.IdAsignacion).ToList();
-        var peasExistentes = await _context.DocPeas.AsNoTracking()
+        var peasList = await _context.DocPeas.AsNoTracking()
             .Where(p => p.IdAsignacion.HasValue && asignacionIds.Contains(p.IdAsignacion.Value) && p.Activo)
-            .ToDictionaryAsync(p => p.IdAsignacion!.Value);
+            .ToListAsync();
+        var peasExistentes = peasList
+            .GroupBy(p => p.IdAsignacion!.Value)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.Version).First());
 
         var result = new List<DocenteAsignaturaDto>();
 

@@ -11,7 +11,16 @@ import {
     BookOpen,
     Users,
     FileText,
-    PenLine
+    PenLine,
+    GraduationCap,
+    Target,
+    Award,
+    Layers,
+    Lightbulb,
+    Cpu,
+    CheckSquare,
+    Library,
+    ShieldCheck
 } from 'lucide-react';
 import type { BlockType, DocumentBlock } from '../types';
 
@@ -56,7 +65,21 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
             ]
         },
         {
-            title: 'Bloques de Base de Datos (Dinámicos)',
+            title: 'Bloques Curriculares (PEA Oficial)',
+            items: [
+                { type: 'pea_general_section', icon: GraduationCap, label: 'Datos Generales y Carga Horaria', desc: 'Asignatura, carrera, modalidad y horas RRA Art. 21.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_characterization_section', icon: Target, label: 'Caracterización y Objetivos', desc: 'Objetivo general, específicos y perfil de egreso.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_competencies_rda_section', icon: Award, label: 'Competencias y RDAs', desc: 'Resultados de aprendizaje articulados a unidades.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_contents_section', icon: Layers, label: 'Matriz de Contenidos y Horas', desc: 'Unidades, temas, horas CD/APE/TA y CoWork.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_methodology_section', icon: Lightbulb, label: 'Metodología y Ambientes', desc: 'Estrategias pedagógicas y escenarios didácticos.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_resources_section', icon: Cpu, label: 'Recursos y Equipamiento', desc: 'Talleres, laboratorios, plataformas y software.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_evaluation_section', icon: CheckSquare, label: 'Sistema de Evaluación', desc: 'Ponderaciones oficiales y criterios RRA Art. 84.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_bibliography_section', icon: Library, label: 'Bibliografía APA', desc: 'Referencias básicas y complementarias (APA 7ma).', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_signatures_section', icon: ShieldCheck, label: 'Firmas Curriculares (4 Niveles)', desc: 'Docente, Coordinador, Académica y Vicerrector.', color: 'text-violet-500 bg-violet-500/5' }
+            ]
+        },
+        {
+            title: 'Bloques de Base de Datos (Dinámicos - Proyectos)',
             items: [
                 { type: 'project_general_section', icon: BookOpen, label: 'Identificación del Proyecto', desc: 'Metadatos institucionales (título, carrera, plazos).', color: 'text-emerald-500 bg-emerald-500/5' },
                 { type: 'researchers_table', icon: Users, label: 'Investigadores', desc: 'Participantes y docentes del proyecto científico.', color: 'text-emerald-500 bg-emerald-500/5' },

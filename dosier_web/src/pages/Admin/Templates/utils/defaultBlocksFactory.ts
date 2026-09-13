@@ -96,6 +96,109 @@ const RESEARCH_TECHNICAL_SUBSECTIONS: TechnicalSubsection[] = [
 ];
 
 /**
+ * Genera la estructura completa de bloques oficiales del PEA (RRA Art. 21 / ISTPET).
+ */
+export function createPeaDefaultBlocks(): DocumentBlock[] {
+    return [
+        createBaseCoverBlock('PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)', {
+            colorTitle: 'navy',
+            showInstitution: true,
+            carrera: 'TECNOLOGÍA SUPERIOR',
+            periodo: 'PERÍODO ACADÉMICO 2026-I'
+        }),
+        {
+            id: 'block-pea-general',
+            type: 'pea_general_section' as BlockType,
+            title: 'a) DATOS GENERALES DE LA ASIGNATURA',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a',
+                borderStyle: 'solid',
+                showAsignatura: true,
+                showCarrera: true,
+                showNivelModalidad: true,
+                showUnidadOrganizacion: true,
+                showRequisitos: true,
+                showDocente: true,
+                customFields: []
+            }
+        },
+        {
+            id: 'block-pea-characterization',
+            type: 'pea_characterization_section' as BlockType,
+            title: 'b) OBJETIVO DE LA ASIGNATURA Y c) PRERREQUISITOS',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-competencies-rda',
+            type: 'pea_competencies_rda_section' as BlockType,
+            title: 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA Y e) DE LA ASIGNATURA',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-contents',
+            type: 'pea_contents_section' as BlockType,
+            title: 'f) CONTENIDOS DE ENSEÑANZA',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-methodology',
+            type: 'pea_methodology_section' as BlockType,
+            title: 'g) METODOLOGÍA DE ENSEÑANZA Y RECURSOS DIDÁCTICOS',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-resources',
+            type: 'pea_resources_section' as BlockType,
+            title: 'h) ACTIVIDADES PRÁCTICAS',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-evaluation',
+            type: 'pea_evaluation_section' as BlockType,
+            title: 'i) EVALUACIÓN DEL APRENDIZAJE',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-bibliography',
+            type: 'pea_bibliography_section' as BlockType,
+            title: 'j) BIBLIOGRAFÍA BÁSICA Y DE CONSULTA',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-pea-signatures',
+            type: 'pea_signatures_section' as BlockType,
+            title: 'k) FIRMAS DE RESPONSABILIDAD',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a'
+            }
+        }
+    ];
+}
+
+/**
  * Fábrica principal de bloques por defecto.
  */
 export function generateDefaultBlocksForTemplate(
@@ -197,6 +300,11 @@ export function generateDefaultBlocksForTemplate(
                 { label: 'Coordinación de Carrera', name: '{{coordinador_carrera}}', role: 'Coordinador de Carrera' }
             ])
         ];
+    }
+
+    // C. PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)
+    if (code === 'PEA_OFICIAL' || code === 'PEA' || code.includes('PROGRAMA DE ESTUDIO') || template.category === 90) {
+        return createPeaDefaultBlocks();
     }
 
 

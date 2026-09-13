@@ -131,6 +131,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             DocumentCategory.ReporteAnualSenescyt => "Reporte Anual SENESCYT",
             DocumentCategory.ReporteDistributivoCruce => "Reporte Distributivo-Investigación (RRA)",
             DocumentCategory.ResolucionCargaHoraria => "Resolución de Carga Horaria",
+            DocumentCategory.PeaCurricular => "Programa de Estudio de la Asignatura (PEA)",
             _ => category.ToString()
         };
     }

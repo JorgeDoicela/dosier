@@ -468,5 +468,75 @@ public class UnitTest1
         Assert.NotNull(testTemplate.CustomCss);
         Assert.Contains(".cover-page", testTemplate.CustomCss);
     }
+
+    [Fact]
+    public async Task Test_GetMisAsignaturasAsync_Regression()
+    {
+        if (_skipTests) return;
+
+        var options = new DbContextOptionsBuilder<DosierContext>()
+            .UseMySql(GetConnectionString(), new MySqlServerVersion(new Version(8, 0, 31)))
+            .Options;
+        using var context = new DosierContext(options);
+        var service = new dosier_infrastructure.Academico.AsignaturasDocenteService(context);
+
+        var result = await service.GetMisAsignaturasAsync("0302144159", "OCT2025");
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public async Task Test_CrearDesdeAsignacion_Regression()
+    {
+        if (_skipTests) return;
+
+        var options = new DbContextOptionsBuilder<DosierContext>()
+            .UseMySql(GetConnectionString(), new MySqlServerVersion(new Version(8, 0, 31)))
+            .Options;
+        using var context = new DosierContext(options);
+        
+        var loggerResolver = new Mock<ILogger<dosier_infrastructure.Academico.AcademicContextResolver>>();
+        var resolver = new dosier_infrastructure.Academico.AcademicContextResolver(context, loggerResolver.Object);
+        var mockNormativa = new Mock<dosier_application.Curriculum.Interfaces.INormativaService>();
+        var mockPerfilEgreso = new Mock<dosier_application.Curriculum.Interfaces.IPerfilEgresoService>();
+        var expedienteService = new dosier_infrastructure.Curriculum.ExpedienteCurricularService(context, resolver, mockNormativa.Object, mockPerfilEgreso.Object);
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(c => c["DosierFirma:SigningSecret"]).Returns("SecretKeyForTestingDosierSignatures1234567890!");
+        var hashService = new dosier_infrastructure.Signatures.SignatureHashService(mockConfig.Object);
+        var mockUrl = new Mock<dosier_application.Common.IAppUrlService>();
+        var mockFirma = new Mock<dosier_infrastructure.Security.IFirmaElectronicaService>();
+        var peaService = new dosier_infrastructure.Curriculum.PeaService(context, resolver, expedienteService, hashService, mockUrl.Object, mockFirma.Object);
+
+        var result = await peaService.CrearDesdeAsignacionAsync(23377, "1718620816");
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task Test_GetByUuidAsync_Regression()
+    {
+        if (_skipTests) return;
+
+        var options = new DbContextOptionsBuilder<DosierContext>()
+            .UseMySql(GetConnectionString(), new MySqlServerVersion(new Version(8, 0, 31)))
+            .Options;
+        using var context = new DosierContext(options);
+
+        var loggerResolver = new Mock<ILogger<dosier_infrastructure.Academico.AcademicContextResolver>>();
+        var resolver = new dosier_infrastructure.Academico.AcademicContextResolver(context, loggerResolver.Object);
+        var mockNormativa = new Mock<dosier_application.Curriculum.Interfaces.INormativaService>();
+        var mockPerfilEgreso = new Mock<dosier_application.Curriculum.Interfaces.IPerfilEgresoService>();
+        var expedienteService = new dosier_infrastructure.Curriculum.ExpedienteCurricularService(context, resolver, mockNormativa.Object, mockPerfilEgreso.Object);
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(c => c["DosierFirma:SigningSecret"]).Returns("SecretKeyForTestingDosierSignatures1234567890!");
+        var hashService = new dosier_infrastructure.Signatures.SignatureHashService(mockConfig.Object);
+        var mockUrl = new Mock<dosier_application.Common.IAppUrlService>();
+        var mockFirma = new Mock<dosier_infrastructure.Security.IFirmaElectronicaService>();
+        var peaService = new dosier_infrastructure.Curriculum.PeaService(context, resolver, expedienteService, hashService, mockUrl.Object, mockFirma.Object);
+
+        var pea = await peaService.GetByUuidAsync("df6c76ee-0527-4b50-92f4-6c4d90b2cc0d");
+        Assert.NotNull(pea);
+        Assert.Equal("df6c76ee-0527-4b50-92f4-6c4d90b2cc0d", pea.Uuid);
+        Assert.Equal("TECNICAS DE COCINA CONTEMPORANEA Y DE VANGUARDIA", pea.NombreAsignatura);
+    }
 }
 

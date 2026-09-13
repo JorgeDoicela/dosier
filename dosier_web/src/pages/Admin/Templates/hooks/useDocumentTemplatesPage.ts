@@ -454,6 +454,65 @@ export const useDocumentTemplatesPage = () => {
                     }
                 };
                 break;
+            case 'pea_general_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_general_section.defaultTitle, isActive: true,
+                    config: {
+                        headerColor: '#1e2a4a', borderStyle: 'solid',
+                        showAsignatura: true, showCarrera: true, showNivelModalidad: true,
+                        showUnidadOrganizacion: true, showRequisitos: true, showDocente: true,
+                        customFields: []
+                    }
+                };
+                break;
+            case 'pea_characterization_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_characterization_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_competencies_rda_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_competencies_rda_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_contents_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_contents_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_methodology_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_methodology_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_resources_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_resources_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_evaluation_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_evaluation_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_bibliography_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_bibliography_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'pea_signatures_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.pea_signatures_section.defaultTitle, isActive: true,
+                    config: { headerColor: '#1e2a4a' }
+                };
+                break;
             default:
                 return;
         }

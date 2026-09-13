@@ -85,7 +85,7 @@ graph TD
 | `/verificacion/:code` | Público | Comprobación forense de autenticidad, firmas y hash SHA-256 mediante código QR. |
 | `/dashboard` | Autenticado | Panel de bienvenida, accesos rápidos y estado institucional. |
 | `/documentacion/mis-proyectos` | `ResearcherRoute` (Docentes) | Listado de asignaturas y expedientes asignados al docente autenticado. |
-| `/documentacion/workspace/:templateCode/:projectUuid` | Autenticado | Entorno de trabajo para estructuración y co-redacción concurrente con Yjs. |
+| `/documentacion/workspace/:templateCode/:projectUuid` | Autenticado | Entorno de trabajo para estructuración y co-redacción concurrente con Yjs (soporta plantillas de investigación y PEA oficial vía `/api/pea/uuid/:uuid`). |
 | `/documentacion/revision-tecnica/:projectUuid` | Autenticado | Portal de revisión colegiada, formulación de observaciones técnicas y dictámenes. |
 | `/documentacion/monitoreo/:projectUuid` | Autenticado | Seguimiento del estado del flujo curricular y avances. |
 | `/documentacion` | `RoleRoute` (Admin, Coordinadores, Vicerrector) | Consola de supervisión y gestión integral de expedientes curriculares. |

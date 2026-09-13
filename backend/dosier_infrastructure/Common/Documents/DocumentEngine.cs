@@ -862,6 +862,7 @@ namespace Dosier.Infrastructure.Common.Documents
                 DocumentCategory.ConvenioMarco => "CONV",
                 DocumentCategory.ReporteDistributivoCruce => "DISTR",
                 DocumentCategory.ReporteAnaliticas => "ANLT",
+                DocumentCategory.PeaCurricular => "PEA",
                 _ => "DOC"
             };
 

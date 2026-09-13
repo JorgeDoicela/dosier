@@ -463,5 +463,45 @@ CREATE TABLE doc_documentos_firmas (
 --    - dosier_admin: Administrador general.
 -- =============================================================================
 
+-- =============================================================================
+-- SEEDER DE PLANTILLA INSTITUCIONAL OFICIAL DEL PEA (MOTOR DOCUMENTAL DOSIER)
+-- =============================================================================
+INSERT INTO doc_document_templates (
+    code,
+    name,
+    description,
+    html_content,
+    category,
+    version,
+    requires_lopdp,
+    supports_blind_mode,
+    requires_traceability,
+    requires_signature,
+    signature_type,
+    collaborative_fields_json,
+    is_active
+) VALUES (
+    'PEA_OFICIAL',
+    'Programa de Estudio de la Asignatura (PEA)',
+    'Formato institucional oficial del Programa de Estudio de la Asignatura (PEA) para carreras del ISTPET. Estructura curricular oficial secciones A a K según el Modelo Educativo institucional.',
+    '<!-- Plantilla oficial de fábrica PEA ISTPET -->',
+    90, -- DocumentCategory.PeaCurricular
+    1,
+    1, -- requires_lopdp
+    0, -- supports_blind_mode
+    1, -- requires_traceability
+    1, -- requires_signature
+    'DOSIER',
+    '["objetivo_asignatura", "prerrequisitos", "rdas_carrera", "rdas_asignatura", "contenidos_unidades", "metodologia_propuesta", "recursos_didacticos", "actividades_practicas", "sistema_evaluacion", "bibliografia_basica", "bibliografia_consulta"]',
+    1
+) ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    description = VALUES(description),
+    category = VALUES(category),
+    requires_lopdp = VALUES(requires_lopdp),
+    requires_signature = VALUES(requires_signature),
+    collaborative_fields_json = VALUES(collaborative_fields_json),
+    is_active = 1;
+
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;

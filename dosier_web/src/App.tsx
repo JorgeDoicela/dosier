@@ -137,18 +137,13 @@ export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNod
 };
 
 const ResearcherRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated, isLoading, isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
 
     if (isLoading) {
         return <PageLoader />;
     }
 
     if (!isAuthenticated) return <Navigate to="/login" replace />;
-
-    // Si es Administrador o autoridad curricular, lo redirigimos a la consola institucional de supervisión
-    if (isAdmin || isCoordCarrera || isCoordAcad || isVicerrector) {
-        return <Navigate to="/documentacion" replace />;
-    }
 
     return <>{children}</>;
 };

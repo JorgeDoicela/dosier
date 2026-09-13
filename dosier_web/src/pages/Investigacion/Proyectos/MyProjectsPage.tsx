@@ -1,637 +1,515 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { PageHeader } from '../../../components/Common/PageHeader';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-    ClipboardList, Plus, ArrowRight, Calendar, AlertCircle,
-    Loader2, Search, BarChart3, Target, BookOpen, Trash2, User, FileText, Pin
+    BookOpen,
+    Clock,
+    Award,
+    CheckCircle2,
+    AlertCircle,
+    ArrowRight,
+    Search,
+    RefreshCw,
+    FileText,
+    Shield,
+    Loader2,
+    Building2,
+    PlusCircle,
+    GraduationCap
 } from 'lucide-react';
-import api from '../../../api/axios_config';
-import { CreateProjectModal } from '../../../components/DOSIER/CreateProjectModal';
-import { useAuth } from '../../../api/AuthContext';
-import { buildWorkspacePath } from '../../../core/documents/templateUrl';
-import { useWorkflowStates } from '../../../hooks/useWorkflowStates';
+import { PageHeader } from '../../../components/Common/PageHeader';
+import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useNotifications } from '../../../api/NotificationsContext';
-import { useConfirm } from '../../../api/ConfirmContext';
-import { useProjectPreferences } from './hooks/useProjectPreferences';
+import {
+    getMisMaterias,
+    getPeriodoActivo,
+    getPeriodosAcademicos
+} from '../../../services/docenteAsignaturasService';
+import type {
+    DocenteAsignaturaDto,
+    PeriodoAcademicoDto
+} from '../../../services/docenteAsignaturasService';
+import { crearPeaDesdeAsignacion } from '../../../services/peaService';
 
-interface ProyectoResumen {
-    uuid: string;
-    codigo_institucional?: string;
-    titulo: string;
-    estado: string;
-    linea_investigacion?: string;
-    tipo_investigacion?: string;
-    template_code?: string;
-    templateCode?: string;
-    puntaje_evaluacion?: number;
-    fecha_registro?: string;
-    fecha_modificacion?: string;
-    fecha_inicio?: string;
-    fecha_fin?: string;
-    tiempo_ejecucion?: string;
-    convocatoria_titulo?: string;
-    rol_en_proyecto?: string;
-    total_investigadores: number;
-    total_informes: number;
-    informes_aprobados: number;
-    director_nombre?: string;
-    carrera?: string;
-}
-
-const MyProjectsPage: React.FC = () => {
-    const { states, getEstadoConfig } = useWorkflowStates();
-    const { isDocente } = useAuth();
+export const MyProjectsPage: React.FC = () => {
+    const navigate = useNavigate();
     const { addToast } = useNotifications();
-    const confirm = useConfirm();
 
-    const [proyectos, setProyectos] = useState<ProyectoResumen[]>([]);
+    const [materias, setMaterias] = useState<DocenteAsignaturaDto[]>([]);
+    const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
+    const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Filtros
     const [search, setSearch] = useState('');
-    
-    const { recentVisitsMap, togglePin, isPinned } = useProjectPreferences();
-
     const [filterEstado, setFilterEstado] = useState<string>('todos');
-    const [filterLinea, setFilterLinea] = useState<string>('todas');
-    const [sortBy, setSortBy] = useState<string>('mi_actividad');
-    const [showNewProject, setShowNewProject] = useState(false);
-    const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
-    const [deletingTitle, setDeletingTitle] = useState<string>('');
-    const [deletionError, setDeletionError] = useState<string | null>(null);
+    const [filterCarrera, setFilterCarrera] = useState<string>('todas');
 
-    // Draft external management states
-    const [pendingDraft, setPendingDraft] = useState<{ titulo: string; timestamp: number } | null>(null);
-    const [restoreDraftOnOpen, setRestoreDraftOnOpen] = useState(false);
+    // Estado transaccional por asignación
+    const [creatingPeaId, setCreatingPeaId] = useState<number | null>(null);
 
-    const confirmarEliminar = (uuid: string, titulo: string) => {
-        setDeletingUuid(uuid);
-        setDeletingTitle(titulo || 'PROYECTO SIN TÍTULO');
-        setDeletionError(null);
-    };
-
-    const ejecutarEliminacion = async () => {
-        if (!deletingUuid) return;
-        const projectUuid = deletingUuid;
-        const projectTitle = deletingTitle;
-        try {
-            setDeletionError(null);
-            await api.delete(`/projects/${projectUuid}`);
-            setProyectos(prev => prev.filter(p => p.uuid !== projectUuid));
-            setDeletingUuid(null);
-            setDeletingTitle('');
-            window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-            addToast(
-                "Propuesta Eliminada",
-                `La propuesta "${projectTitle}" se envió a la papelera de reciclaje.`,
-                "success",
-                undefined,
-                async () => {
-                    try {
-                        await api.post(`/recyclebin/restore/project/${projectUuid}`);
-                        addToast("Acción Revertida", "La propuesta de investigación ha sido restaurada con éxito.", "success");
-                        window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                        loadProjects(true);
-                    } catch (err: any) {
-                        console.error("[Undo Delete] Failed:", err);
-                        addToast("Error al Restaurar", err.response?.data?.message || "No se pudo restaurar la propuesta.", "error");
-                    }
-                }
-            );
-        } catch (err: any) {
-            console.error('[DOSIER] Error al eliminar borrador:', err);
-            setDeletionError(err.response?.data?.message || 'No se pudo eliminar el borrador de investigación debido a un error del servidor.');
-        }
-    };
-
-    const lastFetchRef = useRef<number>(0);
-
-    const loadProjects = async (isSilent = false, isBackground = false) => {
-        if (isBackground) {
-            // Recarga silenciosa en segundo plano
-        } else if (isSilent) {
-            setRefreshing(true);
-        } else {
-            setLoading(true);
-        }
+    const cargarPeriodosYDatos = useCallback(async () => {
+        setLoading(true);
         setError(null);
         try {
-            const res = await api.get('/projects/my');
-            setProyectos(res.data || []);
-            lastFetchRef.current = Date.now();
-        } catch (e: any) {
-            if (!isBackground) {
-                setError('No se pudieron cargar tus proyectos. Verifica la conexión con el servidor.');
+            const [periodosList, periodoActivo] = await Promise.all([
+                getPeriodosAcademicos(),
+                getPeriodoActivo()
+            ]);
+
+            setPeriodos(periodosList);
+
+            const initialPeriod = periodoActivo?.id_periodo || periodosList[0]?.id_periodo || '';
+            setSelectedPeriodo(initialPeriod);
+
+            if (initialPeriod) {
+                const misMaterias = await getMisMaterias(initialPeriod);
+                setMaterias(misMaterias);
             }
-            console.error('[DOSIER] Error al cargar proyectos:', e);
+        } catch (err: any) {
+            console.error('[DOSIER] Error al cargar períodos y materias:', err);
+            setError('No se pudo cargar la información curricular institucional. Verifique la conexión con el servidor.');
         } finally {
             setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        cargarPeriodosYDatos();
+    }, [cargarPeriodosYDatos]);
+
+    const handlePeriodoChange = async (newPeriodoId: string | number) => {
+        const idStr = String(newPeriodoId);
+        setSelectedPeriodo(idStr);
+        setRefreshing(true);
+        setError(null);
+        try {
+            const misMaterias = await getMisMaterias(idStr);
+            setMaterias(misMaterias);
+        } catch (err) {
+            console.error('[DOSIER] Error al cambiar período:', err);
+            setError('Error al actualizar las asignaturas del período seleccionado.');
+        } finally {
             setRefreshing(false);
         }
     };
 
-    const checkPendingDraft = () => {
-        const metaStr = localStorage.getItem('preproposal_draft_metadata');
-        if (metaStr) {
-            try {
-                setPendingDraft(JSON.parse(metaStr));
-            } catch (e) {
-                console.error("Error reading draft metadata", e);
-                setPendingDraft(null);
-            }
-        } else {
-            setPendingDraft(null);
+    const handleCrearPea = async (asignacion: DocenteAsignaturaDto) => {
+        setCreatingPeaId(asignacion.id_asignacion);
+        try {
+            const nuevoPea = await crearPeaDesdeAsignacion(asignacion.id_asignacion);
+            addToast(
+                'PEA Inicializado',
+                `Se ha creado el Programa de Estudio de la Asignatura para "${asignacion.nombre_asignatura}".`,
+                'success'
+            );
+
+            // Redirigir al workspace con el UUID o ID del PEA oficial
+            const targetUuid = nuevoPea.uuid || String(nuevoPea.idPea || (nuevoPea as any).id_pea);
+            navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
+        } catch (err: any) {
+            console.error('[DOSIER] Error al inicializar PEA:', err);
+            addToast(
+                'Error al Iniciar PEA',
+                err.response?.data?.message || 'No se pudo inicializar el PEA desde la asignación institucional.',
+                'error'
+            );
+        } finally {
+            setCreatingPeaId(null);
         }
     };
 
-    const handleRestoreDraftExternal = () => {
-        setRestoreDraftOnOpen(true);
-        setShowNewProject(true);
+    const handleContinuarPea = (asignacion: DocenteAsignaturaDto) => {
+        const targetUuid = asignacion.uuid_pea || String(asignacion.id_pea);
+        navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
     };
 
-    const handleDiscardDraftExternal = async () => {
-        if (await confirm({
-            title: "Descartar Borrador",
-            message: "¿Está seguro de descartar el borrador guardado? Esta acción no se puede deshacer.",
-            confirmText: "Descartar",
-            cancelText: "Cancelar",
-            variant: "destructive"
-        })) {
-            localStorage.removeItem('preproposal_form_draft');
-            localStorage.removeItem('preproposal_draft_metadata');
-            setPendingDraft(null);
-            setRestoreDraftOnOpen(false);
-        }
-    };
-
-    useEffect(() => {
-        loadProjects();
-        checkPendingDraft();
-    }, []);
-
-    useEffect(() => {
-        const handleFocus = () => {
-            if (Date.now() - lastFetchRef.current > 30000) {
-                loadProjects(false, true);
-                checkPendingDraft();
-            }
-        };
-        const handleProjectsChanged = () => {
-            loadProjects(false, true);
-            checkPendingDraft();
-        };
-
-        window.addEventListener('focus', handleFocus);
-        window.addEventListener('dosier-projects-changed', handleProjectsChanged);
-
-        return () => {
-            window.removeEventListener('focus', handleFocus);
-            window.removeEventListener('dosier-projects-changed', handleProjectsChanged);
-        };
-    }, []);
-
-    // Sondeo periódico (polling) de respaldo de 60 segundos si la pestaña está visible
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (document.visibilityState === 'visible' && Date.now() - lastFetchRef.current > 30000) {
-                loadProjects(false, true);
-                checkPendingDraft();
-            }
-        }, 60000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const lineasDisponibles = Array.from(
-        new Set(proyectos.map(p => p.linea_investigacion).filter(Boolean))
-    ) as string[];
-
-    const filtered = proyectos
-        .filter(p => {
-            const query = search.toLowerCase();
-            const matchSearch = 
-                p.titulo.toLowerCase().includes(query) ||
-                (p.codigo_institucional || '').toLowerCase().includes(query) ||
-                (p.director_nombre || '').toLowerCase().includes(query) ||
-                (p.linea_investigacion || '').toLowerCase().includes(query) ||
-                (p.carrera || '').toLowerCase().includes(query);
-
-            const matchEstado = filterEstado === 'todos' || p.estado === filterEstado;
-            const matchLinea = filterLinea === 'todas' || p.linea_investigacion === filterLinea;
-
-            return matchSearch && matchEstado && matchLinea;
-        })
-        .sort((a, b) => {
-            if (sortBy === 'mi_actividad') {
-                const aPinned = isPinned(a.uuid);
-                const bPinned = isPinned(b.uuid);
-                if (aPinned && !bPinned) return -1;
-                if (!aPinned && bPinned) return 1;
-
-                const aVisit = recentVisitsMap.get(a.uuid) || 0;
-                const bVisit = recentVisitsMap.get(b.uuid) || 0;
-                if (aVisit !== bVisit) {
-                    return bVisit - aVisit;
-                }
-
-                const dateA = a.fecha_modificacion || a.fecha_registro || '';
-                const dateB = b.fecha_modificacion || b.fecha_registro || '';
-                return new Date(dateB).getTime() - new Date(dateA).getTime();
-            }
-            if (sortBy === 'accion_requerida') {
-                const actionPriority: Record<string, number> = {
-                    'Enviado': 1,
-                    'Revisión Técnica': 2,
-                    'En Corrección': 3,
-                    'Prepropuesta': 4,
-                    'En Dictamen': 5,
-                    'Pendiente Firma': 6,
-                    'Borrador': 7,
-                    'Aprobado': 8,
-                    'En Ejecución': 9,
-                    'Finalizado': 10,
-                    'Rechazado': 11
-                };
-                const pA = actionPriority[a.estado] || 50;
-                const pB = actionPriority[b.estado] || 50;
-                if (pA !== pB) return pA - pB;
-
-                const dateA = a.fecha_modificacion || a.fecha_registro || '';
-                const dateB = b.fecha_modificacion || b.fecha_registro || '';
-                return new Date(dateB).getTime() - new Date(dateA).getTime();
-            }
-            if (sortBy === 'recientes') {
-                const dateA = a.fecha_modificacion || a.fecha_registro || '';
-                const dateB = b.fecha_modificacion || b.fecha_registro || '';
-                return new Date(dateB).getTime() - new Date(dateA).getTime();
-            }
-            if (sortBy === 'antiguos') {
-                const dateA = a.fecha_modificacion || a.fecha_registro || '';
-                const dateB = b.fecha_modificacion || b.fecha_registro || '';
-                return new Date(dateA).getTime() - new Date(dateB).getTime();
-            }
-            if (sortBy === 'titulo') {
-                return a.titulo.localeCompare(b.titulo);
-            }
-            return 0;
+    // Lista única de carreras para filtro
+    const carrerasDisponibles = useMemo(() => {
+        const unique = new Set<string>();
+        materias.forEach(m => {
+            if (m.nombre_carrera) unique.add(m.nombre_carrera);
         });
+        return Array.from(unique).sort();
+    }, [materias]);
 
-    const hasActiveFilters = search !== '' || filterEstado !== 'todos' || filterLinea !== 'todas';
+    // Métricas del Bento Grid
+    const metricas = useMemo(() => {
+        const total = materias.length;
+        const totalHoras = materias.reduce((acc, m) => acc + (m.horas_totales || 0), 0);
+        const aprobados = materias.filter(m => m.estado_pea === 'Aprobado').length;
+        const enRevision = materias.filter(m => ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(m.estado_pea)).length;
+        const conObservaciones = materias.filter(m => m.estado_pea === 'Observado').length;
+        const pendientes = materias.filter(m => ['NoIniciado', 'Borrador', 'Corregido'].includes(m.estado_pea)).length;
 
-    if (loading) return (
-        <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-            <div className="flex flex-col items-center gap-4">
-                <Loader2 className="animate-spin text-text-dim" size={32} />
-                <p className="text-text-dim text-sm font-mono uppercase tracking-widest">Cargando proyectos...</p>
-            </div>
-        </div>
-    );
+        return { total, totalHoras, aprobados, enRevision, conObservaciones, pendientes };
+    }, [materias]);
+
+    // Filtrado en vivo
+    const materiasFiltradas = useMemo(() => {
+        return materias.filter(m => {
+            const matchesSearch =
+                m.nombre_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
+                m.codigo_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
+                m.nombre_carrera?.toLowerCase().includes(search.toLowerCase()) ||
+                m.paralelo?.toLowerCase().includes(search.toLowerCase());
+
+            const matchesEstado =
+                filterEstado === 'todos' ? true :
+                filterEstado === 'pendientes' ? ['NoIniciado', 'Borrador', 'Corregido'].includes(m.estado_pea) :
+                filterEstado === 'revision' ? ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(m.estado_pea) :
+                filterEstado === 'observados' ? m.estado_pea === 'Observado' :
+                filterEstado === 'aprobados' ? m.estado_pea === 'Aprobado' : true;
+
+            const matchesCarrera = filterCarrera === 'todas' || m.nombre_carrera === filterCarrera;
+
+            return matchesSearch && matchesEstado && matchesCarrera;
+        });
+    }, [materias, search, filterEstado, filterCarrera]);
+
+    const renderEstadoBadge = (estado: string) => {
+        switch (estado) {
+            case 'NoIniciado':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                        <Clock className="w-3 h-3 text-zinc-400" />
+                        No Iniciado
+                    </span>
+                );
+            case 'Borrador':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300">
+                        <FileText className="w-3 h-3 text-blue-500" />
+                        Borrador
+                    </span>
+                );
+            case 'EnRevision':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
+                        <Clock className="w-3 h-3 text-amber-500" />
+                        En Revisión
+                    </span>
+                );
+            case 'Observado':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300">
+                        <AlertCircle className="w-3 h-3 text-red-500" />
+                        Con Observaciones
+                    </span>
+                );
+            case 'Corregido':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
+                        <CheckCircle2 className="w-3 h-3 text-purple-500" />
+                        Corregido
+                    </span>
+                );
+            case 'RevisadoCoord':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
+                        <Award className="w-3 h-3 text-cyan-500" />
+                        Aval de Carrera
+                    </span>
+                );
+            case 'RevisadoAcad':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
+                        <Shield className="w-3 h-3 text-indigo-500" />
+                        Aval Académico
+                    </span>
+                );
+            case 'Aprobado':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        Aprobado Oficial
+                    </span>
+                );
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                        {estado}
+                    </span>
+                );
+        }
+    };
 
     return (
-        <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+            {/* Cabecera Principal con Selector de Período Oficial */}
             <PageHeader
-                kicker="Portafolio Docente Institucional"
-                icon={ClipboardList}
-                title="Mis Instrumentos Curriculares y PEA"
-                description={
-                    <span className="flex items-center gap-2">
-                        <span>
-                            {proyectos.length} instrumento{proyectos.length !== 1 ? 's' : ''} y planificaciones PEA en tu portafolio docente.
-                        </span>
-                        {refreshing && (
-                            <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse">
-                                <Loader2 className="animate-spin" size={10} />
-                                Sincronizando...
-                            </span>
-                        )}
-                    </span>
-                }
+                title="Mis Instrumentos Curriculares - PEA"
+                description="Gestión microcurricular y formulación de Programas de Estudio de la Asignatura según distributivo oficial SIGAFI."
             >
-                <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="w-56">
+                        <GeistSelect
+                            value={selectedPeriodo}
+                            onChange={handlePeriodoChange}
+                            placeholder="Seleccione período..."
+                            disabled={loading || periodos.length === 0}
+                        >
+                            {periodos.map(p => (
+                                <option key={p.id_periodo} value={p.id_periodo}>
+                                    {p.detalle || p.id_periodo} {p.es_activo ? '(Activo)' : ''}
+                                </option>
+                            ))}
+                        </GeistSelect>
+                    </div>
                     <button
-                        onClick={() => setShowNewProject(true)}
-                        className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
+                        onClick={() => handlePeriodoChange(selectedPeriodo)}
+                        disabled={refreshing || loading}
+                        className="btn-vercel-secondary inline-flex items-center justify-center p-2 rounded-md transition-colors"
+                        title="Actualizar distributivo"
                     >
-                        <Plus size={14} strokeWidth={3} />
-                        Nuevo Instrumento PEA
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
             </PageHeader>
 
-            {/* Banner de Recuperación de Borrador */}
-            {pendingDraft && (
-                <div className="bento-card static p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-up mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-surface-hover border border-border-thin flex items-center justify-center text-text-main shrink-0">
-                            <FileText size={16} />
-                        </div>
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <h4 className="text-sm font-semibold text-text-main">Borrador detectado</h4>
-                                <span className="badge-vercel badge-vercel-neutral text-[9px] font-mono py-0.5 px-2 leading-none shrink-0">
-                                    No guardado
-                                </span>
-                            </div>
-                            <p className="text-xs text-text-dim">
-                                Tienes un borrador sin guardar de una postulación: <span className="text-text-main font-medium">"{pendingDraft.titulo}"</span>.
-                            </p>
-                            <p className="text-[10px] text-text-dim/60 font-mono">
-                                Guardado automáticamente el {new Date(pendingDraft.timestamp).toLocaleDateString()} a las {new Date(pendingDraft.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-2 w-full md:w-auto shrink-0">
-                        <button
-                            onClick={handleRestoreDraftExternal}
-                            className="btn-vercel-primary !py-1.5 !px-3 !text-xs !normal-case !tracking-normal font-medium flex items-center justify-center gap-1.5"
-                        >
-                            Restaurar borrador
-                        </button>
-                        <button
-                            onClick={handleDiscardDraftExternal}
-                            className="btn-vercel-secondary !py-1.5 !px-3 !text-xs !normal-case !tracking-normal font-medium flex items-center justify-center gap-1.5"
-                        >
-                            Descartar
-                        </button>
-                    </div>
+            {/* Mensaje de Error si ocurre */}
+            {error && (
+                <div className="p-4 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 text-sm flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 shrink-0" />
+                    <span>{error}</span>
                 </div>
             )}
 
-            <div className="flex flex-col gap-4 mb-8 animate-fade-up [animation-delay:100ms] bg-surface p-5 rounded-2xl border border-border-thin shadow-sm">
-                <div className="flex flex-col lg:flex-row gap-3">
-                    <div className="relative flex-1">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-                        <input
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Buscar por título, código, director o carrera..."
-                            className="input-vercel !pl-9 !rounded-xl !py-2.5 !text-sm !placeholder:text-text-dim w-full"
-                        />
+            {/* Tablero de Métricas Curriculares (Bento Grid) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        <span>Asignaturas Asignadas</span>
+                        <BookOpen className="w-4 h-4 text-zinc-400" />
                     </div>
-                    <div className="flex gap-2">
-                        <select
-                            value={sortBy}
-                            onChange={e => setSortBy(e.target.value)}
-                            className="input-vercel !rounded-xl !py-2.5 !text-sm min-w-[170px] cursor-pointer"
-                        >
-                            <option value="mi_actividad">Mi actividad reciente</option>
-                            <option value="accion_requerida">Requieren atención</option>
-                            <option value="recientes">Modificados recientemente</option>
-                            <option value="antiguos">Más antiguos</option>
-                            <option value="titulo">Título (A-Z)</option>
-                        </select>
-                        {(filterEstado !== 'todos' || filterLinea !== 'todas' || filterConvocatoria !== 'todas' || search !== '') && (
-                            <button
-                                onClick={() => {
-                                    setSearch('');
-                                    setFilterEstado('todos');
-                                    setFilterLinea('todas');
-                                    setFilterConvocatoria('todas');
-                                    setSortBy('mi_actividad');
-                                }}
-                                className="btn-vercel-secondary !py-2.5 !px-4 !rounded-xl !text-xs whitespace-nowrap hover:bg-surface-hover hover:text-text-main transition-all"
-                            >
-                                Limpiar filtros
-                            </button>
-                        )}
-                    </div>
+                    <p className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                        {metricas.total}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {metricas.totalHoras} horas académicas en total
+                    </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-border-thin">
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-1">Estado</label>
-                        <select
-                            value={filterEstado}
-                            onChange={e => setFilterEstado(e.target.value)}
-                            className="input-vercel !rounded-xl !py-2 !text-xs w-full cursor-pointer"
-                        >
-                            <option value="todos">Todos los estados</option>
-                            {states.map(s => (
-                                <option key={s.estado} value={s.estado}>{s.etiqueta}</option>
-                            ))}
-                        </select>
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        <span>PEAs Aprobados</span>
+                        <CheckCircle2 className="w-4 h-4" />
                     </div>
+                    <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+                        {metricas.aprobados}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        Legalizados por Vicerrectorado
+                    </p>
+                </div>
 
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-text-dim uppercase tracking-wider pl-0.5">Línea / Área Temática</label>
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium text-amber-600 dark:text-amber-400">
+                        <span>En Revisión Colegiada</span>
+                        <Clock className="w-4 h-4" />
+                    </div>
+                    <p className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
+                        {metricas.enRevision}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        En comisión o coordinación
+                    </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium text-blue-600 dark:text-blue-400">
+                        <span>Pendientes / Borrador</span>
+                        <FileText className="w-4 h-4" />
+                    </div>
+                    <p className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+                        {metricas.pendientes}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {metricas.conObservaciones > 0 ? `${metricas.conObservaciones} con observaciones` : 'En fase docente'}
+                    </p>
+                </div>
+            </div>
+
+            {/* Barra de Búsqueda y Filtros de Estado */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
+                <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                        type="text"
+                        placeholder="Buscar por asignatura, código, carrera o paralelo..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600"
+                    />
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                    {carrerasDisponibles.length > 1 && (
                         <select
-                            value={filterLinea}
-                            onChange={e => setFilterLinea(e.target.value)}
-                            className="input-vercel !rounded-xl !py-2 !text-xs w-full cursor-pointer"
+                            value={filterCarrera}
+                            onChange={e => setFilterCarrera(e.target.value)}
+                            className="text-xs py-2 px-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 focus:outline-none"
                         >
-                            <option value="todas">Todas las líneas</option>
-                            {lineasDisponibles.map(linea => (
-                                <option key={linea} value={linea}>{linea}</option>
+                            <option value="todas">Todas las Carreras</option>
+                            {carrerasDisponibles.map(c => (
+                                <option key={c} value={c}>{c}</option>
                             ))}
                         </select>
+                    )}
+
+                    <div className="inline-flex p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-xs font-medium">
+                        <button
+                            onClick={() => setFilterEstado('todos')}
+                            className={`px-3 py-1 rounded-md transition-colors ${filterEstado === 'todos' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                        >
+                            Todos
+                        </button>
+                        <button
+                            onClick={() => setFilterEstado('pendientes')}
+                            className={`px-3 py-1 rounded-md transition-colors ${filterEstado === 'pendientes' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                        >
+                            Pendientes
+                        </button>
+                        <button
+                            onClick={() => setFilterEstado('revision')}
+                            className={`px-3 py-1 rounded-md transition-colors ${filterEstado === 'revision' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                        >
+                            Revisión
+                        </button>
+                        <button
+                            onClick={() => setFilterEstado('aprobados')}
+                            className={`px-3 py-1 rounded-md transition-colors ${filterEstado === 'aprobados' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                        >
+                            Aprobados
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {error && (
-                <div className="badge-vercel-error !rounded-xl !p-4 mb-6 w-full text-sm">
-                    <AlertCircle size={16} />
-                    {error}
+            {/* Listado de Asignaturas / Instrumentos PEA */}
+            {loading ? (
+                <div className="py-20 flex flex-col items-center justify-center text-zinc-400 space-y-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
+                    <p className="text-sm">Consultando distributivo académico y estado de PEAs...</p>
                 </div>
-            )}
-
-            {!error && filtered.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
-                    <div className="icon-circle !p-4 bg-surface mb-6">
-                        <Target size={28} className="text-text-dim" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-text-main tracking-tight mb-2">
-                        {hasActiveFilters ? 'Sin resultados' : 'Aún no tienes proyectos'}
+            ) : materiasFiltradas.length === 0 ? (
+                <div className="py-16 px-4 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center space-y-3 bg-white dark:bg-zinc-950">
+                    <GraduationCap className="w-10 h-10 mx-auto text-zinc-400" />
+                    <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                        No se encontraron asignaturas
                     </h3>
-                    <p className="text-sm text-text-dim max-w-xs mb-6">
-                        {hasActiveFilters
-                            ? 'Prueba con otros filtros de búsqueda.'
-                            : 'Crea tu primera propuesta de investigación para comenzar.'}
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                        {search || filterEstado !== 'todos' || filterCarrera !== 'todas'
+                            ? 'No hay materias que coincidan con los filtros aplicados en el período actual.'
+                            : 'No existen materias asignadas para su perfil docente en este período lectivo.'}
                     </p>
-                    {!hasActiveFilters && (
-                        <button
-                            onClick={() => setShowNewProject(true)}
-                            className="btn-vercel-primary px-6 py-2.5 flex items-center justify-center gap-2"
-                        >
-                            <Plus size={14} strokeWidth={3} /> Iniciar propuesta
-                        </button>
-                    )}
                 </div>
-            )}
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {materiasFiltradas.map((materia) => {
+                        const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
+                        const isCreating = creatingPeaId === materia.id_asignacion;
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-up [animation-delay:150ms]">
-                {filtered.map((p) => {
-                    const cfg = getEstadoConfig(p.estado);
-
-                    return (
-                        <div
-                            key={p.uuid}
-                            className="bento-card group relative p-6 overflow-hidden"
-                        >
-                            <Link
-                                to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid, '', '/documentacion/mis-proyectos')}
-                                className="absolute inset-0 z-10"
-                            />
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-subtle rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1 min-w-0">
-                                    {p.codigo_institucional && (
-                                        <p className="text-[10px] font-semibold text-text-dim uppercase tracking-[0.2em] mb-1 font-mono">
-                                            {p.codigo_institucional}
-                                        </p>
-                                    )}
-                                    <h3 className="font-medium text-text-main text-sm leading-snug line-clamp-2 group-hover:text-brand transition-colors">
-                                        {p.titulo?.trim() || '(Sin título)'}
-                                    </h3>
-                                    {p.director_nombre && (
-                                        <div className="flex items-center gap-1 text-text-dim mt-2">
-                                            <User size={12} className="text-text-dim opacity-70" />
-                                            <span className="text-[11px] text-text-dim font-medium truncate">
-                                                Director: <span className="text-text-main font-semibold">{p.director_nombre}</span>
-                                            </span>
+                        return (
+                            <div
+                                key={materia.id_asignacion}
+                                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between space-y-4"
+                            >
+                                {/* Top: Carrera y Estado */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                            <Building2 className="w-3.5 h-3.5 shrink-0" />
+                                            <span className="truncate">{materia.nombre_carrera}</span>
                                         </div>
-                                    )}
+                                        <div>{renderEstadoBadge(materia.estado_pea)}</div>
+                                    </div>
+
+                                    {/* Título de la Asignatura */}
+                                    <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                                        {materia.nombre_asignatura}
+                                    </h2>
+
+                                    {/* Metadatos Curriculares */}
+                                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                                        {materia.codigo_asignatura && (
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono">
+                                                {materia.codigo_asignatura}
+                                            </span>
+                                        )}
+                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300">
+                                            {materia.nombre_nivel}
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold">
+                                            Paralelo {materia.paralelo}
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                                            {materia.nombre_modalidad || 'Presencial'}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1.5 shrink-0 ml-2 mt-0.5 relative z-20">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            togglePin(p.uuid);
-                                        }}
-                                        className={`p-1.5 rounded-lg transition-colors ${
-                                            isPinned(p.uuid)
-                                                ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                                                : 'hover:bg-surface-hover text-text-dim hover:text-amber-400'
-                                        }`}
-                                        title={isPinned(p.uuid) ? 'Desfijar de accesos prioritarios' : 'Fijar en accesos prioritarios'}
-                                    >
-                                        <Pin size={13} className={isPinned(p.uuid) ? 'fill-amber-400 text-amber-400' : ''} />
-                                    </button>
-                                    {(p.estado === 'Borrador' || p.estado === 'En Corrección' || p.estado === 'Prepropuesta' || p.estado === 'Prepropuesta Rechazada') && (
+
+                                {/* Desglose de Horas Oficiales (RRA Art. 21) */}
+                                <div className="p-3 rounded-lg border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/50 grid grid-cols-4 gap-2 text-center text-xs">
+                                    <div>
+                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">CD</span>
+                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{materia.horas_docencia}h</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">APE</span>
+                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{materia.horas_practico_experimental}h</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">TA</span>
+                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{materia.horas_autonomo}h</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">Total</span>
+                                        <span className="font-bold text-zinc-900 dark:text-zinc-100">{materia.horas_totales}h</span>
+                                    </div>
+                                </div>
+
+                                {/* Botón de Acción Principal */}
+                                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+                                    <div className="text-[11px] text-zinc-400">
+                                        {tienePea && materia.version_pea ? `Versión ${materia.version_pea}.0` : 'Sin PEA registrado'}
+                                    </div>
+
+                                    {tienePea ? (
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                confirmarEliminar(p.uuid, p.titulo);
-                                            }}
-                                            className="p-1.5 rounded-lg hover:bg-error-subtle text-text-dim hover:text-error transition-colors"
-                                            title="Eliminar propuesta"
+                                            onClick={() => handleContinuarPea(materia)}
+                                            className="btn-vercel-primary inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
                                         >
-                                            <Trash2 size={13} />
+                                            <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
+                                            <ArrowRight className="w-3.5 h-3.5" />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleCrearPea(materia)}
+                                            disabled={isCreating}
+                                            className="btn-vercel-primary inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                                        >
+                                            {isCreating ? (
+                                                <>
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    <span>Inicializando...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <PlusCircle className="w-3.5 h-3.5" />
+                                                    <span>Elaborar PEA</span>
+                                                </>
+                                            )}
                                         </button>
                                     )}
-                                    <ArrowRight
-                                        size={14}
-                                        className="text-text-dim group-hover:text-brand group-hover:translate-x-1 transition-all"
-                                    />
                                 </div>
                             </div>
-
-                            <div className={`status-label ${cfg.badge} mb-4 text-[10px] tracking-wider uppercase font-semibold`} style={cfg.style}>
-                                <span className={`dot ${cfg.dot}`} style={cfg.dotStyle} />
-                                {cfg.label}
-                                {p.rol_en_proyecto && (
-                                    <span className="opacity-60 ml-1">· {p.rol_en_proyecto}</span>
-                                )}
-                            </div>
-
-                            {p.linea_investigacion && (
-                                <div className="flex items-center gap-1.5 text-[10px] text-text-dim mb-4">
-                                    <BookOpen size={10} />
-                                    <span className="truncate">{p.linea_investigacion}</span>
-                                </div>
-                            )}
-                            <div className="grid grid-cols-2 gap-2 mb-4">
-                                <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">{p.total_investigadores}</p>
-                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Autores</p>
-                                </div>
-                                <div className="text-center p-2 bg-bg-deep rounded-lg border border-border-thin">
-                                    <p className="stat-number--sm !text-base font-bold text-text-main font-mono">
-                                        {p.informes_aprobados}/{p.total_informes}
-                                    </p>
-                                    <p className="text-[9px] text-text-dim uppercase tracking-wide">Informes</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-3 border-t border-border mt-4 text-[10px] text-text-dim">
-                                <div className="flex items-center gap-1">
-                                    <Calendar size={10} />
-                                    <span>
-                                        {p.fecha_modificacion
-                                            ? new Date(p.fecha_modificacion).toLocaleDateString('es-EC')
-                                            : p.fecha_registro
-                                            ? new Date(p.fecha_registro).toLocaleDateString('es-EC')
-                                            : '—'}
-                                    </span>
-                                </div>
-                                {p.puntaje_evaluacion != null && (
-                                    <div className="flex items-center gap-1">
-                                        <BarChart3 size={10} className="text-success" />
-                                        <span className="text-success font-bold">{p.puntaje_evaluacion}/100</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {showNewProject && (
-                <CreateProjectModal
-                    onClose={() => {
-                        setShowNewProject(false);
-                        setRestoreDraftOnOpen(false);
-                    }}
-                    restoreDraftOnOpen={restoreDraftOnOpen}
-                />
-            )}
-
-            {deletingUuid && (
-                <div className="modal-overlay animate-fade-in">
-                    <div className="modal-card animate-fade-up">
-                        <div className="modal-body">
-                            <div className="flex items-start gap-4">
-                                <div className="icon-circle-error !p-3 shrink-0">
-                                    <AlertCircle size={24} />
-                                </div>
-                                <div className="space-y-2">
-                                    <h4 className="font-bold text-text-main text-base">¿Eliminar propuesta de investigación?</h4>
-                                    <p className="text-text-dim text-xs leading-relaxed">
-                                        Esta acción enviará la prepropuesta o borrador <strong className="text-text-main">"{deletingTitle}"</strong> a la papelera de reciclaje, donde se conservará por 30 días antes de eliminarse permanentemente de forma automática.
-                                    </p>
-                                    {deletionError && (
-                                        <div className="badge-vercel-error !rounded-lg !p-3 text-[11px] leading-relaxed w-full">
-                                            {deletionError}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button
-                                onClick={() => {
-                                    setDeletingUuid(null);
-                                    setDeletingTitle('');
-                                    setDeletionError(null);
-                                }}
-                                className="btn-vercel-secondary py-2"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={ejecutarEliminacion}
-                                className="btn-brand !bg-error !border-error hover:!text-error hover:!bg-transparent py-2"
-                            >
-                                Confirmar y Eliminar
-                            </button>
-                        </div>
-                    </div>
+                        );
+                    })}
                 </div>
             )}
-        </main>
+        </div>
     );
 };
 

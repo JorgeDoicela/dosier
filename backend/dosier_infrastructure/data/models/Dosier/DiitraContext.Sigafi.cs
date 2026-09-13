@@ -188,9 +188,26 @@ public partial class DosierContext
             entity.ToTable("asignaciones_profesores");
             entity.Property(e => e.IdAsignacion).HasColumnType("int(11)").HasColumnName("idAsignacion");
             entity.Property(e => e.IdProfesor).HasMaxLength(14).HasColumnName("idProfesor");
+            entity.Property(e => e.IdAsignatura).HasColumnType("int(11)").HasColumnName("idAsignatura");
             entity.Property(e => e.IdPeriodo).HasMaxLength(7).HasColumnName("idPeriodo");
-            entity.Property(e => e.NumeroHoras).HasPrecision(10, 2).HasColumnName("numeroHoras");
+            entity.Property(e => e.IdModalidad).HasColumnType("int(11)").HasColumnName("idModalidad");
+            entity.Property(e => e.IdSeccion).HasColumnType("int(11)").HasColumnName("idSeccion");
+            entity.Property(e => e.IdNivel).HasColumnType("int(11)").HasColumnName("idNivel");
+            entity.Property(e => e.Paralelo).HasMaxLength(1).HasColumnName("paralelo");
             entity.Property(e => e.Activo).HasColumnType("tinyint(4)").HasColumnName("activo");
+            entity.Property(e => e.FechaGrabar).HasColumnName("fecha_grabar");
+            entity.Property(e => e.FechaModificacion).HasColumnName("fecha_modificacion");
+            entity.Property(e => e.CodigoAsignacion).HasMaxLength(10).HasColumnName("codigo_asignacion");
+            entity.Property(e => e.EntregaActa).HasColumnType("tinyint(4)").HasColumnName("entrega_acta");
+            entity.Property(e => e.IngresaNotas).HasColumnType("tinyint(4)").HasColumnName("ingresa_notas");
+            entity.Property(e => e.UserAsignaciones).HasMaxLength(25).HasColumnName("user_asignaciones");
+            entity.Property(e => e.FechaFin).HasColumnName("fecha_fin");
+            entity.Property(e => e.FechaInicial).HasColumnName("fecha_inicial");
+            entity.Property(e => e.UserActa).HasMaxLength(25).HasColumnName("user_acta");
+            entity.Property(e => e.EsActivaAsignacion).HasColumnType("tinyint(4)").HasColumnName("esActivaAsignacion");
+            entity.Property(e => e.NumeroHoras).HasPrecision(10, 2).HasColumnName("numeroHoras");
+            entity.Property(e => e.ContabilizarHoraDocente).HasColumnType("tinyint(4)").HasColumnName("contabilizarHoraDocente");
+            entity.Property(e => e.HorasPracticoExperimental).HasPrecision(10, 2).HasColumnName("horasPracticoExperimental");
             entity.Ignore(e => e.HorarioDetalles);
         });
 

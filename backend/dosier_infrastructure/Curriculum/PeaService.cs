@@ -130,6 +130,23 @@ namespace dosier_infrastructure.Curriculum
             return await MapToDtoAsync(pea);
         }
 
+        public async Task<PeaDto?> GetByUuidAsync(string uuid)
+        {
+            var pea = await _context.DocPeas
+                .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                .Include(p => p.ResultadosAprendizaje)
+                .Include(p => p.ActividadesPracticas)
+                .Include(p => p.Bibliografias)
+                .Include(p => p.Observaciones)
+                .Include(p => p.Trazabilidades)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
+                .FirstOrDefaultAsync(p => p.Uuid == uuid && p.Activo);
+
+            if (pea == null) return null;
+            return await MapToDtoAsync(pea);
+        }
+
         public async Task<PeaDto?> GetByAsignaturaPeriodoAsync(int idAsignatura, string idPeriodo)
         {
             var pea = await _context.DocPeas

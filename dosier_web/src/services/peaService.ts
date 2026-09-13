@@ -202,6 +202,9 @@ export interface PeaFirmaResultadoDto {
 export const getPeaById = (id: number): Promise<PeaDto> =>
     api.get(`/pea/${id}`).then(r => r.data);
 
+export const getPeaByUuid = (uuid: string): Promise<PeaDto> =>
+    api.get(`/pea/uuid/${uuid}`).then(r => r.data);
+
 export const getPeaByAsignaturaPeriodo = (idAsignatura: number, idPeriodo: string): Promise<PeaDto> =>
     api.get('/pea/buscar', { params: { idAsignatura, idPeriodo } }).then(r => r.data);
 

@@ -42,7 +42,7 @@ Las llamadas dirigidas al endpoint de parches de instancias documentales (`/docu
 
 | Controlador | Ruta Base HTTP | Subsistema | Responsabilidad Principal |
 | :--- | :--- | :--- | :--- |
-| `PeaController` | `/api/pea` | Curricular | Gestión integral del PEA: Secciones a - k, guardado, co-redacción, cambio de estados, circuito de firmas, observaciones por sección, subsanación y trazabilidad. |
+| `PeaController` | `/api/pea` | Curricular | Gestión integral del PEA: consulta por ID (`/{id:int}`) o UUID (`/uuid/{uuid}`), creación desde asignación SIGAFI (`/desde-asignacion/{id}`), Secciones a - k, guardado, co-redacción, cambio de estados, circuito de firmas, observaciones y trazabilidad. |
 | `DocenteAsignaturasController` | `/api/docente-asignaturas` | Curricular | Consulta de asignaciones docentes reales de solo lectura desde SIGAFI, resolución de mallas por cohorte (`mallas_periodos`) y cálculo de horas oficiales. |
 | `ExpedientesController` | `/api/expedientes-curriculares` | Curricular | Expedientes Curriculares por Asignatura: vinculación de la asignación docente de SIGAFI con el período académico y el PEA oficial. |
 | `NormativasController` | `/api/normativas` | Gobernanza | Repositorio de normativas externas inalterables (CES, CACES, SENESCYT), desglose de artículos y checklist de cumplimiento pedagógico. |

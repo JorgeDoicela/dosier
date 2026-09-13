@@ -40,12 +40,14 @@ export function useProjectCore() {
     const isMisProyectos = location.pathname.startsWith('/documentacion/mis-proyectos') || location.pathname.startsWith('/investigacion/mis-proyectos');
     const urlPrefix = isMisProyectos ? '/documentacion/mis-proyectos' : '/documentacion';
 
+    const isPeaTemplate = templateCode === 'PEA_OFICIAL';
+
     const queryParams = new URLSearchParams(location.search);
     const editParam = queryParams.get('edit');
     const sectionParam = queryParams.get('section');
     const activeDocument = editParam
         ? editParamToTemplateCode(editParam, templateCode)
-        : (sectionParam ? templateCode : null);
+        : (sectionParam ? templateCode : (isPeaTemplate ? 'PEA_OFICIAL' : null));
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
         return localStorage.getItem('sidebar_collapsed') === 'true';
@@ -115,8 +117,12 @@ export function useProjectCore() {
 
         while (retries > 0 && !success) {
             try {
+                const detailEndpoint = isPeaTemplate
+                    ? `/pea/uuid/${resolvedProjectUuid}`
+                    : `/projects/${resolvedProjectUuid}/detail`;
+
                 const [projectDetailRes, docsRes] = await Promise.all([
-                    api.get(`/projects/${resolvedProjectUuid}/detail`),
+                    api.get(detailEndpoint),
                     api.get(`/documents/instances/entity/${resolvedProjectUuid}`).catch(() => ({ data: [] }))
                 ]);
                 res = projectDetailRes;
@@ -129,14 +135,14 @@ export function useProjectCore() {
                     forbidden = true;
                 } else if (e?.response?.status === 404) {
                     if (retries > 0) {
-                        console.warn(`[DOSIER] Detalle de proyecto no encontrado (404), reintentando en 1s... (${retries} intentos restantes)`);
+                        console.warn(`[DOSIER] Detalle no encontrado (404), reintentando en 1s... (${retries} intentos restantes)`);
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     } else {
                         isNotFound = true;
                     }
                 } else {
                     retries = 0;
-                    console.error("[DOSIER] Error al cargar la instancia del proyecto", e);
+                    console.error("[DOSIER] Error al cargar la entidad:", e);
                 }
             }
         }
@@ -148,54 +154,93 @@ export function useProjectCore() {
         }
 
         if (success && res) {
-            const directorObj = (res.data.investigadores || []).find((inv: any) =>
-                inv.rol?.toLowerCase().includes('director') || inv.rol?.toLowerCase().includes('principal')
-            );
-            const directorNombre = directorObj
-                ? (directorObj.nombres_completos || directorObj.nombresCompletos || `${directorObj.nombre || ''} ${directorObj.apellido || ''}`.trim())
-                : '';
+            let projectData: any;
 
-            const userCedula = user?.idSigafi || user?.id_sigafi || (user as any)?.cedula || '';
-            const userInternalId = user?.id?.toString() || (user as any)?.id_usuario?.toString() || '';
-            const isUserInInvestigadores = (res.data.investigadores || []).some((inv: any) =>
-                (inv.cedula && inv.cedula === userCedula) ||
-                (inv.idUsuario && inv.idUsuario.toString() === userInternalId) ||
-                (inv.id_usuario && inv.id_usuario.toString() === userInternalId) ||
-                (inv.id && inv.id.toString() === userInternalId)
-            );
-            const isUserDirector = directorObj && (
-                (directorObj.cedula && directorObj.cedula === userCedula) ||
-                (directorObj.idUsuario && directorObj.idUsuario.toString() === userInternalId) ||
-                (directorObj.id_usuario && directorObj.id_usuario.toString() === userInternalId)
-            );
-            const esParticipante = isUserInInvestigadores || isUserDirector || (res.data.puede_firmar ?? res.data.puedeFirmar ?? false);
+            if (isPeaTemplate) {
+                const pea = res.data;
+                const userCedula = user?.idSigafi || user?.id_sigafi || (user as any)?.cedula || '';
+                const docenteNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || user?.nombre_completo || 'Docente Responsable';
+                const isDocenteAutor = (pea.id_docente_elaborador && pea.id_docente_elaborador === userCedula) || isAdmin;
+                const canEditPea = isDocenteAutor && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección');
 
-            const projectData = {
-                id: res.data.uuid.substring(0, 8).toUpperCase(),
-                uuid: res.data.uuid,
-                title: res.data.titulo?.trim() || '(Sin título)',
-                status: res.data.estado || 'Borrador',
-                presupuesto: res.data.costoTotal ?? res.data.costo_total ?? res.data.CostoTotal ?? 0,
-                linea: res.data.linea_investigacion || 'No definida',
-                directorProyecto: directorNombre,
-                esParticipante: !!esParticipante,
-                puedeEditar: (res.data.puede_editar ?? res.data.puedeEditar ?? res.data.PuedeEditar ?? false) &&
-                    (res.data.estado === 'Borrador' || res.data.estado === 'En Corrección' || res.data.estado === 'Prepropuesta' || res.data.estado === 'Prepropuesta Rechazada'),
-                puedeSolicitarCambioEquipo: res.data.puede_solicitar_cambio_equipo ?? res.data.puedeSolicitarCambioEquipo ?? false,
-                puedeFirmar: res.data.puede_firmar ?? res.data.puedeFirmar ?? res.data.PuedeFirmar ?? false,
-                puntajeEvaluacion: res.data.puntaje_evaluacion ?? res.data.puntajeEvaluacion ?? res.data.PuntajeEvaluacion ?? null,
-                grupoInvestigacion: '',
-                grupoInvestigacionUuid: '',
-                tieneGrupoInvestigacion: false,
-                dominio: res.data.dominio || '',
-                descripcion: res.data.descripcion_proyecto || res.data.descripcionProyecto || '',
-                carrera: res.data.carrera || '',
-                convocatoria: '',
-                convocatoriaMontoMaximo: null,
-                fechaInicio: res.data.fecha_inicio || res.data.fechaInicio || null,
-                fechaFin: res.data.fecha_fin || res.data.fechaFin || null,
-                fechaLimiteSubsanacion: res.data.fecha_limite_subsanacion || res.data.fechaLimiteSubsanacion || null
-            };
+                projectData = {
+                    id: pea.codigo_asignatura || pea.codigoAsignatura || `PEA-${pea.id_pea || pea.idPea || '001'}`,
+                    uuid: pea.uuid || resolvedProjectUuid,
+                    title: pea.nombre_asignatura || pea.nombreAsignatura || 'Programa de Estudio de la Asignatura',
+                    status: pea.estado || 'Borrador',
+                    presupuesto: 0,
+                    linea: pea.semestre_nivel || pea.semestreNivel || 'Nivel Académico',
+                    directorProyecto: docenteNombre,
+                    esParticipante: true,
+                    puedeEditar: canEditPea,
+                    puedeSolicitarCambioEquipo: false,
+                    puedeFirmar: true,
+                    puntajeEvaluacion: null,
+                    grupoInvestigacion: '',
+                    grupoInvestigacionUuid: '',
+                    tieneGrupoInvestigacion: false,
+                    dominio: pea.modalidad || 'Presencial',
+                    descripcion: `Programa de Estudio de la Asignatura (PEA) para ${pea.nombre_asignatura || ''}.`,
+                    carrera: pea.nombre_carrera || pea.nombreCarrera || '',
+                    convocatoria: pea.id_periodo || pea.idPeriodo || '',
+                    convocatoriaMontoMaximo: null,
+                    fechaInicio: pea.fecha_creacion || null,
+                    fechaFin: null,
+                    fechaLimiteSubsanacion: null,
+                    isPea: true,
+                    peaData: pea
+                };
+            } else {
+                const directorObj = (res.data.investigadores || []).find((inv: any) =>
+                    inv.rol?.toLowerCase().includes('director') || inv.rol?.toLowerCase().includes('principal')
+                );
+                const directorNombre = directorObj
+                    ? (directorObj.nombres_completos || directorObj.nombresCompletos || `${directorObj.nombre || ''} ${directorObj.apellido || ''}`.trim())
+                    : '';
+
+                const userCedula = user?.idSigafi || user?.id_sigafi || (user as any)?.cedula || '';
+                const userInternalId = user?.id?.toString() || (user as any)?.id_usuario?.toString() || '';
+                const isUserInInvestigadores = (res.data.investigadores || []).some((inv: any) =>
+                    (inv.cedula && inv.cedula === userCedula) ||
+                    (inv.idUsuario && inv.idUsuario.toString() === userInternalId) ||
+                    (inv.id_usuario && inv.id_usuario.toString() === userInternalId) ||
+                    (inv.id && inv.id.toString() === userInternalId)
+                );
+                const isUserDirector = directorObj && (
+                    (directorObj.cedula && directorObj.cedula === userCedula) ||
+                    (directorObj.idUsuario && directorObj.idUsuario.toString() === userInternalId) ||
+                    (directorObj.id_usuario && directorObj.id_usuario.toString() === userInternalId)
+                );
+                const esParticipante = isUserInInvestigadores || isUserDirector || (res.data.puede_firmar ?? res.data.puedeFirmar ?? false);
+
+                projectData = {
+                    id: res.data.uuid.substring(0, 8).toUpperCase(),
+                    uuid: res.data.uuid,
+                    title: res.data.titulo?.trim() || '(Sin título)',
+                    status: res.data.estado || 'Borrador',
+                    presupuesto: res.data.costoTotal ?? res.data.costo_total ?? res.data.CostoTotal ?? 0,
+                    linea: res.data.linea_investigacion || 'No definida',
+                    directorProyecto: directorNombre,
+                    esParticipante: !!esParticipante,
+                    puedeEditar: (res.data.puede_editar ?? res.data.puedeEditar ?? res.data.PuedeEditar ?? false) &&
+                        (res.data.estado === 'Borrador' || res.data.estado === 'En Corrección' || res.data.estado === 'Prepropuesta' || res.data.estado === 'Prepropuesta Rechazada'),
+                    puedeSolicitarCambioEquipo: res.data.puede_solicitar_cambio_equipo ?? res.data.puedeSolicitarCambioEquipo ?? false,
+                    puedeFirmar: res.data.puede_firmar ?? res.data.puedeFirmar ?? res.data.PuedeFirmar ?? false,
+                    puntajeEvaluacion: res.data.puntaje_evaluacion ?? res.data.puntajeEvaluacion ?? res.data.PuntajeEvaluacion ?? null,
+                    grupoInvestigacion: '',
+                    grupoInvestigacionUuid: '',
+                    tieneGrupoInvestigacion: false,
+                    dominio: res.data.dominio || '',
+                    descripcion: res.data.descripcion_proyecto || res.data.descripcionProyecto || '',
+                    carrera: res.data.carrera || '',
+                    convocatoria: '',
+                    convocatoriaMontoMaximo: null,
+                    fechaInicio: res.data.fecha_inicio || res.data.fechaInicio || null,
+                    fechaFin: res.data.fecha_fin || res.data.fechaFin || null,
+                    fechaLimiteSubsanacion: res.data.fecha_limite_subsanacion || res.data.fechaLimiteSubsanacion || null
+                };
+            }
+
             setCurrentProject(projectData);
             if (resDocs && Array.isArray(resDocs.data)) {
                 setProjectDocuments(resDocs.data);
@@ -215,7 +260,7 @@ export function useProjectCore() {
             setIsUnauthorized(true);
         }
         setIsLoading(false);
-    }, [resolvedProjectUuid, user]);
+    }, [resolvedProjectUuid, user, isPeaTemplate, isAdmin]);
 
     const resolveDocumentInstance = useCallback(async (docTemplateCode: string) => {
         if (subDocumentUuids[docTemplateCode]) {
@@ -225,11 +270,15 @@ export function useProjectCore() {
         if (!resolvedProjectUuid) return;
         setResolvingDocument(docTemplateCode);
         try {
+            const isPeaDoc = docTemplateCode === 'PEA_OFICIAL';
             const res = await api.get('/documents/instances/resolve', {
                 params: {
                     templateCode: docTemplateCode,
                     entityUuid: resolvedProjectUuid,
-                    title: `${docTemplateCode === 'RUBRICA_EVALUACION' ? 'Rúbrica de Evaluación' : docTemplateCode} — ${currentProject?.title || ''}`
+                    title: isPeaDoc
+                        ? `PEA — ${currentProject?.title || 'Programa de Estudio de la Asignatura'}`
+                        : `${docTemplateCode === 'RUBRICA_EVALUACION' ? 'Rúbrica de Evaluación' : docTemplateCode} — ${currentProject?.title || ''}`,
+                    entityType: isPeaDoc ? 'PEA' : 'Proyecto'
                 }
             });
             const instanceUuid = res.data?.uuid || res.data?.Uuid;

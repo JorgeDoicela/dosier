@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Palette, PanelLeft, GripVertical, Sparkles, Award, FlaskConical, BarChart3 } from 'lucide-react';
+import { FileText, Palette, PanelLeft, GripVertical, Sparkles, Award, FlaskConical, BarChart3, GraduationCap } from 'lucide-react';
 import {
     DndContext,
     rectIntersection,
@@ -29,10 +29,11 @@ interface TemplateCatalogProps {
     onReorderTemplates?: (newTemplates: DocumentTemplateDto[]) => void;
 }
 
-type TemplateCategoryKey = 'INVESTIGACION' | 'REPORTES';
+type TemplateCategoryKey = 'INVESTIGACION' | 'REPORTES' | 'CURRICULAR';
 
 function getTemplateCategory(code: string): TemplateCategoryKey {
     const c = (code || '').toUpperCase();
+    if (c.includes('PEA') || c.includes('CURRICULUM') || c.includes('ESTUDIO')) return 'CURRICULAR';
     if (c.startsWith('REPORTE') || c.includes('ANALITICAS')) return 'REPORTES';
     return 'INVESTIGACION';
 }
@@ -42,6 +43,8 @@ function getTemplateIcon(code: string) {
     switch (cat) {
         case 'REPORTES':
             return <BarChart3 className="w-3.5 h-3.5 text-text-dim" />;
+        case 'CURRICULAR':
+            return <GraduationCap className="w-3.5 h-3.5 text-text-dim" />;
         default:
             return <FileText className="w-3.5 h-3.5 text-text-dim" />;
     }
@@ -201,6 +204,7 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
 
     // Agrupación de plantillas
     const investigacionTemplates = templates.filter(t => getTemplateCategory(t.code) === 'INVESTIGACION');
+    const curricularTemplates = templates.filter(t => getTemplateCategory(t.code) === 'CURRICULAR');
     const reportesTemplates = templates.filter(t => getTemplateCategory(t.code) === 'REPORTES');
 
     return (
@@ -304,7 +308,32 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                                 </div>
                             )}
 
-                            {/* SECCIÓN 4: REPORTES & ANALÍTICAS */}
+                            {/* SECCIÓN 2: CURRÍCULO & ASIGNATURAS (PEA) */}
+                            {curricularTemplates.length > 0 && (
+                                <div className="border-b border-border-thin/40">
+                                    <div className="px-3 py-2 bg-surface-deep/40 border-b border-border-thin/30 flex items-center justify-between">
+                                        <span className="text-[9px] font-mono font-bold tracking-wider text-text-dim uppercase flex items-center gap-1.5">
+                                            <GraduationCap size={11} className="text-text-dim" />
+                                            Currículo & Asignaturas (PEA)
+                                        </span>
+                                        <span className="text-[9px] font-mono text-text-dim/60">
+                                            {curricularTemplates.length}
+                                        </span>
+                                    </div>
+                                    <div className="divide-y divide-border-thin/30">
+                                        {curricularTemplates.map(t => (
+                                            <SortableTemplateItem
+                                                key={t.code}
+                                                template={t}
+                                                isSelected={selectedTemplate?.code === t.code}
+                                                onSelect={() => onSelectTemplate(t)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SECCIÓN 3: REPORTES & ANALÍTICAS */}
                             {reportesTemplates.length > 0 && (
                                 <div>
                                     <div className="px-3 py-2 bg-surface-deep/40 border-b border-border-thin/30 flex items-center justify-between">

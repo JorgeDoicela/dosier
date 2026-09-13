@@ -126,5 +126,63 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             { id: 'bibliografia', label: '8. Bibliografía', iconName: 'BookOpen', componentName: 'AgnosticSection' },
             { id: 'firmas', label: '9. Firmas de Responsabilidad', iconName: 'PenTool', componentName: 'SignaturesSection' }
         ]
+    },
+    PEA_OFICIAL: {
+        title: "Programa de Estudio de la Asignatura (PEA)",
+        subtitle: "Formato Curricular Oficial Normalizado - ISTPET",
+        schema: {
+            // Datos Generales de la Asignatura
+            CodigoAsignatura: '',
+            NombreAsignatura: '',
+            Carrera: '',
+            Periodo: '',
+            Modalidad: 'Presencial',
+            Nivel: '',
+            UnidadOrganizacion: '',
+            TotalHorasAsignatura: 0,
+            Creditos: 0,
+            HorasContactoDocente: 0,
+            HorasPracticoExperimental: 0,
+            HorasAutonomo: 0,
+            DocenteElaborador: '',
+
+            // Secciones Descriptivas y Metodológicas
+            ObjetivoAsignatura: '',
+            MetodologiaEnsenanza: '',
+            RecursosDidacticos: '',
+            EvaluacionAprendizaje: '',
+
+            // Colecciones Curriculares
+            Prerrequisitos: [],
+            ResultadosAprendizaje: [],
+            Unidades: [],
+            ActividadesPracticas: [],
+            Bibliografias: [],
+            Evaluaciones: [],
+
+            // Firmas de Responsabilidad Institucional
+            FirmasResponsabilidad: {
+                DocenteNombre: '',
+                DocenteCargo: 'Docente Elaborador',
+                CoordinadorNombre: '',
+                CoordinadorCargo: 'Coordinador de Carrera',
+                CoordinadorAcadNombre: '',
+                CoordinadorAcadCargo: 'Coordinación Académica',
+                VicerrectorNombre: '',
+                VicerrectorCargo: 'Vicerrectorado Académico'
+            }
+        },
+        lists: ['Prerrequisitos', 'ResultadosAprendizaje', 'Unidades', 'ActividadesPracticas', 'Bibliografias', 'Evaluaciones'],
+        sections: [
+            { id: 'pea_general_section', label: 'a) Datos Generales y Carga Horaria', iconName: 'FileText', componentName: 'AgnosticSection' },
+            { id: 'pea_characterization_section', label: 'b) Objetivo y c) Prerrequisitos', iconName: 'Target', componentName: 'AgnosticSection' },
+            { id: 'pea_competencies_rda_section', label: 'd) y e) Resultados de Aprendizaje', iconName: 'Award', componentName: 'AgnosticSection' },
+            { id: 'pea_contents_section', label: 'f) Contenidos de Enseñanza', iconName: 'Layers', componentName: 'AgnosticSection' },
+            { id: 'pea_methodology_section', label: 'g) Metodología y Recursos Didácticos', iconName: 'BookOpen', componentName: 'AgnosticSection' },
+            { id: 'pea_resources_section', label: 'h) Actividades Prácticas', iconName: 'CheckSquare', componentName: 'AgnosticSection' },
+            { id: 'pea_evaluation_section', label: 'i) Evaluación del Aprendizaje', iconName: 'BarChart', componentName: 'AgnosticSection' },
+            { id: 'pea_bibliography_section', label: 'j) Bibliografía Básica y de Consulta', iconName: 'Library', componentName: 'AgnosticSection' },
+            { id: 'pea_signatures_section', label: 'k) Firmas de Responsabilidad', iconName: 'Shield', componentName: 'AgnosticSection' }
+        ]
     }
 };

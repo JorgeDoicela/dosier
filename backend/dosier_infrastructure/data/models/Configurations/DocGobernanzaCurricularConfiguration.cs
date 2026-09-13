@@ -152,14 +152,28 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_expedientes_curriculares");
             builder.HasKey(e => e.IdExpediente);
-
-            builder.Property(e => e.Uuid).IsRequired().HasMaxLength(36);
-            builder.Property(e => e.CodigoExpediente).HasMaxLength(100);
-            builder.Property(e => e.IdPeriodo).IsRequired().HasMaxLength(7);
-            builder.Property(e => e.Paralelo).HasMaxLength(20);
-            builder.Property(e => e.IdDocenteResponsable).HasMaxLength(20);
-            builder.Property(e => e.EstadoGeneral).IsRequired().HasMaxLength(20);
-            builder.Property(e => e.SnapshotCurricularJson).HasColumnType("json");
+            builder.Property(e => e.IdExpediente).HasColumnName("idExpediente");
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.CodigoExpediente).HasColumnName("codigoExpediente").HasMaxLength(100);
+            builder.Property(e => e.IdAsignacion).HasColumnName("idAsignacion");
+            builder.Property(e => e.IdPeriodo).HasColumnName("idPeriodo").IsRequired().HasMaxLength(7);
+            builder.Property(e => e.IdCarrera).HasColumnName("idCarrera");
+            builder.Property(e => e.IdMalla).HasColumnName("idMalla");
+            builder.Property(e => e.IdDetalleMalla).HasColumnName("idDetalleMalla");
+            builder.Property(e => e.IdAsignatura).HasColumnName("idAsignatura");
+            builder.Property(e => e.IdNivel).HasColumnName("idNivel");
+            builder.Property(e => e.IdModalidad).HasColumnName("idModalidad");
+            builder.Property(e => e.IdSeccion).HasColumnName("idSeccion");
+            builder.Property(e => e.Paralelo).HasColumnName("paralelo").HasMaxLength(20);
+            builder.Property(e => e.IdDocenteResponsable).HasColumnName("idDocenteResponsable").HasMaxLength(20);
+            builder.Property(e => e.IdProyectoCurricular).HasColumnName("idProyectoCurricular");
+            builder.Property(e => e.IdPerfilEgreso).HasColumnName("idPerfilEgreso");
+            builder.Property(e => e.IdModeloEducativo).HasColumnName("idModeloEducativo");
+            builder.Property(e => e.EstadoGeneral).HasColumnName("estadoGeneral").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.SnapshotCurricularJson).HasColumnName("snapshotCurricularJson").HasColumnType("json");
+            builder.Property(e => e.FechaApertura).HasColumnName("fechaApertura");
+            builder.Property(e => e.FechaCierre).HasColumnName("fechaCierre");
+            builder.Property(e => e.Activo).HasColumnName("activo");
 
             builder.HasIndex(e => new { e.IdPeriodo, e.IdAsignatura });
             builder.HasIndex(e => e.IdAsignacion);
@@ -197,9 +211,11 @@ namespace dosier_infrastructure.data.models.Configurations
         {
             builder.ToTable("doc_expediente_asignaciones");
             builder.HasKey(e => new { e.IdExpediente, e.IdAsignacion });
+            builder.Property(e => e.IdExpediente).HasColumnName("idExpediente");
+            builder.Property(e => e.IdAsignacion).HasColumnName("idAsignacion");
 
-            builder.Property(e => e.EsDocenteLider).HasDefaultValue(false);
-            builder.Property(e => e.FechaAsignacion).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            builder.Property(e => e.EsDocenteLider).HasColumnName("esDocenteLider").HasDefaultValue(false);
+            builder.Property(e => e.FechaAsignacion).HasColumnName("fechaAsignacion").HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             builder.HasIndex(e => e.IdAsignacion);
 
