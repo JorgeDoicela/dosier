@@ -1068,5 +1068,89 @@ namespace dosier_infrastructure.Curriculum
                 }).ToList()
             };
         }
+
+        public async Task<bool> SincronizarMetadataAsync(string peaUuid, string snapshotJson)
+        {
+            if (string.IsNullOrWhiteSpace(peaUuid) || string.IsNullOrWhiteSpace(snapshotJson)) return false;
+
+            var entity = await _context.DocPeas.FirstOrDefaultAsync(p => p.Uuid == peaUuid && p.Activo);
+            if (entity == null) return false;
+
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(snapshotJson);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("ObjetivoAsignatura", out var objProp) && objProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                    entity.ObjetivoAsignatura = objProp.GetString();
+
+                if (root.TryGetProperty("MetodologiaEnsenanza", out var metProp) && metProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                    entity.MetodologiaEnsenanza = metProp.GetString();
+
+                if (root.TryGetProperty("RecursosDidacticos", out var recProp) && recProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                    entity.RecursosDidacticos = recProp.GetString();
+
+                if (root.TryGetProperty("EvaluacionAprendizaje", out var evaProp) && evaProp.ValueKind == System.Text.Json.JsonValueKind.String)
+                    entity.EvaluacionAprendizaje = evaProp.GetString();
+
+                if (root.TryGetProperty("Modalidad", out var modProp) && modProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(modProp.GetString()))
+                    entity.Modalidad = modProp.GetString()!;
+
+                if (root.TryGetProperty("UnidadOrganizacion", out var uoProp) && uoProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(uoProp.GetString()))
+                    entity.UnidadOrganizacion = uoProp.GetString();
+
+                if (root.TryGetProperty("Nivel", out var nivProp) && nivProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(nivProp.GetString()))
+                    entity.SemestreNivel = nivProp.GetString();
+
+                if (root.TryGetProperty("TotalHorasAsignatura", out var thProp))
+                {
+                    if (thProp.ValueKind == System.Text.Json.JsonValueKind.Number && thProp.TryGetInt32(out var thVal) && thVal > 0)
+                        entity.TotalHorasAsignatura = thVal;
+                    else if (thProp.ValueKind == System.Text.Json.JsonValueKind.String && int.TryParse(thProp.GetString(), out var thParsed) && thParsed > 0)
+                        entity.TotalHorasAsignatura = thParsed;
+                }
+
+                if (root.TryGetProperty("Creditos", out var credProp))
+                {
+                    if (credProp.ValueKind == System.Text.Json.JsonValueKind.Number && credProp.TryGetDecimal(out var credVal) && credVal > 0)
+                        entity.Creditos = credVal;
+                    else if (credProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(credProp.GetString(), out var credParsed) && credParsed > 0)
+                        entity.Creditos = credParsed;
+                }
+
+                if (root.TryGetProperty("HorasContactoDocente", out var hcdProp))
+                {
+                    if (hcdProp.ValueKind == System.Text.Json.JsonValueKind.Number && hcdProp.TryGetInt32(out var hcdVal))
+                        entity.HorasContactoDocente = hcdVal;
+                    else if (hcdProp.ValueKind == System.Text.Json.JsonValueKind.String && int.TryParse(hcdProp.GetString(), out var hcdParsed))
+                        entity.HorasContactoDocente = hcdParsed;
+                }
+
+                if (root.TryGetProperty("HorasPracticoExperimental", out var hpeProp))
+                {
+                    if (hpeProp.ValueKind == System.Text.Json.JsonValueKind.Number && hpeProp.TryGetInt32(out var hpeVal))
+                        entity.HorasPracticoExperimental = hpeVal;
+                    else if (hpeProp.ValueKind == System.Text.Json.JsonValueKind.String && int.TryParse(hpeProp.GetString(), out var hpeParsed))
+                        entity.HorasPracticoExperimental = hpeParsed;
+                }
+
+                if (root.TryGetProperty("HorasAutonomo", out var haProp))
+                {
+                    if (haProp.ValueKind == System.Text.Json.JsonValueKind.Number && haProp.TryGetInt32(out var haVal))
+                        entity.HorasAutonomo = haVal;
+                    else if (haProp.ValueKind == System.Text.Json.JsonValueKind.String && int.TryParse(haProp.GetString(), out var haParsed))
+                        entity.HorasAutonomo = haParsed;
+                }
+
+                entity.FechaModificacion = System.DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine($"[DOSIER] Error al sincronizar metadata de PEA: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

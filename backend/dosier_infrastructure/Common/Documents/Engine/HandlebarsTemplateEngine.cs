@@ -410,6 +410,34 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             SyncKeyAlias("Anexos", "sec_anexos");
             SyncKeyAlias("anexos", "sec_anexos");
 
+            // Aliases curriculares de PEA_OFICIAL (resiliencia bidireccional)
+            SyncKeyAlias("NombreAsignatura", "titulo");
+            SyncKeyAlias("NombreAsignatura", "nombre_asignatura");
+            SyncKeyAlias("CodigoAsignatura", "codigo_asignatura");
+            SyncKeyAlias("CodigoAsignatura", "codigo");
+            SyncKeyAlias("Carrera", "carrera");
+            SyncKeyAlias("Periodo", "periodo");
+            SyncKeyAlias("DocenteElaborador", "docente_elaborador");
+            SyncKeyAlias("DocenteElaborador", "docente");
+            SyncKeyAlias("TotalHorasAsignatura", "total_horas_asignatura");
+            SyncKeyAlias("TotalHorasAsignatura", "horas_totales");
+            SyncKeyAlias("Creditos", "creditos");
+            SyncKeyAlias("HorasContactoDocente", "horas_contacto_docente");
+            SyncKeyAlias("HorasPracticoExperimental", "horas_practico_experimental");
+            SyncKeyAlias("HorasAutonomo", "horas_autonomo");
+            SyncKeyAlias("ObjetivoAsignatura", "objetivo_asignatura");
+            SyncKeyAlias("MetodologiaEnsenanza", "metodologia_ensenanza");
+            SyncKeyAlias("RecursosDidacticos", "recursos_didacticos");
+            SyncKeyAlias("EvaluacionAprendizaje", "evaluacion_aprendizaje");
+            SyncKeyAlias("UnidadOrganizacion", "unidad_organizacion");
+            SyncKeyAlias("Nivel", "nivel");
+            SyncKeyAlias("Nivel", "semestre");
+            SyncKeyAlias("Nivel", "semestre_nivel");
+            SyncKeyAlias("RdaCarrera", "rda_carrera");
+            SyncKeyAlias("ResultadosAprendizaje", "resultados_aprendizaje");
+            SyncKeyAlias("BibliografiaBasica", "bibliografia_basica");
+            SyncKeyAlias("BibliografiaConsulta", "bibliografia_consulta");
+
             // Sincronización dinámica de alias para cualquier propiedad no listada explícitamente
             var currentKeys = dict.Keys.ToList();
             foreach (var key in currentKeys)

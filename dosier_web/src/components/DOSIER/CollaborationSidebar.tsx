@@ -103,6 +103,23 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             if (!entityUuid) return;
             setIsLoadingTrazabilidad(true);
             try {
+                if (templateCode === 'PEA_OFICIAL') {
+                    const peaRes = await api.get(`/pea/uuid/${entityUuid}`).catch(() => ({ data: null }));
+                    if (peaRes.data) {
+                        const peaData = peaRes.data;
+                        const traceList = (peaData.trazabilidades || peaData.Trazabilidades || []).map((t: any) => ({
+                            id: t.id_trazabilidad ?? t.idTrazabilidad,
+                            estadoAnterior: t.estado_anterior ?? t.estadoAnterior,
+                            estadoNuevo: t.estado_nuevo ?? t.estadoNuevo,
+                            motivo: t.motivo ?? t.Motivo,
+                            usuario: t.nombre_usuario ?? t.nombreUsuario ?? 'Sistema Curricular',
+                            fecha: t.fecha_transicion ?? t.fechaTransicion
+                        }));
+                        setTrazabilidad(traceList);
+                    }
+                    return;
+                }
+
                 const [traceRes, projectRes] = await Promise.all([
                     api.get(`/projects/${entityUuid}/traceability`).catch(() => ({ data: [] })),
                     api.get(`/projects/${entityUuid}/detail`).catch(() => ({ data: null }))
@@ -120,7 +137,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             }
         };
         fetchProjectDetails();
-    }, [entityUuid]);
+    }, [entityUuid, templateCode]);
 
     const deadlineBadge = useMemo(() => {
         if (!projectDeadline) return null;

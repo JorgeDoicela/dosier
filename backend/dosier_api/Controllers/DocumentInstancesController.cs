@@ -274,6 +274,21 @@ namespace dosier_api.Controllers
                         return BadRequest(new { success = false, message = $"Fallo crítico en la sincronización de base de datos: {ex.Message}" });
                     }
                 }
+                else if (instance.TemplateCode == "PEA_OFICIAL")
+                {
+                    try
+                    {
+                        var peaService = HttpContext.RequestServices.GetService<dosier_application.Curriculum.Interfaces.IPeaService>();
+                        if (peaService != null && !string.IsNullOrEmpty(instance.EntityUuid))
+                        {
+                            await peaService.SincronizarMetadataAsync(instance.EntityUuid, instance.DataSnapshotJson ?? metadataJson);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DOSIER] Error en sincronización curricular del PEA: {ex.Message}");
+                    }
+                }
 
                 return Ok(new { success = true, uuid = instance.Uuid });
             }

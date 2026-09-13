@@ -798,6 +798,136 @@ namespace Dosier.Infrastructure.Common.Documents
                     Console.WriteLine($"[DOSIER] [SyncFromProjectAsync] No se encontró el proyecto con EntityUuid: {instance.EntityUuid}");
                 }
             }
+            else if (instance.TemplateCode == "PEA_OFICIAL")
+            {
+                await SyncFromPeaAsync(instance, ct);
+            }
+        }
+
+        private async Task SyncFromPeaAsync(DocumentInstance instance, CancellationToken ct)
+        {
+            if (string.IsNullOrEmpty(instance.EntityUuid)) return;
+
+            // Solo pre-poblar si el snapshot está vacío o sin datos de asignatura cargados
+            bool needsSync = string.IsNullOrWhiteSpace(instance.DataSnapshotJson) ||
+                             instance.DataSnapshotJson == "{}" ||
+                             instance.DataSnapshotJson == "null" ||
+                             !instance.DataSnapshotJson.Contains("\"NombreAsignatura\":\"") ||
+                             instance.DataSnapshotJson.Contains("\"NombreAsignatura\":\"\"");
+
+            if (needsSync)
+            {
+                var pea = await _context.DocPeas
+                    .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                    .Include(p => p.ResultadosAprendizaje)
+                    .Include(p => p.ActividadesPracticas)
+                    .Include(p => p.Bibliografias)
+                    .Include(p => p.Prerrequisitos)
+                    .Include(p => p.Evaluaciones)
+                    .FirstOrDefaultAsync(p => p.Uuid == instance.EntityUuid && p.Activo, ct);
+
+                if (pea != null)
+                {
+                    var carrera = await _context.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == pea.IdCarrera, ct);
+                    var asignatura = await _context.Asignaturas.AsNoTracking().FirstOrDefaultAsync(a => a.IdAsignatura == pea.IdAsignatura, ct);
+                    var docente = !string.IsNullOrEmpty(pea.IdDocenteElaborador)
+                        ? await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == pea.IdDocenteElaborador, ct)
+                        : null;
+
+                    var docenteNombre = docente != null ? $"{docente.Nombres} {docente.Apellidos}".Trim() : "";
+
+                    var initialDict = new Dictionary<string, object?>
+                    {
+                        ["CodigoAsignatura"] = asignatura?.Codigo ?? "",
+                        ["NombreAsignatura"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
+                        ["titulo"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
+                        ["Carrera"] = carrera?.Carrera1 ?? "Carrera ISTPET",
+                        ["Periodo"] = pea.IdPeriodo,
+                        ["Modalidad"] = pea.Modalidad,
+                        ["Nivel"] = pea.SemestreNivel ?? "",
+                        ["UnidadOrganizacion"] = pea.UnidadOrganizacion ?? "",
+                        ["TotalHorasAsignatura"] = pea.TotalHorasAsignatura,
+                        ["Creditos"] = pea.Creditos,
+                        ["HorasContactoDocente"] = pea.HorasContactoDocente,
+                        ["HorasPracticoExperimental"] = pea.HorasPracticoExperimental,
+                        ["HorasAutonomo"] = pea.HorasAutonomo,
+                        ["DocenteElaborador"] = docenteNombre,
+                        ["ObjetivoAsignatura"] = string.IsNullOrWhiteSpace(pea.ObjetivoAsignatura) ? "<p>Desarrollar y consolidar las competencias técnicas y conocimientos fundamentales de la asignatura.</p>" : pea.ObjetivoAsignatura,
+                        ["MetodologiaEnsenanza"] = pea.MetodologiaEnsenanza ?? "",
+                        ["RecursosDidacticos"] = pea.RecursosDidacticos ?? "",
+                        ["EvaluacionAprendizaje"] = pea.EvaluacionAprendizaje ?? "",
+                        ["Prerrequisitos"] = pea.Prerrequisitos.Select(p => new Dictionary<string, string>
+                        {
+                            ["NombreAsignatura"] = p.NombreAsignatura ?? "",
+                            ["Observacion"] = p.Observacion ?? ""
+                        }).ToList(),
+                        ["ResultadosAprendizaje"] = pea.ResultadosAprendizaje.OrderBy(r => r.Orden).Select(r => new Dictionary<string, string>
+                        {
+                            ["CodigoRda"] = r.CodigoRda ?? "",
+                            ["Descripcion"] = r.Descripcion ?? "",
+                            ["NivelDesarrollo"] = r.NivelDesarrollo ?? ""
+                        }).ToList(),
+                        ["Unidades"] = pea.Unidades.OrderBy(u => u.Orden).Select(u => new Dictionary<string, object?>
+                        {
+                            ["NumeroUnidad"] = u.NumeroUnidad,
+                            ["NombreUnidad"] = u.NombreUnidad,
+                            ["TotalHorasUnidad"] = u.TotalHorasUnidad,
+                            ["HorasDocencia"] = u.HorasDocencia,
+                            ["HorasPracticoExp"] = u.HorasPracticoExp,
+                            ["HorasAutonomo"] = u.HorasAutonomo,
+                            ["Temas"] = u.Temas.OrderBy(t => t.Orden).Select(t => new Dictionary<string, string>
+                            {
+                                ["NumeroTema"] = t.NumeroTema.ToString(),
+                                ["TituloTema"] = t.TituloTema ?? "",
+                                ["DescripcionSubtemas"] = t.DescripcionSubtemas ?? ""
+                            }).ToList()
+                        }).ToList(),
+                        ["ActividadesPracticas"] = pea.ActividadesPracticas.OrderBy(p => p.Orden).Select(p => new Dictionary<string, object?>
+                        {
+                            ["NumeroPractica"] = p.NumeroPractica,
+                            ["NombrePractica"] = p.NombrePractica ?? "",
+                            ["Caracterizacion"] = p.Caracterizacion ?? "",
+                            ["DuracionHoras"] = p.DuracionHoras
+                        }).ToList(),
+                        ["Bibliografias"] = pea.Bibliografias.OrderBy(b => b.Orden).Select(b => new Dictionary<string, string>
+                        {
+                            ["TipoBibliografia"] = b.TipoBibliografia ?? "",
+                            ["Autor"] = b.Autor ?? "",
+                            ["Anio"] = b.Anio?.ToString() ?? "",
+                            ["TituloLibro"] = b.TituloLibro ?? "",
+                            ["EditorialCiudad"] = b.EditorialCiudad ?? "",
+                            ["CitaCompletaApa"] = b.CitaCompletaApa ?? ""
+                        }).ToList(),
+                        ["Evaluaciones"] = pea.Evaluaciones.Any()
+                            ? pea.Evaluaciones.Select(e => new Dictionary<string, string>
+                            {
+                                ["Denominacion"] = e.Denominacion ?? "",
+                                ["TipoEvaluacion"] = e.TipoEvaluacion ?? "",
+                                ["CalificacionMaxima"] = e.CalificacionMaxima.ToString()
+                            }).ToList()
+                            : new List<Dictionary<string, string>>
+                            {
+                                new() { ["Denominacion"] = "Nota Parcial 1", ["TipoEvaluacion"] = "Actividades autónomas y práctico-experimentales (frecuentes)", ["CalificacionMaxima"] = "10" },
+                                new() { ["Denominacion"] = "Nota Parcial 2", ["TipoEvaluacion"] = "Evaluaciones sumativas de las unidades de estudio (parcial)", ["CalificacionMaxima"] = "10" },
+                                new() { ["Denominacion"] = "Evaluación Final", ["TipoEvaluacion"] = "Evaluación final de la asignatura (examen)", ["CalificacionMaxima"] = "10" }
+                            },
+                        ["FirmasResponsabilidad"] = new Dictionary<string, string>
+                        {
+                            ["DocenteNombre"] = docenteNombre,
+                            ["DocenteCargo"] = "Docente Elaborador",
+                            ["CoordinadorNombre"] = "",
+                            ["CoordinadorCargo"] = "Coordinador de Carrera",
+                            ["CoordinadorAcadNombre"] = "",
+                            ["CoordinadorAcadCargo"] = "Coordinación Académica",
+                            ["VicerrectorNombre"] = "",
+                            ["VicerrectorCargo"] = "Vicerrectorado Académico"
+                        }
+                    };
+
+                    instance.UpdateDataSnapshot(System.Text.Json.JsonSerializer.Serialize(initialDict));
+                    await _context.SaveChangesAsync(ct);
+                }
+            }
         }
 
         private static void MergeField(Dictionary<string, object> target, string key, object? newValue)

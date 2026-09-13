@@ -67,6 +67,31 @@ namespace dosier_tests.Curriculum
             );
         }
 
+        private static void AssignRole(DosierContext context, int idUsuario, string codigoRol)
+        {
+            var role = context.Roles.FirstOrDefault(r => r.CodigoRol == codigoRol);
+            if (role == null)
+            {
+                role = new Role
+                {
+                    CodigoRol = codigoRol,
+                    Nombre = codigoRol,
+                    EsActivo = true
+                };
+                context.Roles.Add(role);
+                context.SaveChanges();
+            }
+
+            context.UserRoles.Add(new UserRole
+            {
+                IdUsuario = idUsuario,
+                IdRol = role.IdRol,
+                Role = role,
+                EsActivo = true
+            });
+            context.SaveChanges();
+        }
+
         [Fact]
         [Trait("Category", "Unit")]
         [Trait("Feature", "FirmaCurricular")]
@@ -88,6 +113,7 @@ namespace dosier_tests.Curriculum
                 Activo = true
             };
             context.Users.Add(docente);
+            AssignRole(context, 101, "DOSIER_DOCENTE");
 
             // 2. Arrange: PEA en Borrador
             var pea = new DocPea
@@ -227,6 +253,8 @@ namespace dosier_tests.Curriculum
                 Activo = true
             };
             context.Users.AddRange(coord, vicerrector);
+            AssignRole(context, 201, "DOSIER_COORD_CARRERA");
+            AssignRole(context, 301, "DOSIER_VICERRECTOR");
 
             var pea = new DocPea
             {
@@ -293,6 +321,7 @@ namespace dosier_tests.Curriculum
                 Activo = true
             };
             context.Users.Add(user);
+            AssignRole(context, 501, "DOSIER_DOCENTE");
 
             var pea = new DocPea
             {
@@ -345,6 +374,7 @@ namespace dosier_tests.Curriculum
                 Activo = true
             };
             context.Users.Add(user);
+            AssignRole(context, 601, "DOSIER_DOCENTE");
 
             var pea1 = new DocPea
             {
@@ -430,6 +460,7 @@ namespace dosier_tests.Curriculum
                 Activo = true
             };
             context.Users.Add(user);
+            AssignRole(context, 701, "DOSIER_DOCENTE");
 
             var pea = new DocPea
             {

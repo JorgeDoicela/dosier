@@ -604,6 +604,203 @@ namespace Dosier.Infrastructure.Common.Documents
                     }
                 }
 
+                // 4.1 Enriquecimiento Curricular Integral para PEA_OFICIAL (Failsafe institucional ante snapshots incompletos)
+                if (string.Equals(template.Code, "PEA_OFICIAL", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var rawText = renderData is System.Text.Json.JsonElement je 
+                            ? je.GetRawText() 
+                            : System.Text.Json.JsonSerializer.Serialize(renderData);
+                        
+                        var dataDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(rawText) 
+                            ?? new Dictionary<string, object?>();
+
+                        bool NeedsField(string key)
+                        {
+                            if (!dataDict.TryGetValue(key, out var val) || val == null) return true;
+                            var str = val.ToString()?.Trim();
+                            return string.IsNullOrWhiteSpace(str);
+                        }
+
+                        bool NeedsList(string key)
+                        {
+                            if (!dataDict.TryGetValue(key, out var val) || val == null) return true;
+                            if (val is System.Text.Json.JsonElement jeList && jeList.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                return jeList.GetArrayLength() == 0;
+                            if (val is System.Collections.ICollection col)
+                                return col.Count == 0;
+                            return false;
+                        }
+
+                        dosier_domain.Curriculum.Entities.DocPea? pea = null;
+                        if (targetUuids.Count > 0)
+                        {
+                            pea = await _db.DocPeas
+                                .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                                .Include(p => p.ResultadosAprendizaje)
+                                .Include(p => p.ActividadesPracticas)
+                                .Include(p => p.Bibliografias)
+                                .Include(p => p.Prerrequisitos)
+                                .Include(p => p.Evaluaciones)
+                                .FirstOrDefaultAsync(p => targetUuids.Contains(p.Uuid) && p.Activo, cancellationToken);
+
+                            if (pea == null)
+                            {
+                                var inst = await _db.DocumentInstances.FirstOrDefaultAsync(i => targetUuids.Contains(i.Uuid), cancellationToken);
+                                if (inst != null && !string.IsNullOrEmpty(inst.EntityUuid))
+                                {
+                                    pea = await _db.DocPeas
+                                        .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                                        .Include(p => p.ResultadosAprendizaje)
+                                        .Include(p => p.ActividadesPracticas)
+                                        .Include(p => p.Bibliografias)
+                                        .Include(p => p.Prerrequisitos)
+                                        .Include(p => p.Evaluaciones)
+                                        .FirstOrDefaultAsync(p => p.Uuid == inst.EntityUuid && p.Activo, cancellationToken);
+                                }
+                            }
+                        }
+
+                        if (pea != null)
+                        {
+                            var carrera = await _db.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == pea.IdCarrera, cancellationToken);
+                            var asignatura = await _db.Asignaturas.AsNoTracking().FirstOrDefaultAsync(a => a.IdAsignatura == pea.IdAsignatura, cancellationToken);
+                            var docente = !string.IsNullOrEmpty(pea.IdDocenteElaborador)
+                                ? await _db.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == pea.IdDocenteElaborador, cancellationToken)
+                                : null;
+
+                            var docenteNombre = docente != null ? $"{docente.Nombres} {docente.Apellidos}".Trim() : "";
+                            var materiaNombre = asignatura?.Asignatura1 ?? "Asignatura ISTPET";
+                            var carreraNombre = carrera?.Carrera1 ?? "Carrera ISTPET";
+
+                            void Put(string k, object? v)
+                            {
+                                if (v != null)
+                                {
+                                    dataDict[k] = v;
+                                    var pascal = char.ToUpper(k[0]) + k.Substring(1);
+                                    var snake = Regex.Replace(k, @"([A-Z])", "_$1").ToLower().TrimStart('_');
+                                    dataDict[pascal] = v;
+                                    dataDict[snake] = v;
+                                }
+                            }
+
+                            if (NeedsField("NombreAsignatura")) Put("NombreAsignatura", materiaNombre);
+                            if (NeedsField("titulo")) Put("titulo", materiaNombre);
+                            if (NeedsField("Carrera")) Put("Carrera", carreraNombre);
+                            if (NeedsField("Periodo")) Put("Periodo", pea.IdPeriodo);
+                            if (NeedsField("CodigoAsignatura")) Put("CodigoAsignatura", asignatura?.Codigo ?? "");
+                            if (NeedsField("Modalidad")) Put("Modalidad", pea.Modalidad);
+                            if (NeedsField("Nivel")) Put("Nivel", pea.SemestreNivel);
+                            if (NeedsField("UnidadOrganizacion")) Put("UnidadOrganizacion", pea.UnidadOrganizacion);
+                            if (NeedsField("DocenteElaborador")) Put("DocenteElaborador", docenteNombre);
+                            if (NeedsField("TotalHorasAsignatura") || Convert.ToInt32(dataDict.GetValueOrDefault("TotalHorasAsignatura") ?? 0) == 0)
+                                Put("TotalHorasAsignatura", pea.TotalHorasAsignatura);
+                            if (NeedsField("Creditos") || Convert.ToDecimal(dataDict.GetValueOrDefault("Creditos") ?? 0) == 0)
+                                Put("Creditos", pea.Creditos);
+                            if (NeedsField("HorasContactoDocente") || Convert.ToInt32(dataDict.GetValueOrDefault("HorasContactoDocente") ?? 0) == 0)
+                                Put("HorasContactoDocente", pea.HorasContactoDocente);
+                            if (NeedsField("HorasPracticoExperimental") || Convert.ToInt32(dataDict.GetValueOrDefault("HorasPracticoExperimental") ?? 0) == 0)
+                                Put("HorasPracticoExperimental", pea.HorasPracticoExperimental);
+                            if (NeedsField("HorasAutonomo") || Convert.ToInt32(dataDict.GetValueOrDefault("HorasAutonomo") ?? 0) == 0)
+                                Put("HorasAutonomo", pea.HorasAutonomo);
+
+                            if (NeedsField("ObjetivoAsignatura")) Put("ObjetivoAsignatura", pea.ObjetivoAsignatura);
+                            if (NeedsField("MetodologiaEnsenanza")) Put("MetodologiaEnsenanza", pea.MetodologiaEnsenanza);
+                            if (NeedsField("RecursosDidacticos")) Put("RecursosDidacticos", pea.RecursosDidacticos);
+                            if (NeedsField("EvaluacionAprendizaje")) Put("EvaluacionAprendizaje", pea.EvaluacionAprendizaje);
+
+                            if (NeedsList("Unidades") && pea.Unidades.Any())
+                            {
+                                dataDict["Unidades"] = pea.Unidades.OrderBy(u => u.Orden).Select(u => new
+                                {
+                                    NumeroUnidad = u.NumeroUnidad,
+                                    NombreUnidad = u.NombreUnidad,
+                                    TotalHorasUnidad = u.TotalHorasUnidad,
+                                    HorasDocencia = u.HorasDocencia,
+                                    HorasPracticoExp = u.HorasPracticoExp,
+                                    HorasAutonomo = u.HorasAutonomo,
+                                    Temas = u.Temas.OrderBy(t => t.Orden).Select(t => new
+                                    {
+                                        NumeroTema = t.NumeroTema,
+                                        TituloTema = t.TituloTema,
+                                        DescripcionSubtemas = t.DescripcionSubtemas
+                                    }).ToList()
+                                }).ToList();
+                            }
+
+                            if (NeedsList("ResultadosAprendizaje") && pea.ResultadosAprendizaje.Any())
+                            {
+                                dataDict["ResultadosAprendizaje"] = pea.ResultadosAprendizaje.OrderBy(r => r.Orden).Select(r => new
+                                {
+                                    CodigoRda = r.CodigoRda,
+                                    Descripcion = r.Descripcion,
+                                    NivelDesarrollo = r.NivelDesarrollo
+                                }).ToList();
+                            }
+
+                            if (NeedsList("ActividadesPracticas") && pea.ActividadesPracticas.Any())
+                            {
+                                dataDict["ActividadesPracticas"] = pea.ActividadesPracticas.OrderBy(p => p.Orden).Select(p => new
+                                {
+                                    NumeroPractica = p.NumeroPractica,
+                                    NombrePractica = p.NombrePractica,
+                                    Caracterizacion = p.Caracterizacion,
+                                    DuracionHoras = p.DuracionHoras
+                                }).ToList();
+                            }
+
+                            if (NeedsList("Bibliografias") && pea.Bibliografias.Any())
+                            {
+                                dataDict["Bibliografias"] = pea.Bibliografias.OrderBy(b => b.Orden).Select(b => new
+                                {
+                                    TipoBibliografia = b.TipoBibliografia,
+                                    Autor = b.Autor,
+                                    Anio = b.Anio,
+                                    TituloLibro = b.TituloLibro,
+                                    EditorialCiudad = b.EditorialCiudad,
+                                    CitaCompletaApa = b.CitaCompletaApa
+                                }).ToList();
+                            }
+
+                            if (NeedsList("Prerrequisitos") && pea.Prerrequisitos.Any())
+                            {
+                                dataDict["Prerrequisitos"] = pea.Prerrequisitos.OrderBy(p => p.Orden).Select(p => new
+                                {
+                                    NombreAsignatura = p.NombreAsignatura,
+                                    Observacion = p.Observacion
+                                }).ToList();
+                            }
+
+                            if (NeedsList("Evaluaciones") && pea.Evaluaciones.Any())
+                            {
+                                dataDict["Evaluaciones"] = pea.Evaluaciones.OrderBy(e => e.Orden).Select(e => new
+                                {
+                                    Denominacion = e.Denominacion,
+                                    TipoEvaluacion = e.TipoEvaluacion,
+                                    CalificacionMaxima = e.CalificacionMaxima
+                                }).ToList();
+                            }
+
+                            if (!string.IsNullOrEmpty(pea.FirmaElaboradoDocente))
+                                dataDict["FirmaElaboradoDocente"] = pea.FirmaElaboradoDocente;
+                            if (!string.IsNullOrEmpty(pea.FirmaRevisadoCoord))
+                                dataDict["FirmaRevisadoCoord"] = pea.FirmaRevisadoCoord;
+                            if (!string.IsNullOrEmpty(pea.FirmaRevisadoAcad))
+                                dataDict["FirmaRevisadoAcad"] = pea.FirmaRevisadoAcad;
+                            if (!string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector))
+                                dataDict["FirmaAprobadoVicerrector"] = pea.FirmaAprobadoVicerrector;
+                        }
+
+                        renderData = dataDict;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "DOSIER DocumentEngine: Error al enriquecer datos de PEA_OFICIAL");
+                    }
+                }
+
                 // 5. Inyectar datos + imágenes con Handlebars
                 var renderedHtml = await _handlebarsEngine.RenderAsync(htmlToRender ?? string.Empty, renderData ?? new object(), extraImageVars.Count > 0 ? extraImageVars : null, request.IsBlindMode);
                 

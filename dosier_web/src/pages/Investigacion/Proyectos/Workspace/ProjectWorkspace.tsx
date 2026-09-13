@@ -82,7 +82,52 @@ export const ProjectWorkspace: React.FC = () => {
     }, [currentProject?.uuid, currentProject?.titulo, (currentProject as any)?.codigo_institucional, touchProject]);
 
     const editorUuid = activeDocument ? subDocumentUuids[activeDocument] : undefined;
-    const preloadedData = React.useMemo(() => ({ Uuid: editorUuid }), [editorUuid]);
+    const preloadedData = React.useMemo(() => {
+        const base: any = { Uuid: editorUuid };
+        if (activeDocument === 'PEA_OFICIAL') {
+            const pea = currentProject?.peaData || currentProject || {};
+            const asigNombre = pea.nombre_asignatura || pea.nombreAsignatura || currentProject?.titulo || currentProject?.title || '';
+            const carreraNombre = pea.nombre_carrera || pea.nombreCarrera || currentProject?.carrera || '';
+            const perNombre = pea.id_periodo || pea.idPeriodo || currentProject?.convocatoria || '';
+            const docNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || currentProject?.directorProyecto || '';
+
+            base.titulo = asigNombre;
+            base.NombreAsignatura = asigNombre;
+            base.nombre_asignatura = asigNombre;
+            base.CodigoAsignatura = pea.codigo_asignatura || pea.codigoAsignatura || '';
+            base.codigo_asignatura = pea.codigo_asignatura || pea.codigoAsignatura || '';
+            base.Carrera = carreraNombre;
+            base.carrera = carreraNombre;
+            base.Periodo = perNombre;
+            base.periodo = perNombre;
+            base.Modalidad = pea.modalidad || 'Presencial';
+            base.modalidad = pea.modalidad || 'Presencial';
+            base.Nivel = pea.semestre_nivel || pea.semestreNivel || '';
+            base.nivel = pea.semestre_nivel || pea.semestreNivel || '';
+            base.UnidadOrganizacion = pea.unidad_organizacion || pea.unidadOrganizacion || '';
+            base.unidad_organizacion = pea.unidadOrganizacion || pea.unidadOrganizacion || '';
+            base.TotalHorasAsignatura = pea.total_horas_asignatura ?? pea.totalHorasAsignatura ?? 0;
+            base.total_horas_asignatura = pea.total_horas_asignatura ?? pea.totalHorasAsignatura ?? 0;
+            base.Creditos = pea.creditos ?? 0;
+            base.creditos = pea.creditos ?? 0;
+            base.HorasContactoDocente = pea.horas_contacto_docente ?? pea.horasContactoDocente ?? 0;
+            base.HorasPracticoExperimental = pea.horas_practico_experimental ?? pea.horasPracticoExperimental ?? 0;
+            base.HorasAutonomo = pea.horas_autonomo ?? pea.horasAutonomo ?? 0;
+            base.DocenteElaborador = docNombre;
+            base.docente = docNombre;
+            base.ObjetivoAsignatura = pea.objetivo_asignatura || pea.objetivoAsignatura || '';
+            base.MetodologiaEnsenanza = pea.metodologia_ensenanza || pea.metodologiaEnsenanza || '';
+            base.RecursosDidacticos = pea.recursos_didacticos || pea.recursosDidacticos || '';
+            base.EvaluacionAprendizaje = pea.evaluacion_aprendizaje || pea.evaluacionAprendizaje || '';
+            base.Unidades = pea.unidades || pea.Unidades || [];
+            base.ResultadosAprendizaje = pea.resultados_aprendizaje || pea.resultadosAprendizaje || pea.ResultadosAprendizaje || [];
+            base.ActividadesPracticas = pea.actividades_practicas || pea.actividadesPracticas || pea.ActividadesPracticas || [];
+            base.Bibliografias = pea.bibliografias || pea.Bibliografias || [];
+            base.Prerrequisitos = pea.prerrequisitos || pea.Prerrequisitos || [];
+            base.Evaluaciones = pea.evaluaciones || pea.Evaluaciones || [];
+        }
+        return base;
+    }, [editorUuid, activeDocument, currentProject?.peaData, currentProject?.directorProyecto, currentProject?.titulo, currentProject?.title, currentProject?.carrera, currentProject?.convocatoria]);
 
     // ── Sincronización Silenciosa y Throttling Enterprise (10/10) ──
     const FOCUS_THROTTLE_MS = 15000; // Cooldown mínimo de 15s entre revalidaciones por foco/visibilidad
