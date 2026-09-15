@@ -304,8 +304,17 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-backend:${{ github.sha }}
-            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-web:${{ github.sha }}
+            if docker manifest inspect "ghcr.io/${OWNER_LOWER}/dosier-backend:${{ github.sha }}" >/dev/null 2>&1; then
+              export BACKEND_IMAGE="ghcr.io/${OWNER_LOWER}/dosier-backend:${{ github.sha }}"
+            else
+              export BACKEND_IMAGE="ghcr.io/${OWNER_LOWER}/dosier-backend:latest"
+            fi
+
+            if docker manifest inspect "ghcr.io/${OWNER_LOWER}/dosier-web:${{ github.sha }}" >/dev/null 2>&1; then
+              export FRONTEND_IMAGE="ghcr.io/${OWNER_LOWER}/dosier-web:${{ github.sha }}"
+            else
+              export FRONTEND_IMAGE="ghcr.io/${OWNER_LOWER}/dosier-web:latest"
+            fi
 
             echo "=== Descargando imagenes Docker actualizadas ==="
             docker compose pull --quiet
