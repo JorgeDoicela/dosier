@@ -31,14 +31,15 @@ Distribución proyectada del consumo de memoria en estado estacionario y bajo ca
 |---------------------------------------------------------------------------------|
 | SO Linux Debian/Ubuntu (~300 MB)                                                |
 | Docker Engine & Containerd (~150 MB)                                            |
+| dosier-db (MySQL 8.0 InnoDB Buffer Pool + Conexiones) (~450 MB)                 |
 | dosier-web (Nginx SPA + SSL) (~50 MB)                                           |
 | dosier-backend (.NET 8 Web API + EF Core + SignalR) (~450 MB)                   |
 | Reserva para Picos de iText 9 / Firmas SHA-256 (~500 MB)                        |
-| Margen Libre / Page Cache de Linux (~2646 MB)                                   |
+| Margen Libre / Page Cache de Linux (~2196 MB)                                   |
 |---------------------------------------------------------------------------------|
 ```
 
-El margen de más de 2.5 GB garantiza que el sistema operativo mantenga en memoria caché de disco los archivos estáticos y datos de lectura frecuente sin recurrir a paginación en disco.
+El margen de más de 2.1 GB garantiza que el sistema operativo mantenga en memoria caché de disco los archivos estáticos y datos de lectura frecuente sin recurrir a paginación en disco, soportando la ejecución concurrente de base de datos y backend sin degradación.
 
 ---
 

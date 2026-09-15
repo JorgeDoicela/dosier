@@ -80,12 +80,36 @@ Implementa el patrón de compilación multi-etapa (*Multi-Stage Build*) para red
 
 ## 4. Orquestacion y Persistencia (`docker-compose.yml`)
 
-El orquestador define la topología de servicios en el servidor de producción:
+El orquestador define la topología de servicios multi-contenedor en el servidor de producción:
 
 ```yaml
-version: '3.8'
-
 services:
+  # 1. Base de Datos Relacional (MySQL 8.0 con Auto-Inicialización de Scripts)
+  dosier-db:
+    image: mysql:8.0
+    container_name: dosier-db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}
+      MYSQL_DATABASE: sigafi_es
+      MYSQL_USER: ${DB_USER:-dosier_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-DosierIstpet2026UserPass}
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./scripts/base_datos:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - dosier-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # 2. Backend ASP.NET Core (.NET 8 Web API)
   dosier-backend:
     image: ${BACKEND_IMAGE:-ghcr.io/jorgedoicela/dosier-backend:latest}
     container_name: dosier-backend
@@ -95,11 +119,20 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__default_connection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass};
+      - ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass};
+      - Jwt__Secret=ClaveSecretaInstitucionalParaFirmasJWTMinimo32Caracteres
+      - Jwt__Issuer=DosierApi
+      - Jwt__Audience=DosierClients
+      - FrontendUrl=https://dosier.jorgedoicela.com
     env_file:
       - .env
     volumes:
       - ./uploads:/app/uploads
       - ./backups:/app/backups
+    depends_on:
+      dosier-db:
+        condition: service_healthy
     networks:
       - dosier-network
     healthcheck:
@@ -109,6 +142,7 @@ services:
       retries: 3
       start_period: 20s
 
+  # 3. Frontend Web (React 18 + Vite + Nginx SPA + SSL)
   dosier-web:
     image: ${FRONTEND_IMAGE:-ghcr.io/jorgedoicela/dosier-web:latest}
     container_name: dosier-web
@@ -130,6 +164,8 @@ networks:
 ```
 
 ### 4.1 Politica de Persistencia y Volúmenes
+* **`./mysql_data:/var/lib/mysql`:** Persistencia física de los archivos de tablas y registros de MySQL 8.0, garantizando inmunidad a reinicios o reconstrucciones de contenedores.
+* **`./scripts/base_datos:/docker-entrypoint-initdb.d:ro`:** Monta los 5 scripts DDL oficiales en modo lectura. En el primer encendido, MySQL los ejecuta en orden lexicográfico (`00` a `04`), aprovisionando la base de datos sin intervención manual.
 * **`./uploads:/app/uploads`:** Almacena los archivos PDF oficiales generados por el motor `DocumentEngine`, firmas electrónicas PKCS#12 y evidencias subidas por docentes.
 * **`./backups:/app/backups`:** Almacena volcados periódicos y copias de seguridad de la base de datos `sigafi_es`.
 * **`./certs:/etc/nginx/certs:ro`:** Monta los certificados SSL de Cloudflare Origin CA en modo solo lectura (`:ro`) para impedir cualquier manipulación desde el contenedor web.
