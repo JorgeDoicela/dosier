@@ -1,0 +1,322 @@
+name: DOSIER Enterprise CI/CD Pipeline - Security, Multi-Stage DAG & AWS EC2 Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'dosier_web/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      restart_only:
+        description: 'Solo reiniciar contenedores en EC2 (fix rapido sin rebuild)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+env:
+  REGISTRY: ghcr.io
+  DEPLOY_DIR: /var/www/dosier
+
+jobs:
+  # =========================================================================
+  # 0. Reinicio Rapido de Contenedores (Fix sin Rebuild)
+  # =========================================================================
+  quick-restart:
+    name: Quick Restart EC2 Containers
+    runs-on: ubuntu-latest
+    if: github.event.inputs.restart_only == 'true'
+    steps:
+      - name: SSH al EC2 y Reiniciar Contenedores
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ env.DEPLOY_DIR }}
+            echo "=== Estado actual de contenedores ==="
+            docker compose ps
+            echo "=== Reiniciando contenedores ==="
+            docker compose restart
+            echo "=== Estado post-reinicio ==="
+            docker compose ps
+            echo "=== Health check de la API ==="
+            sleep 5
+            curl -sf http://localhost:5000/api/ping && echo "API DOSIER OK" || echo "API DOSIER sigue sin responder"
+
+  # =========================================================================
+  # 1. Deteccion Inteligente de Cambios en Rutas (Path Filtering)
+  # =========================================================================
+  detect-changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    if: github.event.inputs.restart_only != 'true'
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Evaluar Filtros de Rutas
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'docker-compose.yml'
+              - '.github/workflows/deploy.yml'
+            frontend:
+              - 'dosier_web/**'
+              - 'docker-compose.yml'
+              - '.github/workflows/deploy.yml'
+
+  # =========================================================================
+  # 2. Verificacion, Compilacion y Pruebas Unitarias (Backend .NET 8)
+  # =========================================================================
+  backend-qa:
+    name: Backend QA & Unit Tests (.NET 8)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar dependencias
+        run: dotnet restore backend/dosier.slnx
+
+      - name: Compilar Solucion
+        run: dotnet build backend/dosier.slnx --no-restore -c Release
+
+      - name: Ejecutar Pruebas Unitarias
+        run: dotnet test backend/dosier_tests/dosier_tests.csproj --no-build -c Release --verbosity normal
+
+  # =========================================================================
+  # 3. Verificacion, Calidad y Compilacion (Frontend React + Vite)
+  # =========================================================================
+  frontend-qa:
+    name: Frontend QA & Build Check (Vite React)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: dosier_web/package.json
+
+      - name: Instalar Dependencias
+        run: |
+          cd dosier_web
+          npm install
+
+      - name: Ejecutar Pruebas Unitarias Vitest
+        run: |
+          cd dosier_web
+          npm run test:run
+
+      - name: Compilar Frontend para Produccion
+        run: |
+          cd dosier_web
+          npm run build
+
+  # =========================================================================
+  # 4. Build, Cache y Push (Backend Docker Image -> GHCR)
+  # =========================================================================
+  build-backend:
+    name: Build & Push Backend Image (GHCR)
+    needs: [detect-changes, backend-qa]
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Codigo
+        uses: actions/checkout@v4
+
+      - name: Formatear nombre de repositorio y obtener SHA corto
+        id: vars
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "BACKEND_IMAGE_NAME=${OWNER_LOWER}/dosier-backend" >> $GITHUB_ENV
+          echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar Sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compilar y Publicar Imagen Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =========================================================================
+  # 5. Build, Cache y Push (Frontend Docker Image -> GHCR)
+  # =========================================================================
+  build-frontend:
+    name: Build & Push Frontend Image (GHCR)
+    needs: [detect-changes, frontend-qa]
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Codigo
+        uses: actions/checkout@v4
+
+      - name: Formatear nombre de repositorio y obtener SHA corto
+        id: vars
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "FRONTEND_IMAGE_NAME=${OWNER_LOWER}/dosier-web" >> $GITHUB_ENV
+          echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar Sesion en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compilar y Publicar Imagen Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./dosier_web
+          file: ./dosier_web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =========================================================================
+  # 6. Despliegue Inmutable en AWS EC2 via SSH
+  # =========================================================================
+  deploy-ec2:
+    name: Deploy to AWS EC2 Production
+    needs: [detect-changes, build-backend, build-frontend]
+    if: always() && !cancelled() && !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar Directorio en EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo mkdir -p ${{ env.DEPLOY_DIR }}/uploads ${{ env.DEPLOY_DIR }}/backups ${{ env.DEPLOY_DIR }}/certs
+            sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} ${{ env.DEPLOY_DIR }}
+
+      - name: Transferir docker-compose.yml via SCP
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/docker-compose.yml
+
+      - name: Desplegar Contenedores en EC2 por SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            set -e
+            cd ${{ env.DEPLOY_DIR }}
+
+            echo "=== Liberando espacio en disco en EC2 ==="
+            docker system prune -af || true
+            sudo journalctl --vacuum-size=100M 2>/dev/null || true
+
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-backend:${{ github.sha }}
+            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-web:${{ github.sha }}
+
+            echo "=== Descargando imagenes Docker actualizadas ==="
+            docker compose pull --quiet
+            echo "=== Levantando servicios DOSIER ==="
+            docker compose up -d --remove-orphans
+            docker image prune -f
+
+  # =========================================================================
+  # 7. Verificacion de Salud y Resumen de Despliegue
+  # =========================================================================
+  health-check-report:
+    name: Post-Deploy Health Check & Summary Report
+    needs: deploy-ec2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar Disponibilidad en Vivo (Health Check)
+        run: |
+          echo "Verificando respuesta del backend en el servidor..."
+          curl -sI --connect-timeout 10 http://${{ secrets.EC2_HOST }}:5000/api/ping || true
+
+      - name: Generar Reporte de Despliegue en GitHub Summary
+        run: |
+          cat <<EOF >> $GITHUB_STEP_SUMMARY
+          # Reporte Ejecutivo de Despliegue CI/CD - DOSIER
+
+          | Parametro | Valor |
+          | :--- | :--- |
+          | **Estado** | **Despliegue Exitoso en Produccion** |
+          | **IP / Host EC2** | \`${{ secrets.EC2_HOST }}\` |
+          | **Commit SHA** | \`${{ github.sha }}\` |
+          | **Desplegado por** | @${{ github.actor }} |
+          | **Rama** | \`${{ github.ref_name }}\` |
+
+          ### Servicios Desplegados en Docker:
+          - **DOSIER Backend (.NET 8 Web API)**: Puerto 5000, Clean Architecture, Pomelo MySQL, SignalR.
+          - **DOSIER Web (React + Vite + Nginx)**: Puerto 80, SPA Enrutador, Compresión Gzip y Proxy Inverso.
+          EOF

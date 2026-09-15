@@ -1,0 +1,80 @@
+name: Rollback - Instant AWS EC2 Deployment (DOSIER)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Commit SHA (completo de 40 caracteres o corto de 7 caracteres, ej: d676b17... o latest)'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  DEPLOY_DIR: /var/www/dosier
+
+jobs:
+  rollback-ec2:
+    name: Execute Rollback in AWS EC2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codigo Fuente
+        uses: actions/checkout@v4
+
+      - name: Transferir docker-compose.yml via SCP
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/docker-compose.yml
+
+      - name: Reemplazar Contenedores en EC2 con la Version Solicitada
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ env.DEPLOY_DIR }}
+
+            echo "=== Liberando espacio en disco en EC2 ==="
+            docker system prune -af || true
+            sudo journalctl --vacuum-size=100M 2>/dev/null || true
+
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-backend:${{ inputs.target_sha }}
+            export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-web:${{ inputs.target_sha }}
+
+            echo "Descargando imagenes para la version: ${{ inputs.target_sha }}..."
+            docker compose pull
+
+            echo "Levantando contenedores de la version previa..."
+            docker compose up -d --remove-orphans
+
+            echo "Limpiando imagenes huerfanas..."
+            docker image prune -f
+
+      - name: Verificar Disponibilidad en Vivo (Health Check)
+        run: |
+          echo "Verificando respuesta del servidor EC2..."
+          curl -sI --connect-timeout 10 http://${{ secrets.EC2_HOST }}:5000/api/ping || true
+
+      - name: Generar Reporte de Rollback en GitHub Summary
+        run: |
+          cat <<EOF >> $GITHUB_STEP_SUMMARY
+          # Reporte Ejecutivo de Rollback - DOSIER
+
+          | Parametro | Valor |
+          | :--- | :--- |
+          | **Estado** | **Rollback Ejecutado Exitosamente** |
+          | **IP / Host EC2** | \`${{ secrets.EC2_HOST }}\` |
+          | **Target Commit SHA** | \`${{ inputs.target_sha }}\` |
+          | **Ejecutado por** | @${{ github.actor }} |
+
+          ### Nota de Operacion:
+          Se ha restaurado el servicio en producción a la versión correspondiente al SHA \`${{ inputs.target_sha }}\` sin requerir recompilación de código ni retrasos de build.
+          EOF

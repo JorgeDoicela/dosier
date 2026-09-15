@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  dosier-backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/jorgedoicela/dosier-backend:latest}
+    container_name: dosier-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+    networks:
+      - dosier-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  dosier-web:
+    image: ${FRONTEND_IMAGE:-ghcr.io/jorgedoicela/dosier-web:latest}
+    container_name: dosier-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      dosier-backend:
+        condition: service_started
+    networks:
+      - dosier-network
+
+networks:
+  dosier-network:
+    driver: bridge
