@@ -241,15 +241,14 @@ CREATE TABLE doc_bibliografia_proyecto (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- #############################################################################
--- TRIGGERS PARA UUID
+-- TRIGGERS PARA UUID (Single-Statement sin necesidad de DELIMITER)
 -- #############################################################################
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_proyectos_uuid BEFORE INSERT ON doc_proyectos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
+
 CREATE TRIGGER trg_doc_trazabilidad_uuid BEFORE INSERT ON doc_trazabilidad_proyectos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Índices básicos del núcleo V3
 -- Índices básicos del núcleo V3 (Se omiten los índices sobre claves foráneas que InnoDB crea automáticamente)
@@ -283,11 +282,9 @@ CREATE TABLE doc_notificaciones (
     FOREIGN KEY (destinatario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Notificaciones con prioridad y redirección (Deep Linking)';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_notif_uuid
 BEFORE INSERT ON doc_notificaciones FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 CREATE TABLE doc_tokens_acceso (
     idToken         INT          AUTO_INCREMENT PRIMARY KEY,
@@ -312,11 +309,9 @@ CREATE TABLE doc_tokens_acceso (
     FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Seguridad para Pares Ciegos (Control de IPs y usos)';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_tokens_uuid
 BEFORE INSERT ON doc_tokens_acceso FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 CREATE TABLE doc_usuarios_metadata (
     idMetadata           INT          AUTO_INCREMENT PRIMARY KEY,
@@ -378,17 +373,17 @@ CREATE TABLE doc_backup_logs (
     FOREIGN KEY (ejecutadoPor) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SEGURIDAD] Registro y trazabilidad de copias de seguridad (LOPDP Art. 47 & EGSI)';
 
-DELIMITER $$
-CREATE TRIGGER trg_doc_usermeta_uuid
-BEFORE INSERT ON doc_usuarios_metadata FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
+CREATE TRIGGER trg_doc_usermeta_uuid BEFORE INSERT ON doc_usuarios_metadata FOR EACH ROW
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
+
 CREATE TRIGGER trg_doc_lopdp_consentimientos_uuid BEFORE INSERT ON doc_lopdp_consentimientos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
+
 CREATE TRIGGER trg_doc_lopdp_auditoria_uuid BEFORE INSERT ON doc_lopdp_auditoria_datos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
+
 CREATE TRIGGER trg_doc_backup_logs_uuid BEFORE INSERT ON doc_backup_logs FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 CREATE TABLE doc_dispositivos_tokens (
     idToken             INT          AUTO_INCREMENT PRIMARY KEY,
@@ -734,12 +729,11 @@ CREATE TABLE doc_email_historial (
     FOREIGN KEY (idUsuarioDestinatario) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_email_tpl_uuid BEFORE INSERT ON doc_email_templates FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
+
 CREATE TRIGGER trg_doc_email_hist_uuid BEFORE INSERT ON doc_email_historial FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- SEMILLAS: MOTOR DE CORREOS PERSONALIZADO (DOSIER)
@@ -818,11 +812,9 @@ CREATE TABLE doc_ical_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COMMENT 'Tokens de suscripción iCal para Google Calendar / Outlook / iPhone';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_ical_token_uuid
 BEFORE INSERT ON doc_ical_tokens FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- TRAZABILIDAD DE ALERTAS: Evita alertas duplicadas del job diario
@@ -841,11 +833,9 @@ CREATE TABLE doc_calendario_alertas_enviadas (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COMMENT 'Trazabilidad del cron de alertas — evita correos duplicados';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_cal_norm_uuid
 BEFORE INSERT ON doc_calendario_eventos_normativos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- VISTA AGREGADORA: v_doc_calendario_eventos

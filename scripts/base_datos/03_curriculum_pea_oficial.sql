@@ -98,10 +98,8 @@ CREATE TABLE doc_pea (
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='PEA — Programa de Estudio de la Asignatura Oficial';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_uuid BEFORE INSERT ON doc_pea FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Sección c) Prerrequisitos de la asignatura
@@ -121,10 +119,8 @@ CREATE TABLE doc_pea_prerrequisitos (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COMMENT='Prerrequisitos de la asignatura — Sección c) del PEA oficial ISTPET';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_prerrequisitos_uuid BEFORE INSERT ON doc_pea_prerrequisitos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Sección f) Contenidos de enseñanza: Unidades de estudio
@@ -144,10 +140,8 @@ CREATE TABLE doc_pea_unidades (
     FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_unidades_uuid BEFORE INSERT ON doc_pea_unidades FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Sección f) Contenidos de enseñanza: Temas y subtemas por unidad
@@ -164,10 +158,8 @@ CREATE TABLE doc_pea_temas (
     FOREIGN KEY (idUnidad) REFERENCES doc_pea_unidades(idUnidad) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_temas_uuid BEFORE INSERT ON doc_pea_temas FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Secciones d y e) Resultados de aprendizaje (Carrera y Asignatura)
@@ -188,10 +180,8 @@ CREATE TABLE doc_pea_resultados_aprendizaje (
     FOREIGN KEY (idResultadoPerfil) REFERENCES doc_perfil_egreso_resultados(idResultadoPerfil) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_rda_uuid BEFORE INSERT ON doc_pea_resultados_aprendizaje FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Sección h) Actividades prácticas
@@ -211,10 +201,8 @@ CREATE TABLE doc_pea_actividades_practicas (
     FOREIGN KEY (idUnidad) REFERENCES doc_pea_unidades(idUnidad) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_practicas_uuid BEFORE INSERT ON doc_pea_actividades_practicas FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Sección i) Evaluación del aprendizaje oficial (Componentes estándar ISTPET)
@@ -232,10 +220,8 @@ CREATE TABLE doc_pea_evaluaciones (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COMMENT='Evaluación del aprendizaje estructurada — Sección i) del PEA oficial ISTPET';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_evaluaciones_uuid BEFORE INSERT ON doc_pea_evaluaciones FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- -----------------------------------------------------------------------------
 -- Sección j) Bibliografía (Básica, Consulta, Virtual)
@@ -257,10 +243,8 @@ CREATE TABLE doc_pea_bibliografia (
     FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_biblio_uuid BEFORE INSERT ON doc_pea_bibliografia FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- WORKFLOW INSTITUCIONAL: OBSERVACIONES Y TRAZABILIDAD DEL PEA
@@ -285,10 +269,8 @@ CREATE TABLE doc_pea_observaciones (
     FOREIGN KEY (idUsuarioObservador) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Observaciones formales emitidas durante la revisión del PEA';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_observaciones_uuid BEFORE INSERT ON doc_pea_observaciones FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Historial inmutable de trazabilidad de estados y auditoría
 CREATE TABLE doc_pea_trazabilidad (
@@ -307,10 +289,8 @@ CREATE TABLE doc_pea_trazabilidad (
     FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Trazabilidad y auditoría cronológica del ciclo de vida del PEA';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_pea_trazabilidad_uuid BEFORE INSERT ON doc_pea_trazabilidad FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- SEEDER DE PLANTILLA INSTITUCIONAL OFICIAL DEL PEA (MOTOR DOCUMENTAL DOSIER)

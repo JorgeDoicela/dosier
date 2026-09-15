@@ -293,9 +293,11 @@ jobs:
             set -e
             cd ${{ env.DEPLOY_DIR }}
 
-            echo "=== MODO DESARROLLO: Limpieza y reseteo automatico de Base de Datos ==="
-            docker compose down --volumes --remove-orphans 2>/dev/null || true
-            sudo rm -rf ./mysql_data
+            if [ "${{ github.event.inputs.reset_database }}" = "true" ]; then
+              echo "=== Reseteo forzado de Base de Datos solicitado via Workflow Dispatch ==="
+              docker compose down --volumes --remove-orphans 2>/dev/null || true
+              sudo rm -rf ./mysql_data
+            fi
 
             echo "=== Mantenimiento de Disco (Retencion de ultimas 3 versiones para Rollback Instantaneo) ==="
             docker image prune -f

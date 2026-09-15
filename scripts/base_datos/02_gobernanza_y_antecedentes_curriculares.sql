@@ -61,10 +61,8 @@ CREATE TABLE doc_normativas (
     INDEX idx_normativa_codigo (codigoResolucion)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Repositorio inalterable de normativas externas reguladoras';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_normativas_uuid BEFORE INSERT ON doc_normativas FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Artículos y lineamientos específicos para la lista de verificación activa
 CREATE TABLE doc_normativa_articulos (
@@ -81,10 +79,8 @@ CREATE TABLE doc_normativa_articulos (
     FOREIGN KEY (idNormativa) REFERENCES doc_normativas(idNormativa) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Desglose de artículos normativos para auditoría y validación';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_normativa_articulos_uuid BEFORE INSERT ON doc_normativa_articulos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- 2. CAPA DE GOBIERNO INSTITUCIONAL: MODELOS EDUCATIVOS Y POLÍTICAS
@@ -105,10 +101,8 @@ CREATE TABLE doc_modelos_educativos (
     fechaRegistro           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Versiones históricas y vigentes del Modelo Educativo Institucional';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_modelos_educativos_uuid BEFORE INSERT ON doc_modelos_educativos FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- 3. CAPA DE DISEÑO CURRICULAR DE CARRERAS Y PERFILES DE EGRESO
@@ -132,10 +126,8 @@ CREATE TABLE doc_proyectos_curriculares (
     FOREIGN KEY (idMalla) REFERENCES mallas(idMalla) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Proyectos y resoluciones CES de aprobación y rediseño de carreras';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_proyectos_curriculares_uuid BEFORE INSERT ON doc_proyectos_curriculares FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Perfil de egreso oficial de la carrera
 CREATE TABLE doc_perfiles_egreso (
@@ -153,10 +145,8 @@ CREATE TABLE doc_perfiles_egreso (
     FOREIGN KEY (idMalla) REFERENCES mallas(idMalla) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Perfil de egreso institucional formal por carrera y malla';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_perfiles_egreso_uuid BEFORE INSERT ON doc_perfiles_egreso FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Resultados de Aprendizaje del Perfil de Egreso (RDA Carrera - Administrados centralmente)
 CREATE TABLE doc_perfil_egreso_resultados (
@@ -171,10 +161,8 @@ CREATE TABLE doc_perfil_egreso_resultados (
     FOREIGN KEY (idPerfilEgreso) REFERENCES doc_perfiles_egreso(idPerfilEgreso) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Resultados de aprendizaje del perfil de egreso (RDA oficiales de carrera)';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_perfil_egreso_res_uuid BEFORE INSERT ON doc_perfil_egreso_resultados FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Matriz de tributación curricular: qué asignaturas tributan a qué resultados del perfil
 CREATE TABLE doc_asignatura_resultado_perfil (
@@ -228,10 +216,8 @@ CREATE TABLE doc_expedientes_curriculares (
     FOREIGN KEY (idModeloEducativo) REFERENCES doc_modelos_educativos(idModelo) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Expediente Curricular Maestro: Agrupador oficial de PEA, Sílabo y Guías';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_expedientes_curriculares_uuid BEFORE INSERT ON doc_expedientes_curriculares FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Mapeo de asignaciones docentes y paralelos al expediente de la materia (Materia Compartida)
 CREATE TABLE doc_expediente_asignaciones (
@@ -328,10 +314,8 @@ CREATE TABLE IF NOT EXISTS doc_autoridades_curriculares (
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Designaciones oficiales de autoridades y coordinadores curriculares';
 
-DELIMITER $$
 CREATE TRIGGER trg_doc_autoridades_curriculares_uuid BEFORE INSERT ON doc_autoridades_curriculares FOR EACH ROW
-BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
-DELIMITER ;
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- Semillas de autoridades curriculares institucionales (ISTPET)
 INSERT INTO doc_autoridades_curriculares (uuid, idSigafi, nombreCompleto, cargoCurricular, idCarrera, esActivo, fechaDesignacion) VALUES
