@@ -68,3 +68,34 @@ Para garantizar la máxima transparencia en el proceso de revisión:
 * **Bloqueo de Aprobación:** El sistema impide que un PEA sea avalado o aprobado si mantiene observaciones pendientes de atención (`estado = 'Pendiente'`).
 * **Respuesta del Docente:** El docente registra su justificación o detalle de corrección para marcar la observación como `Subsanada`.
 * **Auditoría Forense:** Cada observación y subsanación queda registrada permanentemente con usuario, cargo, fecha UTC y texto original en `doc_pea_observaciones`.
+
+---
+
+## 5. Paneles de Control y Herramientas Operativas por Rol
+
+Para asegurar que cada rol cuente con todas las herramientas necesarias para cumplir a cabalidad su función dentro del circuito, el sistema dispone de paneles de control especializados y un simulador interactivo accesible desde el Dashboard principal:
+
+### 5.1. Coordinación Académica (`CoordAcadDashboard.tsx`)
+* **Apertura de Convocatoria Institucional (`AperturaConvocatoriaModal.tsx`):** Disparador para fijar plazos y notificar a los 28 docentes asignados en SIGAFI.
+* **Recordatorio Masivo a Rezagados (`RecordatorioDocentesModal.tsx`):** Detección automática de docentes con PEAs en Borrador y envío de alertas por correo electrónico institucional y notificaciones push.
+* **Concesión de Prórroga (`ProrrogaPlazoModal.tsx`):** Extensión de plazos por carrera o institucionalmente con registro del justificativo académico.
+* **Auditoría Normativa CACES (`AuditoriaCacesModal.tsx`):** Verificación automática del Artículo 21 del CES (64h docencia + 32h prácticas + 64h autónomo = 160h), matriz de 30 puntos y bibliografía APA.
+* **Emisión de Aval Académico:** Aprobación formal que eleva el PEA al despacho de Vicerrectorado.
+
+### 5.2. Coordinación de Carrera (`CoordCarreraDashboard.tsx`)
+* **Filtro Disciplinar:** Supervisión focalizada en las asignaturas de su carrera.
+* **Notificación a Docentes de Carrera:** Alerta específica a los docentes de la especialidad.
+* **Solicitud de Correcciones (`ObservacionesDisciplinarModal.tsx`):** Registro de observaciones puntuales por sección con fijación de plazo de subsanación de 48 horas.
+* **Emisión de Aval de Carrera:** Firma técnica que certifica la pertinencia curricular y los contenidos mínimos.
+
+### 5.3. Docente Elaborador (`DocentePeaDashboard.tsx`)
+* **Clonado de PEA de Período Anterior (`ClonarPeaModal.tsx`):** Importación ágil de unidades, metodologías y bibliografía aprobadas del período anterior.
+* **Validador de Horas CES Art. 21:** Semáforo en vivo del cuadre horario normativo.
+* **Acceso a Co-Redacción Concurrente (Yjs):** Editor en tiempo real de las 11 secciones institucionales.
+* **Envío a Revisión Técnica:** Disparo de notificación hacia el Coordinador de Carrera.
+
+### 5.4. Vicerrectorado Académico (`VicerrectorDashboard.tsx`)
+* **Firma y Legalización Digital Masiva (`LegalizacionFirmaModal.tsx`):** Aprobación y firma en bloque de todos los PEAs avalados de una carrera.
+* **Legalización Unitaria con Sello SHA-256:** Estampado de firma digital, inmutabilidad y generación de código QR.
+* **Generación de Dossier Curricular:** Compendio foliado en formato PDF oficial para auditorías del CACES.
+
