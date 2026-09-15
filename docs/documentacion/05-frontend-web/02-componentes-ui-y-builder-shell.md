@@ -108,3 +108,13 @@ graph TD
   * **Panel Deslizable de Observaciones:** Permite a las comisiones registrar observaciones directas por sección (`POST /api/pea/:id/observaciones`) y a los docentes responder formalmente con justificación de cambios para subsanar los requerimientos (`PATCH /api/pea/observaciones/:id/subsanar`).
   * **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-zinc-950`), sin transparencias ni efectos de sangrado tipográfico.
   * **Navegación de Retorno Fluida:** El botón de cierre (*Volver*) en `BuilderHeader` invoca un retorno seguro por historial (`navigate(-1)`) con fallback a la bandeja de supervisión curricular (`/investigacion/proyectos?tab=supervision-pea`), preservando el estado previo del usuario, filtros seleccionados y scroll.
+
+### 4.9. Dashboard de Gobernanza Curricular y Paneles de Roles (`/dashboard`)
+* **Ubicación:** `src/pages/Dashboard/` (`Dashboard.tsx`, `Roles/` `VicerrectorDashboard.tsx`, `CoordAcadDashboard.tsx`, `CoordCarreraDashboard.tsx`, `DocentePeaDashboard.tsx`, `AdminPeaDashboard.tsx`, `Components/RoleFlowBanner.tsx`).
+* **Principios de Diseño e Implementación Vercel Geist:**
+  * **Control Segmentado Discreto (`RoleFlowBanner`):** Selector horizontal compacto con fondo sólido `bg-zinc-100 dark:bg-zinc-900` para alternar fluidamente la perspectiva entre los 5 roles curriculares institucionales.
+  * **Eliminación Total de KPIs Artificiales:** Erradicación del anti-patrón de tarjetas métricas gigantes con cifras aisladas que sobrecargan la vista inicial sin aportar valor operativo.
+  * **Cero Iconos SVG Decorativos:** Supresión de iconos vectoriales superfluos en botones, tablas y encabezados para priorizar la legibilidad del texto, nombres de asignaturas, docentes y códigos institucionales.
+  * **Acciones Directas y Textuales:** Botones de alta nitidez y contraste (`Ver`, `Firmar PEA`, `QR CACES`, `Emitir Aval`, `Auditar`) enmarcados en tablas con tipografía monoespaciada para códigos y plazos.
+  * **Superficies Sólidas de 1 Capa:** Fondos monocromáticos `bg-white dark:bg-black`, bordes contrastantes `border-zinc-200 dark:border-zinc-800` y eliminación de cajas anidadas innecesarias.
+
