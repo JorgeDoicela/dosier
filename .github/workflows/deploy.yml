@@ -342,16 +342,16 @@ jobs:
             MYSQL_PASS="$DB_ROOT_PASSWORD"
             docker compose exec -T dosier-db mysqladmin ping -h localhost -u root -p"$MYSQL_PASS" --silent --wait=60
 
-            echo "=== Sincronizando scripts SQL oficiales contra MySQL ==="
-            docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" -e "CREATE DATABASE IF NOT EXISTS sigafi_es CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 | grep -v "Warning: Using a password" || true
+            echo "=== Sincronizando y recreando base de datos sigafi_es con scripts SQL oficiales ==="
+            docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" -e "DROP DATABASE IF EXISTS sigafi_es; CREATE DATABASE sigafi_es CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 | grep -v "Warning: Using a password" || true
             for sql in 00_sigafi_esquema_y_datos_demo.sql 01_sistema_base.sql 02_gobernanza_y_antecedentes_curriculares.sql 03_curriculum_pea_oficial.sql 04_seguridad_rbac_roles_curriculares.sql; do
               if [ -f "scripts/base_datos/$sql" ]; then
-                echo "Garantizando: $sql"
+                echo "Ejecutando script: $sql"
                 docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" --default-character-set=utf8mb4 sigafi_es < "scripts/base_datos/$sql" 2>&1 | grep -v "Warning: Using a password" || true
               fi
             done
 
-            echo "=== Reiniciando servicio backend DOSIER para cargar seeders ==="
+            echo "=== Reiniciando servicio backend DOSIER para vincular con la BD fresca ==="
             docker compose restart dosier-backend
 
   # =========================================================================
