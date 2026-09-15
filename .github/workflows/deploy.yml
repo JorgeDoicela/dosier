@@ -7,12 +7,21 @@ on:
     paths:
       - 'backend/**'
       - 'dosier_web/**'
+      - 'scripts/base_datos/**'
       - 'docker-compose.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       restart_only:
         description: 'Solo reiniciar contenedores en EC2 (fix rapido sin rebuild)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      reset_database:
+        description: 'Borrar volumen de MySQL y recrear base de datos limpia desde cero'
         required: false
         default: 'false'
         type: choice
@@ -62,6 +71,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      database: ${{ steps.filter.outputs.database }}
     steps:
       - name: Checkout Codigo Fuente
         uses: actions/checkout@v4
@@ -79,6 +89,10 @@ jobs:
               - '.github/workflows/deploy.yml'
             frontend:
               - 'dosier_web/**'
+              - 'docker-compose.yml'
+              - '.github/workflows/deploy.yml'
+            database:
+              - 'scripts/base_datos/**'
               - 'docker-compose.yml'
               - '.github/workflows/deploy.yml'
 
@@ -285,11 +299,30 @@ jobs:
             export BACKEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-backend:${{ github.sha }}
             export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-web:${{ github.sha }}
 
+            if [ "${{ github.event.inputs.reset_database }}" = "true" ]; then
+              echo "=== RESEED: Borrando volumen de MySQL y recreando estructura limpia ==="
+              docker compose down -v 2>/dev/null || true
+              sudo rm -rf ./mysql_data
+            fi
+
             echo "=== Descargando imagenes Docker actualizadas ==="
             docker compose pull --quiet
             echo "=== Levantando servicios DOSIER ==="
             docker compose up -d --remove-orphans
             docker image prune -f
+
+            echo "=== Sincronizando scripts SQL en caliente contra MySQL ==="
+            docker compose exec -T dosier-db mysqladmin ping -h localhost -u root -p"${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}" --silent --wait=45
+
+            for sql in 00_sigafi_esquema_y_datos_demo.sql 01_sistema_base.sql 02_gobernanza_y_antecedentes_curriculares.sql 03_curriculum_pea_oficial.sql 04_seguridad_rbac_roles_curriculares.sql; do
+              if [ -f "scripts/base_datos/$sql" ]; then
+                echo "Aplicando: $sql"
+                docker compose exec -T dosier-db mysql -u root -p"${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}" --default-character-set=utf8mb4 sigafi_es < "scripts/base_datos/$sql" 2>&1 | grep -v "Warning: Using a password" || true
+              fi
+            done
+
+            echo "=== Refrescando servicio backend DOSIER ==="
+            docker compose restart dosier-backend
 
   # =========================================================================
   # 7. Verificacion de Salud y Resumen de Despliegue
