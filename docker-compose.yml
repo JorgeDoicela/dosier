@@ -13,7 +13,7 @@ services:
       MYSQL_USER: ${DB_USER:-dosier_user}
       MYSQL_PASSWORD: ${DB_PASSWORD:-DosierIstpet2026UserPass}
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./scripts/base_datos:/docker-entrypoint-initdb.d:ro
     ports:
       - "3306:3306"
@@ -97,3 +97,6 @@ services:
 networks:
   dosier-network:
     driver: bridge
+
+volumes:
+  mysql_data:
