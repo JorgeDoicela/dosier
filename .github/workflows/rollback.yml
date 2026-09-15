@@ -39,9 +39,12 @@ jobs:
             set -e
             cd ${{ env.DEPLOY_DIR }}
 
-            echo "=== Liberando espacio en disco en EC2 ==="
-            docker system prune -af || true
-            sudo journalctl --vacuum-size=100M 2>/dev/null || true
+            echo "=== Mantenimiento de Disco (Retencion de ultimas 3 versiones) ==="
+            docker image prune -f
+            for img in dosier-backend dosier-web; do
+              docker images --filter "reference=*${img}*" --format "{{.ID}}" | sort -u | tail -n +4 | xargs -r docker rmi -f 2>/dev/null || true
+            done
+            sudo journalctl --vacuum-size=20M 2>/dev/null || true
 
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
@@ -50,12 +53,10 @@ jobs:
             export FRONTEND_IMAGE=ghcr.io/${OWNER_LOWER}/dosier-web:${{ inputs.target_sha }}
 
             echo "Descargando imagenes para la version: ${{ inputs.target_sha }}..."
-            docker compose pull
+            docker compose pull --quiet
 
-            echo "Levantando contenedores de la version previa..."
+            echo "Levantando contenedores de la version solicitada..."
             docker compose up -d --remove-orphans
-
-            echo "Limpiando imagenes huerfanas..."
             docker image prune -f
 
       - name: Verificar Disponibilidad en Vivo (Health Check)

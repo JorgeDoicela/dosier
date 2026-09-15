@@ -293,8 +293,11 @@ jobs:
             docker compose down -v 2>/dev/null || true
             sudo rm -rf ./mysql_data
 
-            echo "=== Liberando espacio en disco en EC2 (Optimizacion para disco de 15GB) ==="
-            docker system prune -af --volumes || true
+            echo "=== Mantenimiento de Disco (Retencion de ultimas 3 versiones para Rollback Instantaneo) ==="
+            docker image prune -f
+            for img in dosier-backend dosier-web; do
+              docker images --filter "reference=*${img}*" --format "{{.ID}}" | sort -u | tail -n +4 | xargs -r docker rmi -f 2>/dev/null || true
+            done
             sudo journalctl --vacuum-size=20M 2>/dev/null || true
             sudo apt-get clean 2>/dev/null || true
 
