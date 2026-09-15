@@ -299,10 +299,15 @@ var connectionString = builder.Configuration.GetConnectionString("default_connec
 
 if (!string.IsNullOrEmpty(connectionString))
 {
-    // Usamos una versión fija para evitar que AutoDetect falle si la red parpadea
+    // Usamos una versión fija para evitar que AutoDetect falle si la red parpadea y habilitamos resiliencia transitoria
     var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
     builder.Services.AddDbContext<dosier_infrastructure.data.models.DosierContext>(options =>
-        options.UseMySql(connectionString, serverVersion));
+        options.UseMySql(connectionString, serverVersion, mysqlOptions =>
+            mysqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorNumbersToAdd: null
+            )));
 }
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -349,22 +354,32 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Auto-Seeder de Plantillas de Documentos y Vistas del Sistema (Sincronización Código ↔ MySQL)
+// Auto-Seeder de Plantillas de Documentos y Vistas del Sistema con Resiliencia de Conexión a MySQL
 using (var scope = app.Services.CreateScope())
 {
-    try
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<dosier_infrastructure.data.models.DosierContext>();
+    var env = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+
+    int retries = 0;
+    const int maxRetries = 10;
+    while (retries < maxRetries)
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<dosier_infrastructure.data.models.DosierContext>();
-        var env = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        
-        await DocumentTemplateSeeder.SeedTemplatesAsync(dbContext, env, logger);
-        await CalendarioViewSeeder.EnsureCalendarioViewCreatedAsync(dbContext, logger);
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "DOSIER Seeder: Error al sincronizar esquemas y plantillas al arrancar.");
+        try
+        {
+            if (await dbContext.Database.CanConnectAsync())
+            {
+                await DocumentTemplateSeeder.SeedTemplatesAsync(dbContext, env, logger);
+                await CalendarioViewSeeder.EnsureCalendarioViewCreatedAsync(dbContext, logger);
+                break;
+            }
+        }
+        catch (Exception ex)
+        {
+            retries++;
+            logger.LogWarning("DOSIER Seeder: Esperando conexion a MySQL (Intento {Retries}/{MaxRetries})... Detalle: {Error}", retries, maxRetries, ex.Message);
+            await Task.Delay(2000);
+        }
     }
 }
 

@@ -69,8 +69,25 @@ public class AuthService : IAuthService
         if (user != null)
         {
             // Auto-corrección dinámica de entidad: Si el registro histórico en usuarios dice "alumno", pero la persona es Autoridad Curricular o Docente activo en SIGAFI
-            bool esAutoridad = await _context.DocAutoridadesCurriculares.AnyAsync(a => a.IdSigafi == user.IdSigafi && a.EsActivo);
-            bool esProfesorActivo = await _context.Profesores.AnyAsync(p => p.IdProfesor == user.IdSigafi && (p.Activo == 1 || p.Activo == null));
+            bool esAutoridad = false;
+            try
+            {
+                esAutoridad = await _context.DocAutoridadesCurriculares.AnyAsync(a => a.IdSigafi == user.IdSigafi && a.EsActivo);
+            }
+            catch
+            {
+                esAutoridad = false;
+            }
+
+            bool esProfesorActivo = false;
+            try
+            {
+                esProfesorActivo = await _context.Profesores.AnyAsync(p => p.IdProfesor == user.IdSigafi && (p.Activo == 1 || p.Activo == null));
+            }
+            catch
+            {
+                esProfesorActivo = user.TablaSigafi == "profesor";
+            }
 
             if (user.TablaSigafi == "alumno" && (esAutoridad || esProfesorActivo))
             {

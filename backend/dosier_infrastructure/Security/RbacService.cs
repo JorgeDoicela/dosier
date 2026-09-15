@@ -147,57 +147,64 @@ public class RbacService : IRbacService
         }
 
         // 5. Semilla base de autoridades si doc_autoridades_curriculares está vacía
-        if (!await _context.DocAutoridadesCurriculares.AnyAsync())
+        try
         {
-            _context.DocAutoridadesCurriculares.AddRange(new[]
+            if (!await _context.DocAutoridadesCurriculares.AnyAsync())
             {
-                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                _context.DocAutoridadesCurriculares.AddRange(new[]
                 {
-                    IdSigafi = "1802707511",
-                    NombreCompleto = "FREDDY BAÑO",
-                    CargoCurricular = "VICERRECTOR",
-                    IdCarrera = null,
-                    EsActivo = true,
-                    FechaDesignacion = new DateOnly(2024, 1, 1)
-                },
-                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
-                {
-                    IdSigafi = "0502405889",
-                    NombreCompleto = "CRISTIAN COBOS",
-                    CargoCurricular = "COORD_ACADEMICO",
-                    IdCarrera = null,
-                    EsActivo = true,
-                    FechaDesignacion = new DateOnly(2024, 1, 1)
-                },
-                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
-                {
-                    IdSigafi = "1709890626",
-                    NombreCompleto = "WILFRIDO TRUJILLO",
-                    CargoCurricular = "COORD_CARRERA",
-                    IdCarrera = 9,
-                    EsActivo = true,
-                    FechaDesignacion = new DateOnly(2024, 1, 1)
-                },
-                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
-                {
-                    IdSigafi = "1720004793",
-                    NombreCompleto = "CHRISTIAN CASTRO",
-                    CargoCurricular = "COORD_CARRERA",
-                    IdCarrera = 10,
-                    EsActivo = true,
-                    FechaDesignacion = new DateOnly(2024, 1, 1)
-                },
-                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
-                {
-                    IdSigafi = "1721465431",
-                    NombreCompleto = "WILMER TOAPANTA",
-                    CargoCurricular = "COORD_CARRERA",
-                    IdCarrera = 7,
-                    EsActivo = true,
-                    FechaDesignacion = new DateOnly(2024, 1, 1)
-                }
-            });
-            await _context.SaveChangesAsync();
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1802707511",
+                        NombreCompleto = "FREDDY BAÑO",
+                        CargoCurricular = "VICERRECTOR",
+                        IdCarrera = null,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "0502405889",
+                        NombreCompleto = "CRISTIAN COBOS",
+                        CargoCurricular = "COORD_ACADEMICO",
+                        IdCarrera = null,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1709890626",
+                        NombreCompleto = "WILFRIDO TRUJILLO",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 9,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1720004793",
+                        NombreCompleto = "CHRISTIAN CASTRO",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 10,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1721465431",
+                        NombreCompleto = "WILMER TOAPANTA",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 7,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    }
+                });
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch
+        {
+            // Ignorar de forma resiliente si la tabla aún no ha sido provisionada por los scripts iniciales
         }
 
         _rbacSeeded = true;
@@ -235,11 +242,19 @@ public class RbacService : IRbacService
         // ── Designaciones Curriculares Institucionales (doc_autoridades_curriculares) ──
         if (!string.IsNullOrEmpty(user.IdSigafi))
         {
-            var designaciones = await _context.DocAutoridadesCurriculares
-                .AsNoTracking()
-                .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo)
-                .Select(a => a.CargoCurricular)
-                .ToListAsync();
+            List<string> designaciones = new();
+            try
+            {
+                designaciones = await _context.DocAutoridadesCurriculares
+                    .AsNoTracking()
+                    .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo)
+                    .Select(a => a.CargoCurricular)
+                    .ToListAsync();
+            }
+            catch
+            {
+                designaciones = new();
+            }
 
             foreach (var cargo in designaciones)
             {
