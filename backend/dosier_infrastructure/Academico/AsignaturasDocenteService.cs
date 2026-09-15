@@ -22,13 +22,18 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var periodo = await _context.Periodos
+        var periodos = await _context.Periodos
             .AsNoTracking()
+            .ToListAsync();
+
+        if (!periodos.Any()) return null;
+
+        var periodo = periodos
             .OrderByDescending(p => p.Periodoactivoinstituto == 1)
             .ThenByDescending(p => p.Activo == true)
             .ThenByDescending(p => p.FechaInicial <= today && p.FechaFinal >= today)
             .ThenByDescending(p => p.FechaInicial)
-            .FirstOrDefaultAsync();
+            .FirstOrDefault();
 
         if (periodo == null) return null;
 
@@ -44,8 +49,11 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
 
     public async Task<List<PeriodoAcademicoDto>> GetPeriodosDisponiblesAsync()
     {
-        return await _context.Periodos
+        var periodos = await _context.Periodos
             .AsNoTracking()
+            .ToListAsync();
+
+        return periodos
             .OrderByDescending(p => p.FechaInicial)
             .Select(p => new PeriodoAcademicoDto
             {
@@ -55,7 +63,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 FechaFinal = p.FechaFinal,
                 EsActivo = (p.Periodoactivoinstituto == 1 || p.Activo == true)
             })
-            .ToListAsync();
+            .ToList();
     }
 
     public async Task<List<DocenteAsignaturaDto>> GetMisAsignaturasAsync(string idProfesor, string? idPeriodo = null)

@@ -51,14 +51,16 @@ namespace dosier_api.Controllers
             [FromQuery] string? estado = null,
             CancellationToken cancellationToken = default)
         {
-            var userIdStr = User.FindFirstValue("id_usuario")
-                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
-                ?? User.FindFirstValue("sub");
+            var userIdStr = User.FindFirstValue("id_usuario");
+            int idUsuario = 0;
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int parsedId))
+            {
+                idUsuario = parsedId;
+            }
 
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int idUsuario))
-                return Unauthorized(new { message = "Identificador de usuario inválido en la sesión." });
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
 
-            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, cancellationToken);
+            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, cancellationToken);
             return Ok(lista);
         }
 

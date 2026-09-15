@@ -1345,15 +1345,22 @@ namespace dosier_infrastructure.Curriculum
             }
         }
 
-        public async Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, System.Threading.CancellationToken cancellationToken = default)
+        public async Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, string? identifier = null, System.Threading.CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario, cancellationToken)
-                ?? throw new UnauthorizedAccessException("Usuario no encontrado.");
+            var user = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => (idUsuario > 0 && u.IdUsuario == idUsuario) || (!string.IsNullOrEmpty(identifier) && (u.IdSigafi == identifier || u.EmailInstitucional == identifier)), cancellationToken);
+
+            if (user == null)
+            {
+                return new List<PeaBandejaItemDto>();
+            }
+
+            int resolvedUserId = user.IdUsuario;
 
             var userRoles = await _context.UserRoles
                 .AsNoTracking()
                 .Include(ur => ur.Role)
-                .Where(ur => ur.IdUsuario == idUsuario && (ur.EsActivo ?? true))
+                .Where(ur => ur.IdUsuario == resolvedUserId && (ur.EsActivo ?? true))
                 .Select(ur => ur.Role.CodigoRol)
                 .ToListAsync(cancellationToken);
 
