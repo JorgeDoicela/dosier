@@ -1,19 +1,4 @@
 import React, { useState } from 'react';
-import {
-    UserCheck,
-    Copy,
-    PenTool,
-    CheckCircle2,
-    Clock,
-    AlertTriangle,
-    ShieldCheck,
-    Send,
-    BookOpen,
-    Layers,
-    Sparkles,
-    Calendar,
-    ArrowRight
-} from 'lucide-react';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { MOCK_PEAS, type MockPeaItem } from './data/mockCurricularData';
 import { ClonarPeaModal } from './Modals/ClonarPeaModal';
@@ -41,7 +26,7 @@ export const DocentePeaDashboard: React.FC = () => {
         }));
         addToast(
             'PEA Enviado a Revisión de Carrera',
-            `El instrumento curricular de "${nombre}" fue enviado al despacho del Coordinador de Carrera. Se congeló la edición concurrente temporalmente.`,
+            `El instrumento curricular de "${nombre}" fue enviado al despacho del Coordinador de Carrera.`,
             'success'
         );
     };
@@ -59,91 +44,52 @@ export const DocentePeaDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header del Docente */}
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
-                            <UserCheck className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-lg font-bold text-zinc-900 dark:text-white">
-                                    Mis Asignaturas Asignadas y Elaboración de PEA
-                                </h1>
-                                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                    Ing. Edison Pérez (Docente Titular)
-                                </span>
-                            </div>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                Período 2025-A • Formulación colaborativa de las 11 secciones normativas e importación de cátedras previas
-                            </p>
-                        </div>
+        <div className="space-y-5">
+            {/* Encabezado Vercel Geist */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                            Mis Asignaturas y Elaboración de PEA
+                        </h1>
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                            Ing. Edison Pérez
+                        </span>
                     </div>
-
-                    {/* Botones de acción clave */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <button
-                            onClick={() => {
-                                const borrador = misPeas.find(p => p.estado_workflow === 'Borrador') || misPeas[0];
-                                setClonarModalMateria(borrador);
-                            }}
-                            className="px-3 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 flex items-center gap-1.5 transition-colors shadow-sm"
-                        >
-                            <Copy className="w-3.5 h-3.5" />
-                            Clonar PEA Anterior
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (misPeas[0]) setAuditoriaPea(misPeas[0]);
-                            }}
-                            className="px-3 py-2 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-1.5 transition-colors"
-                        >
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                            Validador de Horas CES
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* KPIs Docente */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">Materias Asignadas</p>
-                    <p className="text-xl font-bold text-zinc-900 dark:text-white mt-1">{misPeas.length}</p>
-                    <span className="text-[10px] text-zinc-400">Distributivo SIGAFI</span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">En Formulación (Borrador)</p>
-                    <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                        {misPeas.filter(p => p.estado_workflow === 'Borrador').length}
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        Período 2025-A • Formulación colaborativa de las 11 secciones normativas e importación de cátedras previas
                     </p>
-                    <span className="text-[10px] text-amber-600/70">Pendiente de envío</span>
                 </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">En Revisión de Carrera</p>
-                    <p className="text-xl font-bold text-purple-600 dark:text-purple-400 mt-1">
-                        {misPeas.filter(p => p.estado_workflow === 'En_Revision_Carrera').length}
-                    </p>
-                    <span className="text-[10px] text-purple-600/70">En despacho de Coord.</span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">Días Restantes Entrega</p>
-                    <p className="text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">4 Días</p>
-                    <span className="text-[10px] text-rose-600/70">Vence: 15 de Abril</span>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            const borrador = misPeas.find(p => p.estado_workflow === 'Borrador') || misPeas[0];
+                            setClonarModalMateria(borrador);
+                        }}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
+                    >
+                        Clonar PEA Anterior
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (misPeas[0]) setAuditoriaPea(misPeas[0]);
+                        }}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                        Validador Horas CES
+                    </button>
                 </div>
             </div>
 
             {/* Listado de Asignaturas Asignadas */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-zinc-500" />
-                        Instrumentos Curriculares a Elaborar (Período 2025-A)
+                    <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                        Instrumentos Curriculares a Elaborar
                     </h2>
-                    <span className="text-xs text-zinc-500">
-                        {misPeas.length} materias activas en su carga horaria
+                    <span className="text-[11px] text-zinc-500 font-mono">
+                        {misPeas.length} asignaturas activas
                     </span>
                 </div>
 
@@ -151,31 +97,31 @@ export const DocentePeaDashboard: React.FC = () => {
                     {misPeas.map(pea => (
                         <div
                             key={pea.id}
-                            className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
+                            className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 flex flex-col justify-between space-y-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
                         >
                             <div>
                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                    <span className="font-mono text-[10px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
+                                    <span className="font-mono text-[10px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
                                         {pea.codigo_asignatura}
                                     </span>
                                     {pea.estado_workflow === 'Borrador' && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                            Borrador (En Edición)
+                                        <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                                            Borrador
                                         </span>
                                     )}
                                     {pea.estado_workflow === 'En_Revision_Carrera' && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                                        <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-medium">
                                             En Revisión Carrera
                                         </span>
                                     )}
                                     {pea.estado_workflow === 'Avalado_Academica' && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                        <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-600 text-white font-medium">
                                             Aval Académico Listo
                                         </span>
                                     )}
                                 </div>
 
-                                <h3 className="text-sm font-bold text-zinc-900 dark:text-white leading-snug">
+                                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">
                                     {pea.nombre_asignatura}
                                 </h3>
                                 <p className="text-xs text-zinc-500 mt-1">
@@ -183,10 +129,10 @@ export const DocentePeaDashboard: React.FC = () => {
                                 </p>
 
                                 {/* Distribución horaria */}
-                                <div className="mt-3 p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[11px] space-y-1">
+                                <div className="mt-3 p-2.5 rounded bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-[11px] space-y-1 font-mono">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-zinc-500">Total Horas Período:</span>
-                                        <span className="font-mono font-semibold text-zinc-900 dark:text-white">
+                                        <span className="text-zinc-500">Carga Horaria Total:</span>
+                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">
                                             {pea.horas_totales}h
                                         </span>
                                     </div>
@@ -195,19 +141,14 @@ export const DocentePeaDashboard: React.FC = () => {
                                         <span>Prácticas: {pea.horas_practicas}h</span>
                                         <span>Autónomo: {pea.horas_autonomo}h</span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 pt-1 border-t border-zinc-200 dark:border-zinc-800">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        Horas cuadran al 100% con Art. 21 CES
-                                    </div>
                                 </div>
 
                                 {pea.observacion_pendiente && (
-                                    <div className="mt-3 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300">
-                                        <p className="font-semibold flex items-center gap-1">
-                                            <AlertTriangle className="w-3.5 h-3.5" />
+                                    <div className="mt-3 p-2 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs">
+                                        <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                                             Observación del Coordinador:
                                         </p>
-                                        <p className="mt-0.5 text-[11px]">{pea.observacion_pendiente}</p>
+                                        <p className="mt-0.5 text-[11px] text-zinc-600 dark:text-zinc-400">{pea.observacion_pendiente}</p>
                                     </div>
                                 )}
                             </div>
@@ -219,30 +160,28 @@ export const DocentePeaDashboard: React.FC = () => {
                                         onClick={() => {
                                             addToast(
                                                 'Entrando al Editor Colaborativo',
-                                                `Cargando las 11 secciones del PEA "${pea.nombre_asignatura}" con soporte Yjs y cursores concurrentes.`,
+                                                `Cargando las 11 secciones del PEA "${pea.nombre_asignatura}" con soporte Yjs.`,
                                                 'info'
                                             );
                                         }}
-                                        className="flex-1 py-2 px-3 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 flex items-center justify-center gap-1.5 transition-colors"
+                                        className="flex-1 py-1.5 px-3 text-xs font-medium rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors text-center"
                                     >
-                                        <PenTool className="w-3.5 h-3.5" />
                                         Editar PEA (11 Secc.)
                                     </button>
                                     <button
                                         onClick={() => setClonarModalMateria(pea)}
-                                        className="p-2 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                        className="px-2.5 py-1.5 text-xs font-medium rounded border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                                         title="Clonar de semestre anterior"
                                     >
-                                        <Copy className="w-3.5 h-3.5" />
+                                        Clonar
                                     </button>
                                 </div>
 
                                 {pea.estado_workflow === 'Borrador' && (
                                     <button
                                         onClick={() => handleEnviarRevision(pea.id, pea.nombre_asignatura)}
-                                        className="w-full py-1.5 px-3 text-[11px] font-medium rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 flex items-center justify-center gap-1.5 transition-colors"
+                                        className="w-full py-1 px-3 text-[11px] font-medium rounded border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                                     >
-                                        <Send className="w-3 h-3" />
                                         Enviar a Revisión de Carrera
                                     </button>
                                 )}

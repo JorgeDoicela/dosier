@@ -1,18 +1,4 @@
 import React, { useState } from 'react';
-import {
-    Shield,
-    Users,
-    FileText,
-    CheckCircle2,
-    AlertTriangle,
-    Clock,
-    Search,
-    Send,
-    Eye,
-    MessageSquare,
-    BookOpen,
-    ArrowRight
-} from 'lucide-react';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { MOCK_PEAS, type MockPeaItem } from './data/mockCurricularData';
 import { ObservacionesDisciplinarModal } from './Modals/ObservacionesDisciplinarModal';
@@ -74,116 +60,63 @@ export const CoordCarreraDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header del Rol */}
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
-                            <Shield className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-lg font-bold text-zinc-900 dark:text-white">
-                                    Coordinación de Carrera: {carreraActiva}
-                                </h1>
-                                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                                    Ing. Wilfrido Trujillo
-                                </span>
-                            </div>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                                Supervisión disciplinar de contenidos, revisión de unidades temáticas y emisión del Aval de Carrera
-                            </p>
-                        </div>
+        <div className="space-y-5">
+            {/* Encabezado Vercel Geist */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                            Coordinación de Carrera
+                        </h1>
+                        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                            Ing. Wilfrido Trujillo
+                        </span>
                     </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        Supervisión disciplinar de contenidos, revisión de unidades temáticas y emisión del Aval de Carrera
+                    </p>
+                </div>
 
-                    {/* Botones de acción clave */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <select
-                            value={carreraActiva}
-                            onChange={e => setCarreraActiva(e.target.value)}
-                            className="px-3 py-2 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white"
-                        >
-                            <option value="Desarrollo de Software">Desarrollo de Software</option>
-                            <option value="Mecánica Industrial">Mecánica Industrial</option>
-                            <option value="Entrenamiento Deportivo">Entrenamiento Deportivo</option>
-                        </select>
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        value={carreraActiva}
+                        onChange={e => setCarreraActiva(e.target.value)}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none"
+                    >
+                        <option value="Desarrollo de Software">Desarrollo de Software</option>
+                        <option value="Mecánica Industrial">Mecánica Industrial</option>
+                        <option value="Entrenamiento Deportivo">Entrenamiento Deportivo</option>
+                    </select>
 
-                        <button
-                            onClick={() => setIsRecordatorioOpen(true)}
-                            className="px-3 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 flex items-center gap-1.5 transition-colors shadow-sm"
-                        >
-                            <Send className="w-3.5 h-3.5" />
-                            Notificar Docentes de Carrera
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* KPIs de la Carrera */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">Materias de la Carrera</p>
-                    <p className="text-xl font-bold text-zinc-900 dark:text-white mt-1">{peasCarrera.length}</p>
-                    <span className="text-[10px] text-zinc-400">Malla Vigente</span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">En Formulación (Docente)</p>
-                    <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-                        {peasCarrera.filter(p => p.estado_workflow === 'Borrador').length}
-                    </p>
-                    <span className="text-[10px] text-amber-600/70">Redacción activa</span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-purple-500/30 bg-purple-500/5 shadow-2xs">
-                    <p className="text-[11px] font-medium text-purple-700 dark:text-purple-300">Pendientes de su Revisión</p>
-                    <p className="text-xl font-bold text-purple-600 dark:text-purple-400 mt-1">
-                        {peasCarrera.filter(p => p.estado_workflow === 'En_Revision_Carrera').length}
-                    </p>
-                    <span className="text-[10px] text-purple-600/80 font-semibold">Requiere acción hoy</span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">Con Observaciones</p>
-                    <p className="text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
-                        {peasCarrera.filter(p => p.estado_workflow === 'Con_Observaciones').length}
-                    </p>
-                    <span className="text-[10px] text-rose-600/70">Subsanación 48h</span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-2xs">
-                    <p className="text-[11px] font-medium text-zinc-500">Aval de Carrera Emitido</p>
-                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400 mt-1">
-                        {peasCarrera.filter(p => p.tiene_aval_carrera).length}
-                    </p>
-                    <span className="text-[10px] text-blue-600/70">Elevados a Académica</span>
+                    <button
+                        onClick={() => setIsRecordatorioOpen(true)}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
+                    >
+                        Notificar Docentes
+                    </button>
                 </div>
             </div>
 
             {/* Bandeja de Supervisión Disciplinar */}
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/40">
-                    <div className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
-                        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
-                            Bandeja Técnica de Asignaturas de {carreraActiva}
-                        </h2>
-                    </div>
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/30">
+                    <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                        Bandeja de Asignaturas: {carreraActiva}
+                    </h2>
 
-                    {/* Filtros */}
                     <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar materia o docente..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none w-52"
-                            />
-                        </div>
+                        <input
+                            type="text"
+                            placeholder="Buscar materia o docente..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            className="px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-500 w-52"
+                        />
 
                         <select
                             value={filterEstado}
                             onChange={e => setFilterEstado(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none"
+                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white focus:outline-none"
                         >
                             <option value="todos">Todos los Estados</option>
                             <option value="Borrador">Borrador</option>
@@ -198,25 +131,25 @@ export const CoordCarreraDashboard: React.FC = () => {
                 {/* Tabla de la Carrera */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-100 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
+                        <thead className="bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
                             <tr>
-                                <th className="py-3 px-4">Asignatura y Ciclo</th>
-                                <th className="py-3 px-3">Docente Elaborador</th>
-                                <th className="py-3 px-3">Distribución Horaria</th>
-                                <th className="py-3 px-3">Estado Técnico</th>
-                                <th className="py-3 px-4 text-right">Acciones de Coordinador</th>
+                                <th className="py-2.5 px-4">Asignatura y Ciclo</th>
+                                <th className="py-2.5 px-3">Docente Elaborador</th>
+                                <th className="py-2.5 px-3">Distribución Horaria</th>
+                                <th className="py-2.5 px-3">Estado Técnico</th>
+                                <th className="py-2.5 px-4 text-right">Acción</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-200 dark:border-zinc-800">
+                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                             {peasCarrera.map(p => (
-                                <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
-                                    <td className="py-3 px-4">
+                                <tr key={p.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/30 transition-colors">
+                                    <td className="py-2.5 px-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-mono text-[10px] text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                                            <span className="font-mono text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
                                                 {p.codigo_asignatura}
                                             </span>
                                             <div>
-                                                <p className="font-semibold text-zinc-900 dark:text-white">
+                                                <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                                                     {p.nombre_asignatura}
                                                 </p>
                                                 <p className="text-[11px] text-zinc-500">
@@ -225,44 +158,44 @@ export const CoordCarreraDashboard: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-3 px-3">
-                                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                    <td className="py-2.5 px-3">
+                                        <span className="text-zinc-700 dark:text-zinc-300">
                                             {p.docente_responsable}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-3 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
+                                    <td className="py-2.5 px-3 font-mono text-[11px] text-zinc-600 dark:text-zinc-400">
                                         {p.horas_totales}h ({p.horas_docencia}D / {p.horas_practicas}P / {p.horas_autonomo}A)
                                     </td>
-                                    <td className="py-3 px-3">
+                                    <td className="py-2.5 px-3">
                                         {p.estado_workflow === 'Borrador' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                                                 Docente Elaborando
                                             </span>
                                         )}
                                         {p.estado_workflow === 'En_Revision_Carrera' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                                                Listo para su Revisión
+                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-medium">
+                                                Listo para Revisión
                                             </span>
                                         )}
                                         {p.estado_workflow === 'Con_Observaciones' && (
                                             <div>
-                                                <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                                <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-medium">
                                                     Con Observaciones
                                                 </span>
                                                 {p.seccion_observada && (
-                                                    <p className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-xs">
+                                                    <p className="text-[10px] text-zinc-400 mt-0.5 truncate max-w-xs font-mono">
                                                         {p.seccion_observada}
                                                     </p>
                                                 )}
                                             </div>
                                         )}
                                         {p.estado_workflow === 'Avalado_Carrera' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-medium">
                                                 Aval de Carrera Emitido
                                             </span>
                                         )}
                                         {p.estado_workflow === 'Avalado_Academica' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                            <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-600 text-white font-medium">
                                                 Aval Académico Concedido
                                             </span>
                                         )}
@@ -272,14 +205,12 @@ export const CoordCarreraDashboard: React.FC = () => {
                                             </span>
                                         )}
                                     </td>
-                                    <td className="py-3 px-4 text-right">
+                                    <td className="py-2.5 px-4 text-right">
                                         <div className="flex items-center justify-end gap-1.5">
                                             <button
                                                 onClick={() => setAuditoriaPea(p)}
-                                                className="px-2 py-1 text-[11px] font-medium rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-1 transition-colors"
-                                                title="Revisar unidades y horas"
+                                                className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
                                             >
-                                                <Eye className="w-3 h-3" />
                                                 Revisar
                                             </button>
 
@@ -287,18 +218,14 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                 <>
                                                     <button
                                                         onClick={() => setObservacionPea(p)}
-                                                        className="px-2 py-1 text-[11px] font-medium rounded border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 flex items-center gap-1 transition-colors"
-                                                        title="Solicitar correcciones al docente"
+                                                        className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors"
                                                     >
-                                                        <AlertTriangle className="w-3 h-3" />
                                                         Observar
                                                     </button>
                                                     <button
                                                         onClick={() => handleEmitirAvalCarrera(p.id, p.nombre_asignatura)}
-                                                        className="px-2.5 py-1 text-[11px] font-medium rounded bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1 transition-colors shadow-2xs"
-                                                        title="Emitir Aval de Carrera"
+                                                        className="px-2.5 py-1 text-xs font-medium rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
                                                     >
-                                                        <CheckCircle2 className="w-3 h-3" />
                                                         Emitir Aval
                                                     </button>
                                                 </>
