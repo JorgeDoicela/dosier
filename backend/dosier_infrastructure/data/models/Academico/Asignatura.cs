@@ -9,7 +9,5 @@ public partial class Asignatura
 
     public string? Asignatura1 { get; set; }
 
-    public bool? Anulada { get; set; }
-
     public string? Codigo { get; set; }
 }

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using dosier_application.Academico;
 
 namespace dosier_api.Controllers;
@@ -13,13 +14,16 @@ public class DocenteAsignaturasController : ControllerBase
 {
     private readonly IAsignaturasDocenteService _service;
     private readonly IAcademicContextResolver _contextResolver;
+    private readonly ILogger<DocenteAsignaturasController> _logger;
 
     public DocenteAsignaturasController(
         IAsignaturasDocenteService service,
-        IAcademicContextResolver contextResolver)
+        IAcademicContextResolver contextResolver,
+        ILogger<DocenteAsignaturasController> logger)
     {
         _service = service;
         _contextResolver = contextResolver;
+        _logger = logger;
     }
 
     /// <summary>
@@ -35,15 +39,23 @@ public class DocenteAsignaturasController : ControllerBase
         if (string.IsNullOrEmpty(idProfesor))
             return Unauthorized(new { message = "No se pudo identificar la cedula del docente en el token." });
 
-        var context = await _contextResolver.ResolveByAssignmentAsync(
-            idAsignacion,
-            idProfesor,
-            cancellationToken);
+        try
+        {
+            var context = await _contextResolver.ResolveByAssignmentAsync(
+                idAsignacion,
+                idProfesor,
+                cancellationToken);
 
-        if (context == null)
-            return NotFound(new { message = "No se encontro una asignacion institucional valida para el docente." });
+            if (context == null)
+                return NotFound(new { message = "No se encontro una asignacion institucional valida para el docente." });
 
-        return Ok(context);
+            return Ok(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al resolver contexto academico para asignacion {IdAsignacion} y profesor {IdProfesor}", idAsignacion, idProfesor);
+            return StatusCode(500, new { message = "Error al resolver el contexto curricular oficial", error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -52,11 +64,19 @@ public class DocenteAsignaturasController : ControllerBase
     [HttpGet("periodo-activo")]
     public async Task<IActionResult> GetPeriodoActivo()
     {
-        var periodo = await _service.GetPeriodoActivoAsync();
-        if (periodo == null)
-            return NotFound(new { message = "No se encontró ningún período activo." });
+        try
+        {
+            var periodo = await _service.GetPeriodoActivoAsync();
+            if (periodo == null)
+                return NotFound(new { message = "No se encontró ningún período activo." });
 
-        return Ok(periodo);
+            return Ok(periodo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener periodo activo");
+            return StatusCode(500, new { message = "Error interno al consultar el periodo activo", error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -65,8 +85,16 @@ public class DocenteAsignaturasController : ControllerBase
     [HttpGet("periodos")]
     public async Task<IActionResult> GetPeriodos()
     {
-        var periodos = await _service.GetPeriodosDisponiblesAsync();
-        return Ok(periodos);
+        try
+        {
+            var periodos = await _service.GetPeriodosDisponiblesAsync();
+            return Ok(periodos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener lista de periodos");
+            return StatusCode(500, new { message = "Error interno al consultar la lista de periodos", error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -81,8 +109,16 @@ public class DocenteAsignaturasController : ControllerBase
         if (string.IsNullOrEmpty(idProfesor))
             return Unauthorized(new { message = "No se pudo identificar la cédula del docente en el token." });
 
-        var asignaturas = await _service.GetMisAsignaturasAsync(idProfesor, periodoId);
-        return Ok(asignaturas);
+        try
+        {
+            var asignaturas = await _service.GetMisAsignaturasAsync(idProfesor, periodoId);
+            return Ok(asignaturas);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener mis materias para profesor {IdProfesor} en periodo {PeriodoId}", idProfesor, periodoId);
+            return StatusCode(500, new { message = "Error interno al consultar materias del docente", error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -91,10 +127,18 @@ public class DocenteAsignaturasController : ControllerBase
     [HttpGet("curriculo/{idAsignatura:int}/{idCarrera:int}")]
     public async Task<IActionResult> GetCurriculoAsignatura(int idAsignatura, int idCarrera)
     {
-        var curriculo = await _service.GetCurriculoAsignaturaAsync(idAsignatura, idCarrera);
-        if (curriculo == null)
-            return NotFound(new { message = "No se encontró información curricular para la asignatura y carrera especificadas." });
+        try
+        {
+            var curriculo = await _service.GetCurriculoAsignaturaAsync(idAsignatura, idCarrera);
+            if (curriculo == null)
+                return NotFound(new { message = "No se encontró información curricular para la asignatura y carrera especificadas." });
 
-        return Ok(curriculo);
+            return Ok(curriculo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener curriculo para asignatura {IdAsignatura} y carrera {IdCarrera}", idAsignatura, idCarrera);
+            return StatusCode(500, new { message = "Error interno al consultar el curriculo de la asignatura", error = ex.Message });
+        }
     }
 }

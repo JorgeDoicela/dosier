@@ -90,22 +90,34 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
         var nivelIds = asignaciones.Select(a => a.IdNivel).Distinct().ToList();
         var modalidadIds = asignaciones.Select(a => a.IdModalidad).Distinct().ToList();
 
-        var asignaturasMap = await _context.Asignaturas.AsNoTracking()
+        var asignaturasList = await _context.Asignaturas.AsNoTracking()
             .Where(a => asignaturaIds.Contains(a.IdAsignatura))
-            .ToDictionaryAsync(a => a.IdAsignatura);
+            .ToListAsync();
+        var asignaturasMap = asignaturasList
+            .GroupBy(a => a.IdAsignatura)
+            .ToDictionary(g => g.Key, g => g.First());
+
         var cursosList = await _context.Cursos.AsNoTracking()
             .Where(c => nivelIds.Contains(c.IdNivel))
             .ToListAsync();
         var cursosMap = cursosList
             .GroupBy(c => c.IdNivel)
             .ToDictionary(g => g.Key, g => g.First());
+
         var carreraIds = cursosMap.Values.Select(c => c.IdCarrera).Distinct().ToList();
-        var carrerasMap = await _context.Carreras.AsNoTracking()
+        var carrerasList = await _context.Carreras.AsNoTracking()
             .Where(c => carreraIds.Contains(c.IdCarrera) && c.EsInstituto == 1)
-            .ToDictionaryAsync(c => c.IdCarrera);
-        var modalidadesMap = await _context.Modalidades.AsNoTracking()
+            .ToListAsync();
+        var carrerasMap = carrerasList
+            .GroupBy(c => c.IdCarrera)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var modalidadesList = await _context.Modalidades.AsNoTracking()
             .Where(m => modalidadIds.Contains(m.IdModalidad))
-            .ToDictionaryAsync(m => m.IdModalidad);
+            .ToListAsync();
+        var modalidadesMap = modalidadesList
+            .GroupBy(m => m.IdModalidad)
+            .ToDictionary(g => g.Key, g => g.First());
 
         var mallasPeriodo = await (
             from mp in _context.MallasPeriodos.AsNoTracking()
@@ -131,17 +143,24 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                         && d.Anulada != true)
             .ToListAsync();
         var tiposAsignaturaIds = detallesMalla.Select(d => d.IdTipoAsignatura).Distinct().ToList();
-        var tiposAsignaturaMap = await _context.TiposAsignatura.AsNoTracking()
+        var tiposAsignaturaList = await _context.TiposAsignatura.AsNoTracking()
             .Where(t => tiposAsignaturaIds.Contains(t.IdTipoAsignatura))
-            .ToDictionaryAsync(t => t.IdTipoAsignatura);
+            .ToListAsync();
+        var tiposAsignaturaMap = tiposAsignaturaList
+            .GroupBy(t => t.IdTipoAsignatura)
+            .ToDictionary(g => g.Key, g => g.First());
+
         var detalleIds = detallesMalla.Select(d => d.IdDetalleMalla).ToList();
         var prerequisitos = await _context.Prerequisitos.AsNoTracking()
             .Where(p => detalleIds.Contains(p.IdDetalleMalla) && p.Activa == 1)
             .ToListAsync();
         var prerequisitoIds = prerequisitos.Select(p => p.IdAsignatura).Distinct().ToList();
-        var prerequisitoNombres = await _context.Asignaturas.AsNoTracking()
+        var prerequisitoList = await _context.Asignaturas.AsNoTracking()
             .Where(a => prerequisitoIds.Contains(a.IdAsignatura))
-            .ToDictionaryAsync(a => a.IdAsignatura, a => a.Asignatura1 ?? a.Codigo ?? string.Empty);
+            .ToListAsync();
+        var prerequisitoNombres = prerequisitoList
+            .GroupBy(a => a.IdAsignatura)
+            .ToDictionary(g => g.Key, g => g.First().Asignatura1 ?? g.First().Codigo ?? string.Empty);
 
         var periodo = await _context.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == idPeriodo);
 
