@@ -137,7 +137,19 @@ graph TD
 
 ---
 
-## 5. Script Consolidado para Modelado Curricular (PEA Oficial)
+## 5. Secuencia Oficial de Provisión de Base de Datos para Docker y Despliegues
+
+Para inicializaciones autónomas (Docker Compose, CI/CD y entornos de prueba/defensa de tesis), la base de datos se estructura en 5 scripts ordenados en `scripts/base_datos/`, ejecutados automáticamente por el contenedor MySQL en `/docker-entrypoint-initdb.d/`:
+
+1. **`00_sigafi_esquema_y_datos_demo.sql`:** Provisión autónoma del esquema preexistente de SIGAFI (`carreras`, `periodos`, `mallas_periodos`, `detallemallas`, `profesores`, `asignacion_materias`), tabla maestra `usuarios` y el esquema base RBAC (`rbac_sistema`, `rbac_operaciones`, `rbac_rol`, `rbac_modulos`, `rbac_modulos_operaciones`, `rbac_rol_modulo_operacion`, `rbac_usuario_rol`). Cumple con LOPDP mediante datos sintéticos realistas.
+2. **`01_sistema_base.sql`:** Tablas base del motor DOSIER (`doc_proyectos`, `doc_document_templates`, `doc_documentos_instancias`, `doc_user_signature_profiles`, `doc_documentos_firmas`, `doc_email_historial`, `doc_calendario_eventos_normativos`, etc.).
+3. **`02_gobernanza_y_antecedentes_curriculares.sql`:** Marco normativo institucional (CES, CACES), modelo educativo, matrices de tributación curricular y autoridades académicas designadas (`doc_autoridades_curriculares`).
+4. **`03_curriculum_pea_oficial.sql`:** Estructura completa de las 11 secciones oficiales del Programa de Estudio de la Asignatura (PEA).
+5. **`04_seguridad_rbac_roles_curriculares.sql`:** Configuración de roles curriculares (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`), permisos atómicos por módulo y sincronización de autoridades curriculares.
+
+---
+
+## 6. Script Consolidado para Modelado Curricular (PEA Oficial)
 
 Para sesiones de levantamiento de requerimientos, modelado relacional y presentación técnica ante comisiones directivas, se dispone del script maestro:
 * **Archivo:** `scripts/base_datos/00_dosier_curriculum_pea_consolidado.sql`
