@@ -778,4 +778,231 @@ INSERT IGNORE INTO contratos (idContratos, idProfesor, idTiposContratos, esActiv
 (4, '1720000004', 1, 1, 2),
 (5, '1720000005', 1, 1, 3);
 
+-- -----------------------------------------------------------------------------
+-- 23. TABLA: etnias (Catálogo CACES / SENESCYT)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS etnias (
+    idEtnia             INT AUTO_INCREMENT PRIMARY KEY,
+    etnia               VARCHAR(80) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO etnias (idEtnia, etnia) VALUES
+(1, 'Mestizo'),
+(2, 'Afroecuatoriano'),
+(3, 'Indígena'),
+(4, 'Montubio'),
+(5, 'Blanco'),
+(6, 'Otro');
+
+-- -----------------------------------------------------------------------------
+-- 24. TABLA: discapacidades (Catálogo CACES / SENESCYT)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS discapacidades (
+    idDiscapacidad      INT AUTO_INCREMENT PRIMARY KEY,
+    discapacidad        VARCHAR(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO discapacidades (idDiscapacidad, discapacidad) VALUES
+(0, 'Ninguna'),
+(1, 'Auditiva'),
+(2, 'Visual'),
+(3, 'Física / Motriz'),
+(4, 'Intelectual'),
+(5, 'Psicosocial');
+
+-- -----------------------------------------------------------------------------
+-- 25. TABLA: grados_academicos y niveles_academicos
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS grados_academicos (
+    idGradoAcademico    INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(45) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO grados_academicos (idGradoAcademico, nombre) VALUES
+(1, 'Tercer Nivel Técnico/Tecnológico'),
+(2, 'Tercer Nivel de Grado'),
+(3, 'Cuarto Nivel Maestría'),
+(4, 'Cuarto Nivel Doctorado (PhD)');
+
+CREATE TABLE IF NOT EXISTS niveles_academicos (
+    idNivelAcademico    INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(60) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO niveles_academicos (idNivelAcademico, nombre) VALUES
+(1, 'Tecnológico'),
+(2, 'Pregrado'),
+(3, 'Posgrado');
+
+-- -----------------------------------------------------------------------------
+-- 26. TABLA: universidades
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS universidades (
+    idUniversidad       INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO universidades (idUniversidad, nombre) VALUES
+(1, 'Instituto Superior Tecnológico Policía Nacional - ISTPET'),
+(2, 'Universidad Central del Ecuador'),
+(3, 'Escuela Politécnica Nacional'),
+(4, 'Universidad de las Fuerzas Armadas ESPE'),
+(5, 'Pontificia Universidad Católica del Ecuador');
+
+-- -----------------------------------------------------------------------------
+-- 27. TABLA: titulos_profesores
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS titulos_profesores (
+    idTitulosProfesor   INT AUTO_INCREMENT PRIMARY KEY,
+    idProfesor          VARCHAR(14)  NOT NULL,
+    titulo              VARCHAR(200) NOT NULL,
+    codigo_senescyt     VARCHAR(90)  NULL,
+    fecha_obtencion     DATE         NULL,
+    FOREIGN KEY (idProfesor) REFERENCES profesores(idProfesor)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO titulos_profesores (idTitulosProfesor, idProfesor, titulo, codigo_senescyt, fecha_obtencion) VALUES
+(1, '1725555377', 'Tecnólogo Superior en Desarrollo de Software', '1005-2024-2819', '2024-03-15'),
+(2, '1720000002', 'Magíster en Sistemas de Información', '1020-2020-1928', '2020-07-20'),
+(3, '1720000003', 'Doctora en Ciencias de la Educación (Ph.D.)', '1001-2018-0912', '2018-11-10'),
+(4, '1720000004', 'Magíster en Ciberseguridad y Redes', '1035-2021-4821', '2021-05-18'),
+(5, '1720000005', 'Magíster en Docencia Universitaria y Gestión Curricular', '1040-2019-3310', '2019-09-30');
+
+-- -----------------------------------------------------------------------------
+-- 28. TABLA: clasificacion UNESCO (SENESCYT)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS campo_amplio_unesco (
+    idCampoAmplioUnesco INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(100) NOT NULL,
+    codigoAmplio        VARCHAR(10)  NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO campo_amplio_unesco (idCampoAmplioUnesco, nombre, codigoAmplio) VALUES
+(1, 'Tecnologías de la Información y la Comunicación (TIC)', '06'),
+(2, 'Ingeniería, Industria y Construcción', '07'),
+(3, 'Administración y Derecho', '04'),
+(4, 'Servicios y Seguridad', '10');
+
+CREATE TABLE IF NOT EXISTS campo_especifico_unesco (
+    idCampospecificoUnesco INT AUTO_INCREMENT PRIMARY KEY,
+    nombreEspecifico    VARCHAR(100) NOT NULL,
+    codigoEspecifico    VARCHAR(10)  NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO campo_especifico_unesco (idCampospecificoUnesco, nombreEspecifico, codigoEspecifico) VALUES
+(1, 'Tecnologías de la información y la comunicación', '061'),
+(2, 'Ingeniería y profesiones afines', '071'),
+(3, 'Seguridad y protección civil', '102');
+
+CREATE TABLE IF NOT EXISTS campo_detallado_unesco (
+    idCampoDetalladoUnesco INT AUTO_INCREMENT PRIMARY KEY,
+    nombreDetallado     VARCHAR(100) NOT NULL,
+    codigoDetallado     VARCHAR(10)  NOT NULL,
+    activo              TINYINT(4)   DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO campo_detallado_unesco (idCampoDetalladoUnesco, nombreDetallado, codigoDetallado, activo) VALUES
+(1, 'Desarrollo y análisis de software y aplicaciones', '0613', 1),
+(2, 'Diseño y administración de bases de datos y redes', '0612', 1),
+(3, 'Seguridad policial y orden público', '1022', 1);
+
+-- -----------------------------------------------------------------------------
+-- 29. TABLA: dedicacion, profesores_dedicacion, profesores_actividades y subcategorias
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS dedicacion (
+    idDedicacion        INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(90) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO dedicacion (idDedicacion, nombre) VALUES
+(1, 'Tiempo Completo (40h)'),
+(2, 'Medio Tiempo (20h)'),
+(3, 'Tiempo Parcial (10h)');
+
+CREATE TABLE IF NOT EXISTS profesores_dedicacion (
+    idProfesoresDedicacion INT AUTO_INCREMENT PRIMARY KEY,
+    idProfesor          VARCHAR(14)  NOT NULL,
+    idPeriodo           CHAR(7) CHARACTER SET latin1 NOT NULL,
+    esActivo            TINYINT(4)   DEFAULT 1,
+    idDedicacionCategorias INT       NULL,
+    FOREIGN KEY (idProfesor) REFERENCES profesores(idProfesor),
+    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO profesores_dedicacion (idProfesoresDedicacion, idProfesor, idPeriodo, esActivo, idDedicacionCategorias) VALUES
+(1, '1725555377', '2026-1', 1, 1),
+(2, '1720000002', '2026-1', 1, 1),
+(3, '1720000003', '2026-1', 1, 1),
+(4, '1720000004', '2026-1', 1, 1),
+(5, '1720000005', '2026-1', 1, 1);
+
+CREATE TABLE IF NOT EXISTS subcategorias_actividades (
+    idSubcategoria      INT AUTO_INCREMENT PRIMARY KEY,
+    subcategoria        VARCHAR(100) NOT NULL,
+    idCategoria         INT          NULL,
+    esDocencia          TINYINT(4)   DEFAULT 1,
+    activa              TINYINT(4)   DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO subcategorias_actividades (idSubcategoria, subcategoria, idCategoria, esDocencia, activa) VALUES
+(1, 'Docencia y Preparación de Clases', 1, 1, 1),
+(2, 'Investigación y Desarrollo Curricular', 2, 0, 1),
+(3, 'Vinculación con la Sociedad', 3, 0, 1),
+(4, 'Gestión Académica y Coordinación', 4, 0, 1);
+
+CREATE TABLE IF NOT EXISTS profesores_actividades (
+    idPeriodo           CHAR(7) CHARACTER SET latin1 NOT NULL,
+    idProfesor          VARCHAR(14)  NOT NULL,
+    idSubcategoria      INT          NOT NULL,
+    horas_semana        INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (idPeriodo, idProfesor, idSubcategoria),
+    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo),
+    FOREIGN KEY (idProfesor) REFERENCES profesores(idProfesor),
+    FOREIGN KEY (idSubcategoria) REFERENCES subcategorias_actividades(idSubcategoria)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO profesores_actividades (idPeriodo, idProfesor, idSubcategoria, horas_semana) VALUES
+('2026-1', '1725555377', 1, 20),
+('2026-1', '1725555377', 2, 10),
+('2026-1', '1725555377', 4, 10),
+('2026-1', '1720000004', 1, 10),
+('2026-1', '1720000004', 4, 30);
+
+-- -----------------------------------------------------------------------------
+-- 30. TABLA: matriculas (Registro Académico de Estudiantes)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS matriculas (
+    idMatricula         INT AUTO_INCREMENT PRIMARY KEY,
+    idAlumno            INT          NOT NULL,
+    idNivel             INT          NULL,
+    idSeccion           INT          NULL,
+    idModalidad         INT          NULL,
+    idPeriodo           CHAR(7) CHARACTER SET latin1 NULL,
+    fechaMatricula      DATE         NULL,
+    paralelo            VARCHAR(1)   NULL,
+    arrastres           TINYINT(4)   DEFAULT 0,
+    folio               INT          NULL,
+    beca_matricula      INT          NULL,
+    beca_colegiatura    INT          NULL,
+    retirado            TINYINT(4)   DEFAULT 0,
+    fechaRetiro         DATE         NULL,
+    observacion         TEXT         NULL,
+    convalidacion       TINYINT(4)   DEFAULT 0,
+    carrera_convalidada VARCHAR(100) NULL,
+    numero_permiso      VARCHAR(50)  NULL,
+    user_matricula      VARCHAR(25)  NULL,
+    valida              TINYINT(4)   DEFAULT 1,
+    esOyente            TINYINT(4)   DEFAULT 0,
+    documentoFactura    VARCHAR(50)  NULL,
+    FOREIGN KEY (idAlumno) REFERENCES alumnos(idAlumno),
+    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO matriculas (idMatricula, idAlumno, idNivel, idSeccion, idModalidad, idPeriodo, fechaMatricula, paralelo, valida) VALUES
+(1, 1, 3, 1, 1, '2026-1', '2026-03-25', 'A', 1),
+(2, 2, 3, 1, 1, '2026-1', '2026-03-25', 'A', 1),
+(3, 3, 3, 1, 1, '2026-1', '2026-03-26', 'A', 1),
+(4, 4, 3, 1, 1, '2026-1', '2026-03-26', 'A', 1),
+(5, 5, 3, 1, 1, '2026-1', '2026-03-27', 'A', 1);
+
 SET FOREIGN_KEY_CHECKS = 1;
