@@ -209,12 +209,12 @@ La seguridad del pipeline se rige por el principio de cero credenciales en texto
 ### 5.2 Variables de Entorno en el Servidor (`/var/www/dosier/.env`)
 
 ```env
+DB_ROOT_PASSWORD=PASSWORD_SEGURO_GENERADO_OPENSSL
+DB_USER=dosier_user
+DB_PASSWORD=PASSWORD_SEGURO_GENERADO_OPENSSL
+JWT_SECRET=CLAVE_SECRETA_INSTITUCIONAL_JWT_MINIMO_32_BYTES
+FRONTEND_URL=https://dosier.jorgedoicela.com
 ASPNETCORE_ENVIRONMENT=Production
-ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=PASSWORD_SEGURA;
-Jwt__Secret=CLAVE_SECRETA_INSTITUCIONAL_JWT_MINIMO_32_CARACTERES
-Jwt__Issuer=DosierApi
-Jwt__Audience=DosierClients
-FrontendUrl=https://dosier.jorgedoicela.com
 ```
 
 ---
