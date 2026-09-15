@@ -38,6 +38,9 @@ Para garantizar que el agente aplique tanto los estándares globales como los pa
   1. Activar skill global `desarrollo-backend` (arquitectura limpia, EF Core, SOLID, REST, logging).
   2. Activar skill local `backend-dosier` (mallas, asignaciones docentes, PEA oficial en sus 11 secciones, gobernanza curricular y esquemas SIGAFI de solo lectura).
 
+* **Tareas de Documentación Técnica, Memoria de Tesis y Especificación Académica:**
+  * Activar skill local `documentacion-dosier` (sincronización obligatoria de `docs/documentacion/`, creación/edición/eliminación de `.md`, cero emojis y consistencia para la tesis ISTPET).
+
 * **Tareas de Seguridad, Login, Credenciales o Base de Datos Sensible:**
   * Activar skill global `gobernanza-datos-segura`.
 
