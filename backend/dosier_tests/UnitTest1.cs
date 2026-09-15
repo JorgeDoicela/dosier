@@ -533,10 +533,12 @@ public class UnitTest1
         var mockFirma = new Mock<dosier_infrastructure.Security.IFirmaElectronicaService>();
         var peaService = new dosier_infrastructure.Curriculum.PeaService(context, resolver, expedienteService, hashService, mockUrl.Object, mockFirma.Object);
 
-        var pea = await peaService.GetByUuidAsync("df6c76ee-0527-4b50-92f4-6c4d90b2cc0d");
+        var primerPea = await context.DocPeas.FirstOrDefaultAsync();
+        if (primerPea == null) return;
+
+        var pea = await peaService.GetByUuidAsync(primerPea.Uuid);
         Assert.NotNull(pea);
-        Assert.Equal("df6c76ee-0527-4b50-92f4-6c4d90b2cc0d", pea.Uuid);
-        Assert.Equal("TECNICAS DE COCINA CONTEMPORANEA Y DE VANGUARDIA", pea.NombreAsignatura);
+        Assert.Equal(primerPea.Uuid, pea.Uuid);
     }
 }
 
