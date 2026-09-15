@@ -251,10 +251,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo mkdir -p ${{ env.DEPLOY_DIR }}/uploads ${{ env.DEPLOY_DIR }}/backups ${{ env.DEPLOY_DIR }}/certs
+            sudo mkdir -p ${{ env.DEPLOY_DIR }}/uploads ${{ env.DEPLOY_DIR }}/backups ${{ env.DEPLOY_DIR }}/certs ${{ env.DEPLOY_DIR }}/scripts/base_datos
             sudo chown -R ${{ secrets.EC2_USER }}:${{ secrets.EC2_USER }} ${{ env.DEPLOY_DIR }}
 
-      - name: Transferir docker-compose.yml via SCP
+      - name: Transferir docker-compose.yml y Scripts SQL via SCP
         run: |
           eval $(ssh-agent -s)
           echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' | ssh-add -
@@ -262,6 +262,7 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
           scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/docker-compose.yml
+          scp -r -o StrictHostKeyChecking=no scripts/base_datos/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.DEPLOY_DIR }}/scripts/base_datos/
 
       - name: Desplegar Contenedores en EC2 por SSH
         uses: appleboy/ssh-action@v1.0.3
