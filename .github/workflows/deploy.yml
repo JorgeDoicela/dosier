@@ -333,7 +333,11 @@ jobs:
               . .env
               set +a
             fi
-            MYSQL_PASS="${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}"
+            if [ -z "$DB_ROOT_PASSWORD" ]; then
+              echo "ERROR: DB_ROOT_PASSWORD no esta definida en .env del servidor."
+              exit 1
+            fi
+            MYSQL_PASS="$DB_ROOT_PASSWORD"
             docker compose exec -T dosier-db mysqladmin ping -h localhost -u root -p"$MYSQL_PASS" --silent --wait=60
 
             echo "=== Sincronizando scripts SQL oficiales contra MySQL ==="

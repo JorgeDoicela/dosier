@@ -233,19 +233,19 @@ WHERE m.id_sistema = @idSistemaDosier
 -- F. Sincronizar roles de autoridades designadas hacia usuarios existentes
 INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
 SELECT u.idUsuario, 
-       CASE aut.cargoCurricular
+       CASE CONVERT(aut.cargoCurricular USING utf8mb4)
            WHEN 'VICERRECTOR' THEN @rolVicerrec
            WHEN 'COORD_ACADEMICO' THEN @rolCoordAca
            WHEN 'COORD_CARRERA' THEN @rolCoordCar
        END as idRol,
        CURDATE(), 1
 FROM doc_autoridades_curriculares aut
-JOIN usuarios u ON aut.idSigafi = u.idSigafi
+JOIN usuarios u ON CONVERT(aut.idSigafi USING utf8mb4) = CONVERT(u.idSigafi USING utf8mb4)
 WHERE aut.esActivo = 1
   AND NOT EXISTS (
       SELECT 1 FROM rbac_usuario_rol ur
       WHERE ur.idUsuario = u.idUsuario
-        AND ur.idRol = CASE aut.cargoCurricular
+        AND ur.idRol = CASE CONVERT(aut.cargoCurricular USING utf8mb4)
                            WHEN 'VICERRECTOR' THEN @rolVicerrec
                            WHEN 'COORD_ACADEMICO' THEN @rolCoordAca
                            WHEN 'COORD_CARRERA' THEN @rolCoordCar
@@ -266,7 +266,7 @@ WHERE u.administrador = 1
 INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
 SELECT u.idUsuario, @rolDocente, CURDATE(), 1
 FROM usuarios u
-WHERE u.tablaSigafi = 'profesor'
+WHERE CONVERT(u.tablaSigafi USING utf8mb4) = 'profesor'
   AND NOT EXISTS (
       SELECT 1 FROM rbac_usuario_rol ur
       WHERE ur.idUsuario = u.idUsuario AND ur.idRol = @rolDocente

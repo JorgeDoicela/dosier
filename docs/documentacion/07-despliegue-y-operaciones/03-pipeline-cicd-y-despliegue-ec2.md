@@ -91,9 +91,9 @@ services:
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: sigafi_es
-      MYSQL_PASSWORD: ${DB_PASSWORD:-DosierIstpet2026UserPass}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./scripts/base_datos:/docker-entrypoint-initdb.d:ro
@@ -107,7 +107,7 @@ services:
     networks:
       - dosier-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -123,8 +123,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
-      - ConnectionStrings__default_connection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass};
-      - ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass};
+      - ConnectionStrings__default_connection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};
+      - ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};
       - Jwt__Secret=ClaveSecretaInstitucionalParaFirmasJWTMinimo32Caracteres
       - Jwt__Issuer=DosierApi
       - Jwt__Audience=DosierClients
