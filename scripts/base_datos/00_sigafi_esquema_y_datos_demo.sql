@@ -734,4 +734,48 @@ CREATE TABLE IF NOT EXISTS parciales_modalidades_fechas (
     activo              TINYINT(4)   DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS cargo_instituto (
+    idCargoInstituto     INT AUTO_INCREMENT PRIMARY KEY,
+    idTipoFuncionario   INT NOT NULL DEFAULT 1,
+    nombre              VARCHAR(100) NULL,
+    disponibilidad_cargo INT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO cargo_instituto (idCargoInstituto, idTipoFuncionario, nombre, disponibilidad_cargo) VALUES
+(1, 1, 'Docente Titular', 1),
+(2, 1, 'Coordinador de Carrera', 1),
+(3, 1, 'Coordinador Académico', 1),
+(4, 1, 'Vicerrector Académico', 1),
+(5, 1, 'Rector', 1);
+
+CREATE TABLE IF NOT EXISTS tipos_contratos (
+    idTiposContratos    INT AUTO_INCREMENT PRIMARY KEY,
+    nombre              VARCHAR(100) NULL,
+    codigo              VARCHAR(20) NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO tipos_contratos (idTiposContratos, nombre, codigo) VALUES
+(1, 'Tiempo Completo', 'TC'),
+(2, 'Medio Tiempo', 'MT'),
+(3, 'Tiempo Parcial', 'TP');
+
+CREATE TABLE IF NOT EXISTS contratos (
+    idContratos         INT AUTO_INCREMENT PRIMARY KEY,
+    idProfesor          VARCHAR(14) NOT NULL,
+    idTiposContratos    INT NULL,
+    esActivo            TINYINT(4) DEFAULT 1,
+    iddepartamentos     INT NULL,
+    idCargoInstituto    INT NULL,
+    FOREIGN KEY (idProfesor) REFERENCES profesores(idProfesor),
+    FOREIGN KEY (idTiposContratos) REFERENCES tipos_contratos(idTiposContratos),
+    FOREIGN KEY (idCargoInstituto) REFERENCES cargo_instituto(idCargoInstituto)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO contratos (idContratos, idProfesor, idTiposContratos, esActivo, idCargoInstituto) VALUES
+(1, '1725555377', 1, 1, 1),
+(2, '1720000002', 1, 1, 1),
+(3, '1720000003', 1, 1, 4),
+(4, '1720000004', 1, 1, 2),
+(5, '1720000005', 1, 1, 3);
+
 SET FOREIGN_KEY_CHECKS = 1;
