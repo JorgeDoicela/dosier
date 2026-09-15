@@ -68,8 +68,18 @@ public class AuthService : IAuthService
 
         if (user != null)
         {
-            // Restricción institucional: En DOSIER solo ingresa personal docente y directivo/administrativo
-            if (user.TablaSigafi == "alumno" && !user.Administrador && (string.IsNullOrEmpty(_masterAdminId) || user.IdSigafi != _masterAdminId))
+            // Auto-corrección dinámica de entidad: Si el registro histórico en usuarios dice "alumno", pero la persona es Autoridad Curricular o Docente activo en SIGAFI
+            bool esAutoridad = await _context.DocAutoridadesCurriculares.AnyAsync(a => a.IdSigafi == user.IdSigafi && a.EsActivo);
+            bool esProfesorActivo = await _context.Profesores.AnyAsync(p => p.IdProfesor == user.IdSigafi && (p.Activo == 1 || p.Activo == null));
+
+            if (user.TablaSigafi == "alumno" && (esAutoridad || esProfesorActivo))
+            {
+                user.TablaSigafi = esProfesorActivo ? "profesor" : "otros";
+                await _context.SaveChangesAsync();
+            }
+
+            // Restricción institucional: En DOSIER solo ingresa personal docente, autoridades/directivos y administradores
+            if (user.TablaSigafi == "alumno" && !user.Administrador && !esAutoridad && (string.IsNullOrEmpty(_masterAdminId) || user.IdSigafi != _masterAdminId))
             {
                 await _auditService.LogActionAsync(user.IdUsuario, "LOGIN_DENIED", "Acceso denegado: los estudiantes no tienen acceso a la plataforma curricular DOSIER", "SEGURIDAD");
                 return (null, null);
@@ -90,7 +100,24 @@ public class AuthService : IAuthService
                 });
             }
 
-            if (VerifyPassword(user, password))
+            bool passwordOk = VerifyPassword(user, password);
+            if (!passwordOk && esProfesorActivo)
+            {
+                // Resiliencia con SIGAFI: verificar si la contraseña fue actualizada en la nómina de profesores de SIGAFI
+                var prof = await _context.Profesores.FirstOrDefaultAsync(p => p.IdProfesor == user.IdSigafi);
+                if (prof != null)
+                {
+                    var sigafiVerification = _passwordService.VerifyPassword(password, prof.Clave ?? string.Empty);
+                    if (sigafiVerification.Success)
+                    {
+                        user.Contrasenia = _passwordService.HashPassword(password);
+                        await _context.SaveChangesAsync();
+                        passwordOk = true;
+                    }
+                }
+            }
+
+            if (passwordOk)
             {
                 // ── Éxito: resetear contadores ───────────────────────────────────
                 _userLockouts.TryRemove(userKey, out _);

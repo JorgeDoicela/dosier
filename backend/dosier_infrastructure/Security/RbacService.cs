@@ -119,6 +119,87 @@ public class RbacService : IRbacService
             await _context.SaveChangesAsync();
         }
 
+        // 4. Asegurar que los roles oficiales de DOSIER existan formalmente en rbac_rol
+        var officialRoles = new[]
+        {
+            ("DOSIER_ADMIN", "Administrador DOSIER"),
+            ("DOSIER_DOCENTE", "Docente Elaborador DOSIER"),
+            ("DOSIER_COORD_CARRERA", "Coordinador de Carrera DOSIER"),
+            ("DOSIER_COORD_ACAD", "Coordinación Académica DOSIER"),
+            ("DOSIER_VICERRECTOR", "Vicerrectorado Académico DOSIER")
+        };
+
+        foreach (var (code, name) in officialRoles)
+        {
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.CodigoRol == code);
+            if (role == null)
+            {
+                role = new Role
+                {
+                    CodigoRol = code,
+                    Nombre = name,
+                    EsActivo = true
+                };
+                _context.Roles.Add(role);
+                await _context.SaveChangesAsync();
+                await AssignDefaultPermissionsToRoleAsync(role);
+            }
+        }
+
+        // 5. Semilla base de autoridades si doc_autoridades_curriculares está vacía
+        if (!await _context.DocAutoridadesCurriculares.AnyAsync())
+        {
+            _context.DocAutoridadesCurriculares.AddRange(new[]
+            {
+                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                {
+                    IdSigafi = "1802707511",
+                    NombreCompleto = "FREDDY BAÑO",
+                    CargoCurricular = "VICERRECTOR",
+                    IdCarrera = null,
+                    EsActivo = true,
+                    FechaDesignacion = new DateOnly(2024, 1, 1)
+                },
+                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                {
+                    IdSigafi = "0502405889",
+                    NombreCompleto = "CRISTIAN COBOS",
+                    CargoCurricular = "COORD_ACADEMICO",
+                    IdCarrera = null,
+                    EsActivo = true,
+                    FechaDesignacion = new DateOnly(2024, 1, 1)
+                },
+                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                {
+                    IdSigafi = "1709890626",
+                    NombreCompleto = "WILFRIDO TRUJILLO",
+                    CargoCurricular = "COORD_CARRERA",
+                    IdCarrera = 9,
+                    EsActivo = true,
+                    FechaDesignacion = new DateOnly(2024, 1, 1)
+                },
+                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                {
+                    IdSigafi = "1720004793",
+                    NombreCompleto = "CHRISTIAN CASTRO",
+                    CargoCurricular = "COORD_CARRERA",
+                    IdCarrera = 10,
+                    EsActivo = true,
+                    FechaDesignacion = new DateOnly(2024, 1, 1)
+                },
+                new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                {
+                    IdSigafi = "1721465431",
+                    NombreCompleto = "WILMER TOAPANTA",
+                    CargoCurricular = "COORD_CARRERA",
+                    IdCarrera = 7,
+                    EsActivo = true,
+                    FechaDesignacion = new DateOnly(2024, 1, 1)
+                }
+            });
+            await _context.SaveChangesAsync();
+        }
+
         _rbacSeeded = true;
     }
 
@@ -149,6 +230,26 @@ public class RbacService : IRbacService
         else if (user.TablaSigafi == "profesor")
         {
             requiredRoleCodes.Add("DOSIER_DOCENTE");
+        }
+
+        // ── Designaciones Curriculares Institucionales (doc_autoridades_curriculares) ──
+        if (!string.IsNullOrEmpty(user.IdSigafi))
+        {
+            var designaciones = await _context.DocAutoridadesCurriculares
+                .AsNoTracking()
+                .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo)
+                .Select(a => a.CargoCurricular)
+                .ToListAsync();
+
+            foreach (var cargo in designaciones)
+            {
+                if (cargo == "VICERRECTOR" && !requiredRoleCodes.Contains("DOSIER_VICERRECTOR"))
+                    requiredRoleCodes.Add("DOSIER_VICERRECTOR");
+                else if (cargo == "COORD_ACADEMICO" && !requiredRoleCodes.Contains("DOSIER_COORD_ACAD"))
+                    requiredRoleCodes.Add("DOSIER_COORD_ACAD");
+                else if (cargo == "COORD_CARRERA" && !requiredRoleCodes.Contains("DOSIER_COORD_CARRERA"))
+                    requiredRoleCodes.Add("DOSIER_COORD_CARRERA");
+            }
         }
 
         foreach (var requiredRoleCode in requiredRoleCodes)

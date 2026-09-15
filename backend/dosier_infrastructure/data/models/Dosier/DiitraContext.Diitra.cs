@@ -46,6 +46,7 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocAsignaturaResultadoPerfilConfiguration());
         modelBuilder.ApplyConfiguration(new DocExpedienteCurricularConfiguration());
         modelBuilder.ApplyConfiguration(new DocExpedienteAsignacionConfiguration());
+        modelBuilder.ApplyConfiguration(new DocAutoridadCurricularConfiguration());
 
         // Módulos Curriculares Oficiales (Los 4 Documentos ISTPET)
         // 1. PEA

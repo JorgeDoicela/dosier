@@ -1386,6 +1386,19 @@ namespace dosier_infrastructure.Curriculum
             {
                 query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
             }
+            else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad)
+            {
+                // Coordinador de Carrera: supervisa las carreras que coordina o sus propias materias formuladas
+                var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                    .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                    .Select(a => a.IdCarrera!.Value)
+                    .ToListAsync(cancellationToken);
+
+                if (carrerasCoordinadas.Any())
+                {
+                    query = query.Where(p => carrerasCoordinadas.Contains(p.IdCarrera) || p.IdDocenteElaborador == user.IdSigafi);
+                }
+            }
 
             var peas = await query
                 .OrderByDescending(p => p.FechaModificacion)

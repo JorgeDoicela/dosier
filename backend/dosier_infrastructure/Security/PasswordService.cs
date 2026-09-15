@@ -6,21 +6,35 @@ public class PasswordService : IPasswordService
 {
     public PasswordVerificationResult VerifyPassword(string password, string hashedPasswordOrPlaintext)
     {
-        try
+        if (string.IsNullOrEmpty(hashedPasswordOrPlaintext))
+            return new PasswordVerificationResult { Success = false, NeedsRehash = false };
+
+        if (IsBCryptHash(hashedPasswordOrPlaintext))
         {
-            if (BCrypt.Net.BCrypt.Verify(password, hashedPasswordOrPlaintext))
+            try
             {
-                return new PasswordVerificationResult { Success = true, NeedsRehash = false };
+                if (BCrypt.Net.BCrypt.Verify(password, hashedPasswordOrPlaintext))
+                {
+                    return new PasswordVerificationResult { Success = true, NeedsRehash = false };
+                }
             }
+            catch
+            {
+                // Si el hash BCrypt estaba corrupto, fallback a texto plano si coincide
+                if (hashedPasswordOrPlaintext == password)
+                {
+                    return new PasswordVerificationResult { Success = true, NeedsRehash = true };
+                }
+            }
+            return new PasswordVerificationResult { Success = false, NeedsRehash = false };
         }
-        catch
+
+        // Si no es formato BCrypt, es texto plano institucional (SIGAFI)
+        if (hashedPasswordOrPlaintext == password)
         {
-            // Fallback para claves en texto plano durante transición
-            if (hashedPasswordOrPlaintext == password)
-            {
-                return new PasswordVerificationResult { Success = true, NeedsRehash = true };
-            }
+            return new PasswordVerificationResult { Success = true, NeedsRehash = true };
         }
+
         return new PasswordVerificationResult { Success = false, NeedsRehash = false };
     }
 

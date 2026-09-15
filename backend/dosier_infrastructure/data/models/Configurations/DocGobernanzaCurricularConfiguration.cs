@@ -225,4 +225,27 @@ namespace dosier_infrastructure.data.models.Configurations
                    .OnDelete(DeleteBehavior.Cascade);
         }
     }
+
+    public class DocAutoridadCurricularConfiguration : IEntityTypeConfiguration<DocAutoridadCurricular>
+    {
+        public void Configure(EntityTypeBuilder<DocAutoridadCurricular> builder)
+        {
+            builder.ToTable("doc_autoridades_curriculares");
+            builder.HasKey(e => e.IdAutoridad);
+            builder.Property(e => e.IdAutoridad).HasColumnName("idAutoridad");
+
+            builder.Property(e => e.Uuid).HasColumnName("uuid").IsRequired().HasMaxLength(36);
+            builder.Property(e => e.IdSigafi).HasColumnName("idSigafi").IsRequired().HasMaxLength(20);
+            builder.Property(e => e.NombreCompleto).HasColumnName("nombreCompleto").IsRequired().HasMaxLength(255);
+            builder.Property(e => e.CargoCurricular).HasColumnName("cargoCurricular").IsRequired().HasMaxLength(50);
+            builder.Property(e => e.IdCarrera).HasColumnName("idCarrera");
+            builder.Property(e => e.EsActivo).HasColumnName("esActivo").HasDefaultValue(true);
+            builder.Property(e => e.FechaDesignacion).HasColumnName("fechaDesignacion");
+            builder.Property(e => e.FechaRegistro).HasColumnName("fechaRegistro").HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            builder.HasIndex(e => new { e.IdSigafi, e.EsActivo }).HasDatabaseName("idx_aut_sigafi");
+            builder.HasIndex(e => new { e.CargoCurricular, e.EsActivo }).HasDatabaseName("idx_aut_cargo");
+            builder.HasIndex(e => e.IdCarrera).HasDatabaseName("idx_aut_carrera");
+        }
+    }
 }

@@ -202,7 +202,11 @@ export const useBuilderAutoSave = ({
         if (!readOnly && saveTimeoutRef.current) {
             coworkLog("[DOSIER] handleClose: Limpiando timeout y forzando handleSave.");
             clearTimeout(saveTimeoutRef.current);
-            await handleSave();
+            try {
+                await handleSave();
+            } catch (err) {
+                console.warn("[DOSIER] Error en autoguardado previo al cierre:", err);
+            }
         }
         onClose();
     };

@@ -29,7 +29,13 @@ graph TD
 ```
 
 ### 2.1. Autenticación Nativa y JIT Provisioning
-* **Just-In-Time (JIT) Provisioning:** Cuando un docente ingresa con su cédula o correo institucional por primera vez, `AuthService` valida las credenciales contra la tabla `profesores` de `sigafi_es`. Si son válidas, aprovisiona de forma transparente su registro en `usuarios` y le asigna el rol `DOSIER_DOCENTE` en el sistema RBAC.
+* **Just-In-Time (JIT) Provisioning:** 
+  * **Personal Docente:** Cuando un docente ingresa con su cédula o correo institucional por primera vez, `AuthService` valida las credenciales contra la nómina de la tabla `profesores` de `sigafi_es`. Si son válidas, aprovisiona de forma transparente su registro en `usuarios` y le asigna el rol `DOSIER_DOCENTE` en el sistema RBAC.
+  * **Autoridades y Coordinadores Curriculares (`doc_autoridades_curriculares`):** Durante la sincronización de roles en `RbacService.SynchronizeUserRolesAsync`, el sistema consulta las designaciones oficiales activas del usuario:
+    * `VICERRECTOR`: Asigna automáticamente el rol institucional `DOSIER_VICERRECTOR` con privilegios de legalización final y sellado oficial.
+    * `COORD_ACADEMICO`: Asigna el rol institucional `DOSIER_COORD_ACAD` para emisión de avales académicos y auditoría pedagógica.
+    * `COORD_CARRERA`: Asigna el rol `DOSIER_COORD_CARRERA` y vincula la supervisión del PEA y la bandeja curricular a las carreras bajo su coordinación (`idCarrera`).
+  * **Administrador Maestro (`Security:MasterAdminId`):** Si el usuario coincide con el identificador institucional del administrador configurado en `appsettings.json` y su ficha original de identidad reside en la tabla `alumnos` o personal del instituto, el sistema valida su contraseña institucional y lo aprovisiona automáticamente en `usuarios`, asignándole la bandera de `Administrador = 1` y el rol curricular máximo **`DOSIER_ADMIN`** con privilegios completos de gestión y supervisión.
 * **Hashing de Contraseñas:** Administrado por `PasswordService` utilizando el algoritmo **BCrypt** (`BCrypt.Net-Next`) con verificación y re-hashing automático en caso de hashes desactualizados.
 * **Emisión de Tokens JWT:** Administrado por `TokenService`. Los JSON Web Tokens son firmados criptográficamente mediante algoritmo HMAC-SHA256 (`SymmetricSecurityKey`).
 * **Estructura de Claims del JWT:**

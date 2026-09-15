@@ -263,6 +263,14 @@ export const ProjectWorkspace: React.FC = () => {
     }
 
     const handleCloseEditor = () => {
+        if (templateCode === 'PEA_OFICIAL' || activeDocument === 'PEA_OFICIAL') {
+            if (window.history.state && window.history.state.idx > 0) {
+                navigate(-1);
+            } else {
+                navigate(urlPrefix ? `${urlPrefix}/proyectos?tab=supervision-pea` : '/investigacion/proyectos?tab=supervision-pea');
+            }
+            return;
+        }
         setActiveDocument(null);
     };
 

@@ -25,8 +25,10 @@ DROP TRIGGER IF EXISTS trg_doc_proyectos_curriculares_uuid;
 DROP TRIGGER IF EXISTS trg_doc_perfiles_egreso_uuid;
 DROP TRIGGER IF EXISTS trg_doc_perfil_egreso_res_uuid;
 DROP TRIGGER IF EXISTS trg_doc_expedientes_curriculares_uuid;
+DROP TRIGGER IF EXISTS trg_doc_autoridades_curriculares_uuid;
 
 DROP TABLE IF EXISTS
+    doc_autoridades_curriculares,
     doc_expediente_asignaciones,
     doc_asignatura_resultado_perfil,
     doc_perfil_egreso_resultados,
@@ -305,4 +307,40 @@ INSERT INTO doc_modelos_educativos (uuid, codigo, nombre, version, resolucionApr
     0
 );
 
+-- =============================================================================
+-- 6. CAPA DE DESIGNACIONES Y AUTORIDADES CURRICULARES INSTITUCIONALES
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS doc_autoridades_curriculares (
+    idAutoridad         INT AUTO_INCREMENT PRIMARY KEY,
+    uuid                VARCHAR(36) NOT NULL UNIQUE,
+    idSigafi            VARCHAR(20) NOT NULL COMMENT 'Cédula del docente o funcionario institucional',
+    nombreCompleto      VARCHAR(255) NOT NULL,
+    cargoCurricular     ENUM('VICERRECTOR', 'COORD_ACADEMICO', 'COORD_CARRERA') NOT NULL,
+    idCarrera           INT(11) NULL COMMENT 'Solo para COORD_CARRERA (FK carreras)',
+    esActivo            TINYINT(1) NOT NULL DEFAULT 1,
+    fechaDesignacion    DATE NOT NULL,
+    fechaRegistro       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_aut_sigafi (idSigafi, esActivo),
+    INDEX idx_aut_cargo (cargoCurricular, esActivo),
+    INDEX idx_aut_carrera (idCarrera),
+    FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Designaciones oficiales de autoridades y coordinadores curriculares';
+
+DELIMITER $$
+CREATE TRIGGER trg_doc_autoridades_curriculares_uuid BEFORE INSERT ON doc_autoridades_curriculares FOR EACH ROW
+BEGIN IF NEW.uuid IS NULL OR NEW.uuid = '' THEN SET NEW.uuid = UUID(); END IF; END$$
+DELIMITER ;
+
+-- Semillas de autoridades curriculares institucionales (ISTPET)
+INSERT INTO doc_autoridades_curriculares (uuid, idSigafi, nombreCompleto, cargoCurricular, idCarrera, esActivo, fechaDesignacion) VALUES
+(UUID(), '1802707511', 'FREDDY BAÑO', 'VICERRECTOR', NULL, 1, '2024-01-01'),
+(UUID(), '0502405889', 'CRISTIAN COBOS', 'COORD_ACADEMICO', NULL, 1, '2024-01-01'),
+(UUID(), '1709890626', 'WILFRIDO TRUJILLO', 'COORD_CARRERA', 9, 1, '2024-01-01'),
+(UUID(), '1720004793', 'CHRISTIAN CASTRO', 'COORD_CARRERA', 10, 1, '2024-01-01'),
+(UUID(), '1721465431', 'WILMER TOAPANTA', 'COORD_CARRERA', 7, 1, '2024-01-01')
+ON DUPLICATE KEY UPDATE nombreCompleto = VALUES(nombreCompleto);
+
 SET FOREIGN_KEY_CHECKS = 1;
+SET SQL_SAFE_UPDATES = 1;

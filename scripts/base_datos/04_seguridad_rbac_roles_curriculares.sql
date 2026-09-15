@@ -230,5 +230,33 @@ WHERE m.id_sistema = @idSistemaDosier
       (CONVERT(m.Nombre USING utf8mb4) = 'CONFIGURACION' AND mo.idOperaciones IN (@opVer, @opEditar))
   );
 
+-- Normalización institucional: Actualizar tablaSigafi a 'profesor' para usuarios que consten en la nómina docente
+UPDATE usuarios u
+JOIN profesores p ON u.idSigafi = p.idProfesor
+SET u.tablaSigafi = 'profesor'
+WHERE u.tablaSigafi = 'alumno';
+
+-- F. Sincronizar roles de autoridades designadas hacia usuarios existentes
+INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
+SELECT u.idUsuario, 
+       CASE aut.cargoCurricular
+           WHEN 'VICERRECTOR' THEN @rolVicerrec
+           WHEN 'COORD_ACADEMICO' THEN @rolCoordAca
+           WHEN 'COORD_CARRERA' THEN @rolCoordCar
+       END as idRol,
+       CURDATE(), 1
+FROM doc_autoridades_curriculares aut
+JOIN usuarios u ON aut.idSigafi = u.idSigafi
+WHERE aut.esActivo = 1
+  AND NOT EXISTS (
+      SELECT 1 FROM rbac_usuario_rol ur
+      WHERE ur.idUsuario = u.idUsuario
+        AND ur.idRol = CASE aut.cargoCurricular
+                           WHEN 'VICERRECTOR' THEN @rolVicerrec
+                           WHEN 'COORD_ACADEMICO' THEN @rolCoordAca
+                           WHEN 'COORD_CARRERA' THEN @rolCoordCar
+                       END
+  );
+
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;

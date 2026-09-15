@@ -84,6 +84,7 @@ graph TD
 * **`cur_proyectos_carrera`:** Proyectos de creación y rediseño de carreras aprobados por el Consejo de Educación Superior (CES), vinculando la carrera de SIGAFI con su fundamentación curricular.
 * **`cur_proyectos_carrera_normativas`:** Tabla de articulación N:M entre los proyectos de carrera y las normativas externas vigentes.
 * **`cur_asignaturas_antecedentes`:** Matriz curricular que detalla para cada asignatura de `detallemallas` su justificación epistemológica, problema pedagógico que resuelve, relación con el perfil de egreso y articulación metodológica.
+* **`doc_autoridades_curriculares`:** Registro formal de designaciones institucionales y coordinaciones de carrera (`VICERRECTOR`, `COORD_ACADEMICO`, `COORD_CARRERA` con FK opcional a `carreras`). Garantiza la autonomía de DOSIER frente a vacíos de SIGAFI y alimenta el aprovisionamiento de roles RBAC en tiempo de ejecución.
 
 ### 3.4. Tablas del Programa de Estudio de la Asignatura Oficial (`03_curriculum_pea_oficial.sql`)
 
