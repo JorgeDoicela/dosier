@@ -82,7 +82,7 @@ public class AuthService : IAuthService
             bool tieneRolDosier = false;
             try
             {
-                tieneRolDosier = await _context.RbacUsuarioRoles.AnyAsync(ur => ur.IdUsuario == user.IdUsuario && ur.EsActivo);
+                tieneRolDosier = await _context.UserRoles.AnyAsync(ur => ur.IdUsuario == user.IdUsuario && (ur.EsActivo == true || ur.EsActivo == null));
             }
             catch
             {
