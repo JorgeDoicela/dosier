@@ -16,137 +16,238 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS carreras;
 CREATE TABLE carreras (
     idCarrera           INT AUTO_INCREMENT PRIMARY KEY,
-    nombreCarrera       VARCHAR(200) NOT NULL,
-    codigoCarrera       VARCHAR(50)  NULL,
-    tituloOtorga        VARCHAR(200) NULL,
-    modalidad           VARCHAR(50)  DEFAULT 'Presencial',
-    duracionPeriodos    INT          DEFAULT 4,
-    esInstituto         TINYINT(1)   NOT NULL DEFAULT 1,
-    estado              VARCHAR(20)  DEFAULT 'Activo'
+    Carrera             VARCHAR(200) NOT NULL,
+    codigo_cases        VARCHAR(50)  NULL,
+    aliasCarrera        VARCHAR(50)  NULL,
+    esInstituto         TINYINT(4)   NOT NULL DEFAULT 1,
+    activa              TINYINT(4)   NOT NULL DEFAULT 1,
+    numero_creditos     INT          DEFAULT 80,
+    ordenCarrera        INT          DEFAULT 1,
+    numero_alumnos      INT          DEFAULT 0,
+    revisaArrastres     TINYINT(4)   DEFAULT 0,
+    directorCarrera     VARCHAR(100) NULL,
+    BolsaEmpleo         TINYINT(4)   DEFAULT 0,
+    fechaCreacion       DATE         NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO carreras (idCarrera, nombreCarrera, codigoCarrera, tituloOtorga, modalidad, duracionPeriodos, esInstituto, estado) VALUES
-(1, 'Tecnología Superior en Desarrollo de Software', 'TSDS-2022', 'Tecnólogo/a Superior en Desarrollo de Software', 'Presencial', 4, 1, 'Activo'),
-(2, 'Tecnología Superior en Ciberseguridad', 'TSC-2023', 'Tecnólogo/a Superior en Ciberseguridad', 'Presencial', 4, 1, 'Activo'),
-(3, 'Tecnología Superior en Redes y Telecomunicaciones', 'TSRT-2022', 'Tecnólogo/a Superior en Redes y Telecomunicaciones', 'Presencial', 4, 1, 'Activo');
+INSERT INTO carreras (idCarrera, Carrera, codigo_cases, aliasCarrera, esInstituto, activa, numero_creditos) VALUES
+(1, 'Tecnología Superior en Desarrollo de Software', 'TSDS-2022', 'TSDS', 1, 1, 80),
+(2, 'Tecnología Superior en Ciberseguridad', 'TSC-2023', 'TSC', 1, 1, 80),
+(3, 'Tecnología Superior en Redes y Telecomunicaciones', 'TSRT-2022', 'TSRT', 1, 1, 80),
+(7, 'Tecnología Superior en Electricidad', 'TSE-2022', 'TSE', 1, 1, 80),
+(9, 'Tecnología Superior en Mecánica Automotriz', 'TSMA-2022', 'TSMA', 1, 1, 80),
+(10, 'Tecnología Superior en Administración', 'TSA-2022', 'TSA', 1, 1, 80);
 
 -- -----------------------------------------------------------------------------
 -- 2. TABLA: periodos (Períodos Académicos Ordinarios PAO)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS periodos;
 CREATE TABLE periodos (
-    idPeriodo           INT AUTO_INCREMENT PRIMARY KEY,
-    nombrePeriodo       VARCHAR(100) NOT NULL,
-    codigoPeriodo       VARCHAR(20)  NOT NULL UNIQUE,
-    fechaInicio         DATE         NOT NULL,
-    fechaFin            DATE         NOT NULL,
-    estado              VARCHAR(20)  DEFAULT 'Activo'
+    idPeriodo           VARCHAR(7)   PRIMARY KEY,
+    detalle             VARCHAR(100) NOT NULL,
+    fecha_inicial       DATE         NOT NULL,
+    fecha_final         DATE         NOT NULL,
+    cerrado             TINYINT(1)   DEFAULT 0,
+    activo              TINYINT(1)   DEFAULT 1,
+    esInstituto         TINYINT(4)   NOT NULL DEFAULT 1,
+    periodoactivoinstituto TINYINT(4) NOT NULL DEFAULT 1,
+    creditos            TINYINT(1)   DEFAULT 1,
+    permiteMatricula    TINYINT(4)   DEFAULT 1,
+    ingresoCalificaciones TINYINT(4) DEFAULT 1,
+    permiteCalificacionesInstituto TINYINT(4) DEFAULT 1,
+    visualizaPowerBi    TINYINT(4)   DEFAULT 0,
+    periodoPlanificacion TINYINT(4)  DEFAULT 0,
+    fecha_maxima_autocierre DATE     NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO periodos (idPeriodo, nombrePeriodo, codigoPeriodo, fechaInicio, fechaFin, estado) VALUES
-(1, 'Periodo Académico 2026-1', '2026-1', '2026-04-01', '2026-08-31', 'Activo'),
-(2, 'Periodo Académico 2025-2', '2025-2', '2025-10-01', '2025-02-28', 'Cerrado');
+INSERT INTO periodos (idPeriodo, detalle, fecha_inicial, fecha_final, cerrado, activo, esInstituto, periodoactivoinstituto) VALUES
+('2026-1', 'Periodo Académico Ordinario 2026-1', '2026-04-01', '2026-08-31', 0, 1, 1, 1),
+('2025-2', 'Periodo Académico Ordinario 2025-2', '2025-10-01', '2025-02-28', 1, 0, 1, 0);
 
 -- -----------------------------------------------------------------------------
--- 3. TABLA: mallas_periodos (Vigencia de Malla Curricular por Período)
+-- 3. TABLA: asignaturas (Catálogo de Materias del Instituto)
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS asignaturas;
+CREATE TABLE asignaturas (
+    idAsignatura        INT AUTO_INCREMENT PRIMARY KEY,
+    asignatura          VARCHAR(200) NOT NULL,
+    codigo              VARCHAR(30)  NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO asignaturas (idAsignatura, asignatura, codigo) VALUES
+(101, 'Desarrollo de Aplicaciones Web Avanzadas', 'TSDS-301'),
+(102, 'Arquitectura de Software y Patrones de Diseno', 'TSDS-302'),
+(103, 'Bases de Datos Avanzadas y Seguridad LOPDP', 'TSDS-303'),
+(104, 'Metodologias Agiles y DevOps Curricular', 'TSDS-304'),
+(105, 'Integracion Continua y Despliegue en la Nube', 'TSDS-401');
+
+-- -----------------------------------------------------------------------------
+-- 4. TABLA: mallas (Estructura Macro-Curricular)
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS mallas;
+CREATE TABLE mallas (
+    idMalla             INT AUTO_INCREMENT PRIMARY KEY,
+    idCarrera           INT          NOT NULL,
+    vigencia            VARCHAR(50)  NULL,
+    descripcion         VARCHAR(100) NULL,
+    creditos_minimo     INT          DEFAULT 0,
+    creditos_maximo     INT          DEFAULT 80,
+    creditos_reprobatorio INT        DEFAULT 0,
+    activa              TINYINT(4)   DEFAULT 1,
+    FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO mallas (idMalla, idCarrera, vigencia, descripcion, creditos_minimo, creditos_maximo, activa) VALUES
+(1, 1, '2022-2026', 'Malla Curricular Rediseño 2022 - TSDS', 0, 80, 1),
+(2, 2, '2023-2027', 'Malla Curricular Rediseño 2023 - TSC', 0, 80, 1);
+
+-- -----------------------------------------------------------------------------
+-- 5. TABLA: mallas_periodos (Vigencia de Malla por Período y Nivel)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS mallas_periodos;
 CREATE TABLE mallas_periodos (
-    idMallaPeriodo      INT AUTO_INCREMENT PRIMARY KEY,
-    idCarrera           INT          NOT NULL,
-    idPeriodo           INT          NOT NULL,
-    codigoMalla         VARCHAR(50)  NOT NULL,
-    resolucionCes       VARCHAR(100) DEFAULT 'RPC-SO-12-No.185-2022',
-    estado              VARCHAR(20)  DEFAULT 'Vigente',
-    FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera),
-    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo)
+    idPeriodo           VARCHAR(7)   NOT NULL,
+    idNivel             INT          NOT NULL,
+    idMalla             INT          NOT NULL,
+    PRIMARY KEY (idPeriodo, idNivel, idMalla),
+    FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo),
+    FOREIGN KEY (idMalla) REFERENCES mallas(idMalla)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO mallas_periodos (idMallaPeriodo, idCarrera, idPeriodo, codigoMalla, resolucionCes, estado) VALUES
-(1, 1, 1, 'MALLA-TSDS-V2', 'RPC-SO-12-No.185-2022', 'Vigente'),
-(2, 2, 1, 'MALLA-TSC-V1', 'RPC-SO-15-No.220-2023', 'Vigente');
+INSERT INTO mallas_periodos (idPeriodo, idNivel, idMalla) VALUES
+('2026-1', 1, 1),
+('2026-1', 2, 1),
+('2026-1', 3, 1),
+('2026-1', 4, 1);
 
 -- -----------------------------------------------------------------------------
--- 4. TABLA: detallemallas (Asignaturas, Créditos y Cuadre Horario 48h/crédito)
+-- 6. TABLA: detallemallas (Detalle Asignaturas, Horas y Créditos)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS detallemallas;
 CREATE TABLE detallemallas (
     idDetalleMalla      INT AUTO_INCREMENT PRIMARY KEY,
-    idMallaPeriodo      INT          NOT NULL,
-    idCarrera           INT          NOT NULL,
-    nivelMalla          INT          NOT NULL, -- 1 a 4
-    codigoMateria       VARCHAR(30)  NOT NULL,
-    nombreMateria       VARCHAR(200) NOT NULL,
-    campoFormacion      VARCHAR(100) DEFAULT 'Disciplinar',
+    idMalla             INT          NOT NULL,
+    idAsignatura        INT          NOT NULL,
+    idNivel             INT          NOT NULL,
+    idtipo_asignatura   INT          DEFAULT 1,
+    tipo                VARCHAR(100) DEFAULT 'Disciplinar',
+    opcional            TINYINT(4)   DEFAULT 0,
     creditos            DECIMAL(4,2) NOT NULL DEFAULT 3.00,
-    horasDocencia       INT          NOT NULL DEFAULT 48, -- CD
-    horasPracticas      INT          NOT NULL DEFAULT 48, -- APE
-    horasAutonomas      INT          NOT NULL DEFAULT 48, -- TA
-    totalHoras          INT          NOT NULL DEFAULT 144,
-    prerrequisitos      VARCHAR(255) NULL,
-    correquisitos       VARCHAR(255) NULL,
-    estado              VARCHAR(20)  DEFAULT 'Activo',
-    FOREIGN KEY (idMallaPeriodo) REFERENCES mallas_periodos(idMallaPeriodo),
-    FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera)
+    horas               INT          NOT NULL DEFAULT 144,
+    anulada             TINYINT(4)   DEFAULT 0,
+    horasDocente        INT          NOT NULL DEFAULT 48,
+    horasPracticoExperimental DECIMAL(10,2) NOT NULL DEFAULT 48.00,
+    FOREIGN KEY (idMalla) REFERENCES mallas(idMalla),
+    FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO detallemallas (idDetalleMalla, idMallaPeriodo, idCarrera, nivelMalla, codigoMateria, nombreMateria, campoFormacion, creditos, horasDocencia, horasPracticas, horasAutonomas, totalHoras, prerrequisitos, correquisitos, estado) VALUES
--- Nivel 3 - TSDS
-(101, 1, 1, 3, 'TSDS-301', 'Desarrollo de Aplicaciones Web Avanzadas', 'Profesional', 3.00, 48, 48, 48, 144, 'TSDS-201', 'TSDS-302', 'Activo'),
-(102, 1, 1, 3, 'TSDS-302', 'Arquitectura de Software y Patrones de Diseno', 'Profesional', 3.00, 48, 48, 48, 144, 'TSDS-202', 'TSDS-301', 'Activo'),
-(103, 1, 1, 3, 'TSDS-303', 'Bases de Datos Avanzadas y Seguridad LOPDP', 'Disciplinar', 2.50, 40, 40, 40, 120, 'TSDS-203', NULL, 'Activo'),
-(104, 1, 1, 3, 'TSDS-304', 'Metodologias Agiles y DevOps Curricular', 'Profesional', 2.50, 40, 40, 40, 120, 'TSDS-204', NULL, 'Activo'),
--- Nivel 4 - TSDS
-(105, 1, 1, 4, 'TSDS-401', 'Integracion Continua y Despliegue en la Nube', 'Profesional', 3.00, 48, 48, 48, 144, 'TSDS-304', NULL, 'Activo');
+INSERT INTO detallemallas (idDetalleMalla, idMalla, idAsignatura, idNivel, idtipo_asignatura, tipo, creditos, horas, horasDocente, horasPracticoExperimental) VALUES
+(101, 1, 101, 3, 1, 'Profesional', 3.00, 144, 48, 48.00),
+(102, 1, 102, 3, 1, 'Profesional', 3.00, 144, 48, 48.00),
+(103, 1, 103, 3, 1, 'Disciplinar', 2.50, 120, 40, 40.00),
+(104, 1, 104, 3, 1, 'Profesional', 2.50, 120, 40, 40.00),
+(105, 1, 105, 4, 1, 'Profesional', 3.00, 144, 48, 48.00);
 
 -- -----------------------------------------------------------------------------
--- 5. TABLA: profesores (Nómina Docente Institucional Demo)
+-- 7. TABLA: profesores (Nómina Docente Institucional Completa)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS profesores;
 CREATE TABLE profesores (
-    idProfesor          INT AUTO_INCREMENT PRIMARY KEY,
-    cedula              VARCHAR(20)  NOT NULL UNIQUE,
-    nombres             VARCHAR(100) NOT NULL,
+    idProfesor          VARCHAR(14)  PRIMARY KEY,
+    tipodocumento       VARCHAR(20)  DEFAULT 'C',
     apellidos           VARCHAR(100) NOT NULL,
-    correoInstitucional VARCHAR(150) NOT NULL UNIQUE,
+    nombres             VARCHAR(100) NOT NULL,
+    primerApellido      VARCHAR(50)  NULL,
+    segundoApellido     VARCHAR(50)  NULL,
+    primerNombre        VARCHAR(50)  NULL,
+    segundoNombre       VARCHAR(50)  NULL,
+    estadoCivil         INT          DEFAULT 1,
+    direccion           VARCHAR(255) NULL,
+    callePrincipal      VARCHAR(100) NULL,
+    calleSecundaria     VARCHAR(100) NULL,
+    numeroCasa          VARCHAR(20)  NULL,
     telefono            VARCHAR(30)  NULL,
-    tituloAcademico     VARCHAR(200) DEFAULT 'Magíster en Ingeniería de Software',
-    estado              VARCHAR(20)  DEFAULT 'Activo'
+    celular             VARCHAR(30)  NULL,
+    email               VARCHAR(150) NULL,
+    fecha_nacimiento    DATE         NULL,
+    sexo                VARCHAR(10)  DEFAULT 'M',
+    clave               VARCHAR(250) NULL,
+    practicas           TINYINT(4)   DEFAULT 0,
+    tipo                VARCHAR(50)  DEFAULT 'Docente',
+    nacionalidad        VARCHAR(50)  DEFAULT 'ECUATORIANA',
+    titulo              VARCHAR(200) DEFAULT 'Magíster en Ingeniería de Software',
+    abreviatura         VARCHAR(20)  DEFAULT 'Ing.',
+    abreviatura_post    VARCHAR(20)  DEFAULT 'Msc.',
+    activo              TINYINT(4)   DEFAULT 1,
+    idEtnia             INT          DEFAULT 1,
+    idNacionalidad      INT          DEFAULT 1,
+    idParroquiaNacimiento INT        DEFAULT 1,
+    emailInstitucional  VARCHAR(150) NULL,
+    fecha_ingreso       DATE         NULL,
+    fechaIngresoIess    DATE         NULL,
+    fecha_retiro        DATE         NULL,
+    idParroquiaResidencia INT        DEFAULT 1,
+    tipoSangre          VARCHAR(10)  DEFAULT 'O+',
+    codigoPostal        VARCHAR(20)  NULL,
+    idDiscapacidad      INT          DEFAULT 0,
+    porcentajeDiscapacidad INT       DEFAULT 0,
+    numeroConadis       VARCHAR(50)  NULL,
+    foto                VARCHAR(255) NULL,
+    esReal              TINYINT(4)   DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO profesores (idProfesor, cedula, nombres, apellidos, correoInstitucional, telefono, tituloAcademico, estado) VALUES
-(1, '1720000001', 'Jorge Ismael', 'Doicela Molina', 'jorge.doicela@istpet.edu.ec', '0990000001', 'Tecnólogo en Desarrollo de Software', 'Activo'),
-(2, '1720000002', 'Carlos Enrique', 'Valencia Llerena', 'carlos.valencia@istpet.edu.ec', '0990000002', 'Magíster en Sistemas de Información', 'Activo'),
-(3, '1720000003', 'Marcia Elena', 'Proaño Ramos', 'vicerrectorado@istpet.edu.ec', '0990000003', 'Doctora en Ciencias de la Educación', 'Activo'),
-(4, '1720000004', 'David Alejandro', 'Guaman Perez', 'coordinacion.software@istpet.edu.ec', '0990000004', 'Magíster en Ciberseguridad y Redes', 'Activo'),
-(5, '1720000005', 'Silvia Patricia', 'Andrade Torres', 'coordinacion.academica@istpet.edu.ec', '0990000005', 'Magíster en Docencia Universitaria', 'Activo');
+INSERT INTO profesores (idProfesor, tipodocumento, apellidos, nombres, primerApellido, segundoApellido, primerNombre, segundoNombre, emailInstitucional, email, clave, titulo, abreviatura, abreviatura_post, activo) VALUES
+('1725555377', 'C', 'Doicela Molina', 'Jorge Ismael', 'Doicela', 'Molina', 'Jorge', 'Ismael', 'jorge.doicela@istpet.edu.ec', 'jorge.doicela@istpet.edu.ec', '12345', 'Tecnólogo en Desarrollo de Software', 'Ing.', 'Msc.', 1),
+('1720000002', 'C', 'Valencia Llerena', 'Carlos Enrique', 'Valencia', 'Llerena', 'Carlos', 'Enrique', 'carlos.valencia@istpet.edu.ec', 'carlos.valencia@istpet.edu.ec', '12345', 'Magíster en Sistemas de Información', 'Ing.', 'Msc.', 1),
+('1720000003', 'C', 'Proaño Ramos', 'Marcia Elena', 'Proaño', 'Ramos', 'Marcia', 'Elena', 'vicerrectorado@istpet.edu.ec', 'vicerrectorado@istpet.edu.ec', '12345', 'Doctora en Ciencias de la Educación', 'Dra.', 'Ph.D.', 1),
+('1720000004', 'C', 'Guaman Perez', 'David Alejandro', 'Guaman', 'Perez', 'David', 'Alejandro', 'coordinacion.software@istpet.edu.ec', 'coordinacion.software@istpet.edu.ec', '12345', 'Magíster en Ciberseguridad y Redes', 'Ing.', 'Msc.', 1),
+('1720000005', 'C', 'Andrade Torres', 'Silvia Patricia', 'Andrade', 'Torres', 'Silvia', 'Patricia', 'coordinacion.academica@istpet.edu.ec', 'coordinacion.academica@istpet.edu.ec', '12345', 'Magíster en Docencia Universitaria', 'Msc.', 'Msc.', 1),
+('1802707511', 'C', 'Baño', 'Freddy', 'Baño', '', 'Freddy', '', 'freddy.bano@istpet.edu.ec', 'freddy.bano@istpet.edu.ec', '12345', 'Magíster en Educación Superior', 'Msc.', 'Msc.', 1),
+('0502405889', 'C', 'Cobos', 'Cristian', 'Cobos', '', 'Cristian', '', 'cristian.cobos@istpet.edu.ec', 'cristian.cobos@istpet.edu.ec', '12345', 'Magíster en Gestión Curricular', 'Msc.', 'Msc.', 1),
+('1709890626', 'C', 'Trujillo', 'Wilfrido', 'Trujillo', '', 'Wilfrido', '', 'wilfrido.trujillo@istpet.edu.ec', 'wilfrido.trujillo@istpet.edu.ec', '12345', 'Ingeniero Mecánico', 'Ing.', 'Msc.', 1),
+('1720004793', 'C', 'Castro', 'Christian', 'Castro', '', 'Christian', '', 'christian.castro@istpet.edu.ec', 'christian.castro@istpet.edu.ec', '12345', 'Magíster en Administración', 'Msc.', 'Msc.', 1),
+('1721465431', 'C', 'Toapanta', 'Wilmer', 'Toapanta', '', 'Wilmer', '', 'wilmer.toapanta@istpet.edu.ec', 'wilmer.toapanta@istpet.edu.ec', '12345', 'Ingeniero Eléctrico', 'Ing.', 'Msc.', 1);
 
 -- -----------------------------------------------------------------------------
--- 6. TABLA: asignacion_materias (Carga Académica Distributiva Docente)
+-- 8. TABLA: asignaciones_profesores (Carga Académica Distributiva Docente)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS asignacion_materias;
-CREATE TABLE asignacion_materias (
+DROP TABLE IF EXISTS asignaciones_profesores;
+CREATE TABLE asignaciones_profesores (
     idAsignacion        INT AUTO_INCREMENT PRIMARY KEY,
-    idProfesor          INT         NOT NULL,
-    idDetalleMalla      INT         NOT NULL,
-    idPeriodo           INT         NOT NULL,
-    paralelo            VARCHAR(10) DEFAULT 'A',
-    jornada             VARCHAR(30) DEFAULT 'Nocturna',
-    esTitular           TINYINT(1)  DEFAULT 1,
-    estado              VARCHAR(20) DEFAULT 'Aprobado',
+    idProfesor          VARCHAR(14)  NOT NULL,
+    idAsignatura        INT          NOT NULL,
+    idPeriodo           VARCHAR(7)   NOT NULL,
+    idModalidad         INT          DEFAULT 1,
+    idSeccion           INT          DEFAULT 1,
+    idNivel             INT          DEFAULT 3,
+    paralelo            VARCHAR(1)   DEFAULT 'A',
+    activo              TINYINT(4)   DEFAULT 1,
+    codigo_asignacion   VARCHAR(10)  NULL,
+    fecha_inicial       DATE         NULL,
+    fecha_fin           DATE         NULL,
+    fecha_grabar        DATETIME     NULL,
+    fecha_modificacion  DATETIME     NULL,
+    entrega_acta        TINYINT(4)   DEFAULT 0,
+    ingresa_notas       TINYINT(4)   DEFAULT 1,
+    user_asignaciones   VARCHAR(25)  NULL,
+    user_acta           VARCHAR(25)  NULL,
+    esActivaAsignacion  TINYINT(4)   DEFAULT 1,
+    numeroHoras         DECIMAL(10,2) DEFAULT 48.00,
+    contabilizarHoraDocente TINYINT(4) DEFAULT 1,
+    horasPracticoExperimental DECIMAL(10,2) DEFAULT 48.00,
     FOREIGN KEY (idProfesor) REFERENCES profesores(idProfesor),
-    FOREIGN KEY (idDetalleMalla) REFERENCES detallemallas(idDetalleMalla),
+    FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura),
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO asignacion_materias (idAsignacion, idProfesor, idDetalleMalla, idPeriodo, paralelo, jornada, esTitular, estado) VALUES
-(1, 1, 101, 1, 'A', 'Nocturna', 1, 'Aprobado'), -- Jorge Doicela -> Web Avanzada
-(2, 2, 102, 1, 'A', 'Nocturna', 1, 'Aprobado'), -- Carlos Valencia -> Arquitectura
-(3, 4, 103, 1, 'A', 'Nocturna', 1, 'Aprobado'), -- David Guaman -> Bases de Datos
-(4, 1, 104, 1, 'A', 'Nocturna', 1, 'Aprobado'); -- Jorge Doicela -> Metodologías Ágiles
+INSERT INTO asignaciones_profesores (idAsignacion, idProfesor, idAsignatura, idPeriodo, paralelo, idNivel, activo) VALUES
+(1, '1725555377', 101, '2026-1', 'A', 3, 1),
+(2, '1720000002', 102, '2026-1', 'A', 3, 1),
+(3, '1720000004', 103, '2026-1', 'A', 3, 1),
+(4, '1725555377', 104, '2026-1', 'A', 3, 1);
 
 -- -----------------------------------------------------------------------------
--- 7. TABLA: usuarios (Usuarios Maestros Institucionales SIGAFI)
+-- 9. TABLA: usuarios (Usuarios Maestros Institucionales SIGAFI)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS usuarios;
 CREATE TABLE usuarios (
@@ -164,14 +265,14 @@ CREATE TABLE usuarios (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO usuarios (idUsuario, idSigafi, tablaSigafi, nombre, contrasenia, activo, administrador, emailInstitucional, emailValidado) VALUES
-(1, '1', 'profesor', 'Jorge Ismael Doicela Molina', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
-(2, '2', 'profesor', 'Carlos Enrique Valencia Llerena', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
-(3, '3', 'profesor', 'Marcia Elena Proaño Ramos', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
-(4, '4', 'profesor', 'David Alejandro Guaman Perez', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.software@istpet.edu.ec', 1),
-(5, '5', 'profesor', 'Silvia Patricia Andrade Torres', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.academica@istpet.edu.ec', 1);
+(1, '1725555377', 'profesor', 'Jorge Ismael Doicela Molina', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
+(2, '1720000002', 'profesor', 'Carlos Enrique Valencia Llerena', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
+(3, '1720000003', 'profesor', 'Marcia Elena Proaño Ramos', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
+(4, '1720000004', 'profesor', 'David Alejandro Guaman Perez', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.software@istpet.edu.ec', 1),
+(5, '1720000005', 'profesor', 'Silvia Patricia Andrade Torres', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.academica@istpet.edu.ec', 1);
 
 -- -----------------------------------------------------------------------------
--- 8. ESQUEMA RBAC BASE (Sistemas, Módulos, Operaciones y Roles Institucionales)
+-- 10. ESQUEMA RBAC BASE (Sistemas, Módulos, Operaciones y Roles Institucionales)
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS rbac_usuario_rol;
 DROP TABLE IF EXISTS rbac_rol_modulo_operacion;

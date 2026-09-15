@@ -45,7 +45,7 @@ CREATE TABLE doc_pea (
     idExpediente            INT             NULL COMMENT 'Vínculo al expediente curricular maestro',
     idCarrera               INT(11)         NOT NULL,
     idAsignatura            INT(11)         NOT NULL,
-    idPeriodo               CHAR(7)         CHARACTER SET latin1 NOT NULL,
+    idPeriodo               VARCHAR(7)      NOT NULL,
     idAsignacion            INT(11)         NULL COMMENT 'Vínculo oficial a distributivo docente SIGAFI',
     idMalla                 INT(11)         NULL,
     idDetalleMalla          INT(11)         NULL,
