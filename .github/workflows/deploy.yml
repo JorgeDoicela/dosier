@@ -29,6 +29,10 @@ on:
           - 'false'
           - 'true'
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   REGISTRY: ghcr.io
   DEPLOY_DIR: /var/www/dosier
