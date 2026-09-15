@@ -1,8 +1,9 @@
 -- =============================================================================
--- SISTEMA DOSIER - SEMILLERO DE ENTORNO SIGAFI MAESTRO (DEMO / TESIS ISTPET)
+-- SISTEMA DOSIER - SEMILLERO DE ENTORNO SIGAFI MAESTRO (DEMO / SANDBOX)
 -- Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
--- Propósito: Provisión autónoma del esquema preexistente de solo lectura de SIGAFI
--- con datos sintéticos realistas para defensas de grado y cumplimiento LOPDP.
+-- GOBERNANZA DE PRODUCCIÓN: Script 100% no destructivo.
+-- Emplea CREATE TABLE IF NOT EXISTS e INSERT IGNORE INTO para garantizar que
+-- NUNCA sobrescriba ni borre tablas ni registros preexistentes en producción.
 -- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS sigafi_es CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -13,8 +14,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -----------------------------------------------------------------------------
 -- 1. TABLA: carreras (Filtro institucional esInstituto = 1)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS carreras;
-CREATE TABLE carreras (
+CREATE TABLE IF NOT EXISTS carreras (
     idCarrera           INT AUTO_INCREMENT PRIMARY KEY,
     Carrera             VARCHAR(200) NOT NULL,
     codigo_cases        VARCHAR(50)  NULL,
@@ -30,7 +30,7 @@ CREATE TABLE carreras (
     fechaCreacion       DATE         NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO carreras (idCarrera, Carrera, codigo_cases, aliasCarrera, esInstituto, activa, numero_creditos) VALUES
+INSERT IGNORE INTO carreras (idCarrera, Carrera, codigo_cases, aliasCarrera, esInstituto, activa, numero_creditos) VALUES
 (1, 'Tecnología Superior en Desarrollo de Software', 'TSDS-2022', 'TSDS', 1, 1, 80),
 (2, 'Tecnología Superior en Ciberseguridad', 'TSC-2023', 'TSC', 1, 1, 80),
 (3, 'Tecnología Superior en Redes y Telecomunicaciones', 'TSRT-2022', 'TSRT', 1, 1, 80),
@@ -41,8 +41,7 @@ INSERT INTO carreras (idCarrera, Carrera, codigo_cases, aliasCarrera, esInstitut
 -- -----------------------------------------------------------------------------
 -- 2. TABLA: periodos (Períodos Académicos Ordinarios PAO)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS periodos;
-CREATE TABLE periodos (
+CREATE TABLE IF NOT EXISTS periodos (
     idPeriodo           CHAR(7) CHARACTER SET latin1 PRIMARY KEY,
     detalle             VARCHAR(100) NOT NULL,
     fecha_inicial       DATE         NOT NULL,
@@ -60,21 +59,20 @@ CREATE TABLE periodos (
     fecha_maxima_autocierre DATE     NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO periodos (idPeriodo, detalle, fecha_inicial, fecha_final, cerrado, activo, esInstituto, periodoactivoinstituto) VALUES
+INSERT IGNORE INTO periodos (idPeriodo, detalle, fecha_inicial, fecha_final, cerrado, activo, esInstituto, periodoactivoinstituto) VALUES
 ('2026-1', 'Periodo Académico Ordinario 2026-1', '2026-04-01', '2026-08-31', 0, 1, 1, 1),
 ('2025-2', 'Periodo Académico Ordinario 2025-2', '2025-10-01', '2025-02-28', 1, 0, 1, 0);
 
 -- -----------------------------------------------------------------------------
 -- 3. TABLA: asignaturas (Catálogo de Materias del Instituto)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS asignaturas;
-CREATE TABLE asignaturas (
+CREATE TABLE IF NOT EXISTS asignaturas (
     idAsignatura        INT AUTO_INCREMENT PRIMARY KEY,
     asignatura          VARCHAR(200) NOT NULL,
     codigo              VARCHAR(30)  NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO asignaturas (idAsignatura, asignatura, codigo) VALUES
+INSERT IGNORE INTO asignaturas (idAsignatura, asignatura, codigo) VALUES
 (101, 'Desarrollo de Aplicaciones Web Avanzadas', 'TSDS-301'),
 (102, 'Arquitectura de Software y Patrones de Diseno', 'TSDS-302'),
 (103, 'Bases de Datos Avanzadas y Seguridad LOPDP', 'TSDS-303'),
@@ -84,8 +82,7 @@ INSERT INTO asignaturas (idAsignatura, asignatura, codigo) VALUES
 -- -----------------------------------------------------------------------------
 -- 4. TABLA: mallas (Estructura Macro-Curricular)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS mallas;
-CREATE TABLE mallas (
+CREATE TABLE IF NOT EXISTS mallas (
     idMalla             INT AUTO_INCREMENT PRIMARY KEY,
     idCarrera           INT          NOT NULL,
     vigencia            VARCHAR(50)  NULL,
@@ -97,15 +94,14 @@ CREATE TABLE mallas (
     FOREIGN KEY (idCarrera) REFERENCES carreras(idCarrera)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO mallas (idMalla, idCarrera, vigencia, descripcion, creditos_minimo, creditos_maximo, activa) VALUES
+INSERT IGNORE INTO mallas (idMalla, idCarrera, vigencia, descripcion, creditos_minimo, creditos_maximo, activa) VALUES
 (1, 1, '2022-2026', 'Malla Curricular Rediseño 2022 - TSDS', 0, 80, 1),
 (2, 2, '2023-2027', 'Malla Curricular Rediseño 2023 - TSC', 0, 80, 1);
 
 -- -----------------------------------------------------------------------------
 -- 5. TABLA: mallas_periodos (Vigencia de Malla por Período y Nivel)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS mallas_periodos;
-CREATE TABLE mallas_periodos (
+CREATE TABLE IF NOT EXISTS mallas_periodos (
     idPeriodo           CHAR(7) CHARACTER SET latin1 NOT NULL,
     idNivel             INT          NOT NULL,
     idMalla             INT          NOT NULL,
@@ -114,7 +110,7 @@ CREATE TABLE mallas_periodos (
     FOREIGN KEY (idMalla) REFERENCES mallas(idMalla)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO mallas_periodos (idPeriodo, idNivel, idMalla) VALUES
+INSERT IGNORE INTO mallas_periodos (idPeriodo, idNivel, idMalla) VALUES
 ('2026-1', 1, 1),
 ('2026-1', 2, 1),
 ('2026-1', 3, 1),
@@ -123,8 +119,7 @@ INSERT INTO mallas_periodos (idPeriodo, idNivel, idMalla) VALUES
 -- -----------------------------------------------------------------------------
 -- 6. TABLA: detallemallas (Detalle Asignaturas, Horas y Créditos)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS detallemallas;
-CREATE TABLE detallemallas (
+CREATE TABLE IF NOT EXISTS detallemallas (
     idDetalleMalla      INT AUTO_INCREMENT PRIMARY KEY,
     idMalla             INT          NOT NULL,
     idAsignatura        INT          NOT NULL,
@@ -141,7 +136,7 @@ CREATE TABLE detallemallas (
     FOREIGN KEY (idAsignatura) REFERENCES asignaturas(idAsignatura)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO detallemallas (idDetalleMalla, idMalla, idAsignatura, idNivel, idtipo_asignatura, tipo, creditos, horas, horasDocente, horasPracticoExperimental) VALUES
+INSERT IGNORE INTO detallemallas (idDetalleMalla, idMalla, idAsignatura, idNivel, idtipo_asignatura, tipo, creditos, horas, horasDocente, horasPracticoExperimental) VALUES
 (101, 1, 101, 3, 1, 'Profesional', 3.00, 144, 48, 48.00),
 (102, 1, 102, 3, 1, 'Profesional', 3.00, 144, 48, 48.00),
 (103, 1, 103, 3, 1, 'Disciplinar', 2.50, 120, 40, 40.00),
@@ -151,8 +146,7 @@ INSERT INTO detallemallas (idDetalleMalla, idMalla, idAsignatura, idNivel, idtip
 -- -----------------------------------------------------------------------------
 -- 7. TABLA: profesores (Nómina Docente Institucional Completa)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS profesores;
-CREATE TABLE profesores (
+CREATE TABLE IF NOT EXISTS profesores (
     idProfesor          VARCHAR(14)  PRIMARY KEY,
     tipodocumento       VARCHAR(20)  DEFAULT 'C',
     apellidos           VARCHAR(100) NOT NULL,
@@ -196,7 +190,7 @@ CREATE TABLE profesores (
     esReal              TINYINT(4)   DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO profesores (idProfesor, tipodocumento, apellidos, nombres, primerApellido, segundoApellido, primerNombre, segundoNombre, emailInstitucional, email, clave, titulo, abreviatura, abreviatura_post, activo) VALUES
+INSERT IGNORE INTO profesores (idProfesor, tipodocumento, apellidos, nombres, primerApellido, segundoApellido, primerNombre, segundoNombre, emailInstitucional, email, clave, titulo, abreviatura, abreviatura_post, activo) VALUES
 ('1725555377', 'C', 'Doicela Molina', 'Jorge Ismael', 'Doicela', 'Molina', 'Jorge', 'Ismael', 'jorge.doicela@istpet.edu.ec', 'jorge.doicela@istpet.edu.ec', '12345', 'Tecnólogo en Desarrollo de Software', 'Ing.', 'Msc.', 1),
 ('1720000002', 'C', 'Valencia Llerena', 'Carlos Enrique', 'Valencia', 'Llerena', 'Carlos', 'Enrique', 'carlos.valencia@istpet.edu.ec', 'carlos.valencia@istpet.edu.ec', '12345', 'Magíster en Sistemas de Información', 'Ing.', 'Msc.', 1),
 ('1720000003', 'C', 'Proaño Ramos', 'Marcia Elena', 'Proaño', 'Ramos', 'Marcia', 'Elena', 'vicerrectorado@istpet.edu.ec', 'vicerrectorado@istpet.edu.ec', '12345', 'Doctora en Ciencias de la Educación', 'Dra.', 'Ph.D.', 1),
@@ -211,8 +205,7 @@ INSERT INTO profesores (idProfesor, tipodocumento, apellidos, nombres, primerApe
 -- -----------------------------------------------------------------------------
 -- 8. TABLA: asignaciones_profesores (Carga Académica Distributiva Docente)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS asignaciones_profesores;
-CREATE TABLE asignaciones_profesores (
+CREATE TABLE IF NOT EXISTS asignaciones_profesores (
     idAsignacion        INT AUTO_INCREMENT PRIMARY KEY,
     idProfesor          VARCHAR(14)  NOT NULL,
     idAsignatura        INT          NOT NULL,
@@ -240,7 +233,7 @@ CREATE TABLE asignaciones_profesores (
     FOREIGN KEY (idPeriodo) REFERENCES periodos(idPeriodo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO asignaciones_profesores (idAsignacion, idProfesor, idAsignatura, idPeriodo, paralelo, idNivel, activo) VALUES
+INSERT IGNORE INTO asignaciones_profesores (idAsignacion, idProfesor, idAsignatura, idPeriodo, paralelo, idNivel, activo) VALUES
 (1, '1725555377', 101, '2026-1', 'A', 3, 1),
 (2, '1720000002', 102, '2026-1', 'A', 3, 1),
 (3, '1720000004', 103, '2026-1', 'A', 3, 1),
@@ -249,8 +242,7 @@ INSERT INTO asignaciones_profesores (idAsignacion, idProfesor, idAsignatura, idP
 -- -----------------------------------------------------------------------------
 -- 9. TABLA: usuarios (Usuarios Maestros Institucionales SIGAFI)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS usuarios;
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     idUsuario           INT AUTO_INCREMENT PRIMARY KEY,
     idSigafi            VARCHAR(20)  NULL,
     tablaSigafi         ENUM('alumno','profesor','otros') DEFAULT 'profesor',
@@ -264,7 +256,7 @@ CREATE TABLE usuarios (
     fechaEmailValidacion DATETIME    NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO usuarios (idUsuario, idSigafi, tablaSigafi, nombre, contrasenia, activo, administrador, emailInstitucional, emailValidado) VALUES
+INSERT IGNORE INTO usuarios (idUsuario, idSigafi, tablaSigafi, nombre, contrasenia, activo, administrador, emailInstitucional, emailValidado) VALUES
 (1, '1725555377', 'profesor', 'Jorge Ismael Doicela Molina', '12345', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
 (2, '1720000002', 'profesor', 'Carlos Enrique Valencia Llerena', '12345', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
 (3, '1720000003', 'profesor', 'Marcia Elena Proaño Ramos', '12345', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
@@ -279,33 +271,25 @@ INSERT INTO usuarios (idUsuario, idSigafi, tablaSigafi, nombre, contrasenia, act
 -- -----------------------------------------------------------------------------
 -- 10. ESQUEMA RBAC BASE (Sistemas, Módulos, Operaciones y Roles Institucionales)
 -- -----------------------------------------------------------------------------
-DROP TABLE IF EXISTS rbac_usuario_rol;
-DROP TABLE IF EXISTS rbac_rol_modulo_operacion;
-DROP TABLE IF EXISTS rbac_modulos_operaciones;
-DROP TABLE IF EXISTS rbac_modulos;
-DROP TABLE IF EXISTS rbac_operaciones;
-DROP TABLE IF EXISTS rbac_rol;
-DROP TABLE IF EXISTS rbac_sistema;
-
-CREATE TABLE rbac_sistema (
+CREATE TABLE IF NOT EXISTS rbac_sistema (
     idSistema           INT AUTO_INCREMENT PRIMARY KEY,
     codigo              VARCHAR(20) NOT NULL,
     detalle             VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE rbac_operaciones (
+CREATE TABLE IF NOT EXISTS rbac_operaciones (
     idOperaciones       INT AUTO_INCREMENT PRIMARY KEY,
     NombreOperacion     VARCHAR(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE rbac_rol (
+CREATE TABLE IF NOT EXISTS rbac_rol (
     idRol               INT AUTO_INCREMENT PRIMARY KEY,
     Nombre              VARCHAR(255) NOT NULL,
     codigo_rol          VARCHAR(25)  NOT NULL,
     esActivo            TINYINT(4)   NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE rbac_modulos (
+CREATE TABLE IF NOT EXISTS rbac_modulos (
     idModulos           INT AUTO_INCREMENT PRIMARY KEY,
     id_sistema          INT          NOT NULL,
     Nombre              VARCHAR(255) NOT NULL,
@@ -313,7 +297,7 @@ CREATE TABLE rbac_modulos (
     FOREIGN KEY (id_sistema) REFERENCES rbac_sistema(idSistema)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE rbac_modulos_operaciones (
+CREATE TABLE IF NOT EXISTS rbac_modulos_operaciones (
     idModulosOperaciones INT AUTO_INCREMENT PRIMARY KEY,
     idModulos           INT        NOT NULL,
     idOperaciones       INT        NOT NULL,
@@ -324,7 +308,7 @@ CREATE TABLE rbac_modulos_operaciones (
     FOREIGN KEY (idOperaciones) REFERENCES rbac_operaciones(idOperaciones)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE rbac_rol_modulo_operacion (
+CREATE TABLE IF NOT EXISTS rbac_rol_modulo_operacion (
     idRolModuloOperacion INT AUTO_INCREMENT PRIMARY KEY,
     idRol               INT        NOT NULL,
     idModulosOperaciones INT       NOT NULL,
@@ -336,7 +320,7 @@ CREATE TABLE rbac_rol_modulo_operacion (
     FOREIGN KEY (idModulosOperaciones) REFERENCES rbac_modulos_operaciones(idModulosOperaciones)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE rbac_usuario_rol (
+CREATE TABLE IF NOT EXISTS rbac_usuario_rol (
     idUsuarioRol        INT AUTO_INCREMENT PRIMARY KEY,
     idUsuario           INT        NOT NULL,
     idRol               INT        NOT NULL,
