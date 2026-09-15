@@ -145,4 +145,100 @@ INSERT INTO asignacion_materias (idAsignacion, idProfesor, idDetalleMalla, idPer
 (3, 4, 103, 1, 'A', 'Nocturna', 1, 'Aprobado'), -- David Guaman -> Bases de Datos
 (4, 1, 104, 1, 'A', 'Nocturna', 1, 'Aprobado'); -- Jorge Doicela -> Metodologías Ágiles
 
+-- -----------------------------------------------------------------------------
+-- 7. TABLA: usuarios (Usuarios Maestros Institucionales SIGAFI)
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS usuarios;
+CREATE TABLE usuarios (
+    idUsuario           INT AUTO_INCREMENT PRIMARY KEY,
+    idSigafi            VARCHAR(20)  NULL,
+    tablaSigafi         ENUM('alumno','profesor','otros') DEFAULT 'profesor',
+    nombre              VARCHAR(200) NOT NULL,
+    contrasenia         VARCHAR(250) NOT NULL,
+    activo              TINYINT(4)   NOT NULL DEFAULT 1,
+    administrador       TINYINT(4)   NOT NULL DEFAULT 0,
+    emailInstitucional  VARCHAR(100) NULL,
+    emailValidado       TINYINT(4)   NOT NULL DEFAULT 1,
+    hashEmailToken      VARCHAR(255) NULL,
+    fechaEmailValidacion DATETIME    NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO usuarios (idUsuario, idSigafi, tablaSigafi, nombre, contrasenia, activo, administrador, emailInstitucional, emailValidado) VALUES
+(1, '1', 'profesor', 'Jorge Ismael Doicela Molina', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
+(2, '2', 'profesor', 'Carlos Enrique Valencia Llerena', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
+(3, '3', 'profesor', 'Marcia Elena Proaño Ramos', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
+(4, '4', 'profesor', 'David Alejandro Guaman Perez', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.software@istpet.edu.ec', 1),
+(5, '5', 'profesor', 'Silvia Patricia Andrade Torres', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.academica@istpet.edu.ec', 1);
+
+-- -----------------------------------------------------------------------------
+-- 8. ESQUEMA RBAC BASE (Sistemas, Módulos, Operaciones y Roles Institucionales)
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS rbac_usuario_rol;
+DROP TABLE IF EXISTS rbac_rol_modulo_operacion;
+DROP TABLE IF EXISTS rbac_modulos_operaciones;
+DROP TABLE IF EXISTS rbac_modulos;
+DROP TABLE IF EXISTS rbac_operaciones;
+DROP TABLE IF EXISTS rbac_rol;
+DROP TABLE IF EXISTS rbac_sistema;
+
+CREATE TABLE rbac_sistema (
+    idSistema           INT AUTO_INCREMENT PRIMARY KEY,
+    codigo              VARCHAR(20) NOT NULL,
+    detalle             VARCHAR(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE rbac_operaciones (
+    idOperaciones       INT AUTO_INCREMENT PRIMARY KEY,
+    NombreOperacion     VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE rbac_rol (
+    idRol               INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre              VARCHAR(255) NOT NULL,
+    codigo_rol          VARCHAR(25)  NOT NULL,
+    esActivo            TINYINT(4)   NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE rbac_modulos (
+    idModulos           INT AUTO_INCREMENT PRIMARY KEY,
+    id_sistema          INT          NOT NULL,
+    Nombre              VARCHAR(255) NOT NULL,
+    esActivo            TINYINT(4)   NOT NULL DEFAULT 1,
+    FOREIGN KEY (id_sistema) REFERENCES rbac_sistema(idSistema)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE rbac_modulos_operaciones (
+    idModulosOperaciones INT AUTO_INCREMENT PRIMARY KEY,
+    idModulos           INT        NOT NULL,
+    idOperaciones       INT        NOT NULL,
+    fecha_creacion      DATE       NULL,
+    fecha_modificacion  DATE       NULL,
+    esActivo            TINYINT(4) NOT NULL DEFAULT 1,
+    FOREIGN KEY (idModulos) REFERENCES rbac_modulos(idModulos),
+    FOREIGN KEY (idOperaciones) REFERENCES rbac_operaciones(idOperaciones)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE rbac_rol_modulo_operacion (
+    idRolModuloOperacion INT AUTO_INCREMENT PRIMARY KEY,
+    idRol               INT        NOT NULL,
+    idModulosOperaciones INT       NOT NULL,
+    fecha_asignacion    DATE       NULL,
+    fecha_modificacion  DATE       NULL,
+    fecha_desactivacion DATE       NULL,
+    esActivo            TINYINT(4) NOT NULL DEFAULT 1,
+    FOREIGN KEY (idRol) REFERENCES rbac_rol(idRol),
+    FOREIGN KEY (idModulosOperaciones) REFERENCES rbac_modulos_operaciones(idModulosOperaciones)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE rbac_usuario_rol (
+    idUsuarioRol        INT AUTO_INCREMENT PRIMARY KEY,
+    idUsuario           INT        NOT NULL,
+    idRol               INT        NOT NULL,
+    fecha_creacion      DATE       NULL,
+    fecha_modificacion  DATE       NULL,
+    esActivo            TINYINT(4) NOT NULL DEFAULT 1,
+    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario),
+    FOREIGN KEY (idRol) REFERENCES rbac_rol(idRol)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
