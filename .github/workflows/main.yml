@@ -16,9 +16,9 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore backend/dosier.slnx
+      run: dotnet restore backend/dosier.sln
     - name: Build
-      run: dotnet build backend/dosier.slnx --no-restore
+      run: dotnet build backend/dosier.sln --no-restore
     - name: Test
       run: dotnet test backend/dosier_tests/dosier_tests.csproj --no-build --verbosity normal
 

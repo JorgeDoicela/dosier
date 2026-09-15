@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copiar archivos de proyectos y solución para aprovechar la caché de Docker
-COPY backend/dosier.slnx ./backend/
+COPY backend/dosier.sln ./backend/
 COPY backend/dosier_api/dosier_api.csproj ./backend/dosier_api/
 COPY backend/dosier_application/dosier_application.csproj ./backend/dosier_application/
 COPY backend/dosier_domain/dosier_domain.csproj ./backend/dosier_domain/
@@ -13,7 +13,7 @@ COPY backend/dosier_infrastructure/dosier_infrastructure.csproj ./backend/dosier
 COPY backend/dosier_tests/dosier_tests.csproj ./backend/dosier_tests/
 
 # Restaurar dependencias
-RUN dotnet restore ./backend/dosier.slnx
+RUN dotnet restore ./backend/dosier.sln
 
 # Copiar todo el código fuente del backend
 COPY backend/ ./backend/

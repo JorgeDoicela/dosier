@@ -52,6 +52,8 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 * [01. Guía de Instalación y Configuración en Entorno Local](./07-despliegue-y-operaciones/01-instalacion-entorno-local.md): Requisitos de desarrollo (.NET 8, Node 18, MySQL 3306), ejecución ordenada de los 4 scripts SQL oficiales (01 a 04) y variables de entorno.
 * [02. Guía de Cumplimiento e Integridad Forense para Acreditación CACES 2026](./07-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md): Matriz de evidencias técnicas y cobertura curricular para auditorías de acreditación institucional.
 * [03. Pipeline CI/CD Automatizado y Despliegue en AWS EC2](./07-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md): Pipeline DAG con filtrado de rutas, empaquetado multi-stage Docker en GHCR, despliegue zero-downtime en EC2 y workflow de rollback instantáneo por commit SHA.
+* [04. Seguridad Perimetral: Cifrado SSL/TLS con Cloudflare Origin CA y Nginx](./07-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md): Topología de cifrado de dos niveles, modo Full (Strict), certificados Origin CA válidos hasta 15 años y configuración de proxy inverso.
+* [05. Dimensionamiento de Servidor y Topología en AWS EC2](./07-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md): Justificación técnica de cómputo (c7i-flex.large), huella de memoria (memory footprint), reglas de firewall y volúmenes EBS gp3.
 
 ---
 

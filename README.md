@@ -169,7 +169,21 @@ La especificación completa del sistema está organizada en el directorio `docs/
 * [Sección 06: Arquitectura de la Aplicación Móvil](docs/documentacion/06-aplicacion-movil/01-arquitectura-movil-docente.md)
 * [Sección 07: Instalación y Configuración Local](docs/documentacion/07-despliegue-y-operaciones/01-instalacion-entorno-local.md)
 * [Sección 07: Guía de Cumplimiento para Acreditación CACES 2026](docs/documentacion/07-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md)
+* [Sección 07: Pipeline CI/CD y Despliegue en AWS EC2](docs/documentacion/07-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md)
+* [Sección 07: Seguridad Perimetral y SSL Cloudflare Origin CA](docs/documentacion/07-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md)
+* [Sección 07: Dimensionamiento de Servidor y Topología en AWS EC2](docs/documentacion/07-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md)
+
+---
+
+## 8. Despliegue en Producción y CI/CD
+
+El repositorio implementa integración y despliegue continuo (CI/CD) automatizado mediante GitHub Actions hacia instancias AWS EC2 con Docker Compose:
+
+* **Pipeline Principal (`deploy.yml`):** Detección de cambios por rutas (`backend/**` vs `dosier_web/**`), compilación multi-stage, publicación de imágenes en GitHub Container Registry (`ghcr.io`), transferencia segura por SCP y despliegue zero-downtime vía SSH.
+* **Mecanismo de Rollback (`rollback.yml`):** Reversión instantánea por commit SHA sin re-compilación.
+* **Seguridad Perimetral:** Nginx como proxy inverso con terminación SSL en puerto 443 mediante certificados Cloudflare Origin CA bajo modo Full (Strict).
 
 ---
 
 DOSIER Architecture | Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET) | Quito, Ecuador
+
