@@ -14,7 +14,8 @@ import {
     Filter,
     Shield,
     FileCheck2,
-    Eye
+    Eye,
+    GraduationCap
 } from 'lucide-react';
 import { GeistSelect } from '../../../../components/Common/GeistSelect';
 import { useNotifications } from '../../../../api/NotificationsContext';

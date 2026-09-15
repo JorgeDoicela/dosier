@@ -11,14 +11,26 @@ SET FOREIGN_KEY_CHECKS = 0;
 SET SQL_SAFE_UPDATES = 0;
 
 -- -----------------------------------------------------------------------------
--- 1. ACTUALIZACIÓN DE IDENTIDAD DEL SISTEMA 'DOSIER' (idSistema = 6)
+-- 1. REGISTRO / ACTUALIZACIÓN DEL SISTEMA 'DOSIER' (idSistema = 6)
 --    Nota: rbac_sistema.detalle tiene restricción varchar(50)
 -- -----------------------------------------------------------------------------
+INSERT INTO rbac_sistema (idSistema, codigo, detalle)
+SELECT 6, 'DOSIER', 'Gestión Curricular y Acreditación ISTPET'
+WHERE NOT EXISTS (
+    SELECT 1 FROM rbac_sistema WHERE idSistema = 6 OR CONVERT(codigo USING utf8mb4) = 'DOSIER'
+);
+
 UPDATE rbac_sistema 
-SET detalle = 'Gestión Curricular y Acreditación ISTPET',
-    url = '/dosier',
-    icono = 'book'
-WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER';
+SET codigo = 'DOSIER',
+    detalle = 'Gestión Curricular y Acreditación ISTPET'
+WHERE idSistema = 6 OR CONVERT(codigo USING utf8mb4) = 'DOSIER';
+
+-- Definición robusta de variable de sesión para el sistema DOSIER
+SET @idSistemaDosier = COALESCE(
+    (SELECT idSistema FROM rbac_sistema WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER' LIMIT 1),
+    (SELECT idSistema FROM rbac_sistema WHERE idSistema = 6 LIMIT 1),
+    6
+);
 
 -- -----------------------------------------------------------------------------
 -- 2. LIMPIEZA DE PERMISOS PREVIOS DEL SISTEMA DOSIER (Evitar duplicidades)
@@ -27,23 +39,31 @@ WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER';
 DELETE rmo FROM rbac_rol_modulo_operacion rmo
 JOIN rbac_modulos_operaciones mo ON rmo.idModulosOperaciones = mo.idModulosOperaciones
 JOIN rbac_modulos m ON mo.idModulos = m.idModulos
-WHERE m.id_sistema = (SELECT idSistema FROM rbac_sistema WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER' LIMIT 1);
+WHERE m.id_sistema = @idSistemaDosier;
 
 -- Eliminar relaciones módulo-operación de DOSIER
 DELETE mo FROM rbac_modulos_operaciones mo
 JOIN rbac_modulos m ON mo.idModulos = m.idModulos
-WHERE m.id_sistema = (SELECT idSistema FROM rbac_sistema WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER' LIMIT 1);
+WHERE m.id_sistema = @idSistemaDosier;
 
 -- Eliminar módulos anteriores de DOSIER
 DELETE FROM rbac_modulos 
-WHERE id_sistema = (SELECT idSistema FROM rbac_sistema WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER' LIMIT 1);
+WHERE id_sistema = @idSistemaDosier;
 
 -- -----------------------------------------------------------------------------
 -- 3. CATÁLOGO DE OPERACIONES ATÓMICAS (rbac_operaciones)
 -- -----------------------------------------------------------------------------
 INSERT INTO rbac_operaciones (NombreOperacion)
 SELECT op FROM (
-    SELECT 'COWORK' AS op UNION
+    SELECT 'ver' AS op UNION
+    SELECT 'crear' UNION
+    SELECT 'editar' UNION
+    SELECT 'eliminar' UNION
+    SELECT 'GESTIONAR' UNION
+    SELECT 'REPORTES' UNION
+    SELECT 'APROBAR' UNION
+    SELECT 'ver-auditoria' UNION
+    SELECT 'COWORK' UNION
     SELECT 'OBSERVAR' UNION
     SELECT 'SUBSANAR' UNION
     SELECT 'AVALAR_CARRERA' UNION
@@ -51,7 +71,7 @@ SELECT op FROM (
     SELECT 'EXPORTAR_PDF'
 ) AS nuevas_ops
 WHERE NOT EXISTS (
-    SELECT 1 FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = nuevas_ops.op
+    SELECT 1 FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = LOWER(nuevas_ops.op)
 );
 
 -- -----------------------------------------------------------------------------
@@ -86,8 +106,6 @@ WHERE NOT EXISTS (SELECT 1 FROM rbac_rol WHERE CONVERT(codigo_rol USING utf8mb4)
 -- -----------------------------------------------------------------------------
 -- 5. MÓDULOS CURRICULARES DE DOSIER (rbac_modulos)
 -- -----------------------------------------------------------------------------
-SET @idSistemaDosier = (SELECT idSistema FROM rbac_sistema WHERE CONVERT(codigo USING utf8mb4) = 'DOSIER' LIMIT 1);
-
 INSERT INTO rbac_modulos (id_sistema, Nombre, esActivo) VALUES
 (@idSistemaDosier, 'PEA', 1),
 (@idSistemaDosier, 'GOBERNANZA_CURRICULAR', 1),
@@ -102,20 +120,20 @@ SET @modGob    = (SELECT idModulos FROM rbac_modulos WHERE id_sistema = @idSiste
 SET @modAud    = (SELECT idModulos FROM rbac_modulos WHERE id_sistema = @idSistemaDosier AND CONVERT(Nombre USING utf8mb4) = 'AUDITORIA_CACES' LIMIT 1);
 SET @modCfg    = (SELECT idModulos FROM rbac_modulos WHERE id_sistema = @idSistemaDosier AND CONVERT(Nombre USING utf8mb4) = 'CONFIGURACION' LIMIT 1);
 
-SET @opVer          = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'ver' LIMIT 1);
-SET @opEditar       = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'editar' LIMIT 1);
-SET @opCrear        = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'crear' LIMIT 1);
-SET @opEliminar     = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'eliminar' LIMIT 1);
-SET @opGestionar    = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'GESTIONAR' LIMIT 1);
-SET @opReportes     = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'REPORTES' LIMIT 1);
-SET @opAprobar      = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'APROBAR' LIMIT 1);
-SET @opVerAud       = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'ver-auditoria' LIMIT 1);
-SET @opCowork       = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'COWORK' LIMIT 1);
-SET @opObservar     = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'OBSERVAR' LIMIT 1);
-SET @opSubsanar     = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'SUBSANAR' LIMIT 1);
-SET @opAvalCarrera  = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'AVALAR_CARRERA' LIMIT 1);
-SET @opAvalAcad     = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'AVALAR_ACADEMICO' LIMIT 1);
-SET @opExportarPdf  = (SELECT idOperaciones FROM rbac_operaciones WHERE CONVERT(NombreOperacion USING utf8mb4) = 'EXPORTAR_PDF' LIMIT 1);
+SET @opVer          = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'ver' LIMIT 1);
+SET @opEditar       = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'editar' LIMIT 1);
+SET @opCrear        = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'crear' LIMIT 1);
+SET @opEliminar     = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'eliminar' LIMIT 1);
+SET @opGestionar    = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'gestionar' LIMIT 1);
+SET @opReportes     = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'reportes' LIMIT 1);
+SET @opAprobar      = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'aprobar' LIMIT 1);
+SET @opVerAud       = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'ver-auditoria' LIMIT 1);
+SET @opCowork       = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'cowork' LIMIT 1);
+SET @opObservar     = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'observar' LIMIT 1);
+SET @opSubsanar     = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'subsanar' LIMIT 1);
+SET @opAvalCarrera  = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'avalar_carrera' LIMIT 1);
+SET @opAvalAcad     = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'avalar_academico' LIMIT 1);
+SET @opExportarPdf  = (SELECT idOperaciones FROM rbac_operaciones WHERE LOWER(CONVERT(NombreOperacion USING utf8mb4)) = 'exportar_pdf' LIMIT 1);
 
 -- Operaciones del Módulo PEA
 INSERT INTO rbac_modulos_operaciones (idModulos, idOperaciones, fecha_creacion, esActivo) VALUES

@@ -149,6 +149,27 @@ public class AuthService : IAuthService
             }
         }
 
+        // ── 3. JIT Provisioning: Master Admin (si está configurado y el identificador coincide con sus datos SIGAFI) ────
+        if (!string.IsNullOrEmpty(_masterAdminId))
+        {
+            var adminAlumno = await _context.Alumnos
+                .FirstOrDefaultAsync(a => a.IdAlumno == _masterAdminId &&
+                    (a.IdAlumno == username || a.UserAlumno == username || a.EmailInstitucional == username || a.Email == username));
+
+            if (adminAlumno != null)
+            {
+                var verification = _passwordService.VerifyPassword(password, adminAlumno.Password ?? string.Empty);
+                if (verification.Success)
+                {
+                    string fullNombre = $"{adminAlumno.PrimerNombre} {adminAlumno.SegundoNombre} {adminAlumno.ApellidoPaterno} {adminAlumno.ApellidoMaterno}".Replace("  ", " ").Trim();
+                    user = await ProvisionUserAsync(adminAlumno.IdAlumno, fullNombre, password, "alumno", adminAlumno.IdAlumno);
+                    var response = await GetAuthResponseAsync(user);
+                    await _auditService.LogActionAsync(user.IdUsuario, "LOGIN", "Inicio de sesión exitoso (JIT Master Admin)", "SEGURIDAD");
+                    return (response, null);
+                }
+            }
+        }
+
         return (null, null);
     }
 
@@ -167,8 +188,17 @@ public class AuthService : IAuthService
         if (p != null)
         {
             string fullNombre = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim();
-            string pwd = !string.IsNullOrEmpty(p.Clave) ? p.Clave : "cambiame";
-            return await ProvisionUserAsync(cedula, fullNombre, pwd, "profesor", cedula);
+            return await ProvisionUserAsync(cedula, fullNombre, p.Clave ?? string.Empty, "profesor", cedula);
+        }
+
+        if (!string.IsNullOrEmpty(_masterAdminId) && cedula == _masterAdminId)
+        {
+            var a = await _context.Alumnos.FirstOrDefaultAsync(al => al.IdAlumno == cedula);
+            if (a != null)
+            {
+                string fullNombre = $"{a.PrimerNombre} {a.SegundoNombre} {a.ApellidoPaterno} {a.ApellidoMaterno}".Replace("  ", " ").Trim();
+                return await ProvisionUserAsync(cedula, fullNombre, a.Password ?? string.Empty, "alumno", cedula);
+            }
         }
 
         return null;
@@ -200,6 +230,11 @@ public class AuthService : IAuthService
         {
             var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == sigafiId);
             if (p != null) email = p.EmailInstitucional ?? p.Email;
+        }
+        else if (table == "alumno")
+        {
+            var a = await _context.Alumnos.FirstOrDefaultAsync(al => al.IdAlumno == sigafiId);
+            if (a != null) email = a.EmailInstitucional ?? a.Email;
         }
 
         var user = new User

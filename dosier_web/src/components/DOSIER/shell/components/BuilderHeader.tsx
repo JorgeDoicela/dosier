@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Save, Clock, CheckCircle, Shield, Sun, Moon } from 'lucide-react';
-import type { CoWorkUser } from '../../../../../core/cowork/types';
+import type { CoWorkUser } from '../../../../core/cowork/types';
 
 export interface BuilderHeaderProps {
     title: string;
@@ -34,7 +34,7 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
     toggleTheme
 }) => {
     return (
-        <div className="px-4 md:px-8 py-3 border-b border-border-thin bg-bg-deep/75 backdrop-blur-md flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 z-[50]">
+        <div className="px-4 md:px-8 py-3 border-b border-border-thin bg-bg-deep flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 z-[50]">
             <div className="flex items-center justify-between w-full md:w-auto gap-4">
                 <div className="flex items-center gap-3">
                     {/* Botón Volver/Cerrar */}

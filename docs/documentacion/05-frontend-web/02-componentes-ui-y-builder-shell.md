@@ -97,6 +97,13 @@ graph TD
   * **Métricas Compactas:** Strip horizontal de alta densidad informativa (Total Asignaturas, En Trámite/Revisión, Con Observaciones, Concluidos/Aprobados) sin recurrir al anti-patrón de tarjetas KPI gigantes.
   * **Filtros Institucionales:** Selectores con fondo 100% sólido para período lectivo (`GeistSelect`), carreras asignadas y estados del workflow.
   * **Stepper de Circuito de 4 Firmas:** Visualizador de avance del circuito legal (Docente -> Coordinador de Carrera -> Coordinador Académico -> Vicerrector).
-  * **Acceso Directo:** Botón de apertura directa en el Workspace concurrente (`/documentacion/workspace/pea-oficial/:uuid?edit=pea-oficial`) para revisión, co-redacción y emisión de dictamen/firma.
+* **Acceso Directo:** Botón de apertura directa en el Workspace concurrente (`/documentacion/workspace/pea-oficial/:uuid?edit=pea-oficial`) para revisión, co-redacción y emisión de dictamen/firma.
 
-
+### 4.8. `<PeaWorkflowBar>` & `<PeaObservationsDrawer>`: Control de Estados Colegiados en el Workspace
+* **Ubicación:** `src/components/DOSIER/shell/components/` (`PeaWorkflowBar.tsx`, `PeaObservationsDrawer.tsx`).
+* **Integración en Shell:** Montado condicionalmente en `DOSIERBuilderShell.tsx` cuando `templateCode === 'PEA_OFICIAL'`.
+* **Capacidades Operativas:**
+  * **Semáforo Matemático de Horas:** Calcula en vivo $\sum \text{Horas}$ de las unidades temáticas contra las horas oficiales normadas en SIGAFI, bloqueando el envío si existe déficit o exceso horario.
+  * **Botón Contextual de Firma:** Muestra la acción correspondiente al rol del usuario autenticado (Docente: *Firmar y Enviar a Revisión*; Coordinador de Carrera: *Emitir Aval de Carrera*; Coordinador Académico: *Emitir Aval Académico*; Vicerrector: *Legalizar y Aprobar PEA*).
+  * **Panel Deslizable de Observaciones:** Permite a las comisiones registrar observaciones directas por sección (`POST /api/pea/:id/observaciones`) y a los docentes responder formalmente con justificación de cambios para subsanar los requerimientos (`PATCH /api/pea/observaciones/:id/subsanar`).
+  * **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-zinc-950`), sin transparencias ni efectos de sangrado tipográfico.
