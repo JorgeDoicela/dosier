@@ -199,7 +199,7 @@ CREATE TABLE doc_expedientes_curriculares (
     uuid                    VARCHAR(36)     NOT NULL UNIQUE,
     codigoExpediente        VARCHAR(100)    NULL COMMENT 'Ej: EXP-2025-SOF-P01-PROG1',
     idAsignacion            INT(11)         NULL COMMENT 'Origen oficial desde asignaciones_profesores SIGAFI',
-    idPeriodo               VARCHAR(7)      NOT NULL,
+    idPeriodo               CHAR(7) CHARACTER SET latin1 NOT NULL,
     idCarrera               INT(11)         NOT NULL,
     idMalla                 INT(11)         NULL,
     idDetalleMalla          INT(11)         NULL,

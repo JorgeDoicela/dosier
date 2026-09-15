@@ -43,7 +43,7 @@ INSERT INTO carreras (idCarrera, Carrera, codigo_cases, aliasCarrera, esInstitut
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS periodos;
 CREATE TABLE periodos (
-    idPeriodo           VARCHAR(7)   PRIMARY KEY,
+    idPeriodo           CHAR(7) CHARACTER SET latin1 PRIMARY KEY,
     detalle             VARCHAR(100) NOT NULL,
     fecha_inicial       DATE         NOT NULL,
     fecha_final         DATE         NOT NULL,
@@ -106,7 +106,7 @@ INSERT INTO mallas (idMalla, idCarrera, vigencia, descripcion, creditos_minimo, 
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS mallas_periodos;
 CREATE TABLE mallas_periodos (
-    idPeriodo           VARCHAR(7)   NOT NULL,
+    idPeriodo           CHAR(7) CHARACTER SET latin1 NOT NULL,
     idNivel             INT          NOT NULL,
     idMalla             INT          NOT NULL,
     PRIMARY KEY (idPeriodo, idNivel, idMalla),
@@ -216,7 +216,7 @@ CREATE TABLE asignaciones_profesores (
     idAsignacion        INT AUTO_INCREMENT PRIMARY KEY,
     idProfesor          VARCHAR(14)  NOT NULL,
     idAsignatura        INT          NOT NULL,
-    idPeriodo           VARCHAR(7)   NOT NULL,
+    idPeriodo           CHAR(7) CHARACTER SET latin1 NOT NULL,
     idModalidad         INT          DEFAULT 1,
     idSeccion           INT          DEFAULT 1,
     idNivel             INT          DEFAULT 3,
