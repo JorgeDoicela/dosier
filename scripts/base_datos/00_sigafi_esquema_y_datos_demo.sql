@@ -265,11 +265,16 @@ CREATE TABLE usuarios (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO usuarios (idUsuario, idSigafi, tablaSigafi, nombre, contrasenia, activo, administrador, emailInstitucional, emailValidado) VALUES
-(1, '1725555377', 'profesor', 'Jorge Ismael Doicela Molina', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
-(2, '1720000002', 'profesor', 'Carlos Enrique Valencia Llerena', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
-(3, '1720000003', 'profesor', 'Marcia Elena Proaño Ramos', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
-(4, '1720000004', 'profesor', 'David Alejandro Guaman Perez', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.software@istpet.edu.ec', 1),
-(5, '1720000005', 'profesor', 'Silvia Patricia Andrade Torres', '$2a$11$q9v5uV0j2Jc.27tY7GqFw.mXqUaFjZ0P/6O9aX7uV1j2Jc.27tY7G', 1, 0, 'coordinacion.academica@istpet.edu.ec', 1);
+(1, '1725555377', 'profesor', 'Jorge Ismael Doicela Molina', '12345', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
+(2, '1720000002', 'profesor', 'Carlos Enrique Valencia Llerena', '12345', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
+(3, '1720000003', 'profesor', 'Marcia Elena Proaño Ramos', '12345', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
+(4, '1720000004', 'profesor', 'David Alejandro Guaman Perez', '12345', 1, 0, 'coordinacion.software@istpet.edu.ec', 1),
+(5, '1720000005', 'profesor', 'Silvia Patricia Andrade Torres', '12345', 1, 0, 'coordinacion.academica@istpet.edu.ec', 1),
+(6, '1802707511', 'profesor', 'Freddy Baño', '12345', 1, 0, 'freddy.bano@istpet.edu.ec', 1),
+(7, '0502405889', 'profesor', 'Cristian Cobos', '12345', 1, 0, 'cristian.cobos@istpet.edu.ec', 1),
+(8, '1709890626', 'profesor', 'Wilfrido Trujillo', '12345', 1, 0, 'wilfrido.trujillo@istpet.edu.ec', 1),
+(9, '1720004793', 'profesor', 'Christian Castro', '12345', 1, 0, 'christian.castro@istpet.edu.ec', 1),
+(10, '1721465431', 'profesor', 'Wilmer Toapanta', '12345', 1, 0, 'wilmer.toapanta@istpet.edu.ec', 1);
 
 -- -----------------------------------------------------------------------------
 -- 10. ESQUEMA RBAC BASE (Sistemas, Módulos, Operaciones y Roles Institucionales)

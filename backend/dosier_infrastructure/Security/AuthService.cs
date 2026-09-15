@@ -316,6 +316,18 @@ public class AuthService : IAuthService
             metadata.FechaUltimoAcceso = DateTime.Now;
             await _context.SaveChangesAsync();
         }
+        else
+        {
+            metadata = new DocUsuarioMetadata
+            {
+                IdUsuario = user.IdUsuario,
+                Uuid = Guid.NewGuid(),
+                Version = 1,
+                FechaUltimoAcceso = DateTime.Now
+            };
+            _context.DocUsuariosMetadata.Add(metadata);
+            await _context.SaveChangesAsync();
+        }
 
         var roleCodes = userRoles.Select(ur => ur.Role.CodigoRol).ToList();
         var sistemas = await _context.RoleModuleOperations

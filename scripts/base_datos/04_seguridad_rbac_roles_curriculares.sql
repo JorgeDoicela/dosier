@@ -258,5 +258,25 @@ WHERE aut.esActivo = 1
                        END
   );
 
+-- G. Asignar rol DOSIER_ADMIN a usuarios con administrador = 1
+INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
+SELECT u.idUsuario, @rolAdmin, CURDATE(), 1
+FROM usuarios u
+WHERE u.administrador = 1
+  AND NOT EXISTS (
+      SELECT 1 FROM rbac_usuario_rol ur
+      WHERE ur.idUsuario = u.idUsuario AND ur.idRol = @rolAdmin
+  );
+
+-- H. Asignar rol DOSIER_DOCENTE a todos los usuarios de tipo profesor
+INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
+SELECT u.idUsuario, @rolDocente, CURDATE(), 1
+FROM usuarios u
+WHERE u.tablaSigafi = 'profesor'
+  AND NOT EXISTS (
+      SELECT 1 FROM rbac_usuario_rol ur
+      WHERE ur.idUsuario = u.idUsuario AND ur.idRol = @rolDocente
+  );
+
 SET FOREIGN_KEY_CHECKS = 1;
 SET SQL_SAFE_UPDATES = 1;
