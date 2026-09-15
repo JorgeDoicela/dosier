@@ -94,6 +94,7 @@ dosier/
 
 Los scripts ubicados en `scripts/base_datos/` administran el esquema del módulo curricular con prefijo `doc_` sin alterar las tablas nativas de SIGAFI:
 
+0. `00_sigafi_esquema_y_datos_demo.sql`: Esquema maestro preexistente de SIGAFI y datos sintéticos representativos del ISTPET (LOPDP compliant para producción y defensa de grado).
 1. `01_sistema_base.sql`: Núcleo de auditoría, eventos normativos, seguridad, metadatos, tablas CoWork (`doc_cowork_documentos`) y tablas LOPDP.
 2. `02_gobernanza_y_antecedentes_curriculares.sql`: Normativas externas inalterables (CES, CACES, SENESCYT), modelos educativos institucionales, proyectos de carrera aprobados por CES, perfiles de egreso y matriz de antecedentes epistemológicos de asignaturas.
 3. `03_curriculum_pea_oficial.sql`: Arquitectura completa y normalizada del Programa de Estudio de la Asignatura (Secciones a - k: unidades, temas, RDA con aporte al perfil, prácticas, evaluación institucional 10 pts, bibliografía, observaciones y trazabilidad).

@@ -29,7 +29,8 @@ graph TD
    ```sql
    CREATE DATABASE IF NOT EXISTS sigafi_es CHARACTER SET latin1 COLLATE latin1_swedish_ci;
    ```
-3. Ejecute en orden estricto los **4 scripts SQL oficiales** ubicados en el directorio `scripts/base_datos/`:
+3. Ejecute en orden estricto los **5 scripts SQL oficiales** ubicados en el directorio `scripts/base_datos/`:
+   * **`00_sigafi_esquema_y_datos_demo.sql`:** (Requerido para entornos aislados o producción) Crea el esquema maestro de SIGAFI (`carreras` con `esInstituto = 1`, `periodos`, `mallas_periodos`, `detallemallas`, `profesores` y `asignacion_materias`) con datos sintéticos representativos del ISTPET cumpliendo con la LOPDP.
    * **`01_sistema_base.sql`:** Crea la infraestructura base de plantillas, instancias documentales, firmas electrónicas, bitácora forense de auditoría, tablas de co-redacción concurrente CoWork y tablas LOPDP.
    * **`02_gobernanza_y_antecedentes_curriculares.sql`:** Despliega el repositorio de normativas de nivel superior (CES, CACES, SENESCYT), modelos educativos institucionales del ISTPET, proyectos de carrera aprobados y matriz de antecedentes epistemológicos de asignaturas.
    * **`03_curriculum_pea_oficial.sql`:** Crea la tabla maestra `cur_pea`, las 10 tablas específicas para las secciones oficiales A a la K del PEA institucional, colaboradores y versiones.
