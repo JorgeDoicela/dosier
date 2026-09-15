@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
 
+using Microsoft.Extensions.Logging;
+
 namespace dosier_api.Controllers
 {
     [ApiController]
@@ -14,10 +16,12 @@ namespace dosier_api.Controllers
     public class PeaController : ControllerBase
     {
         private readonly IPeaService _peaService;
+        private readonly ILogger<PeaController> _logger;
 
-        public PeaController(IPeaService peaService)
+        public PeaController(IPeaService peaService, ILogger<PeaController> logger)
         {
             _peaService = peaService;
+            _logger = logger;
         }
 
         [HttpGet("{id:int}")]
@@ -51,17 +55,25 @@ namespace dosier_api.Controllers
             [FromQuery] string? estado = null,
             CancellationToken cancellationToken = default)
         {
-            var userIdStr = User.FindFirstValue("id_usuario");
-            int idUsuario = 0;
-            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int parsedId))
+            try
             {
-                idUsuario = parsedId;
+                var userIdStr = User.FindFirstValue("id_usuario");
+                int idUsuario = 0;
+                if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int parsedId))
+                {
+                    idUsuario = parsedId;
+                }
+
+                var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+                var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, cancellationToken);
+                return Ok(lista);
             }
-
-            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-
-            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, cancellationToken);
-            return Ok(lista);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[DOSIER] Error al obtener bandeja de PEAs. Periodo: {Periodo}, Carrera: {Carrera}, Estado: {Estado}", idPeriodo, idCarrera, estado);
+                return StatusCode(500, new { message = "Error interno al obtener la bandeja de supervisión de PEAs.", detalle = ex.Message });
+            }
         }
 
 

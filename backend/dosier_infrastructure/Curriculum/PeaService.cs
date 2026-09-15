@@ -10,6 +10,7 @@ using dosier_application.Academico;
 using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
 using dosier_domain.Curriculum.Entities;
+using dosier_domain.Identity.Entities;
 using dosier_infrastructure.data.models;
 
 using dosier_domain.Signatures;
@@ -1347,8 +1348,18 @@ namespace dosier_infrastructure.Curriculum
 
         public async Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, string? identifier = null, System.Threading.CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.AsNoTracking()
-                .FirstOrDefaultAsync(u => (idUsuario > 0 && u.IdUsuario == idUsuario) || (!string.IsNullOrEmpty(identifier) && (u.IdSigafi == identifier || u.EmailInstitucional == identifier)), cancellationToken);
+            User? user = null;
+            if (idUsuario > 0)
+            {
+                user = await _context.Users.AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.IdUsuario == idUsuario, cancellationToken);
+            }
+
+            if (user == null && !string.IsNullOrEmpty(identifier))
+            {
+                user = await _context.Users.AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.IdSigafi == identifier || u.EmailInstitucional == identifier, cancellationToken);
+            }
 
             if (user == null)
             {
@@ -1359,8 +1370,7 @@ namespace dosier_infrastructure.Curriculum
 
             var userRoles = await _context.UserRoles
                 .AsNoTracking()
-                .Include(ur => ur.Role)
-                .Where(ur => ur.IdUsuario == resolvedUserId && (ur.EsActivo ?? true))
+                .Where(ur => ur.IdUsuario == resolvedUserId && (ur.EsActivo ?? true) && ur.Role != null)
                 .Select(ur => ur.Role.CodigoRol)
                 .ToListAsync(cancellationToken);
 
@@ -1388,14 +1398,17 @@ namespace dosier_infrastructure.Curriculum
                 query = query.Where(p => p.Estado == estado);
             }
 
-            // Si es docente exclusivo sin rol de supervisión, solo ve sus materias
+            // Si es docente exclusivo sin rol de supervisión institucional, solo ve sus materias
             if (!isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera)
             {
-                query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+                if (!string.IsNullOrEmpty(user.IdSigafi))
+                {
+                    query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+                }
             }
-            else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad)
+            else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad && !string.IsNullOrEmpty(user.IdSigafi))
             {
-                // Coordinador de Carrera: supervisa las carreras que coordina o sus propias materias formuladas
+                // Coordinador de Carrera: supervisa las carreras que coordina o sus materias formuladas
                 var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
                     .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
                     .Select(a => a.IdCarrera!.Value)
@@ -1413,24 +1426,36 @@ namespace dosier_infrastructure.Curriculum
 
             if (!peas.Any()) return new List<PeaBandejaItemDto>();
 
-            // Carga por lotes para evitar N+1 queries
+            // Carga por lotes segura con GroupBy para prevenir colisiones de claves en diccionarios
             var carreraIds = peas.Select(p => p.IdCarrera).Distinct().ToList();
             var asignaturaIds = peas.Select(p => p.IdAsignatura).Distinct().ToList();
             var docenteIds = peas.Where(p => !string.IsNullOrEmpty(p.IdDocenteElaborador))
                                  .Select(p => p.IdDocenteElaborador!)
                                  .Distinct().ToList();
 
-            var carrerasDict = await _context.Carreras.AsNoTracking()
+            var carrerasList = await _context.Carreras.AsNoTracking()
                 .Where(c => carreraIds.Contains(c.IdCarrera))
-                .ToDictionaryAsync(c => c.IdCarrera, c => c.Carrera1, cancellationToken);
+                .Select(c => new { c.IdCarrera, c.Carrera1 })
+                .ToListAsync(cancellationToken);
+            var carrerasDict = carrerasList
+                .GroupBy(c => c.IdCarrera)
+                .ToDictionary(g => g.Key, g => g.First().Carrera1);
 
-            var asignaturasDict = await _context.Asignaturas.AsNoTracking()
+            var asignaturasList = await _context.Asignaturas.AsNoTracking()
                 .Where(a => asignaturaIds.Contains(a.IdAsignatura))
-                .ToDictionaryAsync(a => a.IdAsignatura, a => new { a.Asignatura1, a.Codigo }, cancellationToken);
+                .Select(a => new { a.IdAsignatura, a.Asignatura1, a.Codigo })
+                .ToListAsync(cancellationToken);
+            var asignaturasDict = asignaturasList
+                .GroupBy(a => a.IdAsignatura)
+                .ToDictionary(g => g.Key, g => new { g.First().Asignatura1, g.First().Codigo });
 
-            var profesoresDict = await _context.Profesores.AsNoTracking()
+            var profesoresList = await _context.Profesores.AsNoTracking()
                 .Where(p => docenteIds.Contains(p.IdProfesor))
-                .ToDictionaryAsync(p => p.IdProfesor, p => $"{p.Nombres} {p.Apellidos}".Trim(), cancellationToken);
+                .Select(p => new { p.IdProfesor, Nombre = $"{p.Nombres} {p.Apellidos}".Trim() })
+                .ToListAsync(cancellationToken);
+            var profesoresDict = profesoresList
+                .GroupBy(p => p.IdProfesor)
+                .ToDictionary(g => g.Key, g => g.First().Nombre);
 
             return peas.Select(p =>
             {
