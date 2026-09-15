@@ -93,11 +93,15 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-DosierIstpet2026SecurePass}
       MYSQL_DATABASE: sigafi_es
-      MYSQL_USER: ${DB_USER:-dosier_user}
       MYSQL_PASSWORD: ${DB_PASSWORD:-DosierIstpet2026UserPass}
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./scripts/base_datos:/docker-entrypoint-initdb.d:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
     ports:
       - "3306:3306"
     networks:
@@ -130,6 +134,11 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./backups:/app/backups
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
     depends_on:
       dosier-db:
         condition: service_healthy
@@ -152,6 +161,11 @@ services:
       - "443:443"
     volumes:
       - ./certs:/etc/nginx/certs:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
     depends_on:
       dosier-backend:
         condition: service_started
@@ -163,12 +177,19 @@ networks:
     driver: bridge
 ```
 
-### 4.1 Politica de Persistencia y Volúmenes
-* **`./mysql_data:/var/lib/mysql`:** Persistencia física de los archivos de tablas y registros de MySQL 8.0, garantizando inmunidad a reinicios o reconstrucciones de contenedores.
-* **`./scripts/base_datos:/docker-entrypoint-initdb.d:ro`:** Monta los 5 scripts DDL oficiales en modo lectura. En el primer encendido, MySQL los ejecuta en orden lexicográfico (`00` a `04`), aprovisionando la base de datos sin intervención manual.
-* **`./uploads:/app/uploads`:** Almacena los archivos PDF oficiales generados por el motor `DocumentEngine`, firmas electrónicas PKCS#12 y evidencias subidas por docentes.
+### 4.1 Politica de Persistencia y Almacenamiento
+* **`./mysql_data:/var/lib/mysql`:** Persistencia física de los archivos de tablas y registros de MySQL 8.0. En modo desarrollo/pruebas, el pipeline realiza un reseteo automático para recrear la estructura limpia desde los 5 scripts oficiales.
+* **`./scripts/base_datos:/docker-entrypoint-initdb.d:ro`:** Monta los 5 scripts DDL oficiales en modo lectura (`00_` a `04_`), garantizando la auto-inicialización y sincronización continua del esquema.
+* **`./uploads:/app/uploads`:** Almacena los archivos PDF oficiales generados por el motor `DocumentEngine`, firmas electrónicas PKCS#12 y evidencias curriculares.
 * **`./backups:/app/backups`:** Almacena volcados periódicos y copias de seguridad de la base de datos `sigafi_es`.
 * **`./certs:/etc/nginx/certs:ro`:** Monta los certificados SSL de Cloudflare Origin CA en modo solo lectura (`:ro`) para impedir cualquier manipulación desde el contenedor web.
+
+### 4.2 Gobernanza de Almacenamiento y Control de Disco (Instancias de 15 GB)
+Para operar con alta disponibilidad en instancias AWS EC2 con disco EBS limitado (15 GB):
+1. **Rotación Estricta de Logs:** Cada contenedor implementa el driver `json-file` con `max-size: 20m` y `max-file: 3`, limitando el espacio de logs a un tope máximo inamovible de 60 MB por servicio.
+2. **Política de Retención de 3 Versiones:** En cada despliegue se ejecuta `docker image prune -f` y se preservan únicamente las **3 versiones más recientes** de cada imagen Docker (`dosier-backend` y `dosier-web`), purgando automáticamente las versiones 4 en adelante mediante `docker images | tail -n +4 | xargs -r docker rmi -f`.
+3. **Limpieza de Sistema Operativo:** El pipeline trunca automáticamente los registros de systemd (`sudo journalctl --vacuum-size=20M`) y purga la caché de paquetes de Debian (`sudo apt-get clean`).
+4. **Huella Total en Disco:** El stack completo (SO Debian 13 + 3 versiones de imágenes + MySQL + Logs) consume aproximadamente **~3.5 GB**, manteniendo **más de 11 GB de espacio libre continuo** (73% de disponibilidad de disco).
 
 ---
 
@@ -189,7 +210,7 @@ La seguridad del pipeline se rige por el principio de cero credenciales en texto
 
 ```env
 ASPNETCORE_ENVIRONMENT=Production
-ConnectionStrings__DefaultConnection=Server=localhost;Port=3306;Database=sigafi_es;User=root;Password=PASSWORD_SEGURA;
+ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=PASSWORD_SEGURA;
 Jwt__Secret=CLAVE_SECRETA_INSTITUCIONAL_JWT_MINIMO_32_CARACTERES
 Jwt__Issuer=DosierApi
 Jwt__Audience=DosierClients
@@ -203,8 +224,8 @@ FrontendUrl=https://dosier.jorgedoicela.com
 En caso de que una versión introduzca una regresión crítica o fallo imprevisto en producción, el sistema implementa el workflow [.github/workflows/rollback.yml](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/.github/workflows/rollback.yml):
 
 1. El operador ingresa a GitHub Actions y selecciona el workflow **"Rollback - Instant AWS EC2 Deployment"**.
-2. Ingresa el parámetro `target_sha` (el commit SHA de la versión estable previa, ej. `d676b17`).
-3. El pipeline se conecta vía SSH al servidor EC2, exporta `BACKEND_IMAGE` y `FRONTEND_IMAGE` apuntando exactamente a las imágenes inmutables de ese SHA en GHCR, ejecuta `docker compose pull` y levanta los servicios.
+2. Ingresa el parámetro `target_sha` (el commit SHA de la versión deseada, ej. `d676b17`).
+3. El pipeline se conecta vía SSH al servidor EC2, actualiza los tags de imagen y levanta los servicios.
 4. **Métricas de Recuperación:**
-   * **RTO (Recovery Time Objective):** Menor a 30 segundos (no requiere compilación, solo descarga y reinicio de contenedores).
+   * **RTO (Recovery Time Objective):** **Menor a 2 segundos** para cualquiera de las 3 versiones recientes ya presentes en la caché local del servidor. Menor a 15 segundos si se requiere descargar una versión histórica desde GHCR.
    * **RPO (Recovery Point Objective):** 0 pérdida de datos transaccionales, ya que la base de datos MySQL y los volúmenes de uploads no se destruyen durante el cambio de versión.

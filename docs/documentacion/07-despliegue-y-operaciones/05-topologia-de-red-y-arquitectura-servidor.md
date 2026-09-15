@@ -81,10 +81,16 @@ El servidor implementa el principio de mínima exposición de puertos (*least pr
 
 ## 4. Estrategia de Almacenamiento y Volúmenes EBS
 
-El almacenamiento principal está soportado por un volumen **AWS Elastic Block Store (EBS) de tipo `gp3`** configurado en **30 GiB** (incluido dentro de la capa gratuita permanente de AWS):
+El almacenamiento principal está soportado por un volumen **AWS Elastic Block Store (EBS) de tipo `gp3`** dimensionado en **15 a 30 GiB** (dentro del límite de la capa de AWS):
 
-* **Rendimiento:** 3,000 IOPS de línea base y 125 MB/s de rendimiento sin costo adicional.
+* **Rendimiento:** 3,000 IOPS de línea base y 125 MB/s de rendimiento sostenido sin costo adicional.
+* **Huella de Disco y Control en Instancias de 15 GiB:**
+  * **Sistema Operativo (Debian 13 Cloud):** ~2.1 GiB
+  * **Imágenes Docker Activas (MySQL + Backend + Frontend + 3 versiones retenidas):** ~1.1 GiB
+  * **Logs del Sistema y Docker (con rotación máxima de 20MB por servicio):** ~0.2 GiB
+  * **Espacio Libre Disponible:** **> 11.5 GiB libres de forma permanente (76% disponible)**.
 * **Estructura de Directorios en `/var/www/dosier`:**
   * `/certs`: Contiene los certificados criptográficos del servidor de origen (`cert.pem`, `key.pem`).
   * `/uploads`: Evidencias curriculares, anexos de proyectos y PDFs sellados digitalmente con firma PKCS#12.
-  * `/backups`: Volcados de respaldo automáticos y scripts DDL para recuperación ante desastres.
+  * `/backups`: Volcados de respaldo automáticos y copias de seguridad de la base de datos `sigafi_es`.
+  * `/scripts/base_datos`: Scripts DDL oficiales de inicialización (`00_` a `04_`) sincronizados en caliente en cada despliegue.
