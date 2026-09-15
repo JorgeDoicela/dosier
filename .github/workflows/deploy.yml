@@ -290,7 +290,7 @@ jobs:
             cd ${{ env.DEPLOY_DIR }}
 
             echo "=== MODO DESARROLLO: Limpieza y reseteo automatico de Base de Datos ==="
-            docker compose down -v 2>/dev/null || true
+            docker compose down --volumes --remove-orphans 2>/dev/null || true
             sudo rm -rf ./mysql_data
 
             echo "=== Mantenimiento de Disco (Retencion de ultimas 3 versiones para Rollback Instantaneo) ==="
@@ -309,8 +309,9 @@ jobs:
 
             echo "=== Descargando imagenes Docker actualizadas ==="
             docker compose pull --quiet
-            echo "=== Levantando servicios DOSIER con datos limpios ==="
-            docker compose up -d --remove-orphans
+
+            echo "=== Levantando servicios DOSIER con datos limpios (Force Recreate) ==="
+            docker compose up -d --force-recreate --remove-orphans
             docker image prune -f
 
             echo "=== Esperando auto-inicializacion de MySQL ==="
