@@ -230,12 +230,6 @@ WHERE m.id_sistema = @idSistemaDosier
       (CONVERT(m.Nombre USING utf8mb4) = 'CONFIGURACION' AND mo.idOperaciones IN (@opVer, @opEditar))
   );
 
--- Normalización institucional: Actualizar tablaSigafi a 'profesor' para usuarios que consten en la nómina docente
-UPDATE usuarios u
-JOIN profesores p ON u.idSigafi = p.idProfesor
-SET u.tablaSigafi = 'profesor'
-WHERE u.tablaSigafi = 'alumno';
-
 -- F. Sincronizar roles de autoridades designadas hacia usuarios existentes
 INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
 SELECT u.idUsuario, 
