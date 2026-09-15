@@ -68,7 +68,7 @@ public class AuthService : IAuthService
 
         if (user != null)
         {
-            // Auto-corrección dinámica de entidad: Si el registro histórico en usuarios dice "alumno", pero la persona es Autoridad Curricular o Docente activo en SIGAFI
+            // Auto-corrección dinámica de entidad: Si el registro histórico en usuarios dice "alumno", pero la persona tiene roles de DOSIER, es Autoridad Curricular o Docente en SIGAFI
             bool esAutoridad = false;
             try
             {
@@ -77,6 +77,16 @@ public class AuthService : IAuthService
             catch
             {
                 esAutoridad = false;
+            }
+
+            bool tieneRolDosier = false;
+            try
+            {
+                tieneRolDosier = await _context.RbacUsuarioRoles.AnyAsync(ur => ur.IdUsuario == user.IdUsuario && ur.EsActivo);
+            }
+            catch
+            {
+                tieneRolDosier = false;
             }
 
             bool esProfesorActivo = false;
@@ -89,14 +99,14 @@ public class AuthService : IAuthService
                 esProfesorActivo = user.TablaSigafi == "profesor";
             }
 
-            if (user.TablaSigafi == "alumno" && (esAutoridad || esProfesorActivo))
+            if (user.TablaSigafi == "alumno" && (esAutoridad || esProfesorActivo || tieneRolDosier || user.Administrador))
             {
                 user.TablaSigafi = esProfesorActivo ? "profesor" : "otros";
                 await _context.SaveChangesAsync();
             }
 
             // Restricción institucional: En DOSIER solo ingresa personal docente, autoridades/directivos y administradores
-            if (user.TablaSigafi == "alumno" && !user.Administrador && !esAutoridad && (string.IsNullOrEmpty(_masterAdminId) || user.IdSigafi != _masterAdminId))
+            if (user.TablaSigafi == "alumno" && !user.Administrador && !esAutoridad && !tieneRolDosier && (string.IsNullOrEmpty(_masterAdminId) || user.IdSigafi != _masterAdminId))
             {
                 await _auditService.LogActionAsync(user.IdUsuario, "LOGIN_DENIED", "Acceso denegado: los estudiantes no tienen acceso a la plataforma curricular DOSIER", "SEGURIDAD");
                 return (null, null);
