@@ -1,3 +1,6 @@
+// =============================================================================
+// DOSIER Web (React 18 + Vite + TypeScript + Geist UI) - ISTPET SPA
+// =============================================================================
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet, useParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './api/AuthContext';

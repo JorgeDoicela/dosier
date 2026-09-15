@@ -1,3 +1,6 @@
+// =============================================================================
+// DOSIER API (.NET 8 Clean Architecture) - ISTPET Enterprise Web API
+// =============================================================================
 using Microsoft.EntityFrameworkCore;
 using dosier_infrastructure.Collaboration;
 using dosier_infrastructure.Security;
