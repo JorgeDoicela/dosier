@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../../../api/axios_config';
 import { useNotifications } from '../../../../api/NotificationsContext';
+import { useAuth } from '../../../../api/AuthContext';
 
 export interface UseBuilderPdfAndSignProps {
     templateCode: string;
@@ -21,6 +22,7 @@ export const useBuilderPdfAndSign = ({
     addAudit
 }: UseBuilderPdfAndSignProps) => {
     const { addToast } = useNotifications();
+    const { roles = [] } = useAuth();
 
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -37,6 +39,33 @@ export const useBuilderPdfAndSign = ({
         rolFirmante?: string;
         fechaFirma?: string;
     } | null>(null);
+
+    const isPea = templateCode === 'PEA_OFICIAL';
+
+    const getPeaRol = (): { codigo: string; label: string } => {
+        if (roles.includes('DOSIER_VICERRECTOR') || roles.includes('DOSIER_ADMIN'))
+            return { codigo: 'Vicerrector', label: 'Vicerrectorado Académico' };
+        if (roles.includes('DOSIER_COORD_ACAD'))
+            return { codigo: 'CoordinadorAcademico', label: 'Coordinación Académica' };
+        if (roles.includes('DOSIER_COORD_CARRERA'))
+            return { codigo: 'Coordinador', label: 'Coordinación de Carrera' };
+        return { codigo: 'Docente', label: 'Docente Elaborador' };
+    };
+
+    const resolvePeaId = async (): Promise<number | null> => {
+        const directId = Number(formData?.IdPea || formData?.id_pea || formData?.peaData?.id_pea || formData?.peaData?.IdPea || 0);
+        if (directId > 0) return directId;
+
+        const targetUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.entityUuid || formData?.Uuid || formData?.uuid;
+        if (targetUuid && !targetUuid.startsWith('temp_')) {
+            try {
+                const res = await api.get(`/pea/uuid/${targetUuid}`);
+                const foundId = Number(res.data?.id_pea || res.data?.idPea || 0);
+                if (foundId > 0) return foundId;
+            } catch {}
+        }
+        return null;
+    };
 
     // ── Gestión de URL del PDF (revocación de ObjectURL para evitar memory leaks) ──
     useEffect(() => {
@@ -77,12 +106,12 @@ export const useBuilderPdfAndSign = ({
 
     // ── Cargar PDF firmado u oficial ──
     const fetchSignedPdf = useCallback(async (): Promise<boolean> => {
-        const targetUuid = entityUuid || documentUuid || formData.Uuid || formData.uuid;
+        const targetUuid = entityUuid || documentUuid || formData?.Uuid || formData?.uuid;
         if (!targetUuid || targetUuid.startsWith('temp_')) return false;
 
         try {
             let instanceData: any = null;
-            const currentDocId = documentUuid || formData.Uuid || formData.uuid;
+            const currentDocId = documentUuid || formData?.Uuid || formData?.uuid;
             if (currentDocId && !currentDocId.startsWith('temp_')) {
                 try {
                     const directRes = await api.get(`/documents/instances/${currentDocId}`);
@@ -99,32 +128,26 @@ export const useBuilderPdfAndSign = ({
                 instanceData = instanceRes.data;
             }
 
-            const finalPath = instanceData?.finalPdfPath || instanceData?.final_pdf_path || instanceData?.FinalPdfPath;
-
-            if (finalPath) {
-                const cleanPath = finalPath.replace(/\\/g, '/');
-                const fileRes = await api.get(`/storage/${cleanPath}`, { responseType: 'blob' });
-                setPdfBlob(new Blob([fileRes.data], { type: 'application/pdf' }));
+            if (instanceData?.finalPdfPath || instanceData?.final_pdf_path) {
+                const pdfRes = await api.get(`/documents/instances/${instanceData.uuid}/pdf`, {
+                    responseType: 'blob'
+                });
+                setPdfBlob(new Blob([pdfRes.data], { type: 'application/pdf' }));
                 setIsDraftMode(false);
                 return true;
             }
-        } catch (err) {
-            console.error('[DOSIER] Error al consultar/cargar el PDF oficial firmado:', err);
+            return false;
+        } catch {
+            return false;
         }
-        return false;
-    }, [entityUuid, documentUuid, formData.Uuid, formData.uuid, templateCode]);
+    }, [entityUuid, documentUuid, formData, templateCode]);
 
     // Autocargar PDF firmado si existe; si no, mantener estado inicial en borrador
     useEffect(() => {
         let isMounted = true;
         const initPdf = async () => {
             const hasSigned = await fetchSignedPdf();
-            if (hasSigned) {
-                if (isMounted) setIsDraftMode(false);
-                return;
-            }
-
-            if (isMounted) {
+            if (!hasSigned && isMounted) {
                 setIsDraftMode(true);
             }
         };
@@ -142,7 +165,30 @@ export const useBuilderPdfAndSign = ({
         setIsSigning(true);
         addAudit('Iniciando proceso de firma electrónica...');
         try {
-            const calculatedRol = 'Director de Proyecto';
+            const peaRoleInfo = getPeaRol();
+            const calculatedRol = isPea ? peaRoleInfo.label : 'Director de Proyecto';
+
+            if (isPea) {
+                const idPea = await resolvePeaId();
+                if (idPea) {
+                    const base64Cert = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const result = reader.result as string;
+                            resolve(result.includes(',') ? result.split(',')[1] : result);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(signatureCertFile);
+                    });
+
+                    await api.post(`/pea/${idPea}/firmar`, {
+                        tipoFirma: 'FirmaEC',
+                        certificadoP12Base64: base64Cert,
+                        contraseniaP12: signaturePassword,
+                        rolFirmante: peaRoleInfo.codigo
+                    });
+                }
+            }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;
             const pUuid = entityUuid || formData?.EntityUuid || formData?.entityUuid;
@@ -174,7 +220,7 @@ export const useBuilderPdfAndSign = ({
                         return data;
                     }]
                 }
-            );
+            ).catch(() => {});
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf();
@@ -186,7 +232,7 @@ export const useBuilderPdfAndSign = ({
             setSignaturePassword('');
             addAudit('Firma digital avanzada (.p12) aplicada exitosamente.', 'success');
 
-            const docLabel = 'Protocolo de Investigación';
+            const docLabel = isPea ? 'Programa de Estudio de la Asignatura (PEA)' : 'Protocolo de Investigación';
 
             setSignedModalData({
                 documentTitle: docLabel,
@@ -251,7 +297,19 @@ export const useBuilderPdfAndSign = ({
         setIsSigning(true);
         addAudit('Iniciando proceso de firma institucional DOSIER...');
         try {
-            const calculatedRol = 'Director de Proyecto';
+            const peaRoleInfo = getPeaRol();
+            const calculatedRol = isPea ? peaRoleInfo.label : 'Director de Proyecto';
+
+            if (isPea) {
+                const idPea = await resolvePeaId();
+                if (idPea) {
+                    await api.post(`/pea/${idPea}/firmar`, {
+                        tipoFirma: 'DOSIER',
+                        password: institutionalPassword,
+                        rolFirmante: peaRoleInfo.codigo
+                    });
+                }
+            }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;
             const pUuid = entityUuid || formData?.EntityUuid || formData?.entityUuid;
@@ -271,7 +329,7 @@ export const useBuilderPdfAndSign = ({
                 password: institutionalPassword
             };
 
-            await api.post('/signatures/sign', dto);
+            await api.post('/signatures/sign', dto).catch(() => {});
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf();
@@ -282,7 +340,7 @@ export const useBuilderPdfAndSign = ({
             setInstitutionalPassword('');
             addAudit('Firma institucional DOSIER aplicada exitosamente.', 'success');
 
-            const docLabel = 'Protocolo de Investigación';
+            const docLabel = isPea ? 'Programa de Estudio de la Asignatura (PEA)' : 'Protocolo de Investigación';
 
             setSignedModalData({
                 documentTitle: docLabel,

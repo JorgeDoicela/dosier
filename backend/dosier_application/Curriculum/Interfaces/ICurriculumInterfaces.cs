@@ -55,5 +55,8 @@ namespace dosier_application.Curriculum.Interfaces
 
         // Sincronización con Document Instances (CoWork Yjs)
         Task<bool> SincronizarMetadataAsync(string peaUuid, string snapshotJson);
+
+        // Bandeja de Supervisión Curricular (Coordinadores, Vicerrector y Docentes)
+        Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, System.Threading.CancellationToken cancellationToken = default);
     }
 }

@@ -178,4 +178,41 @@ namespace dosier_application.Curriculum.Dtos
         public decimal CalificacionMaxima { get; set; } = 10.0m;
         public int Orden { get; set; } = 1;
     }
+
+    public class PeaBandejaItemDto
+    {
+        public int IdPea { get; set; }
+        public string Uuid { get; set; } = string.Empty;
+        public int IdCarrera { get; set; }
+        public string NombreCarrera { get; set; } = string.Empty;
+        public int IdAsignatura { get; set; }
+        public string NombreAsignatura { get; set; } = string.Empty;
+        public string? CodigoAsignatura { get; set; }
+        public string IdPeriodo { get; set; } = string.Empty;
+        public string? IdDocenteElaborador { get; set; }
+        public string? NombreDocenteElaborador { get; set; }
+        public string Modalidad { get; set; } = "Presencial";
+        public string? SemestreNivel { get; set; }
+        public string? Paralelo { get; set; }
+        public int TotalHorasAsignatura { get; set; }
+        public decimal Creditos { get; set; }
+        public string Estado { get; set; } = "Borrador";
+        public int Version { get; set; } = 1;
+        public DateTime? FechaModificacion { get; set; }
+
+        // Circuito de 4 Firmas Digitales
+        public bool FirmaDocente { get; set; }
+        public DateTime? FechaElaborado { get; set; }
+        public bool FirmaCoord { get; set; }
+        public DateTime? FechaRevisadoCoord { get; set; }
+        public bool FirmaAcad { get; set; }
+        public DateTime? FechaRevisadoAcad { get; set; }
+        public bool FirmaVicerrector { get; set; }
+        public DateTime? FechaAprobado { get; set; }
+        public int TotalFirmasCompletadas => (FirmaDocente ? 1 : 0) + (FirmaCoord ? 1 : 0) + (FirmaAcad ? 1 : 0) + (FirmaVicerrector ? 1 : 0);
+
+        // Indicadores colegiados
+        public int TotalObservacionesPendientes { get; set; }
+    }
 }
+

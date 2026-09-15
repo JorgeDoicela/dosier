@@ -1073,14 +1073,29 @@ namespace dosier_infrastructure.Curriculum
         {
             if (string.IsNullOrWhiteSpace(peaUuid) || string.IsNullOrWhiteSpace(snapshotJson)) return false;
 
-            var entity = await _context.DocPeas.FirstOrDefaultAsync(p => p.Uuid == peaUuid && p.Activo);
+            var entity = await _context.DocPeas
+                .Include(p => p.Unidades).ThenInclude(u => u.Temas)
+                .Include(p => p.ResultadosAprendizaje)
+                .Include(p => p.ActividadesPracticas)
+                .Include(p => p.Bibliografias)
+                .Include(p => p.Prerrequisitos)
+                .Include(p => p.Evaluaciones)
+                .FirstOrDefaultAsync(p => p.Uuid == peaUuid && p.Activo);
+
             if (entity == null) return false;
+
+            // Inmutabilidad bajo Ley 67 si el PEA está cerrado/aprobado
+            if (entity.Estado is "Aprobado" or "Publicado")
+            {
+                return false;
+            }
 
             try
             {
                 using var doc = System.Text.Json.JsonDocument.Parse(snapshotJson);
                 var root = doc.RootElement;
 
+                // ── 1. Metadatos Descriptivos y Textuales ──
                 if (root.TryGetProperty("ObjetivoAsignatura", out var objProp) && objProp.ValueKind == System.Text.Json.JsonValueKind.String)
                     entity.ObjetivoAsignatura = objProp.GetString();
 
@@ -1102,6 +1117,7 @@ namespace dosier_infrastructure.Curriculum
                 if (root.TryGetProperty("Nivel", out var nivProp) && nivProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(nivProp.GetString()))
                     entity.SemestreNivel = nivProp.GetString();
 
+                // ── 2. Carga Horaria y Créditos Normados ──
                 if (root.TryGetProperty("TotalHorasAsignatura", out var thProp))
                 {
                     if (thProp.ValueKind == System.Text.Json.JsonValueKind.Number && thProp.TryGetInt32(out var thVal) && thVal > 0)
@@ -1142,6 +1158,182 @@ namespace dosier_infrastructure.Curriculum
                         entity.HorasAutonomo = haParsed;
                 }
 
+                // ── 3. Sincronización Relacional: Unidades Temáticas y Subtemas ──
+                var unidadesPropFound = root.TryGetProperty("Unidades", out var unProp) || root.TryGetProperty("unidades", out unProp);
+                if (unidadesPropFound && unProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    _context.DocPeaUnidades.RemoveRange(entity.Unidades);
+                    entity.Unidades.Clear();
+
+                    int uIdx = 1;
+                    foreach (var uEl in unProp.EnumerateArray())
+                    {
+                        string titulo = "";
+                        if (uEl.TryGetProperty("titulo", out var tProp) && tProp.ValueKind == System.Text.Json.JsonValueKind.String) titulo = tProp.GetString() ?? "";
+                        else if (uEl.TryGetProperty("NombreUnidad", out var nuProp) && nuProp.ValueKind == System.Text.Json.JsonValueKind.String) titulo = nuProp.GetString() ?? "";
+                        else if (uEl.TryGetProperty("0", out var zeroProp) && zeroProp.ValueKind == System.Text.Json.JsonValueKind.String) titulo = zeroProp.GetString() ?? "";
+
+                        int cd = 0, ape = 0, ta = 0;
+                        if (uEl.TryGetProperty("horasCD", out var cdP) && cdP.TryGetInt32(out var cdV)) cd = cdV;
+                        else if (uEl.TryGetProperty("HorasDocencia", out var cdP2) && cdP2.TryGetInt32(out var cdV2)) cd = cdV2;
+
+                        if (uEl.TryGetProperty("horasAPE", out var apeP) && apeP.TryGetInt32(out var apeV)) ape = apeV;
+                        else if (uEl.TryGetProperty("HorasPracticoExp", out var apeP2) && apeP2.TryGetInt32(out var apeV2)) ape = apeV2;
+
+                        if (uEl.TryGetProperty("horasTA", out var taP) && taP.TryGetInt32(out var taV)) ta = taV;
+                        else if (uEl.TryGetProperty("HorasAutonomo", out var taP2) && taP2.TryGetInt32(out var taV2)) ta = taV2;
+
+                        int totalH = cd + ape + ta;
+
+                        string contenidos = "";
+                        if (uEl.TryGetProperty("contenidos", out var contP) && contP.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = contP.GetString() ?? "";
+                        else if (uEl.TryGetProperty("Contenidos", out var contP2) && contP2.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = contP2.GetString() ?? "";
+                        else if (uEl.TryGetProperty("1", out var oneP) && oneP.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = oneP.GetString() ?? "";
+
+                        var nuevaUnidad = new DocPeaUnidad
+                        {
+                            Uuid = Guid.NewGuid().ToString(),
+                            IdPea = entity.IdPea,
+                            NumeroUnidad = uIdx,
+                            NombreUnidad = string.IsNullOrWhiteSpace(titulo) ? $"Unidad {uIdx}" : titulo,
+                            TotalHorasUnidad = totalH,
+                            HorasDocencia = cd,
+                            HorasPracticoExp = ape,
+                            HorasAutonomo = ta,
+                            Orden = uIdx,
+                            Temas = new List<DocPeaTema>
+                            {
+                                new DocPeaTema
+                                {
+                                    Uuid = Guid.NewGuid().ToString(),
+                                    NumeroTema = 1,
+                                    TituloTema = "Contenidos y Subtemas de Aprendizaje",
+                                    DescripcionSubtemas = contenidos,
+                                    Orden = 1
+                                }
+                            }
+                        };
+                        entity.Unidades.Add(nuevaUnidad);
+                        uIdx++;
+                    }
+                }
+
+                // ── 4. Sincronización Relacional: Prerrequisitos ──
+                var prerreqPropFound = root.TryGetProperty("Prerrequisitos", out var prProp) || root.TryGetProperty("prerrequisitos", out prProp);
+                if (prerreqPropFound && prProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    _context.DocPeaPrerrequisitos.RemoveRange(entity.Prerrequisitos);
+                    entity.Prerrequisitos.Clear();
+
+                    int pIdx = 1;
+                    foreach (var prEl in prProp.EnumerateArray())
+                    {
+                        string asig = "";
+                        if (prEl.TryGetProperty("Asignatura", out var asP) && asP.ValueKind == System.Text.Json.JsonValueKind.String) asig = asP.GetString() ?? "";
+                        else if (prEl.TryGetProperty("asignatura", out var asP2) && asP2.ValueKind == System.Text.Json.JsonValueKind.String) asig = asP2.GetString() ?? "";
+                        else if (prEl.TryGetProperty("0", out var asZero) && asZero.ValueKind == System.Text.Json.JsonValueKind.String) asig = asZero.GetString() ?? "";
+
+                        string obs = "";
+                        if (prEl.TryGetProperty("Observacion", out var obP) && obP.ValueKind == System.Text.Json.JsonValueKind.String) obs = obP.GetString() ?? "";
+                        else if (prEl.TryGetProperty("observacion", out var obP2) && obP2.ValueKind == System.Text.Json.JsonValueKind.String) obs = obP2.GetString() ?? "";
+                        else if (prEl.TryGetProperty("1", out var obOne) && obOne.ValueKind == System.Text.Json.JsonValueKind.String) obs = obOne.GetString() ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(asig))
+                        {
+                            entity.Prerrequisitos.Add(new DocPeaPrerequisito
+                            {
+                                Uuid = Guid.NewGuid().ToString(),
+                                IdPea = entity.IdPea,
+                                NombreAsignatura = asig,
+                                Observacion = obs,
+                                Orden = pIdx++
+                            });
+                        }
+                    }
+                }
+
+                // ── 5. Sincronización Relacional: Actividades Prácticas y Experimentales (APE) ──
+                var practicasPropFound = root.TryGetProperty("ActividadesPracticas", out var apProp) || root.TryGetProperty("actividades_practicas", out apProp);
+                if (practicasPropFound && apProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    _context.DocPeaActividadesPracticas.RemoveRange(entity.ActividadesPracticas);
+                    entity.ActividadesPracticas.Clear();
+
+                    int prIdx = 1;
+                    foreach (var prEl in apProp.EnumerateArray())
+                    {
+                        string nombre = "";
+                        if (prEl.TryGetProperty("nombre", out var nmP) && nmP.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmP.GetString() ?? "";
+                        else if (prEl.TryGetProperty("NombrePractica", out var nmP2) && nmP2.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmP2.GetString() ?? "";
+                        else if (prEl.TryGetProperty("1", out var nmOne) && nmOne.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmOne.GetString() ?? "";
+
+                        int horas = 2;
+                        if (prEl.TryGetProperty("horas", out var hP) && hP.TryGetInt32(out var hV)) horas = hV;
+                        else if (prEl.TryGetProperty("DuracionHoras", out var hP2) && hP2.TryGetInt32(out var hV2)) horas = hV2;
+
+                        string esc = "";
+                        if (prEl.TryGetProperty("escenario", out var escP) && escP.ValueKind == System.Text.Json.JsonValueKind.String) esc = escP.GetString() ?? "";
+                        string prod = "";
+                        if (prEl.TryGetProperty("producto", out var prdP) && prdP.ValueKind == System.Text.Json.JsonValueKind.String) prod = prdP.GetString() ?? "";
+
+                        string caracterizacion = string.Join(" | ", new[] { esc, prod }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+                        if (!string.IsNullOrWhiteSpace(nombre))
+                        {
+                            entity.ActividadesPracticas.Add(new DocPeaActividadPractica
+                            {
+                                Uuid = Guid.NewGuid().ToString(),
+                                IdPea = entity.IdPea,
+                                NumeroPractica = prIdx,
+                                NombrePractica = nombre,
+                                Caracterizacion = caracterizacion,
+                                DuracionHoras = horas,
+                                Orden = prIdx++
+                            });
+                        }
+                    }
+                }
+
+                // ── 6. Sincronización Relacional: Matriz Oficial de Evaluaciones ──
+                var evalPropFound = root.TryGetProperty("Evaluaciones", out var evProp) || root.TryGetProperty("evaluaciones", out evProp);
+                if (evalPropFound && evProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    _context.DocPeaEvaluaciones.RemoveRange(entity.Evaluaciones);
+                    entity.Evaluaciones.Clear();
+
+                    int evIdx = 1;
+                    foreach (var evEl in evProp.EnumerateArray())
+                    {
+                        string nota = "";
+                        if (evEl.TryGetProperty("nota", out var ntP) && ntP.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntP.GetString() ?? "";
+                        else if (evEl.TryGetProperty("Denominacion", out var ntP2) && ntP2.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntP2.GetString() ?? "";
+                        else if (evEl.TryGetProperty("0", out var ntZero) && ntZero.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntZero.GetString() ?? "";
+
+                        string tipo = "";
+                        if (evEl.TryGetProperty("tipo", out var tpP) && tpP.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpP.GetString() ?? "";
+                        else if (evEl.TryGetProperty("TipoEvaluacion", out var tpP2) && tpP2.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpP2.GetString() ?? "";
+                        else if (evEl.TryGetProperty("1", out var tpOne) && tpOne.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpOne.GetString() ?? "";
+
+                        decimal calif = 10;
+                        if (evEl.TryGetProperty("calificacion", out var clP) && clP.TryGetDecimal(out var clV)) calif = clV;
+                        else if (evEl.TryGetProperty("CalificacionMaxima", out var clP2) && clP2.TryGetDecimal(out var clV2)) calif = clV2;
+                        else if (evEl.TryGetProperty("2", out var clTwo) && decimal.TryParse(clTwo.GetString(), out var clParsed)) calif = clParsed;
+
+                        if (!string.IsNullOrWhiteSpace(nota))
+                        {
+                            entity.Evaluaciones.Add(new DocPeaEvaluacion
+                            {
+                                Uuid = Guid.NewGuid().ToString(),
+                                IdPea = entity.IdPea,
+                                Denominacion = nota,
+                                TipoEvaluacion = tipo,
+                                CalificacionMaxima = calif,
+                                Orden = evIdx++
+                            });
+                        }
+                    }
+                }
+
                 entity.FechaModificacion = System.DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 return true;
@@ -1152,5 +1344,116 @@ namespace dosier_infrastructure.Curriculum
                 return false;
             }
         }
+
+        public async Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, System.Threading.CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario, cancellationToken)
+                ?? throw new UnauthorizedAccessException("Usuario no encontrado.");
+
+            var userRoles = await _context.UserRoles
+                .AsNoTracking()
+                .Include(ur => ur.Role)
+                .Where(ur => ur.IdUsuario == idUsuario && (ur.EsActivo ?? true))
+                .Select(ur => ur.Role.CodigoRol)
+                .ToListAsync(cancellationToken);
+
+            bool isAdmin = user.Administrador || userRoles.Contains("DOSIER_ADMIN");
+            bool isVicerrector = userRoles.Contains("DOSIER_VICERRECTOR");
+            bool isCoordAcad = userRoles.Contains("DOSIER_COORD_ACAD");
+            bool isCoordCarrera = userRoles.Contains("DOSIER_COORD_CARRERA");
+
+            var query = _context.DocPeas.AsNoTracking()
+                .Include(p => p.Observaciones)
+                .Where(p => p.Activo);
+
+            if (!string.IsNullOrWhiteSpace(idPeriodo) && idPeriodo != "todos")
+            {
+                query = query.Where(p => p.IdPeriodo == idPeriodo);
+            }
+
+            if (idCarrera.HasValue && idCarrera.Value > 0)
+            {
+                query = query.Where(p => p.IdCarrera == idCarrera.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(estado) && estado != "todos")
+            {
+                query = query.Where(p => p.Estado == estado);
+            }
+
+            // Si es docente exclusivo sin rol de supervisión, solo ve sus materias
+            if (!isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera)
+            {
+                query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+            }
+
+            var peas = await query
+                .OrderByDescending(p => p.FechaModificacion)
+                .ToListAsync(cancellationToken);
+
+            if (!peas.Any()) return new List<PeaBandejaItemDto>();
+
+            // Carga por lotes para evitar N+1 queries
+            var carreraIds = peas.Select(p => p.IdCarrera).Distinct().ToList();
+            var asignaturaIds = peas.Select(p => p.IdAsignatura).Distinct().ToList();
+            var docenteIds = peas.Where(p => !string.IsNullOrEmpty(p.IdDocenteElaborador))
+                                 .Select(p => p.IdDocenteElaborador!)
+                                 .Distinct().ToList();
+
+            var carrerasDict = await _context.Carreras.AsNoTracking()
+                .Where(c => carreraIds.Contains(c.IdCarrera))
+                .ToDictionaryAsync(c => c.IdCarrera, c => c.Carrera1, cancellationToken);
+
+            var asignaturasDict = await _context.Asignaturas.AsNoTracking()
+                .Where(a => asignaturaIds.Contains(a.IdAsignatura))
+                .ToDictionaryAsync(a => a.IdAsignatura, a => new { a.Asignatura1, a.Codigo }, cancellationToken);
+
+            var profesoresDict = await _context.Profesores.AsNoTracking()
+                .Where(p => docenteIds.Contains(p.IdProfesor))
+                .ToDictionaryAsync(p => p.IdProfesor, p => $"{p.Nombres} {p.Apellidos}".Trim(), cancellationToken);
+
+            return peas.Select(p =>
+            {
+                carrerasDict.TryGetValue(p.IdCarrera, out var nomCarrera);
+                asignaturasDict.TryGetValue(p.IdAsignatura, out var asigInfo);
+                string? nomDocente = null;
+                if (!string.IsNullOrEmpty(p.IdDocenteElaborador))
+                {
+                    profesoresDict.TryGetValue(p.IdDocenteElaborador, out nomDocente);
+                }
+
+                return new PeaBandejaItemDto
+                {
+                    IdPea = p.IdPea,
+                    Uuid = p.Uuid,
+                    IdCarrera = p.IdCarrera,
+                    NombreCarrera = nomCarrera ?? "Carrera ISTPET",
+                    IdAsignatura = p.IdAsignatura,
+                    NombreAsignatura = asigInfo?.Asignatura1 ?? "Asignatura",
+                    CodigoAsignatura = asigInfo?.Codigo,
+                    IdPeriodo = p.IdPeriodo,
+                    IdDocenteElaborador = p.IdDocenteElaborador,
+                    NombreDocenteElaborador = nomDocente,
+                    Modalidad = p.Modalidad,
+                    SemestreNivel = p.SemestreNivel,
+                    Paralelo = p.Paralelo,
+                    TotalHorasAsignatura = p.TotalHorasAsignatura,
+                    Creditos = p.Creditos,
+                    Estado = p.Estado,
+                    Version = p.Version,
+                    FechaModificacion = p.FechaModificacion,
+                    FirmaDocente = !string.IsNullOrEmpty(p.FirmaElaboradoDocente),
+                    FechaElaborado = p.FechaElaborado,
+                    FirmaCoord = !string.IsNullOrEmpty(p.FirmaRevisadoCoord),
+                    FechaRevisadoCoord = p.FechaRevisadoCoord,
+                    FirmaAcad = !string.IsNullOrEmpty(p.FirmaRevisadoAcad),
+                    FechaRevisadoAcad = p.FechaRevisadoAcad,
+                    FirmaVicerrector = !string.IsNullOrEmpty(p.FirmaAprobadoVicerrector),
+                    FechaAprobado = p.FechaAprobado,
+                    TotalObservacionesPendientes = p.Observaciones?.Count(o => o.Estado == "Pendiente") ?? 0
+                };
+            }).ToList();
+        }
     }
 }
+

@@ -222,14 +222,6 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         var user = link.Usuario;
 
-        if (user.TablaSigafi != "otros")
-        {
-            link.Utilizado = true;
-            link.FechaUtilizado = DateTime.Now;
-            link.IpUtilizacion = ipAddress;
-            await _context.SaveChangesAsync();
-        }
-
         string? passwordOriginal = null;
         bool esHashInaccesible = false;
 
@@ -249,6 +241,15 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         if (passwordOriginal == null && !esHashInaccesible)
             esHashInaccesible = true;
+
+        // Si la contraseña original es accesible en texto claro, se quema el token tras mostrarla
+        if (passwordOriginal != null && !esHashInaccesible)
+        {
+            link.Utilizado = true;
+            link.FechaUtilizado = DateTime.Now;
+            link.IpUtilizacion = ipAddress;
+            await _context.SaveChangesAsync();
+        }
 
         await _auditService.LogActionAsync(user.IdUsuario, "PASSWORD_RECOVERY_VIEWED",
             $"Contraseña consultada mediante token de recuperación desde IP {ipAddress}. " +
@@ -270,11 +271,6 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         if (user == null)
         {
             throw new InvalidOperationException("El usuario no existe o está inactivo.");
-        }
-
-        if (user.TablaSigafi != "otros")
-        {
-            throw new InvalidOperationException("Las cuentas institucionales deben cambiar su contraseña a través del portal de autogestión de la institución (SIGAFI).");
         }
 
         if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
@@ -455,11 +451,6 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         if (user == null || !user.Activo)
         {
             throw new InvalidOperationException("El usuario asociado no existe o está inactivo.");
-        }
-
-        if (user.TablaSigafi != "otros")
-        {
-            throw new InvalidOperationException("Solo los evaluadores externos pueden restablecer su contraseña local.");
         }
 
         if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)

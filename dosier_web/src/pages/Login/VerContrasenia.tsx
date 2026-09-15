@@ -234,133 +234,97 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
                     </div>
                 )}
 
-                {/* Estado: Hash inaccesible */}
+                {/* Estado: Hash inaccesible / Establecer nueva contraseña */}
                 {estado === 'hash_inaccesible' && (
                     <div className="space-y-5 animate-fade-up">
-                        {esRevisorExterno ? (
-                            restablecidoConExito ? (
-                                <div className="space-y-5 animate-fade-up">
-                                    <div className="flex items-start gap-3 p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 text-emerald-500">
-                                        <ShieldCheck size={18} className="shrink-0 mt-0.5" strokeWidth={1.5} />
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-semibold uppercase tracking-widest">
-                                                Contraseña Restablecida
-                                            </p>
-                                            <p className="text-[12px] text-text-dim leading-relaxed">
-                                                Tu contraseña ha sido actualizada exitosamente. Ya puedes iniciar sesión con tus nuevas credenciales.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <Link
-                                        to="/auth/login"
-                                        className="btn-vercel-primary w-full h-11 flex items-center justify-center gap-2 no-underline text-[11px] uppercase tracking-widest font-semibold"
-                                    >
-                                        Ir al inicio de sesión
-                                    </Link>
-                                </div>
-                            ) : (
-                                <form onSubmit={handleRestablecer} className="space-y-4">
+                        {restablecidoConExito ? (
+                            <div className="space-y-5 animate-fade-up">
+                                <div className="flex items-start gap-3 p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 text-emerald-500">
+                                    <ShieldCheck size={18} className="shrink-0 mt-0.5" strokeWidth={1.5} />
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-dim">
-                                            Establecer Nueva Contraseña
-                                        </p>
-                                        <p className="text-[11px] text-text-dim leading-relaxed">
-                                            Por favor define una contraseña nueva y segura para tu usuario (<strong>{nombre}</strong>).
-                                        </p>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Nueva Contraseña</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showNewPassword ? "text" : "password"}
-                                                required
-                                                className="input-vercel h-10 pl-3 pr-10 py-2 text-xs text-text-main"
-                                                placeholder="Mínimo 8 caracteres (letras y números)"
-                                                value={formPassword.newPassword}
-                                                onChange={e => setFormPassword(prev => ({ ...prev, newPassword: e.target.value }))}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer bg-transparent border-none"
-                                            >
-                                                {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Confirmar Nueva Contraseña</label>
-                                        <div className="relative">
-                                            <input
-                                                type={showConfirmPassword ? "text" : "password"}
-                                                required
-                                                className="input-vercel h-10 pl-3 pr-10 py-2 text-xs text-text-main"
-                                                placeholder="Repita la nueva contraseña"
-                                                value={formPassword.confirmPassword}
-                                                onChange={e => setFormPassword(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer bg-transparent border-none"
-                                            >
-                                                {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={guardando}
-                                        className="btn-vercel-primary w-full h-11 flex items-center justify-center gap-2 cursor-pointer font-semibold uppercase tracking-widest text-[11px] disabled:opacity-50 mt-2"
-                                    >
-                                        {guardando ? (
-                                            <>
-                                                <Loader2 className="animate-spin" size={14} />
-                                                <span>Guardando...</span>
-                                            </>
-                                        ) : (
-                                            <span>Guardar Contraseña</span>
-                                        )}
-                                    </button>
-                                </form>
-                            )
-                        ) : (
-                            <>
-                                <div className="flex items-start gap-3 p-4 rounded-lg border border-border-thin bg-surface/40">
-                                    <AlertTriangle size={18} className="text-text-dim shrink-0 mt-0.5" strokeWidth={1.5} />
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-text-dim">
-                                            Contraseña encriptada
+                                        <p className="text-[10px] font-semibold uppercase tracking-widest">
+                                            Contraseña Restablecida
                                         </p>
                                         <p className="text-[12px] text-text-dim leading-relaxed">
-                                            Tu contraseña está almacenada con encriptación avanzada en el sistema 
-                                            institucional y no puede ser recuperada automáticamente.
+                                            Tu contraseña ha sido actualizada exitosamente. Ya puedes iniciar sesión con tus nuevas credenciales.
                                         </p>
                                     </div>
                                 </div>
-
-                                <div className="p-4 rounded-lg border border-border-thin bg-surface/20 space-y-2">
-                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-text-dim">
-                                        ¿Qué puedo hacer?
-                                    </p>
-                                    <ul className="text-[11px] text-text-dim space-y-1.5 leading-relaxed list-none p-0">
-                                        <li>• Contacta al administrador de SIGAFI de tu institución</li>
-                                        <li>• Solicita el restablecimiento de contraseña en la Dirección de Sistemas</li>
-                                        <li>• Intenta con tu contraseña de SIGAFI habitual</li>
-                                    </ul>
-                                </div>
-
                                 <Link
                                     to="/auth/login"
-                                    className="flex items-center justify-center gap-2 w-full h-10 text-[10px] font-medium text-text-dim hover:text-text-main transition-colors uppercase tracking-widest no-underline"
+                                    className="btn-vercel-primary w-full h-11 flex items-center justify-center gap-2 no-underline text-[11px] uppercase tracking-widest font-semibold"
                                 >
-                                    <ArrowLeft size={12} />
-                                    Volver al inicio de sesión
+                                    Ir al inicio de sesión
                                 </Link>
-                            </>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleRestablecer} className="space-y-4">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-text-dim">
+                                        Establecer Nueva Contraseña
+                                    </p>
+                                    <p className="text-[11px] text-text-dim leading-relaxed">
+                                        Tu contraseña está protegida institucionalmente. Por favor define una contraseña nueva y segura para tu cuenta (<strong>{nombre}</strong>).
+                                    </p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Nueva Contraseña</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showNewPassword ? "text" : "password"}
+                                            required
+                                            className="input-vercel h-10 pl-3 pr-10 py-2 text-xs text-text-main"
+                                            placeholder="Mínimo 8 caracteres (letras y números)"
+                                            value={formPassword.newPassword}
+                                            onChange={e => setFormPassword(prev => ({ ...prev, newPassword: e.target.value }))}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword(!showNewPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer bg-transparent border-none"
+                                        >
+                                            {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Confirmar Nueva Contraseña</label>
+                                    <div className="relative">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            required
+                                            className="input-vercel h-10 pl-3 pr-10 py-2 text-xs text-text-main"
+                                            placeholder="Repita la nueva contraseña"
+                                            value={formPassword.confirmPassword}
+                                            onChange={e => setFormPassword(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer bg-transparent border-none"
+                                        >
+                                            {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={guardando}
+                                    className="btn-vercel-primary w-full h-11 flex items-center justify-center gap-2 cursor-pointer font-semibold uppercase tracking-widest text-[11px] disabled:opacity-50 mt-2"
+                                >
+                                    {guardando ? (
+                                        <>
+                                            <Loader2 className="animate-spin" size={14} />
+                                            <span>Guardando...</span>
+                                        </>
+                                    ) : (
+                                        <span>Guardar Contraseña</span>
+                                    )}
+                                </button>
+                            </form>
                         )}
                     </div>
                 )}

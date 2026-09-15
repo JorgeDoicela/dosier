@@ -440,7 +440,7 @@ public class AuthController : ControllerBase
                 esHashInaccesible = true,
                 nombre = resultado.NombreUsuario,
                 esRevisorExterno = resultado.EsRevisorExterno,
-                message = "Tu contraseña está almacenada de forma encriptada en el sistema institucional y no puede ser recuperada. Contacta al administrador para restablecerla."
+                message = "Tu contraseña está protegida y encriptada. Puedes definir una nueva contraseña a continuación."
             });
 
         return Ok(new
@@ -453,7 +453,7 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Cambia la contraseña del usuario autenticado actualmente si no es institucional (ej. evaluadores externos).
+    /// Cambia la contraseña del usuario autenticado actualmente.
     /// </summary>
     [HttpPost("cambiar-contrasenia")]
     [Authorize]
@@ -519,7 +519,7 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Restablece la contraseña ordinaria de revisores externos usando el token de recuperación.
+    /// Restablece la contraseña de acceso usando el token de recuperación.
     /// </summary>
     [HttpPost("restablecer-contrasenia-recuperacion")]
     [AllowAnonymous]

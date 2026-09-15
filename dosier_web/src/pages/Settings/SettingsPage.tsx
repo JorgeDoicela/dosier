@@ -347,90 +347,78 @@ const SettingsPage: React.FC = () => {
                             Seguridad y Contraseña
                         </h2>
 
-                        {isRevisor ? (
-                            <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-                                <p className="text-xs text-text-dim leading-relaxed">
-                                    Por motivos de seguridad, es recomendable cambiar su contraseña temporal por una contraseña robusta y personal.
-                                </p>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Contraseña Actual</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
-                                            placeholder="Ingrese su contraseña actual"
-                                            value={passwordForm.currentPassword}
-                                            onChange={e => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
-                                        >
-                                            {showCurrentPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Nueva Contraseña</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showNewPassword ? "text" : "password"}
-                                            className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
-                                            placeholder="Mínimo 8 caracteres (letras y números)"
-                                            value={passwordForm.newPassword}
-                                            onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
-                                        >
-                                            {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Confirmar Nueva Contraseña</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
-                                            placeholder="Repita la nueva contraseña"
-                                            value={passwordForm.confirmPassword}
-                                            onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
-                                        >
-                                            {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-end pt-2">
+                        <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+                            <p className="text-xs text-text-dim leading-relaxed">
+                                Actualice su contraseña de acceso a DOSIER. Por motivos de seguridad, debe tener al menos 8 caracteres e incluir letras y números.
+                            </p>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Contraseña Actual</label>
+                                <div className="relative">
+                                    <input
+                                        type={showCurrentPassword ? "text" : "password"}
+                                        className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
+                                        placeholder="Ingrese su contraseña actual"
+                                        value={passwordForm.currentPassword}
+                                        onChange={e => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                                    />
                                     <button
-                                        type="submit"
-                                        disabled={isChangingPassword}
-                                        className="btn-vercel-primary text-xs"
+                                        type="button"
+                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
                                     >
-                                        {isChangingPassword && <Loader2 className="animate-spin mr-1.5" size={14} />}
-                                        Actualizar Contraseña
+                                        {showCurrentPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                                     </button>
                                 </div>
-                            </form>
-                        ) : (
-                            <div className="flex items-start gap-3 p-4 bg-surface border border-border-thin rounded-xl max-w-2xl">
-                                <Info size={16} className="text-brand mt-0.5 shrink-0" />
-                                <div className="space-y-1">
-                                    <h4 className="text-xs font-semibold text-text-main">Cuenta Gestionada Institucionalmente</h4>
-                                    <p className="text-[11px] text-text-dim leading-relaxed">
-                                        Tu cuenta está vinculada al sistema de identidad institucional (SIGAFI / Microsoft SSO). Por motivos de seguridad y consistencia, el cambio de credenciales debe realizarse directamente a través del portal de autogestión de la institución, no de forma local en esta aplicación.
-                                    </p>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Nueva Contraseña</label>
+                                <div className="relative">
+                                    <input
+                                        type={showNewPassword ? "text" : "password"}
+                                        className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
+                                        placeholder="Mínimo 8 caracteres (letras y números)"
+                                        value={passwordForm.newPassword}
+                                        onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+                                    >
+                                        {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
                                 </div>
                             </div>
-                        )}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-text-dim">Confirmar Nueva Contraseña</label>
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        className="w-full bg-surface border border-border-thin rounded-lg pl-3 pr-10 py-2 text-xs text-text-main focus:outline-none focus:border-brand"
+                                        placeholder="Repita la nueva contraseña"
+                                        value={passwordForm.confirmPassword}
+                                        onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-main transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex justify-end pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={isChangingPassword}
+                                    className="btn-vercel-primary text-xs"
+                                >
+                                    {isChangingPassword && <Loader2 className="animate-spin mr-1.5" size={14} />}
+                                    Actualizar Contraseña
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 )}
             </div>

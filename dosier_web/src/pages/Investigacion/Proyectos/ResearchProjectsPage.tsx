@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../../components/Common/PageHeader';
 import {
     ClipboardList, Plus, ArrowRight, Calendar, AlertCircle,
@@ -13,6 +13,8 @@ import { useWorkflowStates } from '../../../hooks/useWorkflowStates';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { useConfirm } from '../../../api/ConfirmContext';
 import { useProjectPreferences } from './hooks/useProjectPreferences';
+import { PeaSupervisionTray } from './components/PeaSupervisionTray';
+
 
 export interface ProyectoResumen {
     uuid: string;
@@ -51,10 +53,22 @@ const formatNombre = (name?: string) => {
 };
 
 const ResearchProjectsPage = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') === 'investigacion' ? 'investigacion' : 'pea';
+    const setActiveTab = (tab: 'pea' | 'investigacion') => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            if (tab === 'pea') next.delete('tab');
+            else next.set('tab', tab);
+            return next;
+        });
+    };
+
     const { states, getEstadoConfig } = useWorkflowStates();
     const { addToast } = useNotifications();
     const confirm = useConfirm();
     const [showWizard, setShowWizard] = useState(false);
+
     
     const [proyectos, setProyectos] = useState<ProyectoResumen[]>([]);
     const [loading, setLoading] = useState(true);
@@ -335,12 +349,14 @@ const ResearchProjectsPage = () => {
         <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-10">
             <PageHeader
                 kicker="Gestión Curricular Institucional"
-                icon={ClipboardList}
-                title="Supervisión de Documentación y Planificación PEA"
+                icon={activeTab === 'pea' ? BookOpen : ClipboardList}
+                title={activeTab === 'pea' ? "Supervisión de Programas de Estudio (PEA)" : "Gestión de Propuestas y Proyectos de Investigación"}
                 description={
                     <span className="flex flex-col md:flex-row md:items-center gap-x-2 gap-y-1">
                         <span>
-                            Supervise los instrumentos curriculares PEA y portafolios docentes registrados en el sistema, valide su avance y estados colegiados.
+                            {activeTab === 'pea'
+                                ? "Supervise los instrumentos curriculares PEA oficiales del ISTPET, valide la carga horaria y audite el circuito colegiado de firmas."
+                                : "Supervise las propuestas de investigación, postulaciones y expedientes institucionales registrados en el sistema."}
                         </span>
                         {refreshing && (
                             <span className="flex items-center gap-1 text-brand text-[10px] uppercase tracking-wider font-mono animate-pulse shrink-0">
@@ -351,23 +367,66 @@ const ResearchProjectsPage = () => {
                     </span>
                 }
             >
-                <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                    <button
-                        onClick={() => setShowWizard(true)}
-                        className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
-                    >
-                        <Plus size={14} strokeWidth={3} />
-                        Nuevo Instrumento PEA
-                    </button>
-                </div>
+                {activeTab === 'investigacion' ? (
+                    <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                        <button
+                            onClick={() => setShowWizard(true)}
+                            className="btn-vercel-primary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold cursor-pointer"
+                        >
+                            <Plus size={14} strokeWidth={3} />
+                            Nueva Propuesta
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                        <Link
+                            to="/documentacion/mis-proyectos"
+                            className="btn-vercel-secondary h-10 px-4 flex items-center justify-center gap-2 rounded-xl text-xs font-semibold"
+                        >
+                            <BookOpen size={14} />
+                            <span>Mis Asignaturas (Docente)</span>
+                        </Link>
+                    </div>
+                )}
             </PageHeader>
 
-            {error && (
-                <div className="badge-vercel-error !rounded-xl !p-4 mb-6 w-full text-sm flex items-center gap-3">
-                    <AlertCircle size={18} />
-                    <span>{error}</span>
-                </div>
-            )}
+            {/* ── SELECTOR DE PESTAÑAS (VERCEL GEIST TABS) ── */}
+            <div className="flex items-center gap-1 p-1 bg-surface border border-border-thin rounded-xl w-fit">
+                <button
+                    onClick={() => setActiveTab('pea')}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                        activeTab === 'pea'
+                            ? 'bg-text-main text-bg-deep shadow-xs'
+                            : 'text-text-dim hover:text-text-main'
+                    }`}
+                >
+                    <BookOpen size={14} />
+                    <span>Programas de Estudio (PEA)</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('investigacion')}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                        activeTab === 'investigacion'
+                            ? 'bg-text-main text-bg-deep shadow-xs'
+                            : 'text-text-dim hover:text-text-main'
+                    }`}
+                >
+                    <ClipboardList size={14} />
+                    <span>Proyectos de Investigación</span>
+                </button>
+            </div>
+
+            {activeTab === 'pea' ? (
+                <PeaSupervisionTray />
+            ) : (
+                <>
+                    {error && (
+                        <div className="badge-vercel-error !rounded-xl !p-4 mb-6 w-full text-sm flex items-center gap-3">
+                            <AlertCircle size={18} />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
 
             {/* ── SECCIÓN DE FILTROS ── */}
             {!error && !loading && (
@@ -623,6 +682,8 @@ const ResearchProjectsPage = () => {
                     />
                 </div>
             </section>
+            </>
+            )}
 
             {showWizard && <CreateProjectModal onClose={() => setShowWizard(false)} />}
 

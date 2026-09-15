@@ -59,8 +59,16 @@ Para evitar revisiones informales en hojas dispersas o correos electrónicos, DO
 
 ---
 
-## 5. Herencia Curricular y Clonación entre Períodos
+---
 
-Para reducir el esfuerzo administrativo repetitivo sin incurrir en duplicaciones ciegas:
-* **Clonación Asistida (`ClonarPeaPeriodoAsync`):** Al iniciar un nuevo ciclo lectivo, el docente o coordinador puede clonar la estructura pedagógica de un PEA aprobado en un período anterior hacia el nuevo período académico.
-* **Revalidación de Contexto Institucional:** La clonación no copia ciegamente identificadores anteriores; revalida las horas de la malla vigente (`mallas_periodos`), las autoridades en funciones y el nuevo distributivo docente de SIGAFI, iniciando el nuevo PEA en estado `Borrador` para su contextualización.
+## 6. Bandeja de Supervisión Curricular Institucional
+
+Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), el endpoint `GET /api/pea/bandeja` provee la vista consolidada de los instrumentos microcurriculares:
+
+* **Filtros de Consulta:** Permite filtrar por período académico (`idPeriodo`), carrera (`idCarrera`) y estado del documento (`estado`).
+* **Seguridad y Alcance RBAC:**
+  * Administrador, Vicerrector y Coordinador Académico: Acceso irrestricto a todas las carreras y asignaturas del instituto (`esInstituto = 1`).
+  * Coordinador de Carrera: Supervisión acotada a las materias de su carrera respectiva.
+  * Docente: Visualización exclusiva de sus cátedras asignadas.
+* **Optimización de Carga:** Mapeo mediante carga por lotes (batching) en memoria de diccionarios de carreras, asignaturas y profesores para erradicar el problema de consultas N+1 en bases de datos relacionales.
+

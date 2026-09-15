@@ -1,0 +1,9 @@
+export { PeaGeneralSection } from './PeaGeneralSection';
+export { PeaCharacterizationSection } from './PeaCharacterizationSection';
+export { PeaCompetenciesSection } from './PeaCompetenciesSection';
+export { PeaContentsSection } from './PeaContentsSection';
+export { PeaMethodologySection } from './PeaMethodologySection';
+export { PeaResourcesSection } from './PeaResourcesSection';
+export { PeaEvaluationSection } from './PeaEvaluationSection';
+export { PeaBibliographySection } from './PeaBibliographySection';
+export { PeaSignaturesSection } from './PeaSignaturesSection';

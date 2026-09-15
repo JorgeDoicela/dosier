@@ -31,6 +31,17 @@ import { ImpactSection }          from '../../../components/DOSIER/sections/Impa
 import { BibliographySection }    from '../../../components/DOSIER/sections/BibliographySection';
 import { AgnosticSection }        from '../../../components/DOSIER/sections/AgnosticSection';
 import { MultiSectionTableSection } from '../../../components/DOSIER/sections/MultiSectionTableSection';
+import {
+    PeaGeneralSection,
+    PeaCharacterizationSection,
+    PeaCompetenciesSection,
+    PeaContentsSection,
+    PeaMethodologySection,
+    PeaResourcesSection,
+    PeaEvaluationSection,
+    PeaBibliographySection,
+    PeaSignaturesSection
+} from '../../../components/DOSIER/sections/pea';
 
 /**
  * Mapa de nombre string de componente → Componente React real
@@ -44,7 +55,18 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
     'ImpactSection': ImpactSection,
     'BibliographySection': BibliographySection,
     'AgnosticSection': AgnosticSection,
-    'MultiSectionTableSection': MultiSectionTableSection
+    'MultiSectionTableSection': MultiSectionTableSection,
+
+    // ── PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA) ────────────────
+    'PeaGeneralSection': PeaGeneralSection,
+    'PeaCharacterizationSection': PeaCharacterizationSection,
+    'PeaCompetenciesSection': PeaCompetenciesSection,
+    'PeaContentsSection': PeaContentsSection,
+    'PeaMethodologySection': PeaMethodologySection,
+    'PeaResourcesSection': PeaResourcesSection,
+    'PeaEvaluationSection': PeaEvaluationSection,
+    'PeaBibliographySection': PeaBibliographySection,
+    'PeaSignaturesSection': PeaSignaturesSection
 };
 
 /**
@@ -61,6 +83,17 @@ export const DocumentComponentRegistry: Record<string, React.ComponentType<any>>
     'impactos':       ImpactSection,
     'cronograma':     TimelineSection,
     'bibliografia':   BibliographySection,
+
+    // ── PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA) ────────────────
+    'pea_general_section':          PeaGeneralSection,
+    'pea_characterization_section': PeaCharacterizationSection,
+    'pea_competencies_rda_section': PeaCompetenciesSection,
+    'pea_contents_section':         PeaContentsSection,
+    'pea_methodology_section':      PeaMethodologySection,
+    'pea_resources_section':        PeaResourcesSection,
+    'pea_evaluation_section':       PeaEvaluationSection,
+    'pea_bibliography_section':     PeaBibliographySection,
+    'pea_signatures_section':       PeaSignaturesSection,
 };
 
 /**

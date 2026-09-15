@@ -254,3 +254,51 @@ export const subsanarObservacionPea = (idObs: number, respuestaDocente: string):
 
 export const getTrazabilidadPea = (id: number): Promise<PeaTrazabilidadDto[]> =>
     api.get(`/pea/${id}/trazabilidad`).then(r => r.data);
+
+export interface PeaBandejaItemDto {
+    id_pea: number;
+    uuid: string;
+    id_carrera: number;
+    nombre_carrera: string;
+    id_asignatura: number;
+    nombre_asignatura: string;
+    codigo_asignatura?: string;
+    id_periodo: string;
+    id_docente_elaborador?: string;
+    nombre_docente_elaborador?: string;
+    modalidad: string;
+    semestre_nivel?: string;
+    paralelo?: string;
+    total_horas_asignatura: number;
+    creditos: number;
+    estado: string;
+    version: number;
+    fecha_modificacion?: string;
+
+    // Circuito de 4 Firmas
+    firma_docente: boolean;
+    fecha_elaborado?: string;
+    firma_coord: boolean;
+    fecha_revisado_coord?: string;
+    firma_acad: boolean;
+    fecha_revisado_acad?: string;
+    firma_vicerrector: boolean;
+    fecha_aprobado?: string;
+    total_firmas_completadas: number;
+
+    total_observaciones_pendientes: number;
+}
+
+export const getBandejaPeas = (params?: {
+    idPeriodo?: string;
+    idCarrera?: number;
+    estado?: string;
+}): Promise<PeaBandejaItemDto[]> =>
+    api.get('/pea/bandeja', {
+        params: {
+            idPeriodo: params?.idPeriodo,
+            idCarrera: params?.idCarrera,
+            estado: params?.estado
+        }
+    }).then(r => r.data);
+

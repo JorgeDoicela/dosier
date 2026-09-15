@@ -44,6 +44,25 @@ namespace dosier_api.Controllers
             return Ok(pea);
         }
 
+        [HttpGet("bandeja")]
+        public async Task<IActionResult> GetBandeja(
+            [FromQuery] string? idPeriodo = null,
+            [FromQuery] int? idCarrera = null,
+            [FromQuery] string? estado = null,
+            CancellationToken cancellationToken = default)
+        {
+            var userIdStr = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int idUsuario))
+                return Unauthorized(new { message = "Identificador de usuario inválido en la sesión." });
+
+            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, cancellationToken);
+            return Ok(lista);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> Guardar([FromBody] PeaDto dto)
         {

@@ -38,19 +38,17 @@ graph TD
 
 ## 3. Desglose de Secciones Modulares del PEA Oficial (A - K)
 
-| Sección | Componente React | Funcionalidad y Validación |
-| :--- | :--- | :--- |
-| **Sección A: Carátula** | `SectionACover.tsx` | Presentación formal institucional del ISTPET, logotipos, carrera, período lectivo y código de verificación. |
-| **Sección B: Datos Generales** | `SectionBGeneralData.tsx` | Muestra código, nivel, campo de formación, créditos y horas (CD, APE, TA). Sincronizado directamente desde `detallemallas` de SIGAFI. |
-| **Sección C: Objetivos** | `SectionCObjectives.tsx` | Registro del objetivo general y específicos de la asignatura articulados con la titulación. |
-| **Sección D: Competencias** | `SectionDCompetencies.tsx` | Competencias genéricas institucionales y específicas del perfil profesional. |
-| **Sección E: Resultados** | `SectionELearningOutcomes.tsx` | Formulación de resultados de aprendizaje con ponderación y niveles de logro (Inicial, Medio, Alto). |
-| **Sección F: Contenidos Temáticos** | `SectionFContents.tsx` | Matriz modular de unidades, temas y distribución horaria. Valida en tiempo real que la sumatoria de horas coincida con la malla de SIGAFI. Soporta co-redacción con `<CoWorkField>`. |
-| **Sección G: Metodología** | `SectionGMethodology.tsx` | Selección de métodos didácticos alineados con el Modelo Educativo Institucional del ISTPET. |
-| **Sección H: Recursos** | `SectionHResources.tsx` | Equipamiento de talleres, laboratorios tecnológicos y software requerido para la cátedra. |
-| **Sección I: Evaluación** | `SectionIEvaluation.tsx` | Criterios y ponderaciones de evaluación sumativa y formativa reglamentadas por el ISTPET. |
-| **Sección J: Bibliografía** | `SectionJBibliography.tsx` | Catálogo de textos básicos y complementarios con validación de normas APA 7ma edición y disponibilidad bibliotecaria. |
-| **Sección K: Firmas Oficiales** | `SectionKSignatures.tsx` | Visualización del estado del circuito formal de 4 firmas con sellos de tiempo y validez criptográfica. |
+| Sección | Componente React | Ubicación | Funcionalidad y Validación |
+| :--- | :--- | :--- | :--- |
+| **Sección A: Datos Generales** | `PeaGeneralSection.tsx` | `src/components/DOSIER/sections/pea/` | Muestra código, nivel, modalidad, carrera, créditos y distribución de horas (CD, APE, TA). Sincronizado con SIGAFI e interactivo con CoWork. |
+| **Sección B y C: Objetivo y Prerrequisitos** | `PeaCharacterizationSection.tsx` | `src/components/DOSIER/sections/pea/` | Objetivo formativo de la asignatura en CoWorkEditor y tabla dinámica de asignaturas prerrequisito. |
+| **Sección D y E: Resultados de Aprendizaje** | `PeaCompetenciesSection.tsx` | `src/components/DOSIER/sections/pea/` | Articulación con el perfil de egreso de la carrera y RDA específicos observables de la asignatura en CoWorkEditor. |
+| **Sección F: Contenidos Temáticos y Horas** | `PeaContentsSection.tsx` | `src/components/DOSIER/sections/pea/` | Desglose modular de unidades y subtemas. Validador matemático en tiempo real que suma CD + APE + TA y alerta discrepancias contra el total normado de SIGAFI. |
+| **Sección G: Metodología** | `PeaMethodologySection.tsx` | `src/components/DOSIER/sections/pea/` | Métodos didácticos activos basados en el Modelo Educativo Institucional ISTPET y recursos de informatización. |
+| **Sección H: Recursos y Prácticas** | `PeaResourcesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla de prácticas de laboratorio, talleres y actividades de aprendizaje práctico-experimental (APE). |
+| **Sección I: Evaluación del Aprendizaje** | `PeaEvaluationSection.tsx` | `src/components/DOSIER/sections/pea/` | Criterios pedagógicos y matriz oficial de 3 componentes (Parcial 1: 10 pts, Parcial 2: 10 pts, Examen Final: 10 pts). |
+| **Sección J: Bibliografía** | `PeaBibliographySection.tsx` | `src/components/DOSIER/sections/pea/` | Bibliografía básica y de consulta en formato APA 7.ª edición articulada a la biblioteca virtual institucional. |
+| **Sección K: Firmas de Responsabilidad** | `PeaSignaturesSection.tsx` | `src/components/DOSIER/sections/pea/` | Circuito institucional de 4 firmas (Docente Elaborador, Coordinador de Carrera, Coordinador Académico, Vicerrectorado). |
 
 ---
 
@@ -91,3 +89,14 @@ graph TD
   1. **Cobertura Curricular:** Porcentaje de asignaturas con PEA formulado y aprobado frente a la malla vigente.
   2. **Conformidad Horaria Art. 21 CES:** Consistencia de horas asignadas en Docencia (CD), Prácticas (APE) y Trabajo Autónomo (AA).
   3. **Circuito Colegiado de Firmas (Ley 67):** Tasa de instrumentos con dictamen favorable y firmas digitales formalizadas.
+
+### 4.7. `<PeaSupervisionTray>`: Bandeja de Supervisión Curricular Institucional
+* **Ubicación:** `src/pages/Investigacion/Proyectos/components/PeaSupervisionTray.tsx`
+* **Integración:** Embebida en `ResearchProjectsPage.tsx` mediante pestañas Vercel Geist (`[Programas de Estudio (PEA)]` y `[Proyectos de Investigación]`).
+* **Características Visuales y de UX:**
+  * **Métricas Compactas:** Strip horizontal de alta densidad informativa (Total Asignaturas, En Trámite/Revisión, Con Observaciones, Concluidos/Aprobados) sin recurrir al anti-patrón de tarjetas KPI gigantes.
+  * **Filtros Institucionales:** Selectores con fondo 100% sólido para período lectivo (`GeistSelect`), carreras asignadas y estados del workflow.
+  * **Stepper de Circuito de 4 Firmas:** Visualizador de avance del circuito legal (Docente -> Coordinador de Carrera -> Coordinador Académico -> Vicerrector).
+  * **Acceso Directo:** Botón de apertura directa en el Workspace concurrente (`/documentacion/workspace/pea-oficial/:uuid?edit=pea-oficial`) para revisión, co-redacción y emisión de dictamen/firma.
+
+

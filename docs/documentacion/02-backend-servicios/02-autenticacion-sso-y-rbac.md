@@ -50,6 +50,11 @@ graph TD
 * **Propósito:** Permitir a directivos o docentes acceder a revisiones o firmas específicas sin requerir digitación manual de contraseñas.
 * **Mecanismo:** Generación de un token criptográfico aleatorio de alta entropía asociado a un recurso con tiempo de vida limitado y consumo de un solo uso (*single-use token*), enviado por correo electrónico institucional.
 
+### 2.4. Gestión y Recuperación Universal de Contraseñas
+* **Servicio:** `PasswordRecoveryService`.
+* **Cambio Directo en Cuenta:** Disponible para todos los usuarios autenticados (docentes, coordinadores, directivos, evaluadores y administradores) a través de `POST /api/auth/cambiar-contrasenia`. Requiere verificación de la contraseña actual, una longitud mínima de 8 caracteres con caracteres alfanuméricos, persistencia con hash BCrypt y despacho asíncrono de notificación por correo electrónico con token de alerta ante accesos no autorizados.
+* **Recuperación y Restablecimiento:** Solicitud pública mediante `POST /api/auth/solicitar-recuperacion` con rate limiting (3 solicitudes / 15 min), emisión de token criptográfico SHA-256 de 30 minutos y restablecimiento mediante `POST /api/auth/restablecer-contrasenia-recuperacion` para cualquier cuenta del sistema.
+
 ---
 
 ## 3. Modelo de Control de Acceso Basado en Roles Curriculares (RBAC)
