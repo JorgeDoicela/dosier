@@ -18,6 +18,19 @@ export interface User {
     acepto_lopdp?: boolean;
 }
 
+export const ROLE_DISPLAY_NAMES: Record<string, string> = {
+    DOSIER_ADMIN: 'Administrador del Sistema',
+    DOSIER_VICERRECTOR: 'Vicerrectorado Académico',
+    DOSIER_COORD_ACAD: 'Coordinación Académica',
+    DOSIER_COORD_CARRERA: 'Coordinación de Carrera',
+    DOSIER_DOCENTE: 'Docente Elaborador',
+};
+
+export interface RoleOption {
+    code: string;
+    name: string;
+}
+
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
@@ -31,6 +44,9 @@ interface AuthContextType {
     refreshUser: () => Promise<void>;
     hasPermission: (module: string, operation: string) => boolean;
     roles: string[];
+    availableRoles: RoleOption[];
+    activeRole: string;
+    setActiveRole: (roleCode: string) => void;
     isAdmin: boolean;
     isDocente: boolean;
     isCoordCarrera: boolean;
@@ -46,9 +62,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeRole, setActiveRoleState] = useState<string>(() => {
+        return localStorage.getItem('dosier_active_role') || '';
+    });
+
+    const setActiveRole = useCallback((roleCode: string) => {
+        setActiveRoleState(roleCode);
+        localStorage.setItem('dosier_active_role', roleCode);
+    }, []);
 
     const refreshUser = useCallback(async () => {
-        if (!localStorage.getItem('dosier_logged_in') && !localStorage.getItem('dosier_logged_in')) {
+        if (!localStorage.getItem('dosier_logged_in')) {
             setUser(null);
             setIsLoading(false);
             return;
@@ -58,13 +82,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const data = response.data;
             const normalized: User = {
                 ...data,
+                roles: data.role_codes || data.roles || [],
+                role: data.role_codes?.[0] || data.role,
                 acepto_lopdp: data.acepto_lopdp !== undefined ? data.acepto_lopdp : data.aceptoLopdp
             };
             setUser(normalized);
+
+            const userRoles = (normalized.role_codes || normalized.roles || []).map((r: string) => r.toUpperCase());
+            const stored = localStorage.getItem('dosier_active_role');
+            if (stored && userRoles.includes(stored)) {
+                setActiveRoleState(stored);
+            } else if (userRoles.length > 0) {
+                setActiveRoleState(userRoles[0]);
+                localStorage.setItem('dosier_active_role', userRoles[0]);
+            }
         } catch (error: any) {
             setUser(null);
             localStorage.removeItem('dosier_logged_in');
-            localStorage.removeItem('dosier_logged_in');
+            localStorage.removeItem('dosier_active_role');
         } finally {
             setIsLoading(false);
         }
@@ -79,8 +114,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const response = await api.post('/auth/login', credentials);
         const data = response.data;
 
-        // Normalizar los roles para usar los códigos de roles (role_codes) en lugar de los nombres descriptivos.
-        // Esto mantiene la coherencia entre el estado posterior al login y el obtenido al refrescar la página.
         const normalizedUser: User = {
             ...data,
             roles: data.role_codes || data.roles || [],
@@ -90,6 +123,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(normalizedUser);
         localStorage.setItem('dosier_logged_in', 'true');
+
+        const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
+        if (userRoles.length > 0) {
+            setActiveRoleState(userRoles[0]);
+            localStorage.setItem('dosier_active_role', userRoles[0]);
+        }
+
         return normalizedUser;
     };
 
@@ -106,6 +146,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(normalizedUser);
         localStorage.setItem('dosier_logged_in', 'true');
+
+        const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
+        if (userRoles.length > 0) {
+            setActiveRoleState(userRoles[0]);
+            localStorage.setItem('dosier_active_role', userRoles[0]);
+        }
+
         return normalizedUser;
     };
 
@@ -120,8 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             acepto_lopdp: auth.acepto_lopdp !== undefined ? auth.acepto_lopdp : auth.aceptoLopdp
         };
 
-        // Retornamos sin iniciar la sesión en este dispositivo de forma automática.
-        // La sesión se establecerá explícitamente cuando el usuario confirme el acceso.
         return { user: normalizedUser, pin: pin || null, token: auth.token };
     };
 
@@ -129,6 +174,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await api.post('/auth/magic-confirm', { token });
         setUser(user);
         localStorage.setItem('dosier_logged_in', 'true');
+
+        const userRoles = (user.role_codes || user.roles || []).map((r: string) => r.toUpperCase());
+        if (userRoles.length > 0) {
+            setActiveRoleState(userRoles[0]);
+            localStorage.setItem('dosier_active_role', userRoles[0]);
+        }
     };
 
     const handoffLogin = async (pin: string) => {
@@ -144,23 +195,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(normalizedUser);
         localStorage.setItem('dosier_logged_in', 'true');
+
+        const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
+        if (userRoles.length > 0) {
+            setActiveRoleState(userRoles[0]);
+            localStorage.setItem('dosier_active_role', userRoles[0]);
+        }
+
         return normalizedUser;
     };
 
     const logout = async () => {
-        // 1. Limpieza local inmediata para que la UI responda al instante (milisegundos)
         setUser(null);
         localStorage.removeItem('dosier_logged_in');
-        localStorage.removeItem('dosier_logged_in');
+        localStorage.removeItem('dosier_active_role');
         localStorage.removeItem('web_push_active');
 
-        // 2. Ejecutar desuscripción y logout en segundo plano de forma no bloqueante
         (async () => {
             try {
                 const logoutTasks: Promise<any>[] = [];
 
                 if ('serviceWorker' in navigator && 'PushManager' in window) {
-                    // getRegistration() no bloquea la ejecución si el service worker no está listo
                     const registration = await navigator.serviceWorker.getRegistration();
                     if (registration) {
                         const subscription = await registration.pushManager.getSubscription();
@@ -179,9 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                 }
 
-                // Cierre de sesión en el backend
                 logoutTasks.push(api.post('/auth/logout').catch(() => { }));
-
                 await Promise.all(logoutTasks);
             } catch (err) {
                 console.error('Error procesando deslogueo en segundo plano:', err);
@@ -200,6 +253,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const rawRoles = user.roles || (user.role ? [user.role] : []);
         return rawRoles.map(r => r.toUpperCase());
     }, [user]);
+
+    const availableRoles = React.useMemo<RoleOption[]>(() => {
+        return roles.map(code => ({
+            code,
+            name: ROLE_DISPLAY_NAMES[code] || code
+        }));
+    }, [roles]);
 
     const isAdmin = React.useMemo(() => {
         return Boolean(user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('ADMIN'));
@@ -228,13 +288,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [isCoordCarrera, isCoordAcad, isVicerrector, roles]);
 
     const roleDisplayName = React.useMemo(() => {
-        if (isAdmin) return 'Administrador del Sistema';
-        if (isVicerrector) return 'Vicerrectorado Académico';
-        if (isCoordAcad) return 'Coordinación Académica';
-        if (isCoordCarrera) return 'Coordinador de Carrera';
-        if (isDocente) return 'Docente Titular';
+        if (activeRole && ROLE_DISPLAY_NAMES[activeRole]) {
+            return ROLE_DISPLAY_NAMES[activeRole];
+        }
+        if (isAdmin) return ROLE_DISPLAY_NAMES.DOSIER_ADMIN;
+        if (isVicerrector) return ROLE_DISPLAY_NAMES.DOSIER_VICERRECTOR;
+        if (isCoordAcad) return ROLE_DISPLAY_NAMES.DOSIER_COORD_ACAD;
+        if (isCoordCarrera) return ROLE_DISPLAY_NAMES.DOSIER_COORD_CARRERA;
+        if (isDocente) return ROLE_DISPLAY_NAMES.DOSIER_DOCENTE;
         return 'Usuario Institucional';
-    }, [isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente]);
+    }, [activeRole, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente]);
 
     return (
         <AuthContext.Provider value={{
@@ -250,6 +313,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             refreshUser,
             hasPermission,
             roles,
+            availableRoles,
+            activeRole,
+            setActiveRole,
             isAdmin,
             isDocente,
             isCoordCarrera,

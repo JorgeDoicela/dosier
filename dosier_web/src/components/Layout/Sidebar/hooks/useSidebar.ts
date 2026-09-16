@@ -25,7 +25,7 @@ interface UseSidebarProps {
 }
 
 export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProps) => {
-    const { logout, hasPermission, roles, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isRevisor, user, roleDisplayName } = useAuth();
+    const { logout, hasPermission, roles, availableRoles, activeRole, setActiveRole, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isRevisor, user, roleDisplayName } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -501,6 +501,9 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         isAdmin,
         user,
         roleDisplayName,
+        availableRoles,
+        activeRole,
+        setActiveRole,
         navigate,
         location,
         searchShortcut,

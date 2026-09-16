@@ -26,6 +26,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         isAdmin,
         user,
         roleDisplayName,
+        availableRoles,
+        activeRole,
+        setActiveRole,
         navigate,
         location,
         searchShortcut,
@@ -148,6 +151,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                         userInitials={userInitials}
                         username={username}
                         roleDisplayName={roleDisplayName}
+                        availableRoles={availableRoles}
+                        activeRole={activeRole}
+                        setActiveRole={setActiveRole}
                         bellRef={bellRef}
                         isNotificationsOpen={isNotificationsOpen}
                         setIsNotificationsOpen={setIsNotificationsOpen}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Settings, Trash2, LogOut, Bell } from 'lucide-react';
+import { Sun, Moon, Settings, Trash2, LogOut, Bell, Check, Shield } from 'lucide-react';
+import type { RoleOption } from '../../../../api/AuthContext';
 
 const MoreHorizontalIcon = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
     <svg
@@ -32,6 +33,9 @@ interface SidebarFooterProps {
     userInitials: string;
     username: string;
     roleDisplayName: string;
+    availableRoles?: RoleOption[];
+    activeRole?: string;
+    setActiveRole?: (roleCode: string) => void;
     bellRef: React.RefObject<HTMLButtonElement>;
     isNotificationsOpen: boolean;
     setIsNotificationsOpen: (v: boolean) => void;
@@ -53,6 +57,9 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = ({
     userInitials,
     username,
     roleDisplayName,
+    availableRoles = [],
+    activeRole = '',
+    setActiveRole,
     bellRef,
     isNotificationsOpen,
     setIsNotificationsOpen,
@@ -71,6 +78,35 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = ({
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
                     <div className="absolute bottom-14 left-3 right-3 bg-bg-deep border border-border-thin rounded-lg shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in duration-200 slide-in-from-bottom-2">
+                        {availableRoles && availableRoles.length > 1 && (
+                            <div className="px-2 py-1.5 border-b border-border-thin mb-1">
+                                <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider block mb-1.5">
+                                    Rol Institucional Activo
+                                </span>
+                                <div className="space-y-0.5">
+                                    {availableRoles.map(r => (
+                                        <div
+                                            key={r.code}
+                                            onClick={() => {
+                                                if (setActiveRole) setActiveRole(r.code);
+                                                setIsUserMenuOpen(false);
+                                            }}
+                                            className={`flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md cursor-pointer transition-colors ${
+                                                activeRole === r.code
+                                                    ? 'bg-surface-active text-text-main font-medium border border-border-thin'
+                                                    : 'text-text-dim hover:text-text-main hover:bg-surface-hover'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <Shield size={13} className={activeRole === r.code ? 'text-primary shrink-0' : 'text-text-dim shrink-0'} />
+                                                <span className="truncate">{r.name}</span>
+                                            </div>
+                                            {activeRole === r.code && <Check size={13} className="text-primary shrink-0 ml-1.5" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                         <div
                             onClick={() => {
                                 toggleTheme();

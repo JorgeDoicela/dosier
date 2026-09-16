@@ -330,6 +330,19 @@ public class AuthService : IAuthService
             .Where(ur => ur.IdUsuario == user.IdUsuario && (ur.EsActivo ?? true))
             .ToListAsync();
 
+        // Orden jerárquico institucional oficial: DOSIER_ADMIN > DOSIER_VICERRECTOR > DOSIER_COORD_ACAD > DOSIER_COORD_CARRERA > DOSIER_DOCENTE
+        userRoles = userRoles
+            .OrderBy(ur => ur.Role.CodigoRol switch
+            {
+                "DOSIER_ADMIN" => 1,
+                "DOSIER_VICERRECTOR" => 2,
+                "DOSIER_COORD_ACAD" => 3,
+                "DOSIER_COORD_CARRERA" => 4,
+                "DOSIER_DOCENTE" => 5,
+                _ => 99
+            })
+            .ToList();
+
         var permissions = userRoles
             .SelectMany(ur => ur.Role.RoleModuleOperations)
             .Where(rmo => (rmo.EsActivo ?? true) && rmo.ModuleOperation != null && (rmo.ModuleOperation.EsActivo ?? true))
