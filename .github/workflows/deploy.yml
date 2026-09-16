@@ -350,6 +350,20 @@ jobs:
               fi
             done
 
+            echo "=== Sincronizando rol de superadministrador configurado en .env ==="
+            if [ -n "$SECURITY_SUPER_ADMIN_CEDULA" ]; then
+              echo "Asignando DOSIER_ADMIN a la identidad configurada en .env ($SECURITY_SUPER_ADMIN_CEDULA)..."
+              docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" sigafi_es -e "
+                UPDATE usuarios SET administrador = 1 WHERE idSigafi = '$SECURITY_SUPER_ADMIN_CEDULA';
+                INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
+                SELECT u.idUsuario, r.idRol, CURDATE(), 1
+                FROM usuarios u
+                JOIN rbac_rol r ON r.codigo_rol = 'DOSIER_ADMIN'
+                WHERE u.idSigafi = '$SECURITY_SUPER_ADMIN_CEDULA'
+                ON DUPLICATE KEY UPDATE esActivo = 1;
+              " 2>&1 | grep -v "Warning: Using a password" || true
+            fi
+
             echo "=== Levantando servicios de aplicacion DOSIER (Backend y Web) con base de datos lista ==="
             docker compose up -d --force-recreate --remove-orphans dosier-backend dosier-web
             docker image prune -f
