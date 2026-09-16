@@ -228,13 +228,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [isCoordCarrera, isCoordAcad, isVicerrector, roles]);
 
     const roleDisplayName = React.useMemo(() => {
+        if (isAdmin) return 'Administrador del Sistema';
         if (isVicerrector) return 'Vicerrectorado Académico';
         if (isCoordAcad) return 'Coordinación Académica';
         if (isCoordCarrera) return 'Coordinador de Carrera';
-        if (isAdmin) return 'Administrador Institucional';
         if (isDocente) return 'Docente Titular';
         return 'Usuario Institucional';
-    }, [isVicerrector, isCoordAcad, isCoordCarrera, isAdmin, isDocente]);
+    }, [isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente]);
 
     return (
         <AuthContext.Provider value={{
