@@ -4,8 +4,9 @@
 # ==============================================================================
 # Propósito  : Procesa un volcado MySQL de producción (Dump*.sql) y genera un
 #              script DDL/DML optimizado, 100% fiel en catálogo académico
-#              (carreras, mallas, asignaturas, horas) pero estrictamente
-#              anonimizado en datos personales y credenciales (LOPDP Ecuador).
+#              (carreras, mallas, asignaturas, horas, departamentos, cargos,
+#              contratos, distributivos) pero estrictamente anonimizado en datos
+#              personales y credenciales (LOPDP Ecuador).
 # Uso        : py scripts/utilidades/sanitizar_sigafi_dump.py [ruta_dump_opcional]
 # ==============================================================================
 
@@ -36,7 +37,7 @@ def main():
 
     print(f"[*] Procesando volcado: {dump_path.name} ({dump_path.stat().st_size / (1024*1024):.2f} MB)...")
 
-    # 1. Catálogo Institucional y Curricular Real (Datos públicos institucionales - Sin LOPDP)
+    # 1. Catálogo Institucional, Curricular, Organizacional y Distributivos
     STRUCTURAL_TABLES = {
         'carreras', 'facultades', 'instituciones', 'instituciones_instituto',
         'periodos', 'periodos_matriculas_niveles', 'periodos_inscripciones',
@@ -48,6 +49,10 @@ def main():
         'paises', 'provincias', 'cantones', 'parroquias', 'nacionalidades', 'etnias',
         'tipos_documentos', 'tiposdocumentosi', 'tiposangre', 'grados_academicos', 'discapacidades', 'estadocivil',
         'parametros', 'relacion_ies', 'tipo_funcionario',
+        'departamentos', 'cargo_instituto', 'tipos_contratos', 'categoria_contratos', 'dedicacion_categorias',
+        'categorias_actividades', 'subcategorias_actividades',
+        'profesores_carreras_periodos', 'profesores_actividades', 'asignaciones_profesores',
+        'horario_profesores', 'contratos_asignaturas',
         'rbac_sistema', 'rbac_modulos', 'rbac_operaciones', 'rbac_modulos_operaciones',
         'rbac_rol', 'rbac_rol_modulo_operacion', 'asignacion_materias'
     }
@@ -59,7 +64,8 @@ def main():
 -- DOSIER / SIGAFI - Base de Datos Institucional Anonimizada (LOPDP Compliant)
 -- =============================================================================
 -- Generado con Pipeline de Sanitización Oficial para el ISTPET.
--- Conserva el catálogo curricular real (carreras, mallas, periodos, materias)
+-- Conserva el catálogo curricular real (carreras, mallas, periodos, materias),
+-- la estructura organizacional (departamentos, cargos, contratos, distributivos)
 -- y anonimiza estrictamente datos personales y credenciales bajo la LOPDP.
 -- =============================================================================
 
@@ -110,8 +116,8 @@ USE `sigafi_es`;
     for tbl_name, ddl in sorted(tables_found.items()):
         output_blocks.append(f"{ddl}\n\n")
 
-    # 2. Catálogo Académico Íntegro
-    output_blocks.append("-- -----------------------------------------------------------------------------\n-- 2. CATÁLOGO ACADÉMICO Y CURRICULAR INSTITUCIONAL (REAL)\n-- -----------------------------------------------------------------------------\n")
+    # 2. Catálogo Académico, Organizacional y Estructural Íntegro
+    output_blocks.append("-- -----------------------------------------------------------------------------\n-- 2. CATÁLOGO ACADÉMICO, ORGANIZACIONAL Y CURRICULAR INSTITUCIONAL (REAL)\n-- -----------------------------------------------------------------------------\n")
     for tbl in sorted(STRUCTURAL_TABLES):
         if tbl in raw_inserts:
             output_blocks.append(f"-- Datos para la tabla `{tbl}`\n")
@@ -185,9 +191,88 @@ USE `sigafi_es`;
         output_blocks.append("/*!40000 ALTER TABLE `profesores` ENABLE KEYS */;\n")
         output_blocks.append("UNLOCK TABLES;\n\n")
 
-    # 4. Usuarios DOSIER (Credenciales 12345 con hash/texto plano y asignación de roles inicial)
+    # 4. Contratos: Anonimizar URLs de SharePoint y vincular a departamentos/cargos institucionales
+    output_blocks.append("-- -----------------------------------------------------------------------------\n-- 4. CONTRATOS INSTITUCIONALES (DEPARTAMENTO, CARGO Y TIPO DE VINCULACIÓN)\n-- -----------------------------------------------------------------------------\n")
+    if 'contratos' in raw_inserts:
+        contratos_raw = " ".join(raw_inserts['contratos'])
+        c_rows_match = re.findall(r'\(([^)]+)\)', contratos_raw)
+        sanitized_contratos = []
+        for r in c_rows_match:
+            parts = [p.strip() for p in r.split(',')]
+            if len(parts) >= 15:
+                # Sanitizar campos de archivo SharePoint (posiciones 15, 16, 17, 18) a NULL
+                # Columnas: idContratos, idInstitucionesInstituto, idProfesor, idDedicacionCategorias,
+                # idTiposContratos, idRelacionIes, iddepartamentos, idCargoInstituto, numeroContrato,
+                # esAdendum, contratoVinculado, fecha_registro, fecha_inicio, fecha_final, esActivo,
+                # archivoContrato, archivoLegalizado, archivoFiniquito, archivoLegalizadoSalida, ...
+                while len(parts) < 24:
+                    parts.append('NULL')
+                parts[15] = 'NULL'
+                parts[16] = 'NULL'
+                parts[17] = 'NULL'
+                parts[18] = 'NULL'
+                sanitized_contratos.append(f"({', '.join(parts[:24])})")
+
+        # Garantizar contratos para nuestros docentes/autoridades clave
+        test_contratos = [
+            "(9001, 1, '1725555377', 18, 3, 1, 13, 1, '001-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1725555377', NULL, NULL, NULL)",
+            "(9002, 1, '1720000002', 18, 3, 1, 13, 1, '002-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1720000002', NULL, NULL, NULL)",
+            "(9003, 1, '1720000003', 18, 3, 1, 5, 6, '003-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1720000003', NULL, NULL, NULL)",
+            "(9004, 1, '1720000004', 18, 3, 1, 13, 1, '004-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1720000004', NULL, NULL, NULL)",
+            "(9005, 1, '1720000005', 18, 3, 1, 16, 20, '005-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1720000005', NULL, NULL, NULL)",
+            "(9006, 1, '1802707511', 18, 3, 1, 5, 6, '006-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1802707511', NULL, NULL, NULL)",
+            "(9007, 1, '0502405889', 18, 3, 1, 16, 20, '007-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '0502405889', NULL, NULL, NULL)",
+            "(9008, 1, '1709890626', 18, 3, 1, 13, 1, '008-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1709890626', NULL, NULL, NULL)",
+            "(9009, 1, '1720004793', 18, 3, 1, 13, 1, '009-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1720004793', NULL, NULL, NULL)",
+            "(9010, 1, '1721465431', 18, 3, 1, 13, 1, '010-TC-RRHH-2024', 0, NULL, '2024-01-01', '2024-01-01', NULL, 1, NULL, NULL, NULL, NULL, 0, '1721465431', NULL, NULL, NULL)",
+        ]
+        sanitized_contratos.extend(test_contratos)
+
+        output_blocks.append("LOCK TABLES `contratos` WRITE;\n")
+        output_blocks.append("/*!40000 ALTER TABLE `contratos` DISABLE KEYS */;\n")
+        for i in range(0, len(sanitized_contratos), 25):
+            chunk = sanitized_contratos[i:i+25]
+            output_blocks.append(f"INSERT INTO `contratos` VALUES\n{',\n'.join(chunk)}\nON DUPLICATE KEY UPDATE `esActivo` = 1, `iddepartamentos` = VALUES(`iddepartamentos`), `idCargoInstituto` = VALUES(`idCargoInstituto`);\n")
+        output_blocks.append("/*!40000 ALTER TABLE `contratos` ENABLE KEYS */;\n")
+        output_blocks.append("UNLOCK TABLES;\n\n")
+
+    # 5. Asignaciones de Carrera y Distributivo Horario para Profesores Clave
     output_blocks.append("""-- -----------------------------------------------------------------------------
--- 4. USUARIOS INSTITUCIONALES PARA AUTENTICACIÓN DOSIER (CLAVE 12345)
+-- 5. ASIGNACIÓN DOCENTE EN CARRERAS INSTITUCIONALES (profesores_carreras_periodos)
+-- -----------------------------------------------------------------------------
+LOCK TABLES `profesores_carreras_periodos` WRITE;
+/*!40000 ALTER TABLE `profesores_carreras_periodos` DISABLE KEYS */;
+INSERT INTO `profesores_carreras_periodos` (`idProfesor`, `idCarrera`, `idPeriodo`, `activo`) VALUES
+('1725555377', 1, 35, 1),
+('1720000002', 1, 35, 1),
+('1720000004', 1, 35, 1),
+('1720000005', 1, 35, 1),
+('1709890626', 9, 35, 1),
+('1720004793', 10, 35, 1),
+('1721465431', 7, 35, 1)
+ON DUPLICATE KEY UPDATE `activo` = 1;
+/*!40000 ALTER TABLE `profesores_carreras_periodos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+-- -----------------------------------------------------------------------------
+-- 6. ASIGNACIONES DE MATERIAS EN PERIODOS (asignaciones_profesores)
+-- -----------------------------------------------------------------------------
+LOCK TABLES `asignaciones_profesores` WRITE;
+/*!40000 ALTER TABLE `asignaciones_profesores` DISABLE KEYS */;
+INSERT INTO `asignaciones_profesores` (`idProfesor`, `idPeriodo`, `idAsignacionMateria`, `activo`) VALUES
+('1725555377', 35, 1, 1),
+('1720000002', 35, 2, 1),
+('1720000004', 35, 3, 1),
+('1720000005', 35, 4, 1)
+ON DUPLICATE KEY UPDATE `activo` = 1;
+/*!40000 ALTER TABLE `asignaciones_profesores` ENABLE KEYS */;
+UNLOCK TABLES;
+
+""")
+
+    # 7. Usuarios DOSIER (Credenciales 12345 con hash/texto plano y asignación de roles inicial)
+    output_blocks.append("""-- -----------------------------------------------------------------------------
+-- 7. USUARIOS INSTITUCIONALES PARA AUTENTICACIÓN DOSIER (CLAVE 12345)
 -- -----------------------------------------------------------------------------
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
