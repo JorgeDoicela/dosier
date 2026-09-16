@@ -101,7 +101,15 @@ builder.Services.AddCors(options =>
 
 // 1.1 Configurar Autenticación JWT y Cookies (SSO Stateless Compartido)
 var jwtSettings = builder.Configuration.GetSection("JWTSettings");
-var secret = jwtSettings["Secret"] ?? "YOUR_JWT_SHARED_SECRET_KEY_CHANGE_IN_PRODUCTION";
+var secret = jwtSettings["Secret"];
+if (string.IsNullOrWhiteSpace(secret))
+{
+    secret = builder.Configuration["Jwt:Secret"];
+}
+if (string.IsNullOrWhiteSpace(secret))
+{
+    secret = "DOSIER_JWT_zsJpOeYEHWFI8QL0dnTxolGUMywNPZB9V512Da3C7biXrtgf";
+}
 var key = Encoding.UTF8.GetBytes(secret);
 
 builder.Services.AddAuthentication(options =>
