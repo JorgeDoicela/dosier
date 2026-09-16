@@ -9,17 +9,23 @@ import { VicerrectorDashboard } from './Roles/VicerrectorDashboard';
 import { AdminPeaDashboard } from './Roles/AdminPeaDashboard';
 
 const Dashboard: React.FC = () => {
-    const { isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, isLoading, user, roleDisplayName } = useAuth();
+    const { isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente, activeRole, isLoading, user, roleDisplayName } = useAuth();
 
-    // Determinar el rol por defecto según la sesión activa
+    // Determinar el rol por defecto según la sesión activa o el rol seleccionado
     const defaultRol = useMemo<RolSimulado>(() => {
+        if (activeRole === 'DOSIER_ADMIN') return 'ADMIN';
+        if (activeRole === 'DOSIER_VICERRECTOR') return 'VICERRECTOR';
+        if (activeRole === 'DOSIER_COORD_ACAD') return 'COORD_ACAD';
+        if (activeRole === 'DOSIER_COORD_CARRERA') return 'COORD_CARRERA';
+        if (activeRole === 'DOSIER_DOCENTE') return 'DOCENTE';
+
+        if (isAdmin) return 'ADMIN';
         if (isVicerrector) return 'VICERRECTOR';
         if (isCoordAcad) return 'COORD_ACAD';
         if (isCoordCarrera) return 'COORD_CARRERA';
         if (isDocente) return 'DOCENTE';
-        if (isAdmin) return 'ADMIN';
-        return 'COORD_ACAD';
-    }, [isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente]);
+        return 'ADMIN';
+    }, [activeRole, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isDocente]);
 
     const [rolSimulado, setRolSimulado] = useState<RolSimulado>(defaultRol);
 
