@@ -45,8 +45,8 @@ def main():
         'niveles_academicos', 'tipos_asignatura', 'secciones', 'parciales',
         'parciales_modalidades', 'parciales_modalidades_fechas', 'semanas_horarios',
         'horas_clases', 'ofertas_carreras',
-        'paises', 'provincias', 'cantones', 'parroquias', 'nacionalidades',
-        'tipos_documentos', 'tiposdocumentosi', 'tiposangre', 'grados_academicos',
+        'paises', 'provincias', 'cantones', 'parroquias', 'nacionalidades', 'etnias',
+        'tipos_documentos', 'tiposdocumentosi', 'tiposangre', 'grados_academicos', 'discapacidades', 'estadocivil',
         'parametros', 'relacion_ies', 'tipo_funcionario',
         'rbac_sistema', 'rbac_modulos', 'rbac_operaciones', 'rbac_modulos_operaciones',
         'rbac_rol', 'rbac_rol_modulo_operacion', 'asignacion_materias'
@@ -79,8 +79,15 @@ USE `sigafi_es`;
 
 """
 
-    # Extraer DDL completo
-    table_pattern = re.compile(r'(DROP TABLE IF EXISTS `?(\w+)`?;.*?CREATE TABLE `?\2`? \((?:.(?!\n\s*\n|\n--))*?\)\s*ENGINE=[^;\n]+;)', re.DOTALL | re.IGNORECASE)
+    # Extraer DDL completo con regex robusta
+    table_pattern = re.compile(
+        r'(DROP TABLE IF EXISTS `(\w+)`;\s*'
+        r'(?:/\*!40101 SET @saved_cs_client\s*=\s*@@character_set_client \*/;\s*'
+        r'/\*!40101 SET character_set_client\s*=\s*utf8 \*/;\s*)?'
+        r'CREATE TABLE `\2`\s*\([^;]+?\)\s*ENGINE=[^;]+;)',
+        re.DOTALL | re.IGNORECASE
+    )
+
     tables_found = {}
     for match in table_pattern.finditer(content):
         tbl_name = match.group(2)
@@ -115,45 +122,92 @@ USE `sigafi_es`;
             output_blocks.append("/*!40000 ALTER TABLE `" + tbl + "` ENABLE KEYS */;\n")
             output_blocks.append("UNLOCK TABLES;\n\n")
 
-    # 3. Profesores Anonimizados
-    output_blocks.append("-- -----------------------------------------------------------------------------\n-- 3. DOCENTES Y PROFESORES ANONIMIZADOS (LOPDP COMPLIANT)\n-- -----------------------------------------------------------------------------\n")
+    # 3. Profesores: Conservar IDs de asignaciones docentes pero anonimizando LOPDP y credenciales
+    output_blocks.append("-- -----------------------------------------------------------------------------\n-- 3. DOCENTES Y PROFESORES ANONIMIZADOS (LOPDP COMPLIANT CON CLAVE 12345)\n-- -----------------------------------------------------------------------------\n")
+    
+    # Docentes institucionales clave requeridos para pruebas y gobernanza
+    special_profesores = [
+        ("1725555377", "'1'", "'Doicela'", "'Molina'", "'Doicela'", "'Molina'", "'Jorge'", "'Ismael'", "1", "'Quito'", "'Av. Principal'", "'Calle 1'", "'S/N'", "'022222222'", "'0999999999'", "'jorge.doicela@istpet.edu.ec'", "'1990-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Ing.'", "'Ing.'", "''", "1", "1", "1", "1", "'jorge.doicela@istpet.edu.ec'", "'2020-01-01'", "'2020-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1720000002", "'1'", "'Valencia'", "'Llerena'", "'Valencia'", "'Llerena'", "'Carlos'", "'Enrique'", "1", "'Quito'", "'Av. Principal'", "'Calle 2'", "'S/N'", "'022222222'", "'0999999999'", "'carlos.valencia@istpet.edu.ec'", "'1985-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Ing.'", "'Ing.'", "''", "1", "1", "1", "1", "'carlos.valencia@istpet.edu.ec'", "'2018-01-01'", "'2018-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1720000003", "'1'", "'Proaño'", "'Ramos'", "'Proaño'", "'Ramos'", "'Marcia'", "'Elena'", "1", "'Quito'", "'Av. Principal'", "'Calle 3'", "'S/N'", "'022222222'", "'0999999999'", "'vicerrectorado@istpet.edu.ec'", "'1980-01-01'", "'F'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Msc.'", "'Msc.'", "''", "1", "1", "1", "1", "'vicerrectorado@istpet.edu.ec'", "'2015-01-01'", "'2015-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1720000004", "'1'", "'Guaman'", "'Perez'", "'Guaman'", "'Perez'", "'David'", "'Alejandro'", "1", "'Quito'", "'Av. Principal'", "'Calle 4'", "'S/N'", "'022222222'", "'0999999999'", "'coordinacion.software@istpet.edu.ec'", "'1988-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Ing.'", "'Ing.'", "''", "1", "1", "1", "1", "'coordinacion.software@istpet.edu.ec'", "'2019-01-01'", "'2019-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1720000005", "'1'", "'Andrade'", "'Torres'", "'Andrade'", "'Torres'", "'Silvia'", "'Patricia'", "1", "'Quito'", "'Av. Principal'", "'Calle 5'", "'S/N'", "'022222222'", "'0999999999'", "'coordinacion.academica@istpet.edu.ec'", "'1982-01-01'", "'F'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Msc.'", "'Msc.'", "''", "1", "1", "1", "1", "'coordinacion.academica@istpet.edu.ec'", "'2016-01-01'", "'2016-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1802707511", "'1'", "'Baño'", "''", "'Baño'", "''", "'Freddy'", "''", "1", "'Quito'", "'Av. Principal'", "'Calle 6'", "'S/N'", "'022222222'", "'0999999999'", "'freddy.bano@istpet.edu.ec'", "'1975-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Msc.'", "'Msc.'", "''", "1", "1", "1", "1", "'freddy.bano@istpet.edu.ec'", "'2010-01-01'", "'2010-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("0502405889", "'1'", "'Cobos'", "''", "'Cobos'", "''", "'Cristian'", "''", "1", "'Quito'", "'Av. Principal'", "'Calle 7'", "'S/N'", "'022222222'", "'0999999999'", "'cristian.cobos@istpet.edu.ec'", "'1983-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Msc.'", "'Msc.'", "''", "1", "1", "1", "1", "'cristian.cobos@istpet.edu.ec'", "'2017-01-01'", "'2017-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1709890626", "'1'", "'Trujillo'", "''", "'Trujillo'", "''", "'Wilfrido'", "''", "1", "'Quito'", "'Av. Principal'", "'Calle 8'", "'S/N'", "'022222222'", "'0999999999'", "'wilfrido.trujillo@istpet.edu.ec'", "'1978-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Ing.'", "'Ing.'", "''", "1", "1", "1", "1", "'wilfrido.trujillo@istpet.edu.ec'", "'2012-01-01'", "'2012-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1720004793", "'1'", "'Castro'", "''", "'Castro'", "''", "'Christian'", "''", "1", "'Quito'", "'Av. Principal'", "'Calle 9'", "'S/N'", "'022222222'", "'0999999999'", "'christian.castro@istpet.edu.ec'", "'1986-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Ing.'", "'Ing.'", "''", "1", "1", "1", "1", "'christian.castro@istpet.edu.ec'", "'2018-01-01'", "'2018-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+        ("1721465431", "'1'", "'Toapanta'", "''", "'Toapanta'", "''", "'Wilmer'", "''", "1", "'Quito'", "'Av. Principal'", "'Calle 10'", "'S/N'", "'022222222'", "'0999999999'", "'wilmer.toapanta@istpet.edu.ec'", "'1987-01-01'", "'M'", "'12345'", "0", "'P'", "'Ecuatoriana'", "'Ing.'", "'Ing.'", "''", "1", "1", "1", "1", "'wilmer.toapanta@istpet.edu.ec'", "'2019-01-01'", "'2019-01-01'", "NULL", "1", "'ORH+'", "'170101'", "1", "0", "NULL", "NULL", "1"),
+    ]
+
+    processed_prof_ids = set()
+    sanitized_prof_rows = []
+
+    # Agregar primero los especiales
+    for sp in special_profesores:
+        id_p = sp[0]
+        processed_prof_ids.add(id_p)
+        vals = [f"'{id_p}'"] + list(sp[1:])
+        sanitized_prof_rows.append(f"({', '.join(vals)})")
+
+    # Extraer todos los profesores del dump para mantener coherencia referencial
     if 'profesores' in raw_inserts:
         prof_raw = " ".join(raw_inserts['profesores'])
         rows_match = re.findall(r'\(([^)]+)\)', prof_raw)
         
-        sanitized_prof_rows = []
         for idx, row in enumerate(rows_match, 1):
-            parts = [p.strip() for p in row.split(',')]
-            if len(parts) >= 6:
+            parts = [p.strip().strip("'\"") for p in row.split(',')]
+            if len(parts) >= 1:
                 id_prof = parts[0]
-                synthetic_cedula = f"'1790{int(id_prof):06d}'" if id_prof.isdigit() else f"'1790{idx:06d}'"
-                synthetic_apellidos = f"'DocenteApellido {id_prof}'"
-                synthetic_nombres = f"'DocenteNombre {id_prof}'"
+                if id_prof in processed_prof_ids:
+                    continue
+                processed_prof_ids.add(id_prof)
+                
+                synthetic_cedula = f"'{id_prof}'"
+                synthetic_apellidos = f"'DocenteApellido {idx}'"
+                synthetic_nombres = f"'DocenteNombre {idx}'"
                 synthetic_email = f"'docente_{id_prof}@istpet.edu.ec'"
-                new_row = f"({id_prof}, {synthetic_cedula}, {synthetic_nombres}, {synthetic_apellidos}, 'M', '1985-01-01', 'Soltero/a', 'Ecuatoriana', 'Quito', '0999999999', {synthetic_email}, 1, 1, 1, '12345', 1)"
+                
+                # Armar fila con 41 columnas compatibles con tabla profesores
+                new_row = (
+                    f"('{id_prof}', '1', {synthetic_apellidos}, {synthetic_nombres}, {synthetic_apellidos}, '', "
+                    f"{synthetic_nombres}, '', 1, 'Quito', 'Calle Principal', 'Calle Secundaria', 'S/N', "
+                    f"'022222222', '0999999999', {synthetic_email}, '1985-01-01', 'M', '12345', 0, 'P', "
+                    f"'Ecuatoriana', 'Ing.', 'Ing.', '', 1, 1, 1, 1, {synthetic_email}, '2020-01-01', '2020-01-01', NULL, 1, 'ORH+', '170101', 1, 0, NULL, NULL, 1)"
+                )
                 sanitized_prof_rows.append(new_row)
-        
-        if sanitized_prof_rows:
-            output_blocks.append("LOCK TABLES `profesores` WRITE;\n")
-            output_blocks.append("/*!40000 ALTER TABLE `profesores` DISABLE KEYS */;\n")
-            for i in range(0, len(sanitized_prof_rows), 50):
-                chunk = sanitized_prof_rows[i:i+50]
-                output_blocks.append(f"INSERT IGNORE INTO `profesores` VALUES {', '.join(chunk)};\n")
-            output_blocks.append("/*!40000 ALTER TABLE `profesores` ENABLE KEYS */;\n")
-            output_blocks.append("UNLOCK TABLES;\n\n")
+    
+    if sanitized_prof_rows:
+        output_blocks.append("LOCK TABLES `profesores` WRITE;\n")
+        output_blocks.append("/*!40000 ALTER TABLE `profesores` DISABLE KEYS */;\n")
+        for i in range(0, len(sanitized_prof_rows), 25):
+            chunk = sanitized_prof_rows[i:i+25]
+            output_blocks.append(f"INSERT INTO `profesores` VALUES\n{',\n'.join(chunk)}\nON DUPLICATE KEY UPDATE `clave` = VALUES(`clave`), `activo` = 1;\n")
+        output_blocks.append("/*!40000 ALTER TABLE `profesores` ENABLE KEYS */;\n")
+        output_blocks.append("UNLOCK TABLES;\n\n")
 
-    # 4. Usuarios de Prueba para Roles DOSIER
+    # 4. Usuarios DOSIER (Credenciales 12345 con hash/texto plano y asignación de roles inicial)
     output_blocks.append("""-- -----------------------------------------------------------------------------
--- 4. USUARIOS INSTITUCIONALES ANONIMIZADOS PARA ROLES DE DOSIER
+-- 4. USUARIOS INSTITUCIONALES PARA AUTENTICACIÓN DOSIER (CLAVE 12345)
 -- -----------------------------------------------------------------------------
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT IGNORE INTO `usuarios` (`idUsuario`, `usuario`, `password`, `nombre`, `apellido`, `email`, `idRol`, `esActivo`) VALUES
-(1, 'admin_dosier', '$2a$11$N4fP0jYk2Cq5Yj6UuE1k7uRzL5ZfX1G9B3wQ2rT4vP7mK0sJ8hI2y', 'Administrador', 'Curricular ISTPET', 'admin.dosier@istpet.edu.ec', 1, 1),
-(2, 'docente_demo', '$2a$11$N4fP0jYk2Cq5Yj6UuE1k7uRzL5ZfX1G9B3wQ2rT4vP7mK0sJ8hI2y', 'Docente', 'Elaborador ISTPET', 'docente.demo@istpet.edu.ec', 2, 1),
-(3, 'coord_carrera', '$2a$11$N4fP0jYk2Cq5Yj6UuE1k7uRzL5ZfX1G9B3wQ2rT4vP7mK0sJ8hI2y', 'Coordinador', 'Desarrollo de Software', 'coord.software@istpet.edu.ec', 3, 1),
-(4, 'coord_academico', '$2a$11$N4fP0jYk2Cq5Yj6UuE1k7uRzL5ZfX1G9B3wQ2rT4vP7mK0sJ8hI2y', 'Comisión', 'Académica ISTPET', 'coord.academica@istpet.edu.ec', 4, 1),
-(5, 'vicerrector', '$2a$11$N4fP0jYk2Cq5Yj6UuE1k7uRzL5ZfX1G9B3wQ2rT4vP7mK0sJ8hI2y', 'Vicerrector', 'Académico ISTPET', 'vicerrectorado@istpet.edu.ec', 5, 1);
+INSERT INTO `usuarios` (`idUsuario`, `idSigafi`, `tablaSigafi`, `nombre`, `contrasenia`, `activo`, `administrador`, `emailInstitucional`, `emailValidado`) VALUES
+(1, '1725555377', 'profesor', 'Jorge Ismael Doicela Molina', '12345', 1, 1, 'jorge.doicela@istpet.edu.ec', 1),
+(2, '1720000002', 'profesor', 'Carlos Enrique Valencia Llerena', '12345', 1, 0, 'carlos.valencia@istpet.edu.ec', 1),
+(3, '1720000003', 'profesor', 'Marcia Elena Proaño Ramos', '12345', 1, 0, 'vicerrectorado@istpet.edu.ec', 1),
+(4, '1720000004', 'profesor', 'David Alejandro Guaman Perez', '12345', 1, 0, 'coordinacion.software@istpet.edu.ec', 1),
+(5, '1720000005', 'profesor', 'Silvia Patricia Andrade Torres', '12345', 1, 0, 'coordinacion.academica@istpet.edu.ec', 1),
+(6, '1802707511', 'profesor', 'Freddy Baño', '12345', 1, 0, 'freddy.bano@istpet.edu.ec', 1),
+(7, '0502405889', 'profesor', 'Cristian Cobos', '12345', 1, 0, 'cristian.cobos@istpet.edu.ec', 1),
+(8, '1709890626', 'profesor', 'Wilfrido Trujillo', '12345', 1, 0, 'wilfrido.trujillo@istpet.edu.ec', 1),
+(9, '1720004793', 'profesor', 'Christian Castro', '12345', 1, 0, 'christian.castro@istpet.edu.ec', 1),
+(10, '1721465431', 'profesor', 'Wilmer Toapanta', '12345', 1, 0, 'wilmer.toapanta@istpet.edu.ec', 1)
+ON DUPLICATE KEY UPDATE 
+  `contrasenia` = VALUES(`contrasenia`),
+  `nombre` = VALUES(`nombre`),
+  `activo` = 1,
+  `administrador` = VALUES(`administrador`),
+  `emailInstitucional` = VALUES(`emailInstitucional`);
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
