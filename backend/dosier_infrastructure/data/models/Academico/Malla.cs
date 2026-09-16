@@ -7,7 +7,7 @@ public partial class Malla
 {
     public int IdMalla { get; set; }
     public int IdCarrera { get; set; }
-    public string? Vigencia { get; set; }
+    public int? Vigencia { get; set; }
     public string? Descripcion { get; set; }
     public int? CreditosMinimo { get; set; }
     public int? CreditosMaximo { get; set; }

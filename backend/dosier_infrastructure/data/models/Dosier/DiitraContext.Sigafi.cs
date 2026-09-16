@@ -531,7 +531,7 @@ public partial class DosierContext
             entity.ToTable("mallas");
             entity.Property(e => e.IdMalla).HasColumnName("idMalla");
             entity.Property(e => e.IdCarrera).HasColumnName("idCarrera");
-            entity.Property(e => e.Vigencia).HasMaxLength(50).HasColumnName("vigencia");
+            entity.Property(e => e.Vigencia).HasColumnName("vigencia");
             entity.Property(e => e.Descripcion).HasMaxLength(100).HasColumnName("descripcion");
             entity.Property(e => e.CreditosMinimo).HasColumnName("creditos_minimo");
             entity.Property(e => e.CreditosMaximo).HasColumnName("creditos_maximo");
@@ -561,7 +561,7 @@ public partial class DosierContext
             entity.Property(e => e.IdTipoAsignatura).HasColumnName("idtipo_asignatura");
             entity.Property(e => e.Tipo).HasMaxLength(100).HasColumnName("tipo");
             entity.Property(e => e.Opcional).HasColumnName("opcional");
-            entity.Property(e => e.Creditos).HasPrecision(4, 2).HasColumnName("creditos");
+            entity.Property(e => e.Creditos).HasColumnName("creditos");
             entity.Property(e => e.Horas).HasColumnName("horas");
             entity.Property(e => e.Anulada).HasColumnName("anulada");
             entity.Property(e => e.HorasDocente).HasColumnName("horasDocente");

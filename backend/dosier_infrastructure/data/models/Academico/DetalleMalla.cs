@@ -12,7 +12,7 @@ public partial class DetalleMalla
     public int IdTipoAsignatura { get; set; }
     public string? Tipo { get; set; }
     public bool? Opcional { get; set; }
-    public decimal? Creditos { get; set; }
+    public int? Creditos { get; set; }
     public int? Horas { get; set; }
     public bool? Anulada { get; set; }
     public int? HorasDocente { get; set; }

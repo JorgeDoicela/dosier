@@ -228,15 +228,25 @@ public class RbacService : IRbacService
                 if (user.TablaSigafi == "alumno") user.TablaSigafi = "otros";
                 await _context.SaveChangesAsync();
             }
-            requiredRoleCodes.Add("DOSIER_ADMIN");
+            if (!requiredRoleCodes.Contains("DOSIER_ADMIN"))
+            {
+                requiredRoleCodes.Add("DOSIER_ADMIN");
+            }
         }
         else if (user.Administrador)
         {
-            requiredRoleCodes.Add("DOSIER_ADMIN");
+            if (!requiredRoleCodes.Contains("DOSIER_ADMIN"))
+            {
+                requiredRoleCodes.Add("DOSIER_ADMIN");
+            }
         }
-        else if (user.TablaSigafi == "profesor")
+
+        if (user.TablaSigafi == "profesor")
         {
-            requiredRoleCodes.Add("DOSIER_DOCENTE");
+            if (!requiredRoleCodes.Contains("DOSIER_DOCENTE"))
+            {
+                requiredRoleCodes.Add("DOSIER_DOCENTE");
+            }
         }
 
         // ── Designaciones Curriculares Institucionales (doc_autoridades_curriculares) ──

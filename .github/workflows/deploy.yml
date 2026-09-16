@@ -325,11 +325,10 @@ jobs:
             echo "=== Descargando imagenes Docker actualizadas ==="
             docker compose pull --quiet
 
-            echo "=== Levantando servicios DOSIER con datos limpios (Force Recreate) ==="
-            docker compose up -d --force-recreate --remove-orphans
-            docker image prune -f
+            echo "=== Iniciando contenedor de base de datos MySQL ==="
+            docker compose up -d dosier-db
 
-            echo "=== Esperando auto-inicializacion de MySQL ==="
+            echo "=== Esperando inicializacion de MySQL ==="
             if [ -f .env ]; then
               set -a
               . .env
@@ -351,8 +350,13 @@ jobs:
               fi
             done
 
-            echo "=== Reiniciando servicio backend DOSIER para vincular con la BD fresca ==="
-            docker compose restart dosier-backend
+            echo "=== Levantando servicios de aplicacion DOSIER (Backend y Web) con base de datos lista ==="
+            docker compose up -d --force-recreate --remove-orphans dosier-backend dosier-web
+            docker image prune -f
+
+            echo "=== Esperando disponibilidad de la API ==="
+            sleep 8
+            curl -sf http://localhost:5000/api/ping && echo "API DOSIER OK" || echo "Advertencia: API sigue inicializandose"
 
   # =========================================================================
   # 7. Verificacion de Salud y Resumen de Despliegue
