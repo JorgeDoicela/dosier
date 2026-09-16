@@ -76,8 +76,11 @@ dosier/
 |   |-- documentacion/           # Especificación técnica, arquitectónica y operativa completa
 |   `-- tesis/                   # Anteproyecto, codex de diagnóstico y formatos institucionales
 `-- scripts/
-    |-- base_datos/              # Scripts SQL oficiales (01 a 04) para MySQL sigafi_es
-    `-- despliegue/              # Automatizaciones para entornos locales y de producción
+    |-- base_datos/              # Scripts SQL oficiales (00 a 04) para MySQL sigafi_es
+    |   `-- extensiones/         # Esquemas futuros opcionales (05_extension_futura_...)
+    `-- despliegue/              # Automatizaciones organizadas por entorno
+        |-- docker/              # Arranque local Docker + Cloudflare Quick Tunnel (start-local.ps1)
+        `-- iis/                 # Despliegue nativo Windows IIS (deploy_local.ps1) y respaldos
 ```
 
 ### 3.1. Tecnologías Principales
@@ -99,6 +102,7 @@ Los scripts ubicados en `scripts/base_datos/` administran el esquema del módulo
 2. `02_gobernanza_y_antecedentes_curriculares.sql`: Normativas externas inalterables (CES, CACES, SENESCYT), modelos educativos institucionales, proyectos de carrera aprobados por CES, perfiles de egreso y matriz de antecedentes epistemológicos de asignaturas.
 3. `03_curriculum_pea_oficial.sql`: Arquitectura completa y normalizada del Programa de Estudio de la Asignatura (Secciones a - k: unidades, temas, RDA con aporte al perfil, prácticas, evaluación institucional 10 pts, bibliografía, observaciones y trazabilidad).
 4. `04_seguridad_rbac_roles_curriculares.sql`: Identidad oficial de DOSIER (Sistema ID 6), módulos curriculares, catálogo de los 5 roles institucionales y asignación granular de permisos.
+* `extensiones/05_extension_futura_curriculum_silabo_guias.sql`: Esquema DDL para extensiones curriculares futuras (Sílabo analítico y Guías APE).
 
 ---
 
@@ -113,36 +117,43 @@ El diseño visual de DOSIER sigue estrictamente el **Vercel Geist Design System*
 
 ## 6. Configuración y Ejecución Local
 
-### 6.1. Requisitos Previos
-* .NET SDK 8.0 o superior.
-* Node.js 18.0+ y npm 9.0+.
-* Servidor MySQL 8.0+ o MariaDB 10.5+ con la base de datos `sigafi_es` activa en el puerto `3306`.
+### Opción A: Ejecución Integral con Docker (Recomendada)
+Para levantar el stack completo (MySQL 8.0, Backend .NET, Frontend Nginx y Túnel HTTPS de Cloudflare):
+```powershell
+# Levantar stack con túnel público HTTPS
+.\scripts\despliegue\docker\start-local.ps1 -Tunnel
 
-### 6.2. Inicialización de Base de Datos
+# O detener el stack conservando los volúmenes de datos
+.\scripts\despliegue\docker\start-local.ps1 -Down
+```
+
+### Opción B: Ejecución Manual de Servicios (.NET + Vite)
+
+#### 6.1. Inicialización de Base de Datos
 Ejecutar secuencialmente los scripts oficiales desde el cliente MySQL:
 ```powershell
+mysql -u root -p12345 -h 127.0.0.1 -P 3306 sigafi_es -e "SOURCE scripts/base_datos/00_sigafi_esquema_y_datos_demo.sql"
 mysql -u root -p12345 -h 127.0.0.1 -P 3306 sigafi_es -e "SOURCE scripts/base_datos/01_sistema_base.sql"
 mysql -u root -p12345 -h 127.0.0.1 -P 3306 sigafi_es -e "SOURCE scripts/base_datos/02_gobernanza_y_antecedentes_curriculares.sql"
 mysql -u root -p12345 -h 127.0.0.1 -P 3306 sigafi_es -e "SOURCE scripts/base_datos/03_curriculum_pea_oficial.sql"
 mysql -u root -p12345 -h 127.0.0.1 -P 3306 sigafi_es -e "SOURCE scripts/base_datos/04_seguridad_rbac_roles_curriculares.sql"
 ```
 
-### 6.3. Ejecución de Servicios
-1. **Backend API:**
-   ```powershell
-   cd backend/dosier_api
-   dotnet run
-   ```
-   * Servicio activo en: `http://localhost:5247/`
-   * Documentación interactiva Swagger: `http://localhost:5247/swagger`
+#### 6.2. Ejecución del Backend
+```powershell
+cd backend/dosier_api
+dotnet run
+```
+* Servicio activo en: `http://localhost:5001/` (o puerto configurado)
+* Documentación interactiva Swagger: `http://localhost:5001/swagger`
 
-2. **Frontend Web:**
-   ```powershell
-   cd dosier_web
-   npm install
-   npm run dev
-   ```
-   * Interfaz de usuario activa en: `http://localhost:3010/`
+#### 6.3. Ejecución del Frontend Web
+```powershell
+cd dosier_web
+npm install
+npm run dev
+```
+* Interfaz de usuario activa en: `http://localhost:3010/` (o `http://localhost:5173/`)
 
 ---
 

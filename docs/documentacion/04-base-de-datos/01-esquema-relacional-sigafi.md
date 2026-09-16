@@ -141,7 +141,7 @@ graph TD
 
 Para inicializaciones autónomas (Docker Compose, CI/CD y entornos de prueba/defensa de tesis), la base de datos se estructura en 5 scripts ordenados en `scripts/base_datos/`, ejecutados automáticamente por el contenedor MySQL en `/docker-entrypoint-initdb.d/`:
 
-1. **`00_sigafi_esquema_y_datos_demo.sql`:** Provisión autónoma y completa del esquema preexistente de SIGAFI: actores (`profesores`, `alumnos`), carga académica (`carreras`, `periodos`, `mallas`, `mallas_periodos`, `detallemallas`, `prerequisitos`, `asignaturas`, `tipos_asignatura`, `modalidades`, `modalidades_carreras`, `secciones`, `cursos`, `asignaciones_profesores`, `matriculas`), infraestructura y horarios (`departamentos`, `espacios`, `horario_detalle`, `fechas_horarios`, `horas_clases`), evaluación y contratos (`parciales`, `parciales_modalidades_fechas`, `cargo_instituto`, `tipos_contratos`, `contratos`, `horas_academicas`, `dedicacion`, `profesores_dedicacion`, `profesores_actividades`, `subcategorias_actividades`), catálogos institucionales y CACES/SENESCYT (`etnias`, `discapacidades`, `titulos_profesores`, `grados_academicos`, `niveles_academicos`, `universidades`, `campo_amplio_unesco`, `campo_especifico_unesco`, `campo_detallado_unesco`, `instituciones_instituto`, `parametros`), tabla maestra `usuarios` y el esquema base RBAC (`rbac_sistema`, `rbac_operaciones`, `rbac_rol`, `rbac_modulos`, `rbac_modulos_operaciones`, `rbac_rol_modulo_operacion`, `rbac_usuario_rol`). Cumple con LOPDP mediante datos sintéticos realistas.
+1. **`00_sigafi_esquema_y_datos_demo.sql`:** Provisión autónoma y completa del esquema preexistente de SIGAFI: actores (`profesores`), carga académica (`carreras`, `periodos`, `mallas`, `mallas_periodos`, `detallemallas`, `prerequisitos`, `materias`, `tipos_asignatura`, `modalidades`, `modalidades_carreras`, `secciones`, `asignacion_materias`), infraestructura y horarios (`horas_clases`, `semanas_horarios`), catálogos institucionales (`paises`, `provincias`, `cantones`, `parroquias`, `nacionalidades`, `grados_academicos`, `niveles_academicos`, `instituciones_instituto`, `parametros`), tabla maestra `usuarios` y el esquema base RBAC (`rbac_sistema`, `rbac_operaciones`, `rbac_rol`, `rbac_modulos`, `rbac_modulos_operaciones`, `rbac_rol_modulo_operacion`). Cumple con LOPDP mediante anonimización estricta sobre catálogo académico real.
 2. **`01_sistema_base.sql`:** Tablas base del motor DOSIER (`doc_proyectos`, `doc_document_templates`, `doc_documentos_instancias`, `doc_user_signature_profiles`, `doc_documentos_firmas`, `doc_email_historial`, `doc_calendario_eventos_normativos`, etc.).
 3. **`02_gobernanza_y_antecedentes_curriculares.sql`:** Marco normativo institucional (CES, CACES), modelo educativo, matrices de tributación curricular y autoridades académicas designadas (`doc_autoridades_curriculares`).
 4. **`03_curriculum_pea_oficial.sql`:** Estructura completa de las 11 secciones oficiales del Programa de Estudio de la Asignatura (PEA).
@@ -149,17 +149,18 @@ Para inicializaciones autónomas (Docker Compose, CI/CD y entornos de prueba/def
 
 ---
 
-## 6. Script Consolidado para Modelado Curricular (PEA Oficial)
+## 6. Pipeline de Sanitización y Anonimización Continua (LOPDP)
 
-Para sesiones de levantamiento de requerimientos, modelado relacional y presentación técnica ante comisiones directivas, se dispone del script maestro:
-* **Archivo:** `scripts/base_datos/00_dosier_curriculum_pea_consolidado.sql`
-* **Alcance:** Integra en un único modelo relacional de 20 tablas el ciclo de vida íntegro del PEA y la gobernanza curricular:
-  1. *Marco y Gobernanza:* `doc_normativas`, `doc_normativa_articulos`, `doc_modelos_educativos`, `doc_proyectos_curriculares`, `doc_perfiles_egreso`, `doc_perfil_egreso_resultados`, `doc_asignatura_resultado_perfil`.
-  2. *Expediente Académico:* `doc_expedientes_curriculares`, `doc_expediente_asignaciones`.
-  3. *Arquitectura del PEA (11 Secciones):* `doc_pea`, `doc_pea_prerrequisitos`, `doc_pea_unidades`, `doc_pea_temas`, `doc_pea_resultados_aprendizaje`, `doc_pea_actividades_practicas`, `doc_pea_evaluaciones`, `doc_pea_bibliografia`.
-  4. *Circuito de Calidad y Firmas:* `doc_pea_observaciones`, `doc_pea_trazabilidad`, `doc_documentos_firmas`.
-* **Criterios de Depuración Aplicados:**
-  * Empleo exclusivo de claves primarias autoincrementales enteras (`INT AUTO_INCREMENT`) sin columnas UUID.
-  * Supresión de triggers automáticos, vistas y sentencias de inserción de datos (seeders).
-  * Exclusión de tablas efímeras de sincronización en tiempo real (WebSockets / CoWork), enlaces de un solo uso (Magic Links) y módulos ajenos a la planificación del PEA.
+Para mantener la base de datos de desarrollo y Docker permanentemente actualizada con las mallas y periodos reales del ISTPET sin vulnerar la privacidad legal:
+
+* **Script de Automatización:** `scripts/utilidades/sanitizar_sigafi_dump.py`
+* **Ejecución:**
+  ```powershell
+  py scripts/utilidades/sanitizar_sigafi_dump.py [ruta_al_dump_nuevo.sql]
+  ```
+* **Comportamiento del Pipeline:**
+  1. *Extracción DDL Dinámica:* Lee las 300 tablas de `sigafi_es` desde el volcado MySQL más reciente (`Dump*.sql`).
+  2. *Retención Curricular Íntegra:* Conserva de forma transparente todas las carreras, mallas aprobadas, asignaturas, códigos y horas de docencia/APE/autónomo.
+  3. *Anonimización LOPDP:* Reemplaza cédulas de docentes por identificadores sintéticos válidos módulo 10, nombres genéricos y correos institucionales de prueba.
+  4. *Poda de Tablas Masivas:* Omite registros de facturación, pensiones o historiales estudiantiles antiguos, reduciendo el volcado de 263 MB a 0.76 MB para un arranque en 1 segundo.
 

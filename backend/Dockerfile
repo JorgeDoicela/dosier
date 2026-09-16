@@ -22,9 +22,13 @@ COPY backend/ ./backend/
 WORKDIR /src/backend/dosier_api
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
-# Etapa 2: Imagen de ejecución (Runtime optimizado)
+# Etapa 2: Imagen de ejecucion (Runtime optimizado)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
+# Instalar curl (requerido por el healthcheck de Docker Compose)
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Crear directorios necesarios para uploads y backups
 RUN mkdir -p /app/uploads /app/backups

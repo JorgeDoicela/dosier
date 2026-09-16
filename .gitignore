@@ -100,26 +100,31 @@ backend/dosier_api/appsettings.*.json
 # --------------------------------------------------------------------
 # 6. Uploads, Archivos Generados, Firmas y Backups
 # --------------------------------------------------------------------
-# Subidas y PDFs generados en Backend
+# Subidas, evidencias y montajes Docker
+uploads/
+/uploads/
 backend/dosier_api/uploads/**
 !backend/dosier_api/uploads/
 !backend/dosier_api/uploads/**/
 !backend/dosier_api/uploads/**/.gitkeep
 
-# Backups locales (.dump, .sql.bak, temporales)
+# Backups locales (.dump, .sql.bak, temporales y montajes Docker)
+backups/
+/backups/
 backend/dosier_api/backups/**
 !backend/dosier_api/backups/
 !backend/dosier_api/backups/**/
 !backend/dosier_api/backups/**/.gitkeep
 
-scripts/despliegue/backups/**
-!scripts/despliegue/backups/
-!scripts/despliegue/backups/**/
-!scripts/despliegue/backups/**/.gitkeep
+scripts/despliegue/iis/backups/**
+!scripts/despliegue/iis/backups/
+!scripts/despliegue/iis/backups/**/
+!scripts/despliegue/iis/backups/**/.gitkeep
 
 *.dump
 *.sql.bak
 *.sql.dump
+Dump*.sql
 *.db-shm
 *.db-wal
 

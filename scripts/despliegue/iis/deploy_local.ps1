@@ -19,11 +19,11 @@ if (-not $isAdmin) {
 }
 
 # Configuración del Entorno (Detección dinámica de la raíz del proyecto)
-$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $WebDir = Join-Path $ProjectRoot "dosier_web"
 $ApiDir = Join-Path $ProjectRoot "backend\dosier_api"
 $PublishTemp = Join-Path $ProjectRoot "backend\publish"
-$BackupDir = Join-Path $ProjectRoot "scripts\despliegue\backups"
+$BackupDir = Join-Path $PSScriptRoot "backups"
 
 $IisWebPath = "C:\inetpub\wwwroot\dosier"
 $IisApiPath = "C:\inetpub\wwwroot\apiDosier"

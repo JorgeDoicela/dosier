@@ -8,10 +8,10 @@ services:
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-12345}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: sigafi_es
-      MYSQL_USER: ${DB_USER:-dosier_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-12345}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./scripts/base_datos:/docker-entrypoint-initdb.d:ro
@@ -25,7 +25,7 @@ services:
         max-size: "20m"
         max-file: "3"
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${DB_ROOT_PASSWORD:-12345}\""]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${DB_ROOT_PASSWORD}\""]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,18 +46,20 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
-      - ConnectionStrings__default_connection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD:-12345};
-      - ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD:-12345};
-      - Jwt__Secret=${JWT_SECRET:-DOSIER_JWT_zsJpOeYEHWFI8QL0dnTxolGUMywNPZB9V512Da3C7biXrtgf}
-      - JWTSettings__Secret=${JWT_SETTINGS_SECRET:-DOSIER_SSO_Q612U9OpgHkBdhXTsAonNFC0jzSviWel73rftxRbyE5wMIac}
+      # Conexión a MySQL por nombre de red Docker (no por IP del host)
+      - ConnectionStrings__default_connection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
+      - ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
+      - Jwt__Secret=${JWT_SECRET}
+      - JWTSettings__Secret=${JWT_SETTINGS_SECRET}
       - Jwt__Issuer=DosierApi
       - Jwt__Audience=DosierClients
-      - FrontendUrl=https://dosier.jorgedoicela.com
+      # FrontendUrl controla CORS y links en emails — apunta al túnel o frontend activo
+      - FrontendUrl=${FRONTEND_URL:-http://localhost:80}
     env_file:
       - .env
     volumes:
-      - ./uploads:/app/uploads
-      - ./backups:/app/backups
+      - ${UPLOADS_PATH:-./backend/dosier_api/uploads}:/app/uploads
+      - ${BACKUPS_PATH:-./backend/dosier_api/backups}:/app/backups
     logging:
       driver: "json-file"
       options:
@@ -76,17 +78,17 @@ services:
       start_period: 20s
 
   # ---------------------------------------------------------------------------
-  # 3. Frontend Web (React 18 + Vite + Nginx SPA + SSL)
+  # 3. Frontend Web (React 18 + Vite + Nginx SPA)
   # ---------------------------------------------------------------------------
   dosier-web:
     image: ${FRONTEND_IMAGE:-ghcr.io/jorgedoicela/dosier-web:latest}
+    build:
+      context: ./dosier_web
+      dockerfile: Dockerfile
     container_name: dosier-web
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./certs:/etc/nginx/certs:ro
+      - "${FRONTEND_PORT:-80}:80"
     logging:
       driver: "json-file"
       options:
@@ -97,6 +99,25 @@ services:
         condition: service_started
     networks:
       - dosier-network
+
+  # ---------------------------------------------------------------------------
+  # 4. Cloudflare Tunnel (Acceso Remoto HTTPS Público Gratuito / Cero Costos)
+  # ---------------------------------------------------------------------------
+  dosier-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: dosier-tunnel
+    restart: unless-stopped
+    # Quick Tunnel: genera URL HTTPS pública temporal sin cuenta ni dominio.
+    # La URL tipo https://xxxx.trycloudflare.com se imprime en los logs.
+    # Uso: docker compose --profile tunnel up dosier-tunnel
+    command: tunnel --no-autoupdate --url http://dosier-web:80
+    networks:
+      - dosier-network
+    depends_on:
+      dosier-web:
+        condition: service_started
+    profiles:
+      - tunnel
 
 networks:
   dosier-network:

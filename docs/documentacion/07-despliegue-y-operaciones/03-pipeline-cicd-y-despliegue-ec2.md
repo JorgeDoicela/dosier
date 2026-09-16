@@ -132,8 +132,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./uploads:/app/uploads
-      - ./backups:/app/backups
+      - ${UPLOADS_PATH:-./backend/dosier_api/uploads}:/app/uploads
+      - ${BACKUPS_PATH:-./backend/dosier_api/backups}:/app/backups
     logging:
       driver: "json-file"
       options:
@@ -154,13 +154,16 @@ services:
   # 3. Frontend Web (React 18 + Vite + Nginx SPA + SSL)
   dosier-web:
     image: ${FRONTEND_IMAGE:-ghcr.io/jorgedoicela/dosier-web:latest}
+    build:
+      context: ./dosier_web
+      dockerfile: Dockerfile
     container_name: dosier-web
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${FRONTEND_PORT:-80}:80"
+      - "${FRONTEND_SSL_PORT:-443}:443"
     volumes:
-      - ./certs:/etc/nginx/certs:ro
+      - ${CERTS_PATH:-./certs}:/etc/nginx/certs:ro
     logging:
       driver: "json-file"
       options:
@@ -212,9 +215,12 @@ La seguridad del pipeline se rige por el principio de cero credenciales en texto
 DB_ROOT_PASSWORD=PASSWORD_SEGURO_GENERADO_OPENSSL
 DB_USER=dosier_user
 DB_PASSWORD=PASSWORD_SEGURO_GENERADO_OPENSSL
+DB_PORT=3307
 JWT_SECRET=CLAVE_SECRETA_INSTITUCIONAL_JWT_MINIMO_32_BYTES
+JWT_SETTINGS_SECRET=CLAVE_SECRETA_SSO_COMPARTIDA_MINIMO_32_BYTES
+BACKEND_PORT=5001
+FRONTEND_PORT=80
 FRONTEND_URL=https://dosier.jorgedoicela.com
-ASPNETCORE_ENVIRONMENT=Production
 ```
 
 ---

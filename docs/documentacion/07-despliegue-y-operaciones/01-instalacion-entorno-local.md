@@ -17,7 +17,8 @@ Para la puesta en marcha, compilación y ejecución de la plataforma DOSIER en u
 
 ```mermaid
 graph TD
-    Step1[1. Inicialización de Base de Datos\nEjecutar scripts 01 a 05 en MySQL 3306] --> Step2[2. Configuración del Backend\nVerificar appsettings y dotnet run en puerto 5247]
+    Step0[Opción Rápida: Docker Compose\nstart-local.ps1 -Tunnel] -.-> Step4
+    Step1[1. Inicialización de Base de Datos\nEjecutar scripts 00 a 04 en MySQL 3306] --> Step2[2. Configuración del Backend\nVerificar appsettings y dotnet run]
     Step2 --> Step3[3. Configuración del Frontend\nVerificar .env, npm install y npm run dev]
     Step3 --> Step4[4. Verificación de Servicios\nSwagger REST API & React SPA en navegador]
 ```
@@ -35,6 +36,7 @@ graph TD
    * **`02_gobernanza_y_antecedentes_curriculares.sql`:** Despliega el repositorio de normativas de nivel superior (CES, CACES, SENESCYT), modelos educativos institucionales del ISTPET, proyectos de carrera aprobados y matriz de antecedentes epistemológicos de asignaturas.
    * **`03_curriculum_pea_oficial.sql`:** Crea la tabla maestra `cur_pea`, las 10 tablas específicas para las secciones oficiales A a la K del PEA institucional, colaboradores y versiones.
    * **`04_seguridad_rbac_roles_curriculares.sql`:** Registra a DOSIER como sistema oficial (ID 6: `"Gestión Curricular y Acreditación ISTPET"`), formaliza los 4 módulos curriculares, da de alta los 5 roles curriculares (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`), asocia permisos y sincroniza usuarios.
+   * *(Nota: El script `scripts/base_datos/extensiones/05_extension_futura_curriculum_silabo_guias.sql` queda reservado para futuras extensiones de sílabos y guías APE).*
 
 ### Paso 2: Configuración y Ejecución del Backend (.NET 8.0)
 

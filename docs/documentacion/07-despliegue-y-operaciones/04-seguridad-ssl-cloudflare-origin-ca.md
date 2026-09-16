@@ -4,11 +4,12 @@ Este documento detalla la arquitectura de seguridad perimetral implementada para
 
 ---
 
-## 1. Arquitectura de Cifrado Extremo a Extremo
+## 1. Arquitectura de Cifrado y Entornos Operativos (Producción vs Staging)
 
-En arquitecturas tradicionales con SSL básico o proxies flexibles, el tráfico entre Cloudflare y el servidor de origen viaja en texto plano (HTTP puerto 80), lo que expone los datos a ataques Man-in-the-Middle en el canal de transporte.
+En DOSIER se definen dos niveles de conectividad segura según el entorno de ejecución:
 
-En DOSIER, se implementa una topología de **cifrado estricto de dos niveles**:
+### 1.1 Entorno de Producción (AWS EC2 + Cloudflare Full Strict)
+Utiliza certificados Origin CA de Cloudflare instalados en Nginx en el puerto 443 del servidor AWS EC2:
 
 ```
 [ Navegador del Usuario ]
@@ -30,11 +31,26 @@ En DOSIER, se implementa una topología de **cifrado estricto de dos niveles**:
 
 ---
 
-## 2. Ventajas del Certificado Cloudflare Origin CA
+### 1.2 Entorno de Staging / Pre-Producción Local (Docker + Cloudflare Quick Tunnel)
+Para pruebas de integración, co-redacción concurrente multi-dispositivo y simulaciones de defensa de grado sin costos de infraestructura en AWS:
 
-1. **Validez Prolongada (Hasta 15 Años):** Elimina la dependencia de daemons de renovación automática en el servidor como Certbot/Let's Encrypt, previniendo caídas imprevistas por expiración de certificados.
-2. **Autenticación Mutua con Cloudflare:** El servidor Nginx solo acepta conexiones validadas por la red de Cloudflare, reduciendo la superficie de ataque sobre el host EC2.
-3. **Cero Penalización de Rendimiento:** La terminación SSL se realiza a nivel del contenedor Nginx de alto rendimiento con optimización de ciphers modernos.
+* **Mecanismo:** Contenedor `dosier-tunnel` (`cloudflare/cloudflared:latest`) integrado como perfil en Docker Compose.
+* **Topología:** Establece un túnel seguro saliente por QUIC/HTTP2 hacia los bordes de Cloudflare sin abrir puertos en el router ni requerir IP pública.
+* **Cifrado:** Cloudflare Edge provee terminación SSL/TLS 1.3 automática mediante URLs públicas firmadas (`https://*.trycloudflare.com`).
+* **Enrutamiento:** Dirige el tráfico HTTPS directamente al contenedor Nginx (`dosier-web:80`), el cual balancea hacia `dosier-backend:5000` y `dosier-db:3306`.
+* **Arranque:**
+  ```powershell
+  .\scripts\despliegue\docker\start-local.ps1 -Tunnel
+  ```
+
+---
+
+## 2. Ventajas del Modelo Dual Cloudflare (Origin CA y Quick Tunnel)
+
+1. **Paridad Exacta Producción / Staging:** El frontend y backend corren en contenedores idénticos bajo Nginx y Kestrel en ambos entornos.
+2. **Cero Costos en Staging:** Permite apagar la instancia de AWS durante etapas de desarrollo activo sin perder la capacidad de realizar pruebas remotas con evaluadores externos.
+3. **Validez Prolongada en Producción (Hasta 15 Años):** Elimina la dependencia de daemons de renovación automática como Certbot/Let's Encrypt en el servidor EC2.
+4. **Cero Exposición de Puertos en Staging:** El túnel saliente no requiere apertura de NAT ni reenvío de puertos (Port Forwarding) en redes residenciales o institucionales.
 
 ---
 

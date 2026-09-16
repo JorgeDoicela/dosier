@@ -60,7 +60,16 @@ builder.Services.AddCors(options =>
                     }
                 }
 
-                // 3. Permitir conexiones desde redes locales privadas (Wi-Fi, LAN, teléfonos u otras PCs)
+                // 3. Permitir dominios Cloudflare Tunnel y dominios de producción institucionales
+                if (uri.Host.EndsWith(".trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.Equals("trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith("jorgedoicela.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith("istpet.edu.ec", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // 4. Permitir conexiones desde redes locales privadas (Wi-Fi, LAN, teléfonos u otras PCs)
                 if (IPAddress.TryParse(uri.Host, out var ip))
                 {
                     var bytes = ip.GetAddressBytes();
@@ -76,7 +85,7 @@ builder.Services.AddCors(options =>
                 }
             }
 
-            // 4. Permitir cualquier origen explícito listado en Cors:AllowedOrigins
+            // 5. Permitir cualquier origen explícito listado en Cors:AllowedOrigins
             if (configuredOrigins.Any(o => o.TrimEnd('/').Equals(origin.TrimEnd('/'), StringComparison.OrdinalIgnoreCase)))
             {
                 return true;
