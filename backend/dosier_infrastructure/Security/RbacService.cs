@@ -9,12 +9,14 @@ namespace dosier_infrastructure.Security;
 public class RbacService : IRbacService
 {
     private readonly DosierContext _context;
+    private readonly string _superAdminCedula;
     private readonly string _masterAdminId;
     private static bool _rbacSeeded = false;
 
     public RbacService(DosierContext context, IConfiguration configuration)
     {
         _context = context;
+        _superAdminCedula = configuration["Security:SuperAdminCedula"]?.Trim() ?? string.Empty;
         _masterAdminId = configuration["Security:MasterAdminId"]?.Trim() ?? string.Empty;
     }
 
@@ -219,22 +221,18 @@ public class RbacService : IRbacService
 
         var requiredRoleCodes = new List<string>();
 
-        // Reglas de negocio para roles automáticos
-        if (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId)
+        // Reglas de negocio para roles automáticos (RBAC Declarativo)
+        var isDesignatedAdmin = (!string.IsNullOrEmpty(_superAdminCedula) && user.IdSigafi == _superAdminCedula) ||
+                                (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId) ||
+                                user.Administrador;
+
+        if (isDesignatedAdmin)
         {
-            if (!user.Administrador || user.TablaSigafi == "alumno")
+            if (!user.Administrador)
             {
                 user.Administrador = true;
-                if (user.TablaSigafi == "alumno") user.TablaSigafi = "otros";
                 await _context.SaveChangesAsync();
             }
-            if (!requiredRoleCodes.Contains("DOSIER_ADMIN"))
-            {
-                requiredRoleCodes.Add("DOSIER_ADMIN");
-            }
-        }
-        else if (user.Administrador)
-        {
             if (!requiredRoleCodes.Contains("DOSIER_ADMIN"))
             {
                 requiredRoleCodes.Add("DOSIER_ADMIN");

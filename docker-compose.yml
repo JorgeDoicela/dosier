@@ -55,6 +55,8 @@ services:
       - Jwt__Audience=DosierClients
       # FrontendUrl controla CORS y links en emails — apunta al túnel o frontend activo
       - FrontendUrl=${FRONTEND_URL:-http://localhost:80}
+      - Security__SuperAdminCedula=${SECURITY_SUPER_ADMIN_CEDULA}
+      - Security__MasterAdminId=${SECURITY_MASTER_ADMIN_ID}
     env_file:
       - .env
     volumes:

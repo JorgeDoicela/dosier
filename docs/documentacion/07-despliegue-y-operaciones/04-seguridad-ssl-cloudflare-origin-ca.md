@@ -34,14 +34,55 @@ Utiliza certificados Origin CA de Cloudflare instalados en Nginx en el puerto 44
 ### 1.2 Entorno de Staging / Pre-Producción Local (Docker + Cloudflare Quick Tunnel)
 Para pruebas de integración, co-redacción concurrente multi-dispositivo y simulaciones de defensa de grado sin costos de infraestructura en AWS:
 
-* **Mecanismo:** Contenedor `dosier-tunnel` (`cloudflare/cloudflared:latest`) integrado como perfil en Docker Compose.
-* **Topología:** Establece un túnel seguro saliente por QUIC/HTTP2 hacia los bordes de Cloudflare sin abrir puertos en el router ni requerir IP pública.
-* **Cifrado:** Cloudflare Edge provee terminación SSL/TLS 1.3 automática mediante URLs públicas firmadas (`https://*.trycloudflare.com`).
-* **Enrutamiento:** Dirige el tráfico HTTPS directamente al contenedor Nginx (`dosier-web:80`), el cual balancea hacia `dosier-backend:5000` y `dosier-db:3306`.
-* **Arranque:**
-  ```powershell
-  .\scripts\despliegue\docker\start-local.ps1 -Tunnel
-  ```
+* **Mecanismo:** Servicio `dosier-tunnel` sustentado en la imagen oficial `cloudflare/cloudflared:latest` integrado como perfil condicional (`--profile tunnel`) en Docker Compose, o ejecutado directamente mediante el binario de línea de comandos de `cloudflared`.
+* **Naturaleza Efímera (Ciclo de Vida):** Los dominios generados bajo el sufijo `*.trycloudflare.com` son túneles rápidos temporales sin registro previo (*Quick Tunnels*). Al detenerse el proceso de `cloudflared`, cerrarse la terminal o reiniciarse el contenedor, el subdominio aleatorio expira definitivamente y Cloudflare asigna un nuevo identificador al relanzar el túnel.
+* **Topología:** Establece un túnel seguro saliente por QUIC/HTTP2 hacia la red perimetral (Edge) de Cloudflare sin requerir apertura de puertos en el enrutador local ni asignación de IP pública fija.
+* **Cifrado y Certificación:** Los servidores de borde de Cloudflare gestionan la terminación SSL/TLS 1.3 de forma transparente, proveyendo certificados HTTPS válidos y reconocidos por todos los navegadores web.
+* **Enrutamiento Unificado:**
+  * En entorno de contenedores Docker: El túnel apunta internamente a `http://dosier-web:80`, permitiendo que Nginx resuelva tanto los archivos estáticos del frontend React como las redirecciones de `/api/` hacia `dosier-backend:5000` y de `/hubs/` hacia SignalR.
+  * En entorno de desarrollo nativo (Vite + Kestrel): El comando `cloudflared tunnel --url http://localhost:3010` expone el servidor de desarrollo de Vite (puerto 3010), el cual a su vez canaliza `/api` y `/hubs` hacia el backend Kestrel en el puerto `5185` mediante su proxy interno configurado en `vite.config.ts`.
+* **Compatibilidad de Políticas de Seguridad (CORS):** La capa de backend (`Program.cs`) incorpora validación nativa explícita para solicitudes procedentes de subdominios `*.trycloudflare.com`, admitiendo cabeceras, credenciales de sesión y tráfico bidireccional de WebSockets.
+
+#### Comandos de Ejecución para Túneles Temporales
+
+**Opción A: Ejecución mediante Docker Compose (Recomendado para Staging)**
+```powershell
+# Levantar stack completo con túnel activo
+.\scripts\despliegue\docker\start-local.ps1 -Tunnel
+
+# O mediante comandos Docker nativos:
+docker compose --profile tunnel up -d dosier-tunnel
+
+# Consultar la URL HTTPS temporal asignada en los logs:
+docker logs dosier-tunnel 2>&1 | Select-String "trycloudflare.com"
+```
+
+**Opción B: Ejecución en Desarrollo Local Nativo en Windows (Sin Docker)**
+
+1. **Aprovisionamiento del binario `cloudflared.exe`:**
+   * Descargar el ejecutable oficial de Windows desde el repositorio de Cloudflare (`cloudflared-windows-amd64.exe`) y renombrarlo a `cloudflared.exe`.
+   * Para poder invocarlo globalmente desde cualquier terminal (PowerShell / CMD), registrar el directorio donde reside `cloudflared.exe` en la variable de entorno `PATH` del usuario:
+     ```powershell
+     # Ejemplo agregando la carpeta de Descargas/Cloudfare al PATH de usuario:
+     [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$HOME\Downloads\Cloudfare", [EnvironmentVariableTarget]::User)
+     ```
+   * Alternativa directa: Abrir la terminal PowerShell en la carpeta donde reside el ejecutable e invocarlo como `.\cloudflared.exe`.
+
+2. **Arranque del túnel hacia el puerto de Vite:**
+   ```powershell
+   # Asegurar que el frontend esté corriendo en dosier_web (puerto 3010)
+   npm run dev
+
+   # En otra terminal, abrir el túnel temporal hacia Vite:
+   cloudflared tunnel --url http://localhost:3010
+   # (O '.\cloudflared.exe tunnel --url http://localhost:3010' si se ejecuta desde su carpeta local)
+   ```
+La salida por consola generará la URL pública activa (por ejemplo, `https://nuevo-subdominio.trycloudflare.com`). Al abrir dicha URL con el sufijo `/dashboard` o `/login`, la navegación y las llamadas a la API operarán con cifrado HTTPS completo.
+
+#### Criterio de Selección: Terminal vs Contenedor Docker
+
+* **Uso Recomendado de la Terminal (Opción B):** Es la alternativa idónea para pruebas rápidas y demostraciones efímeras. Muestra la URL generada de inmediato en consola, no sobrecarga el archivo `docker-compose.yml` con servicios temporales y permite cerrar la conexión instantáneamente con `Ctrl + C`.
+* **Uso del Contenedor Docker (Opción A):** Reservado para entornos de staging desatendidos o cuando se implementa un **Named Tunnel persistente** vinculado a un dominio oficial mediante token (`tunnel run --token ...`), donde el servicio debe operar de forma ininterrumpida en segundo plano sin intervención manual.
 
 ---
 

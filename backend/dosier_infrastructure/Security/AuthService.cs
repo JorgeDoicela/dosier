@@ -20,6 +20,7 @@ public class AuthService : IAuthService
     private readonly IMagicLinkService _magicLinkService;
     private readonly IMicrosoftAuthService _microsoftAuthService;
     private readonly IPasswordRecoveryService _passwordRecoveryService;
+    private readonly string _superAdminCedula;
     private readonly string _masterAdminId;
 
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (int Attempts, DateTime? LockedUntil)> _userLockouts = new();
@@ -46,6 +47,7 @@ public class AuthService : IAuthService
         _magicLinkService = magicLinkService;
         _microsoftAuthService = microsoftAuthService;
         _passwordRecoveryService = passwordRecoveryService;
+        _superAdminCedula = configuration["Security:SuperAdminCedula"]?.Trim() ?? string.Empty;
         _masterAdminId = configuration["Security:MasterAdminId"]?.Trim() ?? string.Empty;
     }
 
@@ -404,7 +406,9 @@ public class AuthService : IAuthService
             RoleCodes = roleCodes,
             TipoUsuario = user.TablaSigafi,
             Permissions = permissions,
-            Administrador = user.Administrador || (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId),
+            Administrador = roleCodes.Contains("DOSIER_ADMIN") || user.Administrador ||
+                            (!string.IsNullOrEmpty(_superAdminCedula) && user.IdSigafi == _superAdminCedula) ||
+                            (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId),
             Email = user.EmailInstitucional ?? "",
             Sistemas = systemsClaim,
             AceptoLopdp = hasAcceptedLopdp

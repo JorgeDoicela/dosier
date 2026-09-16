@@ -95,3 +95,7 @@ graph TD
 1. **Prueba de Autenticación y RBAC:** Ingrese a la plataforma con una cuenta docente o administrativa. Compruebe que el endpoint `/api/auth/login` emita el JWT y que `AuthContext` active la vista correspondiente a su rol.
 2. **Prueba de Carga Horaria Curricular:** Acceda a la formulación de un PEA. Compruebe que los datos generales y la distribución horaria de docencia (CD), APE y autónomo se precarguen automáticamente desde `detallemallas`.
 3. **Prueba de Co-Redacción Concurrente:** Abra la misma sección de contenidos temáticos del PEA en dos navegadores distintos con credenciales de docentes colaboradores. Verifique que la edición simultánea fluya sin bloqueos mediante SignalR y el componente `<CoWorkField>`.
+4. **Acceso Remoto Temporal (Cloudflare Quick Tunnel):** Para compartir o probar la aplicación en dispositivos externos sin exponer puertos en el router:
+   * En entorno Docker: Ejecutar `.\scripts\despliegue\docker\start-local.ps1 -Tunnel` y consultar la URL pública generada con `docker logs dosier-tunnel`.
+   * En entorno local nativo (Windows): Iniciar el túnel directamente hacia el puerto de Vite con `cloudflared tunnel --url http://localhost:3010` (o `.\cloudflared.exe tunnel --url http://localhost:3010` desde la carpeta donde se descargó el binario, o registrándolo en la variable de entorno `PATH`).
+   * Nota operativa: Las URLs terminadas en `*.trycloudflare.com` son efímeras y cambian al reiniciar el proceso. La política CORS del backend admite automáticamente cualquier subdominio `*.trycloudflare.com`.
