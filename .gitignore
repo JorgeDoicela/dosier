@@ -26,6 +26,12 @@ $RECYCLE.BIN/
 *.swo
 *.bak
 
+# Python (Scripts de utilidades y migraciones)
+__pycache__/
+*.py[cod]
+*$py.class
+
+
 # --------------------------------------------------------------------
 # 2. Entornos de Desarrollo e IDEs (Visual Studio, VS Code, JetBrains Rider)
 # --------------------------------------------------------------------
