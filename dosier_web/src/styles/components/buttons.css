@@ -76,12 +76,12 @@
     justify-content: center;
     gap: 0.5rem;
     white-space: nowrap;
-    box-shadow: 0 4px 14px rgba(0, 112, 243, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 112, 243, 0.25);
 }
 
 .btn-brand:hover {
-    background-color: transparent;
-    color: var(--brand);
-    box-shadow: 0 6px 20px rgba(0, 112, 243, 0.2);
+    background-color: var(--brand-dark);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3);
     transform: translateY(-1px);
 }

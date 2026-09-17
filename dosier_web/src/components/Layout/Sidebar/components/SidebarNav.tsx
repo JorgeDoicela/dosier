@@ -125,8 +125,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
                         className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                            : 'bg-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50'
+                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
+                            : 'bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                             }`}
                     >
                         <Link
@@ -144,8 +144,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
                             <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
+                                ? 'text-zinc-900 dark:text-zinc-100'
+                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                                 }`}>
                                 <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
                             </div>
@@ -271,7 +271,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
                         className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
+                            ? 'bg-zinc-200/75 dark:bg-zinc-800 text-text-main font-semibold shadow-xs'
                             : 'bg-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50'
                             }`}
                     >
@@ -286,7 +286,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
                             <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
+                                ? 'bg-surface dark:bg-zinc-800 shadow-[0_1px_2px_rgba(15,23,42,0.08)] border border-border text-brand'
                                 : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
                                 }`}>
                                 <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
@@ -362,8 +362,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
                         className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                            : 'bg-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50'
+                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
+                            : 'bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                             }`}
                     >
                         <Link
@@ -377,8 +377,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
                             <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
+                                ? 'text-zinc-900 dark:text-zinc-100'
+                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                                 }`}>
                                 <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
                             </div>
@@ -421,14 +421,14 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                             if (onClose) onClose();
                                         }}
                                         className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 ${isSubActive
-                                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                                            : 'text-text-dim hover:text-text-main hover:bg-surface-hover/50'
+                                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
+                                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2.5 min-w-0 py-0.5">
                                             <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isSubActive
-                                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
+                                                ? 'text-zinc-900 dark:text-zinc-100'
+                                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                                                 }`}>
                                                 <subItem.icon size={13} strokeWidth={isSubActive ? 2 : 1.5} className="shrink-0" />
                                             </div>
@@ -511,14 +511,14 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                             if (onClose) onClose();
                                         }}
                                         className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 ${isSubActive
-                                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                                            : 'text-text-dim hover:text-text-main hover:bg-surface-hover/50'
+                                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
+                                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2.5 min-w-0 py-0.5">
                                             <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isSubActive
-                                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
+                                                ? 'text-zinc-900 dark:text-zinc-100'
+                                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                                                 }`}>
                                                 <subItem.icon size={13} strokeWidth={isSubActive ? 2 : 1.5} className="shrink-0" />
                                             </div>
@@ -545,14 +545,14 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 }}
                 className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ${item.indent ? 'ml-2 pl-2.5' : ''
                     } ${isActive
-                        ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                        : 'text-text-dim hover:text-text-main hover:bg-surface-hover/50'
+                        ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
+                        : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                     }`}
             >
                 <div className="flex items-center gap-2.5 min-w-0 py-0.5">
                     <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                        ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                        : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
+                        ? 'text-zinc-900 dark:text-zinc-100'
+                        : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                         }`}>
                         <item.icon size={item.indent ? 13 : 15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
                     </div>
@@ -577,14 +577,14 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
                 {group2.length > 0 && (
                     <>
-                        <hr className="border-border-thin my-3" />
+                        <div className="border-t border-black/[0.04] dark:border-white/[0.05] my-2 mx-1" />
                         {group2.map(renderMenuItem)}
                     </>
                 )}
 
                 {group3.length > 0 && (
                     <>
-                        <hr className="border-border-thin my-3" />
+                        <div className="border-t border-black/[0.04] dark:border-white/[0.05] my-2 mx-1" />
                         {group3.map(renderMenuItem)}
                     </>
                 )}

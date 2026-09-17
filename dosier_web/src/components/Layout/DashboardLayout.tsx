@@ -255,7 +255,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Desktop TopBar */}
                 {!isWorkspace && (
-                    <header className={`hidden lg:flex items-center justify-between bg-bg-deep border-b border-border-thin sticky top-0 z-[40] transition-[max-height,opacity] duration-150 ease-out ${topBarCollapsed
+                    <header className={`hidden lg:flex items-center justify-between bg-surface border-b border-border sticky top-0 z-[40] transition-[max-height,opacity] duration-150 ease-out ${topBarCollapsed
                             ? 'max-h-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
                             : 'max-h-14 h-14 opacity-100'
                         }`}>
@@ -310,7 +310,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
 
                 {/* Mobile Header */}
                 {!isWorkspace && (
-                    <header className={`lg:hidden flex items-center justify-between px-6 bg-bg-deep border-b border-border-thin z-50 transition-all duration-300 ease-in-out ${showHeader && !topBarCollapsed
+                    <header className={`lg:hidden flex items-center justify-between px-6 bg-surface border-b border-border z-50 transition-all duration-300 ease-in-out ${showHeader && !topBarCollapsed
                             ? 'max-h-20 py-4 opacity-100'
                             : 'max-h-0 py-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
                         }`}>

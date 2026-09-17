@@ -6,9 +6,9 @@ El cliente web de DOSIER (`dosier_web`) es una aplicación de página única (**
 * **React 18** y **TypeScript 5.x**.
 * **Vite** como empaquetador ultrarrápido y servidor de desarrollo local.
 * **Tailwind CSS v4** integrado nativamente con variables semánticas en `src/styles/base.css`.
-* **Vercel Geist Design System**: Lenguaje visual sobrio, minimalista, enfocado en tipografía de alta legibilidad (`Geist Sans` / `Geist Mono`), bordes definidos y jerarquía visual estricta.
+* **Geist Editorial / Enterprise Docs System**: Lenguaje visual sobrio y de alta legibilidad inspirado en Mintlify y GitBook Enterprise, enfocado en tipografía documental **Inter Puro** con variantes tipográficas avanzadas (`cv02`, `cv03`, `cv04`, `cv11`), arquitectura de capas con contraste equilibrado y delimitación estricta de folios curriculares.
 
-La plataforma proporciona a la comunidad académica del Instituto Superior Tecnológico Pedro Traversari una herramienta profesional para la planificación del Programa de Estudio de la Asignatura (PEA), co-redacción en tiempo real, revisión colegiada por comisiones de carrera, firma electrónica y verificación pública de acreditación.
+La plataforma proporciona a la comunidad académica del Instituto Superior Tecnológico Mayor Pedro Traversari una herramienta profesional para la planificación del Programa de Estudio de la Asignatura (PEA), co-redacción en tiempo real, revisión colegiada por comisiones de carrera, firma electrónica y verificación pública de acreditación.
 
 ---
 
@@ -19,8 +19,8 @@ Por directriz de diseño institucional y usabilidad técnica, el frontend implem
 > [!IMPORTANT]
 > **Prohibición Total de Transparencias en Componentes Flotantes y Superpuestos:**
 > Todos los modales, popovers, menús desplegables (`GeistSelect`), selectores de fechas (`GeistDatePicker`), drawers, tooltips y paneles de diálogo deben poseer fondos **100% sólidos y opacos**.
-> * Modo Claro: Fondo sólido `bg-white` (`#FFFFFF`).
-> * Modo Oscuro: Fondo sólido `bg-zinc-950` (`#09090b`) o `bg-black` (`#000000`).
+> * Modo Claro: Fondo sólido `bg-white` (`#ffffff`) sobre lienzo documental `#f1f3f6`.
+> * Modo Oscuro: Fondo sólido `bg-[#121721]` o `bg-[#0b0e14]`.
 > * Queda estrictamente prohibido el uso de clases translúcidas con opacidades intermedias (como `bg-white/80`, `bg-black/60` o `backdrop-blur-md` sin color de fondo pleno) en elementos de interacción, a fin de evitar el sangrado de texto (*text bleed-through*) y la contaminación visual de elementos subyacentes.
 
 ---

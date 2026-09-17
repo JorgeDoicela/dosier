@@ -135,15 +135,6 @@ export const PeaSupervisionTray: React.FC = () => {
         });
     }, [peas, search, selectedCarrera, selectedEstado]);
 
-    // Métricas compactas (Anti-patrón de KPIs gigantes evitado)
-    const metricas = useMemo(() => {
-        const total = peas.length;
-        const enRevision = peas.filter(p => p.estado === 'EnRevision' || p.estado === 'RevisadoCoord' || p.estado === 'RevisadoAcad').length;
-        const observados = peas.filter(p => p.estado === 'Observado' || (p.total_observaciones_pendientes > 0)).length;
-        const aprobados = peas.filter(p => p.estado === 'Aprobado' || p.estado === 'Publicado').length;
-        return { total, enRevision, observados, aprobados };
-    }, [peas]);
-
     const getEstadoBadge = (estado: string) => {
         switch (estado) {
             case 'Aprobado':
@@ -186,41 +177,6 @@ export const PeaSupervisionTray: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* ── BANDA DE MÉTRICAS COMPACTAS (HORIZONTAL STRIP) ── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-surface p-3.5 rounded-xl border border-border-thin shadow-2xs">
-                <div className="flex flex-col gap-0.5 border-r border-border-thin last:border-0 pr-3">
-                    <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Total Instrumentos</span>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold font-mono text-text-main">{metricas.total}</span>
-                        <span className="text-[11px] text-text-dim">asignaturas</span>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-0.5 border-r border-border-thin last:border-0 pr-3">
-                    <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">En Trámite / Revisión</span>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold font-mono text-brand">{metricas.enRevision}</span>
-                        <span className="text-[11px] text-text-dim">pendientes</span>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-0.5 border-r border-border-thin last:border-0 pr-3">
-                    <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Con Observaciones</span>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold font-mono text-amber-500">{metricas.observados}</span>
-                        <span className="text-[11px] text-text-dim">por subsanar</span>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Legalizados / Aprobados</span>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold font-mono text-emerald-500">{metricas.aprobados}</span>
-                        <span className="text-[11px] text-text-dim">concluidos</span>
-                    </div>
-                </div>
-            </div>
-
             {/* ── BARRA DE FILTROS Y CONTROLES ── */}
             <div className="bg-surface p-4 rounded-xl border border-border-thin shadow-2xs space-y-3">
                 <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center">

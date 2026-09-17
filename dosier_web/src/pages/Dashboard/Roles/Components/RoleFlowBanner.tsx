@@ -48,18 +48,18 @@ export const RoleFlowBanner: React.FC<Props> = ({
     ];
 
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center gap-1.5 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
+            <div className="segmented-container">
                 {ROLES.map(r => {
                     const isSelected = rolActivo === r.id;
                     return (
                         <button
                             key={r.id}
                             onClick={() => onCambiarRol(r.id)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
                                 isSelected
-                                    ? 'bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs font-semibold'
-                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                    ? 'segmented-item-active text-zinc-900 dark:text-zinc-100'
+                                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 border border-transparent'
                             }`}
                         >
                             {r.nombre}
@@ -69,8 +69,14 @@ export const RoleFlowBanner: React.FC<Props> = ({
             </div>
 
             {nombreUsuarioReal && (
-                <div className="text-[11px] text-zinc-500 font-mono">
-                    Sesión: <span className="text-zinc-900 dark:text-zinc-200 font-sans font-medium">{nombreUsuarioReal}</span> ({rolReal})
+                <div className="flex items-center gap-2.5 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-zinc-400 dark:text-zinc-500">Sesión activa:</span>
+                    <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{nombreUsuarioReal}</strong>
+                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                    <span className="badge-subtle">
+                        {rolReal}
+                    </span>
                 </div>
             )}
         </div>

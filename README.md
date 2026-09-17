@@ -66,7 +66,7 @@ dosier/
 |   |-- dosier_domain/           # Entidades del PEA, Constantes de Permisos y Reglas Puras
 |   |-- dosier_infrastructure/   # EF Core 9, Pomelo MySQL, SignalR Hub, Motor PDF y Firmas
 |   `-- dosier_tests/            # Pruebas unitarias de integridad curricular y firmas
-|-- dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Vercel Geist UI)
+|-- dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Geist Editorial / Enterprise Docs)
 |   |-- public/                  # Recursos estáticos, marcas y certificados
 |   `-- src/                     # Componentes modulares, Editor PEA, Contextos y API Client
 |-- dosier_mobile/               # Cliente Móvil React Native + Expo Router (Vercel Mobile UI)
@@ -85,7 +85,7 @@ dosier/
 
 ### 3.1. Tecnologías Principales
 * **Backend:** C# con .NET 8.0, ASP.NET Core Web API, Entity Framework Core 9.0, Pomelo MySQL Provider.
-* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Vercel Geist Design System, Lucide Icons.
+* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Geist Editorial / Enterprise Docs System (Inter Puro), Lucide Icons.
 * **Cliente Móvil:** React Native, Expo SDK, Expo Router, React Native Reanimated.
 * **Colaboración en Tiempo Real:** SignalR WebSockets con protocolo binario y sincronización Yjs CRDT.
 * **Generación Documental y Criptografía:** iText 9, Handlebars.Net, QRCoder, SHA-256 y soporte PKCS#12 (.p12).

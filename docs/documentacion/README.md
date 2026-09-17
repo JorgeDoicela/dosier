@@ -44,6 +44,7 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 * [02. Componentes UI Especializados y Shell del Constructor (DOSIERBuilder)](./05-frontend-web/02-componentes-ui-y-builder-shell.md): Shell documental, controles Geist UI, stepper de firmas de 4 estados y editor de las 11 secciones oficiales del PEA.
 * [03. Integración con API, Resiliencia y Tolerancia a Discrepancias](./05-frontend-web/03-integracion-api-y-resiliencia.md): Cliente Axios, serialización snake_case con fallbacks duales, interceptores JWT y reconexión SignalR.
 * [04. Guía de Extensibilidad y Creación de Nuevos Bloques Documentales](./05-frontend-web/04-creacion-y-extensibilidad-de-bloques.md): Arquitectura desacoplada para incorporar bloques modulares para el PEA y documentos curriculares institucionales.
+* [05. Sistema de Diseño Visual: DOSIER Editorial Clean](./05-frontend-web/05-sistema-de-diseno-editorial.md): Especificación del lenguaje visual, tipografía Inter con variantes OpenType (`cv02`, `cv03`, `cv04`, `cv11`), bordes suaves (`rgba(0,0,0,0.05)`), tokens `--subtle`, supresión de KPIs gigantes y matriz comparativa frente a Geist Puro.
 
 ### Sección 06: Aplicación Móvil
 * [01. Arquitectura de Aplicación Móvil (React Native + Expo)](./06-aplicacion-movil/01-arquitectura-movil-docente.md): Arquitectura de `dosier_mobile`, Expo Router `(tabs)`, catálogo de componentes táctiles Vercel Mobile y sistema de diseño Geist.

@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <main className="flex-1 bg-white dark:bg-black transition-colors duration-200">
+        <main className="flex-1 bg-bg-deep transition-colors duration-200">
             <div className="max-w-[1440px] mx-auto p-4 md:p-8 space-y-6">
                 {/* Selector Segmentado de Roles (Vercel Geist) */}
                 <RoleFlowBanner

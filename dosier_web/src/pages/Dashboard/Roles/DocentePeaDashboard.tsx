@@ -46,13 +46,13 @@ export const DocentePeaDashboard: React.FC = () => {
     return (
         <div className="space-y-5">
             {/* Encabezado Vercel Geist */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
                             Mis Asignaturas y Elaboración de PEA
                         </h1>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                        <span className="badge-subtle">
                             Ing. Edison Pérez
                         </span>
                     </div>
@@ -101,11 +101,11 @@ export const DocentePeaDashboard: React.FC = () => {
                         >
                             <div>
                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                    <span className="font-mono text-[10px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                                    <span className="badge-subtle">
                                         {pea.codigo_asignatura}
                                     </span>
                                     {pea.estado_workflow === 'Borrador' && (
-                                        <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                                        <span className="badge-subtle">
                                             Borrador
                                         </span>
                                     )}
@@ -129,7 +129,7 @@ export const DocentePeaDashboard: React.FC = () => {
                                 </p>
 
                                 {/* Distribución horaria */}
-                                <div className="mt-3 p-2.5 rounded bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-[11px] space-y-1 font-mono">
+                                <div className="mt-3 p-2.5 rounded-md surface-subtle text-[11px] space-y-1 font-mono">
                                     <div className="flex items-center justify-between">
                                         <span className="text-zinc-500">Carga Horaria Total:</span>
                                         <span className="font-semibold text-zinc-900 dark:text-zinc-100">

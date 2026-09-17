@@ -50,13 +50,13 @@ export const CoordAcadDashboard: React.FC = () => {
     return (
         <div className="space-y-5">
             {/* Encabezado Vercel Geist */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
                             Coordinación Académica Institucional
                         </h1>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                        <span className="badge-subtle">
                             Msc. Cristian Cobos
                         </span>
                     </div>

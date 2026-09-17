@@ -22,8 +22,8 @@
 }
 
 .input-vercel:focus {
-    border-color: var(--fg);
-    box-shadow: 0 0 0 1px var(--fg);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 2px var(--brand-subtle);
 }
 
 .input-vercel-no-highlight:focus {

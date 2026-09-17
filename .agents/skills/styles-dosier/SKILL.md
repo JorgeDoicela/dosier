@@ -7,9 +7,9 @@ description: >
   También actívala cuando el usuario reporte que algo se ve mal o pida mejorar la apariencia
   de cualquier elemento de la interfaz.
 ---
-# DOSIER Design System — Estándar Oficial Vercel Geist
+# DOSIER Design System — Estándar Oficial Geist Editorial / Enterprise Docs
 
-Esta skill define las reglas obligatorias de diseño visual del sistema DOSIER, combinando la precisión minimalista de **Vercel Geist** con la alta densidad y sobriedad requerida para la gestión curricular institucional del ISTPET.
+Esta skill define las reglas obligatorias de diseño visual del sistema DOSIER, combinando la sobriedad y legibilidad de **Geist Editorial / Enterprise Docs** (inspirado en Mintlify y GitBook Enterprise) con la alta densidad y rigor requerido para la gestión curricular y acreditación institucional (PEA / CACES) del ISTPET.
 
 ---
 
@@ -19,12 +19,12 @@ Esta skill define las reglas obligatorias de diseño visual del sistema DOSIER, 
 > **Prohibición Total de Transparencias en Componentes Superpuestos:**
 > * Todos los modales, popovers, menús desplegables (`GeistSelect`), selectores de fecha (`GeistDatePicker`), drawers y tooltips deben tener **fondos 100% opacos y sólidos**:
 >   * **Modo Claro:** Fondo sólido `bg-white` (`#ffffff`) con bordes contrastantes `border border-zinc-200` y sombras `shadow-xl`.
->   * **Modo Oscuro:** Fondo sólido `bg-zinc-950` (`#09090b`) o `bg-black` (`#000000`) con bordes `border border-zinc-800`.
+>   * **Modo Oscuro:** Fondo sólido `bg-[#131720]` o `bg-[#0b0d11]` (grafito institucional profundo) con bordes `border border-white/10` o `border-zinc-800`.
 > * Queda estrictamente prohibido el uso de clases translúcidas intermedias (como `bg-white/80`, `bg-black/60` o `backdrop-blur` sin color sólido pleno) que generen sangrado o traslape visual de texto (*text bleed-through*) respecto a la página de fondo.
 
 ---
 
-## 2. Directrices Fundamentales de UX/UI y Maquetación
+## 2. Directrices Fundamentales de UX/UI y Maquetación Editorial
 
 ### 2.1. Presentación Compacta de Datos (Anti-Patrón de KPIs Gigantes)
 * **Anti-patrón:** Colocar tarjetas gigantes con números desproporcionados en la cabecera de las vistas.
@@ -32,9 +32,9 @@ Esta skill define las reglas obligatorias de diseño visual del sistema DOSIER, 
   * Título de sección sobrio en `text-[13px] font-semibold text-zinc-900 dark:text-zinc-100`.
   * Filas horizontales: indicador circular o barra discreta + concepto formativo (`Docencia CD`, `Prácticas APE`, `Autónomo TA`) + valor tabular alineado (`64h`, `32h`, `64h / 160h Total`).
 
-### 2.2. Arquitectura de 1 Sola Capa Contenedora (Uso Equilibrado de Cajas)
-* **Dónde SÍ se usan tarjetas y bordes:**
-  * Para bloques de resumen curricular y ficha técnica de la asignatura (`.bento-card`).
+### 2.2. Arquitectura de Folio Curricular (Uso Equilibrado de Cajas)
+* **Dónde SÍ se usan tarjetas y folios:**
+  * Para bloques de resumen curricular y ficha técnica de la asignatura (`.bento-card` o `.doc-folio`).
   * Para controles segmentados de pestañas del PEA (`p-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg`).
   * Para enmarcar tablas de contenidos temáticos y matrices de evaluación con bordes definidos.
 * **Lo que está PROHIBIDO (Anidamiento Excesivo):**
@@ -56,14 +56,18 @@ Esta skill define las reglas obligatorias de diseño visual del sistema DOSIER, 
 
 ---
 
-## 3. Catálogo de Clases Semánticas y Tokens (`base.css`)
+## 3. Catálogo de Clases Semánticas y Tokens (`theme.css` / `base.css`)
 
 * **Superficies:**
-  * Base principal: `bg-white` (claro) / `bg-black` (oscuro).
-  * Fondo de tarjetas: `bg-zinc-50` o `bg-white` (claro) / `bg-zinc-900` o `bg-zinc-950` (oscuro).
-  * Hover interactivo: `hover:bg-zinc-100 dark:hover:bg-zinc-800`.
+  * Base principal (Lienzo): `bg-[#f1f3f6]` (claro) / `bg-[#0b0e14]` (oscuro).
+  * Superficie de folios y tarjetas: `bg-white` (claro) / `bg-[#121721]` (oscuro).
+  * Hover interactivo: `hover:bg-[#f8fafc] dark:hover:bg-[#192130]`.
+* **Tipografía Oficial:**
+  * Familia: **Inter Puro** (`font-sans`) con soporte óptico variable `opsz`.
+  * Variables tipográficas estilísticas obligatorias: `font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'` y `letter-spacing: -0.011em`.
 * **Bordes:**
-  * Delimitadores sutiles: `border border-zinc-200 dark:border-zinc-800`.
+  * Delimitadores sutiles: `border border-[rgba(15,23,42,0.1)] dark:border-[rgba(255,255,255,0.1)]`.
 * **Botones Semánticos:**
-  * Primario: `.btn-vercel-primary` (fondo negro con texto blanco en claro / fondo blanco con texto negro en oscuro).
-  * Secundario: `.btn-vercel-secondary` (fondo transparente, borde sutil y hover con fondo sólido).
+  * Primario: `.btn-vercel-primary` (fondo texto principal con texto de fondo).
+  * Secundario: `.btn-vercel-secondary` (fondo superficie, borde sutil y hover con fondo sólido).
+  * Institucional: `.btn-brand` (azul cobalto institucional con sombra sobria de elevación).

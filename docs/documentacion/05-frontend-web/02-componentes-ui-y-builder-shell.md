@@ -1,10 +1,10 @@
-# Componentes UI Especializados, Sistema Geist y Shell del PEA
+# Componentes UI Especializados, Sistema Geist Editorial y Shell del PEA
 
 ## 1. Visión General del Constructor Curricular
 
 La experiencia de usuario de DOSIER se centra en el **Constructor del Programa de Estudio de la Asignatura (PEA)**, una interfaz avanzada diseñada para simplificar la planificación pedagógica docente, validar restricciones matemáticas de carga horaria en tiempo real y permitir la co-redacción concurrente entre docentes de cátedra.
 
-El sistema de componentes se rige por el catálogo de diseño **Vercel Geist**, asegurando alta densidad informativa, legibilidad y un cumplimiento estricto de la regla de **fondos 100% sólidos sin transparencias**.
+El sistema de componentes se rige por el estándar **Geist Editorial / Enterprise Docs** (inspirado en Mintlify y GitBook Enterprise), asegurando alta densidad informativa, sobriedad académica, confort prolongado de lectura y cumplimiento estricto de la regla de **fondos 100% sólidos sin transparencias**.
 
 ---
 
@@ -94,7 +94,7 @@ graph TD
 * **Ubicación:** `src/pages/Investigacion/Proyectos/components/PeaSupervisionTray.tsx`
 * **Integración:** Embebida en `ResearchProjectsPage.tsx` mediante pestañas Vercel Geist (`[Programas de Estudio (PEA)]` y `[Proyectos de Investigación]`).
 * **Características Visuales y de UX:**
-  * **Métricas Compactas:** Strip horizontal de alta densidad informativa (Total Asignaturas, En Trámite/Revisión, Con Observaciones, Concluidos/Aprobados) sin recurrir al anti-patrón de tarjetas KPI gigantes.
+  * **Acceso Directo a Tabla y Filtros:** Erradicación de bloques artificiales de KPIs en la cabecera; la vista presenta de inmediato los filtros de búsqueda rápida y la cuadrícula de instrumentos.
   * **Filtros Institucionales:** Selectores con fondo 100% sólido para período lectivo (`GeistSelect`), carreras asignadas y estados del workflow.
   * **Stepper de Circuito de 4 Firmas:** Visualizador de avance del circuito legal (Docente -> Coordinador de Carrera -> Coordinador Académico -> Vicerrector).
 * **Acceso Directo:** Botón de apertura directa en el Workspace concurrente (`/documentacion/workspace/pea-oficial/:uuid?edit=pea-oficial`) para revisión, co-redacción y emisión de dictamen/firma.
@@ -116,5 +116,14 @@ graph TD
   * **Eliminación Total de KPIs Artificiales:** Erradicación del anti-patrón de tarjetas métricas gigantes con cifras aisladas que sobrecargan la vista inicial sin aportar valor operativo.
   * **Cero Iconos SVG Decorativos:** Supresión de iconos vectoriales superfluos en botones, tablas y encabezados para priorizar la legibilidad del texto, nombres de asignaturas, docentes y códigos institucionales.
   * **Acciones Directas y Textuales:** Botones de alta nitidez y contraste (`Ver`, `Firmar PEA`, `QR CACES`, `Emitir Aval`, `Auditar`) enmarcados en tablas con tipografía monoespaciada para códigos y plazos.
-  * **Superficies Sólidas de 1 Capa:** Fondos monocromáticos `bg-white dark:bg-black`, bordes contrastantes `border-zinc-200 dark:border-zinc-800` y eliminación de cajas anidadas innecesarias.
+  * **Superficies Sólidas de 1 Capa:** Fondos monocromáticos `bg-white dark:bg-black`, bordes ultrafinos y eliminación total de cajas anidadas innecesarias.
+
+### 4.10. Sistema de Superficies y Badges Sutiles (`--subtle` / Geist Muted)
+* **Tokens de Color Globales:**
+  * Modo Claro: `--subtle: #f2f4f7;`, `--subtle-border: rgba(0, 0, 0, 0.05);`, `--subtle-hover: #e4e7ec;`
+  * Modo Oscuro: `--subtle: #181d27;`, `--subtle-border: rgba(255, 255, 255, 0.07);`, `--subtle-hover: #222938;`
+* **Clases Semánticas Oficiales en `base.css`:**
+  * `.surface-subtle`: Contenedores secundarios y bloques de detalle con fondo sutil y borde tenue.
+  * `.badge-subtle`: Píldora con tipografía monoespaciada para códigos de asignatura (`#f2f4f7`), roles institucionales RBAC y parámetros normativos.
+  * `.segmented-container` y `.segmented-item-active`: Estructura institucional para selectores de pestañas, barra de roles de gobernanza y filtros.
 

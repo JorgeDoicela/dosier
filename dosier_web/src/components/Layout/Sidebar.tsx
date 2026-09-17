@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         : undefined
                 }}
                 className={`
-          fixed inset-y-0 left-0 z-[70] bg-bg-deep border-r border-border-thin outline-none shrink-0 overflow-hidden
+          fixed inset-y-0 left-0 z-[70] bg-surface border-r border-border outline-none shrink-0 overflow-hidden
           lg:translate-x-0 lg:static lg:h-screen lg:relative
           ${isOpen ? 'translate-x-0 shadow-2xl w-64' : '-translate-x-full w-64 lg:translate-x-0 lg:w-auto'}
           ${isCollapsed && peekWidth === null && !isClosingAnim ? 'lg:border-r-0 lg:opacity-0 lg:pointer-events-none lg:p-0' : 'lg:opacity-100'}
