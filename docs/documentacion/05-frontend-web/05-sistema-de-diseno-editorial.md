@@ -1,10 +1,16 @@
-# Sistema de Diseño Visual: DOSIER Editorial Clean (Inter Editorial Minimalist)
+# Sistema de Diseño Visual: Linear / Mintlify Editorial Minimalist
 
-## 1. Visión General y Nomenclatura del Sistema
+## 1. Nomenclatura Estándar en la Industria y Fuentes de Inspiración
 
-El sistema de diseño visual de **DOSIER** se denomina formalmente **DOSIER Editorial Clean** (o *Inter Editorial Minimalist*). Se trata de una evolución refinada de la estética de documentación técnica de alta gama (inspirada en Mintlify, GitBook Enterprise y principios minimalistas de Vercel), adaptada específicamente a las exigencias académicas, forenses y documentales de la educación superior en el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET).
+En el estándar de la industria del diseño de interfaces (UI/UX) y desarrollo de software, este estilo se clasifica y denomina bajo las siguientes convenciones profesionales:
 
-Este estilo prioriza la **densidad informativa legible, la serenidad visual para jornadas prolongadas de planificación pedagógica, la sobriedad tipográfica y la eliminación absoluta de ornamentación superflua**.
+* **Nombre Estándar de la Industria:** **`Linear-Inspired Minimalist UI`** / **`Modern Enterprise Docs Aesthetic`** (Estilo Documental Editorial y de Productividad Moderna).
+* **Fuentes de Inspiración y Benchmarks del Mercado:**
+  1. **Linear (`linear.app`):** Creadores del estándar de interfaces de alta velocidad, tipografía Inter con features OpenType, bordes tenues al 5% de opacidad, selectores segmentados redondeados (`--subtle`), y eliminación total de tarjetas KPI innecesarias en favor de tablas de datos directas.
+  2. **Mintlify (`mintlify.com`):** Referencia moderna en plataformas de documentación técnica con contraste editorial suave, fondos sólidos y confort visual prolongado.
+  3. **GitBook Enterprise & Stripe Docs:** Pioneros en la jerarquía de folios limpios, legibilidad tipográfica monoespaciada para códigos y cero transparencias que saturen la vista.
+
+En el contexto institucional del ISTPET y la memoria de tesis, se formaliza como **"Sistema de Documentación Editorial Minimalista (Inspirado en Linear y Mintlify)"**.
 
 ---
 
