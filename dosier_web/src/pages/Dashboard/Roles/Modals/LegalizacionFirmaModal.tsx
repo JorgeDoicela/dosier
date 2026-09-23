@@ -58,7 +58,7 @@ export const LegalizacionFirmaModal: React.FC<Props> = ({
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50">
+                <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center font-bold">
                             <Award className="w-5 h-5" />
@@ -95,7 +95,7 @@ export const LegalizacionFirmaModal: React.FC<Props> = ({
                     </div>
 
                     {/* Previsualización Criptográfica */}
-                    <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-2">
+                    <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-2">
                         <div className="flex items-center justify-between text-xs font-semibold text-zinc-900 dark:text-white">
                             <span className="flex items-center gap-2">
                                 <QrCode className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />

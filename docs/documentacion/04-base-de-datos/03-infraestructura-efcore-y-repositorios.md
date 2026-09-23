@@ -13,7 +13,7 @@ La capa de infraestructura (`dosier_infrastructure`) implementa los contratos de
 
 ## 2. Arquitectura del Contexto de Datos: `DosierContext`
 
-El acceso a datos se centraliza en `DosierContext` (ubicado en `dosier_infrastructure/data/models/Dosier/DiitraContext.cs`), el cual estructura de forma limpia la convivencia entre la base de datos preexistente del instituto y el nuevo ecosistema curricular:
+El acceso a datos se centraliza en `DosierContext` (ubicado en `dosier_infrastructure/data/models/Dosier/DosierContext.cs`), el cual estructura de forma limpia la convivencia entre la base de datos preexistente del instituto y el nuevo ecosistema curricular:
 
 ```mermaid
 graph TD
@@ -122,7 +122,7 @@ Implementado bajo una arquitectura desacoplada en subsistemas especializados en 
 ```mermaid
 graph LR
     DSS[DosierSignatureService]
-    DIS[DiitraInternalSignerSubservice]
+    DIS[DosierInternalSignerSubservice]
     P12[P12SignatureSubservice]
     SVS[SignatureVerificationSubservice]
     SRS[SignatureRevocationSubservice]
@@ -138,7 +138,7 @@ graph LR
     P12 --> STAMP
 ```
 
-### 5.1. Firma Institucional DOSIER (`DiitraInternalSignerSubservice.cs`)
+### 5.1. Firma Institucional DOSIER (`DosierInternalSignerSubservice.cs`)
 * Valida la re-autenticación del usuario con BCrypt contra la tabla `usuarios`.
 * Emite un código único de firma con nomenclatura formal: `DFRM-{AÑO}-{UUID8}` (ej. `DFRM-2026-A1B2C3D4`).
 * Calcula la prueba criptográfica HMAC-SHA256 combinando: identificador del usuario, UUID del documento, timestamp UTC exacto y la clave secreta institucional.

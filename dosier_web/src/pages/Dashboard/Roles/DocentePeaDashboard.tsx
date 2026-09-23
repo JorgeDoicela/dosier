@@ -1,18 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../api/AuthContext';
 import { useNotifications } from '../../../api/NotificationsContext';
+import { docenteAsignaturasService, type DocenteAsignaturaDto } from '../../../services/docenteAsignaturasService';
+import { buildWorkspacePath } from '../../../core/documents/templateUrl';
 import { MOCK_PEAS, type MockPeaItem } from './data/mockCurricularData';
 import { ClonarPeaModal } from './Modals/ClonarPeaModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
+import { BookOpen, RefreshCw, Layers, Clock } from 'lucide-react';
 
 export const DocentePeaDashboard: React.FC = () => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
     const { addToast } = useNotifications();
-    const [misPeas, setMisPeas] = useState<MockPeaItem[]>(
+
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [misPeas, setMisPeas] = useState<MockPeaItem[]>(() =>
         MOCK_PEAS.filter(p => p.docente_responsable === 'Ing. Edison Pérez')
     );
+    const [materiasReales, setMateriasReales] = useState<DocenteAsignaturaDto[]>([]);
+    const [modoDatos, setModoDatos] = useState<'real' | 'simulado'>('simulado');
 
     // Modales
     const [clonarModalMateria, setClonarModalMateria] = useState<MockPeaItem | null>(null);
     const [auditoriaPea, setAuditoriaPea] = useState<MockPeaItem | null>(null);
+
+    const cargarMaterias = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await docenteAsignaturasService.getMisMaterias();
+            if (data && Array.isArray(data) && data.length > 0) {
+                setMateriasReales(data);
+                setModoDatos('real');
+            } else {
+                setModoDatos('simulado');
+            }
+        } catch {
+            // Fallback elegante a datos curriculares institucionales en desarrollo
+            setModoDatos('simulado');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        cargarMaterias();
+    }, [cargarMaterias]);
+
+    const handleEditarPea = (id: string | number, nombre: string, uuidPea?: string) => {
+        const targetUuid = uuidPea || String(id);
+        addToast(
+            'Abriendo Editor PEA',
+            `Cargando las 11 secciones normativas de "${nombre}" con soporte colaborativo Yjs.`,
+            'info'
+        );
+        navigate(buildWorkspacePath('PEA_OFICIAL', targetUuid, '', '/documentacion/mis-proyectos'));
+    };
 
     const handleEnviarRevision = (id: string, nombre: string) => {
         setMisPeas(prev => prev.map(p => {
@@ -53,7 +96,7 @@ export const DocentePeaDashboard: React.FC = () => {
                             Mis Asignaturas y Elaboración de PEA
                         </h1>
                         <span className="badge-subtle">
-                            Ing. Edison Pérez
+                            {user?.nombre_completo || 'Docente Institucional'}
                         </span>
                     </div>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
@@ -157,13 +200,7 @@ export const DocentePeaDashboard: React.FC = () => {
                             <div className="pt-3 border-t border-zinc-100 dark:border-zinc-900 space-y-2">
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => {
-                                            addToast(
-                                                'Entrando al Editor Colaborativo',
-                                                `Cargando las 11 secciones del PEA "${pea.nombre_asignatura}" con soporte Yjs.`,
-                                                'info'
-                                            );
-                                        }}
+                                        onClick={() => handleEditarPea(pea.id, pea.nombre_asignatura)}
                                         className="flex-1 py-1.5 px-3 text-xs font-medium rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors text-center"
                                     >
                                         Editar PEA (11 Secc.)

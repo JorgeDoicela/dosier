@@ -120,3 +120,11 @@ export const getContextoAcademico = async (idAsignacion: number): Promise<Academ
     const res = await api.get(`/docente-asignaturas/contexto/${idAsignacion}`);
     return res.data;
 };
+
+export const docenteAsignaturasService = {
+    getMisMaterias,
+    getPeriodoActivo,
+    getPeriodosAcademicos,
+    getContextoAcademico
+};
+

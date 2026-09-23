@@ -127,3 +127,16 @@ graph TD
   * `.badge-subtle`: Píldora con tipografía monoespaciada para códigos de asignatura (`#f2f4f7`), roles institucionales RBAC y parámetros normativos.
   * `.segmented-container` y `.segmented-item-active`: Estructura institucional para selectores de pestañas, barra de roles de gobernanza y filtros.
 
+### 4.11. Modales de Gestión Curricular y Regla de Opacidad 100% Sólida
+* **Ubicación:** `src/pages/Dashboard/Roles/Modals/`
+* **Catálogo de Componentes:**
+  * `AuditoriaCacesModal.tsx`: Verificación de consistencia horaria y cumplimiento normativo de distribución CES.
+  * `ClonarPeaModal.tsx`: Duplicación y reutilización de PEAs validados de períodos lectivos anteriores.
+  * `AperturaConvocatoriaModal.tsx`: Disparador de fechas límite y períodos de formulación para la planta docente.
+  * `LegalizacionFirmaModal.tsx`: Estampado de firma digital de Vicerrectorado con previsualización del hash SHA-256.
+  * `ObservacionesDisciplinarModal.tsx`: Registro formal de requerimientos de corrección por parte de Coordinación de Carrera.
+  * `ProrrogaPlazoModal.tsx`: Extensión controlada de fechas de entrega para asignaturas observadas.
+  * `RecordatorioDocentesModal.tsx`: Despacho multicanal de alertas de urgencia curricular.
+* **Garantía de Diseño Visual:** Todos los contenedores, encabezados y pies de página aplican fondos 100% sólidos y opacos (`bg-white dark:bg-zinc-950` en el cuerpo, `bg-zinc-50 dark:bg-zinc-900` en cabeceras y footers). Se encuentra terminantemente prohibido el uso de opacidades translúcidas (`/50`, `/40`) o difuminados `backdrop-blur` para prevenir sangrado tipográfico.
+
+

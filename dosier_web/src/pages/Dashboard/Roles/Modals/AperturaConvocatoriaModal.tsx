@@ -42,7 +42,7 @@ export const AperturaConvocatoriaModal: React.FC<Props> = ({ isOpen, onClose, on
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50">
+                <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center font-bold">
                             <Calendar className="w-5 h-5" />
