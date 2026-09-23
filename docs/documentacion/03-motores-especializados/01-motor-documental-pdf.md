@@ -51,12 +51,12 @@ Calcula el Hash **SHA-256** sobre el archivo compilado y el contenido pedagógic
 
 ## 3. Estructura del Congelamiento Forense (`data_snapshot_json`)
 
-En el momento en que un PEA o documento curricular es aprobado por Vicerrectorado Académico, `DocumentEngine` genera una captura inmutable del estado exacto de los datos (`data_snapshot_json`) que se almacena en la tabla `doc_documentos_instancias`:
+En el momento en que un PEA o documento curricular es aprobado por Vicerrectorado Académico, `DocumentEngine` genera una captura inmutable del estado exacto de los datos (`data_snapshot_json`) que se almacena en la tabla `doc_document_instances`:
 
 ```json
 {
   "instance_uuid": "3a9f1b2c-4d5e-6f7a-8b9c-0d1e2f3a4b5c",
-  "template_code": "FORMATO_OFICIAL_PEA_ISTPET",
+  "template_code": "PEA_OFICIAL",
   "traceability_code": "DFRM-PEA-2026-0142",
   "data_snapshot": {
     "asignatura": "PROGRAMACION ORIENTADA A OBJETOS",

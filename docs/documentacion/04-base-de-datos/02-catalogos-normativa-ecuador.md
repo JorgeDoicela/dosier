@@ -64,56 +64,75 @@ $$\text{Créditos Académicos} = \frac{\text{Total Horas Asignatura}}{48}$$
 
 ## 4. Estructura de Tablas de Gobernanza Curricular
 
-El script `02_gobernanza_y_antecedentes_curriculares.sql` despliega el repositorio de articulación entre la normativa externa y los proyectos institucionales:
+El script `02_gobernanza_y_antecedentes_curriculares.sql` despliega el repositorio de articulación entre la normativa externa y los antecedentes institucionales:
 
 ```mermaid
 erDiagram
-    cur_normativas_externas ||--o{ cur_normativa_articulos : contiene
-    cur_normativas_externas ||--o{ cur_proyectos_carrera_normativas : referencia
-    cur_proyectos_carrera ||--o{ cur_proyectos_carrera_normativas : fundamenta
-    cur_modelos_educativos ||--o{ cur_proyectos_carrera : orienta
-    cur_proyectos_carrera ||--o{ cur_asignaturas_antecedentes : agrupa
-    detallemallas ||--|| cur_asignaturas_antecedentes : complementa
+    doc_normativas ||--o{ doc_normativa_articulos : contiene
+    carreras ||--o{ doc_proyectos_curriculares : fundamenta
+    doc_modelos_educativos ||--o{ doc_expedientes_curriculares : orienta
+    doc_proyectos_curriculares ||--o{ doc_expedientes_curriculares : enmarca
+    doc_perfiles_egreso ||--o{ doc_perfil_egreso_resultados : desglosa
+    doc_perfil_egreso_resultados ||--o{ doc_asignatura_resultado_perfil : tributa
+    doc_expedientes_curriculares ||--o{ doc_pea : consolida
 
-    cur_normativas_externas {
-        int id PK
-        string organismo "CES, CACES, SENESCYT, ASAMBLEA"
-        string tipo_normativa "LEY, REGLAMENTO, MODELO_EVALUACION"
+    doc_normativas {
+        int idNormativa PK
+        string organismoEmisor "CES, CACES, SENESCYT, MINEDUC"
+        string tipoNormativa "Reglamento, Resolucion, Guia Metodologica"
+        string codigoResolucion
+        string titulo
+        date fechaVigencia
+    }
+
+    doc_modelos_educativos {
+        int idModelo PK
+        string codigo "MED-ISTPET-2024"
         string nombre
-        string numero_resolucion
-        date fecha_vigencia
+        string version
+        string resolucionAprobacion
+        date fechaVigenciaDesde
     }
 
-    cur_modelos_educativos {
-        int id PK
-        string version "V1, V2, V3"
-        string nombre
-        string enfoque_pedagogico "Constructivismo, Aprendizaje por Competencias"
-        text principios_rectores
+    doc_proyectos_curriculares {
+        int idProyectoCurricular PK
+        int idCarrera FK
+        int idMalla FK
+        string codigoResolucionCes
+        string nombreProyecto
+        string version
     }
 
-    cur_proyectos_carrera {
-        int id PK
-        int id_carrera_sigafi FK
-        string resolucion_ces
-        string modalidad "Presencial, Semipresencial, Híbrida"
-        text perfil_egreso_resumen
+    doc_perfiles_egreso {
+        int idPerfilEgreso PK
+        int idCarrera FK
+        int idMalla FK
+        string version
+        text descripcionGeneral
     }
 
-    cur_asignaturas_antecedentes {
-        int id PK
-        int id_detallemalla_sigafi FK
-        text justificacion_epistemologica
-        text problema_profesional_resuelve
-        text relacion_perfil_egreso
+    doc_perfil_egreso_resultados {
+        int idResultadoPerfil PK
+        int idPerfilEgreso FK
+        string codigo
+        text descripcion
+        int orden
+    }
+
+    doc_asignatura_resultado_perfil {
+        int idRelacion PK
+        int idAsignatura FK
+        int idMalla FK
+        int idResultadoPerfil FK
+        string nivelAporte "Introductorio, Medio, Avanzado"
     }
 ```
 
-### 4.1. `cur_normativas_externas` y `cur_normativa_articulos`
-Permiten a las comisiones curriculares referenciar legalmente cada sección del PEA y de las mallas. Cuando un evaluador externo del CACES audita una asignatura, el sistema vincula la resolución del CES que habilitó la titulación.
+### 4.1. `doc_normativas` y `doc_normativa_articulos`
+Permiten a las comisiones curriculares referenciar legalmente cada sección del PEA y de las mallas. Cuando un evaluador externo del CACES audita una asignatura, el sistema vincula la resolución del CES que habilitó la titulación y el articulado aplicable del RRA.
 
-### 4.2. `cur_modelos_educativos`
-Registra la evolución de la filosofía pedagógica del Instituto Superior Tecnológico Pedro Traversari. Permite asegurar que las estrategias metodológicas seleccionadas en la Sección G del PEA concuerden con el modelo pedagógico oficial vigente en el período lectivo.
+### 4.2. `doc_modelos_educativos`
+Registra la evolución de la filosofía pedagógica del Instituto Superior Tecnológico Mayor Pedro Traversari. Permite asegurar que las estrategias metodológicas seleccionadas en la Sección g) del PEA concuerden con el modelo pedagógico oficial vigente en el período lectivo.
 
-### 4.3. `cur_asignaturas_antecedentes`
-Actúa como la base teórica de cada materia. Al abrir la formulación de un PEA, el docente hereda de forma precargada la justificación epistemológica, el problema profesional que resuelve y la vinculación con el perfil de egreso aprobada institucionalmente, garantizando coherencia formativa transversal y previniendo desvíos conceptuales.
+### 4.3. `doc_perfiles_egreso` y `doc_asignatura_resultado_perfil`
+Estructura la matriz institucional de tributación curricular. Al formular el PEA, el docente selecciona los Resultados de Aprendizaje de Carrera (RDA) predefinidos institucionalmente y define el nivel de aporte disciplinar (`Introductorio`, `Medio`, `Avanzado`), garantizando coherencia transversal en la titulación.

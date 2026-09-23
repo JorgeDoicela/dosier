@@ -69,9 +69,6 @@ dosier/
 |-- dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Geist Editorial / Enterprise Docs)
 |   |-- public/                  # Recursos estáticos, marcas y certificados
 |   `-- src/                     # Componentes modulares, Editor PEA, Contextos y API Client
-|-- dosier_mobile/               # Cliente Móvil React Native + Expo Router (Vercel Mobile UI)
-|   |-- app/                     # Rutas móviles basadas en archivos (tabs)
-|   `-- components/ui/           # Catálogo táctil BentoCards, VercelButton, VercelTabs
 |-- docs/
 |   |-- documentacion/           # Especificación técnica, arquitectónica y operativa completa
 |   `-- tesis/                   # Anteproyecto, codex de diagnóstico y formatos institucionales
@@ -163,10 +160,15 @@ La especificación completa del sistema está organizada en el directorio `docs/
 * [Centro de Documentación Técnica - Índice General](docs/documentacion/README.md)
 * [Sección 01: Macro-Arquitectura y Clean Architecture](docs/documentacion/01-arquitectura/01-macro-arquitectura-clean-arch.md)
 * [Sección 01: Micro-Arquitecturas y Patrones Especializados](docs/documentacion/01-arquitectura/02-micro-arquitecturas-patrones.md)
-* [Sección 02: Especificación de la API REST](docs/documentacion/02-backend-servicios/01-especificacion-api-rest.md)
+* [Sección 01: Modelo de Dominio y Entidades del Sistema](docs/documentacion/01-arquitectura/03-modelo-de-dominio-y-entidades.md)
+* [Sección 01: Diagnóstico Institucional SIGAFI, Auditoría Técnica y Delimitación](docs/documentacion/01-arquitectura/04-delimitacion-diagnostico-y-auditoria-istpet.md)
+* [Sección 02: Especificación Completa de la API REST (23 Controladores)](docs/documentacion/02-backend-servicios/01-especificacion-api-rest.md)
 * [Sección 02: Autenticación, SSO y Roles Curriculares (RBAC)](docs/documentacion/02-backend-servicios/02-autenticacion-sso-y-rbac.md)
 * [Sección 02: Gobernanza de Datos y Auditoría](docs/documentacion/02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md)
 * [Sección 02: Ciclo de Vida Curricular y Workflow del PEA](docs/documentacion/02-backend-servicios/04-ciclo-vida-curricular-y-workflow.md)
+* [Sección 02: Capa de Aplicación, Casos de Uso y Servicios de Orquestación](docs/documentacion/02-backend-servicios/05-capa-de-aplicacion-y-casos-de-uso.md)
+* [Sección 02: Pipeline HTTP, Middlewares y Background Services](docs/documentacion/02-backend-servicios/06-pipeline-http-y-middleware.md)
+* [Sección 02: Suite de Pruebas Unitarias, Integración y Aseguramiento de Calidad](docs/documentacion/02-backend-servicios/07-pruebas-unitarias-y-calidad-de-software.md)
 * [Sección 03: Motor Documental PDF e Integridad Forense](docs/documentacion/03-motores-especializados/01-motor-documental-pdf.md)
 * [Sección 03: Motor Colaborativo en Tiempo Real (CoWork)](docs/documentacion/03-motores-especializados/02-motor-colaborativo-cowork.md)
 * [Sección 03: Motor de Revisión Colegiada Curricular](docs/documentacion/03-motores-especializados/03-motor-revision-colegiada-curricular.md)
@@ -174,16 +176,21 @@ La especificación completa del sistema está organizada en el directorio `docs/
 * [Sección 03: Motor de Notificaciones Multicanal](docs/documentacion/03-motores-especializados/05-motor-notificaciones-multicanal.md)
 * [Sección 04: Esquema Relacional de Base de Datos e Integración SIGAFI](docs/documentacion/04-base-de-datos/01-esquema-relacional-sigafi.md)
 * [Sección 04: Catálogos Institucionales y Normativa Curricular](docs/documentacion/04-base-de-datos/02-catalogos-normativa-ecuador.md)
+* [Sección 04: Infraestructura de Persistencia, EF Core y Repositorios](docs/documentacion/04-base-de-datos/03-infraestructura-efcore-y-repositorios.md)
 * [Sección 05: Arquitectura Frontend Web (React + Vite)](docs/documentacion/05-frontend-web/01-arquitectura-react-vite.md)
 * [Sección 05: Componentes UI y Shell del Constructor](docs/documentacion/05-frontend-web/02-componentes-ui-y-builder-shell.md)
 * [Sección 05: Integración con API y Resiliencia](docs/documentacion/05-frontend-web/03-integracion-api-y-resiliencia.md)
 * [Sección 05: Extensibilidad de Bloques Documentales](docs/documentacion/05-frontend-web/04-creacion-y-extensibilidad-de-bloques.md)
+* [Sección 05: Sistema de Diseño Visual Editorial Minimalista](docs/documentacion/05-frontend-web/05-sistema-de-diseno-editorial.md)
+* [Sección 05: Catálogo Integral de Vistas, Páginas y Flujos de Usuario](docs/documentacion/05-frontend-web/06-catalogo-completo-vistas-y-flujos.md)
+* [Sección 05: Servicios, Hooks Especializados y Gestión del Estado Global](docs/documentacion/05-frontend-web/07-servicios-hooks-y-estado-global.md)
 * [Sección 06: Arquitectura de la Aplicación Móvil](docs/documentacion/06-aplicacion-movil/01-arquitectura-movil-docente.md)
 * [Sección 07: Instalación y Configuración Local](docs/documentacion/07-despliegue-y-operaciones/01-instalacion-entorno-local.md)
 * [Sección 07: Guía de Cumplimiento para Acreditación CACES 2026](docs/documentacion/07-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md)
 * [Sección 07: Pipeline CI/CD y Despliegue en AWS EC2](docs/documentacion/07-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md)
 * [Sección 07: Seguridad Perimetral y SSL Cloudflare Origin CA](docs/documentacion/07-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md)
 * [Sección 07: Dimensionamiento de Servidor y Topología en AWS EC2](docs/documentacion/07-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md)
+* [Sección 07: Guía de Aprovisionamiento, Migración y Rotación de Seguridad](docs/documentacion/07-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md)
 
 ---
 

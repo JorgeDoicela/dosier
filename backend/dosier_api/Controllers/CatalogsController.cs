@@ -36,6 +36,7 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> GetCarreras()
         {
             var data = await _context.Carreras
+                .Where(c => c.EsInstituto == 1)
                 .OrderBy(c => c.Carrera1)
                 .ToListAsync();
             return Ok(data);

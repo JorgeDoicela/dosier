@@ -1,8 +1,13 @@
-# Arquitectura de Aplicación Móvil (React Native + Expo)
+# Arquitectura y Diseño Referencial de Aplicación Móvil (Extensión Futura / Roadmap)
 
-## 1. Visión General del Proyecto Móvil (`dosier_mobile`)
+> [!NOTE]
+> **Delimitación de Alcance de Tesis:**
+> Conforme a la delimitación formal de la memoria de titulación del ISTPET, el entregable operativo principal y validado en producción para el Programa de Estudio de la Asignatura (PEA) está soportado por la aplicación web institucional **`dosier_web`** (React 18 SPA + Vite) y la Web API **`dosier_api`**.
+> Este documento preserva la especificación de diseño visual (**Vercel Mobile UI**) y la arquitectura de referencia en **React Native / Expo** para la futura fase de expansión a dispositivos móviles.
 
-El proyecto `dosier_mobile` constituye el cliente móvil del ecosistema DOSIER, desarrollado sobre el stack **React Native** con el marco de trabajo **Expo** y el enrutador basado en archivos **Expo Router** (`app/`).
+## 1. Visión General del Proyecto Móvil de Roadmap (`dosier_mobile`)
+
+El diseño de `dosier_mobile` se proyecta sobre el stack **React Native** con el marco de trabajo **Expo** y el enrutador basado en archivos **Expo Router** (`app/`).
 
 Su estado de implementación actual se enfoca en el **Sistema de Diseño Vercel Mobile**, proporcionando una biblioteca de componentes táctiles de alta precisión, animaciones fluidas (`react-native-reanimated`) y soporte dual de temas visuales (modo claro y modo oscuro) adaptados a dispositivos móviles.
 

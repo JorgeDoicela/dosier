@@ -21,12 +21,17 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 ### Sección 01: Arquitectura de Sistemas
 * [01. Macro-Arquitectura del Sistema y Clean Architecture](./01-arquitectura/01-macro-arquitectura-clean-arch.md): Clean Architecture en .NET 8, diagramas C4 (Contexto y Contenedores), integración curricular de solo lectura con SIGAFI (`sigafi_es`) y delimitación estratégica de la tesis.
 * [02. Micro-Arquitecturas Internas, Patrones y Motores Especializados](./01-arquitectura/02-micro-arquitecturas-patrones.md): Patrones arquitectónicos: *Curricular Validation Engine*, *Snapshot Forensic SHA-256*, *Pattern Molde vs Instancia*, *CRDT CoWork Yjs*, *State Machine Curricular* y *AcademicContextResolver*.
+* [03. Modelo de Dominio y Entidades del Sistema](./01-arquitectura/03-modelo-de-dominio-y-entidades.md): Especificación detallada de POCOs, agregados, contratos (`IAuditable`, `IEntity`), PEA curricular oficial, RBAC, auditoría forense y enumeraciones de dominio.
+* [04. Diagnóstico Institucional SIGAFI, Auditoría Técnica y Delimitación de Tesis](./01-arquitectura/04-delimitacion-diagnostico-y-auditoria-istpet.md): Diagnóstico exhaustivo de `sigafi_es`, resolución de hallazgos A01-A08 y delimitación estricta del alcance de titulación ISTPET.
 
 ### Sección 02: Backend y Servicios REST
-* [01. Especificación de API REST y Enlace de Datos](./02-backend-servicios/01-especificacion-api-rest.md): Catálogo de controladores de la API (`PeaController`, `NormativasController`, `ExpedienteCurricularController`, etc.), rutas HTTP, DTOs y serialización `snake_case`.
+* [01. Especificación de API REST y Enlace de Datos](./02-backend-servicios/01-especificacion-api-rest.md): Catálogo completo y exhaustivo de los 23 controladores de la API (`PeaController`, `DocumentInstancesController`, `SignaturesController`, etc.), rutas HTTP, DTOs y serialización `snake_case`.
 * [02. Arquitectura de Autenticación, SSO y Control de Acceso (RBAC)](./02-backend-servicios/02-autenticacion-sso-y-rbac.md): Autenticación JWT Bearer, hashing BCrypt, SSO Microsoft 365, Magic Links y los 5 roles curriculares oficiales (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`).
 * [03. Gobernanza de Datos, Protección LOPDP y Bitácora de Auditoría](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md): Cumplimiento de la Ley Orgánica de Protección de Datos Personales (LOPDP), consentimientos, bitácora inmutable `doc_document_audit` y custodia forense.
 * [04. Ciclo de Vida Curricular, Workflow y Portafolio Docente](./02-backend-servicios/04-ciclo-vida-curricular-y-workflow.md): Circuito colegiado de 4 estados y firmas (`Borrador` -> `EnRevision` -> `RevisadoCoord` -> `RevisadoAcad` -> `Aprobado`), control de observaciones por sección y sellado forense.
+* [05. Capa de Aplicación, Casos de Uso y Servicios de Orquestación](./02-backend-servicios/05-capa-de-aplicacion-y-casos-de-uso.md): Contratos de orquestación (`IPeaService`, `IAcademicContextResolver`, `IDocumentEngine`, `IDosierSignatureService`), DTOs de entrada/salida y reglas de validación curricular.
+* [06. Pipeline HTTP, Middlewares y Background Services](./02-backend-servicios/06-pipeline-http-y-middleware.md): Configuración de host ASP.NET Core 8.0, política dinámica de CORS (`Dosier_policy`), autenticación dual (Cookie/Bearer) y los 6 servicios en segundo plano (`BackupBackgroundService`, `CalendarioAlertasJob`, etc.).
+* [07. Suite de Pruebas Unitarias, Integración y Aseguramiento de Calidad](./02-backend-servicios/07-pruebas-unitarias-y-calidad-de-software.md): Especificación de `dosier_tests` (pruebas de firmas curriculares, BCrypt, RBAC, tokens JWT y pipeline CI/CD).
 
 ### Sección 03: Motores Especializados
 * [01. Motor de Generación Documental PDF e Integridad Forense](./03-motores-especializados/01-motor-documental-pdf.md): Pipeline `DocumentEngine`, plantilla oficial del PEA institucional, membrete ISTPET, iText 9, Hash SHA-256 y Código QR de verificación pública sin login.
@@ -38,6 +43,7 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 ### Sección 04: Base de Datos y Catálogos
 * [01. Esquema Relacional de Base de Datos e Integración SIGAFI](./04-base-de-datos/01-esquema-relacional-sigafi.md): Frontera de solo lectura sobre `sigafi_es`, resolución de mallas por cohorte (`mallas_periodos`), aislamiento de la escuela de conducción y los 4 scripts oficiales en `scripts/base_datos/`.
 * [02. Catálogos Institucionales y Normativa Curricular](./04-base-de-datos/02-catalogos-normativa-ecuador.md): Repositorio inalterable de normativas externas (CES, CACES, SENESCYT), versiones del Modelo Educativo Institucional y Proyectos de Carrera aprobados.
+* [03. Infraestructura de Persistencia, EF Core y Repositorios](./04-base-de-datos/03-infraestructura-efcore-y-repositorios.md): Implementación en `dosier_infrastructure`, contexto `DosierContext`, modularización Fluent API, motor transaccional `PeaService`, hub SignalR CoWork, firmas PKCS#12 e iText 9.
 
 ### Sección 05: Frontend Web (React SPA)
 * [01. Arquitectura Frontend Web (React SPA + Vite)](./05-frontend-web/01-arquitectura-react-vite.md): React 18, Vite, TypeScript, Tailwind CSS v4, Vercel Geist Design System, catálogo de rutas reales de `App.tsx` y directriz de fondos sólidos sin transparencias.
@@ -45,6 +51,8 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 * [03. Integración con API, Resiliencia y Tolerancia a Discrepancias](./05-frontend-web/03-integracion-api-y-resiliencia.md): Cliente Axios, serialización snake_case con fallbacks duales, interceptores JWT y reconexión SignalR.
 * [04. Guía de Extensibilidad y Creación de Nuevos Bloques Documentales](./05-frontend-web/04-creacion-y-extensibilidad-de-bloques.md): Arquitectura desacoplada para incorporar bloques modulares para el PEA y documentos curriculares institucionales.
 * [05. Sistema de Diseño Visual: DOSIER Editorial Clean](./05-frontend-web/05-sistema-de-diseno-editorial.md): Especificación del lenguaje visual, tipografía Inter con variantes OpenType (`cv02`, `cv03`, `cv04`, `cv11`), bordes suaves (`rgba(0,0,0,0.05)`), tokens `--subtle`, supresión de KPIs gigantes y matriz comparativa frente a Geist Puro.
+* [06. Catálogo Integral de Vistas, Páginas y Flujos de Usuario](./05-frontend-web/06-catalogo-completo-vistas-y-flujos.md): Desglose exhaustivo de los 14 módulos de `src/pages/`, tableros de gobernanza por rol y modales operativos institucionales.
+* [07. Servicios, Hooks Especializados y Gestión del Estado Global](./05-frontend-web/07-servicios-hooks-y-estado-global.md): Arquitectura de `peaService.ts`, contextos globales (`AuthContext`, `NotificationsContext`, `DocumentDataContext`) y hooks del shell curricular.
 
 ### Sección 06: Aplicación Móvil
 * [01. Arquitectura de Aplicación Móvil (React Native + Expo)](./06-aplicacion-movil/01-arquitectura-movil-docente.md): Arquitectura de `dosier_mobile`, Expo Router `(tabs)`, catálogo de componentes táctiles Vercel Mobile y sistema de diseño Geist.

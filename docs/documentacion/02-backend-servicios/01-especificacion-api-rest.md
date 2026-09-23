@@ -1,110 +1,413 @@
-# Especificación de API REST y Enlace de Datos (API-Frontend Binding)
+# Especificación Técnica de API REST y Enlace de Datos (API-Frontend Binding)
 
-## 1. Visión General de la API Backend
+La API REST de **DOSIER** (`dosier_api`) está construida sobre **ASP.NET Core 8.0**, proporcionando el conjunto completo de servicios web consumidos por la aplicación web institucional SPA (`dosier_web`).
 
-La capa de exposición web API (`dosier_api`) de DOSIER está construida sobre **ASP.NET Core 8.0**, proporcionando una interfaz RESTful para el consumo cliente por parte de la SPA React (`dosier_web`) y la aplicación móvil (`dosier_mobile`).
-
-El backend está compuesto por controladores especializados organizados bajo los principios de Clean Architecture, coordinando la ejecución de los casos de uso curriculares y documentales alojados en `dosier_application`.
+El sistema expone **23 controladores especializados** que orquestan los casos de uso curriculares, motores documentales, validaciones normativas, seguridad RBAC, criptografía y colaboración concurrente.
 
 ---
 
-## 2. Políticas Globales de Serialización y Model Binding
+## 2. Convenciones Globales de Comunicación
 
-Para asegurar la interoperabilidad entre el cliente TypeScript y la API C#, el pipeline de ASP.NET Core impone convenciones de serialización y mapeo de parámetros.
+### 2.1. Política de Nombres de Claves: `snake_case`
+El backend tiene configurada la directiva global `JsonNamingPolicy.SnakeCaseLower` en `Program.cs`. Todas las solicitudes y respuestas JSON intercambiadas a través del cuerpo HTTP (`[FromBody]`) utilizan exclusivamente nombres de campo en **`snake_case`**.
 
-### 2.1. Política Global de Casing: `lower_snake_case` (`[FromBody]`)
-El backend tiene configurada la propiedad `JsonNamingPolicy.SnakeCaseLower` de forma global en `Program.cs`. Todas las solicitudes `POST`, `PUT` y `PATCH` enviadas en el cuerpo del mensaje deben utilizar nombres de clave en **`lower_snake_case`**.
-
-```json
-{
-  "id_asignacion": 1254,
-  "codigo_asignatura": "SOF-401",
-  "horas_docencia": 64,
-  "horas_ape": 32,
-  "horas_autonomo": 64,
-  "creditos": 3.33,
-  "rol_firmante": "DOSIER_DOCENTE"
-}
-```
-
-La deserialización de .NET transforma automáticamente estas claves a sus correspondientes propiedades `PascalCase` en los DTOs de C# (`IdAsignacion`, `CodigoAsignatura`, `HorasDocencia`, `HorasApe`, `HorasAutonomo`, `Creditos`, `RolFirmante`).
-
-### 2.2. Parámetros de Consulta y Formularios (`[FromQuery]`, `[FromForm]`)
-* **Query Parameters (`[FromQuery]`):** El enlazador de parámetros de consulta vincula directamente con las variables de los métodos del controlador en **`camelCase`** (ej. `?idAsignatura=12&idPeriodo=ABR2026`).
-* **Form Data (`multipart/form-data`):** La carga de certificados digitales (.p12), evidencias y archivos se procesa mediante `IFormFile`.
-
-### 2.3. Excepción de Metadatos de Plantillas (`PascalCase`)
-Las llamadas dirigidas al endpoint de parches de instancias documentales (`/documents/instances/{uuid}/metadata`) procesan esquemas dinámicos renderizados por el motor de plantillas (Handlebars / Scriban). Para preservar la compatibilidad con el compilador HTML, el payload de metadatos se envía y procesa en **`PascalCase`**.
-
----
-
-## 3. Catálogo Técnico de Controladores del Backend
-
-| Controlador | Ruta Base HTTP | Subsistema | Responsabilidad Principal |
-| :--- | :--- | :--- | :--- |
-| `PeaController` | `/api/pea` | Curricular | Gestión integral del PEA: consulta por ID (`/{id:int}`) o UUID (`/uuid/{uuid}`), creación desde asignación SIGAFI (`/desde-asignacion/{id}`), bandeja de supervisión institucional (`/bandeja`), Secciones a - k, guardado, co-redacción, cambio de estados, circuito de firmas, observaciones y trazabilidad. |
-| `DocenteAsignaturasController` | `/api/docente-asignaturas` | Curricular | Consulta de asignaciones docentes reales de solo lectura desde SIGAFI, resolución de mallas por cohorte (`mallas_periodos`) y cálculo de horas oficiales. |
-| `ExpedientesController` | `/api/expedientes-curriculares` | Curricular | Expedientes Curriculares por Asignatura: vinculación de la asignación docente de SIGAFI con el período académico y el PEA oficial. |
-| `NormativasController` | `/api/normativas` | Gobernanza | Repositorio de normativas externas inalterables (CES, CACES, SENESCYT), desglose de artículos y checklist de cumplimiento pedagógico. |
-| `CurriculumCatalogController` | `/api/curriculum-catalog` | Catálogos | Catálogos de campos de formación, modelos educativos institucionales y perfiles de egreso. |
-| `DocumentInstancesController` | `/api/document-instances` | Motor Documental | Instanciación documental, snapshots forenses SHA-256, versionado y renderizado oficial a PDF. |
-| `DocumentTemplatesController` | `/api/document-templates` | Motor Documental | Gestión y versionado de plantillas institucionales HTML oficiales (PEA Institucional y formatos de acreditación). |
-| `DocumentsController` | `/api/documents` | Motor Documental | Almacenamiento, descarga de archivos PDF emitidos y verificación pública mediante QR. |
-| `CollaborationController` | `/api/collaboration` | CoWork | Orquestación de sesiones de co-redacción concurrente multi-docente y control de bloqueos de sección. |
-| `SignaturesController` | `/api/signatures` | Criptografía | Registro de firmas electrónicas, validación de certificados PKCS#12 (.p12) y estampados DFRM. |
-| `AuthController` | `/api/auth` | Seguridad | Autenticación JWT, JIT provisioning desde profesores de SIGAFI, SSO Microsoft 365 y Magic Links. |
-| `AdminController` | `/api/admin` | Administración | Gestión de usuarios, asignación de roles curriculares RBAC y auditoría administrativa. |
-| `CalendarioController` | `/api/calendario` | Planificación | Hitos académicos, semanas lectivas institucionales y alertas normativas CACES. |
-| `ReportsController` | `/api/reports` | Analítica | Reportes de cobertura curricular por carrera y tableros para acreditación institucional CACES. |
-| `LopdpController` | `/api/lopdp` | Gobernanza | Gestión de derechos ARCO, consentimientos informados y anonimización de datos personales. |
-| `NotificationsController` | `/api/notifications` | Comunicación | Notificaciones in-app, marcas de lectura y suscripciones WebPush VAPID. |
-| `EmailEngineController` | `/api/email-engine` | Comunicación | Envío de correos transaccionales con layout institucional para alertas de revisión y firma. |
-| `CatalogsController` | `/api/catalogs` | Catálogos | Catálogos de carreras institucionales (`esInstituto = 1`) y períodos académicos de SIGAFI. |
-| `RecycleBinController` | `/api/recycle-bin` | Persistencia | Papelera de reciclaje lógica y restauración controlada de registros. |
-| `StorageController` | `/api/storage` | Almacenamiento | Gestión de archivos temporales e imágenes institucionales. |
-| `HealthController` | `/api/health` | Monitoreo | Verificación de estado y disponibilidad operativa del servicio. |
-
----
-
-## 4. Estructura Estándar de Peticiones y Respuestas
-
-### 4.1. Respuesta Exitosa de Consulta Curricular
+Ejemplo de payload para guardado del PEA:
 ```json
 {
   "id_pea": 108,
+  "id_carrera": 12,
   "id_asignatura": 45,
-  "nombre_asignatura": "PROGRAMACION ORIENTADA A OBJETOS",
-  "codigo_carrera": "SOF-2023",
-  "horas_totales": 160,
-  "horas_docencia": 64,
-  "horas_ape": 32,
-  "horas_autonomo": 64,
+  "id_periodo": "ABR2026-SEP2026",
+  "total_horas_asignatura": 160,
   "creditos": 3.33,
-  "estado": "EnRevision",
-  "version": 1,
-  "unidades": [
-    {
-      "id_unidad": 1,
-      "numero_unidad": 1,
-      "titulo": "Fundamentos de Objetos y Clases",
-      "horas_docencia": 16,
-      "horas_ape": 8,
-      "horas_autonomo": 16
-    }
-  ]
+  "horas_contacto_docente": 64,
+  "horas_practico_experimental": 32,
+  "horas_autonomo": 64,
+  "estado": "Borrador",
+  "version": 1
 }
 ```
 
-### 4.2. Respuesta de Error de Validación Matemática (`400 Bad Request`)
-```json
-{
-  "status": 400,
-  "error": "Inconsistencia Matemática Curricular",
-  "message": "La suma de horas de las unidades temáticas (176h) excede el total oficial de la asignatura en la malla (160h).",
-  "detalles": {
-    "horas_malla": 160,
-    "horas_ingresadas": 176,
-    "diferencia": 16
-  }
-}
+### 2.2. Parámetros de Consulta (`[FromQuery]`) y Cabeceras
+* Los parámetros de consulta en URL se reciben en formato **`camelCase`** (ej. `?idAsignatura=45&idPeriodo=ABR2026`).
+* Las autorizaciones se transmiten vía encabezado `Authorization: Bearer <jwt_token>` o mediante la cookie segura `dosier_auth`.
+
+---
+
+## 3. Catálogo Exhaustivo de los 23 Controladores REST
+
+A continuación se detalla la especificación técnica de cada uno de los controladores del backend:
+
 ```
+Controladores del Backend DOSIER:
+|-- Subsistema Curricular:
+|   |-- 1. PeaController (/api/pea)
+|   |-- 2. DocenteAsignaturasController (/api/docente-asignaturas)
+|   |-- 3. ExpedientesController (/api/expedientes-curriculares)
+|   |-- 4. NormativasController (/api/normativas)
+|   |-- 5. CurriculumCatalogController (/api/curriculum)
+|   `-- 6. CatalogsController (/api/catalogs)
+|-- Subsistema de Motor Documental y Criptografía:
+|   |-- 7. DocumentInstancesController (/api/documents/instances)
+|   |-- 8. DocumentTemplatesController (/api/admin/templates)
+|   |-- 9. DocumentsController (/api/documents)
+|   `-- 10. SignaturesController (/api/signatures)
+|-- Subsistema de Seguridad, Identidad y Gobernanza:
+|   |-- 11. AuthController (/api/auth)
+|   |-- 12. AdminController (/api/admin)
+|   `-- 13. LopdpController (/api/lopdp)
+|-- Subsistema de Colaboración y Proyectos:
+|   |-- 14. CollaborationController (/api/collaboration)
+|   `-- 15. ProjectsController (/api/projects)
+|-- Subsistema de Comunicación y Analítica:
+|   |-- 16. NotificationsController (/api/Admin/notifications)
+|   |-- 17. EmailEngineController (/api/Admin/email-engine)
+|   |-- 18. CalendarioController (/api/calendario)
+|   `-- 19. ReportsController (/api/reports)
+`-- Subsistema de Mantenimiento y Utilidades:
+    |-- 20. RecycleBinController (/api/recyclebin)
+    |-- 21. StorageController (/api/storage)
+    |-- 22. HealthController (/api/health)
+    `-- 23. Endpoint Mínimo Ping (/api/ping)
+```
+
+---
+
+### 3.1. `PeaController` (`/api/pea`)
+Controlador central para la elaboración, edición, validación de horas, circuito colegiado de firmas y observaciones del PEA institucional.
+
+| Método | Ruta | Autorización | Descripción y Parámetros |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/{id:int}` | Autenticado | Obtiene un PEA por su ID primario, incluyendo todas sus 11 secciones estructuradas. |
+| `GET` | `/uuid/{uuid}` | Autenticado | Obtiene un PEA por su UUID único. |
+| `GET` | `/buscar` | Autenticado | Busca PEA por `idAsignatura` e `idPeriodo`. |
+| `GET` | `/bandeja` | Autenticado | Bandeja de supervisión curricular filtrada por `idPeriodo`, `idCarrera`, `estado`. Calcula firmas completadas. |
+| `POST`| `/` | Autenticado | Guarda o actualiza incrementalmente las secciones del PEA. Valida balance de horas. |
+| `POST`| `/desde-asignacion/{idAsignacion:int}` | Autenticado | Instancia un nuevo PEA a partir de la asignación docente oficial de SIGAFI. |
+| `PATCH`| `/{id}/estado` | `DOSIER_ADMIN` | Modificación forzada de estado administrativo. |
+| `POST`| `/{id:int}/firmar` | Autenticado | Firma electrónica oficial del PEA (HMAC o PKCS#12) según la fase colegiada del usuario. |
+| `POST`| `/{id}/clonar` | Admin / Docente / Coord | Clona el PEA hacia un nuevo período lectivo (`?nuevoPeriodo=...`). |
+| `GET` | `/{id:int}/observaciones` | Autenticado | Lista las observaciones registradas durante la revisión. |
+| `POST`| `/{id:int}/observaciones` | Coordinadores / Vicerrector | Registra una nueva observación formal sobre una sección pedagógica. |
+| `PATCH`| `/observaciones/{idObs:int}/subsanar` | Docente / Admin | Subsanación de la observación por parte del docente con su respuesta formal. |
+| `GET` | `/{id:int}/trazabilidad` | Autenticado | Historial inmutable de cambios de estado y hashes SHA-256. |
+
+---
+
+### 3.2. `DocenteAsignaturasController` (`/api/docente-asignaturas`)
+Frontera de integración de solo lectura con las asignaciones académicas de SIGAFI.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/contexto/{idAsignacion:int}` | Autenticado | Resuelve el contexto curricular oficial de la materia asignada (horas, créditos, prerrequisitos). |
+| `GET` | `/periodo-activo` | Autenticado | Retorna el período académico activo institucional de SIGAFI. |
+| `GET` | `/periodos` | Autenticado | Lista los períodos académicos disponibles. |
+| `GET` | `/mis-asignaturas` | Autenticado | Retorna las materias asignadas al docente autenticado con el estado actual de su PEA. |
+| `GET` | `/curriculo` | Autenticado | Información detallada de una asignatura y carrera (`idAsignatura`, `idCarrera`). |
+
+---
+
+### 3.3. `ExpedientesController` (`/api/expedientes-curriculares`)
+Gestión del Expediente Curricular Maestro por Asignatura y Período.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/{id:int}` | Autenticado | Consulta básica de expediente curricular por ID. |
+| `GET` | `/{id:int}/detalle` | Autenticado | Expediente consolidado con proyecto de carrera CES, modelo educativo y matriz de tributación. |
+| `GET` | `/asignacion/{idAsignacion:int}` | Autenticado | Obtiene el expediente vinculado a una asignación docente. |
+| `GET` | `/periodo/{idPeriodo}` | Autenticado | Lista expedientes curriculares por período y carrera opcional. |
+| `POST`| `/asegurar/asignacion/{idAsignacion:int}` | Autenticado | Obtiene o crea automáticamente el expediente curricular maestro para la cátedra. |
+
+---
+
+### 3.4. `NormativasController` (`/api/normativas`)
+Repositorio inalterable de normativas externas y catálogos curriculares.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Autenticado | Lista normativas vigentes (CES, CACES, SENESCYT). |
+| `GET` | `/checklist` | Autenticado | Checklist de artículos normativos para validación pedagógica del PEA. |
+| `GET` | `/modelo-educativo` | Autenticado | Versión oficial del Modelo Educativo Institucional vigente. |
+| `GET` | `/perfil-egreso` | Autenticado | Perfil de egreso formal por carrera y malla (`idCarrera`, `idMalla`). |
+| `GET` | `/tributacion-asignatura`| Autenticado | Matriz de articulación curricular entre asignatura y resultados del perfil. |
+| `GET` | `/proyecto-curricular` | Autenticado | Proyecto curricular aprobado por el CES para la carrera. |
+
+---
+
+### 3.5. `CurriculumCatalogController` (`/api/curriculum`)
+Catálogos académicos filtrados para la elaboración del PEA.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/carreras` | Autenticado | Carreras institucionales asociadas al docente en el período. |
+| `GET` | `/asignaturas` | Autenticado | Asignaturas de la malla curricular por carrera y profesor. |
+| `GET` | `/periodos` | Autenticado | Lista de períodos académicos para selección en filtros. |
+
+---
+
+### 3.6. `CatalogsController` (`/api/catalogs`)
+Catálogos institucionales maestros y configuraciones del sistema.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/config-general` | Público / Autenticado | Parámetros de configuración general del instituto (prefijos). |
+| `GET` | `/carreras` | Público / Autenticado | Catálogo de carreras institucionales del ISTPET (`esInstituto = 1`). |
+| `GET` | `/mi-carrera` | Autenticado | Determina la carrera oficial del usuario en el período activo. |
+
+---
+
+### 3.7. `DocumentInstancesController` (`/api/documents/instances`)
+Orquestación de instancias documentales generadas, snapshots forenses y mantenimiento.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/` | Autenticado | Crea una nueva instancia documental para una entidad y plantilla. |
+| `GET` | `/{uuid}` | Autenticado | Consulta la instancia documental por UUID. |
+| `GET` | `/entity/{entityUuid}` | Autenticado | Lista instancias vinculadas a una entidad (ej. PEA o proyecto). |
+| `GET` | `/resolve` | Autenticado | Busca o crea atómicamente la instancia para `(entityUuid, templateCode)`. |
+| `PATCH`| `/{uuid}/metadata` | Autenticado | Guarda snapshots de metadatos colaborativos para renderizado. |
+| `POST`| `/{uuid}/finalize` | Autenticado | Finaliza el documento, bloqueando edición y registrando hash SHA-256. |
+| `POST`| `/{uuid}/upgrade-template` | Autenticado | Actualiza la instancia a la última versión de la plantilla base. |
+| `GET` | `/templates/{code}/ui-config` | Autenticado | Retorna la configuración dinámica de interfaz (Metadata-Driven UI). |
+| `GET` | `/{uuid}/ui-config` | Autenticado | Configuración de UI preservando el snapshot histórico de la instancia. |
+| `GET` | `/maintenance/obsolete-diagnosis` | `DOSIER_ADMIN` | Diagnóstico de documentos generados con plantillas obsoletas. |
+| `DELETE`| `/maintenance/purge-file/{uuid}` | `DOSIER_ADMIN` | Purga física de un PDF obsoleto preservando la trazabilidad. |
+| `POST`| `/maintenance/purge-all-obsolete` | `DOSIER_ADMIN` | Purga masiva de binarios obsoletos del servidor. |
+
+---
+
+### 3.8. `DocumentTemplatesController` (`/api/admin/templates`)
+Administración y diseño de plantillas HTML institucionales en base de datos.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | Autenticado | Lista todas las plantillas institucionales activas. |
+| `GET` | `/{code}` | Autenticado | Detalle y código HTML/Scriban de una plantilla por código. |
+| `PUT` | `/{code}` | `DOSIER_ADMIN` | Actualiza el marcado HTML, CSS y campos colaborativos de una plantilla. |
+| `POST`| `/{code}/reset` | `DOSIER_ADMIN` | Restablece la plantilla a sus archivos oficiales de fábrica. |
+| `PUT` | `/{code}/signature-config` | `DOSIER_ADMIN` | Modifica los requisitos de firma (DOSIER, ECUADOR_P12, HIBRIDO). |
+| `PUT` | `/{code}/theme-config` | `DOSIER_ADMIN` | Configuración Schema-Driven de tematización sin alterar HTML. |
+| `POST`| `/order` | `DOSIER_ADMIN` | Guarda el orden visual de presentación de plantillas en la UI. |
+| `GET` | `/categories` | Autenticado | Catálogo de categorías documentales CACES/Institucionales. |
+
+---
+
+### 3.9. `DocumentsController` (`/api/documents`)
+Motor documental agnóstico de renderizado PDF y validación pública.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/render` | Autenticado | Renderizado universal de cualquier DTO a PDF con marca de agua o doble ciego. |
+| `GET` | `/templates` | Autenticado | Catálogo de plantillas disponibles. |
+| `GET` | `/templates/{code}` | Autenticado | Consulta de plantilla por código. |
+| `GET` | `/verify/{traceabilityCode}` | **Público (Anónimo)** | Verificación pública forense de autenticidad documental mediante QR. |
+| `GET` | `/audit/{traceabilityCode}` | Autenticado | Ficha completa de auditoría forense con snapshot inyectado. |
+| `POST`| `/merge` | Autenticado | Concatenación de múltiples binarios PDF en un solo archivo. |
+
+---
+
+### 3.10. `SignaturesController` (`/api/signatures`)
+Motor criptográfico de firmas digitales institucionales y certificados PKCS#12.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/profile` | Autenticado | Obtiene el perfil de firma del usuario (trazo canvas, cargo institucional). |
+| `PUT` | `/profile` | Autenticado | Guarda o actualiza el trazo vectorial y datos del firmante. |
+| `POST`| `/sign` | Autenticado | Firma institucional con re-autenticación de contraseña (HMAC-SHA256 y DFRM). |
+| `POST`| `/sign-p12` | Autenticado | Firma electrónica con certificado calificado del Ecuador (`.p12`). |
+| `GET` | `/document/{documentoUuid}` | Autenticado | Lista todas las firmas estampadas en un documento. |
+| `GET` | `/verify/{firmaCode}` | **Público (Anónimo)** | Verificación de validez de una firma sin requerir inicio de sesión. |
+| `POST`| `/revoke` | Autenticado | Revocación formal de una firma por el autor o un administrador. |
+
+---
+
+### 3.11. `AuthController` (`/api/auth`)
+Gestión de autenticación, JIT provisioning, SSO Microsoft, Magic Links y recuperación.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/login` | **Público** | Autenticación con usuario/contraseña, emitiendo JWT y cookie `dosier_auth`. |
+| `POST`| `/microsoft-login` | **Público** | Inicio de sesión federado mediante token de Microsoft Entra ID. |
+| `POST`| `/magic-login` | **Público** | Consumo de enlace temporal firmado para acceso directo sin contraseña. |
+| `POST`| `/magic-login/handoff` | **Público** | Validación de PIN temporal para traspaso de sesión móvil/escritorio. |
+| `POST`| `/magic-login/resend` | **Público** | Reenvío de enlace mágico a correo institucional. |
+| `POST`| `/password-recovery/request` | **Público** | Solicitud de recuperación de contraseña con respuesta anti-enumeración. |
+| `POST`| `/password-recovery/validate`| **Público** | Validación de token de recuperación. |
+| `POST`| `/password-recovery/reset` | **Público** | Establecimiento de nueva contraseña mediante token. |
+| `POST`| `/password-recovery/revert-suspicious` | **Público** | Reversión de emergencia ante cambio de credenciales sospechoso. |
+| `POST`| `/change-password` | Autenticado | Cambio de contraseña voluntario por parte del usuario. |
+| `GET` | `/profile` | Autenticado | Ficha completa del perfil autenticado con roles y permisos curriculares. |
+| `POST`| `/logout` | Autenticado | Invalida la sesión y borra la cookie `dosier_auth`. |
+| `POST`| `/refresh-token` | **Público** | Renovación de access token mediante refresh token. |
+| `GET` | `/verify-session` | Autenticado | Comprobación de vigencia del token JWT. |
+
+---
+
+### 3.12. `AdminController` (`/api/admin`)
+Panel de control administrativo institucional (`DOSIER_ADMIN`).
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/users` | `DOSIER_ADMIN` | Gestión paginada de docentes, directivos y estudiantes con filtros de carga. |
+| `GET` | `/roles` | `DOSIER_ADMIN` | Catálogo de roles curriculares institucionales. |
+| `GET` | `/departments` | `DOSIER_ADMIN` | Departamentos y áreas académicas. |
+| `GET` | `/metadata/{uuid}` | `DOSIER_ADMIN` | Metadatos de perfil extendido de un usuario. |
+| `PUT` | `/metadata/{uuid}` | `DOSIER_ADMIN` | Actualización de perfil administrativo. |
+| `POST`| `/assign-role` | `DOSIER_ADMIN` | Asignación de rol curricular RBAC a un usuario. |
+| `POST`| `/remove-role` | `DOSIER_ADMIN` | Revocación de rol curricular. |
+| `GET` | `/audit-logs` | `DOSIER_ADMIN` | Bitácora inmutable de auditoría con deltas JSON (`values_before`, `values_after`). |
+| `POST`| `/external-users` | `DOSIER_ADMIN` | Alta de evaluadores externos y pares académicos. |
+| `POST`| `/system-roles/toggle` | `DOSIER_ADMIN` | Conmutador de permisos por módulo institucional. |
+| `GET` | `/backups` | `DOSIER_ADMIN` | Historial de copias de seguridad de la base de datos `sigafi_es`. |
+| `POST`| `/backups/trigger` | `DOSIER_ADMIN` | Ejecución forzada e inmediata de respaldo de base de datos. |
+
+---
+
+### 3.13. `LopdpController` (`/api/lopdp`)
+Gestión de cumplimiento de la Ley Orgánica de Protección de Datos Personales.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/consentimiento` | Autenticado | Registro de consentimiento informado con versión de política, IP y agente. |
+| `GET` | `/consentimientos` | `DOSIER_ADMIN` | Auditoría de consentimientos otorgados por la comunidad institucional. |
+| `POST`| `/solicitud-arco` | Autenticado | Registro de solicitudes de derechos ARCO (Acceso, Rectificación, etc.). |
+| `GET` | `/solicitudes-arco` | `DOSIER_ADMIN` | Bandeja de seguimiento de solicitudes ARCO con alerta de plazos legales. |
+| `POST`| `/solicitud-arco/resolver` | `DOSIER_ADMIN` | Resolución formal de solicitud ARCO con adjunto de evidencia. |
+| `GET` | `/perfil` | Autenticado | Estado del consentimiento LOPDP del usuario autenticado. |
+| `PATCH`| `/perfil` | Autenticado | Actualización de preferencias de consentimiento y firmas. |
+
+---
+
+### 3.14. `CollaborationController` (`/api/collaboration`)
+Coordinación previa y control de sesiones del editor colaborativo CoWork.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/upload` | Autenticado | Carga de imágenes insertadas en el editor colaborativo para evitar Base64. |
+| `GET` | `/doc/{docId}` | Autenticado | Estado inicial y snapshot del documento colaborativo antes del handshake WebSocket. |
+| `POST`| `/doc/{docId}/lock` | Autenticado | Adquisición de bloqueo suave sobre una sección pedagógica del PEA. |
+| `POST`| `/doc/{docId}/unlock` | Autenticado | Liberación de bloqueo sobre la sección. |
+| `GET` | `/doc/{docId}/active-users` | Autenticado | Lista de usuarios actualmente concurrentes en el documento. |
+| `GET` | `/doc/{docId}/comments` | Autenticado | Hilos de comentarios y debates pedagógicos sobre el documento. |
+| `POST`| `/doc/{docId}/comments` | Autenticado | Inserción de nuevo comentario colaborativo. |
+| `PATCH`| `/comments/{commentId}/resolve` | Autenticado | Marca un comentario o sugerencia como resuelta. |
+| `DELETE`| `/comments/{commentId}` | Autenticado | Eliminación de comentario por su autor o moderador. |
+
+---
+
+### 3.15. `ProjectsController` (`/api/projects`)
+Gestión del ciclo de vida de proyectos formativos y de investigación articulados al PEA.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST`| `/generate-pdf` | Autenticado | Generación de protocolo en PDF (borrador / definitivo). |
+| `POST`| `/generate-pdf/blind-review` | Autenticado | Generación de protocolo en modo Doble Ciego para revisión por pares. |
+| `POST`| `/draft` | Autenticado | Creación de borrador de proyecto. |
+| `POST`| `/sign` | Autenticado | Firma electrónica PAdES del protocolo con certificado del docente líder. |
+| `PATCH`| `/{id}/section` | Autenticado | Guardado modular de secciones del proyecto. |
+| `POST`| `/{id}/transition` | Autenticado | Transición de estado en la máquina de workflow con observaciones. |
+| `POST`| `/{uuid}/iniciar-ejecucion` | Autenticado | Inicio formal de ejecución con registro de trazabilidad. |
+| `GET` | `/{id}/traceability` | Autenticado | Historial forense de trazabilidad del proyecto. |
+| `POST`| `/save-preview-data` | Autenticado | Sincronización de datos del asistente (Wizard) de proyectos. |
+| `GET` | `/` | Autenticado | Lista general de proyectos institucionales. |
+| `GET` | `/my` | Autenticado | Proyectos asignados al usuario o todos si es administrador. |
+| `GET` | `/{uuid}/detail` | Autenticado | Ficha completa de detalle, permisos de edición y firma del proyecto. |
+| `GET` | `/stats` | Autenticado | Estadísticas de investigación y cobertura para el dashboard docente. |
+| `PATCH`| `/{uuid}/team` | Autenticado | Actualización del equipo de investigadores y grupos asociados. |
+| `POST`| `/{uuid}/team-change-requests` | Autenticado | Solicitud formal de alta/baja de participantes en el proyecto. |
+| `GET` | `/{uuid}/team-change-requests` | Autenticado | Historial de solicitudes de cambio de equipo. |
+| `PATCH`| `/{uuid}/team-change-requests/{requestUuid}/review` | `DOSIER_ADMIN` | Aprobación o rechazo administrativo de cambio de participantes. |
+| `POST`| `/{uuid}/transfer-director` | Autenticado | Transferencia de la dirección de proyecto a otro docente calificado. |
+
+---
+
+### 3.16. `NotificationsController` (`/api/Admin/notifications`)
+Centro de notificaciones institucionales e in-app alerts.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/my` | Autenticado | Consulta de notificaciones del usuario autenticado con límite configurable. |
+| `PATCH`| `/{uuid}/read` | Autenticado | Marca una notificación individual como leída. |
+| `POST`| `/mark-all-read` | Autenticado | Marca todas las notificaciones del usuario como leídas. |
+| `DELETE`| `/{uuid}` | Autenticado | Elimina una notificación del buzón del usuario. |
+| `DELETE`| `/clear-read` | Autenticado | Purga todas las notificaciones leídas del buzón. |
+| `POST`| `/subscribe` | Autenticado | Suscripción de token de dispositivo WebPush para notificaciones push móviles. |
+| `POST`| `/unsubscribe` | Autenticado | Desuscripción de token de dispositivo. |
+
+---
+
+### 3.17. `EmailEngineController` (`/api/Admin/email-engine`)
+Administración de plantillas y despacho de correos electrónicos transaccionales.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/templates` | Autenticado | Catálogo de plantillas de correo electrónico activas. |
+| `GET` | `/templates/{id}` | Autenticado | Consulta de plantilla de correo por ID. |
+| `POST`| `/templates` | Autenticado | Creación de nueva plantilla de correo HTML institucional. |
+| `PUT` | `/templates/{id}` | Autenticado | Actualización de contenido y variables de la plantilla de correo. |
+| `DELETE`| `/templates/{id}` | Autenticado | Eliminación de plantilla de correo. |
+| `GET` | `/history` | Autenticado | Historial de envíos con estados (`Pendiente`, `Enviado`, `Fallido`). |
+| `POST`| `/send` | Autenticado | Envío transaccional de correo con adjuntos y reemplazo de variables. |
+
+---
+
+### 3.18. `CalendarioController` (`/api/calendario`)
+Planificación académica, hitos lectivos y sincronización de calendario institucional.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/eventos` | Autenticado | Lista eventos normativos y fechas límites de revisión del PEA por rango de fechas. |
+| `GET` | `/feed` | **Público (Token iCal)** | Feed iCalendar `.ics` para sincronización con Outlook, Google Calendar o Apple Calendar. |
+| `POST`| `/ical/token` | Autenticado | Genera o renueva el token privado de sincronización iCal del docente. |
+| `DELETE`| `/ical/token` | Autenticado | Revoca el token privado iCal del usuario. |
+
+---
+
+### 3.19. `ReportsController` (`/api/reports`)
+Tableros analíticos y paquetes de evidencias para acreditación CACES 2026.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/analiticas` | `DOSIER_ADMIN` | Reporte consolidado de cobertura curricular y proyectos por período y carrera. |
+| `GET` | `/caces-preview` | `DOSIER_ADMIN` | Previsualización de indicadores de acreditación CACES. |
+| `GET` | `/caces-package` | `DOSIER_ADMIN` | Generación del paquete PDF unificado de evidencias institucionales. |
+| `GET` | `/caces-coverage` | `DOSIER_ADMIN` | Matriz porcentual de cobertura de PEAs aprobados y firmados. |
+| `GET` | `/distributivo-cruce` | `DOSIER_ADMIN` | Cruce distributivo entre asignaciones SIGAFI y PEAs elaborados. |
+
+---
+
+### 3.20. `RecycleBinController` (`/api/recyclebin`)
+Papelera de reciclaje lógica y recuperación de registros eliminados.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/projects` | Autenticado | Lista proyectos eliminados lógicamente disponibles para restauración. |
+| `POST`| `/projects/{uuid}/restore` | Autenticado | Restaura un proyecto de investigación y reconstruye sus dependencias. |
+| `DELETE`| `/projects/{uuid}/permanent`| `DOSIER_ADMIN` | Eliminación definitiva (Hard Delete) de un registro tras período de gracia. |
+
+---
+
+### 3.21. `StorageController` (`/api/storage`)
+Despacho de archivos estáticos, evidencias y firmas institucionales.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/{*filePath}` | Público / Autenticado | Descarga de recursos estáticos (imágenes de canvas, evidencias y anexos) con resolución automática de MIME Type. |
+
+---
+
+### 3.22. `HealthController` (`/api/health`)
+Comprobación de estado y disponibilidad del servicio API.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | **Público** | Retorna estado del servicio `{ "status": "online", "timestamp": "..." }`. |
+
+---
+
+### 3.23. Endpoint Mínimo `/api/ping`
+Ruta mapeada en `Program.cs` para chequeos de salud de balanceadores de carga y proxies:
+* **Método:** `GET`
+* **Ruta:** `/api/ping`
+* **Autenticación:** Ninguna (Acceso abierto).
+* **Respuesta:** `{ "status": "healthy", "timestamp": "..." }`.

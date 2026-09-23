@@ -21,8 +21,7 @@ La solución adopta un modelo desacoplado compuesto por una aplicación de pági
 ```mermaid
 graph TD
     subgraph CapaPresentacion [Capa de Presentacion / Exposicion]
-        WebClient["React 18 SPA (dosier_web)\nVite + TypeScript + Geist Design"]
-        MobileClient["App Movil Docente (dosier_mobile)\nReact Native / Expo"]
+        WebClient["React 18 SPA (dosier_web)\nVite + TypeScript + Geist Editorial"]
     end
 
     subgraph CapaBackend [Backend API Gateway .NET 8.0]
@@ -92,9 +91,8 @@ El diagrama de contenedores detalla los bloques tecnológicos principales y sus 
 
 ```mermaid
 graph TB
-    subgraph Clients [Contenedores de Cliente]
+    subgraph Clients [Contenedor de Cliente]
         WebClient["dosier_web\nReact 18 + Vite + TypeScript (Geist UI)"]
-        MobileClient["dosier_mobile\nApp Movil Docente"]
     end
 
     subgraph BackendServices [Contenedores de Aplicacion .NET 8.0]

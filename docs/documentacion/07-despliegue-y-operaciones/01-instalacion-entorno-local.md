@@ -34,7 +34,7 @@ graph TD
    * **`00_sigafi_esquema_y_datos_demo.sql`:** (Requerido para entornos aislados o producción) Crea el esquema maestro de SIGAFI (`carreras` con `esInstituto = 1`, `periodos`, `mallas_periodos`, `detallemallas`, `profesores` y `asignacion_materias`) con datos sintéticos representativos del ISTPET cumpliendo con la LOPDP.
    * **`01_sistema_base.sql`:** Crea la infraestructura base de plantillas, instancias documentales, firmas electrónicas, bitácora forense de auditoría, tablas de co-redacción concurrente CoWork y tablas LOPDP.
    * **`02_gobernanza_y_antecedentes_curriculares.sql`:** Despliega el repositorio de normativas de nivel superior (CES, CACES, SENESCYT), modelos educativos institucionales del ISTPET, proyectos de carrera aprobados y matriz de antecedentes epistemológicos de asignaturas.
-   * **`03_curriculum_pea_oficial.sql`:** Crea la tabla maestra `cur_pea`, las 10 tablas específicas para las secciones oficiales A a la K del PEA institucional, colaboradores y versiones.
+   * **`03_curriculum_pea_oficial.sql`:** Crea la tabla maestra `doc_pea`, las 10 tablas específicas para las secciones oficiales A a la K del PEA institucional, colaboradores y versiones.
    * **`04_seguridad_rbac_roles_curriculares.sql`:** Registra a DOSIER como sistema oficial (ID 6: `"Gestión Curricular y Acreditación ISTPET"`), formaliza los 4 módulos curriculares, da de alta los 5 roles curriculares (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`), asocia permisos y sincroniza usuarios.
    * *(Nota: El script `scripts/base_datos/extensiones/05_extension_futura_curriculum_silabo_guias.sql` queda reservado para futuras extensiones de sílabos y guías APE).*
 

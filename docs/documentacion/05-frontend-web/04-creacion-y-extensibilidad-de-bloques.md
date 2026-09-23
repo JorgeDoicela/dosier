@@ -133,16 +133,22 @@ export const RubricaPracticaSection: React.FC<{ peaId: string; readOnly: boolean
 };
 ```
 
-### 3.5. Fase 5: Compilación en Plantilla HTML y Motor PDF
-Ubicación: `backend/dosier_infrastructure/Documents/Templates/PeaOficial.html`
+### 3.5. Fase 5: Registro del Proveedor de Bloque en el Motor Documental
+Ubicación: `backend/dosier_infrastructure/Common/Documents/DocumentTemplateRegistry.cs` y ensambladores de bloque (`IDocumentBlockProvider`).
 
-Se agrega el fragmento evaluable por el motor de plantillas para que el documento PDF oficial compilado en el backend refleje los datos guardados:
+Se implementa el ensamblador del bloque para que `DocumentDataOrchestrator` inyecte la sección en el marcado HTML compilado por iText 9:
 
-```html
-<section class="pea-section rubrica-practica">
-    <div class="section-header">{{RubricaPracticaTitle}}</div>
-    <div class="section-content">
-        {{{RubricaPracticaContenidoHtml}}}
-    </div>
-</section>
+```csharp
+public class RubricaPracticaBlockProvider : IDocumentBlockProvider
+{
+    public string BlockType => "cur_rubrica_evaluacion_practica";
+
+    public async Task<string> RenderHtmlAsync(DocumentBlock block, DocumentContext context)
+    {
+        return $"<section class=\"pea-section rubrica-practica\">" +
+               $"<div class=\"section-header\">{block.Config?.CustomTitle}</div>" +
+               $"<div class=\"section-content\">{block.ContentHtml}</div>" +
+               $"</section>";
+    }
+}
 ```

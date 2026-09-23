@@ -18,10 +18,10 @@ graph TD
     AuditCACES --> E4[Estándar 4: Integridad Criptográfica Forense]
     AuditCACES --> E5[Estándar 5: Verificación Pública y Transparencia]
 
-    E1 --> ModPEA[Módulo cur_pea Secciones A-K y cur_asignaturas_antecedentes]
+    E1 --> ModPEA[Módulo doc_pea Secciones A-K y doc_asignatura_resultado_perfil]
     E2 --> ValMalla[Motor de Validación Horaria CD, APE, TA vs detallemallas]
-    E3 --> WFSign[WorkflowEngineService & cur_pea_seccion_k_firmas 4 Firmas]
-    E4 --> HashDB[document_instances con data_snapshot_json y Hash SHA-256]
+    E3 --> WFSign[PeaService & doc_pea_trazabilidad / doc_documentos_firmas 4 Firmas]
+    E4 --> HashDB[doc_document_instances con data_snapshot_json y Hash SHA-256]
     E5 --> QRNode[Endpoint Público /public/verify y Código QR Vectorial]
 ```
 
@@ -32,29 +32,29 @@ graph TD
 ### 3.1. Estándar 1: Coherencia Curricular y Planificación Microcurricular
 * **Exigencia CACES:** Los institutos deben demostrar que cada asignatura cuenta con un Programa de Estudio de la Asignatura (PEA) actualizado, que articula los objetivos de aprendizaje con el perfil de egreso y las competencias del proyecto de carrera aprobado por el CES.
 * **Respaldo Técnico en DOSIER:**
-  * Tabla `cur_asignaturas_antecedentes`: Provee la fundamentación epistemológica institucional precargada para cada materia.
-  * Tablas `cur_pea_seccion_c_objetivos`, `cur_pea_seccion_d_competencias` y `cur_pea_seccion_e_resultados`: Mapean taxativamente la tributación al perfil profesional.
+  * Tablas de Gobernanza Curricular: `doc_modelos_educativos`, `doc_proyectos_curriculares` y `doc_perfiles_egreso` proveen la fundamentación institucional precargada.
+  * Tablas `doc_pea`, `doc_pea_resultados_aprendizaje` y `doc_asignatura_resultado_perfil`: Mapean taxativamente la tributación de la asignatura al perfil profesional de egreso.
 
 ### 3.2. Estándar 2: Cumplimiento Estricto de Carga Horaria (CES RRA)
 * **Exigencia CACES:** Comprobar que las horas asignadas a la docencia teórica, aprendizaje práctico-experimental (laboratorios/talleres) y trabajo autónomo correspondan de manera inviolable a la malla curricular y a los créditos reconocidos.
 * **Respaldo Técnico en DOSIER:**
-  * Al momento de formular el PEA, el sistema consulta `detallemallas` de SIGAFI y bloquea el avance del documento si la suma de unidades temáticas en `cur_pea_seccion_f_contenidos` difiere en un solo minuto de las horas normadas.
+  * Al momento de formular el PEA, el sistema consulta `detallemallas` de SIGAFI y bloquea el avance del documento si la suma de unidades temáticas en `doc_pea_unidades` y `doc_pea_temas` difiere en un solo minuto de las horas normadas.
 
 ### 3.3. Estándar 3: Circuito de Revisión Colegiada y 4 Firmas Institucionales
 * **Exigencia CACES:** Evidenciar que la planificación microcurricular fue sometida a revisión colegiada por las comisiones académicas y aprobada formalmente por las autoridades institucionales previo al inicio de las clases.
 * **Respaldo Técnico en DOSIER:**
-  * Circuito formal de 4 etapas implementado en `WorkflowEngineService`:
+  * Circuito formal de 4 etapas implementado en `PeaService`:
     1. **Elaboración:** Docente/s autor/es (`DOSIER_DOCENTE`).
     2. **Revisión de Carrera:** Coordinador de Carrera (`DOSIER_COORD_CARRERA`).
     3. **Verificación Académica:** Coordinador Académico (`DOSIER_COORD_ACAD`).
     4. **Aprobación Oficial:** Vicerrectorado (`DOSIER_VICERRECTOR`).
-  * Cada etapa estampa un registro auditable en `cur_pea_seccion_k_firmas` y `document_signatures` con marcas de tiempo UTC y certificado criptográfico.
+  * Cada etapa estampa un registro auditable en `doc_pea_trazabilidad` y `doc_documentos_firmas` con marcas de tiempo UTC y certificado criptográfico.
 
 ### 3.4. Estándar 4: Integridad Criptográfica Forense (*State Locking*)
 * **Exigencia CACES:** Garantizar que los documentos curriculares entregados para auditoría no hayan sido modificados retroactivamente o adulterados con posterioridad a su aprobación.
 * **Respaldo Técnico en DOSIER:**
-  * **Bloqueo Inmutable (*State Locking*):** En el instante en que Vicerrectorado estampa la firma final, el estado pasa a `Aprobado` y la capa de servicios prohíbe cualquier mutación sobre las tablas de secciones.
-  * **Snapshot JSON y Hash SHA-256:** El contenido exacto se congela en `document_instances.data_snapshot_json` y se calcula un hash criptográfico SHA-256 sobre la cadena serializada y sobre el binario del PDF generado mediante `iText 9`.
+  * **Bloqueo Inmutable (*State Locking*):** En el instante en que Vicerrectorado estampa la firma final, el estado pasa a `Aprobado` y la capa de servicios prohíbe cualquier mutación sobre las tablas del PEA.
+  * **Snapshot JSON y Hash SHA-256:** El contenido exacto se congela en `doc_document_instances.data_snapshot_json` y se calcula un hash criptográfico SHA-256 sobre la cadena serializada y sobre el binario del PDF generado mediante `iText 9`.
 
 ### 3.5. Estándar 5: Acceso y Verificación Pública para Evaluadores Externos
 * **Exigencia CACES:** Facilitar a los pares evaluadores del CACES mecanismos ágiles para verificar la legitimidad de las evidencias presentadas en los portafolios docentes, tanto en formato digital como en impresiones físicas.
