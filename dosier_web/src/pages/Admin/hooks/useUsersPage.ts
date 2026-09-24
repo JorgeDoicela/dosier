@@ -1,38 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import api from '../../../api/axios_config';
+import { usersService, type ManagedUserDto, type RoleDto } from '../../../services/usersService';
 
-export interface ManagedUser {
-    id_profesor: string;
-    nombre_completo: string;
-    email: string;
-    user_uuid: string;
-    type: string;
-    roles: string[];
-    role_codes: string[];
-    firma_habilitada: boolean;
-    horas_docente?: number;
-    horas_clase?: number;
-    materias_asignadas?: number;
-    catedras_asignadas?: number;
-    tiene_carga_docente?: boolean;
-    horas_investigacion?: number;
-    horas_asignadas?: number;
-    tiene_horas_investigacion?: boolean;
-    departamento?: string;
-    cargo_instituto?: string;
-    tipo_contrato?: string;
-    carrera?: string;
-    nivel?: string;
-    es_graduado?: boolean;
-    es_instituto?: boolean;
-}
-
-export interface Role {
-    id_rol: number;
-    nombre: string;
-    codigo_rol: string;
-}
+export type ManagedUser = ManagedUserDto;
+export type Role = RoleDto;
 
 export interface PendingUserDraft {
     type: 'edit';
@@ -145,11 +116,11 @@ export const useUsersPage = () => {
                 origenEstudiante,
                 departamento
             });
-            const response = await api.get(`/Admin/users?${params.toString()}`);
-            const items: ManagedUser[] = response.data.items;
+            const data = await usersService.getUsers(params);
+            const items: ManagedUser[] = data.items;
             setUsers(items);
-            setTotalCount(response.data.total_count);
-            setTotalPages(response.data.total_pages);
+            setTotalCount(data.total_count);
+            setTotalPages(data.total_pages);
         } catch (error) {
             console.error('Error fetching users:', error);
         } finally {
@@ -169,12 +140,12 @@ export const useUsersPage = () => {
 
         const resolveOpenUser = async () => {
             try {
-                const res = await api.get(
-                    `/Admin/users?search=${encodeURIComponent(openUuid)}&type=${userType}&page=1&pageSize=5`
+                const data = await usersService.getUsers(
+                    `search=${encodeURIComponent(openUuid)}&type=${userType}&page=1&pageSize=5`
                 );
                 if (cancelled) return;
 
-                const items: ManagedUser[] = res.data.items ?? [];
+                const items: ManagedUser[] = data.items ?? [];
                 const searchLower = openUuid.trim().toLowerCase();
                 const target = items.find(
                     u => 
@@ -221,8 +192,8 @@ export const useUsersPage = () => {
 
     const fetchRoles = async () => {
         try {
-            const response = await api.get('/Admin/roles');
-            setRoles(response.data);
+            const data = await usersService.getRoles();
+            setRoles(data);
         } catch (error) {
             console.error('Error fetching roles:', error);
         }
@@ -230,8 +201,8 @@ export const useUsersPage = () => {
 
     const fetchDepartments = async () => {
         try {
-            const response = await api.get('/Admin/departments');
-            setAvailableDepartments(response.data);
+            const data = await usersService.getDepartments();
+            setAvailableDepartments(data);
         } catch (error) {
             console.error('Error fetching departments:', error);
         }
@@ -453,9 +424,9 @@ export const useUsersPage = () => {
         setUpdating(`${userId}-${roleCode}`);
         try {
             if (hasRole) {
-                await api.post('/Admin/roles/revoke', { id_usuario: userId, role_code: roleCode, user_type: userType });
+                await usersService.revokeRole({ id_usuario: userId, role_code: roleCode, user_type: userType });
             } else {
-                await api.post('/Admin/roles/assign', { id_usuario: userId, role_code: roleCode, user_type: userType });
+                await usersService.assignRole({ id_usuario: userId, role_code: roleCode, user_type: userType });
             }
             await fetchUsers();
         } catch (error) {
@@ -485,7 +456,7 @@ export const useUsersPage = () => {
         const registeredCedula = externalForm.cedula;
         const registeredNombre = `${externalForm.nombres} ${externalForm.apellidos}`.toUpperCase().trim();
         try {
-            await api.post('/Admin/external', externalForm);
+            await usersService.createExternalUser(externalForm);
             clearExternalDraft();
             setShowExternalForm(false);
             setExternalForm({ cedula: '', nombres: '', apellidos: '', email: '', institucion: '' });

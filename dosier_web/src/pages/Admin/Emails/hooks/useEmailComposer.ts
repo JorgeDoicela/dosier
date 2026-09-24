@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import api from '../../../../api/axios_config';
+import { emailService } from '../../../../services/emailService';
 import { buildWorkspacePath } from '../../../../core/documents/templateUrl';
 import { useConfirm } from '../../../../api/ConfirmContext';
 import type { SelectedPerson } from '../components/RecipientPicker';
@@ -444,8 +444,8 @@ export const useEmailComposer = ({
         });
 
         try {
-            const res = await api.post('/Admin/email-engine/send', payload);
-            setSendResult({ success: true, message: res.data.message || 'Lote de correos encolado exitosamente. Se procesará en segundo plano.' });
+            const data = await emailService.sendEmail(payload as any);
+            setSendResult({ success: true, message: data.message || 'Lote de correos encolado exitosamente. Se procesará en segundo plano.' });
 
             // Clean fields upon success
             setSelectedPeople([]);

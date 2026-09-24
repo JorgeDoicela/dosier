@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axios_config';
+import { configuracionService } from '../services/configuracionService';
 
 export interface WorkflowState {
     estado: string;
@@ -73,10 +73,10 @@ export const useWorkflowStates = () => {
         }
 
         if (!fetchPromise) {
-            fetchPromise = api.get<WorkflowState[]>('/catalogs/workflow/estados')
-                .then(res => {
-                    cachedStates = res.data;
-                    return res.data;
+            fetchPromise = configuracionService.getWorkflowEstados()
+                .then(data => {
+                    cachedStates = data;
+                    return data;
                 })
                 .catch(err => {
                     fetchPromise = null;

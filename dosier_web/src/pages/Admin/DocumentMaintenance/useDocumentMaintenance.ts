@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../../../api/axios_config';
+import { documentMaintenanceService } from '../../../services/documentMaintenanceService';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { useConfirm } from '../../../api/ConfirmContext';
 import type { ObsoleteDoc, BackupLog, DiskInfo } from './documentMaintenanceTypes';
@@ -35,8 +35,8 @@ export const useDocumentMaintenance = () => {
     const fetchDiagnosis = async () => {
         setLoadingDocs(true);
         try {
-            const res = await api.get('/documents/instances/maintenance/diagnose');
-            setDocs(res.data || []);
+            const data = await documentMaintenanceService.getDiagnosis();
+            setDocs(data || []);
         } catch (err: any) {
             console.error(err);
             addToast("Error de Diagnóstico", "No se pudo cargar la información de almacenamiento de documentos.", "error");
@@ -48,8 +48,8 @@ export const useDocumentMaintenance = () => {
     const fetchBackups = async () => {
         setLoadingBackups(true);
         try {
-            const res = await api.get('/admin/backups');
-            setBackups(res.data || []);
+            const data = await documentMaintenanceService.getBackups();
+            setBackups(data || []);
         } catch (err: any) {
             console.error(err);
             addToast("Error de Backups", "No se pudo obtener el historial de copias de seguridad.", "error");
@@ -61,8 +61,8 @@ export const useDocumentMaintenance = () => {
     const fetchDiskInfo = async () => {
         setLoadingDiskInfo(true);
         try {
-            const res = await api.get('/admin/backups/disk-info');
-            setDiskInfo(res.data);
+            const data = await documentMaintenanceService.getDiskInfo();
+            setDiskInfo(data);
         } catch (err: any) {
             console.error(err);
         } finally {
@@ -82,12 +82,11 @@ export const useDocumentMaintenance = () => {
 
         const interval = setInterval(async () => {
             try {
-                const res = await api.get('/admin/backups');
-                const updatedLogs: BackupLog[] = res.data || [];
-                setBackups(updatedLogs);
+                const updatedLogs = await documentMaintenanceService.getBackups();
+                setBackups(updatedLogs || []);
                 fetchDiskInfo();
 
-                const stillPending = updatedLogs.some(b => b.estado === 'En_Proceso');
+                const stillPending = (updatedLogs || []).some(b => b.estado === 'En_Proceso');
                 if (!stillPending) {
                     addToast("Respaldo Completado", "El proceso de copia de seguridad finalizó exitosamente.", "success");
                 }
@@ -123,7 +122,7 @@ export const useDocumentMaintenance = () => {
 
         setActionLoading(uuid);
         try {
-            await api.post(`/documents/instances/maintenance/purge/${uuid}`);
+            await documentMaintenanceService.purgeSingle(uuid);
             addToast("Archivo Purgado", "El archivo físico ha sido eliminado del almacenamiento con éxito.", "success");
             fetchDiagnosis();
         } catch (err: any) {
@@ -153,8 +152,8 @@ export const useDocumentMaintenance = () => {
 
         setBulkLoading(true);
         try {
-            const res = await api.post('/documents/instances/maintenance/purge-all');
-            addToast("Depuración Completada", `Se liberaron físicamente ${res.data.count} archivos obsoletos.`, "success");
+            const res = await documentMaintenanceService.purgeAll();
+            addToast("Depuración Completada", `Se liberaron físicamente ${res.count} archivos obsoletos.`, "success");
             fetchDiagnosis();
         } catch (err: any) {
             console.error(err);
@@ -177,7 +176,7 @@ export const useDocumentMaintenance = () => {
 
         setTriggeringBackup(true);
         try {
-            await api.post('/admin/backups/trigger');
+            await documentMaintenanceService.triggerBackup();
             addToast("Copia de Seguridad Iniciada", "El respaldo se está ejecutando en segundo plano. Se actualizará la lista al finalizar.", "info");
             setTimeout(() => {
                 fetchBackups();
@@ -194,11 +193,11 @@ export const useDocumentMaintenance = () => {
     const handleVerifyIntegrity = async (uuid: string) => {
         setVerifyingUuid(uuid);
         try {
-            const res = await api.post(`/admin/backups/verify/${uuid}`);
-            if (res.data.isMatch) {
-                addToast("Integridad Confirmada", res.data.message, "success");
+            const res = await documentMaintenanceService.verifyIntegrity(uuid);
+            if (res.isMatch) {
+                addToast("Integridad Confirmada", res.message, "success");
             } else {
-                addToast("¡Advertencia de Integridad!", res.data.message, "error");
+                addToast("¡Advertencia de Integridad!", res.message, "error");
             }
         } catch (err: any) {
             console.error(err);
@@ -221,7 +220,7 @@ export const useDocumentMaintenance = () => {
 
         setPurgingBackupUuid(uuid);
         try {
-            await api.delete(`/admin/backups/${uuid}`);
+            await documentMaintenanceService.purgeBackup(uuid);
             addToast("Respaldo Purgado", "El archivo de copia de seguridad fue eliminado del disco con éxito.", "success");
             fetchBackups();
             fetchDiskInfo();
@@ -236,11 +235,8 @@ export const useDocumentMaintenance = () => {
     const handleDownloadBackup = async (uuid: string, filename: string) => {
         setDownloadingUuid(uuid);
         try {
-            const response = await api.get(`/admin/backups/download/${uuid}`, {
-                responseType: 'blob'
-            });
+            const blob = await documentMaintenanceService.downloadBackup(uuid);
 
-            const blob = new Blob([response.data]);
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;

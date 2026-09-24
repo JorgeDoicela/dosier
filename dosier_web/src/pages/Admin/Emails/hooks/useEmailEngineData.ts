@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../../../../api/axios_config';
+import { emailService } from '../../../../services/emailService';
+import { analyticsService } from '../../../../services/analyticsService';
 import type {
     EmailTemplate, EmailHistorial, Carrera, Proyecto, Convocatoria
 } from '../emailEngineTypes';
@@ -83,14 +84,14 @@ export const useEmailEngineData = (): UseEmailEngineDataResult => {
     const loadInitialData = useCallback(async () => {
         setLoading(true);
         try {
-            const [templatesRes, carrerasRes, projectsRes] = await Promise.all([
-                api.get<any[]>('/Admin/email-engine/templates'),
-                api.get<Carrera[]>('/catalogs/carreras'),
-                api.get<Proyecto[]>('/projects')
+            const [templatesData, carrerasData, projectsData] = await Promise.all([
+                emailService.getTemplates(),
+                analyticsService.getCarreras(),
+                analyticsService.getProjects()
             ]);
-            setTemplates(templatesRes.data.map(mapTemplateToCamelCase));
-            setCarreras(carrerasRes.data.map(mapCarreraToCamelCase));
-            setProjects(projectsRes.data);
+            setTemplates(templatesData.map(mapTemplateToCamelCase));
+            setCarreras(carrerasData.map(mapCarreraToCamelCase as any));
+            setProjects(projectsData as any);
             setConvocatorias([]);
         } catch (e) {
             console.error('[DOSIER EMAIL ENGINE] Error loading catalogs:', e);

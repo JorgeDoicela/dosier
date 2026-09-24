@@ -4,20 +4,12 @@ import {
     CheckCheck, Search, Inbox, Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios_config';
+import { notificacionesService, type NotificationDto } from '../../services/notificacionesService';
 import { useNotifications } from '../../api/NotificationsContext';
 import { stripHtmlToText } from '../../utils/notificationText';
 import { PageHeader } from '../../components/Common/PageHeader';
 
-interface NotificationItem {
-    uuid: string;
-    titulo: string;
-    mensaje: string;
-    categoria: string;
-    fecha_envio: string;
-    leido: boolean;
-    url_accion?: string;
-}
+type NotificationItem = NotificationDto;
 
 const categoryConfig: Record<string, { icon: typeof Info; color: string; bg: string; label: string }> = {
     INVESTIGACION: { icon: ExternalLink, color: 'text-info', bg: 'bg-info/10', label: 'Investigación' },
@@ -57,8 +49,8 @@ const NotificationsPage = () => {
         const loadAll = async () => {
             setLoadingAll(true);
             try {
-                const res = await api.get('/Admin/notifications/my?limit=0');
-                setAllNotifications(res.data);
+                const data = await notificacionesService.getMyNotifications(0);
+                setAllNotifications(data);
                 lastFetchRef.current = Date.now();
             } catch {
                 setAllNotifications(notifications as unknown as NotificationItem[]);
@@ -173,8 +165,8 @@ const NotificationsPage = () => {
     const handleRefresh = async () => {
         await fetchNotifications();
         try {
-            const res = await api.get('/Admin/notifications/my?limit=0');
-            setAllNotifications(res.data);
+            const data = await notificacionesService.getMyNotifications(0);
+            setAllNotifications(data || []);
             lastFetchRef.current = Date.now();
         } catch { /* fallback to context data */ }
     };

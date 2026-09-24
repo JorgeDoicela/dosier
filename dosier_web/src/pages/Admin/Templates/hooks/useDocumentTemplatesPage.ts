@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import api from '../../../../api/axios_config';
+import { documentTemplateService } from '../../../../services/documentTemplateService';
 import { notifyTemplatePublished } from '../../../../core/events/templateEvents';
 import {
     KeyboardSensor,
@@ -166,7 +166,7 @@ export const useDocumentTemplatesPage = () => {
             let loadedBlocks: DocumentBlock[] = [];
 
             if (tmpl.code === 'GLOBAL_THEME') {
-                const res = await api.get('/admin/templates/global-theme');
+                const resTheme = await documentTemplateService.getGlobalTheme();
                 fullData = {
                     id: 0,
                     code: 'GLOBAL_THEME',
@@ -179,7 +179,7 @@ export const useDocumentTemplatesPage = () => {
                     supportsBlindMode: false,
                     requiresElectronicSignature: false,
                     signatureType: 'none',
-                    themeConfigJson: res.data.themeConfigJson,
+                    themeConfigJson: resTheme?.themeConfigJson,
                     htmlContent: '',
                     customCss: '',
                     collaborativeFieldsJson: '',
@@ -189,9 +189,9 @@ export const useDocumentTemplatesPage = () => {
                 setSelectedTemplate(fullData);
 
                 let parsedTheme: any = {};
-                if (res.data.themeConfigJson) {
+                if (resTheme?.themeConfigJson) {
                     try {
-                        parsedTheme = JSON.parse(res.data.themeConfigJson);
+                        parsedTheme = JSON.parse(resTheme.themeConfigJson);
                     } catch {}
                 }
                 const savedCoverConfig = parsedTheme?.brand?.coverConfig || {};
@@ -260,8 +260,7 @@ export const useDocumentTemplatesPage = () => {
                     }
                 ];
             } else {
-                const res = await api.get(`/admin/templates/${tmpl.code}`);
-                fullData = res.data;
+                fullData = await documentTemplateService.getTemplateByCode(tmpl.code);
                 setSelectedTemplate(fullData);
 
                 if (fullData.htmlContent) {
@@ -302,9 +301,8 @@ export const useDocumentTemplatesPage = () => {
     const fetchTemplates = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/admin/templates');
-            const data = res.data || [];
-            setTemplates(data);
+            const data = await documentTemplateService.getTemplates();
+            setTemplates(data || []);
         } catch (err: any) {
             console.error(err);
             addToast("Error al Cargar", "No se pudo obtener el catálogo de plantillas.", "error");
@@ -646,9 +644,7 @@ export const useDocumentTemplatesPage = () => {
                     }
                 }
 
-                await api.put('/admin/templates/global-theme', {
-                    themeConfigJson: updatedThemeConfigJson
-                });
+                await documentTemplateService.updateGlobalTheme(updatedThemeConfigJson);
 
                 setSelectedTemplate(prev => prev ? { ...prev, themeConfigJson: updatedThemeConfigJson } : null);
                 addToast("Diseño Global Guardado", "El tema visual institucional ha sido actualizado con éxito.", "success");
@@ -664,8 +660,8 @@ export const useDocumentTemplatesPage = () => {
 
         let usageMessage = `¿Estás seguro de que deseas publicar la plantilla '${selectedTemplate.name}'? Todos los nuevos documentos generados utilizarán esta versión.`;
         try {
-            const usageRes = await api.get(`/admin/templates/${selectedTemplate.code}/usage-count`);
-            const activeDocsCount = usageRes.data?.count || 0;
+            const usageRes = await documentTemplateService.getTemplateUsageCount(selectedTemplate.code);
+            const activeDocsCount = usageRes?.count || 0;
             if (activeDocsCount > 0) {
                 usageMessage = `Hay ${activeDocsCount} documento(s) activo(s) (borradores o en revisión) creados con esta plantilla. Al publicar una nueva versión, los documentos creados previamente conservarán la configuración de la versión con la que fueron inicializados. ¿Estás seguro de que deseas continuar con la publicación de esta nueva versión?`;
             }
@@ -693,7 +689,7 @@ export const useDocumentTemplatesPage = () => {
             const extractedFields = extractScribanVariables(generatedHtml);
             const collaborativeFieldsJson = JSON.stringify(extractedFields);
 
-            await api.put(`/admin/templates/${selectedTemplate.code}`, {
+            await documentTemplateService.publishTemplate(selectedTemplate.code, {
                 htmlContent: htmlWithEmbeddedJson,
                 customCss: selectedTemplate.customCss || null,
                 collaborativeFieldsJson,
@@ -707,10 +703,10 @@ export const useDocumentTemplatesPage = () => {
             notifyTemplatePublished({ templateCode: pubCode, template_code: pubCode, name: pubName });
             setIsDirty(false);
 
-            const resCatalog = await api.get('/admin/templates');
-            setTemplates(resCatalog.data || []);
+            const catalogData = await documentTemplateService.getTemplates();
+            setTemplates(catalogData || []);
 
-            const updated = resCatalog.data.find((t: any) => t.code === selectedTemplate.code);
+            const updated = (catalogData || []).find((t: any) => t.code === selectedTemplate.code);
             if (updated) {
                 let extractedBlocks = blocks;
                 if (updated.htmlContent) {
@@ -747,7 +743,7 @@ export const useDocumentTemplatesPage = () => {
         try {
             setLoading(true);
             try {
-                await api.post(`/admin/templates/${selectedTemplate.code}/reset-to-default`);
+                await documentTemplateService.resetToDefault(selectedTemplate.code);
             } catch { }
 
             // Generar o recargar los bloques oficiales de fábrica
@@ -813,7 +809,7 @@ export const useDocumentTemplatesPage = () => {
         setTemplates(newTemplates);
         try {
             const codes = newTemplates.map(t => t.code);
-            await api.put('/admin/templates/order', { codes });
+            await documentTemplateService.reorderTemplates(codes);
         } catch (err: any) {
             console.error(err);
             addToast("Error al Reordenar", "No se pudo guardar el orden personalizado de las plantillas.", "error");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import api from '../../../../api/axios_config';
+import { usersService } from '../../../../services/usersService';
 import { Users, CheckCircle2, Loader2, Search, ChevronDown, X, UserCheck, Sparkles } from 'lucide-react';
 import type { Carrera } from '../emailEngineTypes';
 
@@ -98,9 +98,9 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                 typesToFetch.map(async t => {
                     const params: Record<string, string> = { pageSize: '50', page: '1', type: t };
                     if (q.trim()) params.search = q.trim();
-                    if (carreraLabel) params.carrera = carreraLabel;
-                    const res = await api.get('/Admin/users', { params });
-                    const raw = res.data?.items ?? res.data ?? [];
+                    const p = new URLSearchParams(params);
+                    const res = await usersService.getUsers(p);
+                    const raw = res?.items ?? res ?? [];
                     return (Array.isArray(raw) ? raw : []).map((u: Record<string, unknown>) =>
                         mapApiUserToPerson(u)
                     );

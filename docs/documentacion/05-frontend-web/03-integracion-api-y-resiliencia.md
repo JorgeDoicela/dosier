@@ -2,13 +2,17 @@
 
 ## 1. Visión General del Cliente HTTP Centralizado
 
-La capa de comunicación entre el frontend React (`dosier_web`) y la API backend (`dosier_api`) opera a través de un cliente HTTP centralizado basado en **Axios** (`src/api/axios.ts`).
+La capa de comunicación entre el frontend React (`dosier_web`) y la API backend (`dosier_api`) opera a través de un cliente HTTP centralizado basado en **Axios** (`src/api/axios_config.ts`).
 
 Este cliente administra automáticamente:
 1. La inyección de credenciales mediante encabezados `Authorization: Bearer <token>`.
 2. El refresco proactivo y reactivo del token JWT.
 3. La normalización de respuestas según la convención `lower_snake_case` global del backend.
 4. El manejo estructurado de excepciones de red, validaciones de dominio (códigos HTTP 400 y 422) y control de autorizaciones (HTTP 401 y 403).
+
+> [!IMPORTANT]
+> **Consumo Exclusivo mediante la Service Layer (`src/services/`):**
+> Queda terminantemente prohibido el uso de `fetch()` nativo o de llamadas directas a `api.get/post/put/delete` desde los componentes JSX o desde los hooks de vista. Toda comunicación con los controladores de ASP.NET Core debe canalizarse a través de una fachada fuertemente tipada en `src/services/` (`authService`, `peaService`, `recycleBinService`, `notificacionesService`, etc.). Esto garantiza desacoplamiento, trazabilidad de contratos, serialización uniforme y cobertura de pruebas unitarias aisladas.
 
 ---
 

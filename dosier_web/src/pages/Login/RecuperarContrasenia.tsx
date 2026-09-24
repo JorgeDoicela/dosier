@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, CheckCircle, ArrowLeft, Sun, Moon } from 'lucide-react';
 
-import { getApiRootUrl } from '../../api/axios_config';
-
-const API_BASE = getApiRootUrl();
+import { authService } from '../../services/authService';
 
 interface RecuperarContraseniaProps {
     currentTheme?: 'dark' | 'light';
@@ -40,17 +38,12 @@ const RecuperarContrasenia = ({ currentTheme = 'dark', toggleTheme }: RecuperarC
         setIsSubmitting(true);
         setError(null);
         try {
-            const res = await fetch(`${API_BASE}/api/auth/recuperar-contrasenia`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    identificador: identificador.trim(),
-                    cedula: requiereDesambiguacion ? cedula.trim() : null
-                }),
+            const data = await authService.recuperarContrasenia({
+                identificador: identificador.trim(),
+                cedula: requiereDesambiguacion ? cedula.trim() : null
             });
-            const data = await res.json();
 
-            if (data.requiresDisambiguation) {
+            if (data.requiresDisambiguation || data.requires_disambiguation) {
                 setRequiereDesambiguacion(true);
                 setError(data.message);
                 setIsSubmitting(false);
@@ -58,8 +51,8 @@ const RecuperarContrasenia = ({ currentTheme = 'dark', toggleTheme }: RecuperarC
             }
 
             setEnviado(true);
-        } catch {
-            setError('Error de conexión. Por favor intenta nuevamente.');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Error de conexión. Por favor intenta nuevamente.');
         } finally {
             setIsSubmitting(false);
         }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import api from '../../../../api/axios_config';
+import { monitoreoService } from '../../../../services/monitoreoService';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import type { CoWorkHandle } from '../../../../../core/cowork/types';
 
@@ -73,7 +73,7 @@ export const useBuilderNetworkMonitor = ({
         const checkLatency = async () => {
             try {
                 const start = Date.now();
-                await api.get('/ping', { timeout: 3500 });
+                await monitoreoService.ping({ timeout: 3500 });
                 const rtt = Date.now() - start;
 
                 if (rtt > 1500) {

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
-import api, { getApiRootUrl } from './axios_config';
+import { getApiRootUrl } from './axios_config';
+import { notificacionesService } from '../services/notificacionesService';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Info, XCircle, Bell, X } from 'lucide-react';
@@ -367,8 +368,8 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!isAuthenticated) return;
         try {
             setIsLoading(true);
-            const response = await api.get('/Admin/notifications/my');
-            setNotifications(response.data);
+            const data = await notificacionesService.getMyNotifications();
+            setNotifications(data);
         } catch (error) {
             console.error('Error fetching notifications:', error);
         } finally {
@@ -378,7 +379,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const markAsRead = async (uuid: string) => {
         try {
-            await api.patch(`/Admin/notifications/${uuid}/read`);
+            await notificacionesService.markAsRead(uuid);
             setNotifications(prev => prev.map(n => n.uuid === uuid ? { ...n, leido: true } : n));
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -387,7 +388,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const markAllAsRead = async () => {
         try {
-            await api.post('/Admin/notifications/mark-all-read');
+            await notificacionesService.markAllAsRead();
             setNotifications(prev => prev.map(n => ({ ...n, leido: true })));
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
@@ -396,7 +397,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const deleteNotification = async (uuid: string) => {
         try {
-            await api.delete(`/Admin/notifications/${uuid}`);
+            await notificacionesService.deleteNotification(uuid);
             setNotifications(prev => prev.filter(n => n.uuid !== uuid));
         } catch (error) {
             console.error('Error deleting notification:', error);
@@ -405,7 +406,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const clearReadNotifications = async () => {
         try {
-            await api.delete('/Admin/notifications/clear-read');
+            await notificacionesService.clearReadNotifications();
             setNotifications(prev => prev.filter(n => !n.leido));
         } catch (error) {
             console.error('Error clearing read notifications:', error);

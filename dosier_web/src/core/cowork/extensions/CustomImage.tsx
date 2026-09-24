@@ -4,7 +4,7 @@ import type { NodeViewProps } from '@tiptap/react';
 import ImageExtension from '@tiptap/extension-image';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import api from '../../../api/axios_config';
+import { collaborationService } from '../../../services/collaborationService';
 import { 
     AlignLeft, 
     AlignCenter, 
@@ -147,11 +147,8 @@ const ImageNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, select
             formData.append('file', file);
             
             // Upload cropped image
-            const res = await api.post('/collaboration/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            
-            const newUrl = res.data.url;
+            const res = await collaborationService.uploadFile(formData);
+            const newUrl = res.url || (res as any).data?.url;
             updateAttributes({ src: newUrl });
             setIsCropping(false);
         } catch (err) {

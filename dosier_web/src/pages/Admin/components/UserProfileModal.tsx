@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Award, Link, BookOpen, Fingerprint, Save, RefreshCw, ChevronRight, FileText } from 'lucide-react';
-import api from '../../../api/axios_config';
+import { usersService } from '../../../services/usersService';
 import { useConfirm } from '../../../api/ConfirmContext';
 
 interface UserProfileModalProps {
@@ -43,8 +43,7 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
     const fetchMetadata = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/Admin/metadata/${user.user_uuid}`);
-            const officialData = response.data;
+            const officialData = await usersService.getUserMetadata(user.user_uuid);
             setOfficialMetadata(officialData);
             
             // Check if there is a draft
@@ -130,7 +129,7 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
     const handleSave = async () => {
         setSaving(true);
         try {
-            await api.put(`/Admin/metadata/${user.user_uuid}`, metadata);
+            await usersService.updateUserMetadata(user.user_uuid, metadata);
             clearDraft();
             onClose();
         } catch (error: any) {

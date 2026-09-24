@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../../../api/axios_config';
+import { auditService } from '../../../services/auditService';
 import { formatDateSafe } from './auditTypes';
-import type { AuditLog, PagedResult } from './auditTypes';
+import type { AuditLog } from './auditTypes';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 
@@ -29,19 +29,18 @@ export const useAuditLogs = () => {
     const fetchLogs = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                pageSize: '15',
-                search: search,
-                modulo: modulo,
-                action: action,
+            const data = await auditService.getAuditLogs({
+                page,
+                pageSize: 15,
+                search,
+                modulo,
+                action,
                 from: fromDate,
                 to: toDate
             });
-            const response = await api.get<PagedResult>(`/Admin/audit/advanced?${params}`);
-            setLogs(response.data.items);
-            setTotalPages(response.data.total_pages);
-            setTotalCount(response.data.total_count);
+            setLogs(data.items as AuditLog[]);
+            setTotalPages(data.total_pages);
+            setTotalCount(data.total_count);
         } catch (error) {
             console.error('Error fetching audit logs:', error);
         } finally {

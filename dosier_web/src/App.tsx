@@ -21,11 +21,12 @@ const MagicResend            = lazy(() => import('./pages/Login/MagicResend'));
 const MicrosoftCallback      = lazy(() => import('./pages/Login/MicrosoftCallback'));
 const RecuperarContrasenia   = lazy(() => import('./pages/Login/RecuperarContrasenia'));
 const VerContrasenia         = lazy(() => import('./pages/Login/VerContrasenia'));
-const ResearchProjectsPage   = lazy(() => import('./pages/Investigacion/Proyectos/ResearchProjectsPage'));
-const MyProjectsPage         = lazy(() => import('./pages/Investigacion/Proyectos/MyProjectsPage'));
-const ProjectWorkspace       = lazy(() => import('./pages/Investigacion/Proyectos/Workspace/ProjectWorkspace').then(m => ({ default: m.ProjectWorkspace })));
-const RevisionTecnicaPage    = lazy(() => import('./pages/Investigacion/Proyectos/RevisionTecnicaPage').then(m => ({ default: m.RevisionTecnicaPage })));
-const MonitoringPage         = lazy(() => import('./pages/Investigacion/Monitoreo/MonitoringPage'));
+// Dominio Curricular y Gestión de Documentos Docentes (PEA / ISTPET)
+const SupervisionCurricularPage = lazy(() => import('./pages/Curriculum/SupervisionCurricularPage'));
+const MisAsignaturasPage        = lazy(() => import('./pages/Curriculum/MisAsignaturasPage'));
+const DocumentWorkspace         = lazy(() => import('./pages/Curriculum/Workspace/DocumentWorkspace'));
+const RevisionCurricularPage    = lazy(() => import('./pages/Curriculum/RevisionCurricularPage'));
+const MonitoreoCurricularPage   = lazy(() => import('./pages/Curriculum/MonitoreoCurricularPage'));
 const AuditPage              = lazy(() => import('./pages/Admin/AuditPage'));
 const VerifyDocument         = lazy(() => import('./pages/Public/VerifyDocument'));
 const AnalyticsPage          = lazy(() => import('./pages/Analytics/AnalyticsPage'));
@@ -271,21 +272,21 @@ function App() {
                             <Route path="/lopdp/admin" element={<Navigate to="/lopdp" replace />} />
                             
                             {/* Supervision Context (Admin, Coordinadores, Vicerrector) */}
-                            <Route path="/documentacion" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><ResearchProjectsPage /></RoleRoute>} />
-                            <Route path="/documentacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
-                            <Route path="/documentacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoringPage /></RoleRoute>} />
-                            <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
+                            <Route path="/documentacion" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><SupervisionCurricularPage /></RoleRoute>} />
+                            <Route path="/documentacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
+                            <Route path="/documentacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoreoCurricularPage /></RoleRoute>} />
+                            <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionCurricularPage />} />
 
                             {/* Retrocompatibilidad /investigacion */}
                             <Route path="/investigacion" element={<RedirectPreserveSearch to="/documentacion" />} />
-                            <Route path="/investigacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
-                            <Route path="/investigacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoringPage /></RoleRoute>} />
-                            <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionTecnicaPage />} />
+                            <Route path="/investigacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
+                            <Route path="/investigacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoreoCurricularPage /></RoleRoute>} />
+                            <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionCurricularPage />} />
                             
                             {/* Author / Docente Context */}
-                            <Route path="/documentacion/mis-proyectos" element={<ResearcherRoute><MyProjectsPage /></ResearcherRoute>} />
-                            <Route path="/documentacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><ProjectWorkspace /></ProtectedRoute>} />
-                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoringPage /></ResearcherRoute>} />
+                            <Route path="/documentacion/mis-proyectos" element={<ResearcherRoute><MisAsignaturasPage /></ResearcherRoute>} />
+                            <Route path="/documentacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
+                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoreoCurricularPage /></ResearcherRoute>} />
                             <Route path="/investigacion/mis-proyectos" element={<RedirectPreserveSearch to="/documentacion/mis-proyectos" />} />
                             
                             <Route path="/verificacion" element={<VerifyDocument />} />

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, ClipboardList, PenTool, BarChart3, ShieldCheck, Users, Activity, Mail, Bell, Calendar, Award, Gavel, FileCode2, Sparkles, BookOpen } from 'lucide-react';
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
-import api from '../../../../api/axios_config';
+import { curriculumProjectService } from '../../../../services/curriculumProjectService';
 import type { MenuItem, SidebarProject, NotificationItem } from '../types';
 
 const NOTIF_PANEL_WIDTH = 380;
@@ -117,10 +117,12 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         if (!user) return;
         try {
             setSidebarProjectsLoading(true);
-            const endpoint = isAdmin ? '/projects' : '/projects/my';
-            const res = await api.get(endpoint);
+            const data = isAdmin
+                ? await curriculumProjectService.getAllProjects()
+                : await curriculumProjectService.getMyProjects();
 
-            const sorted = (res.data || []).sort((a: any, b: any) => {
+            const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
+            const sorted = projectList.sort((a: any, b: any) => {
                 const dateA = a.fecha_modificacion || a.fecha_registro || '';
                 const dateB = b.fecha_modificacion || b.fecha_registro || '';
                 return new Date(dateB).getTime() - new Date(dateA).getTime();

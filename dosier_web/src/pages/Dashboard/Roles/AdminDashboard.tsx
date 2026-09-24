@@ -7,7 +7,7 @@ import {
 import { DashboardHeader } from '../Components/DashboardHeader';
 import { useAuth } from '../../../api/AuthContext';
 import { Link } from 'react-router-dom';
-import api from '../../../api/axios_config';
+import { analyticsService } from '../../../services/analyticsService';
 import { ProximosEventosWidget } from '../../../components/Common/ProximosEventosWidget';
 import { FullscreenLoader } from '../../../components/Common/FullscreenLoader';
 import { AnimatedNumber } from '../Components/AnimatedNumber';
@@ -49,8 +49,8 @@ export const AdminDashboard: React.FC = () => {
             setError(null);
         }
         try {
-            const res = await api.get('/projects/stats');
-            setStats(res.data);
+            const data = await analyticsService.getStats();
+            setStats(data);
             lastFetchRef.current = Date.now();
         } catch (e) {
             console.error('[DOSIER] Error al cargar datos:', e);

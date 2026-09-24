@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { User, Loader2, Shield, CheckCircle2, KeyRound, Info, Eye, EyeOff, CheckCircle, XCircle, Settings2, HardDrive } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../../components/Common/PageHeader';
-import api from '../../api/axios_config';
+import { authService } from '../../services/authService';
+import { lopdpService } from '../../services/lopdpService';
+import { documentTemplateService } from '../../services/documentTemplateService';
 import { useNotifications } from '../../api/NotificationsContext';
 import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
@@ -104,9 +106,9 @@ const SettingsPage: React.FC = () => {
 
         setIsChangingPassword(true);
         try {
-            await api.post('/auth/cambiar-contrasenia', {
-                current_password: passwordForm.currentPassword,
-                new_password: passwordForm.newPassword
+            await authService.cambiarContrasenia({
+                currentPassword: passwordForm.currentPassword,
+                newPassword: passwordForm.newPassword
             });
             addToast('Contraseña Actualizada', 'Su contraseña ha sido cambiada exitosamente.', 'success');
             setPasswordForm({
@@ -132,8 +134,8 @@ const SettingsPage: React.FC = () => {
     const fetchProfile = async () => {
         setIsLoadingProfile(true);
         try {
-            const res = await api.get('/lopdp/perfil');
-            setProfile(res.data);
+            const data = await lopdpService.getPerfil();
+            setProfile(data);
         } catch (err) {
             console.error('Error fetching profile:', err);
             addToast('Error', 'No se pudo cargar la configuración de firma.', 'error');
@@ -145,8 +147,8 @@ const SettingsPage: React.FC = () => {
     const fetchTemplates = async () => {
         setIsLoadingTemplates(true);
         try {
-            const res = await api.get('/admin/templates');
-            setTemplates(res.data || []);
+            const data = await documentTemplateService.getTemplates();
+            setTemplates(data || []);
         } catch (err) {
             console.error('[DOSIER] Error al cargar plantillas de firma:', err);
             addToast('Error', 'No se pudieron cargar las plantillas de firma institucional.', 'error');
@@ -157,7 +159,7 @@ const SettingsPage: React.FC = () => {
 
     const handleUpdateSignatureConfig = async (code: string, requiresSignature: boolean, signatureType: string) => {
         try {
-            await api.put(`/admin/templates/${code}/signature-config`, {
+            await documentTemplateService.updateSignatureConfig(code, {
                 requires_signature: requiresSignature,
                 signature_type: signatureType
             });
@@ -183,9 +185,7 @@ const SettingsPage: React.FC = () => {
         if (checked) {
             setIsSavingConsent(true);
             try {
-                await api.post('/lopdp/consentimiento', {
-                    version_politica: 'FIRMA_ELECTRONICA'
-                });
+                await lopdpService.registrarConsentimiento('FIRMA_ELECTRONICA');
                 setProfile(prev => ({
                     ...prev,
                     acepto_terminos_firma: true,
@@ -213,7 +213,7 @@ const SettingsPage: React.FC = () => {
 
             setIsSavingConsent(true);
             try {
-                await api.post('/lopdp/revocar');
+                await lopdpService.revocarConsentimiento();
                 addToast('Consentimiento Revocado', 'Su consentimiento ha sido revocado. Cerrando sesión...', 'info');
                 setTimeout(async () => {
                     await logout();

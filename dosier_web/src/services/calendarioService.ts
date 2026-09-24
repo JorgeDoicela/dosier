@@ -72,6 +72,11 @@ export const getEventos = (date: Date): Promise<EventoCalendario[]> => {
     }).then(r => r.data || []);
 };
 
+export const getEventosRango = (desde: string, hasta: string): Promise<EventoCalendario[]> =>
+    api.get('/calendario/eventos', {
+        params: { desde, hasta }
+    }).then(r => r.data || []);
+
 export const getStickyNotes = (): Promise<EventoCalendario[]> =>
     api.get('/calendario/usuario/notas').then(r => r.data || []);
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
-import api from '../../api/axios_config';
+import { curriculumProjectService } from '../../services/curriculumProjectService';
+import { usersService } from '../../services/usersService';
 import { buildWorkspacePath } from '../../core/documents/templateUrl';
 import {
     Search,
@@ -442,8 +443,8 @@ export const CommandPalette = () => {
 
                 // Mis proyectos (docente/estudiante/admin)
                 promises.push(
-                    api.get('/projects/my').then(res => {
-                        const data: any[] = Array.isArray(res.data) ? res.data : [];
+                    curriculumProjectService.getMyProjects().then(res => {
+                        const data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
                         data.forEach(p => results.push(proyectoToItem(p, true, isAdmin)));
                     }).catch(() => {})
                 );
@@ -451,8 +452,8 @@ export const CommandPalette = () => {
                 // Todos los proyectos (admin)
                 if (isAdmin) {
                     promises.push(
-                        api.get('/projects').then(res => {
-                            const data: any[] = Array.isArray(res.data) ? res.data : (res.data?.items ?? []);
+                        curriculumProjectService.getAllProjects().then(res => {
+                            const data: any[] = Array.isArray(res) ? res : ((res as any)?.items ?? (res as any)?.data ?? []);
                             data.forEach(p => {
                                 if (!results.some(r => r.id === `proj-${p.uuid}`)) {
                                     results.push(proyectoToItem(p, false, isAdmin));
@@ -464,8 +465,8 @@ export const CommandPalette = () => {
 
                 // Convocatorias
                 promises.push(
-                    api.get('/Convocatorias').then(res => {
-                        const data: any[] = Array.isArray(res.data) ? res.data : [];
+                    curriculumProjectService.getConvocatorias().then(res => {
+                        const data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
                         data
                             .filter(c => c.estado !== 'Borrador' || isAdmin)
                             .forEach(c => results.push(convocatoriaToItem(c)));
@@ -509,8 +510,8 @@ export const CommandPalette = () => {
                 const userTypes = ['DOCENTE', 'ESTUDIANTE', 'EXTERNO'];
                 userTypes.forEach(type => {
                     promises.push(
-                        api.get(`/Admin/users?search=${encodeURIComponent(queryClean)}&type=${type}&page=1&pageSize=3`, { signal: ctrl.signal }).then(res => {
-                            const data: any[] = res.data?.items ?? [];
+                        usersService.getUsers(`search=${encodeURIComponent(queryClean)}&type=${type}&page=1&pageSize=3`).then(res => {
+                            const data: any[] = (res as any)?.items ?? (res as any)?.data?.items ?? [];
                             data.forEach(u => {
                                 if (!results.some(r => r.id === `user-${u.user_uuid || u.id_profesor}`)) {
                                     results.push(usuarioToItem(u));
@@ -523,8 +524,8 @@ export const CommandPalette = () => {
 
             // Grupos de investigación
             promises.push(
-                api.get(`/Groups?search=${encodeURIComponent(queryClean)}`, { signal: ctrl.signal }).then(res => {
-                    const data: any[] = Array.isArray(res.data) ? res.data : [];
+                curriculumProjectService.searchGroups(queryClean, { signal: ctrl.signal }).then(res => {
+                    const data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
                     data
                         .slice(0, 4)
                         .forEach(g => results.push(grupoToItem(g)));

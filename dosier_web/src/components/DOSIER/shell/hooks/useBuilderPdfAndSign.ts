@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../../../../api/axios_config';
+import { documentInstanceService } from '../../../../services/documentInstanceService';
+import { getPeaByUuid, firmarPea } from '../../../../services/peaService';
+import { signDocumentWithDosier, signDocumentWithP12 } from '../../../../services/signaturesService';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { useAuth } from '../../../../api/AuthContext';
 
@@ -59,8 +61,8 @@ export const useBuilderPdfAndSign = ({
         const targetUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.entityUuid || formData?.Uuid || formData?.uuid;
         if (targetUuid && !targetUuid.startsWith('temp_')) {
             try {
-                const res = await api.get(`/pea/uuid/${targetUuid}`);
-                const foundId = Number(res.data?.id_pea || res.data?.idPea || 0);
+                const res = await getPeaByUuid(targetUuid);
+                const foundId = Number(res?.id_pea || res?.idPea || 0);
                 if (foundId > 0) return foundId;
             } catch {}
         }
@@ -82,12 +84,8 @@ export const useBuilderPdfAndSign = ({
         setIsGenerating(true);
         addAudit(blind ? 'Generando vista previa sin identidades...' : 'Generando vista previa del documento...');
         try {
-            const response = await api.post(
-                `/documents/render?templateCode=${templateCode}&isDraft=${isDraftMode}&isBlind=${blind}`,
-                formData,
-                { responseType: 'blob' }
-            );
-            setPdfBlob(new Blob([response.data], { type: 'application/pdf' }));
+            const blob = await documentInstanceService.renderDocumentPdf(templateCode, formData, isDraftMode, blind);
+            setPdfBlob(blob);
             addAudit('PDF Generado exitosamente', 'success');
         } catch (err: any) {
             let errorMsg = err;
@@ -114,25 +112,25 @@ export const useBuilderPdfAndSign = ({
             const currentDocId = documentUuid || formData?.Uuid || formData?.uuid;
             if (currentDocId && !currentDocId.startsWith('temp_')) {
                 try {
-                    const directRes = await api.get(`/documents/instances/${currentDocId}`);
-                    if (directRes?.data?.finalPdfPath || directRes?.data?.final_pdf_path) {
-                        instanceData = directRes.data;
+                    const directRes: any = await documentInstanceService.getById(currentDocId);
+                    const resData = directRes?.data || directRes;
+                    if (resData?.finalPdfPath || resData?.final_pdf_path) {
+                        instanceData = resData;
                     }
                 } catch { }
             }
 
             if (!instanceData) {
-                const instanceRes = await api.get(`/documents/instances/resolve`, {
-                    params: { templateCode, entityUuid: targetUuid }
+                const instanceRes: any = await documentInstanceService.resolve({
+                    templateCode,
+                    entityUuid: targetUuid
                 });
-                instanceData = instanceRes.data;
+                instanceData = instanceRes?.data || instanceRes;
             }
 
             if (instanceData?.finalPdfPath || instanceData?.final_pdf_path) {
-                const pdfRes = await api.get(`/documents/instances/${instanceData.uuid}/pdf`, {
-                    responseType: 'blob'
-                });
-                setPdfBlob(new Blob([pdfRes.data], { type: 'application/pdf' }));
+                const pdfBlob = await documentInstanceService.getInstancePdf(instanceData.uuid);
+                setPdfBlob(pdfBlob);
                 setIsDraftMode(false);
                 return true;
             }
@@ -181,11 +179,11 @@ export const useBuilderPdfAndSign = ({
                         reader.readAsDataURL(signatureCertFile);
                     });
 
-                    await api.post(`/pea/${idPea}/firmar`, {
+                    await firmarPea(idPea, {
                         tipoFirma: 'FirmaEC',
                         certificadoP12Base64: base64Cert,
                         contraseniaP12: signaturePassword,
-                        rolFirmante: peaRoleInfo.codigo
+                        rolFirmante: peaRoleInfo.codigo as any
                     });
                 }
             }
@@ -195,10 +193,11 @@ export const useBuilderPdfAndSign = ({
 
             if ((!targetDocUuid || targetDocUuid.startsWith('temp_') || targetDocUuid === pUuid) && pUuid && templateCode) {
                 try {
-                    const res = await api.get('/documents/instances/resolve', {
-                        params: { templateCode, entityUuid: pUuid }
+                    const res: any = await documentInstanceService.resolve({
+                        templateCode,
+                        entityUuid: pUuid
                     });
-                    targetDocUuid = res.data?.uuid || res.data?.Uuid || targetDocUuid;
+                    targetDocUuid = res?.uuid || res?.Uuid || targetDocUuid;
                 } catch {}
             }
 
@@ -208,19 +207,7 @@ export const useBuilderPdfAndSign = ({
             formDataObj.append('documentoUuid', targetDocUuid || '');
             formDataObj.append('rolFirmante', calculatedRol);
 
-            await api.post(
-                '/signatures/sign-p12',
-                formDataObj,
-                {
-                    headers: { 'Content-Type': undefined },
-                    transformRequest: [(data, headers) => {
-                        if (data instanceof FormData) {
-                            delete headers['Content-Type'];
-                        }
-                        return data;
-                    }]
-                }
-            ).catch(() => {});
+            await signDocumentWithP12(formDataObj).catch(() => {});
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf();
@@ -303,10 +290,10 @@ export const useBuilderPdfAndSign = ({
             if (isPea) {
                 const idPea = await resolvePeaId();
                 if (idPea) {
-                    await api.post(`/pea/${idPea}/firmar`, {
+                    await firmarPea(idPea, {
                         tipoFirma: 'DOSIER',
                         password: institutionalPassword,
-                        rolFirmante: peaRoleInfo.codigo
+                        rolFirmante: peaRoleInfo.codigo as any
                     });
                 }
             }
@@ -316,10 +303,11 @@ export const useBuilderPdfAndSign = ({
 
             if ((!targetDocUuid || targetDocUuid.startsWith('temp_') || targetDocUuid === pUuid) && pUuid && templateCode) {
                 try {
-                    const res = await api.get('/documents/instances/resolve', {
-                        params: { templateCode, entityUuid: pUuid }
+                    const res: any = await documentInstanceService.resolve({
+                        templateCode,
+                        entityUuid: pUuid
                     });
-                    targetDocUuid = res.data?.uuid || res.data?.Uuid || targetDocUuid;
+                    targetDocUuid = res?.uuid || res?.Uuid || targetDocUuid;
                 } catch {}
             }
 
@@ -329,7 +317,7 @@ export const useBuilderPdfAndSign = ({
                 password: institutionalPassword
             };
 
-            await api.post('/signatures/sign', dto).catch(() => {});
+            await signDocumentWithDosier(dto as any).catch(() => {});
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf();

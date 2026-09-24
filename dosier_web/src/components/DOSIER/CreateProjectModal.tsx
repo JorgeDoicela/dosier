@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { X, Shield, BookOpen, Briefcase, Loader, ChevronDown, Check, FileText } from 'lucide-react';
-import api from '../../api/axios_config';
+import { curriculumProjectService } from '../../services/curriculumProjectService';
+import { analyticsService } from '../../services/analyticsService';
+import { documentInstanceService } from '../../services/documentInstanceService';
 import { useAuth } from '../../api/AuthContext';
 import { useNotifications } from '../../api/NotificationsContext';
 import { useConfirm } from '../../api/ConfirmContext';
@@ -186,11 +188,11 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         const loadCatalogs = async () => {
             try {
                 const [rMiCarrera, rCarreras] = await Promise.all([
-                    isDocente ? api.get('/catalogs/mi-carrera').catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
-                    api.get('/catalogs/carreras').catch(() => ({ data: [] }))
+                    isDocente ? curriculumProjectService.getDocenteCarreras().catch(() => []) : Promise.resolve([]),
+                    analyticsService.getCarreras().catch(() => [])
                 ]);
 
-                const linkedCareers = Array.isArray(rMiCarrera.data) ? rMiCarrera.data : [];
+                const linkedCareers = Array.isArray(rMiCarrera) ? rMiCarrera : ((rMiCarrera as any)?.data || []);
                 if (isDocente && linkedCareers.length > 0) {
                     setCarreras(linkedCareers);
                     if (linkedCareers.length === 1) {
@@ -263,13 +265,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
             setCreationStepMsg("Creando el expediente digital curricular...");
 
-            const response = await api.post('/documents/instances', {
+            const response = await documentInstanceService.createInstance({
                 templateCode,
                 entityUuid: 'GLOBAL',
                 title: titulo.trim().toUpperCase()
             });
 
-            const newUuid = response.data?.uuid;
+            const newUuid = response?.uuid || response?.data?.uuid;
             if (!newUuid) {
                 throw new Error("No se recibió el identificador único del proyecto.");
             }
@@ -292,7 +294,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 Estado: 'Prepropuesta'
             };
 
-            await api.patch(`/documents/instances/${newUuid}/metadata`, initialMetadata);
+            await documentInstanceService.updateMetadata(newUuid, initialMetadata);
 
             setCreationStepMsg("Enviando instrumento a revisión curricular...");
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ShieldCheck, LogOut, CheckCircle2, Loader2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios_config';
+import { lopdpService } from '../../services/lopdpService';
 import { useAuth } from '../../api/AuthContext';
 import { useNotifications } from '../../api/NotificationsContext';
 
@@ -34,8 +34,8 @@ const LopdpConsentPage: React.FC = () => {
         setIsSubmitting(true);
         try {
             // Se registran ambos consentimientos de forma secuencial para evitar condiciones de carrera en base de datos
-            await api.post('/lopdp/consentimiento', { version_politica: 'LOPDP_GENERAL' });
-            await api.post('/lopdp/consentimiento', { version_politica: 'FIRMA_ELECTRONICA' });
+            await lopdpService.registrarConsentimiento('LOPDP_GENERAL');
+            await lopdpService.registrarConsentimiento('FIRMA_ELECTRONICA');
             addToast('Consentimientos Registrados', 'Ha aceptado la política de tratamiento de datos y los términos de uso de firma electrónica.', 'success');
             // Refresh user state so the guard lets the user proceed
             await refreshUser();

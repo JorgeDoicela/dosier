@@ -4,7 +4,8 @@ import { BentoGrid, BentoCard } from '../../../components/Common/BentoGrid';
 import { DashboardHeader } from '../Components/DashboardHeader';
 import { useAuth } from '../../../api/AuthContext';
 import { Link } from 'react-router-dom';
-import api from '../../../api/axios_config';
+import { curriculumProjectService } from '../../../services/curriculumProjectService';
+import { analyticsService } from '../../../services/analyticsService';
 import { buildWorkspacePath } from '../../../core/documents/templateUrl';
 import { ProximosEventosWidget } from '../../../components/Common/ProximosEventosWidget';
 import { FullscreenLoader } from '../../../components/Common/FullscreenLoader';
@@ -33,12 +34,12 @@ export const EstudianteDashboard: React.FC = () => {
             setLoading(true);
         }
         try {
-            const [myRes, statsRes] = await Promise.all([
-                api.get('/projects/my'),
-                api.get('/projects/stats')
+            const [myProjects, statsData] = await Promise.all([
+                curriculumProjectService.getMyProjects(),
+                analyticsService.getStats()
             ]);
-            setColaboraciones(myRes.data);
-            setStats(statsRes.data);
+            setColaboraciones(myProjects || []);
+            setStats(statsData);
             lastFetchRef.current = Date.now();
         } catch (e) {
             console.error('[DOSIER] Error al cargar datos del estudiante:', e);

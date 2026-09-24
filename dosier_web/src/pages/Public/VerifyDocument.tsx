@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { ShieldCheck, ShieldAlert, FileText, Calendar, User, Loader2, Camera, Upload, X, RefreshCw, ScanLine } from 'lucide-react';
-import api from '../../api/axios_config';
+import { verificationService } from '../../services/verificationService';
 import jsQR from 'jsqr';
 
 const VerifyDocument = () => {
@@ -88,8 +88,8 @@ const VerifyDocument = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await api.get(`/documents/verify/${clean}`);
-            setResult(response.data);
+            const data = await verificationService.verifyDocument(clean);
+            setResult(data);
         } catch (err: any) {
             setError(
                 err.response?.data?.error || 

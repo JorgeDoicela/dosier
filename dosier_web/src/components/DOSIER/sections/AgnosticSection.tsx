@@ -9,7 +9,7 @@ import {
     Activity,
     BookOpen
 } from 'lucide-react';
-import api from '../../../api/axios_config';
+import { documentInstanceService } from '../../../services/documentInstanceService';
 import { CoWorkField } from '../../../core/cowork/components/CoWorkField';
 import { CoWorkEditor } from '../../../core/cowork/components/CoWorkEditor';
 import { DocumentTemplateRegistry } from '../../../core/documents/registry/DocumentTemplateRegistry';
@@ -81,14 +81,15 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
             if (refUuid && refUuid !== 'GLOBAL' && config?.referenceTemplateCode) {
                 setIsLoadingRef(true);
                 try {
-                    const response = await api.get(`/documents/instances/${refUuid}`);
+                    const response = await documentInstanceService.getById(refUuid);
                     // FALLBACK PATTERN: Se tolera cualquier casing del backend (snake_case, camelCase, PascalCase)
                     // para evitar roturas si la serialización de snapshots varía o si la propiedad viene de un DTO mapeado.
-                    const snapshotStr = response.data?.data_snapshot_json || response.data?.dataSnapshotJson || response.data?.DataSnapshotJson;
+                    const instanceData: any = (response as any)?.data || response;
+                    const snapshotStr = instanceData?.data_snapshot_json || instanceData?.dataSnapshotJson || instanceData?.DataSnapshotJson;
                     if (snapshotStr) {
-                        setReferenceData(JSON.parse(snapshotStr));
-                    } else if (response.data) {
-                        setReferenceData(response.data);
+                        setReferenceData(typeof snapshotStr === 'string' ? JSON.parse(snapshotStr) : snapshotStr);
+                    } else if (instanceData) {
+                        setReferenceData(instanceData);
                     }
                 } catch (err) {
                     console.error("[AgnosticSection] Error al cargar referencia:", err);

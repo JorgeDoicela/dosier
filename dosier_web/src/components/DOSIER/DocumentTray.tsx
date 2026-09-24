@@ -10,7 +10,7 @@ import {
     Layers
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios_config';
+import { documentInstanceService } from '../../services/documentInstanceService';
 import { buildWorkspacePath } from '../../core/documents/templateUrl';
 
 interface DocumentInstance {
@@ -43,12 +43,11 @@ const DocumentTray: React.FC<DocumentTrayProps> = ({ entityUuid, title = "Docume
 
     const fetchDocuments = async () => {
         try {
-            const url = entityUuid === 'GLOBAL'
-                ? '/documents/instances/global'
-                : `/documents/instances/entity/${entityUuid}`;
+            const docs = entityUuid === 'GLOBAL'
+                ? await documentInstanceService.getGlobal()
+                : await documentInstanceService.getByEntity(entityUuid);
 
-            const response = await api.get(url);
-            setDocuments(response.data);
+            setDocuments(docs as any);
         } catch (error) {
             console.error("[DOSIER] Error al cargar bandeja de documentos:", error);
         } finally {
@@ -62,12 +61,13 @@ const DocumentTray: React.FC<DocumentTrayProps> = ({ entityUuid, title = "Docume
 
     const handleCreateNew = async () => {
         try {
-            const response = await api.post('/documents/instances', {
+            const response = await documentInstanceService.createInstance({
                 templateCode: 'PROTOCOLO_INVESTIGACION',
                 entityUuid: entityUuid,
                 title: `Protocolo - ${new Date().toLocaleDateString()}`
             });
-            navigate(buildWorkspacePath('PROTOCOLO_INVESTIGACION', response.data.uuid));
+            const newUuid = response?.uuid || response?.data?.uuid;
+            navigate(buildWorkspacePath('PROTOCOLO_INVESTIGACION', newUuid));
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
         } catch (error) {
             alert("No se pudo crear el documento.");

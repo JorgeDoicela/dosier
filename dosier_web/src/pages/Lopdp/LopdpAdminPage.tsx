@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Loader2, ArrowLeft } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios_config';
+import { lopdpService, type ConsentimientoDto } from '../../services/lopdpService';
 import { useNotifications } from '../../api/NotificationsContext';
-import { ConsentDetailPanel, type ConsentimientoData } from './components/ConsentDetailPanel';
+import { ConsentDetailPanel } from './components/ConsentDetailPanel';
+
+type ConsentimientoData = ConsentimientoDto;
 
 const LopdpAdminPage: React.FC = () => {
     const navigate = useNavigate();
@@ -22,8 +24,8 @@ const LopdpAdminPage: React.FC = () => {
     const fetchConsents = async () => {
         setIsLoadingConsents(true);
         try {
-            const res = await api.get('/lopdp/consentimientos');
-            setConsents(res.data);
+            const data = await lopdpService.getConsentimientos();
+            setConsents(data);
         } catch (err) {
             console.error('Error fetching consents:', err);
             addToast('Error', 'No se pudieron cargar los consentimientos.', 'error');

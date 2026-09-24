@@ -91,3 +91,14 @@ export const verifySignaturePublic = (firmaCode: string): Promise<SignatureVerif
 
 export const revokeSignature = (dto: RevokeSignatureDto): Promise<{ message: string }> =>
     api.post('/signatures/revoke', dto).then(r => r.data);
+
+export const signDocumentWithP12 = (formData: FormData): Promise<any> =>
+    api.post('/signatures/sign-p12', formData, {
+        headers: { 'Content-Type': undefined },
+        transformRequest: [(data, headers) => {
+            if (data instanceof FormData) {
+                delete headers['Content-Type'];
+            }
+            return data;
+        }]
+    }).then(r => r.data);

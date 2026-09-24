@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import api from '../../../api/axios_config';
+import { analyticsService } from '../../../services/analyticsService';
 import type {
     ProyectoResumen,
     DashboardStats,
@@ -22,25 +22,25 @@ export const useAnalyticsData = (period: string, carrera: string) => {
     const loadData = async () => {
         setRefreshing(true);
         try {
-            const [projectsRes, statsRes, careersRes] = await Promise.all([
-                api.get('/projects').catch(err => {
+            const [projectsData, statsData, careersData] = await Promise.all([
+                analyticsService.getProjects().catch(err => {
                     console.error("[Analytics] Error loading projects:", err);
-                    return { data: [] };
+                    return [];
                 }),
-                api.get('/projects/stats').catch(err => {
+                analyticsService.getStats().catch(err => {
                     console.error("[Analytics] Error loading stats:", err);
-                    return { data: null };
+                    return null;
                 }),
-                api.get('/catalogs/carreras').catch(err => {
+                analyticsService.getCarreras().catch(err => {
                     console.error("[Analytics] Error loading carreras:", err);
-                    return { data: [] };
+                    return [];
                 })
             ]);
 
-            if (projectsRes.data) setProjects(projectsRes.data);
-            if (statsRes.data) setStats(statsRes.data);
+            setProjects(projectsData as ProyectoResumen[]);
+            if (statsData) setStats(statsData as DashboardStats);
             setGroups([]); // DOSIER no gestiona grupos de investigación independientes
-            if (careersRes.data) setAllCareers(careersRes.data);
+            setAllCareers(careersData);
 
         } catch (error) {
             console.error("[Analytics System API Error]", error);

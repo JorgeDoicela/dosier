@@ -7,7 +7,7 @@ import { Menu, HelpCircle } from 'lucide-react';
 import NotificationBell from '../Notifications/NotificationBell';
 import { HelpModal } from './Help/HelpModal';
 import { WelcomeModal } from './WelcomeModal/WelcomeModal';
-import api from '../../api/axios_config';
+import { notificacionesService } from '../../services/notificacionesService';
 import { StickyNotesFloatingButton } from '../Common/StickyNotesFloatingButton';
 import { getStickyNotes } from '../../services/calendarioService';
 
@@ -154,7 +154,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                 const subJson = subscription.toJSON();
                 const tokenString = `${subJson.endpoint}|${subJson.keys?.p256dh || ''}|${subJson.keys?.auth || ''}`;
 
-                await api.post('/Admin/notifications/subscribe', {
+                await notificacionesService.subscribeDevice({
                     device_token: tokenString,
                     plataforma: 'web_push'
                 });

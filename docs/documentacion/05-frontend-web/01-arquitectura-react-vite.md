@@ -1,14 +1,19 @@
 # Arquitectura Frontend Web (React 18 + Vite + TypeScript)
 
-## 1. Visión General del Cliente Web
+## 1. Visión General y Nombre Oficial de la Arquitectura
 
-El cliente web de DOSIER (`dosier_web`) es una aplicación de página única (**SPA**) de alto rendimiento construida con:
+El cliente web de DOSIER (`dosier_web`) adopta la arquitectura **Feature-Based Modular SPA con Service Layer y Container/Presenter en Custom Hooks**. Esta es la definición canónica y estable del frontend; cualquier trabajo nuevo debe seguir este estándar sin excepción.
+
+El stack técnico es:
 * **React 18** y **TypeScript 5.x**.
 * **Vite** como empaquetador ultrarrápido y servidor de desarrollo local.
 * **Tailwind CSS v4** integrado nativamente con variables semánticas en `src/styles/base.css`.
 * **Geist Editorial / Enterprise Docs System**: Lenguaje visual sobrio y de alta legibilidad inspirado en Mintlify y GitBook Enterprise, enfocado en tipografía documental **Inter Puro** con variantes tipográficas avanzadas (`cv02`, `cv03`, `cv04`, `cv11`), arquitectura de capas con contraste equilibrado y delimitación estricta de folios curriculares.
 
 La plataforma proporciona a la comunidad académica del Instituto Superior Tecnológico Mayor Pedro Traversari una herramienta profesional para la planificación del Programa de Estudio de la Asignatura (PEA), co-redacción en tiempo real, revisión colegiada por comisiones de carrera, firma electrónica y verificación pública de acreditación.
+
+> [!IMPORTANT]
+> **El Motor Documental (`core/documents/`) NO es el centro de la arquitectura.** Es un motor de infraestructura auxiliar — equivalente al motor de colaboración (`core/cowork/`). El centro del negocio es el dominio curricular: el flujo PEA con su ciclo de vida de 4 estados (Borrador → EnRevision → RevisadoCoord → Aprobado). Los motores de `core/` sirven a ese dominio; no lo gobiernan.
 
 ---
 
@@ -42,8 +47,8 @@ dosier_web/src/
 │   ├── Analytics/   # Métricas e indicadores de cumplimiento institucional
 │   ├── Auth/        # Vistas de autenticación institucional, contraseñas y alertas
 │   ├── Calendario/  # Calendario académico y cronograma institucional
+│   ├── Curriculum/  # Dominio Curricular ISTPET (Mis Asignaturas PEA, Supervisión, DocumentWorkspace, Monitoreo, Revisión)
 │   ├── Dashboard/   # Panel de control interactivo según el rol autenticado
-│   ├── Investigacion/ # Expedientes y Proyectos (Workspace, Monitoreo, Revisión Técnica)
 │   ├── Landing/     # Página pública institucional
 │   ├── Login/       # Acceso estándar, Magic Links, Microsoft SSO y PIN
 │   ├── Lopdp/       # Formularios de consentimiento y administración LOPDP
@@ -112,3 +117,29 @@ La aplicación implementa una estrategia de arquitectura de estado por capas:
    * Maneja los valores transitorios de las secciones del PEA durante la edición activa antes del guardado formal en base de datos.
 3. **Estado Colaborativo Distribuido (Yjs CRDT + SignalR):**
    * Gestiona la sincronización concurrente en campos de texto enriquecido mediante el componente `<CoWorkField>`. El estado no sufre bloqueos pesimistas, garantizando que dos docentes puedan trabajar en la misma unidad curricular sin sobreescritura de datos.
+
+---
+
+## 6. Patron de Escalabilidad para Nuevos Documentos Institucionales
+
+Cuando el ISTPET requiera incorporar un nuevo tipo de documento docente (informe de mitad de semestre, informe final de semestre, guia de practicas, silabo de 19 semanas, etc.), el proceso de extension es el siguiente. **No se modifica la arquitectura en ningun caso.**
+
+### Pasos obligatorios (en orden)
+
+**Paso 1 — Registrar la plantilla en el motor documental (backend + frontend):**
+* Backend: agregar la plantilla HTML en `DocumentTemplateRegistry` y su contrato de metadatos JSON.
+* Frontend: registrar el `templateCode` en `core/documents/DocumentTemplateRegistry.ts` con su esquema de campos.
+
+**Paso 2 — Crear el servicio de datos en la capa de servicios:**
+* Crear `services/informeMitadService.ts` (o el nombre correspondiente al dominio).
+* El servicio encapsula exclusivamente las llamadas HTTP al endpoint del backend correspondiente.
+* Queda prohibido realizar llamadas Axios directas desde el JSX o desde los hooks sin pasar por el servicio.
+
+**Paso 3 — Crear la pagina en el dominio curricular:**
+* Crear la carpeta `pages/Curriculum/InformeMitad/` con su componente de pagina y su custom hook contenedor.
+* Registrar la ruta en `App.tsx` con el guardia de rol correspondiente.
+* El workspace de edicion reutiliza automaticamente el `DOSIERBuilderShell` mediante el `templateCode` registrado en el Paso 1.
+
+### Resultado
+
+El motor documental `core/documents/` y el motor colaborativo `core/cowork/` sirven al nuevo documento sin ninguna modificacion interna. El ciclo de vida de 4 estados (Borrador, EnRevision, RevisadoCoord, Aprobado) aplica de forma automatica a cualquier documento que transite por el flujo colegiado institucional.

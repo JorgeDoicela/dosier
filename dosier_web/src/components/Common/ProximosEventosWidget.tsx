@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../../api/axios_config';
 import { useAuth } from '../../api/AuthContext';
-import { resolveEventUrl } from '../../services/calendarioService';
+import { resolveEventUrl, getEventosRango } from '../../services/calendarioService';
 import './ProximosEventosWidget.css';
 
 interface Evento {
@@ -49,10 +48,8 @@ export const ProximosEventosWidget: React.FC<ProximosEventosWidgetProps> = ({ cl
         const desdeStr = formatLocal(hoy);
         const hastaStr = formatLocal(dentroDe7Dias);
 
-        const response = await api.get('/calendario/eventos', {
-          params: { desde: desdeStr, hasta: hastaStr }
-        });
-        setEventos(response.data || []);
+        const response = await getEventosRango(desdeStr, hastaStr);
+        setEventos((response as any) || []);
       } catch (error) {
         console.error('Error al obtener próximos eventos:', error);
       } finally {

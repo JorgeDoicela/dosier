@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Loader2, Eye, EyeOff, AlertTriangle, ArrowLeft, ShieldCheck, Copy, CheckCheck, Sun, Moon } from 'lucide-react';
 
-import { getApiRootUrl } from '../../api/axios_config';
-
-const API_BASE = getApiRootUrl();
+import { authService } from '../../services/authService';
 
 type Estado = 'validando' | 'valido' | 'hash_inaccesible' | 'invalido';
 
@@ -43,22 +41,10 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
 
     const validarToken = async (tok: string) => {
         try {
-            const res = await fetch(`${API_BASE}/api/auth/ver-contrasenia`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: tok }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                setEstado('invalido');
-                setMensajeError(data.message ?? 'El enlace ha expirado o ya fue utilizado.');
-                return;
-            }
+            const data = await authService.verContrasenia(tok);
 
             setNombre(data.nombre ?? '');
-            setEsRevisorExterno(data.esRevisorExterno ?? data.es_revisor_externo ?? false);
+            setEsRevisorExterno(Boolean(data.esRevisorExterno ?? data.es_revisor_externo));
 
             if (data.esHashInaccesible ?? data.es_hash_inaccesible) {
                 setEstado('hash_inaccesible');
@@ -66,14 +52,18 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
                 setPassword(data.password ?? '');
                 setEstado('valido');
             }
-        } catch {
+        } catch (err: any) {
             setEstado('invalido');
-            setMensajeError('Error de conexión. Por favor intenta nuevamente.');
+            setMensajeError(err.response?.data?.message ?? 'El enlace ha expirado o ya fue utilizado.');
         }
     };
 
     const handleRestablecer = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!token) {
+            alert('Token no válido o ausente.');
+            return;
+        }
         if (!formPassword.newPassword || !formPassword.confirmPassword) {
             alert('Por favor complete todos los campos.');
             return;
@@ -95,19 +85,13 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
 
         setGuardando(true);
         try {
-            const res = await fetch(`${API_BASE}/api/auth/restablecer-contrasenia-recuperacion`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, new_password: formPassword.newPassword }),
+            await authService.restablecerContraseniaRecuperacion({
+                token,
+                newPassword: formPassword.newPassword
             });
-            const data = await res.json();
-            if (!res.ok) {
-                alert(data.message || 'Error al restablecer la contraseña.');
-                return;
-            }
             setRestablecidoConExito(true);
-        } catch {
-            alert('Error de conexión. Por favor intenta nuevamente.');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Error al restablecer la contraseña.');
         } finally {
             setGuardando(false);
         }

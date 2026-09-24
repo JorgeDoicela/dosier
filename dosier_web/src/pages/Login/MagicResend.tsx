@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../api/axios_config';
+import { authService } from '../../services/authService';
 import { Loader2, Mail, ArrowRight, AlertTriangle, CheckCircle2, Sun, Moon } from 'lucide-react';
 
 const MagicResend = ({ currentTheme = 'dark', toggleTheme }: { currentTheme?: 'dark' | 'light'; toggleTheme?: () => void }) => {
@@ -23,8 +23,8 @@ const MagicResend = ({ currentTheme = 'dark', toggleTheme }: { currentTheme?: 'd
         setSuccess(null);
 
         try {
-            const response = await api.post('/auth/magic-resend', { email: trimmedEmail });
-            setSuccess(response.data.message || 'Si la cuenta existe en el sistema, recibirás un nuevo enlace de acceso seguro en unos momentos.');
+            const response = await authService.magicResend(trimmedEmail);
+            setSuccess(response?.message || 'Si la cuenta existe en el sistema, recibirás un nuevo enlace de acceso seguro en unos momentos.');
             setEmail('');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Error al procesar la solicitud. Intente de nuevo.');

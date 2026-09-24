@@ -10,8 +10,8 @@ dosier_web/src/pages/
 ├── Analytics/       # Indicadores y tablero CACES
 ├── Auth/            # Flujos secundarios de autenticación (Reset password, Magic link)
 ├── Calendario/      # Planificador de hitos lectivos y exportación iCalendar
+├── Curriculum/      # Dominio Curricular ISTPET (Mis Asignaturas PEA, Supervisión, DocumentWorkspace, Monitoreo, Revisión)
 ├── Dashboard/       # Tableros diferenciados por rol (5 roles curriculares) y modales operativos
-├── Investigacion/   # Proyectos y Workspace del PEA Oficial
 ├── Landing/         # Página pública de presentación
 ├── Login/           # Autenticación multicanal (Credenciales, SSO, PIN, Magic Link)
 ├── Lopdp/           # Gestión de consentimientos y solicitudes de derechos ARCO
@@ -70,21 +70,23 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 ---
 
-### 2.2. Módulo de Formulación Curricular y Proyectos (`src/pages/Investigacion/Proyectos/`)
+### 2.2. Módulo de Dominio Curricular y Gestión de Documentos Docentes (`src/pages/Curriculum/`)
 
-* **`ResearchProjectsPage.tsx` (`/documentacion` o `/investigacion/proyectos`):**
+* **`SupervisionCurricularPage.tsx` (`/documentacion` o `/investigacion/proyectos`):**
   * Vista matriz que alberga el conmutador de pestañas institucionales:
     1. **Pestaña Programas de Estudio (PEA):** Despliega el componente `<PeaSupervisionTray>`, permitiendo supervisar, filtrar por carrera/período y acceder al editor curricular oficial.
     2. **Pestaña Proyectos de Investigación:** Gestión de expedientes de investigación formativa vinculados al currículo.
-* **`MyProjectsPage.tsx` (`/documentacion/mis-proyectos`):**
-  * Bandeja personalizada para el docente con sus asignaturas y proyectos a cargo.
-* **`RevisionTecnicaPage.tsx` (`/documentacion/revision-tecnica/:projectUuid`):**
-  * Entorno de revisión colegiada para coordinadores y comisiones. Permite contrastar el contenido contra el checklist de normativas.
-* **`ProjectWorkspace.tsx` (`/documentacion/workspace/:templateCode/:projectUuid`):**
-  * Entorno de trabajo principal. Si `templateCode === 'pea-oficial'`, renderiza el `<DOSIERBuilderShell>` con:
+* **`MisAsignaturasPage.tsx` (`/documentacion/mis-proyectos`):**
+  * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI y el estado de formulación de cada PEA.
+* **`RevisionCurricularPage.tsx` (`/documentacion/revision-tecnica/:projectUuid`):**
+  * Entorno de revisión colegiada y disciplinar para coordinadores y comisiones. Permite contrastar el contenido contra el checklist de normativas.
+* **`MonitoreoCurricularPage.tsx` (`/documentacion/monitoreo/:projectUuid`):**
+  * Monitor de avance, trazabilidad y estado de ejecución del documento docente.
+* **`DocumentWorkspace.tsx` (`/documentacion/workspace/:templateCode/:projectUuid`):**
+  * Entorno de trabajo y orquestador del editor. Monta el `<DOSIERBuilderShell>` con:
     * **`PeaWorkflowBar.tsx`:** Barra superior con semáforo de cuadre horario y botón de firma/transición según el rol autenticado.
     * **`PeaObservationsDrawer.tsx`:** Panel deslizable lateral para consultar y subsanar observaciones por sección.
-    * **Pestañas Secciones A - K:** Componentes modulares con `<CoWorkField>` para edición concurrente en vivo.
+    * **Pestañas Secciones A - K:** Componentes modulares con `<CoWorkField>` para edición concurrente en vivo vía Yjs/SignalR.
     * **`NormativaDrawer.tsx`:** Asistente lateral de consulta de normativas CES y CACES vigentes.
 
 ---

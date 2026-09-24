@@ -1,34 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import api from '../../../api/axios_config';
+import { configuracionService, type PeriodoAcademicoDto, type EventoNormativoDto } from '../../../services/configuracionService';
 import { useConfirm } from '../../../api/ConfirmContext';
 
-export interface PeriodoAcademico {
-    idPeriodo: string;
-    detalle?: string;
-    fechaInicial?: string;
-    fechaFinal?: string;
-    activo?: boolean;
-    cerrado?: boolean;
-}
-
-export interface EventoNormativo {
-    uuid?: string;
-    titulo: string;
-    descripcion?: string;
-    tipoEvento: string;
-    fechaInicio: string;
-    fechaFin?: string;
-    esTodoElDia: boolean;
-    recurrenciaAnual: boolean;
-    recurrenciaHasta?: string;
-    rolesVisibles?: string;
-    moduloOrigen?: string;
-    urlAccion?: string;
-    colorHex?: string;
-    alertaDias?: number;
-    activo?: boolean;
-}
+export type PeriodoAcademico = PeriodoAcademicoDto;
+export type EventoNormativo = EventoNormativoDto;
 
 export const useConfiguracion = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -83,8 +59,7 @@ export const useConfiguracion = () => {
         setLoading(true);
         try {
             if (activeTab === 'periodos') {
-                const res = await api.get('/catalogs/periodos');
-                const rawData = res.data || [];
+                const rawData = await configuracionService.getPeriodos();
                 const mappedData = rawData.map((p: any) => ({
                     idPeriodo: p.id_periodo || p.idPeriodo || '',
                     detalle: p.detalle,
@@ -95,8 +70,7 @@ export const useConfiguracion = () => {
                 }));
                 setPeriodos(mappedData);
             } else if (activeTab === 'calendario') {
-                const res = await api.get('/calendario/normativos');
-                const rawData = res.data || [];
+                const rawData = await configuracionService.getEventosNormativos();
                 const mappedData = rawData.map((e: any) => ({
                     uuid: e.uuid,
                     titulo: e.titulo || '',
@@ -161,9 +135,9 @@ export const useConfiguracion = () => {
                 cerrado: editingPeriodo ? editingPeriodo.cerrado : false
             };
             if (editingPeriodo) {
-                await api.put(`/catalogs/periodos/${editingPeriodo.idPeriodo}`, payload);
+                await configuracionService.updatePeriodo(editingPeriodo.idPeriodo, payload as any);
             } else {
-                await api.post('/catalogs/periodos', payload);
+                await configuracionService.createPeriodo(payload as any);
             }
             setIsPeriodoModalOpen(false);
             fetchData();
@@ -181,7 +155,7 @@ export const useConfiguracion = () => {
             variant: "warning"
         })) return;
         try {
-            await api.delete(`/catalogs/periodos/${item.idPeriodo}`);
+            await configuracionService.deletePeriodo(item.idPeriodo);
             fetchData();
         } catch (error: any) {
             alert('Error al cambiar estado: ' + error.message);
@@ -248,9 +222,9 @@ export const useConfiguracion = () => {
                 activo: editingCalendario ? editingCalendario.activo : true
             };
             if (editingCalendario && editingCalendario.uuid) {
-                await api.put(`/calendario/normativos/${editingCalendario.uuid}`, payload);
+                await configuracionService.updateEventoNormativo(editingCalendario.uuid, payload);
             } else {
-                await api.post('/calendario/normativos', payload);
+                await configuracionService.createEventoNormativo(payload);
             }
             setIsCalendarioModalOpen(false);
             fetchData();
@@ -268,7 +242,9 @@ export const useConfiguracion = () => {
             variant: "destructive"
         })) return;
         try {
-            await api.delete(`/calendario/normativos/${item.uuid}`);
+            if (item.uuid) {
+                await configuracionService.deleteEventoNormativo(item.uuid);
+            }
             fetchData();
         } catch (error: any) {
             alert('Error al eliminar hito: ' + error.message);

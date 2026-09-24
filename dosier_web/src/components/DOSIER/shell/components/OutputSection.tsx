@@ -6,7 +6,7 @@ import { TimedSuccessModal } from '../../../Common/TimedSuccessModal';
 import { getDocumentSignatures } from '../../../../services/signaturesService';
 import { SignatureBlock } from '../../SignatureBlock';
 import { useAuth } from '../../../../api/AuthContext';
-import api from '../../../../api/axios_config';
+import { documentInstanceService } from '../../../../services/documentInstanceService';
 
 export interface OutputSectionProps {
     title: string;
@@ -81,10 +81,11 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
             let targetDocId = directDocId;
             if ((!targetDocId || targetDocId.startsWith('temp_')) && projectUuid && templateCode) {
                 try {
-                    const instRes = await api.get('/documents/instances/resolve', {
-                        params: { templateCode, entityUuid: projectUuid }
+                    const instRes = await documentInstanceService.resolve({
+                        templateCode,
+                        entityUuid: projectUuid
                     });
-                    targetDocId = instRes.data?.uuid || instRes.data?.Uuid;
+                    targetDocId = instRes?.uuid || (instRes as any)?.Uuid;
                 } catch {}
             }
 
@@ -108,9 +109,10 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
         let isMounted = true;
         if (!projectUuid || projectUuid.startsWith('temp_')) return;
 
-        api.get(`/documents/instances/entity/${projectUuid}`)
+        documentInstanceService.getByEntity(projectUuid)
             .then(res => {
-                if (isMounted && Array.isArray(res.data)) {
+                const list = Array.isArray(res) ? res : ((res as any)?.data || []);
+                if (isMounted && Array.isArray(list)) {
                     const isDocValidlySigned = (doc: any): boolean => {
                         if (!doc) return false;
                         if (['Aprobado', 'En Ejecución', 'Finalizado'].includes(projectStatus || '')) return true;

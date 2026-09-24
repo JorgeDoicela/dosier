@@ -16,7 +16,9 @@ import {
     Shield
 } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
-import api from '../../api/axios_config';
+import { collaborationService } from '../../services/collaborationService';
+import { getPeaByUuid } from '../../services/peaService';
+import { curriculumProjectService } from '../../services/curriculumProjectService';
 import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
 import { coworkLog } from '../../core/cowork/utils/log';
@@ -104,9 +106,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             setIsLoadingTrazabilidad(true);
             try {
                 if (templateCode === 'PEA_OFICIAL') {
-                    const peaRes = await api.get(`/pea/uuid/${entityUuid}`).catch(() => ({ data: null }));
-                    if (peaRes.data) {
-                        const peaData = peaRes.data;
+                    const peaRes: any = await getPeaByUuid(entityUuid).catch(() => null);
+                    const peaData = peaRes?.data || peaRes;
+                    if (peaData) {
                         const traceList = (peaData.trazabilidades || peaData.Trazabilidades || []).map((t: any) => ({
                             id: t.id_trazabilidad ?? t.idTrazabilidad,
                             estadoAnterior: t.estado_anterior ?? t.estadoAnterior,
@@ -120,13 +122,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     return;
                 }
 
-                const [traceRes, projectRes] = await Promise.all([
-                    api.get(`/projects/${entityUuid}/traceability`).catch(() => ({ data: [] })),
-                    api.get(`/projects/${entityUuid}/detail`).catch(() => ({ data: null }))
+                const [traceRes, projectRes]: [any, any] = await Promise.all([
+                    curriculumProjectService.getTraceability(entityUuid).catch(() => []),
+                    curriculumProjectService.getProjectDetail(entityUuid).catch(() => null)
                 ]);
-                setTrazabilidad(traceRes.data || []);
-                if (projectRes.data) {
-                    const pData = projectRes.data;
+                const traceList = Array.isArray(traceRes) ? traceRes : (traceRes?.data || []);
+                setTrazabilidad(traceList);
+                const pData = projectRes?.data || projectRes;
+                if (pData) {
                     const deadline = pData.fechaLimiteSubsanacion || pData.fecha_limite_subsanacion || pData.fechaLimiteSubsanacionFinal || pData.fecha_limite_subsanacion_final;
                     setProjectDeadline(deadline || null);
                 }
@@ -210,10 +213,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             try {
                 const normalizedUuid = instanceUuid?.toLowerCase().trim();
                 coworkLog('[TeamPulse] Fetching pulse for:', normalizedUuid);
-                const res = await api.get(`/collaboration/${normalizedUuid}/pulse`);
-                coworkLog('[TeamPulse] Response activities:', res.data.activities?.length, res.data.activities);
-                if (res.data.comments) {
-                    const mappedComments = res.data.comments.map((c: any) => ({
+                const res: any = await collaborationService.getPulse(normalizedUuid);
+                const pulseData = res?.data || res;
+                coworkLog('[TeamPulse] Response activities:', pulseData.activities?.length, pulseData.activities);
+                if (pulseData.comments) {
+                    const mappedComments = pulseData.comments.map((c: any) => ({
                         idComentario: c.idComentario ?? c.id_comentario ?? c.idComentario,
                         usuarioUuid: c.usuarioUuid ?? c.usuario_uuid ?? '',
                         nombreUsuario: c.nombreUsuario ?? c.nombre_usuario ?? 'Usuario',
@@ -223,15 +227,15 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     }));
                     setComments(mappedComments.reverse());
                 }
-                if (res.data.statuses) {
+                if (pulseData.statuses) {
                     const mappedStatuses: Record<string, string> = {};
-                    Object.entries(res.data.statuses).forEach(([key, val]: [string, any]) => {
+                    Object.entries(pulseData.statuses).forEach(([key, val]: [string, any]) => {
                         mappedStatuses[key] = typeof val === 'string' ? val : (val?.estado || 'Borrador');
                     });
                     setSectionStatuses(mappedStatuses);
                 }
-                if (res.data.activities) {
-                    const mappedActivities = res.data.activities.map((a: any) => ({
+                if (pulseData.activities) {
+                    const mappedActivities = pulseData.activities.map((a: any) => ({
                         userName: a.userName ?? a.user_name ?? 'Usuario',
                         action: a.action ?? '',
                         sectionName: a.sectionName ?? a.section_name ?? '',
@@ -382,7 +386,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     const handleUpdateComment = async (id: number, nuevoContenido: string) => {
         try {
-            await api.put(`/collaboration/comments/${id}`, { contenido: nuevoContenido });
+            await collaborationService.updateComment(id, { contenido: nuevoContenido });
             setEditingCommentId(null);
             setEditingCommentText('');
         } catch (err: any) {
@@ -402,7 +406,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         if (!hasConfirmed) return;
 
         try {
-            await api.delete(`/collaboration/comments/${id}`);
+            await collaborationService.deleteComment(id);
         } catch (err: any) {
             console.error("Error al eliminar comentario:", err);
             alert("No se pudo eliminar el comentario: " + (err.response?.data?.message || err.message));
@@ -435,13 +439,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             if (audioBlob) {
                 const formDataObj = new FormData();
                 formDataObj.append('file', audioBlob, `audio_feedback_${Date.now()}.webm`);
-                const uploadRes = await api.post('/collaboration/upload', formDataObj, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                const uploadRes = await collaborationService.uploadFile(formDataObj);
 
                 const payload = {
                     type: 'audio',
-                    audioUrl: uploadRes.data.url,
+                    audioUrl: uploadRes.url || (uploadRes as any).data?.url,
                     text: comment.trim() || 'Explicación de audio adjunta'
                 };
                 contentStr = JSON.stringify(payload);

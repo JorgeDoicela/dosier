@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../../../api/axios_config';
+import { emailService } from '../../../../services/emailService';
 import { useConfirm } from '../../../../api/ConfirmContext';
 import type { EmailTemplate } from '../emailEngineTypes';
 import { mapTemplateToCamelCase } from './useEmailEngineData';
@@ -105,8 +105,8 @@ export const useEmailTemplates = ({ setTemplates }: UseEmailTemplatesProps): Use
                     cuerpo_html: templateForm.cuerpoHtml,
                     activo: templateForm.activo
                 };
-                const res = await api.put<any>(`/Admin/email-engine/templates/${editingTemplate.idEmailTemplate}`, payload);
-                const saved = mapTemplateToCamelCase(res.data);
+                const data = await emailService.updateTemplate(editingTemplate.idEmailTemplate, payload as any);
+                const saved = mapTemplateToCamelCase(data);
                 setTemplates(prev => prev.map(t => t.idEmailTemplate === editingTemplate.idEmailTemplate ? saved : t));
             } else {
                 const payload = {
@@ -117,8 +117,8 @@ export const useEmailTemplates = ({ setTemplates }: UseEmailTemplatesProps): Use
                     cuerpo_html: templateForm.cuerpoHtml,
                     activo: templateForm.activo
                 };
-                const res = await api.post<any>('/Admin/email-engine/templates', payload);
-                const saved = mapTemplateToCamelCase(res.data);
+                const data = await emailService.createTemplate(payload as any);
+                const saved = mapTemplateToCamelCase(data);
                 setTemplates(prev => [saved, ...prev]);
             }
             setIsTemplateModalOpen(false);
@@ -137,7 +137,7 @@ export const useEmailTemplates = ({ setTemplates }: UseEmailTemplatesProps): Use
             variant: "destructive"
         })) return;
         try {
-            await api.delete(`/Admin/email-engine/templates/${id}`);
+            await emailService.deleteTemplate(id);
             setTemplates(prev => prev.filter(t => t.idEmailTemplate !== id));
         } catch (e) {
             console.error('[DOSIER EMAIL ENGINE] Error deleting template:', e);

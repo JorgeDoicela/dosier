@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, UserPlus, X, Briefcase, GraduationCap, Globe, Check, AlertCircle, Loader2 } from 'lucide-react';
-import api from '../../api/axios_config';
+import { usersService } from '../../services/usersService';
 
 export interface SelectedMemberResult {
     id_usuario: number;
@@ -108,8 +108,8 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                     origenEstudiante: 'TODOS'
                 });
 
-                const res = await api.get(`/Admin/users?${params.toString()}`);
-                const items: any[] = res.data?.items || [];
+                const res = await usersService.getUsers(params);
+                const items: any[] = res?.items || (res as any)?.data?.items || [];
                 setResults(items);
             } catch (err) {
                 console.error('[MemberSearchSelector] Error buscando personal:', err);

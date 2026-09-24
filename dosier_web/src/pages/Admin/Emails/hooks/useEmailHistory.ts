@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import api from '../../../../api/axios_config';
+import { emailService } from '../../../../services/emailService';
 import type { EmailHistorial } from '../emailEngineTypes';
 import { mapHistorialToCamelCase } from './useEmailEngineData';
 
@@ -30,8 +30,8 @@ export const useEmailHistory = (): UseEmailHistoryResult => {
         const effectiveLimit = limit ?? historyLimit;
         if (!silent) setRefreshing(true);
         try {
-            const res = await api.get<any[]>(`/Admin/email-engine/history?limit=${effectiveLimit}`);
-            const mapped = res.data.map(mapHistorialToCamelCase);
+            const data = await emailService.getEmailHistory(effectiveLimit);
+            const mapped = data.map(mapHistorialToCamelCase);
             setHistory(mapped);
 
             // Si el drawer está abierto inspeccionando un log, actualizar su estado en vivo

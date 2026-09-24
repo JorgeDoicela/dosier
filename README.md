@@ -82,7 +82,7 @@ dosier/
 
 ### 3.1. Tecnologías Principales
 * **Backend:** C# con .NET 8.0, ASP.NET Core Web API, Entity Framework Core 9.0, Pomelo MySQL Provider.
-* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Geist Editorial / Enterprise Docs System (Inter Puro), Lucide Icons.
+* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Feature-Based Modular SPA con Service Layer (21 servicios) y Container/Presenter en Custom Hooks, Geist Editorial / Enterprise Docs System (Inter Puro), Lucide Icons.
 * **Cliente Móvil:** React Native, Expo SDK, Expo Router, React Native Reanimated.
 * **Colaboración en Tiempo Real:** SignalR WebSockets con protocolo binario y sincronización Yjs CRDT.
 * **Generación Documental y Criptografía:** iText 9, Handlebars.Net, QRCoder, SHA-256 y soporte PKCS#12 (.p12).

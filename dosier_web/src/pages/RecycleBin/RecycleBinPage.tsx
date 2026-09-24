@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, RotateCcw, FileText, RefreshCw, Trash } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
-import api from '../../api/axios_config';
+import { recycleBinService, type DeletedProjectDto } from '../../services/recycleBinService';
 import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
 import { useNotifications } from '../../api/NotificationsContext';
 
-interface DeletedItem {
-    uuid: string;
-    titulo?: string;
-    nombre?: string;
-    codigoInstitucional?: string;
-    siglas?: string;
-    estado: string;
-    fechaEliminacion: string;
-    eliminadoPor: string;
-}
+type DeletedItem = DeletedProjectDto;
 
 const RecycleBinPage: React.FC = () => {
     const { isAdmin } = useAuth();
@@ -29,8 +20,8 @@ const RecycleBinPage: React.FC = () => {
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/recyclebin/projects');
-            setItems(response.data || []);
+            const data = await recycleBinService.getDeletedProjects();
+            setItems(data);
         } catch (error) {
             console.error('Error fetching deleted projects:', error);
         } finally {
@@ -53,7 +44,7 @@ const RecycleBinPage: React.FC = () => {
 
         try {
             setActionLoading(uuid);
-            await api.post(`/recyclebin/restore/project/${uuid}`);
+            await recycleBinService.restoreProject(uuid);
             setItems(items.filter(item => item.uuid !== uuid));
             addToast('Restauración Exitosa', `El proyecto "${title}" ha sido restaurado con éxito.`, 'success');
         } catch (error: any) {
@@ -77,7 +68,7 @@ const RecycleBinPage: React.FC = () => {
 
         try {
             setActionLoading(uuid);
-            await api.delete(`/recyclebin/purge/project/${uuid}`);
+            await recycleBinService.purgeProject(uuid);
             setItems(items.filter(item => item.uuid !== uuid));
             addToast('Eliminado Definitivamente', `El proyecto "${title}" ha sido purgado permanentemente del sistema.`, 'success');
         } catch (error: any) {

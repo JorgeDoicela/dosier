@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { ShieldAlert, Loader2, CheckCircle2, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import api from '../../api/axios_config';
+import { authService } from '../../services/authService';
 import { useNotifications } from '../../api/NotificationsContext';
 
 const ResetAlertPage: React.FC = () => {
@@ -53,9 +53,9 @@ const ResetAlertPage: React.FC = () => {
 
         setIsSaving(true);
         try {
-            await api.post('/auth/revertir-contrasenia-alerta', {
-                token: token,
-                new_password: passwordForm.newPassword
+            await authService.revertirContraseniaAlerta({
+                token,
+                newPassword: passwordForm.newPassword
             });
             setIsSuccess(true);
             addToast('Contraseña Reestablecida', 'Tu contraseña ha sido restablecida y las sesiones sospechosas han sido revocadas.', 'success');

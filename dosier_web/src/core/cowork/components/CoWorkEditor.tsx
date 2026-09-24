@@ -5,7 +5,7 @@
 import React, { useContext } from 'react';
 import * as Y from 'yjs';
 import { useEditor, EditorContent } from '@tiptap/react';
-import api from '../../../api/axios_config';
+import { collaborationService } from '../../../services/collaborationService';
 import { buildCoWorkExtensions } from '../extensions/coworkExtensions';
 import type { CoWorkHandle, ToolbarMode } from '../types';
 import { RemoteCursors } from './RemoteCursors';
@@ -152,9 +152,9 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
                         if (file) {
                             const formData = new FormData();
                             formData.append('file', file);
-                            api.post('/collaboration/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                            collaborationService.uploadFile(formData)
                                 .then(res => {
-                                    const url = res.data.url;
+                                    const url = res.url || (res as any).data?.url;
                                     const { schema } = view.state;
                                     const node = schema.nodes.image.create({ src: url });
                                     view.dispatch(view.state.tr.replaceSelectionWith(node));
@@ -174,9 +174,9 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
                         const formData = new FormData();
                         formData.append('file', file);
                         event.preventDefault();
-                        api.post('/collaboration/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+                        collaborationService.uploadFile(formData)
                             .then(res => {
-                                const url = res.data.url;
+                                const url = res.url || (res as any).data?.url;
                                 const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
                                 if (coordinates) {
                                     const { schema } = view.state;
@@ -245,7 +245,7 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
                 const deletedImages = knownImagesRef.current.filter(url => !currentImages.includes(url));
                 for (const imageUrl of deletedImages) {
                     if (imageUrl.startsWith('/api/storage/cowork_images/')) {
-                        api.delete(`/collaboration/delete-image?url=${encodeURIComponent(imageUrl)}`)
+                        collaborationService.deleteImage(imageUrl)
                             .then(() => coworkLog(`[CoWorkEditor] Imagen eliminada del servidor: ${imageUrl}`))
                             .catch(err => console.error('[DOSIER] Error al eliminar imagen de la base de datos:', err));
                     }
