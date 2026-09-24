@@ -3,7 +3,7 @@ import {
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
 
-export const INVESTIGACION_CONFIG: HelpConfig = {
+export const DOCUMENTACION_CONFIG: HelpConfig = {
     icon: <PenTool size={24} className="text-brand" />,
     title: "Supervisión de Documentación y Planificación PEA",
     summary: "Módulo administrativo central para la formulación, registro y supervisión de instrumentos curriculares oficiales PEA.",

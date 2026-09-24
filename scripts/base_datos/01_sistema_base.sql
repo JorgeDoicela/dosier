@@ -15,8 +15,6 @@ SET SQL_SAFE_UPDATES = 0;
 
 DROP VIEW IF EXISTS v_doc_calendario_eventos;
 
-DROP TRIGGER IF EXISTS trg_doc_proyectos_uuid;
-DROP TRIGGER IF EXISTS trg_doc_trazabilidad_uuid;
 DROP TRIGGER IF EXISTS trg_doc_notif_uuid;
 DROP TRIGGER IF EXISTS trg_doc_tokens_uuid;
 DROP TRIGGER IF EXISTS trg_doc_usermeta_uuid;
@@ -57,15 +55,6 @@ DROP TABLE IF EXISTS
     doc_cowork_sesiones,
     doc_cowork_documentos,
 
-    -- Núcleo V3 (Secciones 1-9)
-    doc_bibliografia_proyecto,
-    doc_cronograma,
-    doc_objetivos_proyecto,
-    doc_proyecto_participantes,
-    doc_proyectos_carreras,
-    doc_trazabilidad_proyectos,
-    doc_proyectos,
-
     -- Catálogos y Configuración adicionales
     doc_config_workflow,
 
@@ -74,66 +63,10 @@ DROP TABLE IF EXISTS
     doc_ical_tokens,
     doc_calendario_eventos_normativos;
 
--- #############################################################################
--- SECCIÓN 2: PROYECTO Y PARTICIPANTES
--- #############################################################################
+-- =============================================================================
+-- SECCIÓN: AUDITORÍA ADMINISTRATIVA Y FORENSE (CACES/SENESCYT)
+-- =============================================================================
 
-CREATE TABLE doc_proyectos (
-    idProyecto            INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid                  VARCHAR(36)      NOT NULL UNIQUE,
-    codigoInstitucional   VARCHAR(50)   UNIQUE,
-    titulo                VARCHAR(500)  NOT NULL,
-    -- Nota: Los textos descriptivos (antecedentes, justificacion, marcoTeorico, metodologia,
-    -- metodoEvaluacion) viven exclusivamente en metadataCacesJson y en el snapshot del
-    -- documento colaborativo (doc_documentos_instancias). No se duplican aquí.
-    fechaPresentacion     DATE          NULL,
-    fechaInicio           DATE,
-    fechaFin              DATE,
-    tiempoEjecucion       VARCHAR(100),
-    -- ADAPTABILIDAD CACES: VARCHAR en lugar de ENUM.
-    -- Agregar nuevos estados solo requiere insertar en doc_config_workflow,
-    -- NO requiere alterar esta tabla ni redesplegar el backend.
-    estado                VARCHAR(50)   NOT NULL DEFAULT 'Borrador' COMMENT 'Estado del ciclo de vida. Valores válidos definidos en doc_config_workflow.',
-    puntajeEvaluacion     DECIMAL(5,2)  NULL,
-    activo                TINYINT(1)    DEFAULT 1,
-    eliminado             TINYINT(1)    DEFAULT 0,
-    fechaEliminacion      TIMESTAMP     NULL,
-    eliminadoPorUsuarioId INT(11)       NULL,
-    fechaRegistro         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    fechaModificacion     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    autoExtendDeadlines   TINYINT(1)    DEFAULT 0,
-    autoExtendDays        INT           DEFAULT 7,
-
-    -- GESTIÓN Y CONTROL DE PLAZOS INSTITUCIONALES (DEADLINES)
-    fechaLimiteSubsanacion      DATE          NULL COMMENT 'Fecha límite fijada por el Administrador para subsanar observaciones del protocolo (Fase 1/2)',
-
-    -- Extensiones CACES / SENESCYT
-    hashActaAprobacion   TEXT NULL,
-    fechaAprobacion      TIMESTAMP NULL,
-    firmadoPor           INT(11) NULL,
-    metadataCacesJson    JSON          NULL COMMENT 'Snapshot de indicadores para acreditación',
-    FOREIGN KEY (firmadoPor) REFERENCES usuarios(idUsuario) ON DELETE SET NULL,
-    FOREIGN KEY (eliminadoPorUsuarioId) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Trazabilidad de Estados para Auditoría (CACES)
-CREATE TABLE doc_trazabilidad_proyectos (
-    idTrazabilidad  INT AUTO_INCREMENT PRIMARY KEY,
-    uuid            VARCHAR(36) NOT NULL UNIQUE,
-    idProyecto      INT NOT NULL,
-    idUsuario       INT(11) NULL,
-    estadoAnterior  VARCHAR(50) NOT NULL,
-    estadoNuevo     VARCHAR(50) NOT NULL,
-    observacion     TEXT,
-    fechaTransicion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    -- Seguridad del Núcleo: Cadena de Confianza (Blockchain-like Audit)
-    hashAnterior    VARCHAR(100) NULL COMMENT 'Hash de la transición previa',
-    hashActual      VARCHAR(100) NULL COMMENT 'Hash SHA-256 de esta transición (Integridad)',
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Auditoría Administrativa Forense (CACES/SENESCYT)
 CREATE TABLE doc_audit_admin (
     idAudit            INT AUTO_INCREMENT PRIMARY KEY,
     idUsuarioAdmin     INT NULL,
@@ -149,110 +82,6 @@ CREATE TABLE doc_audit_admin (
     FOREIGN KEY (idUsuarioAdmin) REFERENCES usuarios(idUsuario) ON DELETE SET NULL,
     FOREIGN KEY (idUsuarioAfectado) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE doc_proyectos_carreras (
-    idProyectoCarrera INT          AUTO_INCREMENT PRIMARY KEY,
-    idProyecto        INT          NOT NULL,
-    idCarrera         INT(11)      NOT NULL,
-    modalidad         VARCHAR(100),
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idCarrera)  REFERENCES carreras(idCarrera)       ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
-
--- Tabla unificada de participantes (docentes y alumnos bajo un mismo modelo)
--- Reemplaza: doc_proyectos_profesores + doc_proyectos_alumnos
--- tipoParticipante discrimina el origen: 'Docente' | 'Alumno' | 'Externo'
-CREATE TABLE doc_proyecto_participantes (
-    idParticipante   INT           AUTO_INCREMENT PRIMARY KEY,
-    idProyecto       INT           NOT NULL,
-    idUsuario        INT(11)       NOT NULL,
-    tipoParticipante VARCHAR(20)   NOT NULL DEFAULT 'Docente' COMMENT 'Docente | Alumno | Externo',
-    esDirector       TINYINT(1)    DEFAULT 0,
-    rol              VARCHAR(100),
-    nivelAcademico   VARCHAR(150),
-    telefono         VARCHAR(20),
-    horasSemanales   DECIMAL(4,1),
-    activo           TINYINT(1)    DEFAULT 1,
-    fecha_inicio     DATETIME      NULL,
-    fecha_fin        DATETIME      NULL,
-    motivo_cambio    VARCHAR(150)  NULL,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idUsuario)  REFERENCES usuarios(idUsuario)       ON DELETE CASCADE,
-    UNIQUE KEY uq_proyecto_usuario (idProyecto, idUsuario)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Participantes del proyecto: docentes, alumnos y externos unificados';
-
--- #############################################################################
--- SECCIÓN 3: OBJETIVOS Y ODS
--- #############################################################################
-
-CREATE TABLE doc_objetivos_proyecto (
-    idObjetivo    INT          AUTO_INCREMENT PRIMARY KEY,
-    idProyecto    INT          NOT NULL,
-    esGeneral     TINYINT(1)   NOT NULL DEFAULT 0,
-    descripcion   TEXT         NOT NULL,
-    orden         INT          DEFAULT 0,
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
--- SECCIÓN 7: CRONOGRAMA MODERNO
--- #############################################################################
-
-CREATE TABLE doc_cronograma (
-    idActividad       INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid              VARCHAR(36)      NOT NULL UNIQUE,
-    idProyecto        INT           NOT NULL,
-    idObjetivo        INT           NOT NULL,
-    numeroActividad   INT           NOT NULL,
-    descripcion       TEXT          NOT NULL,
-    recursosNecesarios TEXT,
-    responsable       VARCHAR(255)  NULL COMMENT 'Nombre del investigador/estudiante responsable',
-    entregable        TEXT          NULL COMMENT 'Entregable o evidencia esperada para el CACES',
-    fechaInicioPrevista DATE,
-    fechaFinPrevista    DATE,
-    progreso            DECIMAL(5,2)  DEFAULT 0.00,
-    ponderacion         DECIMAL(5,2)  DEFAULT 0.00 COMMENT 'Peso porcentual en el proyecto',
-    esEntregableCaces   TINYINT(1)    DEFAULT 0    COMMENT 'Marca actividad como evidencia de acreditación',
-    idActividadPadre    INT           NULL,
-    colorHex            VARCHAR(7)    DEFAULT '#0070f3',
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE,
-    FOREIGN KEY (idObjetivo) REFERENCES doc_objetivos_proyecto(idObjetivo) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- #############################################################################
--- SECCIÓN 8: BIBLIOGRAFÍA ESTRUCTURADA
--- #############################################################################
-
-CREATE TABLE doc_bibliografia_proyecto (
-    idBibliografia INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid           VARCHAR(36)     NOT NULL UNIQUE,
-    idProyecto     INT          NOT NULL,
-    citaAPA        TEXT         NOT NULL,
-    doi            VARCHAR(100),
-    isbn           VARCHAR(20),
-    autores        TEXT,
-    anioPublicacion INT,
-    tituloFuente   TEXT,
-    url            VARCHAR(512),
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- #############################################################################
--- TRIGGERS PARA UUID (Single-Statement sin necesidad de DELIMITER)
--- #############################################################################
-
-CREATE TRIGGER trg_doc_proyectos_uuid BEFORE INSERT ON doc_proyectos FOR EACH ROW
-SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
-
-CREATE TRIGGER trg_doc_trazabilidad_uuid BEFORE INSERT ON doc_trazabilidad_proyectos FOR EACH ROW
-SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
-
--- Índices básicos del núcleo V3
--- Índices básicos del núcleo V3 (Se omiten los índices sobre claves foráneas que InnoDB crea automáticamente)
-CREATE INDEX idx_proyectos_estado           ON doc_proyectos(estado);
 
 -- =============================================================================
 -- GRUPO K: NOTIFICACIONES, SEGURIDAD Y METADATA
@@ -278,7 +107,6 @@ CREATE TABLE doc_notificaciones (
     UNIQUE KEY uq_notif_uuid (uuid),
     INDEX idx_notif_exp (idExpediente),
     INDEX idx_notif_pea (idPea),
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE SET NULL,
     FOREIGN KEY (destinatario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Notificaciones con prioridad y redirección (Deep Linking)';
 
@@ -305,8 +133,7 @@ CREATE TABLE doc_tokens_acceso (
     version         INT          DEFAULT 1,
     UNIQUE KEY uq_tokens_uuid (uuid),
     INDEX idx_tokens_exp (idExpediente),
-    INDEX idx_tokens_pea (idPea),
-    FOREIGN KEY (idProyecto) REFERENCES doc_proyectos(idProyecto) ON DELETE SET NULL
+    INDEX idx_tokens_pea (idPea)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Seguridad para Pares Ciegos (Control de IPs y usos)';
 
 CREATE TRIGGER trg_doc_tokens_uuid
@@ -867,76 +694,7 @@ SELECT
     creadoPor,
     alertaDias,
     recurrenciaAnual
-FROM doc_calendario_eventos_normativos
-
-UNION ALL
-
--- 5. Inicio de proyectos activos
-SELECT
-    CONCAT('PROY-INI-', idProyecto),
-    uuid,
-    CONCAT('Inicio: ', titulo),
-    CONCAT('Fecha de inicio del proyecto ', COALESCE(codigoInstitucional, uuid)),
-    'Proyecto', 'InicioProyecto',
-    fechaInicio, NULL, 1,
-    '#10B981',
-    idProyecto, uuid, 'PROYECTO',
-    NULL, 'DOSIER_ADMIN',
-    IF(estado NOT IN ('Borrador','Anulado','Rechazado') AND activo = 1, 1, 0),
-    0                                       AS esPrivado,
-    'Media'                                 AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_proyectos
-WHERE fechaInicio IS NOT NULL
-
-UNION ALL
-
--- 6. Vencimiento de proyectos activos
-SELECT
-    CONCAT('PROY-FIN-', idProyecto),
-    uuid,
-    CONCAT('Vencimiento: ', titulo),
-    CONCAT('Fecha de cierre planificada del proyecto ', COALESCE(codigoInstitucional, uuid)),
-    'Proyecto', 'VencimientoProyecto',
-    fechaFin, NULL, 1,
-    '#EF4444',
-    idProyecto, uuid, 'PROYECTO',
-    NULL, NULL,
-    IF(estado IN ('En Ejecución','Aprobado') AND activo = 1, 1, 0),
-    0                                       AS esPrivado,
-    'Alta'                                  AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_proyectos
-WHERE fechaFin IS NOT NULL
-
-UNION ALL
-
--- 9. Plazo de subsanación de protocolo (Fase 1/2)
-SELECT
-    CONCAT('SUB-PROT-', p.idProyecto),
-    p.uuid,
-    CONCAT('Plazo de Subsanación: ', p.titulo),
-    'Fecha límite para corregir y reenviar el protocolo de investigación.',
-    'Proyecto', 'SubsanacionProtocolo',
-    p.fechaLimiteSubsanacion, NULL, 1,
-    '#F59E0B',
-    p.idProyecto, p.uuid, 'PROYECTO',
-    NULL, NULL,
-    IF(p.estado = 'En Corrección' AND p.activo = 1, 1, 0),
-    0                                       AS esPrivado,
-    'Alta'                                  AS prioridad,
-    'Pendiente'                             AS estado,
-    NULL                                    AS creadoPor,
-    NULL                                    AS alertaDias,
-    0                                       AS recurrenciaAnual
-FROM doc_proyectos p
-WHERE p.fechaLimiteSubsanacion IS NOT NULL;
+FROM doc_calendario_eventos_normativos;
 
 
 -- =============================================================================

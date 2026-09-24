@@ -3,8 +3,8 @@ import {
     DEFAULT_CONFIG, DASHBOARD_CONFIG, SETTINGS_CONFIG, ANALYTICS_CONFIG, NOTIFICATIONS_CONFIG, VERIFY_CONFIG, CONVOCATORIAS_CONFIG, ARCO_CONFIG, LOPDP_ADMIN_CONFIG 
 } from './general';
 import { 
-    INVESTIGACION_CONFIG, MIS_PROYECTOS_CONFIG, MONITOREO_CONFIG, INFORMES_AVANCE_CONFIG 
-} from './investigacion';
+    DOCUMENTACION_CONFIG, MIS_PROYECTOS_CONFIG, MONITOREO_CONFIG, INFORMES_AVANCE_CONFIG 
+} from './documentacion';
 import { 
     USUARIOS_CONFIG, AUDITORIA_CONFIG, CONFIGURACION_CONFIG, GRUPOS_CONFIG, EMAILS_CONFIG 
 } from './admin';
@@ -19,14 +19,10 @@ export const HELP_MAP: Record<string, HelpConfig> = {
     '/verificacion': VERIFY_CONFIG,
     '/convocatorias': CONVOCATORIAS_CONFIG,
     
-    '/documentacion': INVESTIGACION_CONFIG,
+    '/documentacion': DOCUMENTACION_CONFIG,
     '/documentacion/mis-proyectos': MIS_PROYECTOS_CONFIG,
     '/documentacion/monitoreo': MONITOREO_CONFIG,
     '/documentacion/informes-avance': INFORMES_AVANCE_CONFIG,
-    '/investigacion': INVESTIGACION_CONFIG,
-    '/investigacion/mis-proyectos': MIS_PROYECTOS_CONFIG,
-    '/investigacion/monitoreo': MONITOREO_CONFIG,
-    '/investigacion/informes-avance': INFORMES_AVANCE_CONFIG,
     
     '/usuarios': USUARIOS_CONFIG,
     '/auditoria': AUDITORIA_CONFIG,
@@ -40,10 +36,10 @@ export { DEFAULT_CONFIG };
 export const normalizePathname = (path: string): string => {
     const segments = path.split('/').filter(Boolean);
 
-    if ((segments[0] === 'documentacion' || segments[0] === 'investigacion') && segments[1] === 'monitoreo' && segments.length > 2) {
+    if (segments[0] === 'documentacion' && segments[1] === 'monitoreo' && segments.length > 2) {
         return `/${segments[0]}/monitoreo`;
     }
-    if ((segments[0] === 'documentacion' || segments[0] === 'investigacion') && segments[1] === 'informes-avance' && segments.length > 2) {
+    if (segments[0] === 'documentacion' && segments[1] === 'informes-avance' && segments.length > 2) {
         return `/${segments[0]}/informes-avance`;
     }
     if (segments[0] === 'verificacion' && segments.length > 1) {

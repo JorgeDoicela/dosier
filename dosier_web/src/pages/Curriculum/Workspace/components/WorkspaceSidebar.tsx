@@ -32,7 +32,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
     const location = useLocation();
     const [asyncProtocoloSigned, setAsyncProtocoloSigned] = useState(false);
 
-    const isMisProyectos = location.pathname.startsWith('/documentacion/mis-proyectos') || location.pathname.startsWith('/investigacion/mis-proyectos');
+    const isMisProyectos = location.pathname.startsWith('/documentacion/mis-proyectos');
     const monitoringUrl = isMisProyectos
         ? `/documentacion/mis-proyectos/monitoreo/${resolvedProjectUuid}`
         : `/documentacion/monitoreo/${resolvedProjectUuid}`;

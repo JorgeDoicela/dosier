@@ -365,23 +365,7 @@ public class AdminService : IAdminService
                 .Select(ap => new { IdProfesor = ap.IdProfesor.Trim(), ap.IdAsignacion })
                 .ToListAsync();
 
-            // Obtener horas comprometidas en proyectos activos/enviados
-            var linkedUserIdsQuery = linkedUsers.Select(u => u.IdUsuario).ToList();
-            var estadosConCarga = await _context.DocConfigWorkflows.AsNoTracking()
-                .Where(w => w.Activo && w.ContabilizaCargaHoraria)
-                .Select(w => w.EstadoDestino)
-                .Distinct()
-                .ToListAsync();
-            if (estadosConCarga == null || !estadosConCarga.Any())
-            {
-                estadosConCarga = new List<string> { "Enviado", "En Revisión", "Aprobado", "En Ejecución" };
-            }
 
-            var assignedHoursList = await _context.DocProyectoParticipantes.AsNoTracking()
-                .Where(pp => pp.TipoParticipante == "Docente" && linkedUserIdsQuery.Contains(pp.IdUsuario) && pp.Activo != false &&
-                             pp.IdProyectoNavigation != null && estadosConCarga.Contains(pp.IdProyectoNavigation.Estado))
-                .Select(pp => new { pp.IdUsuario, pp.HorasSemanales })
-                .ToListAsync();
 
             // Obtener carreras vinculadas a los docentes en este periodo cargando su navegación
             var profCareers = await _context.ProfesoresCarrerasPeriodos.AsNoTracking()
@@ -429,10 +413,6 @@ public class AdminService : IAdminService
                 var firstUserId = linkedUser?.IdUsuario ?? roleInfo.FirstOrDefault()?.IdUsuario;
                 var userMeta = firstUserId.HasValue ? metadatas.FirstOrDefault(m => m.IdUsuario == firstUserId.Value) : null;
 
-                var assignedHours = firstUserId.HasValue
-                    ? assignedHoursList.Where(ah => ah.IdUsuario == firstUserId.Value).Sum(ah => ah.HorasSemanales ?? 0)
-                    : 0;
-
                 var linkedCareers = profCareers
                     .Where(pc => pc.IdProfesor == pId && !string.IsNullOrEmpty(pc.Carrera))
                     .Select(pc => pc.Carrera!)
@@ -458,7 +438,7 @@ public class AdminService : IAdminService
                     MateriasAsignadas = numMaterias,
                     CatedrasAsignadas = numMaterias,
                     HorasInvestigacion = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : 0),
-                    HorasAsignadas = assignedHours,
+                    HorasAsignadas = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : 0),
                     Departamento = contract?.Departamento,
                     CargoInstituto = contract?.CargoInstituto,
                     TipoContrato = contract?.TipoContrato

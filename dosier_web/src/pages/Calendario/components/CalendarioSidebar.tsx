@@ -100,9 +100,9 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                             // Derivar chip de contexto desde url_accion
                             const contextoChip = (() => {
                                 const url = note.url_accion || '';
-                                if (url.startsWith('/documentacion/proyectos') || url.startsWith('/investigacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                                if (url.startsWith('/documentacion/monitoreo') || url.startsWith('/investigacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                                if (url.startsWith('/documentacion') || url.startsWith('/investigacion')) return { label: 'Documentación', icon: BookOpen };
+                                if (url.startsWith('/documentacion/proyectos')) return { label: 'Proyectos', icon: Folder };
+                                if (url.startsWith('/documentacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
+                                if (url.startsWith('/documentacion')) return { label: 'Documentación', icon: BookOpen };
                                 if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
                                 if (url.startsWith('/analiticas')) return { label: 'Analíticas', icon: TrendingUp };
                                 return null;

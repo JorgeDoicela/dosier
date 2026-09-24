@@ -102,10 +102,10 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         location.pathname.startsWith('/parametros-normativos')
     );
     const [isInvestigacionOpen, setIsInvestigacionOpen] = useState(
-        location.pathname === '/investigacion' || (location.pathname.startsWith('/investigacion/') && !location.pathname.startsWith('/investigacion/mis-proyectos'))
+        location.pathname === '/documentacion' || (location.pathname.startsWith('/documentacion/') && !location.pathname.startsWith('/documentacion/mis-proyectos'))
     );
     const [isMisProyectosOpen, setIsMisProyectosOpen] = useState(
-        location.pathname.startsWith('/investigacion/mis-proyectos')
+        location.pathname.startsWith('/documentacion/mis-proyectos')
     );
     const [sidebarProjects, setSidebarProjects] = useState<SidebarProject[]>([]);
     const [sidebarProjectsLoading, setSidebarProjectsLoading] = useState(false);
@@ -149,7 +149,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             isFirstRender.current = false;
             return;
         }
-        if (location.pathname === '/documentacion' || location.pathname === '/documentacion/mis-proyectos' || location.pathname === '/investigacion' || location.pathname === '/investigacion/mis-proyectos') {
+        if (location.pathname === '/documentacion' || location.pathname === '/documentacion/mis-proyectos') {
             fetchSidebarProjects();
         }
     }, [location.pathname, fetchSidebarProjects]);
@@ -182,12 +182,11 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         if (location.pathname.startsWith('/parametros-normativos')) {
             setIsParametrosOpen(true);
         }
-        if (location.pathname.startsWith('/documentacion/mis-proyectos') || location.pathname.startsWith('/investigacion/mis-proyectos')) {
+        if (location.pathname.startsWith('/documentacion/mis-proyectos')) {
             setIsMisProyectosOpen(true);
         }
         
         const isDocumentacionRoute = (location.pathname.startsWith('/documentacion') && !location.pathname.startsWith('/documentacion/mis-proyectos')) ||
-            (location.pathname.startsWith('/investigacion') && !location.pathname.startsWith('/investigacion/mis-proyectos')) ||
             (location.pathname.includes('/workspace/') && !location.pathname.includes('/mis-proyectos/'));
         if (isDocumentacionRoute) {
             setIsInvestigacionOpen(true);
@@ -275,7 +274,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
     const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
 
     const menuItems = allMenuItems.filter(item => {
-        if ((item.path === '/documentacion/mis-proyectos' || item.path === '/investigacion/mis-proyectos') && isSupervisor) return false;
+        if (item.path === '/documentacion/mis-proyectos' && isSupervisor) return false;
 
         if (isAdmin) return true;
         if (item.permission) {

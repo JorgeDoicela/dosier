@@ -100,15 +100,15 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 }) => {
     const renderMenuItem = (item: MenuItem) => {
         const isActive = item === activeItem;
-        const isDocumentacion = item.name === 'Documentación' || item.name === 'Investigación' || item.name === 'Mis Instrumentos PEA' || item.path.startsWith('/documentacion');
+        const isDocumentacion = item.name === 'Documentación' || item.name === 'Mis Instrumentos PEA' || item.path.startsWith('/documentacion');
 
         if (isDocumentacion) {
-            const isMenuOpen = (item.path === '/documentacion' || item.path === '/investigacion') ? isInvestigacionOpen : isMisProyectosOpen;
+            const isMenuOpen = item.path === '/documentacion' ? isInvestigacionOpen : isMisProyectosOpen;
 
             const toggleOpen = (e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (item.path === '/documentacion' || item.path === '/investigacion') {
+                if (item.path === '/documentacion') {
                     setIsInvestigacionOpen(!isInvestigacionOpen);
                 } else {
                     setIsMisProyectosOpen(!isMisProyectosOpen);
@@ -133,7 +133,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             to={targetBasePath}
                             onClick={(e) => {
                                 if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                                    if (item.path === '/documentacion' || item.path === '/investigacion') {
+                                    if (item.path === '/documentacion') {
                                         setIsInvestigacionOpen(true);
                                     } else {
                                         setIsMisProyectosOpen(true);

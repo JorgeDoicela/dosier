@@ -94,14 +94,15 @@ Conecta con `/api/lopdp`:
 * `getConsentimientos()`: Auditoría y trazabilidad histórica de consentimientos para administradores.
 
 ### 2.11. `monitoreoService.ts`: Monitoreo y Avance Curricular
-Conecta con `/api/projects`:
-* `getProjectDetail(projectUuid)`: Resuelve el estado técnico, docente responsable y trazabilidad para la vista satélite de monitoreo.
+Conecta con `/api/pea`:
+* `getProjectDetail(projectUuid)`: Resuelve el estado técnico, docente elaborador, carga de horas CD/APE/TA, unidades temáticas y estado de firmas institucionales CACES para la vista satélite de monitoreo curricular.
+* `ping(options)`: Verificación de estado del servidor en `/health`.
 
 ### 2.12. `analyticsService.ts`: Indicadores y Reportes CACES
-Conecta con `/api/projects` y `/api/catalogs`:
-* `getProjects()`: Datos de proyectos para agregación analítica reactiva.
-* `getStats()`: Totales, estados y presupuestos consolidados.
-* `getCarreras()`: Catálogo de carreras para segmentación curricular.
+Conecta con `/api/pea` y `/api/catalogs`:
+* `getProjects()`: Datos agregados de PEAs para análisis curricular.
+* `getStats()`: Totales, estados y cumplimiento de horas consolidados.
+* `getCarreras()`: Catálogo de carreras institucionales para segmentación curricular.
 
 ### 2.13. `usersService.ts`: Administración de Usuarios y Roles Institucionales
 Conecta con `/api/Admin`:
@@ -151,20 +152,15 @@ Conecta con `/api/documents/instances`:
 * `getInstancePdf(instanceUuid)`: Descarga del PDF firmado o consolidado del documento.
 * `getStorageFile(cleanPath)`: Descarga de adjuntos binarios desde el almacenamiento institucional.
 
-### 2.19. `curriculumProjectService.ts`: Gestión de Proyectos Curriculares y Workspace
-Conecta con `/api/projects` y `/api/pea`:
-* `getProjectDetail(uuid, isPeaTemplate)`: Consulta detallada del PEA o proyecto curricular.
-* `getAllProjects()`: Nómina global de proyectos curriculares (vista administrativa).
-* `getMyProjects()`: Nómina de proyectos asociados al usuario autenticado.
-* `deleteProject(uuid)`: Envío de proyecto a la papelera curricular.
+### 2.19. `curriculumProjectService.ts`: Gestión de Instrumentos Curriculares y Workspace
+Conecta con `/api/pea`, `/api/docente-asignaturas` y `/documents/instances`:
+* `getProjectDetail(uuid, isPeaTemplate)`: Consulta detallada del PEA oficial o instrumento curricular.
+* `getAllProjects()`: Bandeja institucional de PEAs (vista para coordinadores y vicerrectorado).
+* `getMyProjects()`: Nómina de asignaturas y PEAs asignados al docente autenticado.
+* `deleteProject(uuid)`: Envío de instrumento a la papelera curricular.
 * `generatePdf(projectData, isDraft)`: Generación de PDF de borrador o consolidado.
-* `getConvocatorias()`: Nómina oficial de convocatorias curriculares e institucionales.
-* `searchGroups(queryClean, options)`: Búsqueda reactiva de grupos de investigación y cuerpos colegiados.
+* `getConvocatorias()`: Nómina de períodos académicos institucionales.
 * `getActivity(uuid, params)`: Bitácora de actividad curricular en el workspace.
-* `getTeamChangeRequests(uuid)` / `createTeamChangeRequest(uuid, payload)` / `reviewTeamChangeRequest(uuid, reqUuid, payload)`: Solicitudes y resoluciones de cambio de integrantes de equipo.
-* `transferDirector(uuid, payload)`: Reasignación de dirección institucional de proyecto.
-* `updateTeam(uuid, payload)`: Actualización de integrantes de equipo.
-* `iniciarEjecucion(uuid)`: Habilitación de la fase de ejecución.
 * `getTraceability(uuid)`: Historial de cambios de estado curricular.
 * `transitionState(uuid, newState, observation)`: Transición formal entre etapas con registro de observaciones.
 * `getDocenteCarreras()`: Catálogo de carreras asignadas al docente autenticado.

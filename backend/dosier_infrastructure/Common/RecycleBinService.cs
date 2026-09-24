@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using dosier_application.Common.Interfaces;
 using dosier_infrastructure.data.models;
 using dosier_domain.Curriculum.Entities;
+using Dosier.Domain.Common.Documents;
 
 namespace dosier_infrastructure.Common
 {
@@ -50,42 +51,29 @@ namespace dosier_infrastructure.Common
 
             result.AddRange(peas);
 
-            // 2. Proyectos históricos archivados si existieran
-            var projectsQuery = _context.DocProyectos
-                .IgnoreQueryFilters()
+            // 2. Documentos curriculares complementarios archivados
+            var docsQuery = _context.DocumentInstances
                 .AsNoTracking()
-                .Where(p => p.Eliminado == true);
+                .Where(d => d.State == DocumentState.Archived);
 
             if (!isAdmin)
             {
-                projectsQuery = projectsQuery.Where(p => p.EliminadoPorUsuarioId == user.IdUsuario);
+                docsQuery = docsQuery.Where(d => d.CreatedBy == user.IdSigafi);
             }
 
-            var rawProjects = await projectsQuery
-                .Select(p => new
+            var docs = await docsQuery
+                .Select(d => new DeletedItemDto
                 {
-                    p.Uuid,
-                    p.Titulo,
-                    RawCodigoInstitucional = p.CodigoInstitucional,
-                    p.Estado,
-                    p.FechaEliminacion,
-                    EliminadoPor = p.EliminadoPorUsuarioId != null
-                        ? _context.Users.Where(u => u.IdUsuario == p.EliminadoPorUsuarioId).Select(u => u.Nombre).FirstOrDefault()
-                        : "Desconocido"
+                    Uuid = d.Uuid,
+                    Titulo = d.Title ?? $"Documento {d.TemplateCode}",
+                    CodigoInstitucional = d.TemplateCode,
+                    Estado = d.State.ToString(),
+                    FechaEliminacion = d.UpdatedAt,
+                    EliminadoPor = d.CreatedBy
                 })
                 .ToListAsync();
 
-            var projects = rawProjects.Select(p => new DeletedItemDto
-            {
-                Uuid = p.Uuid,
-                Titulo = p.Titulo,
-                CodigoInstitucional = CleanDeletedSuffix(p.RawCodigoInstitucional),
-                Estado = p.Estado,
-                FechaEliminacion = p.FechaEliminacion,
-                EliminadoPor = p.EliminadoPor ?? "Desconocido"
-            }).ToList();
-
-            result.AddRange(projects);
+            result.AddRange(docs);
 
             return result;
         }
@@ -100,11 +88,10 @@ namespace dosier_infrastructure.Common
                 return true;
             }
 
-            var proy = await _context.DocProyectos.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Uuid == uuid);
-            if (proy != null)
+            var doc = await _context.DocumentInstances.FirstOrDefaultAsync(d => d.Uuid == uuid);
+            if (doc != null && doc.State == DocumentState.Archived)
             {
-                proy.Eliminado = false;
-                proy.FechaEliminacion = null;
+                doc.TransitionTo(DocumentState.Draft);
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -122,22 +109,15 @@ namespace dosier_infrastructure.Common
                 return true;
             }
 
-            var proy = await _context.DocProyectos.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Uuid == uuid);
-            if (proy != null)
+            var doc = await _context.DocumentInstances.FirstOrDefaultAsync(d => d.Uuid == uuid);
+            if (doc != null)
             {
-                _context.DocProyectos.Remove(proy);
+                _context.DocumentInstances.Remove(doc);
                 await _context.SaveChangesAsync();
                 return true;
             }
 
             return false;
-        }
-
-        private static string CleanDeletedSuffix(string? code)
-        {
-            if (string.IsNullOrWhiteSpace(code)) return "";
-            var idx = code.IndexOf("_del_", StringComparison.Ordinal);
-            return idx > 0 ? code.Substring(0, idx) : code;
         }
     }
 }

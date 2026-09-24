@@ -17,16 +17,13 @@ import DocumentEditor from './Wizard/DocumentEditor';
 
 // Hooks de Orquestación
 import { useProjectCore } from './hooks/useProjectCore';
-import { useProjectTeam } from './hooks/useProjectTeam';
 import { useProjectPreferences } from './hooks/useProjectPreferences';
 
 // Subcomponentes Desacoplados
 import WorkspaceHeader from './components/WorkspaceHeader';
 import WorkspaceTitle from './components/WorkspaceTitle';
 import CacesWorkflow from './components/CacesWorkflow';
-import TeamManagement from './components/TeamManagement';
 import WorkspaceSidebar from './components/WorkspaceSidebar';
-import DirectorTransferModal from './components/DirectorTransferModal';
 
 export const DocumentWorkspace: React.FC = () => {
     const core = useProjectCore();
@@ -50,13 +47,6 @@ export const DocumentWorkspace: React.FC = () => {
         fetchProject,
         resolveDocumentInstance
     } = core;
-
-    const team = useProjectTeam(
-        currentProject,
-        setCurrentProject,
-        resolvedProjectUuid,
-        isLoading
-    );
 
     const { touchProject } = useProjectPreferences();
 
@@ -253,7 +243,7 @@ export const DocumentWorkspace: React.FC = () => {
             if (window.history.state && window.history.state.idx > 0) {
                 navigate(-1);
             } else {
-                navigate(urlPrefix ? `${urlPrefix}/proyectos?tab=supervision-pea` : '/investigacion/proyectos?tab=supervision-pea');
+                navigate(urlPrefix ? `${urlPrefix}/proyectos?tab=supervision-pea` : '/documentacion/proyectos?tab=supervision-pea');
             }
             return;
         }
@@ -327,39 +317,6 @@ export const DocumentWorkspace: React.FC = () => {
                                 resolveDocumentInstance={resolveDocumentInstance}
                                 navigate={navigate}
                             />
-
-                            <TeamManagement
-                                currentProject={currentProject}
-                                investigadores={team.investigadores}
-                                isSavingTeam={team.isSavingTeam}
-                                teamMessage={team.teamMessage}
-                                teamChangeRequests={team.teamChangeRequests}
-                                isLoadingTeamChangeRequests={team.isLoadingTeamChangeRequests}
-                                isSubmittingTeamChangeRequest={team.isSubmittingTeamChangeRequest}
-                                teamChangeForm={team.teamChangeForm}
-                                setTeamChangeForm={team.setTeamChangeForm}
-                                availableProfessors={team.availableProfessors}
-                                setAvailableProfessors={team.setAvailableProfessors}
-                                availableStudents={team.availableStudents}
-                                setAvailableStudents={team.setAvailableStudents}
-                                requestSearchQuery={team.requestSearchQuery}
-                                setRequestSearchQuery={team.setRequestSearchQuery}
-                                requestSearchResults={team.requestSearchResults}
-                                isRequestSearching={team.isRequestSearching}
-                                showRequestSearchResults={team.showRequestSearchResults}
-                                setShowRequestSearchResults={team.setShowRequestSearchResults}
-                                canReviewTeamChanges={team.canReviewTeamChanges}
-                                isHistoryExpanded={team.isHistoryExpanded}
-                                setIsHistoryExpanded={team.setIsHistoryExpanded}
-                                isChangeRequestsExpanded={team.isChangeRequestsExpanded}
-                                setIsChangeRequestsExpanded={team.setIsChangeRequestsExpanded}
-                                onSaveTeam={team.handleSaveTeam}
-                                onCreateTeamChangeRequest={team.handleCreateTeamChangeRequest}
-                                onReviewTeamChangeRequest={team.handleReviewTeamChangeRequest}
-                                onOpenTransferModal={team.handleOpenTransferModal}
-                                onUpdateMember={team.handleUpdateMember}
-                                onRemoveMember={team.handleRemoveMember}
-                            />
                         </div>
 
                         <div className="lg:sticky lg:top-0 flex flex-col gap-3">
@@ -374,27 +331,6 @@ export const DocumentWorkspace: React.FC = () => {
                     </div>
                 </main>
             </div>
-
-            <DirectorTransferModal
-                isOpen={team.showTransferModal}
-                onClose={() => team.setShowTransferModal(false)}
-                onSubmit={team.handleConfirmTransfer}
-                transferDirector={team.transferDirector}
-                transferSearchQuery={team.transferSearchQuery}
-                setTransferSearchQuery={team.setTransferSearchQuery}
-                showTransferSearchResults={team.showTransferSearchResults}
-                setShowTransferSearchResults={team.setShowTransferSearchResults}
-                transferSearchResults={team.transferSearchResults}
-                isTransferSearching={team.isTransferSearching}
-                newDirectorCedula={team.newDirectorCedula}
-                setNewDirectorCedula={team.setNewDirectorCedula}
-                transferMotivo={team.transferMotivo}
-                setTransferMotivo={team.setTransferMotivo}
-                transferDescripcion={team.transferDescripcion}
-                setTransferDescripcion={team.setTransferDescripcion}
-                isTransferring={team.isTransferring}
-                investigadores={team.investigadores}
-            />
         </div>
     );
 };

@@ -153,9 +153,11 @@ describe('Sprint 3 Service Layer Tests', () => {
             });
         });
 
-        it('iniciarEjecucion debe resolver exitosamente', async () => {
-            const res = await curriculumProjectService.iniciarEjecucion('proj-1');
-            expect(res.success).toBe(true);
+        it('getTraceability debe consultar /pea/:uuid/trazabilidad', async () => {
+            (api.get as any).mockResolvedValueOnce({ data: [{ fase: 'Elaboracion', estado: 'Borrador' }] });
+            const res = await curriculumProjectService.getTraceability('proj-1');
+            expect(api.get).toHaveBeenCalledWith('/pea/proj-1/trazabilidad');
+            expect(res).toHaveLength(1);
         });
     });
 });

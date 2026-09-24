@@ -261,9 +261,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         setError(null);
 
         try {
-            const templateCode = 'PEA_OFICIAL';
+            const templateCode = 'GUIA_PRACTICA_LAB';
 
-            setCreationStepMsg("Creando el expediente digital curricular...");
+            setCreationStepMsg("Creando el instrumento curricular...");
 
             const response = await documentInstanceService.createInstance({
                 templateCode,
@@ -273,48 +273,42 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
             const newUuid = response?.uuid || response?.data?.uuid;
             if (!newUuid) {
-                throw new Error("No se recibió el identificador único del proyecto.");
+                throw new Error("No se recibió el identificador único del instrumento.");
             }
 
-            setCreationStepMsg("Estructurando secciones del instrumento...");
+            setCreationStepMsg("Estructurando secciones del instrumento docente...");
 
             const initialMetadata = {
-                ...DocumentTemplateRegistry.PEA_OFICIAL.schema,
+                ...DocumentTemplateRegistry.GUIA_PRACTICA_LAB.schema,
                 Uuid: newUuid,
                 Titulo: titulo.trim().toUpperCase(),
+                TituloPractica: titulo.trim().toUpperCase(),
                 IdCarrera: idCarrera,
-                DirectorProyecto: user?.nombre_completo || '',
-                DescripcionProyecto: descripcion.trim(),
-                CostoTotal: 0,
-                costoTotal: 0,
-                costo_total: 0,
-                PresupuestoEstimado: 0,
-                presupuestoEstimado: 0,
-                presupuesto_estimado: 0,
-                Estado: 'Prepropuesta'
+                Docente: user?.nombre_completo || '',
+                Estado: 'Borrador'
             };
 
             await documentInstanceService.updateMetadata(newUuid, initialMetadata);
 
-            setCreationStepMsg("Enviando instrumento a revisión curricular...");
+            setCreationStepMsg("Finalizando inicialización del borrador...");
 
             clearDraft();
 
             addToast(
-                "Instrumento Curricular Registrado",
-                "El instrumento curricular ha sido registrado y enviado para revisión curricular.",
+                "Instrumento Docente Registrado",
+                "El instrumento curricular auxiliar ha sido inicializado en estado borrador.",
                 "success"
             );
 
             setTimeout(() => {
                 window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                navigate('/documentacion/mis-proyectos', { replace: true });
+                navigate(`/documentacion/workspace/guia-practica-lab/${newUuid}?edit=guia-practica-lab`, { replace: true });
                 onClose();
             }, 800);
 
         } catch (err: any) {
-            console.error("[DOSIER] Error creating proposal:", err);
-            setError(err.response?.data?.message || "Ocurrió un error inesperado al registrar el instrumento.");
+            console.error("[DOSIER] Error creating instrument:", err);
+            setError(err.response?.data?.message || "Ocurrió un error inesperado al registrar el instrumento docente.");
             setIsCreating(false);
         }
     };

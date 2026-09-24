@@ -24,20 +24,6 @@ export interface ProjectDetailDto {
     [key: string]: any;
 }
 
-export interface TeamChangeRequestDto {
-    uuid: string;
-    project_uuid: string;
-    tipo_solicitud: string;
-    usuario_afectado_id?: string;
-    usuario_afectado_nombre?: string;
-    rol_propuesto?: string;
-    justificacion?: string;
-    estado: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | string;
-    created_at?: string;
-    reviewed_at?: string;
-    review_notes?: string;
-    [key: string]: any;
-}
 
 export interface ProjectActivityLogDto {
     id?: number;
@@ -119,46 +105,6 @@ export const curriculumProjectService = {
      */
     getActivity: (projectUuid: string, _params?: { page?: number; limit?: number }): Promise<any> =>
         api.get(`/documents/instances/${encodeURIComponent(projectUuid)}`).then(r => r.data).catch(() => ({ items: [] })),
-
-    /**
-     * Obtiene la nómina de solicitudes de cambio de equipo de un proyecto.
-     */
-    getTeamChangeRequests: (_projectUuid: string): Promise<TeamChangeRequestDto[]> =>
-        Promise.resolve([]),
-
-    /**
-     * Crea una solicitud formal de modificación de integrantes del equipo.
-     */
-    createTeamChangeRequest: (_projectUuid: string, _payload: any): Promise<any> =>
-        Promise.resolve({ success: true }),
-
-    /**
-     * Revisa (aprueba o rechaza) una solicitud de cambio de equipo.
-     */
-    reviewTeamChangeRequest: (
-        _projectUuid: string,
-        _requestUuid: string,
-        _payload: any
-    ): Promise<any> =>
-        Promise.resolve({ success: true }),
-
-    /**
-     * Transfiere la dirección del proyecto a otro docente calificado.
-     */
-    transferDirector: (_projectUuid: string, _payloadOrCedula: string | { nuevo_director_cedula: string; motivo?: string; descripcion?: string; new_director_id?: string }): Promise<any> =>
-        Promise.resolve({ success: true }),
-
-    /**
-     * Actualiza directamente los integrantes del equipo de trabajo.
-     */
-    updateTeam: (_projectUuid: string, _payload: any): Promise<any> =>
-        Promise.resolve({ success: true }),
-
-    /**
-     * Inicia la fase de ejecución oficial del proyecto.
-     */
-    iniciarEjecucion: (_projectUuid: string): Promise<any> =>
-        Promise.resolve({ success: true }),
 
     /**
      * Obtiene el historial de trazabilidad de cambios de estado del PEA o documento.
@@ -252,12 +198,6 @@ export const curriculumProjectService = {
      */
     getConvocatorias: (): Promise<any[]> =>
         api.get<any[]>('/docente-asignaturas/periodos').then(r => r.data || []),
-
-    /**
-     * Busca grupos curriculares o comités por término.
-     */
-    searchGroups: (_queryClean: string, _options?: { signal?: AbortSignal }): Promise<any[]> =>
-        Promise.resolve([]),
 };
 
 export default curriculumProjectService;

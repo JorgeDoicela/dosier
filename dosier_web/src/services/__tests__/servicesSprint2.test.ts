@@ -97,10 +97,10 @@ describe('Sprint 2 Service Layer Tests', () => {
     });
 
     describe('monitoreoService', () => {
-        it('getProjectDetail debe consultar /projects/:uuid/detail', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: { uuid: 'proj-abc', titulo: 'PEA Monitoreo' } });
+        it('getProjectDetail debe consultar /pea/uuid/:uuid', async () => {
+            (api.get as any).mockResolvedValueOnce({ data: { uuid: 'proj-abc', nombre_asignatura: 'PEA Monitoreo', estado: 'Borrador' } });
             const res = await monitoreoService.getProjectDetail('proj-abc');
-            expect(api.get).toHaveBeenCalledWith('/projects/proj-abc/detail');
+            expect(api.get).toHaveBeenCalledWith('/pea/uuid/proj-abc');
             expect(res.titulo).toBe('PEA Monitoreo');
         });
     });

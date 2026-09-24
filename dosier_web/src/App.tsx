@@ -140,18 +140,6 @@ export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNod
     return <Navigate to="/dashboard" replace />;
 };
 
-const ResearcherRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated, isLoading } = useAuth();
-
-    if (isLoading) {
-        return <PageLoader />;
-    }
-
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
-
-    return <>{children}</>;
-};
-
 const NavigateToProjectDetail = () => {
     const { projectUuid } = useParams();
     const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
@@ -168,7 +156,7 @@ const NavigateToWorkspaceDetail = () => {
     return <Navigate to={buildWorkspacePath('PEA_OFICIAL', projectUuid!, '', prefix)} replace />;
 };
 
-const NavigateToResearchProjects = () => {
+const NavigateToCurriculumProjects = () => {
     const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
     const target = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
@@ -265,9 +253,7 @@ function App() {
                              <Route path="/admin/lopdp" element={<Navigate to="/lopdp" replace />} />
                              <Route path="/admin/emails" element={<Navigate to="/emails" replace />} />
                              <Route path="/proyectos/:projectUuid" element={<NavigateToProjectDetail />} />
-                            <Route path="/documentacion/proyectos" element={<NavigateToResearchProjects />} />
-                            <Route path="/investigacion/proyectos" element={<RedirectPreserveSearch to="/documentacion" />} />
-                            <Route path="/investigacion/proyectos/workspace/:projectUuid" element={<NavigateToWorkspaceDetail />} />
+                            <Route path="/documentacion/proyectos" element={<NavigateToCurriculumProjects />} />
                             <Route path="/lopdp/arco" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/lopdp/admin" element={<Navigate to="/lopdp" replace />} />
                             
@@ -276,18 +262,11 @@ function App() {
                             <Route path="/documentacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
                             <Route path="/documentacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoreoCurricularPage /></RoleRoute>} />
                             <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionCurricularPage />} />
-
-                            {/* Retrocompatibilidad /investigacion */}
-                            <Route path="/investigacion" element={<RedirectPreserveSearch to="/documentacion" />} />
-                            <Route path="/investigacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
-                            <Route path="/investigacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoreoCurricularPage /></RoleRoute>} />
-                            <Route path="/investigacion/revision-tecnica/:projectUuid" element={<RevisionCurricularPage />} />
                             
                             {/* Author / Docente Context */}
-                            <Route path="/documentacion/mis-proyectos" element={<ResearcherRoute><MisAsignaturasPage /></ResearcherRoute>} />
+                            <Route path="/documentacion/mis-proyectos" element={<ProtectedRoute><MisAsignaturasPage /></ProtectedRoute>} />
                             <Route path="/documentacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
-                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ResearcherRoute><MonitoreoCurricularPage /></ResearcherRoute>} />
-                            <Route path="/investigacion/mis-proyectos" element={<RedirectPreserveSearch to="/documentacion/mis-proyectos" />} />
+                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ProtectedRoute><MonitoreoCurricularPage /></ProtectedRoute>} />
                             
                             <Route path="/verificacion" element={<VerifyDocument />} />
                             <Route path="/verificar-firma" element={<RedirectPreserveSearch to="/verificacion" />} />

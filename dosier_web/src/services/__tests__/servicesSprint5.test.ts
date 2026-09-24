@@ -138,11 +138,6 @@ describe('Sprint 5 Service Layer Tests', () => {
             expect(api.get).toHaveBeenCalledWith('/docente-asignaturas/periodos');
             expect(list).toHaveLength(1);
         });
-
-        it('searchGroups debe resolver lista', async () => {
-            const list = await curriculumProjectService.searchGroups('IA');
-            expect(Array.isArray(list)).toBe(true);
-        });
     });
 
     describe('documentInstanceService - extensions', () => {
@@ -190,11 +185,11 @@ describe('Sprint 5 Service Layer Tests', () => {
     });
 
     describe('monitoreoService - ping', () => {
-        it('ping debe consultar /ping con opciones', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: { status: 'pong' } });
+        it('ping debe consultar /health con opciones', async () => {
+            (api.get as any).mockResolvedValueOnce({ data: { status: 'healthy' } });
             const res = await monitoreoService.ping({ timeout: 3500 });
-            expect(api.get).toHaveBeenCalledWith('/ping', { timeout: 3500 });
-            expect(res.status).toBe('pong');
+            expect(api.get).toHaveBeenCalledWith('/health', { timeout: 3500 });
+            expect(res.status).toBe('healthy');
         });
     });
 

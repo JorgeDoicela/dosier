@@ -156,10 +156,10 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
 
         if (existingFirmas.Any())
         {
-            var project = await _context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == instancia.EntityUuid);
-            var stateLower = project?.Estado?.ToLower().Trim() ?? "";
-            var isFinalLockedState = stateLower == "enviado" || stateLower == "aprobado" || stateLower == "en ejecución" || stateLower == "en ejecucion" || stateLower == "finalizado";
-            var isCorrectionMode = !isFinalLockedState || stateLower.Contains("devuelt") || stateLower.Contains("correc") || stateLower.Contains("observac") || stateLower.Contains("edici");
+            var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.Uuid == instancia.EntityUuid);
+            var stateLower = (pea?.Estado ?? instancia.State.ToString()).ToLower().Trim();
+            var isFinalLockedState = stateLower == "aprobado" || stateLower == "revisadoacad" || stateLower == "finalizado" || stateLower == "signed";
+            var isCorrectionMode = !isFinalLockedState || stateLower.Contains("observ") || stateLower == "borrador";
 
             if (isCorrectionMode)
             {
