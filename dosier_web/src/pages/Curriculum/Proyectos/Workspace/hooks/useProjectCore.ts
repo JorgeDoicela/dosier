@@ -87,8 +87,6 @@ export function useProjectCore() {
     const [isNotFound, setIsNotFound] = useState(false);
     const [iniciandoEjecucion, setIniciandoEjecucion] = useState(false);
 
-    const isPreproposalState = currentProject?.status === 'Prepropuesta' || currentProject?.status === 'Prepropuesta Rechazada';
-
     const setActiveDocument = useCallback((doc: string | null) => {
         const searchParams = new URLSearchParams(location.search);
         if (doc) {
@@ -353,7 +351,6 @@ export function useProjectCore() {
         isUnauthorized,
         isNotFound,
         iniciandoEjecucion,
-        isPreproposalState,
         fetchProject,
         resolveDocumentInstance,
         handleIniciarEjecucion

@@ -5,7 +5,6 @@ import { UsersHeader } from './components/UsersPage/UsersHeader';
 import { DraftBanners } from './components/UsersPage/DraftBanners';
 import { UsersTable } from './components/UsersPage/UsersTable';
 import { UserDetailPanel } from './components/UsersPage/UserDetailPanel';
-import { ExternalEvaluatorModal } from './components/UsersPage/ExternalEvaluatorModal';
 import { ConfirmDialogModal } from './components/UsersPage/ConfirmDialogModal';
 
 const UsersPage = () => {
@@ -38,31 +37,19 @@ const UsersPage = () => {
         setDetailUser,
         lastActiveUserId,
         setLastActiveUserId,
-        showExternalForm,
-        setShowExternalForm,
         error,
         setError,
         pendingUserDraft,
         setPendingUserDraft,
-        isExternalDraftRestored,
-        setIsExternalDraftRestored,
-        pendingExternalDraft,
-        setPendingExternalDraft,
         confirmDialog,
         setConfirmDialog,
-        externalForm,
-        setExternalForm,
         searchInputRef,
         isOverlayMouseDownRef,
         fetchUsers,
         handleCloseDetail,
         handleRestoreUserDraft,
         handleDiscardUserDraft,
-        handleRestoreExternalDraft,
-        handleDiscardExternalDraft,
-        handleCloseExternalModal,
-        handleRoleToggle,
-        handleRegisterExternal
+        handleRoleToggle
     } = useUsersPage();
 
     const openedAtRef = React.useRef<number>(0);
@@ -94,16 +81,12 @@ const UsersPage = () => {
                     loading={loading}
                     searchInputRef={searchInputRef}
                     setError={setError}
-                    setShowExternalForm={setShowExternalForm}
                 />
 
                 <DraftBanners
                     pendingUserDraft={pendingUserDraft}
                     handleRestoreUserDraft={handleRestoreUserDraft}
                     handleDiscardUserDraft={handleDiscardUserDraft}
-                    pendingExternalDraft={pendingExternalDraft}
-                    handleRestoreExternalDraft={handleRestoreExternalDraft}
-                    handleDiscardExternalDraft={handleDiscardExternalDraft}
                 />
 
                 <UsersTable
@@ -127,18 +110,6 @@ const UsersPage = () => {
                     openedAtRef={openedAtRef}
                 />
             </div>
-
-            <ExternalEvaluatorModal
-                showExternalForm={showExternalForm}
-                handleCloseExternalModal={handleCloseExternalModal}
-                error={error}
-                isExternalDraftRestored={isExternalDraftRestored}
-                externalForm={externalForm}
-                setExternalForm={setExternalForm}
-                setIsExternalDraftRestored={setIsExternalDraftRestored}
-                setPendingExternalDraft={setPendingExternalDraft}
-                handleRegisterExternal={handleRegisterExternal}
-            />
 
             {selectedUser && (
                 <UserProfileModal

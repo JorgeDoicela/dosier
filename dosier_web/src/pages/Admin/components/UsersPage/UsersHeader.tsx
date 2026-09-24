@@ -19,7 +19,6 @@ interface UsersHeaderProps {
     loading: boolean;
     searchInputRef: React.RefObject<HTMLInputElement | null>;
     setError: (error: string) => void;
-    setShowExternalForm: (show: boolean) => void;
 }
 
 export const UsersHeader: React.FC<UsersHeaderProps> = ({
@@ -38,27 +37,17 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
     setSearch,
     loading,
     searchInputRef,
-    setError,
-    setShowExternalForm
+    setError
 }) => {
     return (
         <PageHeader
             kicker="Administración Central"
             title="Gestión de Personal y Usuarios"
-            description="Control de acceso, roles institucionales y evaluadores externos."
+            description="Control de acceso, roles curriculares y claustro docente del ISTPET."
         >
 
             <div className="w-full lg:w-auto flex flex-col gap-3">
                 <div className="flex flex-col md:flex-row items-center gap-3">
-                    {userType === 'EXTERNO' && (
-                        <button
-                            onClick={() => { setError(''); setShowExternalForm(true); }}
-                            className="btn-brand w-full md:w-auto flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                            <UserPlus size={14} /> Nuevo Externo
-                        </button>
-                    )}
-
                     {/* Tabs de Tipos Principales */}
                     <div className="bg-surface border border-border-thin p-1 rounded-lg flex overflow-x-auto custom-scrollbar w-full md:w-auto">
                         <button
@@ -72,12 +61,6 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
                             className={`flex-1 whitespace-nowrap px-3.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${userType === 'ADMINISTRATIVO' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
                         >
                             Administrativos
-                        </button>
-                        <button
-                            onClick={() => setUserType('EXTERNO')}
-                            className={`flex-1 whitespace-nowrap px-3.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${userType === 'EXTERNO' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
-                        >
-                            Externos
                         </button>
                     </div>
 

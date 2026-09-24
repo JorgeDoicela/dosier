@@ -1,5 +1,7 @@
 import React from 'react';
-import ResearchProjectsPage from './Proyectos/ResearchProjectsPage';
+import { BookOpen } from 'lucide-react';
+import { PageHeader } from '../../components/Common/PageHeader';
+import { PeaSupervisionTray } from './Proyectos/components/PeaSupervisionTray';
 
 /**
  * ══════════════════════════════════════════════════════════════════════════════
@@ -9,7 +11,17 @@ import ResearchProjectsPage from './Proyectos/ResearchProjectsPage';
  * Coordinación de Carrera, Coordinación Académica, Vicerrectorado y Calidad/Admin.
  */
 export const SupervisionCurricularPage: React.FC = () => {
-    return <ResearchProjectsPage />;
+    return (
+        <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-8">
+            <PageHeader
+                kicker="Gobernanza Curricular Institucional"
+                icon={BookOpen}
+                title="Supervisión de Programas de Estudio (PEA)"
+                description="Supervise los instrumentos curriculares PEA oficiales del ISTPET, valide la carga horaria pedagógica y audite el circuito colegiado de firmas."
+            />
+            <PeaSupervisionTray />
+        </main>
+    );
 };
 
 export default SupervisionCurricularPage;

@@ -185,7 +185,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                 <>
                                     <div className="flex flex-col gap-0.5 max-h-[340px] overflow-y-auto custom-scrollbar pr-1">
                                         {shownProjects.map((p) => {
-                                            const tCode = (p.template_code || p.templateCode || 'PROTOCOLO_INVESTIGACION').toLowerCase().replace(/_/g, '-');
+                                            const tCode = (p.template_code || p.templateCode || 'PEA_OFICIAL').toLowerCase().replace(/_/g, '-');
                                             const basePath = item.path.includes('/mis-proyectos') ? '/documentacion/mis-proyectos/workspace' : '/documentacion/workspace';
                                             const projectPath = `${basePath}/${tCode}/${p.uuid}`;
 

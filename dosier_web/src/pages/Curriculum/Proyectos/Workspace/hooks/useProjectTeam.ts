@@ -18,8 +18,7 @@ export function useProjectTeam(
     currentProject: any,
     setCurrentProject: React.Dispatch<React.SetStateAction<any>>,
     resolvedProjectUuid: string | null,
-    isLoadingProject: boolean,
-    _isPreproposalState: boolean
+    isLoadingProject: boolean
 ) {
     const { user, isAdmin, roles } = useAuth();
     const { addToast } = useNotifications();
@@ -334,7 +333,7 @@ export function useProjectTeam(
     const populateTeamFromProject = useCallback((data: any) => {
         if (!data) return;
         setInvestigadores((data.investigadores || []).map(mapInvestigador));
-        if (data.estado !== 'Prepropuesta' && data.estado !== 'Prepropuesta Rechazada') {
+        if (data.uuid) {
             fetchTeamChangeRequests(data.uuid);
         }
     }, [fetchTeamChangeRequests]);

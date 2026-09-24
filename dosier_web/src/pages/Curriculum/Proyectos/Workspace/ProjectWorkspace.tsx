@@ -18,7 +18,6 @@ import DocumentEditor from '../Wizard/DocumentEditor';
 // Hooks de Orquestación
 import { useProjectCore } from './hooks/useProjectCore';
 import { useProjectTeam } from './hooks/useProjectTeam';
-import { usePreproposalState } from './hooks/usePreproposalState';
 import { useProjectPreferences } from '../hooks/useProjectPreferences';
 
 // Subcomponentes Desacoplados
@@ -28,8 +27,6 @@ import CacesWorkflow from './components/CacesWorkflow';
 import TeamManagement from './components/TeamManagement';
 import WorkspaceSidebar from './components/WorkspaceSidebar';
 import DirectorTransferModal from './components/DirectorTransferModal';
-import { PreproposalAdminView } from './components/PreproposalAdminView';
-import { PreproposalAuthorView } from './components/PreproposalAuthorView';
 
 export const ProjectWorkspace: React.FC = () => {
     const core = useProjectCore();
@@ -50,7 +47,6 @@ export const ProjectWorkspace: React.FC = () => {
         subDocumentUuids,
         isUnauthorized,
         isNotFound,
-        isPreproposalState,
         fetchProject,
         resolveDocumentInstance
     } = core;
@@ -59,14 +55,7 @@ export const ProjectWorkspace: React.FC = () => {
         currentProject,
         setCurrentProject,
         resolvedProjectUuid,
-        isLoading,
-        isPreproposalState
-    );
-
-    const preproposal = usePreproposalState(
-        currentProject,
-        resolvedProjectUuid,
-        fetchProject
+        isLoading
     );
 
     const { touchProject } = useProjectPreferences();
@@ -307,50 +296,6 @@ export const ProjectWorkspace: React.FC = () => {
                 readOnlyReason={readOnlyReason}
                 projectStatus={currentProject.status}
                 canSign={canSignDocument}
-            />
-        );
-    }
-
-    if (isPreproposalState) {
-        if (isAdmin) {
-            return (
-                <PreproposalAdminView
-                    currentProject={currentProject}
-                    isSidebarCollapsed={isSidebarCollapsed}
-                    urlPrefix={urlPrefix}
-                    feedbackMode={preproposal.feedbackMode}
-                    setFeedbackMode={preproposal.setFeedbackMode}
-                    activeSectionTab={preproposal.activeSectionTab}
-                    setActiveSectionTab={preproposal.setActiveSectionTab}
-                    adminObservation={preproposal.adminObservation}
-                    setAdminObservation={preproposal.setAdminObservation}
-                    sectionObservations={preproposal.sectionObservations}
-                    setSectionObservations={preproposal.setSectionObservations}
-                    isSubmittingAdminReview={preproposal.isSubmittingAdminReview}
-                    handleAdminAprobarPrepropuesta={preproposal.handleAdminAprobarPrepropuesta}
-                    handleAdminDevolverPrepropuesta={preproposal.handleAdminDevolverPrepropuesta}
-                    trazabilidad={preproposal.trazabilidad}
-                    isLoadingTrazabilidad={preproposal.isLoadingTrazabilidad}
-                />
-            );
-        }
-
-        return (
-            <PreproposalAuthorView
-                currentProject={currentProject}
-                isSidebarCollapsed={isSidebarCollapsed}
-                urlPrefix={urlPrefix}
-                editTitulo={preproposal.editTitulo}
-                setEditTitulo={preproposal.setEditTitulo}
-                editDescripcion={preproposal.editDescripcion}
-                setEditDescripcion={preproposal.setEditDescripcion}
-                docenteCarreras={preproposal.docenteCarreras}
-                editIdCarrera={preproposal.editIdCarrera}
-                setEditIdCarrera={preproposal.setEditIdCarrera}
-                isSavingPreproposal={preproposal.isSavingPreproposal}
-                handleGuardarYReenviar={preproposal.handleGuardarYReenviar}
-                trazabilidad={preproposal.trazabilidad}
-                isLoadingTrazabilidad={preproposal.isLoadingTrazabilidad}
             />
         );
     }

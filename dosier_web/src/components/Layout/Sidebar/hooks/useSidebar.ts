@@ -289,7 +289,6 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
             if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
             if (checkRoles.includes('DOSIER_VICERRECTOR') && isVicerrector) return true;
-            if (checkRoles.includes('DOSIER_REVISOR_EXTERNO') && isRevisor) return true;
             return item.roles.some(r => roles.includes(r.toUpperCase()));
         }
         return true;

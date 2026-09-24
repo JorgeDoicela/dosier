@@ -72,10 +72,8 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 ### 2.2. Módulo de Dominio Curricular y Gestión de Documentos Docentes (`src/pages/Curriculum/`)
 
-* **`SupervisionCurricularPage.tsx` (`/documentacion` o `/investigacion/proyectos`):**
-  * Vista matriz que alberga el conmutador de pestañas institucionales:
-    1. **Pestaña Programas de Estudio (PEA):** Despliega el componente `<PeaSupervisionTray>`, permitiendo supervisar, filtrar por carrera/período y acceder al editor curricular oficial.
-    2. **Pestaña Proyectos de Investigación:** Gestión de expedientes de investigación formativa vinculados al currículo.
+* **`SupervisionCurricularPage.tsx` (`/documentacion`):**
+  * Vista matriz de supervisión curricular que despliega directamente el componente `<PeaSupervisionTray>`, permitiendo a coordinadores de carrera, coordinadores académicos y vicerrectorado supervisar en tiempo real el avance institucional de los PEAs, filtrar por período y carrera, y acceder al espacio de trabajo documental con las firmas y validaciones normativas vigentes.
 * **`MisAsignaturasPage.tsx` (`/documentacion/mis-proyectos`):**
   * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI y el estado de formulación de cada PEA.
 * **`RevisionCurricularPage.tsx` (`/documentacion/revision-tecnica/:projectUuid`):**
