@@ -15,7 +15,6 @@ dosier_web/src/pages/
 ├── Landing/         # Página pública de presentación
 ├── Login/           # Autenticación multicanal (Credenciales, SSO, PIN, Magic Link)
 ├── Lopdp/           # Gestión de consentimientos y solicitudes de derechos ARCO
-├── Modulos/         # Conmutador modular institucional
 ├── Notificaciones/  # Centro de notificaciones in-app
 ├── Public/          # Validador público de documentos vía código QR
 ├── RecycleBin/      # Papelera de reciclaje y recuperación de registros
@@ -142,4 +141,3 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 * **`src/pages/Notificaciones/`:** Bandeja centralizada de alertas transaccionales recibidas por WebSocket SignalR.
 * **`src/pages/RecycleBin/`:** Papelera de reciclaje lógica para recuperación controlada de registros curriculares dados de baja.
 * **`src/pages/Settings/`:** Gestión del perfil docente, actualización de correo, cambio de clave y selector de tema visual (Claro / Oscuro).
-* **`src/pages/Modulos/`:** Selector de subsistemas institucionales del ISTPET.

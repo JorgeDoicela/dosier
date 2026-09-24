@@ -45,24 +45,8 @@ export interface DashboardStats {
     proyectosFinalizados: number;
     totalConvocatoriasAbiertas: number;
     totalInvestigadoresActivos: number;
-    articulosIndexados: number;
-    prototipos: number;
-    ponencias: number;
-    presupuestoTotalAsignado: number;
-    presupuestoTotalEjecutado: number;
     proyectosPorEstado: EstadoConteo[];
     actividadReciente: ActividadReciente[];
-}
-
-export interface GrupoInvestigacion {
-    id_grupo: number;
-    uuid: string;
-    nombre: string;
-    siglas: string;
-    categoria_consolidacion?: string;
-    activo: boolean;
-    estado?: string;
-    miembros?: any[];
 }
 
 export interface CacesIndicator {

@@ -141,7 +141,6 @@ public partial class DosierContext
             entity.Property(e => e.FechaLectura).HasColumnName("fechaLectura");
             entity.Property(e => e.Version).HasColumnName("version").HasDefaultValueSql("'1'");
 
-            entity.HasOne(d => d.IdProyectoNavigation).WithMany().HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_notif_proyecto");
             entity.HasOne(d => d.DestinatarioNavigation).WithMany().HasForeignKey(d => d.Destinatario).OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_notif_usuario");
         });
 
@@ -165,8 +164,6 @@ public partial class DosierContext
             entity.Property(e => e.FechaRegistro).HasColumnName("fechaRegistro").HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.FechaExpiracion).HasColumnName("fechaExpiracion");
             entity.Property(e => e.Version).HasColumnName("version").HasDefaultValueSql("'1'");
-
-            entity.HasOne(d => d.IdProyectoNavigation).WithMany().HasForeignKey(d => d.IdProyecto).OnDelete(DeleteBehavior.SetNull).HasConstraintName("fk_token_proyecto");
         });
 
         modelBuilder.Entity<DocUsuarioMetadata>(entity =>

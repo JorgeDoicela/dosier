@@ -81,7 +81,7 @@ export const curriculumProjectService = {
                 codigo_institucional: data.codigo_asignatura || data.codigoAsignatura || '',
                 id_carrera: data.id_carrera || data.idCarrera,
                 peaData: data,
-                investigadores: []
+                docentes: []
             };
         } catch {
             // Fallback para instancias universales del motor de documentos
@@ -95,7 +95,7 @@ export const curriculumProjectService = {
                 status: doc.status || 'Borrador',
                 carrera: '',
                 director_nombre: doc.created_by || 'Docente',
-                investigadores: []
+                docentes: []
             };
         }
     },

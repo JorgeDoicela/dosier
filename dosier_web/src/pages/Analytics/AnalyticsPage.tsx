@@ -6,8 +6,7 @@ export type {
     ProyectoResumen,
     EstadoConteo,
     ActividadReciente,
-    DashboardStats,
-    GrupoInvestigacion
+    DashboardStats
 } from './types/analytics.types';
 
 // Custom Hooks & Subcomponents
@@ -46,7 +45,6 @@ const AnalyticsPage: React.FC = () => {
         refreshing,
         projects,
         stats,
-        groups,
         processed,
         reload
     } = useAnalyticsData(period, carrera);
@@ -120,7 +118,6 @@ const AnalyticsPage: React.FC = () => {
                         filteredProjects={filteredProjects}
                         allProjects={projects}
                         stats={stats}
-                        groups={groups}
                         linesData={linesData}
                         proyectosPorEstado={proyectosPorEstado}
                         selectedChartSegment={selectedChartSegment}

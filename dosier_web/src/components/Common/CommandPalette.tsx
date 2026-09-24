@@ -42,8 +42,7 @@ import {
 
 type Category = 'Navegación' | 'Acciones Rápidas' | 'Administración' | 'Configuración'
     | 'Parámetros Normativos'
-    | 'Mis Proyectos' | 'Todos los Proyectos' | 'Convocatorias' | 'Usuarios'
-    | 'Mis Revisiones' | 'Grupos';
+    | 'Mis Asignaturas' | 'Todos los PEAs' | 'Usuarios';
 
 interface SearchItem {
     id: string;
@@ -207,68 +206,43 @@ function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boo
     return [
         // ── Navegación ──────────────────────────────────────────────────
         { id: 'dashboard', label: 'Tablero Principal', description: 'Vista general con métricas y actividad reciente', category: 'Navegación', icon: LayoutDashboard, path: '/dashboard', shortcut: 'D', roles: ['ANY'], keywords: ['inicio', 'home', 'panel', 'resumen'], boost: 8 },
-        { id: 'documentacion', label: 'Portafolio y Documentación', description: 'Repositorio documental de proyectos e informes institucionales', category: 'Navegación', icon: ClipboardList, path: '/documentacion', shortcut: 'P', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['proyectos', 'documentacion', 'portafolio', 'informes', 'expedientes'], boost: 9 },
-        { id: 'mis-proyectos', label: 'Mis Proyectos y Documentos', description: 'Portafolios y expedientes en los que participas directamente', category: 'Navegación', icon: ListChecks, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ESTUDIANTE'], keywords: ['mis proyectos', 'mis documentos', 'colaboraciones', 'expediente'], boost: isDocente || isEstudiante ? 10 : 5 },
-        { id: 'convocatorias', label: 'Convocatorias Activas', description: 'Postulaciones abiertas para proyectos y fondos institucionales', category: 'Navegación', icon: PenTool, path: '/convocatorias', shortcut: 'G', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], keywords: ['convocatoria', 'postular', 'aplicar', 'call', 'becas'], boost: 7 },
+        { id: 'documentacion', label: 'Supervisión Curricular', description: 'Bandeja de revisión, aprobación y legalización del PEA', category: 'Navegación', icon: ClipboardList, path: '/documentacion', shortcut: 'P', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['supervision', 'documentacion', 'pea', 'revision', 'expedientes'], boost: 9 },
+        { id: 'mis-proyectos', label: 'Mis Asignaturas (PEA)', description: 'Distributivo académico y formulación curricular del PEA', category: 'Navegación', icon: ListChecks, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE'], keywords: ['mis materias', 'mis asignaturas', 'pea', 'docente', 'distributivo'], boost: isDocente ? 10 : 5 },
+        { id: 'calendario', label: 'Agenda y Calendario Curricular', description: 'Cronograma de entregas, revisiones y fechas límite CACES', category: 'Navegación', icon: Calendar, path: '/calendario', shortcut: 'C', roles: ['ANY'], keywords: ['calendario', 'agenda', 'fechas', 'cronograma', 'plazos', 'hitos'], boost: 7 },
         { id: 'notificaciones', label: 'Centro de Notificaciones', description: 'Historial completo de alertas y mensajes del sistema', category: 'Navegación', icon: Bell, path: '/notificaciones', roles: ['ANY'], keywords: ['notificacion', 'alertas', 'mensajes', 'inbox'], boost: 5 },
         { id: 'verificar', label: 'Verificar Documento', description: 'Comprueba la autenticidad con código QR o de verificación', category: 'Navegación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], keywords: ['verificar', 'verificacion', 'documento', 'validar', 'hash', 'qr', 'trazabilidad'], boost: 4 },
-        { id: 'grupos', label: 'Comités y Grupos Documentales', description: 'Comités y colectivos de trabajo registrados', category: 'Navegación', icon: Award, path: '/grupos', roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], keywords: ['grupos', 'comites', 'equipos', 'colectivos', 'team'], boost: 6 },
         // ── Administración ────────────────────────────────────────────
-        { id: 'analiticas', label: 'Analíticas de Investigación', description: 'Métricas CACES, indicadores y producción académica', category: 'Administración', icon: BarChart3, path: '/analiticas', shortcut: 'A', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['analitica', 'metricas', 'estadisticas', 'caces', 'kpi', 'reporte'], boost: isAdmin ? 9 : 0 },
-        { id: 'analiticas-general', label: 'Métricas Generales I+D', description: 'Indicadores y tendencias de producción investigativa', category: 'Administración', icon: TrendingUp, path: '/analiticas?tab=general', roles: ['DOSIER_ADMIN'], keywords: ['metricas', 'generales', 'tendencias'], boost: 4 },
-        { id: 'analiticas-caces', label: 'Cumplimiento CACES', description: 'Indicadores de evaluación y acreditación institucional', category: 'Administración', icon: ShieldCheck, path: '/analiticas?tab=caces', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['caces', 'acreditacion', 'cumplimiento', 'ceaaces'], boost: 5 },
-        { id: 'usuarios', label: 'Gestión de Usuarios', description: 'Administrar cuentas de docentes, estudiantes y externos', category: 'Administración', icon: Users, path: '/usuarios', shortcut: 'U', permission: 'USUARIOS:VER', keywords: ['usuarios', 'cuentas', 'personas', 'perfiles'], boost: isAdmin ? 8 : 0 },
-        { id: 'usuarios-docentes', label: 'Usuarios: Docentes', description: 'Lista de docentes e investigadores registrados', category: 'Administración', icon: GraduationCap, path: '/usuarios?type=DOCENTE', permission: 'USUARIOS:VER', keywords: ['docentes', 'profesores', 'planta docente'], boost: 3 },
-        { id: 'usuarios-estudiantes', label: 'Usuarios: Estudiantes', description: 'Lista de estudiantes colaboradores', category: 'Administración', icon: Users, path: '/usuarios?type=ESTUDIANTE', permission: 'USUARIOS:VER', keywords: ['estudiantes', 'alumnos', 'colaboradores'], boost: 3 },
-        { id: 'usuarios-externos', label: 'Usuarios: Externos', description: 'Revisores externos y usuarios fuera de la institución', category: 'Administración', icon: Globe, path: '/usuarios?type=EXTERNO', permission: 'USUARIOS:VER', keywords: ['externos', 'revisores', 'externo'], boost: 3 },
-        { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro de acciones y cambios en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
+        { id: 'analiticas', label: 'Analíticas Curriculares', description: 'Cumplimiento del PEA, horas CES y trazabilidad de firmas', category: 'Administración', icon: BarChart3, path: '/analiticas', shortcut: 'A', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['analitica', 'metricas', 'estadisticas', 'caces', 'kpi', 'horas', 'firmas'], boost: isAdmin ? 9 : 0 },
+        { id: 'usuarios', label: 'Gestión de Usuarios', description: 'Administrar cuentas de docentes y autoridades institucionales', category: 'Administración', icon: Users, path: '/usuarios', shortcut: 'U', permission: 'USUARIOS:VER', keywords: ['usuarios', 'cuentas', 'personas', 'perfiles', 'docentes'], boost: isAdmin ? 8 : 0 },
+        { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro forense de firmas y cambios de estado en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
         { id: 'lopdp-admin', label: 'Panel LOPDP', description: 'Gestión de consentimientos y cumplimiento de protección de datos', category: 'Administración', icon: ShieldCheck, path: '/lopdp', roles: ['DOSIER_ADMIN'], keywords: ['lopdp', 'proteccion datos', 'consentimiento', 'rgpd'], boost: 4 },
-        { id: 'plantillas', label: 'Editor de Plantillas', description: 'Diseñar y maquetar plantillas de documentos oficiales', category: 'Administración', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN'], keywords: ['plantillas', 'templates', 'formatos', 'editor', 'documentos'], boost: isAdmin ? 6 : 0 },
-        { id: 'correos', label: 'Correos institucionales', description: 'Administrar y enviar plantillas de correo del sistema', category: 'Administración', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], keywords: ['correos', 'emails', 'plantillas', 'smtp'], boost: 4 },
+        { id: 'plantillas', label: 'Plantillas Institucionales', description: 'Formatos curriculares y documentos normalizados del ISTPET', category: 'Administración', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN'], keywords: ['plantillas', 'templates', 'formatos', 'pea'], boost: isAdmin ? 6 : 0 },
+        { id: 'correos', label: 'Correos Institucionales', description: 'Plantillas y notificaciones por correo del sistema', category: 'Administración', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], keywords: ['correos', 'emails', 'plantillas', 'smtp'], boost: 4 },
         // ── Parámetros Normativos ───────────────────────────────────────
-        { id: 'parametros-normativos', label: 'Parámetros del Sistema', description: 'Períodos académicos e hitos del calendario institucional', category: 'Parámetros Normativos', icon: Settings, path: '/parametros-normativos', roles: ['DOSIER_ADMIN'], keywords: ['parametros', 'periodos', 'calendario', 'fechas', 'catalogos'], boost: isAdmin ? 6 : 0 },
-        { id: 'config-periodos', label: 'Períodos Académicos', description: 'Gestionar ciclos y períodos vigentes', category: 'Parámetros Normativos', icon: Calendar, path: '/parametros-normativos?tab=periodos', roles: ['DOSIER_ADMIN'], keywords: ['periodos', 'ciclos', 'semestre', 'calendario'], boost: 3 },
-        { id: 'config-calendario', label: 'Hitos de Calendario', description: 'Gestionar hitos normativos y calendario institucional', category: 'Parámetros Normativos', icon: Calendar, path: '/parametros-normativos?tab=calendario', roles: ['DOSIER_ADMIN'], keywords: ['hitos', 'fechas', 'normativo', 'calendario'], boost: 3 },
-        { id: 'settings', label: 'Configuración', description: 'Preferencias de cuenta y ajustes personales', category: 'Configuración', icon: Settings, path: '/configuracion', roles: ['ANY'], keywords: ['perfil', 'cuenta', 'preferencias', 'personal', 'configuracion', 'settings'], boost: 4 },
+        { id: 'parametros-normativos', label: 'Parámetros Normativos', description: 'Períodos académicos e hitos curriculares institucionales', category: 'Parámetros Normativos', icon: Settings, path: '/parametros-normativos', roles: ['DOSIER_ADMIN'], keywords: ['parametros', 'periodos', 'calendario', 'fechas', 'catalogos'], boost: isAdmin ? 6 : 0 },
+        { id: 'settings', label: 'Configuración', description: 'Preferencias de cuenta, firma digital y ajustes personales', category: 'Configuración', icon: Settings, path: '/configuracion', roles: ['ANY'], keywords: ['perfil', 'cuenta', 'preferencias', 'firma', 'configuracion', 'settings'], boost: 4 },
         // ── Acciones Rápidas ──────────────────────────────────────────
-        { id: 'new-project', label: 'Nuevo Proyecto Documental', description: 'Iniciar postulación para un nuevo proyecto o expediente institucional', category: 'Acciones Rápidas', icon: PlusCircle, shortcut: 'N', action: () => navigate(isAdmin ? '/documentacion' : '/documentacion/mis-proyectos'), roles: ['DOSIER_ADMIN', 'DOSIER_DOCENTE'], keywords: ['nuevo', 'crear', 'postular', 'iniciar', 'registrar', 'nuevo proyecto', 'nueva documentacion'], boost: isDocente ? 10 : 5 },
-        { id: 'export-analiticas', label: 'Exportar Reporte PDF', description: 'Descargar reporte completo de analíticas en PDF', category: 'Acciones Rápidas', icon: FileDown, shortcut: 'E', action: () => navigate('/analiticas'), roles: ['DOSIER_ADMIN'], keywords: ['exportar', 'pdf', 'descargar', 'reporte', 'informe'], boost: isAdmin ? 6 : 0 },
+        { id: 'export-analiticas', label: 'Exportar Reporte PDF', description: 'Descargar reporte consolidado de analíticas curriculares', category: 'Acciones Rápidas', icon: FileDown, shortcut: 'E', action: () => navigate('/analiticas'), roles: ['DOSIER_ADMIN'], keywords: ['exportar', 'pdf', 'descargar', 'reporte', 'informe'], boost: isAdmin ? 6 : 0 },
         { id: 'logout', label: 'Cerrar Sesión', description: 'Salir de la sesión actual de forma segura', category: 'Acciones Rápidas', icon: LogOut, action: () => navigate('/login'), roles: ['ANY'], keywords: ['salir', 'cerrar sesion', 'logout', 'desconectar'], boost: 0 },
     ];
 }
 
 // ─── Live search helpers ──────────────────────────────────────────────────────
 
-function proyectoToItem(p: any, isMyProject: boolean, isAdminUser = false): SearchItem {
-    const cat: Category = isMyProject ? 'Mis Proyectos' : 'Todos los Proyectos';
-    const prefix = isAdminUser ? '/documentacion' : (isMyProject ? '/documentacion/mis-proyectos' : '/documentacion');
+function peaToItem(p: any, isMyPea: boolean, isAdminUser = false): SearchItem {
+    const cat: Category = isMyPea ? 'Mis Asignaturas' : 'Todos los PEAs';
+    const prefix = isAdminUser ? '/documentacion' : (isMyPea ? '/documentacion/mis-proyectos' : '/documentacion');
     return {
-        id: `proj-${p.uuid}`,
-        label: p.titulo || 'Proyecto sin título',
-        description: [p.codigo_institucional, p.linea_investigacion, p.estado].filter(Boolean).join(' · '),
+        id: `pea-${p.uuid}`,
+        label: p.titulo || 'PEA sin título',
+        description: [p.codigo_institucional, p.carrera, p.estado].filter(Boolean).join(' · '),
         category: cat,
         icon: FolderOpen,
         path: buildWorkspacePath('PEA_OFICIAL', p.uuid, '', prefix),
-        keywords: [p.codigo_institucional || '', p.linea_investigacion || '', p.estado || ''],
+        keywords: [p.codigo_institucional || '', p.carrera || '', p.estado || ''],
         boost: 0,
         isLive: true,
         badge: p.estado,
-    };
-}
-
-function convocatoriaToItem(c: any): SearchItem {
-    const openParam = c.uuid ? `?open=${c.uuid}` : '';
-    return {
-        id: `conv-${c.id_convocatoria ?? c.uuid ?? Math.random()}`,
-        label: c.titulo || c.nombre || 'Convocatoria',
-        description: [c.estado, c.periodo_nombre || c.periodo, c.tipo_agenda].filter(Boolean).join(' · '),
-        category: 'Convocatorias',
-        icon: PenTool,
-        path: `/convocatorias${openParam}`,
-        keywords: [c.estado || '', c.periodo_nombre || c.periodo || '', c.codigo_convocatoria || ''],
-        boost: 0,
-        isLive: true,
-        badge: c.estado,
     };
 }
 
@@ -290,22 +264,6 @@ function usuarioToItem(u: any): SearchItem {
         keywords: [u.email || '', u.carrera || '', u.id_profesor || ''],
         boost: 0,
         isLive: true,
-    };
-}
-
-function grupoToItem(g: any): SearchItem {
-    // Colectivos / grupos documentales
-    return {
-        id: `grupo-${g.uuid || g.id_grupo}`,
-        label: g.nombre || 'Grupo de Investigación',
-        description: [g.siglas, g.tipo_grupo, g.nombre_coordinador].filter(Boolean).join(' · '),
-        category: 'Grupos',
-        icon: Users,
-        path: `/grupos?open=${g.uuid}`,
-        keywords: [g.nombre || '', g.siglas || '', g.tipo_grupo || '', g.nombre_coordinador || ''],
-        boost: 0,
-        isLive: true,
-        badge: g.estado,
     };
 }
 
@@ -441,37 +399,27 @@ export const CommandPalette = () => {
             try {
                 const promises: Promise<void>[] = [];
 
-                // Mis proyectos (docente/estudiante/admin)
+                // Mis PEAs asignados (docente/admin)
                 promises.push(
                     curriculumProjectService.getMyProjects().then(res => {
                         const data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
-                        data.forEach(p => results.push(proyectoToItem(p, true, isAdmin)));
+                        data.forEach(p => results.push(peaToItem(p, true, isAdmin)));
                     }).catch(() => {})
                 );
 
-                // Todos los proyectos (admin)
+                // Todos los PEAs (autoridades/supervisores)
                 if (isAdmin) {
                     promises.push(
                         curriculumProjectService.getAllProjects().then(res => {
                             const data: any[] = Array.isArray(res) ? res : ((res as any)?.items ?? (res as any)?.data ?? []);
                             data.forEach(p => {
-                                if (!results.some(r => r.id === `proj-${p.uuid}`)) {
-                                    results.push(proyectoToItem(p, false, isAdmin));
+                                if (!results.some(r => r.id === `pea-${p.uuid}`)) {
+                                    results.push(peaToItem(p, false, isAdmin));
                                 }
                             });
                         }).catch(() => {})
                     );
                 }
-
-                // Convocatorias
-                promises.push(
-                    curriculumProjectService.getConvocatorias().then(res => {
-                        const data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
-                        data
-                            .filter(c => c.estado !== 'Borrador' || isAdmin)
-                            .forEach(c => results.push(convocatoriaToItem(c)));
-                    }).catch(() => {})
-                );
 
                 await Promise.allSettled(promises);
                 setPreloadedItems(results);
@@ -521,16 +469,6 @@ export const CommandPalette = () => {
                     );
                 });
             }
-
-            // Grupos de investigación
-            promises.push(
-                curriculumProjectService.searchGroups(queryClean, { signal: ctrl.signal }).then(res => {
-                    const data: any[] = Array.isArray(res) ? res : ((res as any)?.data || []);
-                    data
-                        .slice(0, 4)
-                        .forEach(g => results.push(grupoToItem(g)));
-                }).catch(() => {})
-            );
 
             await Promise.allSettled(promises);
 

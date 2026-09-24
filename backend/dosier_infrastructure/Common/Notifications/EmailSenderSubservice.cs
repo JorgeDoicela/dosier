@@ -105,16 +105,7 @@ namespace dosier_infrastructure.Common.Notifications
 
                 if (request.TargetCarreraId.HasValue)
                 {
-                    // 1. Docentes asociados a proyectos de la carrera
-                    var userIdsInCarrera = await _context.DocProyectoParticipantes
-                        .Include(pp => pp.IdProyectoNavigation)
-                        .ThenInclude(p => p!.DocProyectosCarreras)
-                        .Where(pp => pp.TipoParticipante == "Docente" && pp.IdProyectoNavigation!.DocProyectosCarreras.Any(pc => pc.IdCarrera == request.TargetCarreraId.Value))
-                        .Select(pp => pp.IdUsuario)
-                        .Distinct()
-                        .ToListAsync();
-
-                    // 2. Docentes asociados a la carrera directamente en SIGAFI
+                    // Docentes asociados a la carrera directamente en SIGAFI
                     var sigafiProfesorIds = await _context.ProfesoresCarrerasPeriodos
                         .Where(pcp => pcp.IdCarrera == request.TargetCarreraId.Value && (pcp.EsActivo ?? 1) == 1)
                         .Select(pcp => pcp.IdProfesor)
@@ -126,10 +117,7 @@ namespace dosier_infrastructure.Common.Notifications
                         .Select(u => u.IdUsuario)
                         .ToListAsync();
 
-                    // Combinar destinatarios de proyectos y de carrera directamente
-                    var allTargetUserIds = userIdsInCarrera.Union(sigafiUserIds).Distinct().ToList();
-
-                    usersQuery = usersQuery.Where(u => allTargetUserIds.Contains(u.IdUsuario));
+                    usersQuery = usersQuery.Where(u => sigafiUserIds.Contains(u.IdUsuario));
                 }
 
                 var list = await usersQuery.ToListAsync();
@@ -186,39 +174,21 @@ namespace dosier_infrastructure.Common.Notifications
             {
                 try
                 {
-                    if (request.EntityType.Equals("Proyecto", StringComparison.OrdinalIgnoreCase))
+                    if (request.EntityType.Equals("PEA", StringComparison.OrdinalIgnoreCase) || request.EntityType.Equals("Proyecto", StringComparison.OrdinalIgnoreCase))
                     {
-                        var proj = await _context.DocProyectos
-                            .Include(p => p.DocProyectoParticipantes)
-                            .ThenInclude(pp => pp.IdUsuarioNavigation)
+                        var pea = await _context.Set<dosier_domain.Curriculum.Entities.DocPea>()
                             .FirstOrDefaultAsync(p => p.Uuid == request.EntityUuid);
-                        if (proj != null)
+                        if (pea != null)
                         {
-                            var dir = proj.DocProyectoParticipantes.FirstOrDefault(pp => pp.EsDirector == true && pp.Activo != false && pp.TipoParticipante == "Docente")?.IdUsuarioNavigation;
-                            
-                            string desc = "";
-                            if (!string.IsNullOrEmpty(proj.MetadataCacesJson))
-                            {
-                                try
-                                {
-                                    using var doc = System.Text.Json.JsonDocument.Parse(proj.MetadataCacesJson);
-                                    if (doc.RootElement.TryGetProperty("descripcionProyecto", out var el) || doc.RootElement.TryGetProperty("DescripcionProyecto", out el))
-                                    {
-                                        desc = el.GetString() ?? "";
-                                    }
-                                }
-                                catch {}
-                            }
-
-                            contextReplacements["[[proyecto_titulo]]"] = proj.Titulo ?? "";
-                            contextReplacements["[[proyecto_codigo]]"] = proj.CodigoInstitucional ?? "";
-                            contextReplacements["[[proyecto_descripcion]]"] = desc;
-                            contextReplacements["[[proyecto_estado]]"] = proj.Estado ?? "";
-                            contextReplacements["[[proyecto_director]]"] = dir?.Nombre ?? "Sin asignar";
-                            contextReplacements["[[proyecto_director_email]]"] = dir?.EmailInstitucional ?? "";
-                            contextReplacements["[[linea_investigacion]]"] = "General";
-                            contextReplacements["[[proyecto_sublinea]]"] = "No asignada";
-                            contextReplacements["[[proyecto_workspace_url]]"] = _appUrlService.BuildFrontendUrl($"/investigacion/workspace/protocolo-investigacion/{proj.Uuid}");
+                            contextReplacements["[[proyecto_titulo]]"] = $"PEA: Asignatura #{pea.IdAsignatura}";
+                            contextReplacements["[[proyecto_codigo]]"] = $"PEA-{pea.IdAsignatura}";
+                            contextReplacements["[[proyecto_descripcion]]"] = pea.ObjetivoAsignatura ?? "";
+                            contextReplacements["[[proyecto_estado]]"] = pea.Estado;
+                            contextReplacements["[[proyecto_director]]"] = pea.IdDocenteElaborador ?? "Docente Elaborador";
+                            contextReplacements["[[proyecto_director_email]]"] = "";
+                            contextReplacements["[[linea_investigacion]]"] = "Curricular";
+                            contextReplacements["[[proyecto_sublinea]]"] = "ISTPET";
+                            contextReplacements["[[proyecto_workspace_url]]"] = _appUrlService.BuildFrontendUrl($"/documentacion/workspace/PEA_OFICIAL/{pea.Uuid}");
                         }
                     }
                 }

@@ -57,16 +57,28 @@ namespace dosier_api.Services
             var context = scope.ServiceProvider.GetRequiredService<DosierContext>();
             var expirationLimit = DateTime.UtcNow.AddDays(-30);
 
-            // 1. Purgar Proyectos Expirados
-            var expiredProjects = await context.DocProyectos
+            // 1. Purgar PEAs inactivos que hayan superado los 30 días de retención
+            var expiredPeas = await context.Set<dosier_domain.Curriculum.Entities.DocPea>()
                 .IgnoreQueryFilters()
-                .Where(p => p.Eliminado == true && p.FechaEliminacion != null && p.FechaEliminacion < expirationLimit)
+                .Where(p => !p.Activo && p.FechaModificacion != null && p.FechaModificacion < expirationLimit)
                 .ToListAsync();
 
-            if (expiredProjects.Any())
+            if (expiredPeas.Any())
             {
-                _logger.LogInformation("Encontrados {Count} proyectos expirados en la papelera. Purgando.", expiredProjects.Count);
-                context.DocProyectos.RemoveRange(expiredProjects);
+                _logger.LogInformation("Encontrados {Count} PEAs expirados en la papelera. Purgando.", expiredPeas.Count);
+                context.Set<dosier_domain.Curriculum.Entities.DocPea>().RemoveRange(expiredPeas);
+                await context.SaveChangesAsync();
+            }
+
+            // 2. Purgar DocumentInstances archivadas expiradas
+            var expiredDocs = await context.DocumentInstances
+                .Where(d => d.State == Dosier.Domain.Common.Documents.DocumentState.Archived && d.UpdatedAt < expirationLimit)
+                .ToListAsync();
+
+            if (expiredDocs.Any())
+            {
+                _logger.LogInformation("Encontradas {Count} instancias de documentos expiradas en la papelera. Purgando.", expiredDocs.Count);
+                context.DocumentInstances.RemoveRange(expiredDocs);
                 await context.SaveChangesAsync();
             }
         }

@@ -94,7 +94,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                         <input
                             type="text"
                             required
-                            placeholder="Ej: Reunión de Avance del Proyecto"
+                            placeholder="Ej: Entrega de PEA - Programación Web"
                             value={formTitulo}
                             onChange={(e) => setFormTitulo(e.target.value)}
                             className="input-vercel text-sm"
@@ -106,7 +106,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                         <label className="section-label mb-1.5 block">Descripción o Detalles</label>
                         <textarea
                             rows={3}
-                            placeholder="Ingresa notas o detalles sobre el evento..."
+                            placeholder="Ingresa notas o detalles sobre el evento curricular..."
                             value={formDescripcion}
                             onChange={(e) => setFormDescripcion(e.target.value)}
                             className="input-vercel text-sm resize-none"
@@ -122,10 +122,10 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                                 onChange={(e) => setFormTipo(e.target.value)}
                                 className="input-vercel text-sm"
                             >
-                                <option value="Personal">Personal / Nota</option>
-                                <option value="Tarea">Tarea de Investigación</option>
-                                <option value="Reunion">Reunión / Tutoría</option>
-                                <option value="Hito">Hito de Proyecto</option>
+                                <option value="Personal">Personal / Nota Rápida</option>
+                                <option value="Tarea">Tarea Curricular / PEA</option>
+                                <option value="Reunion">Reunión de Área / Cátedra</option>
+                                <option value="Hito">Fecha Límite / Entrega</option>
                             </select>
                         </div>
 

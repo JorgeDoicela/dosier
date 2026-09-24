@@ -174,66 +174,68 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                 {/* Fila Inferior de Informes y Entregables */}
                                 <div className="space-y-3 pt-4 border-t border-brand/20 select-none animate-fade-up">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-text-dim pl-1 font-mono block">
-                                        Entregables y Fases de este Proyecto
+                                        Fases y Estado del Instrumento Curricular
                                     </span>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         
-                                        {/* Columna 1: Borrador / Planificación */}
+                                        {/* Columna 1: Borrador / Formulación */}
                                         <div className="border border-border-thin bg-surface rounded-xl p-3.5 space-y-2 min-h-[120px]">
                                             <div className="flex items-center justify-between text-[9px] font-black text-text-dim uppercase pb-1.5 border-b border-border-thin">
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
-                                                    Planificación
+                                                    Formulación
                                                 </span>
-                                                <span className="font-mono">1</span>
+                                                <span className="font-mono">{selectedProj.estado === 'Borrador' ? 'En Curso' : 'Completado'}</span>
                                             </div>
                                             <div className="pt-1.5 space-y-2 text-[11px] font-semibold text-text-main">
                                                 <div className="p-2 bg-bg-deep/20 border border-border-thin/40 rounded-lg flex flex-col gap-1">
-                                                    <p className="leading-snug line-clamp-2">Informe Técnico y Ficha de Viabilidad del Proyecto</p>
-                                                    <span className="text-[7.5px] font-mono font-bold text-text-dim uppercase mt-0.5">Reporte Interno</span>
+                                                    <p className="leading-snug line-clamp-2">Planificación Microcurricular (PEA y Unidades Temáticas)</p>
+                                                    <span className="text-[7.5px] font-mono font-bold text-text-dim uppercase mt-0.5">Instrumento Base</span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Columna 2: En Revisión */}
+                                        {/* Columna 2: En Revisión Técnica */}
                                         <div className="border border-border-thin bg-surface rounded-xl p-3.5 space-y-2 min-h-[120px]">
                                             <div className="flex items-center justify-between text-[9px] font-black text-warning uppercase pb-1.5 border-b border-border-thin">
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
-                                                    En Revisión
+                                                    Revisión Técnica
                                                 </span>
-                                                <span className="font-mono">{selectedProj.totalInformes > selectedProj.informesAprobados ? 1 : 0}</span>
+                                                <span className="font-mono">{selectedProj.estado === 'En Revisión' || selectedProj.estado === 'Enviado' ? 'Activo' : selectedProj.estado === 'Aprobado' ? 'Completado' : 'Pendiente'}</span>
                                             </div>
                                             <div className="pt-1.5 space-y-2 text-[11px] font-semibold text-text-main">
-                                                {selectedProj.totalInformes > selectedProj.informesAprobados ? (
+                                                {selectedProj.estado === 'En Revisión' || selectedProj.estado === 'Enviado' ? (
                                                     <div className="p-2 bg-bg-deep/20 border border-border-thin/40 rounded-lg flex flex-col gap-1">
-                                                        <p className="leading-snug line-clamp-2">Artículo de Investigación — Revisión Regional (Latindex)</p>
-                                                        <span className="text-[7.5px] font-mono font-bold text-warning uppercase mt-0.5">Peer Review</span>
+                                                        <p className="leading-snug line-clamp-2">Validación Curricular por Coordinación de Carrera</p>
+                                                        <span className="text-[7.5px] font-mono font-bold text-warning uppercase mt-0.5">Dictamen de Área</span>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[10px] text-text-dim font-bold text-center py-5 italic">Sin entregables en revisión.</p>
+                                                    <p className="text-[10px] text-text-dim font-bold text-center py-5 italic">
+                                                        {selectedProj.estado === 'Aprobado' ? 'Dictamen técnico favorable emitido.' : 'A la espera de envío por docente.'}
+                                                    </p>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* Columna 3: Validado / Publicado */}
+                                        {/* Columna 3: Aprobado / Firmado */}
                                         <div className="border border-border-thin bg-surface rounded-xl p-3.5 space-y-2 min-h-[120px]">
                                             <div className="flex items-center justify-between text-[9px] font-black text-success uppercase pb-1.5 border-b border-border-thin">
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                                                    Publicado / Validado
+                                                    Legalizado / Firmado
                                                 </span>
-                                                <span className="font-mono">{selectedProj.informesAprobados || 0}</span>
+                                                <span className="font-mono">{selectedProj.estado === 'Aprobado' || selectedProj.estado === 'Finalizado' ? 'Vigente' : 'En Trámite'}</span>
                                             </div>
                                             <div className="pt-1.5 space-y-2 text-[11px] font-semibold text-text-main">
-                                                {selectedProj.informesAprobados > 0 ? (
+                                                {selectedProj.estado === 'Aprobado' || selectedProj.estado === 'Finalizado' ? (
                                                     <div className="p-2 bg-bg-deep/20 border border-border-thin/40 rounded-lg flex flex-col gap-1">
-                                                        <p className="leading-snug line-clamp-2">Publicación o Informe de Avance Aprobado</p>
-                                                        <span className="text-[7.5px] font-mono font-bold text-success uppercase mt-0.5">Aprobado</span>
+                                                        <p className="leading-snug line-clamp-2">PEA Aprobado con Firmas Digitales Institucionales</p>
+                                                        <span className="text-[7.5px] font-mono font-bold text-success uppercase mt-0.5">RRA Art. 21 / 27</span>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[10px] text-text-dim font-bold text-center py-5 italic">No se han registrado entregables aprobados aún.</p>
+                                                    <p className="text-[10px] text-text-dim font-bold text-center py-5 italic">Pendiente de legalización final.</p>
                                                 )}
                                             </div>
                                         </div>

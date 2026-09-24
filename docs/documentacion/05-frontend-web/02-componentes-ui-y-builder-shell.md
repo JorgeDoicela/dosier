@@ -73,43 +73,38 @@ graph TD
 * **`FirmaModal.tsx`:** Ventana modal de alta seguridad para la firma electrónica. Fondo modal 100% sólido, carga del archivo PKCS#12 (`.p12` o `.pfx`), campo de contraseña enmascarado y validación de certificado ante el backend.
 
 ### 4.4. `<NormativaDrawer>`: Asistente Regulatorio y Checklist Curricular
-* **Ubicación:** `src/pages/Investigacion/Proyectos/Workspace/components/NormativaDrawer.tsx`
+* **Ubicación:** `src/pages/Curriculum/Workspace/components/NormativaDrawer.tsx`
 * **Servicio:** `src/services/normativaService.ts` conectado a `/api/normativas/checklist`.
 * **Propósito:** Permite la consulta contextual inalterable de resoluciones vigentes del Consejo de Educación Superior (CES Art. 21 y 27), Modelo de Evaluación Externa CACES y Modelo Educativo Institucional (MED) durante la redacción del PEA.
 * **Estándar Visual:** Panel deslizable con fondo 100% sólido (`bg-white dark:bg-zinc-950`), overlay opaco sin `backdrop-blur` y búsqueda en tiempo real por artículos y requisitos microcurriculares.
 
-### 4.5. `<CreateProjectModal>`: Registro Ágil de Instrumentos Curriculares
-* **Ubicación:** `src/components/DOSIER/CreateProjectModal.tsx`
-* **Desacople Curricular:** Formulario orientado exclusivamente a la apertura de instrumentos PEA por carrera y asignatura institucional, eliminando campos de índole financiera o presupuestaria.
-* **Resiliencia y Borradores:** Implementa guardado automático en `localStorage` con debounce y detección de cambios sin guardar (`hasUnsavedChanges`) mediante `useRef`, previniendo la pérdida de información pedagógica formulada.
-
-### 4.6. Tableros Analíticos Curriculares e Indicadores CACES
+### 4.5. Tableros Analíticos Curriculares e Indicadores CACES
 * **Ubicación:** `src/pages/Analytics/components/` (`AnalyticsOverviewTab.tsx`, `AnalyticsProjectsTab.tsx`, `AnalyticsCacesTab.tsx`, `cacesCalculator.ts`).
-* **Métricas Pedagógicas:** En lugar de métricas financieras de gasto o presupuestos, el sistema cuantifica:
+* **Métricas Pedagógicas:** En lugar de métricas financieras o presupuestos ajenos a la docencia, el sistema cuantifica:
   1. **Cobertura Curricular:** Porcentaje de asignaturas con PEA formulado y aprobado frente a la malla vigente.
   2. **Conformidad Horaria Art. 21 CES:** Consistencia de horas asignadas en Docencia (CD), Prácticas (APE) y Trabajo Autónomo (AA).
   3. **Circuito Colegiado de Firmas (Ley 67):** Tasa de instrumentos con dictamen favorable y firmas digitales formalizadas.
 
-### 4.7. `<PeaSupervisionTray>`: Bandeja de Supervisión Curricular Institucional
-* **Ubicación:** `src/pages/Investigacion/Proyectos/components/PeaSupervisionTray.tsx`
-* **Integración:** Embebida en `ResearchProjectsPage.tsx` mediante pestañas Vercel Geist (`[Programas de Estudio (PEA)]` y `[Proyectos de Investigación]`).
+### 4.6. `<SupervisionCurricularPage>`: Bandeja de Supervisión Curricular Institucional
+* **Ubicación:** `src/pages/Curriculum/SupervisionCurricularPage.tsx`
+* **Integración:** Accesible en `/documentacion` para roles de supervisión (`DOSIER_ADMIN`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`).
 * **Características Visuales y de UX:**
   * **Acceso Directo a Tabla y Filtros:** Erradicación de bloques artificiales de KPIs en la cabecera; la vista presenta de inmediato los filtros de búsqueda rápida y la cuadrícula de instrumentos.
   * **Filtros Institucionales:** Selectores con fondo 100% sólido para período lectivo (`GeistSelect`), carreras asignadas y estados del workflow.
   * **Stepper de Circuito de 4 Firmas:** Visualizador de avance del circuito legal (Docente -> Coordinador de Carrera -> Coordinador Académico -> Vicerrector).
-* **Acceso Directo:** Botón de apertura directa en el Workspace concurrente (`/documentacion/workspace/pea-oficial/:uuid?edit=pea-oficial`) para revisión, co-redacción y emisión de dictamen/firma.
+* **Acceso Directo:** Botón de apertura directa en el Workspace concurrente (`/documentacion/workspace/PEA_OFICIAL/:uuid`) para revisión, co-redacción y emisión de dictamen/firma.
 
-### 4.8. `<PeaWorkflowBar>` & `<PeaObservationsDrawer>`: Control de Estados Colegiados en el Workspace
+### 4.7. `<PeaWorkflowBar>` & `<PeaObservationsDrawer>`: Control de Estados Colegiados en el Workspace
 * **Ubicación:** `src/components/DOSIER/shell/components/` (`PeaWorkflowBar.tsx`, `PeaObservationsDrawer.tsx`).
 * **Integración en Shell:** Montado condicionalmente en `DOSIERBuilderShell.tsx` cuando `templateCode === 'PEA_OFICIAL'`.
 * **Capacidades Operativas:**
-  * **Semáforo Matemático de Horas:** Calcula en vivo $\sum \text{Horas}$ de las unidades temáticas contra las horas oficiales normadas en SIGAFI, bloqueando el envío si existe déficit o exceso horario.
+  * **Semáforo Matemático de Horas:** Calcula en vivo sumatoria de horas de las unidades temáticas contra las horas oficiales normadas en SIGAFI, bloqueando el envío si existe déficit o exceso horario.
   * **Botón Contextual de Firma:** Muestra la acción correspondiente al rol del usuario autenticado (Docente: *Firmar y Enviar a Revisión*; Coordinador de Carrera: *Emitir Aval de Carrera*; Coordinador Académico: *Emitir Aval Académico*; Vicerrector: *Legalizar y Aprobar PEA*).
   * **Panel Deslizable de Observaciones:** Permite a las comisiones registrar observaciones directas por sección (`POST /api/pea/:id/observaciones`) y a los docentes responder formalmente con justificación de cambios para subsanar los requerimientos (`PATCH /api/pea/observaciones/:id/subsanar`).
   * **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-zinc-950`), sin transparencias ni efectos de sangrado tipográfico.
-  * **Navegación de Retorno Fluida:** El botón de cierre (*Volver*) en `BuilderHeader` invoca un retorno seguro por historial (`navigate(-1)`) con fallback a la bandeja de supervisión curricular (`/investigacion/proyectos?tab=supervision-pea`), preservando el estado previo del usuario, filtros seleccionados y scroll.
+  * **Navegación de Retorno Fluida:** El botón de cierre (*Volver*) en `BuilderHeader` invoca un retorno seguro por historial (`navigate(-1)`) con fallback a la bandeja de supervisión curricular (`/documentacion`), preservando el estado previo del usuario, filtros seleccionados y scroll.
 
-### 4.9. Dashboard de Gobernanza Curricular y Paneles de Roles (`/dashboard`)
+### 4.8. Dashboard de Gobernanza Curricular y Paneles de Roles (`/dashboard`)
 * **Ubicación:** `src/pages/Dashboard/` (`Dashboard.tsx`, `Roles/` `VicerrectorDashboard.tsx`, `CoordAcadDashboard.tsx`, `CoordCarreraDashboard.tsx`, `DocentePeaDashboard.tsx`, `AdminPeaDashboard.tsx`, `Components/RoleFlowBanner.tsx`).
 * **Principios de Diseño e Implementación Vercel Geist:**
   * **Control Segmentado Discreto (`RoleFlowBanner`):** Selector horizontal compacto con fondo sólido `bg-zinc-100 dark:bg-zinc-900` para alternar fluidamente la perspectiva entre los 5 roles curriculares institucionales.
@@ -118,7 +113,7 @@ graph TD
   * **Acciones Directas y Textuales:** Botones de alta nitidez y contraste (`Ver`, `Firmar PEA`, `QR CACES`, `Emitir Aval`, `Auditar`) enmarcados en tablas con tipografía monoespaciada para códigos y plazos.
   * **Superficies Sólidas de 1 Capa:** Fondos monocromáticos `bg-white dark:bg-black`, bordes ultrafinos y eliminación total de cajas anidadas innecesarias.
 
-### 4.10. Sistema de Superficies y Badges Sutiles (`--subtle` / Geist Muted)
+### 4.9. Sistema de Superficies y Badges Sutiles (`--subtle` / Geist Muted)
 * **Tokens de Color Globales:**
   * Modo Claro: `--subtle: #f2f4f7;`, `--subtle-border: rgba(0, 0, 0, 0.05);`, `--subtle-hover: #e4e7ec;`
   * Modo Oscuro: `--subtle: #181d27;`, `--subtle-border: rgba(255, 255, 255, 0.07);`, `--subtle-hover: #222938;`
@@ -127,7 +122,7 @@ graph TD
   * `.badge-subtle`: Píldora con tipografía monoespaciada para códigos de asignatura (`#f2f4f7`), roles institucionales RBAC y parámetros normativos.
   * `.segmented-container` y `.segmented-item-active`: Estructura institucional para selectores de pestañas, barra de roles de gobernanza y filtros.
 
-### 4.11. Modales de Gestión Curricular y Regla de Opacidad 100% Sólida
+### 4.10. Modales de Gestión Curricular y Regla de Opacidad 100% Sólida
 * **Ubicación:** `src/pages/Dashboard/Roles/Modals/`
 * **Catálogo de Componentes:**
   * `AuditoriaCacesModal.tsx`: Verificación de consistencia horaria y cumplimiento normativo de distribución CES.

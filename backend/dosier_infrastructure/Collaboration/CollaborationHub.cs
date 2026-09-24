@@ -62,38 +62,23 @@ namespace dosier_infrastructure.Collaboration
                     throw new HubException("Usuario no registrado en el sistema.");
                 }
 
-                string? projectUuid = null;
                 var instanceToCheck = await _db.DocumentInstances
                     .AsNoTracking()
                     .FirstOrDefaultAsync(i => i.Uuid == instanceUuid);
 
-                if (instanceToCheck != null)
+                string? peaUuid = instanceToCheck?.EntityUuid ?? instanceUuid;
+
+                var pea = await _db.Set<dosier_domain.Curriculum.Entities.DocPea>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Uuid == peaUuid);
+
+                if (pea != null)
                 {
-                    projectUuid = instanceToCheck.EntityUuid;
-                }
-                else
-                {
-                    var projectExists = await _db.DocProyectos.AnyAsync(p => p.Uuid == instanceUuid);
-                    if (projectExists)
+                    bool isElaborador = pea.IdDocenteElaborador == user.IdSigafi;
+                    if (!isElaborador && !isHubAdmin)
                     {
-                        projectUuid = instanceUuid;
-                    }
-                }
-
-                if (projectUuid != null)
-                {
-                    var project = await _db.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == projectUuid);
-                    if (project != null)
-                    {
-                        var isTeamMember = await _db.DocProyectoParticipantes.AnyAsync(pp => pp.IdProyecto == project.IdProyecto && pp.IdUsuario == user.IdUsuario && pp.Activo != false);
-
-                        bool hasAccess = isTeamMember;
-
-                        if (!hasAccess)
-                        {
-                            _logger.LogWarning("[HUB] Access Denied: User {User} has no permissions for project {ProjectUuid}", username, projectUuid);
-                            throw new HubException("No tienes permisos para unirte a esta sesión colaborativa.");
-                        }
+                        _logger.LogWarning("[HUB] Access Denied: User {User} no es elaborador del PEA {PeaUuid}", username, peaUuid);
+                        throw new HubException("No tienes permisos para unirte a la sesión colaborativa de este PEA.");
                     }
                 }
             }
@@ -115,32 +100,15 @@ namespace dosier_infrastructure.Collaboration
                     var observerUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == observerId);
                     if (observerUser != null)
                     {
-                        string? observedProjectUuid = instance?.EntityUuid ?? instanceUuid;
-                        var observedProject = await _db.DocProyectos.AsNoTracking()
-                            .FirstOrDefaultAsync(p => p.Uuid == observedProjectUuid);
+                        string? observedPeaUuid = instance?.EntityUuid ?? instanceUuid;
+                        var observedPea = await _db.Set<dosier_domain.Curriculum.Entities.DocPea>().AsNoTracking()
+                            .FirstOrDefaultAsync(p => p.Uuid == observedPeaUuid);
 
-                        if (observedProject != null)
+                        if (observedPea != null && observedPea.IdDocenteElaborador != observerUser.IdSigafi)
                         {
-                            var isTeamMember = await _db.DocProyectoParticipantes.AnyAsync(pp =>
-                                    pp.IdProyecto == observedProject.IdProyecto
-                                    && pp.IdUsuario == observerUser.IdUsuario
-                                    && pp.Activo != false);
-
-                            if (!isTeamMember)
-                            {
-                                // El admin no es miembro del equipo: modo supervisión (solo lectura).
-                                // NOTA: No forzamos isReadOnly=true aquí porque el banner del editor
-                                // mostraría incorrectamente "ya fue firmado". En su lugar marcamos
-                                // isOversightObserver=true y el cliente recibe ReadOnly=true solo
-                                // cuando el documento realmente ya está firmado (State >= 3).
-                                // Para documentos en BORRADOR, el admin-observador puede leer
-                                // sin el banner de firma falso.
-                                isOversightObserver = true;
-                                // isReadOnly permanece con el valor calculado por State (línea 138):
-                                // true si State >= 3 (firmado), false si está en borrador.
-                                userName = $"{userName} (Supervisión)";
-                                userRole = "Observador";
-                            }
+                            isOversightObserver = true;
+                            userName = $"{userName} (Supervisión)";
+                            userRole = "Observador";
                         }
                     }
                 }

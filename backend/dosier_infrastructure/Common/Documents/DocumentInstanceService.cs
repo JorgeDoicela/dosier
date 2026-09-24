@@ -117,12 +117,12 @@ namespace Dosier.Infrastructure.Common.Documents
                                .FirstOrDefaultAsync(ct);
             }
 
-            // 4. Auto-creación resiliente: si el proyecto existe pero no tiene instancia, crearla en caliente
+            // 4. Auto-creación resiliente: si el PEA existe pero no tiene instancia, crearla en caliente
             if (instance == null)
             {
-                var projectExists = await _context.DocProyectos.AnyAsync(p => p.Uuid == uuid, ct);
-                if (projectExists)
-                    instance = await CreateAsync("PROTOCOLO_INVESTIGACION", uuid, "sistema", "Protocolo Oficial", "Proyecto", ct);
+                var peaExists = await _context.Set<dosier_domain.Curriculum.Entities.DocPea>().AnyAsync(p => p.Uuid == uuid, ct);
+                if (peaExists)
+                    instance = await CreateAsync("PEA_OFICIAL", uuid, "sistema", "PEA Institucional Oficial", "PEA", ct);
             }
 
             return instance;
@@ -232,9 +232,9 @@ namespace Dosier.Infrastructure.Common.Documents
                 .ToListAsync(ct);
 
             var projectUuids = signedInstances.Select(i => i.EntityUuid).Distinct().ToList();
-            var projects = await _context.DocProyectos
+            var projects = await _context.Set<dosier_domain.Curriculum.Entities.DocPea>()
                 .Where(p => projectUuids.Contains(p.Uuid))
-                .Select(p => new { p.Uuid, p.Titulo })
+                .Select(p => new { p.Uuid, Titulo = $"PEA Asignatura #{p.IdAsignatura}" })
                 .ToDictionaryAsync(p => p.Uuid, p => p.Titulo, ct);
 
             var diagnosis = new List<object>();

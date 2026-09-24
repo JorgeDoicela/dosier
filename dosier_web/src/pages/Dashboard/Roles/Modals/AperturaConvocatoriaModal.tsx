@@ -26,8 +26,8 @@ export const AperturaConvocatoriaModal: React.FC<Props> = ({ isOpen, onClose, on
         setTimeout(() => {
             setIsSubmitting(false);
             addToast(
-                'Convocatoria 2025-A Aperturada',
-                'Se activó el calendario curricular del PEA y se despacharon notificaciones a los 28 docentes asignados en SIGAFI.',
+                `Período ${periodo} Activado`,
+                'Se activó el calendario curricular del PEA y se habilitó la formulación para los docentes asignados en SIGAFI.',
                 'success'
             );
             onConvocatoriaActivada();
@@ -49,7 +49,7 @@ export const AperturaConvocatoriaModal: React.FC<Props> = ({ isOpen, onClose, on
                         </div>
                         <div>
                             <h2 className="text-base font-semibold text-zinc-900 dark:text-white">
-                                Apertura de Convocatoria Curricular PEA
+                                Apertura de Período Curricular PEA
                             </h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                 Disparador oficial institucional de Coordinación Académica
@@ -72,7 +72,7 @@ export const AperturaConvocatoriaModal: React.FC<Props> = ({ isOpen, onClose, on
                             Regla de Gobernanza Institucional
                         </div>
                         <p>
-                            Al activar la convocatoria, las asignaciones docentes vigentes en SIGAFI se sincronizan automáticamente y se habilitan los tableros de co-redacción para todos los profesores.
+                            Al activar el período académico, las asignaciones docentes vigentes en SIGAFI se sincronizan automáticamente y se habilitan los tableros de formulación del PEA para todos los profesores.
                         </p>
                     </div>
 

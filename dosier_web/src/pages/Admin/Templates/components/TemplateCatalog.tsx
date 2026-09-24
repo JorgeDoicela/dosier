@@ -29,13 +29,13 @@ interface TemplateCatalogProps {
     onReorderTemplates?: (newTemplates: DocumentTemplateDto[]) => void;
 }
 
-type TemplateCategoryKey = 'INVESTIGACION' | 'REPORTES' | 'CURRICULAR';
+type TemplateCategoryKey = 'INSTITUCIONAL' | 'REPORTES' | 'CURRICULAR';
 
 function getTemplateCategory(code: string): TemplateCategoryKey {
     const c = (code || '').toUpperCase();
     if (c.includes('PEA') || c.includes('CURRICULUM') || c.includes('ESTUDIO')) return 'CURRICULAR';
     if (c.startsWith('REPORTE') || c.includes('ANALITICAS')) return 'REPORTES';
-    return 'INVESTIGACION';
+    return 'INSTITUCIONAL';
 }
 
 function getTemplateIcon(code: string) {
@@ -203,8 +203,8 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
     const activeTemplate = templates.find(t => t.code === activeId);
 
     // Agrupación de plantillas
-    const investigacionTemplates = templates.filter(t => getTemplateCategory(t.code) === 'INVESTIGACION');
     const curricularTemplates = templates.filter(t => getTemplateCategory(t.code) === 'CURRICULAR');
+    const institucionalTemplates = templates.filter(t => getTemplateCategory(t.code) === 'INSTITUCIONAL');
     const reportesTemplates = templates.filter(t => getTemplateCategory(t.code) === 'REPORTES');
 
     return (
@@ -283,32 +283,7 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                 >
                     <SortableContext items={templates.map(t => t.code)} strategy={verticalListSortingStrategy}>
                         <div className="flex flex-col">
-                            {/* SECCIÓN 1: INVESTIGACIÓN CIENTÍFICA */}
-                            {investigacionTemplates.length > 0 && (
-                                <div className="border-b border-border-thin/40">
-                                    <div className="px-3 py-2 bg-surface-deep/40 border-b border-border-thin/30 flex items-center justify-between">
-                                        <span className="text-[9px] font-mono font-bold tracking-wider text-text-dim uppercase flex items-center gap-1.5">
-                                            <FlaskConical size={11} className="text-text-dim" />
-                                            Investigación (I+D+i)
-                                        </span>
-                                        <span className="text-[9px] font-mono text-text-dim/60">
-                                            {investigacionTemplates.length}
-                                        </span>
-                                    </div>
-                                    <div className="divide-y divide-border-thin/30">
-                                        {investigacionTemplates.map(t => (
-                                            <SortableTemplateItem
-                                                key={t.code}
-                                                template={t}
-                                                isSelected={selectedTemplate?.code === t.code}
-                                                onSelect={() => onSelectTemplate(t)}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* SECCIÓN 2: CURRÍCULO & ASIGNATURAS (PEA) */}
+                            {/* SECCIÓN 1: CURRÍCULO & ASIGNATURAS (PEA) */}
                             {curricularTemplates.length > 0 && (
                                 <div className="border-b border-border-thin/40">
                                     <div className="px-3 py-2 bg-surface-deep/40 border-b border-border-thin/30 flex items-center justify-between">
@@ -322,6 +297,31 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                                     </div>
                                     <div className="divide-y divide-border-thin/30">
                                         {curricularTemplates.map(t => (
+                                            <SortableTemplateItem
+                                                key={t.code}
+                                                template={t}
+                                                isSelected={selectedTemplate?.code === t.code}
+                                                onSelect={() => onSelectTemplate(t)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SECCIÓN 2: DOCUMENTACIÓN INSTITUCIONAL */}
+                            {institucionalTemplates.length > 0 && (
+                                <div className="border-b border-border-thin/40">
+                                    <div className="px-3 py-2 bg-surface-deep/40 border-b border-border-thin/30 flex items-center justify-between">
+                                        <span className="text-[9px] font-mono font-bold tracking-wider text-text-dim uppercase flex items-center gap-1.5">
+                                            <FileText size={11} className="text-text-dim" />
+                                            Documentación Institucional
+                                        </span>
+                                        <span className="text-[9px] font-mono text-text-dim/60">
+                                            {institucionalTemplates.length}
+                                        </span>
+                                    </div>
+                                    <div className="divide-y divide-border-thin/30">
+                                        {institucionalTemplates.map(t => (
                                             <SortableTemplateItem
                                                 key={t.code}
                                                 template={t}

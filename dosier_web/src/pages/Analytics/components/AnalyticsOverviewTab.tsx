@@ -8,7 +8,6 @@ import { DonutChart } from './DonutChart';
 import type {
     ProyectoResumen,
     DashboardStats,
-    GrupoInvestigacion,
     LineaInvestigacionData,
     EstadoConteo
 } from '../types/analytics.types';
@@ -18,7 +17,6 @@ export interface AnalyticsOverviewTabProps {
     filteredProjects: ProyectoResumen[];
     allProjects: ProyectoResumen[];
     stats: DashboardStats | null;
-    groups: GrupoInvestigacion[];
     linesData: LineaInvestigacionData[];
     proyectosPorEstado: EstadoConteo[];
     selectedChartSegment: string | null;
@@ -29,12 +27,16 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
     filteredProjects,
     allProjects,
     stats,
-    groups,
     linesData,
     proyectosPorEstado,
     selectedChartSegment,
     setSelectedChartSegment
 }) => {
+    const aprobadosCount = filteredProjects.filter(p => p.estado === 'Aprobado' || p.estado === 'Finalizado').length;
+    const enRevisionCount = filteredProjects.filter(p => p.estado === 'En Revisión' || p.estado === 'Enviado' || p.estado === 'RevisadoCoord' || p.estado === 'RevisadoAcad').length;
+    const borradorCount = filteredProjects.filter(p => p.estado === 'Borrador').length;
+    const totalDocentes = filteredProjects.reduce((acc, p) => acc + (p.totalInvestigadores || 1), 0);
+
     return (
         <>
             {/* Bento Grid: KPIs Principales */}
@@ -47,42 +49,43 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     subText="Portafolio PEA del corte"
                     badgeText={`Total: ${allProjects.length}`}
                     footerItems={[
-                        { label: 'En Ejecución', value: filteredProjects.filter(p => p.estado === 'En Ejecución').length },
-                        { label: 'Borrador', value: filteredProjects.filter(p => p.estado === 'Borrador').length }
+                        { label: 'Aprobados', value: aprobadosCount },
+                        { label: 'Borrador', value: borradorCount }
                     ]}
                 />
                 <KPICard
                     title="Documentación Curricular"
-                    value={(stats?.articulosIndexados || 0) + (stats?.ponencias || 0)}
+                    value={aprobadosCount}
                     icon={<BookOpen size={14} />}
                     accentColor="success"
                     subText="Instrumentos aprobados y vigentes"
-                    badgeText={`Aprobados: ${stats?.articulosIndexados || 0}`}
+                    badgeText={`Aprobados: ${aprobadosCount}`}
                     footerItems={[
-                        { label: 'Instrumentos Aprobados', value: stats?.articulosIndexados || 0, valueColorClass: 'text-success font-semibold' },
-                        { label: 'En Elaboración', value: stats?.ponencias || 0 }
+                        { label: 'Instrumentos Aprobados', value: aprobadosCount, valueColorClass: 'text-success font-semibold' },
+                        { label: 'En Revisión / Trámite', value: enRevisionCount }
                     ]}
                 />
                 <KPICard
                     title="Cobertura Curricular"
-                    value={`${filteredProjects.length > 0 ? Math.round((filteredProjects.filter(p => p.estado === 'Aprobado' || p.estado === 'Finalizado').length / filteredProjects.length) * 100) : 100}%`}
+                    value={`${filteredProjects.length > 0 ? Math.round(((aprobadosCount + enRevisionCount) / filteredProjects.length) * 100) : 100}%`}
                     icon={<CheckCircle2 size={14} />}
                     accentColor="warning"
                     subText="Conformidad RRA Art. 21 / 27"
                     footerItems={[
-                        { label: 'Revisados / Aprobados', value: filteredProjects.filter(p => p.estado === 'Aprobado' || p.estado === 'Finalizado' || p.estado === 'En Revisión').length, valueColorClass: 'text-success font-semibold' },
-                        { label: 'En Formulación', value: filteredProjects.filter(p => p.estado === 'Borrador').length }
+                        { label: 'Revisados / Aprobados', value: aprobadosCount + enRevisionCount, valueColorClass: 'text-success font-semibold' },
+                        { label: 'En Formulación', value: borradorCount }
                     ]}
                 />
                 <KPICard
                     title="Estructura Académica"
-                    value={stats?.totalInvestigadoresActivos || 0}
+                    value={totalDocentes}
                     icon={<Users size={14} />}
                     accentColor="violet"
-                    subText="Docentes registrados"
+                    subText="Docentes asignados al período"
+                    badgeText={`PEAs: ${filteredProjects.length}`}
                     footerItems={[
-                        { label: 'Docentes Activos', value: stats?.totalInvestigadoresActivos || 0 },
-                        { label: 'En Ejecución', value: stats?.proyectosEnEjecucion || 0 }
+                        { label: 'Docentes Asignados', value: totalDocentes },
+                        { label: 'En Formulación', value: borradorCount }
                     ]}
                 />
             </div>

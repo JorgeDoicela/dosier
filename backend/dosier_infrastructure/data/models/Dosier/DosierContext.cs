@@ -5,13 +5,10 @@ using dosier_infrastructure.data.models.Cowork;
 namespace dosier_infrastructure.data.models;
 
 /// <summary>
-/// Contexto LIMPIO del sistema Dosier.
-/// Solo contiene las tablas que el sistema de Investigación e Innovación
-/// realmente usa. No confundirse con SigafiEsContext (que tiene las 235 
-/// tablas del legacy completo y está solo como referencia).
-///
-/// TABLAS PROPIAS (doc_):      Tablas nuevas creadas para Dosier
-/// TABLAS DE SIGAFI (lecturas): Solo las necesarias para el sistema
+/// Contexto principal del sistema DOSIER (Gestión Curricular y PEA del ISTPET).
+/// 
+/// TABLAS PROPIAS (doc_):      Tablas creadas para DOSIER
+/// TABLAS DE SIGAFI (lecturas): Frontera académica institucional (solo lectura)
 /// </summary>
 public partial class DosierContext : DbContext
 {
@@ -20,15 +17,8 @@ public partial class DosierContext : DbContext
     public DosierContext(DbContextOptions<DosierContext> options) : base(options) { }
 
     // ============================================================
-    // TABLAS NUEVAS Dosier (doc_) - V3 Core Schema
+    // TABLAS PROPIAS DOSIER (doc_) - Core Schema Curricular
     // ============================================================
-    public virtual DbSet<DocProyecto>           DocProyectos           { get; set; }
-    public virtual DbSet<DocProyectoCarrera>    DocProyectosCarreras    { get; set; }
-    public virtual DbSet<DocProyectoParticipante> DocProyectoParticipantes { get; set; }
-    public virtual DbSet<DocObjetivoProyecto>   DocObjetivosProyecto   { get; set; }
-    public virtual DbSet<DocCronograma>         DocCronogramas         { get; set; }
-    public virtual DbSet<DocBibliografiaProyecto> DocBibliografiasProyecto { get; set; }
-    public virtual DbSet<DocTrazabilidadProyecto> DocTrazabilidadProyectos { get; set; }
     public virtual DbSet<DocConfigWorkflow> DocConfigWorkflows { get; set; }
     public virtual DbSet<DocDocumentoSeccionMetadata> DocDocumentosSeccionesMetadata { get; set; }
     public virtual DbSet<DocCollaborationComment> DocCollaborationComments { get; set; }
@@ -171,7 +161,7 @@ public partial class DosierContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<DocProyecto>().HasQueryFilter(p => p.Eliminado != true);
+        modelBuilder.Entity<dosier_domain.Curriculum.Entities.DocPea>().HasQueryFilter(p => p.Activo);
 
         // Modularización de Fluent API mediante clases parciales
         OnModelCreatingSigafi(modelBuilder);

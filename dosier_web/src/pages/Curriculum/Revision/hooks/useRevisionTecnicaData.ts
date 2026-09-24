@@ -368,7 +368,7 @@ export const useRevisionTecnicaData = ({
                     }
                 }
             );
-            navigate(`/documentacion/workspace/protocolo-investigacion/${projectUuid}`);
+            navigate(`/documentacion/monitoreo/${projectUuid}`);
             return true;
         } catch (err: any) {
             console.error(err);
@@ -437,7 +437,7 @@ export const useRevisionTecnicaData = ({
                     }
                 }
             );
-            navigate(`/documentacion/workspace/protocolo-investigacion/${projectUuid}`);
+            navigate(`/documentacion/monitoreo/${projectUuid}`);
             return true;
         } catch (err: any) {
             console.error(err);

@@ -89,7 +89,7 @@ export const InboxView: React.FC<InboxViewProps> = ({
                         {[
                             { key: 'Proyectos', label: 'Proyectos', icon: Folder },
                             { key: 'Monitoreo', label: 'Monitoreo', icon: BarChart3 },
-                            { key: 'Investigacion', label: 'Investigación', icon: BookOpen },
+                            { key: 'PEA', label: 'Curricular / PEA', icon: BookOpen },
                             { key: 'Agenda', label: 'Agenda', icon: CalendarIcon },
                         ].map(ctx => (
                             <button

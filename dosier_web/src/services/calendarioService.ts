@@ -103,12 +103,17 @@ export const getIcalToken = (): Promise<{ feed_url: string }> =>
 // ─────────────────────────────────────────────────────────────
 
 export const CATEGORIAS_CONFIG: Record<string, { label: string; color: string }> = {
-    Normativo:   { label: 'CACES / Normativa',   color: '#1E3A8A' },
-    Convocatoria:{ label: 'Convocatorias',        color: '#3B82F6' },
-    Proyecto:    { label: 'Proyectos',            color: '#10B981' },
-    Monitoreo:   { label: 'Monitoreo (Informes)', color: '#8B5CF6' },
-    PeerReview:  { label: 'Evaluaciones',         color: '#EC4899' },
-    Personal:    { label: 'Mis Tareas / Agenda',  color: '#F59E0B' },
+    Normativo:   { label: 'CACES / Normativa',        color: '#1E3A8A' },
+    EntregaPea:  { label: 'Entrega PEA Docente',      color: '#3B82F6' },
+    Revision:    { label: 'Revisión Coordinación',    color: '#8B5CF6' },
+    Firmas:      { label: 'Legalización y Firmas',    color: '#10B981' },
+    Reunion:     { label: 'Reunión de Área / Cátedra', color: '#EC4899' },
+    Personal:    { label: 'Mis Tareas / Agenda',       color: '#F59E0B' },
+    // Compatibilidad retroactiva con eventos preexistentes
+    Convocatoria:{ label: 'Entrega PEA Docente',      color: '#3B82F6' },
+    Proyecto:    { label: 'Instrumento Curricular',   color: '#10B981' },
+    Monitoreo:   { label: 'Supervisión Curricular',   color: '#8B5CF6' },
+    PeerReview:  { label: 'Revisión Coordinación',    color: '#EC4899' },
 };
 
 export const PRIORIDAD_COLORS: Record<string, { bg: string; text: string }> = {
@@ -208,35 +213,40 @@ export const resolveEventUrl = (ev: {
     const projectUuid = ev.uuid_entidad_origen || ev.uuid;
     const prefix = isAdmin ? '/documentacion' : '/documentacion/mis-proyectos';
 
-    // 2. Mapeo según el tipo de entidad de dominio
+    // 2. Mapeo según el tipo de entidad de dominio curricular
     switch (ev.tipo_entidad_origen) {
+        case 'PEA':
         case 'PROYECTO': {
             if (!projectUuid) return `${prefix}`;
-            if (ev.subcategoria === 'SubsanacionProtocolo' || ev.subcategoria === 'InicioProyecto') {
-                return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
+            if (ev.subcategoria === 'RevisionCoordinacion' || ev.subcategoria === 'RevisionTecnica') {
+                return `/documentacion/revision-tecnica/${projectUuid}`;
             }
-            return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
+            return `${prefix}/workspace/PEA_OFICIAL/${projectUuid}`;
         }
-        case 'CONVOCATORIA':
-            return '/proyectos';
+        case 'REVISION':
         case 'PEER_REVIEW':
-            return '/revisiones';
+            return projectUuid ? `/documentacion/revision-tecnica/${projectUuid}` : `${prefix}`;
+        case 'MONITOREO':
+            return projectUuid ? `${prefix}/monitoreo/${projectUuid}` : `${prefix}`;
+        case 'CONVOCATORIA':
+        case 'PERIODO':
+            return `${prefix}`;
         default:
             break;
     }
 
     // 3. Fallbacks por categoría global
-    if (ev.categoria_global === 'Proyecto' && projectUuid) {
-        return `${prefix}/workspace/protocolo-investigacion/${projectUuid}`;
+    if ((ev.categoria_global === 'EntregaPea' || ev.categoria_global === 'Proyecto') && projectUuid) {
+        return `${prefix}/workspace/PEA_OFICIAL/${projectUuid}`;
     }
-    if (ev.categoria_global === 'Convocatoria') {
-        return '/proyectos';
+    if ((ev.categoria_global === 'Revision' || ev.categoria_global === 'PeerReview') && projectUuid) {
+        return `/documentacion/revision-tecnica/${projectUuid}`;
     }
     if (ev.categoria_global === 'Monitoreo' && projectUuid) {
-        return `${prefix}/informes-avance/${projectUuid}`;
+        return `${prefix}/monitoreo/${projectUuid}`;
     }
-    if (ev.categoria_global === 'PeerReview') {
-        return '/revisiones';
+    if (ev.categoria_global === 'Convocatoria' || ev.categoria_global === 'Normativo') {
+        return `${prefix}`;
     }
 
     return null;

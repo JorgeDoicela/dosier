@@ -3,7 +3,6 @@ import { analyticsService } from '../../../services/analyticsService';
 import type {
     ProyectoResumen,
     DashboardStats,
-    GrupoInvestigacion,
     ProcessedAnalyticsData,
     LineaInvestigacionData,
     EstadoConteo
@@ -16,7 +15,6 @@ export const useAnalyticsData = (period: string, carrera: string) => {
     
     const [projects, setProjects] = useState<ProyectoResumen[]>([]);
     const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [groups, setGroups] = useState<GrupoInvestigacion[]>([]);
     const [allCareers, setAllCareers] = useState<any[]>([]);
 
     const loadData = async () => {
@@ -39,7 +37,6 @@ export const useAnalyticsData = (period: string, carrera: string) => {
 
             setProjects(projectsData as ProyectoResumen[]);
             if (statsData) setStats(statsData as DashboardStats);
-            setGroups([]); // DOSIER no gestiona grupos de investigación independientes
             setAllCareers(careersData);
 
         } catch (error) {
@@ -136,14 +133,13 @@ export const useAnalyticsData = (period: string, carrera: string) => {
             dbCareers
         };
 
-    }, [projects, stats, groups, period, carrera]);
+    }, [projects, stats, period, carrera]);
 
     return {
         loading,
         refreshing,
         projects,
         stats,
-        groups,
         allCareers,
         processed,
         reload: loadData

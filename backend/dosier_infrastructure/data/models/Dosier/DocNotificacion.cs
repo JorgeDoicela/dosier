@@ -34,6 +34,5 @@ public partial class DocNotificacion
     public int Version { get; set; } = 1;
 
     // Navegación
-    public virtual DocProyecto? IdProyectoNavigation { get; set; }
     public virtual User? DestinatarioNavigation { get; set; }
 }

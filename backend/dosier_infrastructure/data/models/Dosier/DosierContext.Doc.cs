@@ -7,15 +7,6 @@ public partial class DosierContext
 {
     partial void OnModelCreatingDosier(ModelBuilder modelBuilder)
     {
-        // Ciclo de vida de Proyectos
-        modelBuilder.ApplyConfiguration(new DocProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocTrazabilidadProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocProyectoCarreraConfiguration());
-        modelBuilder.ApplyConfiguration(new DocProyectoParticipanteConfiguration());
-        modelBuilder.ApplyConfiguration(new DocObjetivoProyectoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocCronogramaConfiguration());
-        modelBuilder.ApplyConfiguration(new DocBibliografiaProyectoConfiguration());
-
         // Motor de Documentos
         modelBuilder.ApplyConfiguration(new DocumentInstanceConfiguration());
         modelBuilder.ApplyConfiguration(new DocumentTemplateConfiguration());

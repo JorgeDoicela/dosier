@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Folder, Bell, BarChart3, BookOpen, Calendar as CalendarIcon,
-    TrendingUp, Edit2, Trash2, ChevronRight
+    TrendingUp, Edit2, Trash2, ChevronRight, FileText
 } from 'lucide-react';
 import { format, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -100,11 +100,12 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                             // Derivar chip de contexto desde url_accion
                             const contextoChip = (() => {
                                 const url = note.url_accion || '';
-                                if (url.startsWith('/documentacion/proyectos')) return { label: 'Proyectos', icon: Folder };
+                                if (url.startsWith('/documentacion/mis-proyectos')) return { label: 'Mis Asignaturas', icon: BookOpen };
+                                if (url.startsWith('/documentacion/revision-tecnica')) return { label: 'Revisión PEA', icon: FileText };
                                 if (url.startsWith('/documentacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                                if (url.startsWith('/documentacion')) return { label: 'Documentación', icon: BookOpen };
-                                if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
-                                if (url.startsWith('/analiticas')) return { label: 'Analíticas', icon: TrendingUp };
+                                if (url.startsWith('/documentacion')) return { label: 'Gestión PEA', icon: Folder };
+                                if (url.startsWith('/calendario')) return { label: 'Agenda', icon: CalendarIcon };
+                                if (url.startsWith('/analiticas')) return { label: 'Analíticas CACES', icon: TrendingUp };
                                 return null;
                             })();
 

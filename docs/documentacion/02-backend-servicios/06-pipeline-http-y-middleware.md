@@ -88,7 +88,7 @@ El host de ASP.NET Core ejecuta 6 tareas en segundo plano (`IHostedService` / `B
 | :--- | :--- | :--- |
 | `BackupBackgroundService` | Diario a las 02:00 UTC | Genera un volcado SQL y copia de seguridad de la base de datos `sigafi_es`, registrando el log en `doc_backup_logs`. |
 | `CalendarioAlertasJob` | Cada 15 minutos | Evalúa hitos académicos institucionales y normativas CACES próximas a vencer, despachando recordatorios preventivos a coordinadores y docentes. |
-| `RecycleBinCleanupBackgroundService` | Diario a las 03:00 UTC | Purga definitivamente aquellos registros marcados como eliminados lógicamente que hayan superado el período de retención legal (30 días). |
+| `RecycleBinCleanupBackgroundService` | Diario a las 03:00 UTC | Purga definitivamente aquellos registros marcados como eliminados lógicamente de PEAs inactivos (`DocPea`) e instancias de documentos archivadas (`DocumentInstance`) que hayan superado el período de retención legal (30 días). |
 | `DocumentGarbageCollectorBackgroundService` | Diario a las 04:00 UTC | Ejecuta la purga forense de archivos binarios PDF generados con plantillas obsoletas (`IsFilePurged = true`), preservando los hashes SHA-256 en la base de datos. |
 | `EmailBackgroundProcessorService` | Continuo en cola en memoria | Despacha correos transaccionales pendientes en lotes controlados para no saturar el servidor SMTP institucional ni caer en listas de spam. |
 | `EmailBounceListenerService` | Cada 30 minutos | Monitorea rebotes de correo electrónico (Hard/Soft Bounces) para marcar direcciones inválidas en `doc_email_historial`. |

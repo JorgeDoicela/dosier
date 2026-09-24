@@ -28,7 +28,4 @@ public partial class AccessToken
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public DateTime? FechaExpiracion { get; set; }
     public int Version { get; set; } = 1;
-
-    // Navegación opcional
-    public virtual DocProyecto? IdProyectoNavigation { get; set; }
 }
