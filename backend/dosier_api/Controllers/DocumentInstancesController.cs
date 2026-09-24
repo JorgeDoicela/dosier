@@ -23,7 +23,6 @@ namespace dosier_api.Controllers
         private readonly IDocumentInstanceService _instanceService;
         private readonly IDocumentEngine _documentEngine;
         private readonly IDocumentDataOrchestrator _orchestrator;
-        private readonly dosier_infrastructure.data.models.DosierContext _context;
         private readonly IEnumerable<IDocumentBlockProvider> _blockProviders;
         private readonly Microsoft.Extensions.Hosting.IHostEnvironment _environment;
 
@@ -31,14 +30,12 @@ namespace dosier_api.Controllers
             IDocumentInstanceService instanceService,
             IDocumentEngine documentEngine,
             IDocumentDataOrchestrator orchestrator,
-            dosier_infrastructure.data.models.DosierContext context,
             IEnumerable<IDocumentBlockProvider> blockProviders,
             Microsoft.Extensions.Hosting.IHostEnvironment environment)
         {
             _instanceService = instanceService;
             _documentEngine = documentEngine;
             _orchestrator = orchestrator;
-            _context = context;
             _blockProviders = blockProviders;
             _environment = environment;
         }
@@ -213,13 +210,8 @@ namespace dosier_api.Controllers
 
                             if (isNewProject)
                             {
-                                var context = HttpContext.RequestServices.GetRequiredService<dosier_infrastructure.data.models.DosierContext>();
-                                var dbInstance = await context.DocumentInstances.FirstOrDefaultAsync(i => i.Uuid == instance.Uuid, ct);
-                                if (dbInstance != null)
-                                {
-                                    dbInstance.SetEntityUuid(dto.Uuid);
-                                    await context.SaveChangesAsync(ct);
-                                    if (dto.Estado == "Prepropuesta")
+                                await _instanceService.SetEntityUuidAsync(instance.Uuid, dto.Uuid, ct);
+                                if (dto.Estado == "Prepropuesta")
                                     {
                                         var notificationService = HttpContext.RequestServices.GetRequiredService<dosier_application.Common.Notifications.INotificationService>();
 
@@ -260,7 +252,6 @@ namespace dosier_api.Controllers
                                         }
                                     }
                                 }
-                            }
                         }
                         else
                         {

@@ -41,4 +41,9 @@ public interface IAuthService
     /// Restablece la contraseña de un usuario mediante token de recuperación de contraseña ordinario (solo para evaluadores externos).
     /// </summary>
     Task<bool> ResetPasswordWithRecoveryTokenAsync(string plainToken, string newPassword, string? ipAddress);
+
+    /// <summary>
+    /// Obtiene el ID interno del usuario y su estado de aceptación LOPDP para la sesión activa.
+    /// </summary>
+    Task<(int? IdUsuario, bool AceptoLopdp)> GetUserStatusAsync(string idReferencia);
 }

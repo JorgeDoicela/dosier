@@ -49,10 +49,19 @@ builder.Services.AddCors(options =>
 
 ### 2.2. Manejo Centralizado de Excepciones (`ExceptionMiddleware`)
 
-Intercepta cualquier excepción no controlada dentro del pipeline:
-* Oculta trazas internas sensibles en respuestas HTTP en modo producción.
-* Devuelve estructuras uniformes de error `application/json` con códigos de estado HTTP semánticos (400 para reglas de validación de negocio, 401 para credenciales inválidas, 403 para violaciones RBAC y 500 para fallos no recuperables).
-* Registra el incidente en el sistema de logging con el stack trace completo y contexto del usuario.
+Intercepta cualquier excepción no controlada dentro del pipeline y la transforma en una respuesta HTTP semántica en formato JSON con política `lower_snake_case` y codificación directa UTF-8 (`JavaScriptEncoder.UnsafeRelaxedJsonEscaping`):
+
+| Tipo de Excepción | Código HTTP | Estructura de Respuesta |
+| :--- | :---: | :--- |
+| `FluentValidation.ValidationException` | **400 Bad Request** | `{ "status_code": 400, "message": "Error de validación en la solicitud.", "errors": [ { "campo": "...", "error": "..." } ] }` |
+| `KeyNotFoundException` | **404 Not Found** | `{ "status_code": 404, "message": "..." }` |
+| `UnauthorizedAccessException` | **401 Unauthorized** | `{ "status_code": 401, "message": "..." }` |
+| `InvalidOperationException` / `ArgumentException` | **400 Bad Request** | `{ "status_code": 400, "message": "..." }` |
+| `DbUpdateConcurrencyException` | **409 Conflict** | `{ "status_code": 409, "message": "Conflicto de edición: El registro ha sido modificado por otro usuario..." }` |
+| `Exception` general no controlada | **500 Internal Server Error** | `{ "status_code": 500, "message": "Error interno del servidor." }` *(traza detallada solo en ambiente de Desarrollo)* |
+
+* **Logging Estructurado:** Registra el incidente con `_logger.LogError` o `_logger.LogWarning` incluyendo ruta HTTP, método y contexto de usuario.
+* **Desacople en Controladores:** Elimina la necesidad de bloques `try-catch` repetitivos en los controladores, garantizando que la capa de aplicación defina reglas de negocio mediante excepciones tipadas y el host las traduzca limpiamente a códigos de estado REST.
 
 ### 2.3. Autenticación Dual: Header Bearer y Cookie HttpOnly
 

@@ -135,6 +135,7 @@ namespace dosier_infrastructure.Research.Subservices
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 var currentPeriod = await _context.Periodos
+                    .AsNoTracking()
                     .Where(pr => pr.EsInstituto == 1)
                     .OrderByDescending(pr => pr.Periodoactivoinstituto == 1)
                     .ThenByDescending(pr => pr.Activo == true)
@@ -147,6 +148,7 @@ namespace dosier_infrastructure.Research.Subservices
                     var researchSubcatId = await GetResearchSubcatIdAsync();
 
                     stats.HorasDisponiblesDistributivo = await _context.ProfesoresActividades
+                        .AsNoTracking()
                         .Where(pa => pa.IdProfesor.Trim() == userIdReferencia.Trim() && pa.IdSubcategoria == researchSubcatId && pa.IdPeriodo == currentPeriod.IdPeriodo)
                         .SumAsync(pa => (decimal?)pa.HorasSemana ?? 0);
                 }

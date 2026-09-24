@@ -77,6 +77,15 @@ public interface ICalendarioService
     /// <summary>Reordena las notas de la bandeja actualizando OrdenBandeja en batch.</summary>
     Task ReordenarBandejaAsync(IEnumerable<ReordenarBandejaItem> items, int idUsuario);
 
+    /// <summary>Resuelve el IdUsuario interno a partir del IdSigafi o identificador de sesión.</summary>
+    Task<int?> ResolveUserIdBySigafiAsync(string idSigafi);
+
+    /// <summary>Actualiza un evento personal validando que pertenezca al usuario solicitante. Retorna null si no existe, false si no tiene permisos, true si se actualizó con éxito.</summary>
+    Task<bool?> UpdateUsuarioEventoAsync(string uuid, EventoNormativoDto dto, int idUsuario);
+
+    /// <summary>Elimina un evento personal validando que pertenezca al usuario solicitante. Retorna null si no existe, false si no tiene permisos, true si se eliminó con éxito.</summary>
+    Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario);
+
     /// <summary>Llamado por el job diario: envía alertas por email de eventos próximos.</summary>
     Task ProcesarAlertasDiariasAsync();
 }

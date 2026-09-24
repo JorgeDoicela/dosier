@@ -502,6 +502,33 @@ namespace Dosier.Infrastructure.Research
             return true;
         }
 
+        public async Task<bool> IniciarEjecucionAsync(string proyectoUuid, int idUsuario)
+        {
+            var project = await _context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == proyectoUuid);
+            if (project == null) return false;
+
+            project.Estado = "En Ejecución";
+            if (!project.FechaInicio.HasValue)
+            {
+                project.FechaInicio = DateOnly.FromDateTime(DateTime.UtcNow);
+            }
+
+            var trazabilidad = new DocTrazabilidadProyecto
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdProyecto = project.IdProyecto,
+                IdUsuario = idUsuario,
+                EstadoAnterior = "Aprobado",
+                EstadoNuevo = "En Ejecución",
+                Observacion = "Inicio formal de la fase de ejecución de actividades.",
+                FechaTransicion = DateTime.Now
+            };
+            _context.DocTrazabilidadProyectos.Add(trazabilidad);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<System.Collections.Generic.IEnumerable<object>> GetTrazabilidadAsync(string proyectoUuid)
         {
             return await _context.DocTrazabilidadProyectos

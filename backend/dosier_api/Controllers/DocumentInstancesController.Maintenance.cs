@@ -77,9 +77,7 @@ namespace dosier_api.Controllers
         [HttpGet("{uuid}/ui-config")]
         public async Task<IActionResult> GetInstanceUiConfig(string uuid, CancellationToken ct)
         {
-            var instance = await _context.DocumentInstances
-                .AsNoTracking()
-                .FirstOrDefaultAsync(i => i.Uuid == uuid, ct);
+            var instance = await _instanceService.GetByUuidAsync(uuid, ct);
 
             if (instance == null)
             {
@@ -242,7 +240,7 @@ namespace dosier_api.Controllers
                         if (provider.Behavior == BlockBehavior.DataCapture || isEditableWorkspace)
                         {
                             provider.PopulateSchema(block, schemaDict, listsList, richTextFields, ref premiumFieldsCount, template.Code);
-                            await provider.MapToUiSectionAsync(block, title, sectionsList, _context, template.Code, ct);
+                            await provider.MapToUiSectionAsync(block, title, sectionsList, null!, template.Code, ct);
                         }
                     }
                 }

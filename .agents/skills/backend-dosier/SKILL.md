@@ -37,7 +37,7 @@ backend/
 │   ├── Controllers/         # Controladores delgados (PeaController, DocenteAsignaturasController, etc.)
 │   ├── Middlewares/         # Middleware global de excepciones, auditoría y autenticación híbrida
 │   └── Program.cs           # Composición raíz de la aplicación, CORS dinámico, DI y pipeline HTTP
-└── dosier_tests/            # Suite de Pruebas Unitarias e Integración (111 tests xUnit, Moq, FluentAssertions)
+└── dosier_tests/            # Suite de Pruebas Unitarias e Integración (118 tests xUnit, Moq, FluentAssertions)
 ```
 
 ### Reglas de Dependencia Inviolables

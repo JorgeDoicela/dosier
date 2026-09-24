@@ -133,7 +133,7 @@ public class AuthService : IAuthService
             if (!passwordOk && esProfesorActivo)
             {
                 // Resiliencia con SIGAFI: verificar si la contraseña fue actualizada en la nómina de profesores de SIGAFI
-                var prof = await _context.Profesores.FirstOrDefaultAsync(p => p.IdProfesor == user.IdSigafi);
+                var prof = await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == user.IdSigafi);
                 if (prof != null)
                 {
                     var sigafiVerification = _passwordService.VerifyPassword(password, prof.Clave ?? string.Empty);
@@ -190,6 +190,7 @@ public class AuthService : IAuthService
 
         // ── 2. JIT Provisioning: Docentes (por cédula/IdProfesor o por Email) ────
         var profesor = await _context.Profesores
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => (p.IdProfesor.Trim() == username || p.EmailInstitucional == username || p.Email == username) && (p.Activo == 1 || p.Activo == null));
 
         if (profesor != null)
@@ -240,7 +241,7 @@ public class AuthService : IAuthService
         var user = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == cedula);
         if (user != null) return user;
 
-        var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == cedula);
+        var p = await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(prof => prof.IdProfesor == cedula);
         if (p != null)
         {
             string fullNombre = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim();
@@ -249,7 +250,7 @@ public class AuthService : IAuthService
 
         if (!string.IsNullOrEmpty(_masterAdminId) && cedula == _masterAdminId)
         {
-            var a = await _context.Alumnos.FirstOrDefaultAsync(al => al.IdAlumno == cedula);
+            var a = await _context.Alumnos.AsNoTracking().FirstOrDefaultAsync(al => al.IdAlumno == cedula);
             if (a != null)
             {
                 string fullNombre = $"{a.PrimerNombre} {a.SegundoNombre} {a.ApellidoPaterno} {a.ApellidoMaterno}".Replace("  ", " ").Trim();
@@ -284,12 +285,12 @@ public class AuthService : IAuthService
         string? email = null;
         if (table == "profesor")
         {
-            var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == sigafiId);
+            var p = await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(prof => prof.IdProfesor == sigafiId);
             if (p != null) email = p.EmailInstitucional ?? p.Email;
         }
         else if (table == "alumno")
         {
-            var a = await _context.Alumnos.FirstOrDefaultAsync(al => al.IdAlumno == sigafiId);
+            var a = await _context.Alumnos.AsNoTracking().FirstOrDefaultAsync(al => al.IdAlumno == sigafiId);
             if (a != null) email = a.EmailInstitucional ?? a.Email;
         }
 
@@ -464,4 +465,16 @@ public class AuthService : IAuthService
 
     public Task<bool> ResetPasswordWithRecoveryTokenAsync(string plainToken, string newPassword, string? ipAddress)
         => _passwordRecoveryService.ResetPasswordWithRecoveryTokenAsync(plainToken, newPassword, ipAddress);
+
+    public async Task<(int? IdUsuario, bool AceptoLopdp)> GetUserStatusAsync(string idReferencia)
+    {
+        var dbUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
+        if (dbUser == null) return (null, false);
+
+        var aceptoLopdp = await _context.DocLopdpConsentimientos
+            .AsNoTracking()
+            .AnyAsync(c => c.IdUsuario == dbUser.IdUsuario && c.VersionPolitica == "LOPDP_GENERAL" && c.Estado == "Otorgado");
+
+        return (dbUser.IdUsuario, aceptoLopdp);
+    }
 }

@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using dosier_application.Research;
-using dosier_infrastructure.data.models;
 
 namespace dosier_api.Controllers;
 
@@ -13,26 +11,28 @@ namespace dosier_api.Controllers;
 public class CalendarioController : ControllerBase
 {
     private readonly ICalendarioService _calendarioService;
-    private readonly DosierContext _context;
 
-    public CalendarioController(ICalendarioService calendarioService, DosierContext context)
+    public CalendarioController(ICalendarioService calendarioService)
     {
         _calendarioService = calendarioService;
-        _context = context;
+    }
+
+    private async Task<int?> GetCurrentUserIdAsync()
+    {
+        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(idReferencia)) return null;
+        return await _calendarioService.ResolveUserIdBySigafiAsync(idReferencia);
     }
 
     // ── GET /api/calendario/eventos?desde=2025-09-01&hasta=2025-09-30 ────────
     [HttpGet("eventos")]
     public async Task<IActionResult> GetEventos([FromQuery] DateOnly desde, [FromQuery] DateOnly hasta)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
-
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
         var rol = User.IsInRole("DOSIER_ADMIN") ? "DOSIER_ADMIN" : (User.FindFirst(ClaimTypes.Role)?.Value ?? "DOSIER_DOCENTE");
-        var eventos = await _calendarioService.GetEventosAsync(desde, hasta, rol, dbUser.IdUsuario);
+        var eventos = await _calendarioService.GetEventosAsync(desde, hasta, rol, idUsuario.Value);
         return Ok(eventos);
     }
 
@@ -53,13 +53,10 @@ public class CalendarioController : ControllerBase
     [HttpPost("ical/token")]
     public async Task<IActionResult> GenerarTokenIcal()
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        var token = await _calendarioService.GenerarORegenerarTokenIcalAsync(dbUser.IdUsuario);
+        var token = await _calendarioService.GenerarORegenerarTokenIcalAsync(idUsuario.Value);
         var feedUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/api/calendario/feed?token={token}";
         return Ok(new { token, feed_url = feedUrl });
     }
@@ -70,16 +67,13 @@ public class CalendarioController : ControllerBase
     [HttpPost("usuario/eventos")]
     public async Task<IActionResult> CreateUsuarioEvento([FromBody] EventoNormativoDto dto)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
-
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
         // Forzar a que sea del usuario
         var usuarioDto = dto with { EsPrivado = dto.EsPrivado }; 
 
-        var uuid = await _calendarioService.CreateNormativoAsync(usuarioDto, dbUser.IdUsuario);
+        var uuid = await _calendarioService.CreateNormativoAsync(usuarioDto, idUsuario.Value);
         return Created("", new { uuid });
     }
 
@@ -87,13 +81,10 @@ public class CalendarioController : ControllerBase
     [HttpGet("usuario/notas")]
     public async Task<IActionResult> GetStickyNotes()
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        var notas = await _calendarioService.GetStickyNotesAsync(dbUser.IdUsuario);
+        var notas = await _calendarioService.GetStickyNotesAsync(idUsuario.Value);
         return Ok(notas);
     }
 
@@ -101,20 +92,13 @@ public class CalendarioController : ControllerBase
     [HttpPut("usuario/eventos/{uuid}")]
     public async Task<IActionResult> UpdateUsuarioEvento(string uuid, [FromBody] EventoNormativoDto dto)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
+        var result = await _calendarioService.UpdateUsuarioEventoAsync(uuid, dto, idUsuario.Value);
+        if (result == null) return NotFound();
+        if (result == false) return Forbid();
 
-        var existing = await _context.Set<DocCalendarioEventoNormativo>().FirstOrDefaultAsync(e => e.Uuid == uuid);
-        if (existing == null) return NotFound();
-
-        // Solo el creador puede editar su evento personal
-        if (existing.CreadoPor != dbUser.IdUsuario) return Forbid();
-
-        var result = await _calendarioService.UpdateNormativoAsync(uuid, dto);
-        if (!result) return NotFound();
         return Ok(new { message = "Evento de usuario actualizado." });
     }
 
@@ -122,20 +106,13 @@ public class CalendarioController : ControllerBase
     [HttpDelete("usuario/eventos/{uuid}")]
     public async Task<IActionResult> DeleteUsuarioEvento(string uuid)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
+        var result = await _calendarioService.DeleteUsuarioEventoAsync(uuid, idUsuario.Value);
+        if (result == null) return NotFound();
+        if (result == false) return Forbid();
 
-        var existing = await _context.Set<DocCalendarioEventoNormativo>().FirstOrDefaultAsync(e => e.Uuid == uuid);
-        if (existing == null) return NotFound();
-
-        // Solo el creador puede eliminar su evento personal
-        if (existing.CreadoPor != dbUser.IdUsuario) return Forbid();
-
-        var result = await _calendarioService.DeleteNormativoAsync(uuid);
-        if (!result) return NotFound();
         return Ok(new { message = "Evento de usuario eliminado." });
     }
 
@@ -143,13 +120,10 @@ public class CalendarioController : ControllerBase
     [HttpPatch("usuario/eventos/{uuid}/inbox")]
     public async Task<IActionResult> DevolverAInbox(string uuid)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        var result = await _calendarioService.DevolverAInboxAsync(uuid, dbUser.IdUsuario);
+        var result = await _calendarioService.DevolverAInboxAsync(uuid, idUsuario.Value);
         if (!result) return NotFound(new { message = "Nota no encontrada o no pertenece al usuario." });
         return Ok(new { message = "Evento devuelto a la bandeja Inbox." });
     }
@@ -158,13 +132,10 @@ public class CalendarioController : ControllerBase
     [HttpPatch("usuario/notas/reordenar")]
     public async Task<IActionResult> ReordenarBandeja([FromBody] List<ReordenarBandejaItem> items)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        await _calendarioService.ReordenarBandejaAsync(items, dbUser.IdUsuario);
+        await _calendarioService.ReordenarBandejaAsync(items, idUsuario.Value);
         return Ok(new { message = "Bandeja reordenada." });
     }
 
@@ -182,13 +153,10 @@ public class CalendarioController : ControllerBase
     [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> CreateNormativo([FromBody] EventoNormativoDto dto)
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var idUsuario = await GetCurrentUserIdAsync();
+        if (idUsuario == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        var uuid = await _calendarioService.CreateNormativoAsync(dto, dbUser.IdUsuario);
+        var uuid = await _calendarioService.CreateNormativoAsync(dto, idUsuario.Value);
         return CreatedAtAction(nameof(GetNormativos), new { }, new { uuid });
     }
 

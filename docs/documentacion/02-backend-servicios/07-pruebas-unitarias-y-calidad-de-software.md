@@ -20,6 +20,8 @@ backend/dosier_tests/
 ├── Controllers/     # Pruebas de controladores REST (CatalogsController, LopdpController)
 ├── Curriculum/      # Pruebas del núcleo curricular y circuito colegiado de firmas
 │   └── PeaFirmaTests.cs
+├── Middleware/      # Pruebas de middleware HTTP (ExceptionMiddleware: 400, 401, 404, 409, 500)
+│   └── ExceptionMiddlewareTests.cs
 ├── Research/        # Pruebas de orquestación de proyectos y calendario académico
 │   ├── CalendarioServiceTests.cs
 │   ├── ProjectOrchestratorTests.cs
@@ -82,6 +84,17 @@ Esta suite de pruebas evalúa el comportamiento transaccional del servicio `PeaS
   * Valida el cálculo de plazos de entrega, fechas de gracia en prórrogas y la generación estructurada del feed iCalendar `.ics`.
 * **`ProjectOrchestratorTests.cs` & `ProjectSecurityServiceTests.cs`:**
   * Valida la vinculación entre proyectos de investigación formativa y el Programa de Estudio de la Asignatura (PEA) correspondiente.
+
+### 3.4. Resiliencia HTTP y Manejo Global de Errores (`Middleware/ExceptionMiddlewareTests.cs`)
+
+Esta suite valida la transformación semántica de excepciones de dominio y aplicación en respuestas JSON estandarizadas:
+* **`InvokeAsync_ValidationException_Returns400BadRequest`:** Verifica que errores de `FluentValidation` retornen código HTTP 400 con arreglo de errores por campo.
+* **`InvokeAsync_KeyNotFoundException_Returns404NotFound`:** Valida que recursos no encontrados retornen HTTP 404 con mensaje explicativo.
+* **`InvokeAsync_UnauthorizedAccessException_Returns401Unauthorized`:** Comprueba la respuesta HTTP 401 ante credenciales inválidas o expiradas.
+* **`InvokeAsync_InvalidOperationException_Returns400BadRequest`:** Comprueba que violaciones a transiciones de estado retornen HTTP 400.
+* **`InvokeAsync_ArgumentException_Returns400BadRequest`:** Valida el rechazo de argumentos malformados con HTTP 400.
+* **`InvokeAsync_DbUpdateConcurrencyException_Returns409Conflict`:** Valida la respuesta HTTP 409 ante colisiones de concurrencia en base de datos.
+* **`InvokeAsync_GenericException_Returns500InternalServerError`:** Confirma la respuesta HTTP 500 con sanitización de mensajes en entornos de producción.
 
 ---
 

@@ -55,25 +55,17 @@ namespace dosier_api.Controllers
             [FromQuery] string? estado = null,
             CancellationToken cancellationToken = default)
         {
-            try
+            var userIdStr = User.FindFirstValue("id_usuario");
+            int idUsuario = 0;
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int parsedId))
             {
-                var userIdStr = User.FindFirstValue("id_usuario");
-                int idUsuario = 0;
-                if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int parsedId))
-                {
-                    idUsuario = parsedId;
-                }
-
-                var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-
-                var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, cancellationToken);
-                return Ok(lista);
+                idUsuario = parsedId;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[DOSIER] Error al obtener bandeja de PEAs. Periodo: {Periodo}, Carrera: {Carrera}, Estado: {Estado}", idPeriodo, idCarrera, estado);
-                return StatusCode(500, new { message = "Error interno al obtener la bandeja de supervisión de PEAs.", detalle = ex.Message });
-            }
+
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, cancellationToken);
+            return Ok(lista);
         }
 
 
@@ -125,31 +117,8 @@ namespace dosier_api.Controllers
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
             var userAgent = Request.Headers["User-Agent"].ToString();
 
-            try
-            {
-                var resultado = await _peaService.FirmarPeaAsync(id, idUsuario, dto, ip, userAgent);
-                return Ok(resultado);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error interno al procesar la firma del PEA.", detalle = ex.Message });
-            }
+            var resultado = await _peaService.FirmarPeaAsync(id, idUsuario, dto, ip, userAgent);
+            return Ok(resultado);
         }
 
         [HttpPost("{id}/clonar")]

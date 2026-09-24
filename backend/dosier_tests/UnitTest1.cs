@@ -247,7 +247,7 @@ public class UnitTest1
         var mockDocOrch = new Mock<IDocumentDataOrchestrator>();
         var mockEnv = new Mock<Microsoft.Extensions.Hosting.IHostEnvironment>();
         var providersList = new System.Collections.Generic.List<IDocumentBlockProvider>();
-        var controller = new DocumentInstancesController(instanceService, mockEngine.Object, mockDocOrch.Object, context, providersList, mockEnv.Object);
+        var controller = new DocumentInstancesController(instanceService, mockEngine.Object, mockDocOrch.Object, providersList, mockEnv.Object);
         
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, "0302144159") };
         var identity = new ClaimsIdentity(claims, "TestAuth");

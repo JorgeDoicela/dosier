@@ -85,7 +85,9 @@ public class MicrosoftAuthService : IMicrosoftAuthService
         if (user == null)
         {
             // 2. Intentar buscar en Profesores para JIT Provisioning
-            var profesor = await _context.Profesores.FirstOrDefaultAsync(p =>
+            var profesor = await _context.Profesores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p =>
                 (p.Activo == 1 || p.Activo == null) &&
                 ((p.EmailInstitucional != null && p.EmailInstitucional.ToLower() == email) ||
                  (p.Email != null && p.Email.ToLower() == email) ||

@@ -245,5 +245,11 @@ public class LopdpService : ILopdpService
             _semaphore.Release();
         }
     }
+
+    public async Task<int?> ResolveUserIdBySigafiAsync(string idSigafi)
+    {
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == idSigafi);
+        return user?.IdUsuario;
+    }
 }
 

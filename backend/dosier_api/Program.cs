@@ -245,6 +245,8 @@ foreach (var type in providerTypes)
 builder.Services.AddScoped<IDocumentTemplateRepository, DocumentTemplateRepository>();
 builder.Services.AddScoped<IDocumentAuditRepository, DocumentAuditRepository>();
 builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentInstanceService, Dosier.Infrastructure.Common.Documents.DocumentInstanceService>();
+builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentVerificationService, Dosier.Infrastructure.Common.Documents.DocumentVerificationService>();
+builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentTemplateAdminService, Dosier.Infrastructure.Common.Documents.DocumentTemplateAdminService>();
 builder.Services.AddScoped<IDocumentDataOrchestrator, DocumentDataOrchestrator>();
 builder.Services.AddScoped<IDocumentDataProvider, ProjectDocumentDataProvider>();
 builder.Services.AddSingleton<Dosier.Infrastructure.Common.Storage.IFileStorageService, Dosier.Infrastructure.Common.Storage.LocalFileStorageService>();
@@ -259,6 +261,7 @@ builder.Services.AddScoped<dosier_application.Security.IMicrosoftAuthService, do
 builder.Services.AddScoped<dosier_application.Security.IPasswordRecoveryService, dosier_infrastructure.Security.PasswordRecoveryService>();
 builder.Services.AddScoped<dosier_application.Security.IAuthService, dosier_infrastructure.Security.AuthService>();
 builder.Services.AddScoped<dosier_application.Security.IAdminService, dosier_infrastructure.Security.AdminService>();
+builder.Services.AddScoped<dosier_application.Security.IBackupAdminService, dosier_infrastructure.Security.BackupAdminService>();
 builder.Services.AddScoped<IResearchService, ProjectService>();
 builder.Services.AddScoped<Dosier.Application.Research.IProjectSecurityService, ProjectSecurityService>();
 builder.Services.AddScoped<Dosier.Application.Research.IProjectWizardService, ProjectWizardService>();
@@ -290,6 +293,10 @@ builder.Services.AddScoped<IAIAssistantService, AIAssistantService>();
 builder.Services.AddScoped<Dosier.Application.Research.IWorkflowEngineService, Dosier.Infrastructure.Research.WorkflowEngineService>();
 builder.Services.AddScoped<dosier_application.Security.IAuditService, dosier_infrastructure.Security.AuditService>();
 builder.Services.AddScoped<dosier_application.Security.ILopdpService, dosier_infrastructure.Security.LopdpService>();
+builder.Services.AddScoped<dosier_application.Common.Interfaces.ICatalogsService, dosier_infrastructure.Common.CatalogsService>();
+builder.Services.AddScoped<dosier_application.Collaboration.Interfaces.ICollaborationService, dosier_infrastructure.Collaboration.CollaborationService>();
+builder.Services.AddScoped<dosier_application.Research.IRecycleBinService, dosier_infrastructure.Research.RecycleBinService>();
+builder.Services.AddScoped<dosier_application.Research.IReportsService, dosier_infrastructure.Research.ReportsService>();
 
 // Gobernanza Curricular y Antecedentes Institucionales (CES / CACES / ISTPET)
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.INormativaService, dosier_infrastructure.Curriculum.NormativaService>();
@@ -331,6 +338,7 @@ if (!string.IsNullOrEmpty(connectionString))
 }
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -368,9 +376,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -425,10 +430,6 @@ using (var scope = app.Services.CreateScope())
     app.MapHub<dosier_infrastructure.Common.Notifications.Hubs.NotificationHub>("/hubs/notifications");
 
     app.MapGet("/api/ping", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
 
 app.Run();
 

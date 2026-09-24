@@ -16,12 +16,12 @@ namespace dosier_infrastructure.Research
 
             if (tablaSigafi == "profesor")
             {
-                var prof = await context.Profesores.FirstOrDefaultAsync(p => p.IdProfesor == sigafiTrim);
+                var prof = await context.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == sigafiTrim);
                 return prof?.Celular ?? prof?.Telefono ?? string.Empty;
             }
             else if (tablaSigafi == "alumno")
             {
-                var alum = await context.Alumnos.FirstOrDefaultAsync(a => a.IdAlumno == sigafiTrim);
+                var alum = await context.Alumnos.AsNoTracking().FirstOrDefaultAsync(a => a.IdAlumno == sigafiTrim);
                 return alum?.Celular ?? alum?.Telefono ?? string.Empty;
             }
             return string.Empty;
@@ -34,12 +34,12 @@ namespace dosier_infrastructure.Research
 
             if (tablaSigafi == "profesor")
             {
-                var prof = await context.Profesores.FirstOrDefaultAsync(p => p.IdProfesor == sigafiTrim);
+                var prof = await context.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == sigafiTrim);
                 return prof != null ? (prof.EmailInstitucional ?? prof.Email ?? string.Empty) : string.Empty;
             }
             else if (tablaSigafi == "alumno")
             {
-                var alum = await context.Alumnos.FirstOrDefaultAsync(a => a.IdAlumno == sigafiTrim);
+                var alum = await context.Alumnos.AsNoTracking().FirstOrDefaultAsync(a => a.IdAlumno == sigafiTrim);
                 return alum != null ? (alum.EmailInstitucional ?? alum.Email ?? string.Empty) : string.Empty;
             }
             return string.Empty;

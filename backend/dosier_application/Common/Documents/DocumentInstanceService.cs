@@ -18,5 +18,6 @@ namespace Dosier.Application.Common.Documents
         Task<bool> PurgeObsoleteFileByUuidAsync(string uuid, string purgedBy, CancellationToken ct = default);
         Task<int> PurgeAllObsoleteDocumentFilesAsync(string purgedBy, CancellationToken ct = default);
         Task<DocumentInstance> UpgradeTemplateAsync(string uuid, CancellationToken ct = default);
+        Task SetEntityUuidAsync(string instanceUuid, string entityUuid, CancellationToken ct = default);
     }
 }

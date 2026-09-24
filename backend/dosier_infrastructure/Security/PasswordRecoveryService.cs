@@ -228,6 +228,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         if (user.TablaSigafi == "profesor")
         {
             var profesor = await _context.Profesores
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.IdProfesor == user.IdSigafi);
 
             if (profesor?.Clave != null)

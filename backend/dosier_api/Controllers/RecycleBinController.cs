@@ -1,14 +1,10 @@
-using dosier_application.Research;
-using dosier_application.Research.Dtos;
-using Dosier.Application.Research;
-using dosier_infrastructure.data.models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using dosier_application.Research;
+using Dosier.Application.Research;
 
 namespace dosier_api.Controllers
 {
@@ -17,23 +13,15 @@ namespace dosier_api.Controllers
     [Authorize]
     public class RecycleBinController : ControllerBase
     {
-        private readonly DosierContext _context;
+        private readonly IRecycleBinService _recycleBinService;
         private readonly IProjectOrchestrator _projectOrchestrator;
 
         public RecycleBinController(
-            DosierContext context,
+            IRecycleBinService recycleBinService,
             IProjectOrchestrator projectOrchestrator)
         {
-            _context = context;
+            _recycleBinService = recycleBinService;
             _projectOrchestrator = projectOrchestrator;
-        }
-
-        private async Task<int?> GetInternalUserIdAsync()
-        {
-            var userIdRef = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdRef)) return null;
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == userIdRef);
-            return user?.IdUsuario;
         }
 
         private bool IsAdmin()
@@ -41,55 +29,14 @@ namespace dosier_api.Controllers
             return User.IsInRole("DOSIER_ADMIN");
         }
 
-        private static string CleanDeletedSuffix(string? code)
-        {
-            if (string.IsNullOrWhiteSpace(code)) return "";
-            var idx = code.IndexOf("_del_");
-            return idx > 0 ? code.Substring(0, idx) : code;
-        }
-
         [HttpGet("projects")]
         public async Task<IActionResult> GetDeletedProjects()
         {
-            int? currentUserId = await GetInternalUserIdAsync();
-            if (currentUserId == null) return Unauthorized();
+            var userIdRef = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdRef)) return Unauthorized();
 
-            bool isAdmin = IsAdmin();
-
-            // Consultar omitiendo filtros globales (IgnoreQueryFilters) para ver eliminados
-            var projectsQuery = _context.DocProyectos
-                .IgnoreQueryFilters()
-                .Where(p => p.Eliminado == true);
-
-            if (!isAdmin)
-            {
-                // Un docente solo ve los proyectos que él mismo envió a la papelera
-                projectsQuery = projectsQuery.Where(p => p.EliminadoPorUsuarioId == currentUserId);
-            }
-
-            var rawProjects = await projectsQuery
-                .Select(p => new
-                {
-                    p.Uuid,
-                    p.Titulo,
-                    RawCodigoInstitucional = p.CodigoInstitucional,
-                    p.Estado,
-                    p.FechaEliminacion,
-                    EliminadoPor = p.EliminadoPorUsuarioId != null
-                        ? _context.Users.Where(u => u.IdUsuario == p.EliminadoPorUsuarioId).Select(u => u.Nombre).FirstOrDefault()
-                        : "Desconocido"
-                })
-                .ToListAsync();
-
-            var projects = rawProjects.Select(p => new
-            {
-                p.Uuid,
-                p.Titulo,
-                CodigoInstitucional = CleanDeletedSuffix(p.RawCodigoInstitucional),
-                p.Estado,
-                p.FechaEliminacion,
-                p.EliminadoPor
-            });
+            var projects = await _recycleBinService.GetDeletedProjectsAsync(userIdRef, IsAdmin());
+            if (projects == null) return Unauthorized();
 
             return Ok(projects);
         }

@@ -1,12 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Dosier.Application.Common.Documents;
-using Dosier.Infrastructure.Common.Documents;
+using Dosier.Infrastructure.Common.Documents.Engine;
 using Dosier.Infrastructure.Common.Documents.Templates.Investigacion;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using dosier_infrastructure.Collaboration;
-using System.Text.Json.Serialization;
-using dosier_infrastructure.data.models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace dosier_api.Controllers
 {
@@ -20,19 +23,16 @@ namespace dosier_api.Controllers
     public class DocumentTemplatesController : ControllerBase
     {
         private readonly IDocumentEngine _documentEngine;
-        private readonly DosierContext _db;
-        private readonly IHubContext<CollaborationHub> _hubContext;
+        private readonly IDocumentTemplateAdminService _templateAdminService;
         private readonly IHostEnvironment _environment;
 
         public DocumentTemplatesController(
-            IDocumentEngine documentEngine, 
-            DosierContext db, 
-            IHubContext<CollaborationHub> hubContext,
+            IDocumentEngine documentEngine,
+            IDocumentTemplateAdminService templateAdminService,
             IHostEnvironment environment)
         {
             _documentEngine = documentEngine;
-            _db = db;
-            _hubContext = hubContext;
+            _templateAdminService = templateAdminService;
             _environment = environment;
         }
 
@@ -43,30 +43,14 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> GetAll(CancellationToken ct)
         {
             var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
-            
-            // Intentar cargar el orden personalizado guardado en BD
-            List<string>? customOrder = null;
-            try
-            {
-                var config = await _db.DocConfigsGenerales
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.Clave == "Templates.OrderConfigJson", ct);
-
-                if (config != null && !string.IsNullOrEmpty(config.Valor))
-                {
-                    customOrder = System.Text.Json.JsonSerializer.Deserialize<List<string>>(config.Valor);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error al leer Templates.OrderConfigJson: {ex.Message}");
-            }
+            var customOrder = await _templateAdminService.GetCustomTemplateOrderAsync(ct);
 
             var orderedTemplates = templates.ToList();
             if (customOrder != null && customOrder.Any())
             {
                 orderedTemplates = templates
-                    .OrderBy(t => {
+                    .OrderBy(t =>
+                    {
                         var idx = customOrder.IndexOf(t.Code);
                         return idx >= 0 ? idx : int.MaxValue;
                     })
@@ -105,7 +89,7 @@ namespace dosier_api.Controllers
             if (template == null)
                 return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
 
-            var fileLoader = new Dosier.Infrastructure.Common.Documents.Engine.TemplateFileLoader(_environment);
+            var fileLoader = new TemplateFileLoader(_environment);
             var fileHtml = await fileLoader.LoadAsync(template.Code);
             var fileCss = await fileLoader.LoadCssAsync(template.Code);
 
@@ -148,16 +132,14 @@ namespace dosier_api.Controllers
             try
             {
                 var updatedBy = User.Identity?.Name ?? "admin";
-                await _documentEngine.UpdateTemplateAsync(code, request.HtmlContent, request.CustomCss, request.CollaborativeFieldsJson, request.ThemeConfigJson, updatedBy, ct);
-                
-                // Transmitir evento WebSocket en vivo a todos los usuarios y pestañas del sistema
-                await _hubContext.Clients.All.SendAsync("TemplatePublished", new
-                {
-                    template_code = code,
-                    templateCode = code,
-                    updated_by = updatedBy,
-                    timestamp = DateTime.UtcNow
-                }, ct);
+                await _templateAdminService.PublishTemplateAsync(
+                    code,
+                    request.HtmlContent,
+                    request.CustomCss,
+                    request.CollaborativeFieldsJson,
+                    request.ThemeConfigJson,
+                    updatedBy,
+                    ct);
 
                 return Ok(new { message = $"Plantilla '{code}' actualizada correctamente." });
             }
@@ -169,8 +151,6 @@ namespace dosier_api.Controllers
 
         /// <summary>
         /// [DEPRECADO] Las plantillas ahora se cargan desde archivos .html físicos (TemplateFileLoader).
-        /// Este endpoint se mantiene por compatibilidad hacia atrás.
-        /// Para modificar el diseño edita: Templates/Investigacion/ProyectoInvestigacion.html
         /// </summary>
         [HttpPost("migrate-protocolo-investigacion")]
         public IActionResult MigrateProtocolo()
@@ -226,8 +206,7 @@ namespace dosier_api.Controllers
         [HttpGet("{code}/usage-count")]
         public async Task<IActionResult> GetUsageCount(string code, CancellationToken ct)
         {
-            var count = await _db.DocumentInstances
-                .CountAsync(i => i.TemplateCode == code && (int)i.State < 3, ct);
+            var count = await _templateAdminService.GetUsageCountAsync(code, ct);
             return Ok(new { count });
         }
 
@@ -237,13 +216,10 @@ namespace dosier_api.Controllers
         [HttpGet("global-theme")]
         public async Task<IActionResult> GetGlobalTheme(CancellationToken ct)
         {
-            var config = await _db.DocConfigsGenerales
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Clave == "Theme.GlobalConfigJson", ct);
-                
-            if (config == null || string.IsNullOrEmpty(config.Valor))
+            var configValue = await _templateAdminService.GetGlobalThemeConfigAsync(ct);
+
+            if (string.IsNullOrEmpty(configValue))
             {
-                // Fallback por defecto institucional de Traversari
                 var fallbackTheme = new
                 {
                     colors = new
@@ -276,10 +252,10 @@ namespace dosier_api.Controllers
                         logoScale = "100%"
                     }
                 };
-                return Ok(new { themeConfigJson = System.Text.Json.JsonSerializer.Serialize(fallbackTheme) });
+                return Ok(new { themeConfigJson = JsonSerializer.Serialize(fallbackTheme) });
             }
-            
-            return Ok(new { themeConfigJson = config.Valor });
+
+            return Ok(new { themeConfigJson = configValue });
         }
 
         /// <summary>
@@ -288,25 +264,7 @@ namespace dosier_api.Controllers
         [HttpPut("global-theme")]
         public async Task<IActionResult> UpdateGlobalTheme([FromBody] UpdateGlobalThemeRequest request, CancellationToken ct)
         {
-            var config = await _db.DocConfigsGenerales
-                .FirstOrDefaultAsync(c => c.Clave == "Theme.GlobalConfigJson", ct);
-
-            if (config == null)
-            {
-                config = new DocConfigGeneral
-                {
-                    Clave = "Theme.GlobalConfigJson",
-                    Valor = request.ThemeConfigJson ?? string.Empty,
-                    Descripcion = "Diseño y branding global institucional (colores, márgenes, tipografía)."
-                };
-                _db.DocConfigsGenerales.Add(config);
-            }
-            else
-            {
-                config.Valor = request.ThemeConfigJson ?? string.Empty;
-            }
-
-            await _db.SaveChangesAsync(ct);
+            await _templateAdminService.SaveGlobalThemeConfigAsync(request.ThemeConfigJson ?? string.Empty, ct);
             return Ok(new { message = "Tema global institucional actualizado correctamente." });
         }
 
@@ -319,27 +277,7 @@ namespace dosier_api.Controllers
             if (request == null || request.Codes == null)
                 return BadRequest(new { error = "El cuerpo de la solicitud no puede estar vacío." });
 
-            var config = await _db.DocConfigsGenerales
-                .FirstOrDefaultAsync(c => c.Clave == "Templates.OrderConfigJson", ct);
-
-            var jsonValue = System.Text.Json.JsonSerializer.Serialize(request.Codes);
-
-            if (config == null)
-            {
-                config = new DocConfigGeneral
-                {
-                    Clave = "Templates.OrderConfigJson",
-                    Valor = jsonValue,
-                    Descripcion = "Arreglo ordenado JSON con los códigos de las plantillas para visualización en el catálogo."
-                };
-                _db.DocConfigsGenerales.Add(config);
-            }
-            else
-            {
-                config.Valor = jsonValue;
-            }
-
-            await _db.SaveChangesAsync(ct);
+            await _templateAdminService.SaveTemplateOrderAsync(request.Codes, ct);
             return Ok(new { message = "Orden de plantillas guardado correctamente." });
         }
     }

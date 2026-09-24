@@ -564,6 +564,30 @@ public class CalendarioService : ICalendarioService
         await _context.SaveChangesAsync();
     }
 
+    public async Task<int?> ResolveUserIdBySigafiAsync(string idSigafi)
+    {
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == idSigafi);
+        return user?.IdUsuario;
+    }
+
+    public async Task<bool?> UpdateUsuarioEventoAsync(string uuid, EventoNormativoDto dto, int idUsuario)
+    {
+        var existing = await _context.Set<DocCalendarioEventoNormativo>().FirstOrDefaultAsync(e => e.Uuid == uuid);
+        if (existing == null) return null;
+        if (existing.CreadoPor != idUsuario) return false;
+
+        return await UpdateNormativoAsync(uuid, dto);
+    }
+
+    public async Task<bool?> DeleteUsuarioEventoAsync(string uuid, int idUsuario)
+    {
+        var existing = await _context.Set<DocCalendarioEventoNormativo>().FirstOrDefaultAsync(e => e.Uuid == uuid);
+        if (existing == null) return null;
+        if (existing.CreadoPor != idUsuario) return false;
+
+        return await DeleteNormativoAsync(uuid);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────

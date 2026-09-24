@@ -198,3 +198,18 @@ public interface IDosierSignatureService
 * **`INotificationService`:** Orquesta la distribución multicanal de alertas institucionales (cambio de estado del PEA, asignación de observaciones, recordatorios de firma). Soporta notificaciones dirigidas a usuarios (`NotifyUserAsync`), difusión por roles (`NotifyByRoleCodesAsync`) y marcas de lectura.
 * **`INotificationDriver`:** Interfaz extensible para proveedores de envío (WebSockets SignalR en tiempo real, WebPush VAPID para móviles y navegadores).
 * **`IEmailEngineService`:** Motor de correos electrónicos transaccionales con plantillas dinámicas HTML institucionales (`EmailTemplateDto`), cola de envíos y bitácora de auditoría de entrega (`EmailHistorialDto`).
+
+---
+
+## 8. Servicios de Orquestación Especializada y Purificación Total de Controladores
+
+Para dar cumplimiento estricto al principio de inversión de dependencias y Clean Architecture pura, el 100% de los controladores de la capa `dosier_api` tienen prohibido inyectar `DosierContext` o ejecutar consultas LINQ directas. Todas las operaciones de persistencia y coordinación se desacoplan mediante contratos en `dosier_application`:
+
+* **`ICatalogsService`:** Centraliza la consulta y mutación de catálogos institucionales, carreras activas (`esInstituto = 1`), períodos lectivos, configuraciones generales y estados del workflow.
+* **`ICollaborationService`:** Gestiona el pulso de concurrencia en tiempo real (`GetPulseAsync`), comentarios de retroalimentación (`PostCommentAsync`, `UpdateCommentAsync`, `DeleteCommentAsync`) y retransmisión por WebSockets en `CollaborationHub`.
+* **`IRecycleBinService`:** Aísla la gestión de elementos en papelera de reciclaje (`GetDeletedProjectsAsync`), aplicando de forma controlada `.IgnoreQueryFilters()` en la capa de infraestructura según los roles del solicitante.
+* **`IReportsService`:** Consolida los indicadores agregados CACES (producción científica, semilleros), distribución de estados y generación compilada del PDF del reporte de analíticas institucionales.
+* **`IBackupAdminService`:** Administra la bitácora de copias de seguridad (`DocBackupLogs`), cálculo en caliente de checksum SHA-256 para verificación de integridad física y purga forense en disco.
+* **`IDocumentVerificationService`:** Orquesta la verificación pública de trazabilidad de documentos por código único o código de firma DFRM, resolviendo la cascada de firmas sin exponer el contexto de datos al controlador público.
+* **`IDocumentTemplateAdminService`:** Administra el catálogo de plantillas oficiales, orden personalizado en JSON, tema visual institucional (`Theme.GlobalConfigJson`) y publicación en caliente hacia clientes conectados.
+

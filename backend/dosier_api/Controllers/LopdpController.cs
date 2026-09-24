@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using diBaseModels = dosier_infrastructure.data.models;
 using dosier_application.Security;
 using dosier_application.Security.DTOs;
 
@@ -18,12 +13,17 @@ namespace dosier_api.Controllers;
 public class LopdpController : ControllerBase
 {
     private readonly ILopdpService _lopdpService;
-    private readonly diBaseModels.DosierContext _context;
 
-    public LopdpController(ILopdpService lopdpService, diBaseModels.DosierContext context)
+    public LopdpController(ILopdpService lopdpService)
     {
         _lopdpService = lopdpService;
-        _context = context;
+    }
+
+    private async Task<int?> GetUserIdAsync()
+    {
+        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(idReferencia)) return null;
+        return await _lopdpService.ResolveUserIdBySigafiAsync(idReferencia);
     }
 
     /// <summary>
@@ -37,20 +37,16 @@ public class LopdpController : ControllerBase
             return BadRequest(new { error = "La versión de la política es requerida." });
         }
 
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
-
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
+        var userId = await GetUserIdAsync();
+        if (userId == null) return Unauthorized();
 
         var ip = HttpContext.Connection?.RemoteIpAddress?.ToString();
         var userAgent = Request.Headers["User-Agent"].ToString();
 
-        await _lopdpService.RegistrarConsentimientoAsync(dbUser.IdUsuario, request.VersionPolitica, ip, userAgent);
+        await _lopdpService.RegistrarConsentimientoAsync(userId.Value, request.VersionPolitica, ip, userAgent);
 
         return Ok(new { message = "Consentimiento registrado exitosamente." });
     }
-
 
     /// <summary>
     /// Devuelve todos los consentimientos registrados en el sistema (Solo para administradores/directores).
@@ -69,13 +65,10 @@ public class LopdpController : ControllerBase
     [HttpGet("perfil")]
     public async Task<IActionResult> GetPerfil()
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var userId = await GetUserIdAsync();
+        if (userId == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        var perfil = await _lopdpService.GetPerfilAsync(dbUser.IdUsuario);
+        var perfil = await _lopdpService.GetPerfilAsync(userId.Value);
         return Ok(perfil);
     }
 
@@ -87,13 +80,10 @@ public class LopdpController : ControllerBase
     {
         if (request == null) return BadRequest("Datos nulos");
 
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
+        var userId = await GetUserIdAsync();
+        if (userId == null) return Unauthorized();
 
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
-
-        await _lopdpService.UpdatePerfilAsync(dbUser.IdUsuario, request);
+        await _lopdpService.UpdatePerfilAsync(userId.Value, request);
         return Ok(new { message = "Perfil actualizado exitosamente." });
     }
 
@@ -103,16 +93,13 @@ public class LopdpController : ControllerBase
     [HttpPost("revocar")]
     public async Task<IActionResult> RevocarConsentimiento()
     {
-        var idReferencia = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(idReferencia)) return Unauthorized();
-
-        var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-        if (dbUser == null) return Unauthorized();
+        var userId = await GetUserIdAsync();
+        if (userId == null) return Unauthorized();
 
         var ip = HttpContext.Connection?.RemoteIpAddress?.ToString();
         var userAgent = Request.Headers["User-Agent"].ToString();
 
-        await _lopdpService.RevocarConsentimientoAsync(dbUser.IdUsuario, ip, userAgent);
+        await _lopdpService.RevocarConsentimientoAsync(userId.Value, ip, userAgent);
 
         return Ok(new { message = "Consentimiento revocado exitosamente." });
     }

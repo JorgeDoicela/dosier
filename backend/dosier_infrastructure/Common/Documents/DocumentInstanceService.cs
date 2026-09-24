@@ -977,5 +977,15 @@ namespace Dosier.Infrastructure.Common.Documents
             await _context.SaveChangesAsync(ct);
             return instance;
         }
+
+        public async Task SetEntityUuidAsync(string instanceUuid, string entityUuid, CancellationToken ct = default)
+        {
+            var dbInstance = await _context.DocumentInstances.FirstOrDefaultAsync(i => i.Uuid == instanceUuid, ct);
+            if (dbInstance != null)
+            {
+                dbInstance.SetEntityUuid(entityUuid);
+                await _context.SaveChangesAsync(ct);
+            }
+        }
     }
 }

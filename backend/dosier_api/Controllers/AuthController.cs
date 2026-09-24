@@ -8,8 +8,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using dosier_infrastructure.data.models;
-using Microsoft.EntityFrameworkCore;
 
 namespace dosier_api.Controllers;
 
@@ -19,13 +17,11 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IConfiguration _configuration;
-    private readonly DosierContext _context;
 
-    public AuthController(IAuthService authService, IConfiguration configuration, DosierContext context)
+    public AuthController(IAuthService authService, IConfiguration configuration)
     {
         _authService = authService;
         _configuration = configuration;
-        _context = context;
     }
 
     /// <summary>
@@ -325,16 +321,9 @@ public class AuthController : ControllerBase
             var tipo = User.FindFirst("tipo_usuario")?.Value;
             var isAdmin = User.FindFirst("es_admin")?.Value == "true" || tipo == "ADMIN";
             var permissions = User.FindAll("permission").Select(c => c.Value).ToList();
-
-            var dbUser = await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
-            bool aceptoLopdp = false;
-            int? idUsuario = null;
-            if (dbUser != null)
-            {
-                idUsuario = dbUser.IdUsuario;
-                aceptoLopdp = await _context.DocLopdpConsentimientos
-                    .AnyAsync(c => c.IdUsuario == dbUser.IdUsuario && c.VersionPolitica == "LOPDP_GENERAL" && c.Estado == "Otorgado");
-            }
+            var (idUsuario, aceptoLopdp) = !string.IsNullOrEmpty(idReferencia)
+                ? await _authService.GetUserStatusAsync(idReferencia)
+                : (null, false);
 
             return Ok(new
             {

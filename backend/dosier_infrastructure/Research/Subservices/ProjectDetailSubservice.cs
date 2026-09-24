@@ -155,6 +155,7 @@ namespace dosier_infrastructure.Research.Subservices
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var currentPeriod = await _context.Periodos
+                .AsNoTracking()
                 .Where(pr => pr.EsInstituto == 1)
                 .OrderByDescending(pr => pr.Periodoactivoinstituto == 1)
                 .ThenByDescending(pr => pr.Activo == true)
@@ -182,6 +183,7 @@ namespace dosier_infrastructure.Research.Subservices
             {
                 var profCedulaLts = profCedulas.Select(c => c.Trim()).ToList();
                 var rawCareers = await _context.ProfesoresCarrerasPeriodos
+                    .AsNoTracking()
                     .Include(pc => pc.IdCarreraNavigation)
                     .Where(pc => pc.IdPeriodo == periodId && pc.EsActivo == 1 && pc.IdProfesor != null && profCedulaLts.Contains(pc.IdProfesor))
                     .ToListAsync();
@@ -200,6 +202,7 @@ namespace dosier_infrastructure.Research.Subservices
             {
                 var studentCedulaLts = studentCedulas.Select(c => c.Trim()).ToList();
                 var rawAlumCareers = await _context.AlumnosCarreras
+                    .AsNoTracking()
                     .Where(ac => ac.IdAlumno != null && studentCedulaLts.Contains(ac.IdAlumno))
                     .ToListAsync();
                 alumCareers = rawAlumCareers
@@ -207,12 +210,14 @@ namespace dosier_infrastructure.Research.Subservices
                     .ToList();
 
                 students = await _context.Alumnos
+                    .AsNoTracking()
                     .Where(s => studentCedulas.Contains(s.IdAlumno.Trim()))
                     .ToListAsync();
 
                 if (!string.IsNullOrEmpty(periodId))
                 {
                     currentMatriculas = await _context.Matriculas
+                        .AsNoTracking()
                         .Where(m => studentCedulas.Contains(m.IdAlumno.Trim()) && m.IdPeriodo == periodId)
                         .ToListAsync();
                 }
@@ -224,16 +229,17 @@ namespace dosier_infrastructure.Research.Subservices
                     .Distinct()
                     .ToList();
 
-                relevantCursos = await _context.Cursos.Where(c => levelIds.Contains(c.IdNivel)).ToListAsync();
+                relevantCursos = await _context.Cursos.AsNoTracking().Where(c => levelIds.Contains(c.IdNivel)).ToListAsync();
             }
 
-            var allCarrerasList = await _context.Carreras.ToListAsync();
+            var allCarrerasList = await _context.Carreras.AsNoTracking().Where(c => c.EsInstituto == 1).ToListAsync();
 
             var researchHours = new List<ProfesoresActividade>();
             var otherAssignedHours = new List<DocProyectoParticipante>();
             if (profCedulas.Any() && !string.IsNullOrEmpty(periodId))
             {
                 researchHours = await _context.ProfesoresActividades
+                    .AsNoTracking()
                     .Where(pa => profCedulas.Contains(pa.IdProfesor) && pa.IdSubcategoria == researchSubcatId && pa.IdPeriodo == periodId)
                     .ToListAsync();
 
@@ -255,6 +261,7 @@ namespace dosier_infrastructure.Research.Subservices
             {
                 var profCedulaLts = profCedulas.Select(c => c.Trim()).ToList();
                 var profs = await _context.Profesores
+                    .AsNoTracking()
                     .Where(prof => profCedulaLts.Contains(prof.IdProfesor))
                     .ToListAsync();
                 profesoresDict = profs
@@ -267,6 +274,7 @@ namespace dosier_infrastructure.Research.Subservices
             {
                 var studentCedulaLts = studentCedulas.Select(c => c.Trim()).ToList();
                 var alums = await _context.Alumnos
+                    .AsNoTracking()
                     .Where(alum => studentCedulaLts.Contains(alum.IdAlumno))
                     .ToListAsync();
                 alumnosDict = alums

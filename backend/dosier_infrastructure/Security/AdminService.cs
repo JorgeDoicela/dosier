@@ -601,7 +601,7 @@ public class AdminService : IAdminService
                 return false; // Los estudiantes no tienen acceso a roles ni gestión en DOSIER
             }
 
-            var p = await _context.Profesores.FirstOrDefaultAsync(prof => prof.IdProfesor == idUsuario);
+            var p = await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(prof => prof.IdProfesor == idUsuario);
             if (p == null) return false;
             string fullNombre = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim();
             user = new User {

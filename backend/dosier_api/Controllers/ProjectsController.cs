@@ -139,30 +139,11 @@ namespace dosier_api.Controllers
         }
 
         [HttpPost("{uuid}/iniciar-ejecucion")]
-        public async Task<IActionResult> IniciarEjecucion(string uuid, [FromServices] DosierContext context)
+        public async Task<IActionResult> IniciarEjecucion(string uuid, [FromServices] IWorkflowEngineService workflowEngine)
         {
-            var project = await context.DocProyectos.FirstOrDefaultAsync(p => p.Uuid == uuid);
-            if (project == null) return NotFound("Proyecto no encontrado.");
+            var success = await workflowEngine.IniciarEjecucionAsync(uuid, 1);
+            if (!success) return NotFound("Proyecto no encontrado.");
 
-            project.Estado = "En Ejecución";
-            if (!project.FechaInicio.HasValue)
-            {
-                project.FechaInicio = DateOnly.FromDateTime(DateTime.UtcNow);
-            }
-
-            var trazabilidad = new DocTrazabilidadProyecto
-            {
-                Uuid = Guid.NewGuid().ToString(),
-                IdProyecto = project.IdProyecto,
-                IdUsuario = 1,
-                EstadoAnterior = "Aprobado",
-                EstadoNuevo = "En Ejecución",
-                Observacion = "Inicio formal de la fase de ejecución de actividades.",
-                FechaTransicion = DateTime.Now
-            };
-            context.DocTrazabilidadProyectos.Add(trazabilidad);
-
-            await context.SaveChangesAsync();
             return Ok(new { message = "Proyecto en fase de ejecución.", estado = "En Ejecución" });
         }
 

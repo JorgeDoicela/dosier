@@ -36,6 +36,8 @@ Ejemplo de payload para guardado del PEA:
 
 ## 3. Catálogo Exhaustivo de los 23 Controladores REST
 
+Los 23 controladores de la API operan bajo el estándar estricto de **Clean Architecture pura**. Ningún controlador inyecta directamente el contexto de base de datos (`DosierContext`) ni formula consultas LINQ contra la persistencia; todos los controladores delegan exclusivamente en fachadas e interfaces de servicio tipadas en `dosier_application` e implementadas en `dosier_infrastructure`.
+
 A continuación se detalla la especificación técnica de cada uno de los controladores del backend:
 
 ```

@@ -13,5 +13,6 @@ public interface ILopdpService
     Task<PerfilLopdpDto?> GetPerfilAsync(int idUsuario);
     Task UpdatePerfilAsync(int idUsuario, ActualizarPerfilRequest request);
     Task RevocarConsentimientoAsync(int idUsuario, string? ip, string? userAgent);
+    Task<int?> ResolveUserIdBySigafiAsync(string idSigafi);
 }
 

@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using System;
+using System.IO;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using dosier_infrastructure.data.models;
-using dosier_infrastructure.data.models.Cowork;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.SignalR;
-using dosier_infrastructure.Collaboration;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using dosier_application.Collaboration.Dtos;
+using dosier_application.Collaboration.Interfaces;
+using Dosier.Infrastructure.Common.Storage;
 
 namespace dosier_api.Controllers
 {
@@ -20,18 +20,15 @@ namespace dosier_api.Controllers
     [Authorize]
     public class CollaborationController : ControllerBase
     {
-        private readonly DosierContext _db;
-        private readonly Dosier.Infrastructure.Common.Storage.IFileStorageService _storageService;
-        private readonly IHubContext<CollaborationHub> _hubContext;
+        private readonly ICollaborationService _collaborationService;
+        private readonly IFileStorageService _storageService;
 
         public CollaborationController(
-            DosierContext db, 
-            Dosier.Infrastructure.Common.Storage.IFileStorageService storageService,
-            IHubContext<CollaborationHub> hubContext)
+            ICollaborationService collaborationService,
+            IFileStorageService storageService)
         {
-            _db = db;
+            _collaborationService = collaborationService;
             _storageService = storageService;
-            _hubContext = hubContext;
         }
 
         /// <summary>
@@ -40,29 +37,24 @@ namespace dosier_api.Controllers
         /// </summary>
         [HttpPost("upload")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> UploadImage(Microsoft.AspNetCore.Http.IFormFile file)
+        public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "No se proporcionó ningún archivo." });
 
             try
             {
-                using var memoryStream = new System.IO.MemoryStream();
+                using var memoryStream = new MemoryStream();
                 await file.CopyToAsync(memoryStream);
                 var content = memoryStream.ToArray();
 
-                // Guardar usando el servicio
                 var relativePath = await _storageService.SaveFileAsync(file.FileName, content, "cowork_images");
-
-                // Generar URL pública (asumiendo que la API se sirve en la ruta raíz o mapeada a frontend)
-                // Se reemplazan los "\" por "/" para compatibilidad de URL en navegadores.
                 var url = $"/api/storage/{relativePath.Replace('\\', '/')}";
 
-                return Ok(new { url = url });
+                return Ok(new { url });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                System.Console.WriteLine($"[DOSIER ERROR] Fallo al subir imagen CoWork: {ex.Message}");
                 return StatusCode(500, new { message = "Error interno al guardar la imagen", detail = ex.Message });
             }
         }
@@ -73,135 +65,18 @@ namespace dosier_api.Controllers
         [HttpGet("{instanceUuid}/pulse")]
         public async Task<IActionResult> GetPulse(string instanceUuid)
         {
-            try 
+            try
             {
-
-                var comments = await _db.DocCollaborationComments
-                    .Where(c => c.DocumentoUuid == instanceUuid)
-                    .OrderByDescending(c => c.CreadoEn)
-                    .Take(50)
-                    .ToListAsync();
-
-                var statuses = await _db.DocDocumentosSeccionesMetadata
-                    .Where(s => s.DocumentoUuid == instanceUuid)
-                    .Select(s => new {
-                        s.SeccionNombre,
-                        s.Estado,
-                        s.UltimoNombreUsuario,
-                        s.UltimoUsuarioUuid,
-                        s.ActualizadoEn
-                    })
-                    .ToListAsync();
-
-                // Evitar errores de claves duplicadas si por alguna razón la BD tiene inconsistencias
-                var statusesDict = statuses
-                    .GroupBy(s => s.SeccionNombre)
-                    .ToDictionary(g => g.Key, g => new {
-                        estado = g.First().Estado,
-                        ultimoNombreUsuario = g.First().UltimoNombreUsuario,
-                        ultimoUsuarioUuid = g.First().UltimoUsuarioUuid,
-                        actualizadoEn = g.First().ActualizadoEn
-                    });
-
-                // Cargar actividad reciente para esta instancia documental
-                var pattern = instanceUuid + "%";
-                var sesiones = await _db.DocCoworkSesiones.AsNoTracking()
-                    .Where(s => EF.Functions.Like(s.DocumentoUuid, pattern) &&
-                                (s.SeccionNombre != null || s.Accion != null))
-                    .OrderByDescending(s => s.ConectadoEn)
-                    .Take(50) // traer más para poder filtrar el ruido de React
-                    .ToListAsync();
-
-                // Filtrar sesiones de menos de 30 segundos (ruido de React unmount/remount)
-                // Mantener las sesiones activas (sin DesconectadoEn) siempre
-                sesiones = sesiones
-                    .Where(s => !s.DesconectadoEn.HasValue ||
-                                (s.DesconectadoEn.Value - s.ConectadoEn).TotalSeconds >= 5)
-                    .Take(15)
-                    .ToList();
-
-                var metaSecciones = await _db.DocDocumentosSeccionesMetadata
-                    .AsNoTracking()
-                    .Where(m => m.DocumentoUuid == instanceUuid)
-                    .OrderByDescending(m => m.ActualizadoEn)
-                    .Take(15)
-                    .ToListAsync();
-
-                var activitiesList = new List<CollaborationActivityItem>();
-
-                foreach (var s in sesiones)
+                var pulse = await _collaborationService.GetPulseAsync(instanceUuid);
+                return Ok(new
                 {
-                    // Ignorar eventos técnicos sin sección/acción útil.
-                    if (string.IsNullOrWhiteSpace(s.SeccionNombre) && string.IsNullOrWhiteSpace(s.Accion))
-                    {
-                        continue;
-                    }
-
-                    string sectionName;
-                    string action;
-
-                    if (!string.IsNullOrWhiteSpace(s.SeccionNombre))
-                    {
-                        sectionName = s.SeccionNombre.Replace("_", " ");
-                        action = string.IsNullOrWhiteSpace(s.Accion) ? "ha entrado a redactar" : s.Accion;
-                    }
-                    else
-                    {
-                        // Fallback para registros antiguos (retrocompatibilidad)
-                        var parts = s.DocumentoUuid.Split('_');
-                        sectionName = parts.Length > 1 ? parts[1].Replace("_", " ") : "General";
-                        var durMin = s.DesconectadoEn.HasValue
-                            ? (int)(s.DesconectadoEn.Value - s.ConectadoEn).TotalMinutes
-                            : -1;
-
-                        action = parts.Length > 1
-                            ? "ha entrado a redactar"
-                            : (durMin >= 0
-                                ? $"editó 'General' durante {durMin} min"
-                                : "está editando 'General'");
-                    }
-
-                    activitiesList.Add(new CollaborationActivityItem
-                    {
-                        UserName = string.IsNullOrWhiteSpace(s.NombreUsuario) ? "Usuario" : s.NombreUsuario,
-                        Action = action,
-                        SectionName = sectionName,
-                        Timestamp = s.ConectadoEn
-                    });
-                }
-
-                foreach (var sec in metaSecciones)
-                {
-                    activitiesList.Add(new CollaborationActivityItem
-                    {
-                        UserName = sec.UltimoNombreUsuario ?? "Sistema",
-                        Action = $"marcó sección como {sec.Estado}",
-                        SectionName = sec.SeccionNombre,
-                        Timestamp = sec.ActualizadoEn
-                    });
-                }
-
-                var orderedActivities = activitiesList
-                    .OrderByDescending(a => a.Timestamp)
-                    .Take(20)
-                    .Select(a => new {
-                        userName = a.UserName,
-                        action = a.Action,
-                        sectionName = a.SectionName,
-                        timestamp = a.Timestamp
-                    })
-                    .ToList();
-
-                return Ok(new { 
-                    comments = comments, 
-                    statuses = statusesDict,
-                    activities = orderedActivities
+                    comments = pulse.Comments,
+                    statuses = pulse.Statuses,
+                    activities = pulse.Activities
                 });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                // Loguear el error para que sea visible en la consola del backend
-                System.Console.WriteLine($"[DOSIER ERROR] Error en GetPulse para {instanceUuid}: {ex.Message}");
                 return StatusCode(500, new { message = "Error interno al cargar el pulso de colaboración", detail = ex.Message });
             }
         }
@@ -212,46 +87,16 @@ namespace dosier_api.Controllers
         [HttpPost("comments")]
         public async Task<IActionResult> PostComment([FromBody] CreateCommentRequest request)
         {
-            if (string.IsNullOrEmpty(request.DocumentoUuid) || string.IsNullOrEmpty(request.Contenido))
-                return BadRequest(new { message = "Faltan campos obligatorios." });
+            var userUuid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0";
+            var userName = User.FindFirst("nombre")?.Value ?? User.FindFirst(ClaimTypes.Name)?.Value ?? "Usuario";
 
-            try
+            var result = await _collaborationService.PostCommentAsync(request, userUuid, userName);
+            return result.Status switch
             {
-
-                var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
-                var userName = User.FindFirst("nombre")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Usuario";
-
-                var comment = new DocCollaborationComment
-                {
-                    DocumentoUuid = request.DocumentoUuid,
-                    UsuarioUuid = userUuid,
-                    NombreUsuario = userName,
-                    Contenido = request.Contenido,
-                    IdPadre = request.IdPadre,
-                    CreadoEn = System.DateTime.UtcNow
-                };
-
-                _db.DocCollaborationComments.Add(comment);
-                await _db.SaveChangesAsync();
-
-                // Retransmitir en tiempo real a todos los clientes del Hub de colaboración en el grupo correspondiente (normalizando el UUID a minúsculas)
-                await _hubContext.Clients.Group(request.DocumentoUuid.ToLower().Trim()).SendAsync("NewCommentReceived", new
-                {
-                    idComentario = comment.IdComentario,
-                    usuarioUuid = comment.UsuarioUuid,
-                    nombreUsuario = comment.NombreUsuario,
-                    contenido = comment.Contenido,
-                    idPadre = comment.IdPadre,
-                    creadoEn = comment.CreadoEn
-                });
-
-                return Ok(comment);
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine($"[DOSIER ERROR] Fallo al publicar comentario: {ex.Message}");
-                return StatusCode(500, new { message = "Error interno al publicar comentario", detail = ex.Message });
-            }
+                CommentOpStatus.Success => Ok(result.Comment),
+                CommentOpStatus.InvalidData => BadRequest(new { message = result.Message }),
+                _ => StatusCode(500, new { message = result.Message ?? "Error al publicar comentario" })
+            };
         }
 
         /// <summary>
@@ -260,41 +105,18 @@ namespace dosier_api.Controllers
         [HttpPut("comments/{id}")]
         public async Task<IActionResult> UpdateComment(int id, [FromBody] UpdateCommentRequest request)
         {
-            if (string.IsNullOrEmpty(request.Contenido))
-                return BadRequest(new { message = "El contenido no puede estar vacío." });
+            var userUuid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0";
+            var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
 
-            try
+            var result = await _collaborationService.UpdateCommentAsync(id, request, userUuid, isAdmin);
+            return result.Status switch
             {
-                var comment = await _db.DocCollaborationComments.FindAsync(id);
-                if (comment == null)
-                    return NotFound(new { message = "Comentario no encontrado." });
-
-                var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
-                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
-
-                if (comment.UsuarioUuid != userUuid && !isAdmin)
-                {
-                    return StatusCode(403, new { message = "No tienes permisos para editar este comentario." });
-                }
-
-                comment.Contenido = request.Contenido;
-                await _db.SaveChangesAsync();
-
-                // Notificar en tiempo real
-                await _hubContext.Clients.Group(comment.DocumentoUuid.ToLower().Trim()).SendAsync("CommentUpdated", new
-                {
-                    idComentario = comment.IdComentario,
-                    documentoUuid = comment.DocumentoUuid,
-                    contenido = comment.Contenido
-                });
-
-                return Ok(comment);
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine($"[DOSIER ERROR] Fallo al actualizar comentario: {ex.Message}");
-                return StatusCode(500, new { message = "Error interno al editar el comentario", detail = ex.Message });
-            }
+                CommentOpStatus.Success => Ok(result.Comment),
+                CommentOpStatus.NotFound => NotFound(new { message = result.Message }),
+                CommentOpStatus.Forbidden => StatusCode(403, new { message = result.Message }),
+                CommentOpStatus.InvalidData => BadRequest(new { message = result.Message }),
+                _ => StatusCode(500, new { message = result.Message ?? "Error al actualizar comentario" })
+            };
         }
 
         /// <summary>
@@ -303,40 +125,17 @@ namespace dosier_api.Controllers
         [HttpDelete("comments/{id}")]
         public async Task<IActionResult> DeleteComment(int id)
         {
-            try
+            var userUuid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0";
+            var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
+
+            var result = await _collaborationService.DeleteCommentAsync(id, userUuid, isAdmin);
+            return result.Status switch
             {
-                var comment = await _db.DocCollaborationComments.FindAsync(id);
-                if (comment == null)
-                    return NotFound(new { message = "Comentario no encontrado." });
-
-                var userUuid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
-                var isAdmin = User.IsInRole("DOSIER_ADMIN") || User.FindFirst("es_admin")?.Value == "true";
-
-                if (comment.UsuarioUuid != userUuid && !isAdmin)
-                {
-                    return StatusCode(403, new { message = "No tienes permisos para eliminar este comentario." });
-                }
-
-                // Obtener e hijos si existen y borrarlos en cascada
-                var children = await _db.DocCollaborationComments.Where(c => c.IdPadre == id).ToListAsync();
-                _db.DocCollaborationComments.RemoveRange(children);
-                _db.DocCollaborationComments.Remove(comment);
-                await _db.SaveChangesAsync();
-
-                // Notificar en tiempo real
-                await _hubContext.Clients.Group(comment.DocumentoUuid.ToLower().Trim()).SendAsync("CommentDeleted", new
-                {
-                    idComentario = comment.IdComentario,
-                    documentoUuid = comment.DocumentoUuid
-                });
-
-                return Ok(new { message = "Comentario eliminado correctamente." });
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine($"[DOSIER ERROR] Fallo al eliminar comentario: {ex.Message}");
-                return StatusCode(500, new { message = "Error interno al eliminar el comentario", detail = ex.Message });
-            }
+                CommentOpStatus.Success => Ok(new { message = result.Message }),
+                CommentOpStatus.NotFound => NotFound(new { message = result.Message }),
+                CommentOpStatus.Forbidden => StatusCode(403, new { message = result.Message }),
+                _ => StatusCode(500, new { message = result.Message ?? "Error al eliminar comentario" })
+            };
         }
 
         /// <summary>
@@ -350,10 +149,8 @@ namespace dosier_api.Controllers
 
             try
             {
-                // Extraer la ruta relativa de la URL
-                // Ejemplo de URL: /api/storage/cowork_images/639198926921636825_image.png
                 var prefix = "/api/storage/";
-                var idx = url.IndexOf(prefix);
+                var idx = url.IndexOf(prefix, StringComparison.Ordinal);
                 if (idx == -1)
                 {
                     return BadRequest(new { message = "URL de imagen no válida." });
@@ -361,13 +158,11 @@ namespace dosier_api.Controllers
 
                 var relativePath = url.Substring(idx + prefix.Length);
 
-                // Evitar path traversal por seguridad
                 if (relativePath.Contains("..") || relativePath.StartsWith("/") || relativePath.StartsWith("\\"))
                 {
                     return BadRequest(new { message = "Ruta de archivo no permitida." });
                 }
 
-                // Asegurar que esté dentro de cowork_images
                 if (!relativePath.StartsWith("cowork_images/"))
                 {
                     return BadRequest(new { message = "Solo se permite eliminar imágenes de colaboración." });
@@ -376,31 +171,10 @@ namespace dosier_api.Controllers
                 await _storageService.DeleteFileAsync(relativePath);
                 return Ok(new { message = "Imagen eliminada correctamente." });
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                System.Console.WriteLine($"[DOSIER ERROR] Fallo al eliminar imagen de colaboración: {ex.Message}");
                 return StatusCode(500, new { message = "Error interno al eliminar la imagen", detail = ex.Message });
             }
         }
-    }
-
-    public class UpdateCommentRequest
-    {
-        public string Contenido { get; set; } = null!;
-    }
-
-    public class CreateCommentRequest
-    {
-        public string DocumentoUuid { get; set; } = null!;
-        public string Contenido { get; set; } = null!;
-        public int? IdPadre { get; set; }
-    }
-
-    public class CollaborationActivityItem
-    {
-        public string UserName { get; set; } = string.Empty;
-        public string Action { get; set; } = string.Empty;
-        public string SectionName { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
     }
 }
