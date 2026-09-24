@@ -18,7 +18,7 @@ export const ModulosSelector: React.FC<ModulosSelectorProps> = ({
     return (
         <div className="lg:col-span-4 space-y-6 flex flex-col justify-start">
 
-            {/* Selector de pastillas/botones con scroll lateral en móvil y vertical en desktop */}
+            {/* Selector de pastillas/botones con scroll lateral responsivo */}
             <div className="flex flex-row lg:flex-col flex-wrap lg:flex-nowrap gap-3 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-none">
                 {modulesList.map((item) => {
                     const isSelected = activeModule === item.id;

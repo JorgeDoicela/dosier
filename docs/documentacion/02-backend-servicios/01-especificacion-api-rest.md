@@ -231,7 +231,7 @@ Gestión de autenticación, JIT provisioning, SSO Microsoft, Magic Links y recup
 | `POST`| `/login` | **Público** | Autenticación con usuario/contraseña, emitiendo JWT y cookie `dosier_auth`. |
 | `POST`| `/microsoft-login` | **Público** | Inicio de sesión federado mediante token de Microsoft Entra ID. |
 | `POST`| `/magic-login` | **Público** | Consumo de enlace temporal firmado para acceso directo sin contraseña. |
-| `POST`| `/magic-login/handoff` | **Público** | Validación de PIN temporal para traspaso de sesión móvil/escritorio. |
+| `POST`| `/magic-login/handoff` | **Público** | Validación de PIN temporal para traspaso de sesión entre estaciones. |
 | `POST`| `/magic-login/resend` | **Público** | Reenvío de enlace mágico a correo institucional. |
 | `POST`| `/password-recovery/request` | **Público** | Solicitud de recuperación de contraseña con respuesta anti-enumeración. |
 | `POST`| `/password-recovery/validate`| **Público** | Validación de token de recuperación. |
@@ -333,7 +333,7 @@ Centro de notificaciones institucionales e in-app alerts.
 | `POST`| `/mark-all-read` | Autenticado | Marca todas las notificaciones del usuario como leídas. |
 | `DELETE`| `/{uuid}` | Autenticado | Elimina una notificación del buzón del usuario. |
 | `DELETE`| `/clear-read` | Autenticado | Purga todas las notificaciones leídas del buzón. |
-| `POST`| `/subscribe` | Autenticado | Suscripción de token de dispositivo WebPush para notificaciones push móviles. |
+| `POST`| `/subscribe` | Autenticado | Suscripción de token de dispositivo WebPush para notificaciones push web. |
 | `POST`| `/unsubscribe` | Autenticado | Desuscripción de token de dispositivo. |
 
 ---

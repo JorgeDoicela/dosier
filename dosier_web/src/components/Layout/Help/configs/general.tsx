@@ -332,7 +332,7 @@ export const VERIFY_CONFIG: HelpConfig = {
         },
         {
             title: "Escaneo rápido mediante código QR",
-            description: "Utiliza tu cámara web o el escáner de tu dispositivo móvil sobre el código QR del documento para acceder al enlace de validación directa. Este método evita errores de transcripción alfanumérica y procesa la autenticación de manera automática e instantánea.",
+            description: "Utiliza tu cámara web o lector sobre el código QR del documento para acceder al enlace de validación directa. Este método evita errores de transcripción alfanumérica y procesa la autenticación de manera automática e instantánea.",
             highlight: 'content-top'
         },
         {

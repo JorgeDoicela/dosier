@@ -46,7 +46,7 @@
     height: 100%;
     display: block;
     background: transparent;
-    touch-action: none; /* Evita que el navegador haga scroll en móviles mientras se dibuja */
+    touch-action: none; /* Evita que el navegador haga scroll táctil mientras se dibuja */
 }
 
 /* En modo oscuro, invertir colores del trazo en caliente para que se vea blanco/azul brillante */

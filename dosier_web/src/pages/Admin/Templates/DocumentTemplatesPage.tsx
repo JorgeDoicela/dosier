@@ -197,7 +197,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                 </div>
             )}
 
-            {/* Pestañas Móviles Responsive */}
+            {/* Pestañas de Vista Compacta */}
             {selectedTemplate && (
                 <div className="flex md:hidden border-b border-border-thin bg-surface shrink-0 mb-3 rounded-lg overflow-hidden border">
                     <button

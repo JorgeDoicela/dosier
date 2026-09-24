@@ -60,7 +60,7 @@ graph TD
 * **Exigencia CACES:** Facilitar a los pares evaluadores del CACES mecanismos ágiles para verificar la legitimidad de las evidencias presentadas en los portafolios docentes, tanto en formato digital como en impresiones físicas.
 * **Respaldo Técnico en DOSIER:**
   * Cada ejemplar oficial emitido lleva embebido un **código QR vectorial** con un código de trazabilidad único.
-  * Al escanear el código QR con cualquier lector estándar o dispositivo móvil, el evaluador es dirigido al portal público `/public/verify/{traceability_code}`.
+  * Al escanear el código QR con cualquier lector estándar o cámara digital, el evaluador es dirigido al portal público `/public/verify/{traceability_code}`.
   * El portal consulta directamente la base institucional y certifica ante el evaluador:
     * Nombre oficial de la asignatura y código de malla.
     * Período académico ordinario.

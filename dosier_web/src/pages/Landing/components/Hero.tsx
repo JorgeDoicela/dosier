@@ -438,7 +438,7 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                     </button>
                 </div>
 
-                {/* Ticker de logos visible en móvil/tablet y oculto en PC */}
+                {/* Ticker de logos visible en pantalla compacta y oculto en PC */}
                 <div className="lg:hidden w-full pt-6 pb-2 flex flex-wrap justify-center items-center gap-x-8 gap-y-4 text-black dark:text-white select-none">
                     {institutionalLogos.map((logo) => (
                         <div

@@ -43,7 +43,7 @@ const Login = ({ currentTheme = 'dark', toggleTheme }: LoginProps) => {
     }, [location.state]);
 
     useEffect(() => {
-        // Bloquear el scroll en html y body mientras el login esté montado para que sea estático en móvil
+        // Bloquear el scroll en html y body mientras el login esté montado para que sea estático
         const originalBodyOverflow = document.body.style.overflow;
         const originalHtmlOverflow = document.documentElement.style.overflow;
 

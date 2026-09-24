@@ -11,8 +11,8 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 | **Desarrollador Backend (.NET 8)** | [01-macro-arquitectura-clean-arch.md](./01-arquitectura/01-macro-arquitectura-clean-arch.md), [01-especificacion-api-rest.md](./02-backend-servicios/01-especificacion-api-rest.md), [02-autenticacion-sso-y-rbac.md](./02-backend-servicios/02-autenticacion-sso-y-rbac.md) |
 | **Desarrollador Frontend (React)** | [01-arquitectura-react-vite.md](./05-frontend-web/01-arquitectura-react-vite.md), [02-componentes-ui-y-builder-shell.md](./05-frontend-web/02-componentes-ui-y-builder-shell.md), [03-integracion-api-y-resiliencia.md](./05-frontend-web/03-integracion-api-y-resiliencia.md) |
 | **Ingeniero de Base de Datos / DBA** | [01-esquema-relacional-sigafi.md](./04-base-de-datos/01-esquema-relacional-sigafi.md), [02-catalogos-normativa-ecuador.md](./04-base-de-datos/02-catalogos-normativa-ecuador.md), [03-gobernanza-lopdp-y-auditoria.md](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md) |
-| **Comisión Curricular / Auditor CACES** | [02-guia-acreditacion-caces-2026.md](./07-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md), [01-motor-documental-pdf.md](./03-motores-especializados/01-motor-documental-pdf.md), [04-motor-firma-digital-y-sellos.md](./03-motores-especializados/04-motor-firma-digital-y-sellos.md) |
-| **Ingeniero de Operaciones / DevOps** | [01-instalacion-entorno-local.md](./07-despliegue-y-operaciones/01-instalacion-entorno-local.md) |
+| **Comisión Curricular / Auditor CACES** | [02-guia-acreditacion-caces-2026.md](./06-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md), [01-motor-documental-pdf.md](./03-motores-especializados/01-motor-documental-pdf.md), [04-motor-firma-digital-y-sellos.md](./03-motores-especializados/04-motor-firma-digital-y-sellos.md) |
+| **Ingeniero de Operaciones / DevOps** | [01-instalacion-entorno-local.md](./06-despliegue-y-operaciones/01-instalacion-entorno-local.md) |
 
 ---
 
@@ -54,16 +54,13 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 * [06. Catálogo Integral de Vistas, Páginas y Flujos de Usuario](./05-frontend-web/06-catalogo-completo-vistas-y-flujos.md): Desglose exhaustivo de los 14 módulos de `src/pages/`, tableros de gobernanza por rol y modales operativos institucionales.
 * [07. Servicios, Hooks Especializados y Gestión del Estado Global](./05-frontend-web/07-servicios-hooks-y-estado-global.md): Catálogo completo de la Service Layer (21 servicios tipados: `peaService`, `authService`, `usersService`, `auditService`, `emailService`, `configuracionService`, `documentMaintenanceService`, `documentInstanceService`, `curriculumProjectService`, `documentTemplateService`, `collaborationService`, `signaturesService`, `notificacionesService`, `recycleBinService`, `verificationService`, `lopdpService`, `monitoreoService`, `analyticsService`, etc.), contextos globales y hooks de orquestación.
 
-### Sección 06: Aplicación Móvil
-* [01. Arquitectura de Aplicación Móvil (React Native + Expo)](./06-aplicacion-movil/01-arquitectura-movil-docente.md): Arquitectura de `dosier_mobile`, Expo Router `(tabs)`, catálogo de componentes táctiles Vercel Mobile y sistema de diseño Geist.
-
-### Sección 07: Despliegue y Operaciones
-* [01. Guía de Instalación y Configuración en Entorno Local](./07-despliegue-y-operaciones/01-instalacion-entorno-local.md): Requisitos de desarrollo (.NET 8, Node 18, MySQL 3306), ejecución ordenada de los 4 scripts SQL oficiales (01 a 04) y variables de entorno.
-* [02. Guía de Cumplimiento e Integridad Forense para Acreditación CACES 2026](./07-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md): Matriz de evidencias técnicas y cobertura curricular para auditorías de acreditación institucional.
-* [03. Pipeline CI/CD Automatizado y Despliegue en AWS EC2](./07-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md): Pipeline DAG con filtrado de rutas, empaquetado multi-stage Docker en GHCR, despliegue zero-downtime en EC2 y workflow de rollback instantáneo por commit SHA.
-* [04. Seguridad Perimetral: Cifrado SSL/TLS con Cloudflare Origin CA y Nginx](./07-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md): Topología de cifrado de dos niveles, modo Full (Strict), certificados Origin CA válidos hasta 15 años, Quick Tunnels temporales (*.trycloudflare.com) y configuración de proxy inverso.
-* [05. Dimensionamiento de Servidor y Topología en AWS EC2](./07-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md): Justificación técnica de cómputo (c7i-flex.large), huella de memoria (memory footprint), reglas de firewall y volúmenes EBS gp3.
-* [06. Guía de Aprovisionamiento, Migración de Servidores y Rotación de Seguridad](./07-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md): Protocolo paso a paso para desplegar DOSIER en un nuevo servidor, restauración de backups SIGAFI, sincronización de esquemas `doc_*`, resolución de collations y rotación segura de credenciales.
+### Sección 06: Despliegue y Operaciones
+* [01. Guía de Instalación y Configuración en Entorno Local](./06-despliegue-y-operaciones/01-instalacion-entorno-local.md): Requisitos de desarrollo (.NET 8, Node 18, MySQL 3306), ejecución ordenada de los 4 scripts SQL oficiales (01 a 04) y variables de entorno.
+* [02. Guía de Cumplimiento e Integridad Forense para Acreditación CACES 2026](./06-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md): Matriz de evidencias técnicas y cobertura curricular para auditorías de acreditación institucional.
+* [03. Pipeline CI/CD Automatizado y Despliegue en AWS EC2](./06-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md): Pipeline DAG con filtrado de rutas, empaquetado multi-stage Docker en GHCR, despliegue zero-downtime en EC2 y workflow de rollback instantáneo por commit SHA.
+* [04. Seguridad Perimetral: Cifrado SSL/TLS con Cloudflare Origin CA y Nginx](./06-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md): Topología de cifrado de dos niveles, modo Full (Strict), certificados Origin CA válidos hasta 15 años, Quick Tunnels temporales (*.trycloudflare.com) y configuración de proxy inverso.
+* [05. Dimensionamiento de Servidor y Topología en AWS EC2](./06-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md): Justificación técnica de cómputo (c7i-flex.large), huella de memoria (memory footprint), reglas de firewall y volúmenes EBS gp3.
+* [06. Guía de Aprovisionamiento, Migración de Servidores y Rotación de Seguridad](./06-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md): Protocolo paso a paso para desplegar DOSIER en un nuevo servidor, restauración de backups SIGAFI, sincronización de esquemas `doc_*`, resolución de collations y rotación segura de credenciales.
 
 ---
 

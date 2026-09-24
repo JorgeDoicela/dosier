@@ -7,7 +7,7 @@ La capa de infraestructura (`dosier_infrastructure`) implementa los contratos de
 * Hub de comunicación bidireccional en tiempo real **SignalR** (`CollaborationHub`) para la co-redacción concurrente de asignaturas mediante CRDTs (Yjs) con compresión `GZip`.
 * Motor de generación documental y compilación PDF basado en **Scriban** (motor de plantillas) e **iText 9** (manipulación de bajo nivel de flujos PDF y estampados forenses).
 * Motor criptográfico de firmas digitales institucionales (HMAC-SHA256) y certificados electrónicos **PKCS#12 (.p12 / FirmaEC)**.
-* Servicios de comunicación multicanal: WebSockets in-app (`SignalRDriver`), notificaciones push móviles/web (`PushDriver` vía VAPID) y despachador de correo institucional (`EmailEngineService`).
+* Servicios de comunicación multicanal: WebSockets in-app (`SignalRDriver`), notificaciones push web (`PushDriver` vía VAPID) y despachador de correo institucional (`EmailEngineService`).
 
 ---
 
@@ -181,7 +181,7 @@ graph LR
 ## 7. Notificaciones y Comunicación Multicanal (`Common/Notifications/`)
 
 * **`NotificationService.cs`:** Distribuidor unificado de mensajes. Registra las alertas en `doc_notificaciones` y las envía concurrentemente a los drivers registrados.
-* **`SignalRDriver.cs`:** Notificación instantánea al socket del usuario conectado en la web o app móvil.
+* **`SignalRDriver.cs`:** Notificación instantánea al socket del usuario conectado en la plataforma web.
 * **`PushDriver.cs`:** Construye payloads WebPush VAPID cifrados para dispositivos registrados en `doc_dispositivos_tokens`.
 * **`EmailEngineService.cs` y `EmailSenderSubservice.cs`:**
   * Renderiza correos institucionales mediante `EmailMasterLayoutRenderer.cs`.

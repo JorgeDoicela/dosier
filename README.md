@@ -83,7 +83,6 @@ dosier/
 ### 3.1. Tecnologías Principales
 * **Backend:** C# con .NET 8.0, ASP.NET Core Web API, Entity Framework Core 9.0, Pomelo MySQL Provider.
 * **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Feature-Based Modular SPA con Service Layer (21 servicios) y Container/Presenter en Custom Hooks, Geist Editorial / Enterprise Docs System (Inter Puro), Lucide Icons.
-* **Cliente Móvil:** React Native, Expo SDK, Expo Router, React Native Reanimated.
 * **Colaboración en Tiempo Real:** SignalR WebSockets con protocolo binario y sincronización Yjs CRDT.
 * **Generación Documental y Criptografía:** iText 9, Handlebars.Net, QRCoder, SHA-256 y soporte PKCS#12 (.p12).
 * **Base de Datos Institucional:** MySQL 8.0+ / MariaDB en base `sigafi_es`, modo de solo lectura para tablas académicas (`AsNoTracking()`).
@@ -184,13 +183,12 @@ La especificación completa del sistema está organizada en el directorio `docs/
 * [Sección 05: Sistema de Diseño Visual Editorial Minimalista](docs/documentacion/05-frontend-web/05-sistema-de-diseno-editorial.md)
 * [Sección 05: Catálogo Integral de Vistas, Páginas y Flujos de Usuario](docs/documentacion/05-frontend-web/06-catalogo-completo-vistas-y-flujos.md)
 * [Sección 05: Servicios, Hooks Especializados y Gestión del Estado Global](docs/documentacion/05-frontend-web/07-servicios-hooks-y-estado-global.md)
-* [Sección 06: Arquitectura de la Aplicación Móvil](docs/documentacion/06-aplicacion-movil/01-arquitectura-movil-docente.md)
-* [Sección 07: Instalación y Configuración Local](docs/documentacion/07-despliegue-y-operaciones/01-instalacion-entorno-local.md)
-* [Sección 07: Guía de Cumplimiento para Acreditación CACES 2026](docs/documentacion/07-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md)
-* [Sección 07: Pipeline CI/CD y Despliegue en AWS EC2](docs/documentacion/07-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md)
-* [Sección 07: Seguridad Perimetral y SSL Cloudflare Origin CA](docs/documentacion/07-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md)
-* [Sección 07: Dimensionamiento de Servidor y Topología en AWS EC2](docs/documentacion/07-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md)
-* [Sección 07: Guía de Aprovisionamiento, Migración y Rotación de Seguridad](docs/documentacion/07-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md)
+* [Sección 06: Instalación y Configuración Local](docs/documentacion/06-despliegue-y-operaciones/01-instalacion-entorno-local.md)
+* [Sección 06: Guía de Cumplimiento para Acreditación CACES 2026](docs/documentacion/06-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md)
+* [Sección 06: Pipeline CI/CD y Despliegue en AWS EC2](docs/documentacion/06-despliegue-y-operaciones/03-pipeline-cicd-y-despliegue-ec2.md)
+* [Sección 06: Seguridad Perimetral y SSL Cloudflare Origin CA](docs/documentacion/06-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md)
+* [Sección 06: Dimensionamiento de Servidor y Topología en AWS EC2](docs/documentacion/06-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md)
+* [Sección 06: Guía de Aprovisionamiento, Migración y Rotación de Seguridad](docs/documentacion/06-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md)
 
 ---
 

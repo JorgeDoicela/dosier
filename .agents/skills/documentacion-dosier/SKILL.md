@@ -49,9 +49,7 @@ docs/documentacion/
 │   ├── 02-componentes-ui-y-builder-shell.md
 │   ├── 03-gestion-estado-y-cowork-ui.md
 │   └── 04-sistema-diseno-geist-editorial.md
-├── 06-aplicacion-movil/          # Arquitectura React Native Expo, navegación por tabs y vistas docentes.
-│   └── 01-arquitectura-movil-docente.md
-└── 07-despliegue-y-operaciones/  # Instalación local, CACES 2026, CI/CD GitHub Actions, Cloudflare SSL y despliegue en servidor.
+└── 06-despliegue-y-operaciones/  # Instalación local, CACES 2026, CI/CD GitHub Actions, Cloudflare SSL y despliegue en servidor.
     ├── 01-instalacion-entorno-local.md
     ├── 02-auditoria-y-acreditacion-caces.md
     └── 03-integracion-continua-y-despliegue.md
@@ -92,11 +90,6 @@ Para evitar tanto el desfase documental como el ruido innecesario, se establecen
   * Creación o ajuste de componentes de sección del PEA oficial (secciones A a K), integración de `<CoWorkField>` o modales curriculares en `src/pages/Dashboard/Roles/Modals/`.
   * Ajustes en la regla cardinal de fondos 100% sólidos o en el sistema de diseño Geist Editorial.
 * **Acción Obligatoria:** Actualizar `05-frontend-web/01-arquitectura-react-vite.md`, `05-frontend-web/02-componentes-ui-y-builder-shell.md` o `05-frontend-web/04-sistema-diseno-geist-editorial.md`.
-
-### 3.5. Cliente Móvil (`06-aplicacion-movil/`)
-* **Cambio Sustancial:**
-  * Adición o reestructuración de pantallas en `dosier_mobile/app/(tabs)/` o componentes táctiles en `components/ui/`.
-* **Acción Obligatoria:** Actualizar `06-aplicacion-movil/01-arquitectura-movil-docente.md`.
 
 ---
 

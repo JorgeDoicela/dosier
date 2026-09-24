@@ -38,7 +38,6 @@ graph TD
     end
 
     WebClient -->|HTTP REST / WebSockets Yjs| APIGateway
-    MobileClient -->|HTTP REST| APIGateway
 
     APIGateway --> AppCore
     AppCore --> DomainCore
@@ -68,7 +67,7 @@ graph TD
     Publico["Auditor CACES / Verificación Pública QR"]
 
     subgraph DOSIERSystem ["Plataforma DOSIER ISTPET"]
-        CoreSystem["DOSIER Core Platform\n(API REST + CoWork Hub + Engines + Frontend Web/Mobile)"]
+        CoreSystem["DOSIER Core Platform\n(API REST + CoWork Hub + Engines + Frontend Web SPA)"]
     end
 
     SIGAFI[("SIGAFI Institucional: Mallas, Asignaturas, Asignaciones (Solo Lectura)")]
@@ -114,7 +113,6 @@ graph TB
     end
 
     WebClient -->|HTTP REST / JSON / WebSockets| APIContainer
-    MobileClient -->|HTTP REST / JSON| APIContainer
 
     APIContainer --> AppContainer
     AppContainer --> DomainContainer

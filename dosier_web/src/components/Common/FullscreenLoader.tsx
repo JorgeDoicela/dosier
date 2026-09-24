@@ -138,7 +138,7 @@ export const FullscreenLoader: React.FC<FullscreenLoaderProps> = ({
                 />
             )}
             
-            {/* Logo de DOSIER centrado de forma absoluta e inmóvil */}
+            {/* Logo de DOSIER centrado de forma absoluta y fija */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center select-none z-10">
                 <img 
                     src={`${baseUrl}logo_negro.webp`} 

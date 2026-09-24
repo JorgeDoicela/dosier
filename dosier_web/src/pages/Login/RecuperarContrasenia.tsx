@@ -19,7 +19,7 @@ const RecuperarContrasenia = ({ currentTheme = 'dark', toggleTheme }: RecuperarC
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Bloquear el scroll en html y body mientras esté montado para que sea estático en móvil
+        // Bloquear el scroll en html y body mientras esté montado para que sea estático
         const originalBodyOverflow = document.body.style.overflow;
         const originalHtmlOverflow = document.documentElement.style.overflow;
         

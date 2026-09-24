@@ -34,7 +34,7 @@ const PinHandoff = ({ currentTheme = 'dark', toggleTheme }: { currentTheme?: 'da
     useEffect(() => () => { if (lockoutRef.current) clearInterval(lockoutRef.current); }, []);
 
     useEffect(() => {
-        // Bloquear el scroll en html y body mientras esté montado para que sea estático en móvil
+        // Bloquear el scroll en html y body mientras esté montado para que sea estático
         const originalBodyOverflow = document.body.style.overflow;
         const originalHtmlOverflow = document.documentElement.style.overflow;
         
@@ -134,7 +134,7 @@ const PinHandoff = ({ currentTheme = 'dark', toggleTheme }: { currentTheme?: 'da
                             <Laptop size={24} />
                         </div>
                         <p className="text-xs text-text-dim leading-relaxed">
-                            Introduce el código PIN de 5 caracteres que se muestra en tu teléfono móvil para iniciar sesión en esta computadora de forma segura.
+                            Introduce el código PIN de 5 caracteres temporal para iniciar sesión en esta estación de forma segura.
                         </p>
                     </div>
 

@@ -82,4 +82,3 @@ Para garantizar un producto de software robusto, auditable y de calidad de produ
    * Web API REST (`dosier_api`) en ASP.NET Core 8 con Clean Architecture y MySQL (`sigafi_es`).
 3. **Reserva para Extensiones Futuras:**
    * Los módulos de Sílabos Analíticos de 19 semanas y Guías de Prácticas APE quedan respaldados por el script DDL de extensión `05_extension_futura_curriculum_silabo_guias.sql` como segunda etapa post-titulación.
-   * La aplicación móvil nativa no forma parte del despliegue inicial y se proyecta como una integración cliente posterior a la defensa de grado.

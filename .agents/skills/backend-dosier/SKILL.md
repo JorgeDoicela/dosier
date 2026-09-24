@@ -158,7 +158,7 @@ $$\text{Horas Docencia (CD)} + \text{Horas APE} + \text{Horas Autónomo (TA)} \e
 
 * **Serialización Global en snake_case:** El backend serializa todas las propiedades de respuestas JSON a `snake_case` de forma global (`JsonNamingPolicy.SnakeCaseLower` configurado en `Program.cs`).
 * **Production-Lock de Validación:** `SuppressModelStateInvalidFilter = false`. Ninguna petición que viole las DataAnnotations o validadores de FluentValidation ingresa al cuerpo del controlador; retorna inmediatamente `400 Bad Request`.
-* **Autenticación Híbrida JWT:** El middleware de autenticación soporta lectura de token tanto desde cookie segura `dosier_auth` (cliente web local) como desde la cabecera `Authorization: Bearer <token>` (SSO institucional y cliente móvil).
+* **Autenticación Híbrida JWT:** El middleware de autenticación soporta lectura de token tanto desde cookie segura `dosier_auth` (cliente web local) como desde la cabecera `Authorization: Bearer <token>` (SSO institucional y peticiones API).
 * **SignalR CoWork Hub:** El hub de colaboración (`CollaborationHub`) establece un límite máximo de payload de 2 MB con compresión binaria GZip para la transmisión eficiente de deltas Yjs.
 
 ---

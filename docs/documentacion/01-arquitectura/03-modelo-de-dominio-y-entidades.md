@@ -368,8 +368,8 @@ Define las enumeraciones de dominio para el motor de firma electrónica y audito
 * **`SigningMethod`:**
   * `DosierBasic = 1`: Firma institucional basada en credenciales auditadas de sesión.
   * `DosierCanvas = 2`: Firma con trazo manuscrito en canvas vectorizado.
-  * `Biometric = 3`: Verificación biométrica reservada para dispositivos móviles.
-  * `MobileOtp = 4`: Confirmación de doble factor mediante Push OTP móvil.
+  * `Biometric = 3`: Verificación biométrica (reservado).
+  * `MobileOtp = 4`: Confirmación de doble factor mediante Push OTP (reservado).
 * **`SignatureAuditEvent`:**
   * `ProfileCreated = 1`, `ProfileUpdated = 2`, `DocumentSigned = 3`, `SignatureVerified = 4`, `SignatureRevoked = 5`, `SignatureFailed = 6`.
 

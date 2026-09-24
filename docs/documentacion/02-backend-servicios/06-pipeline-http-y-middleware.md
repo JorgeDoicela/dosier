@@ -8,7 +8,7 @@ El ciclo de procesamiento de solicitudes HTTP sigue una tubería estrictamente o
 
 ```mermaid
 graph TD
-    Client[Cliente: Web SPA / App Móvil] --> CORS[1. Middleware CORS: Dosier_policy]
+    Client[Cliente: Web SPA (React 18)] --> CORS[1. Middleware CORS: Dosier_policy]
     CORS --> Exception[2. Middleware Global de Excepciones: ExceptionMiddleware]
     Exception --> Auth[3. Autenticación Dual: JWT Bearer / Cookie dosier_auth]
     Auth --> RBAC[4. Autorización Basada en Políticas y Roles: PBAC]
@@ -65,7 +65,7 @@ Intercepta cualquier excepción no controlada dentro del pipeline y la transform
 
 ### 2.3. Autenticación Dual: Header Bearer y Cookie HttpOnly
 
-Para asegurar la convivencia fluida entre la SPA de desarrollo local, los túneles temporales y las aplicaciones móviles nativas, el handler de JWT inspecciona dos fuentes en orden de precedencia:
+Para asegurar la convivencia fluida entre la SPA de desarrollo local, los túneles temporales y las integraciones de prueba, el handler de JWT inspecciona dos fuentes en orden de precedencia:
 
 1. **Cookie Segura `dosier_auth`:** Emitida durante el login con flags `HttpOnly = true`, `SameSite = Strict` y expiración a 8 horas.
 2. **Encabezado `Authorization: Bearer <token>`:** Empleado por clientes HTTP, herramientas de prueba (Swagger, Postman) e integraciones externas.
