@@ -248,7 +248,7 @@ function proyectoToItem(p: any, isMyProject: boolean, isAdminUser = false): Sear
         description: [p.codigo_institucional, p.linea_investigacion, p.estado].filter(Boolean).join(' · '),
         category: cat,
         icon: FolderOpen,
-        path: buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid, '', prefix),
+        path: buildWorkspacePath('PEA_OFICIAL', p.uuid, '', prefix),
         keywords: [p.codigo_institucional || '', p.linea_investigacion || '', p.estado || ''],
         boost: 0,
         isLive: true,

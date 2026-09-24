@@ -261,7 +261,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         setError(null);
 
         try {
-            const templateCode = 'PROTOCOLO_INVESTIGACION';
+            const templateCode = 'PEA_OFICIAL';
 
             setCreationStepMsg("Creando el expediente digital curricular...");
 
@@ -279,7 +279,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             setCreationStepMsg("Estructurando secciones del instrumento...");
 
             const initialMetadata = {
-                ...DocumentTemplateRegistry.PROTOCOLO_INVESTIGACION.schema,
+                ...DocumentTemplateRegistry.PEA_OFICIAL.schema,
                 Uuid: newUuid,
                 Titulo: titulo.trim().toUpperCase(),
                 IdCarrera: idCarrera,

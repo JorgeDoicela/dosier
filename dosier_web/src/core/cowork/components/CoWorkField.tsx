@@ -120,7 +120,7 @@ function applyMinimalDiff(ytext: Y.Text, oldVal: string, newVal: string): void {
 }
 
 /**
- * DIITRA CoWork Field (v2.0 — Yjs as single source of truth)
+ * DOSIER CoWork Field (v2.0 — Yjs as single source of truth)
  *
  * The displayed value is always derived from Yjs (after history loads).
  * The parent's DB value via DocumentDataContext is used ONLY as a one-time

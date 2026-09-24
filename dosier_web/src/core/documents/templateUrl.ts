@@ -1,4 +1,4 @@
-/** Convierte un código interno (PROTOCOLO_INVESTIGACION) a slug de URL (protocolo-investigacion). */
+/** Convierte un código interno (PEA_OFICIAL) a slug de URL (pea-oficial). */
 export function templateCodeToSlug(code: string): string {
     return code.toLowerCase().replace(/_/g, '-');
 }
@@ -20,7 +20,7 @@ export function isLegacyTemplateUrlSegment(segment: string): boolean {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Convierte un código interno de plantilla al valor de ?edit= (protocolo-investigacion). */
+/** Convierte un código interno de plantilla al valor de ?edit= (pea-oficial). */
 export function templateCodeToEditParam(templateCode: string): string {
     return templateCodeToSlug(templateCode);
 }

@@ -22,12 +22,6 @@
 // Si NO registras un id aquí, se usa AgnosticSection como fallback automático.
 // ═══════════════════════════════════════════════════════════════════
 
-import { GeneralSection }         from '../../../components/DOSIER/sections/GeneralSection';
-import { TechnicalSection }       from '../../../components/DOSIER/sections/TechnicalSection';
-import { TeamSection }            from '../../../components/DOSIER/sections/TeamSection';
-import { BudgetSection }          from '../../../components/DOSIER/sections/BudgetSection';
-import { TimelineSection }        from '../../../components/DOSIER/sections/TimelineSection';
-import { ImpactSection }          from '../../../components/DOSIER/sections/ImpactSection';
 import { BibliographySection }    from '../../../components/DOSIER/sections/BibliographySection';
 import { AgnosticSection }        from '../../../components/DOSIER/sections/AgnosticSection';
 import { MultiSectionTableSection } from '../../../components/DOSIER/sections/MultiSectionTableSection';
@@ -47,12 +41,6 @@ import {
  * Mapa de nombre string de componente → Componente React real
  */
 export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
-    'GeneralSection': GeneralSection,
-    'TeamSection': TeamSection,
-    'TechnicalSection': TechnicalSection,
-    'BudgetSection': BudgetSection,
-    'TimelineSection': TimelineSection,
-    'ImpactSection': ImpactSection,
     'BibliographySection': BibliographySection,
     'AgnosticSection': AgnosticSection,
     'MultiSectionTableSection': MultiSectionTableSection,
@@ -75,15 +63,6 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
  * Valor: Componente React de sección
  */
 export const DocumentComponentRegistry: Record<string, React.ComponentType<any>> = {
-    // ── PROTOCOLO DE INVESTIGACIÓN ─────────────────────────────────
-    'identificacion': GeneralSection,
-    'equipo':         TeamSection,
-    'tecnico':        TechnicalSection,
-    'recursos':       BudgetSection,
-    'impactos':       ImpactSection,
-    'cronograma':     TimelineSection,
-    'bibliografia':   BibliographySection,
-
     // ── PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA) ────────────────
     'pea_general_section':          PeaGeneralSection,
     'pea_characterization_section': PeaCharacterizationSection,

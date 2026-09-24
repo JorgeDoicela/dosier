@@ -97,7 +97,7 @@ export const useEmailComposer = ({
     const [contextType, setContextType] = useState<string>('');
     const [selectedEntityUuid, setSelectedEntityUuid] = useState<string>('');
     const [systemAttachments, setSystemAttachments] = useState<Record<string, boolean>>({
-        'PROTOCOLO_INVESTIGACION': false
+        'PEA_OFICIAL': false
     });
     const [emailSubject, setEmailSubject] = useState<string>('');
     const [emailBody, setEmailBody] = useState<string>('');
@@ -229,7 +229,7 @@ export const useEmailComposer = ({
                     '[[proyecto_descripcion]]': p.descripcion || 'Sin descripción',
                     '[[proyecto_estado]]': p.estado || 'En Ejecución',
                     '[[linea_investigacion]]': p.linea_investigacion || 'General',
-                    '[[proyecto_workspace_url]]': `${window.location.origin}${buildWorkspacePath('PROTOCOLO_INVESTIGACION', p.uuid)}`
+                    '[[proyecto_workspace_url]]': `${window.location.origin}${buildWorkspacePath('PEA_OFICIAL', p.uuid)}`
                 }));
             }
         } else if (contextType === 'Convocatoria') {
@@ -453,7 +453,7 @@ export const useEmailComposer = ({
             setContextType('');
             setSelectedEntityUuid('');
             setSystemAttachments({
-                'PROTOCOLO_INVESTIGACION': false
+                'PEA_OFICIAL': false
             });
             setSelectedRole('');
             setSelectedCarreraId('');

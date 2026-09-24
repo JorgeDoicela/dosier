@@ -212,4 +212,5 @@ Para dar cumplimiento estricto al principio de inversión de dependencias y Clea
 * **`IBackupAdminService`:** Administra la bitácora de copias de seguridad (`DocBackupLogs`), cálculo en caliente de checksum SHA-256 para verificación de integridad física, diagnóstico del volumen de almacenamiento en disco (`GetDiskInfo`) y purga forense.
 * **`IDocumentVerificationService`:** Orquesta la verificación pública de trazabilidad de documentos por código único o código de firma DFRM, resolviendo la cascada de firmas sin exponer el contexto de datos al controlador público.
 * **`IDocumentTemplateAdminService`:** Administra el catálogo de plantillas oficiales, orden personalizado en JSON, tema visual institucional (`Theme.GlobalConfigJson`) y publicación en caliente hacia clientes conectados.
+* **`ICalendarioService`:** Administra los eventos normativos institucionales, notas adhesivas de planificación docente (Inbox), exportación iCalendar (RFC 5545) y tablero Kanban de actividades curriculares.
 

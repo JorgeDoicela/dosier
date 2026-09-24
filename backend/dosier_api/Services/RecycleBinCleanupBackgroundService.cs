@@ -7,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using dosier_infrastructure.data.models;
-using dosier_application.Research;
-using Dosier.Application.Research;
 
 namespace dosier_api.Services
 {
@@ -57,34 +55,19 @@ namespace dosier_api.Services
         {
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DosierContext>();
-            var projectOrchestrator = scope.ServiceProvider.GetRequiredService<IProjectOrchestrator>();
             var expirationLimit = DateTime.UtcNow.AddDays(-30);
 
-            // 1. Purgar Proyectos
+            // 1. Purgar Proyectos Expirados
             var expiredProjects = await context.DocProyectos
                 .IgnoreQueryFilters()
                 .Where(p => p.Eliminado == true && p.FechaEliminacion != null && p.FechaEliminacion < expirationLimit)
-                .Select(p => p.Uuid)
                 .ToListAsync();
 
             if (expiredProjects.Any())
             {
-                _logger.LogInformation("Encontrados {Count} proyectos expirados en la papelera. Iniciando purga.", expiredProjects.Count);
-                foreach (var uuid in expiredProjects)
-                {
-                    try
-                    {
-                        var result = await projectOrchestrator.PurgeProjectAsync(uuid, "SYSTEM_CLEANUP");
-                        if (!result.Success)
-                        {
-                            _logger.LogWarning("No se pudo purgar proyecto {Uuid}: {Message}", uuid, result.Message);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error purgando proyecto expirado UUID: {Uuid}", uuid);
-                    }
-                }
+                _logger.LogInformation("Encontrados {Count} proyectos expirados en la papelera. Purgando.", expiredProjects.Count);
+                context.DocProyectos.RemoveRange(expiredProjects);
+                await context.SaveChangesAsync();
             }
         }
     }

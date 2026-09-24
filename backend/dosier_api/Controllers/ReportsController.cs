@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using dosier_application.Research;
+using dosier_application.Common.Interfaces;
 
 namespace dosier_api.Controllers
 {

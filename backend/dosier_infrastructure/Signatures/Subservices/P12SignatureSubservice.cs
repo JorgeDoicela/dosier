@@ -214,12 +214,7 @@ public class P12SignatureSubservice : IP12SignatureSubservice
             // Persistir cambios de la instancia y firma antes de evaluar transiciones de workflow en la base de datos
             await _context.SaveChangesAsync();
 
-            // 12. Transición de Estado de Workflow al firmar Protocolo de Investigación
-            if (instancia.TemplateCode == "PROTOCOLO_INVESTIGACION")
-            {
-                var workflowService = _serviceProvider.GetRequiredService<Dosier.Application.Research.IWorkflowEngineService>();
-                await workflowService.TransicionarEstadoAsync(instancia.EntityUuid, "Enviado", 1, $"Firma Digital .p12 de Protocolo de Investigación - Hash: {docHash}");
-            }
+
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         }

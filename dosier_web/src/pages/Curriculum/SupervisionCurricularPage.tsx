@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
-import { PeaSupervisionTray } from './Proyectos/components/PeaSupervisionTray';
+import { PeaSupervisionTray } from './components/PeaSupervisionTray';
 
 /**
  * ══════════════════════════════════════════════════════════════════════════════

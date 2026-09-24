@@ -2,7 +2,7 @@
 
 La API REST de **DOSIER** (`dosier_api`) está construida sobre **ASP.NET Core 8.0**, proporcionando el conjunto completo de servicios web consumidos por la aplicación web institucional SPA (`dosier_web`).
 
-El sistema expone **23 controladores especializados** que orquestan los casos de uso curriculares, motores documentales, validaciones normativas, seguridad RBAC, criptografía y colaboración concurrente.
+El sistema expone **22 controladores especializados** que orquestan los casos de uso curriculares, motores documentales, validaciones normativas, seguridad RBAC, criptografía y colaboración concurrente.
 
 ---
 
@@ -34,9 +34,9 @@ Ejemplo de payload para guardado del PEA:
 
 ---
 
-## 3. Catálogo Exhaustivo de los 23 Controladores REST
+## 3. Catálogo Exhaustivo de los 22 Controladores REST
 
-Los 23 controladores de la API operan bajo el estándar estricto de **Clean Architecture pura**. Ningún controlador inyecta directamente el contexto de base de datos (`DosierContext`) ni formula consultas LINQ contra la persistencia; todos los controladores delegan exclusivamente en fachadas e interfaces de servicio tipadas en `dosier_application` e implementadas en `dosier_infrastructure`.
+Los 22 controladores de la API operan bajo el estándar estricto de **Clean Architecture pura**. Ningún controlador inyecta directamente el contexto de base de datos (`DosierContext`) ni formula consultas LINQ contra la persistencia; todos los controladores delegan exclusivamente en fachadas e interfaces de servicio tipadas en `dosier_application` e implementadas en `dosier_infrastructure`.
 
 A continuación se detalla la especificación técnica de cada uno de los controladores del backend:
 
@@ -58,19 +58,18 @@ Controladores del Backend DOSIER:
 |   |-- 11. AuthController (/api/auth)
 |   |-- 12. AdminController (/api/admin)
 |   `-- 13. LopdpController (/api/lopdp)
-|-- Subsistema de Colaboración y Proyectos:
-|   |-- 14. CollaborationController (/api/collaboration)
-|   `-- 15. ProjectsController (/api/projects)
+|-- Subsistema de Colaboración:
+|   `-- 14. CollaborationController (/api/collaboration)
 |-- Subsistema de Comunicación y Analítica:
-|   |-- 16. NotificationsController (/api/Admin/notifications)
-|   |-- 17. EmailEngineController (/api/Admin/email-engine)
-|   |-- 18. CalendarioController (/api/calendario)
-|   `-- 19. ReportsController (/api/reports)
+|   |-- 15. NotificationsController (/api/Admin/notifications)
+|   |-- 16. EmailEngineController (/api/Admin/email-engine)
+|   |-- 17. CalendarioController (/api/calendario)
+|   `-- 18. ReportsController (/api/reports)
 `-- Subsistema de Mantenimiento y Utilidades:
-    |-- 20. RecycleBinController (/api/recyclebin)
-    |-- 21. StorageController (/api/storage)
-    |-- 22. HealthController (/api/health)
-    `-- 23. Endpoint Mínimo Ping (/api/ping)
+    |-- 19. RecycleBinController (/api/recyclebin)
+    |-- 20. StorageController (/api/storage)
+    |-- 21. HealthController (/api/health)
+    `-- 22. Endpoint Mínimo Ping (/api/ping)
 ```
 
 ---
@@ -300,33 +299,7 @@ Coordinación previa y control de sesiones del editor colaborativo CoWork.
 
 ---
 
-### 3.15. `ProjectsController` (`/api/projects`)
-Gestión del ciclo de vida de proyectos formativos y de investigación articulados al PEA.
-
-| Método | Ruta | Autorización | Descripción |
-| :--- | :--- | :--- | :--- |
-| `POST`| `/generate-pdf` | Autenticado | Generación de protocolo en PDF (borrador / definitivo). |
-| `POST`| `/generate-pdf/blind-review` | Autenticado | Generación de protocolo en modo Doble Ciego para revisión por pares. |
-| `POST`| `/draft` | Autenticado | Creación de borrador de proyecto. |
-| `POST`| `/sign` | Autenticado | Firma electrónica PAdES del protocolo con certificado del docente líder. |
-| `PATCH`| `/{id}/section` | Autenticado | Guardado modular de secciones del proyecto. |
-| `POST`| `/{id}/transition` | Autenticado | Transición de estado en la máquina de workflow con observaciones. |
-| `POST`| `/{uuid}/iniciar-ejecucion` | Autenticado | Inicio formal de ejecución con registro de trazabilidad. |
-| `GET` | `/{id}/traceability` | Autenticado | Historial forense de trazabilidad del proyecto. |
-| `POST`| `/save-preview-data` | Autenticado | Sincronización de datos del asistente (Wizard) de proyectos. |
-| `GET` | `/` | Autenticado | Lista general de proyectos institucionales. |
-| `GET` | `/my` | Autenticado | Proyectos asignados al usuario o todos si es administrador. |
-| `GET` | `/{uuid}/detail` | Autenticado | Ficha completa de detalle, permisos de edición y firma del proyecto. |
-| `GET` | `/stats` | Autenticado | Estadísticas de investigación y cobertura para el dashboard docente. |
-| `PATCH`| `/{uuid}/team` | Autenticado | Actualización del equipo de investigadores y grupos asociados. |
-| `POST`| `/{uuid}/team-change-requests` | Autenticado | Solicitud formal de alta/baja de participantes en el proyecto. |
-| `GET` | `/{uuid}/team-change-requests` | Autenticado | Historial de solicitudes de cambio de equipo. |
-| `PATCH`| `/{uuid}/team-change-requests/{requestUuid}/review` | `DOSIER_ADMIN` | Aprobación o rechazo administrativo de cambio de participantes. |
-| `POST`| `/{uuid}/transfer-director` | Autenticado | Transferencia de la dirección de proyecto a otro docente calificado. |
-
----
-
-### 3.16. `NotificationsController` (`/api/Admin/notifications`)
+### 3.15. `NotificationsController` (`/api/Admin/notifications`)
 Centro de notificaciones institucionales e in-app alerts.
 
 | Método | Ruta | Autorización | Descripción |
@@ -341,7 +314,7 @@ Centro de notificaciones institucionales e in-app alerts.
 
 ---
 
-### 3.17. `EmailEngineController` (`/api/Admin/email-engine`)
+### 3.16. `EmailEngineController` (`/api/Admin/email-engine`)
 Administración de plantillas y despacho de correos electrónicos transaccionales.
 
 | Método | Ruta | Autorización | Descripción |
@@ -356,8 +329,8 @@ Administración de plantillas y despacho de correos electrónicos transaccionale
 
 ---
 
-### 3.18. `CalendarioController` (`/api/calendario`)
-Planificación académica, hitos lectivos y sincronización de calendario institucional.
+### 3.17. `CalendarioController` (`/api/calendario`)
+Planificación académica, hitos lectivos y sincronización de calendario institucional con soporte a eventos del PEA.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
@@ -368,12 +341,12 @@ Planificación académica, hitos lectivos y sincronización de calendario instit
 
 ---
 
-### 3.19. `ReportsController` (`/api/reports`)
+### 3.18. `ReportsController` (`/api/reports`)
 Tableros analíticos y paquetes de evidencias para acreditación CACES 2026.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/analiticas` | `DOSIER_ADMIN` | Reporte consolidado de cobertura curricular y proyectos por período y carrera. |
+| `GET` | `/analiticas` | `DOSIER_ADMIN` | Reporte consolidado de cobertura curricular por período y carrera. |
 | `GET` | `/caces-preview` | `DOSIER_ADMIN` | Previsualización de indicadores de acreditación CACES. |
 | `GET` | `/caces-package` | `DOSIER_ADMIN` | Generación del paquete PDF unificado de evidencias institucionales. |
 | `GET` | `/caces-coverage` | `DOSIER_ADMIN` | Matriz porcentual de cobertura de PEAs aprobados y firmados. |
@@ -381,18 +354,18 @@ Tableros analíticos y paquetes de evidencias para acreditación CACES 2026.
 
 ---
 
-### 3.20. `RecycleBinController` (`/api/recyclebin`)
+### 3.19. `RecycleBinController` (`/api/recyclebin`)
 Papelera de reciclaje lógica y recuperación de registros eliminados.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/projects` | Autenticado | Lista proyectos eliminados lógicamente disponibles para restauración. |
-| `POST`| `/projects/{uuid}/restore` | Autenticado | Restaura un proyecto de investigación y reconstruye sus dependencias. |
+| `GET` | `/projects` | Autenticado | Lista elementos curriculares eliminados lógicamente disponibles para restauración. |
+| `POST`| `/projects/{uuid}/restore` | Autenticado | Restaura un instrumento curricular y reconstruye sus dependencias. |
 | `DELETE`| `/projects/{uuid}/permanent`| `DOSIER_ADMIN` | Eliminación definitiva (Hard Delete) de un registro tras período de gracia. |
 
 ---
 
-### 3.21. `StorageController` (`/api/storage`)
+### 3.20. `StorageController` (`/api/storage`)
 Despacho de archivos estáticos, evidencias y firmas institucionales.
 
 | Método | Ruta | Autorización | Descripción |
@@ -401,7 +374,7 @@ Despacho de archivos estáticos, evidencias y firmas institucionales.
 
 ---
 
-### 3.22. `HealthController` (`/api/health`)
+### 3.21. `HealthController` (`/api/health`)
 Comprobación de estado y disponibilidad del servicio API.
 
 | Método | Ruta | Autorización | Descripción |
@@ -410,7 +383,7 @@ Comprobación de estado y disponibilidad del servicio API.
 
 ---
 
-### 3.23. Endpoint Mínimo `/api/ping`
+### 3.22. Endpoint Mínimo `/api/ping`
 Ruta mapeada en `Program.cs` para chequeos de salud de balanceadores de carga y proxies:
 * **Método:** `GET`
 * **Ruta:** `/api/ping`

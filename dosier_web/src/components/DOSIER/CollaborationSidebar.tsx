@@ -62,7 +62,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     };
 
     const isProtocolDocument = useMemo(() => {
-        return !templateCode || templateCode === 'PROTOCOLO_INVESTIGACION' || templateCode === 'PROTOCOLO_PEER_REVIEW';
+        return !templateCode || templateCode === 'PEA_OFICIAL' || templateCode === 'GUIA_PRACTICA_LAB';
     }, [templateCode]);
 
     const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones'>(() => {

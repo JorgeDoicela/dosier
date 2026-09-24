@@ -280,12 +280,12 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                                 type="checkbox"
                                 id="sys-protocolo"
                                 disabled={!selectedEntityUuid}
-                                checked={systemAttachments['PROTOCOLO_INVESTIGACION']}
-                                onChange={e => setSystemAttachments(prev => ({ ...prev, 'PROTOCOLO_INVESTIGACION': e.target.checked }))}
+                                checked={systemAttachments['PEA_OFICIAL']}
+                                onChange={e => setSystemAttachments(prev => ({ ...prev, 'PEA_OFICIAL': e.target.checked }))}
                                 className="rounded border-border-thin text-brand focus:ring-brand shrink-0 cursor-pointer disabled:opacity-50"
                             />
                             <label htmlFor="sys-protocolo" className={`text-xs font-bold select-none cursor-pointer ${!selectedEntityUuid ? 'text-text-dim/40' : 'text-text-main hover:text-brand transition-colors'} flex items-center gap-1.5`}>
-                                Generar Ficha / Protocolo de Investigación
+                                Generar Programa de Estudio de la Asignatura (PEA Oficial)
                                 {!selectedEntityUuid && <span className="text-[9px] text-text-dim font-normal italic">(Requiere seleccionar un contexto)</span>}
                             </label>
                         </div>

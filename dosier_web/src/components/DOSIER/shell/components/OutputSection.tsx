@@ -122,7 +122,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                     };
 
                     const protoDoc = list.find(
-                        (d: any) => d.template_code === 'PROTOCOLO_INVESTIGACION' || d.templateCode === 'PROTOCOLO_INVESTIGACION'
+                        (d: any) => d.template_code === 'PEA_OFICIAL' || d.templateCode === 'PEA_OFICIAL'
                     );
                     setIsProtocoloSigned(isDocValidlySigned(protoDoc));
                 }

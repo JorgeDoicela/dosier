@@ -211,92 +211,77 @@ export function generateDefaultBlocksForTemplate(
     // 1. ESTRATEGIAS PARA PLANTILLAS INSTITUCIONALES CONOCIDAS
     // ─────────────────────────────────────────────────────────────────────────
 
-    // B. PROTOCOLO DE INVESTIGACIÓN (I+D+i)
-    if (code === 'PROTOCOLO_INVESTIGACION' || code === '1. FORMATO PROYECTO DE INVESTIGACIÓN') {
+    // B. GUÍA DE PRÁCTICA DE LABORATORIO / TALLER
+    if (code === 'GUIA_PRACTICA_LAB' || code === 'GUIA_PRACTICA' || code.includes('PRÁCTICA') || code.includes('PRACTICA')) {
         return [
-            createBaseCoverBlock('PROYECTO DE INVESTIGACIÓN', { colorTitle: 'navy', showInstitution: false }),
+            createBaseCoverBlock('GUÍA DE PRÁCTICA DE LABORATORIO / TALLER', { colorTitle: 'navy', showInstitution: true }),
             {
-                id: 'block-general',
-                type: 'project_general_section' as BlockType,
-                title: '1. IDENTIFICACIÓN DEL PROYECTO',
+                id: 'block-guia-identificacion',
+                type: 'agnostic_section' as BlockType,
+                title: '1. DATOS INFORMATIVOS DE LA PRÁCTICA',
                 isActive: true,
                 config: {
-                    showTitulo: true,
-                    showPrograma: true,
-                    showGrupo: true,
-                    showTipo: true,
-                    showLinea: true,
-                    showCaces: true,
-                    showDirector: true,
-                    showFechas: true
-                }
-            },
-            {
-                id: 'block-researchers',
-                type: 'researchers_table' as BlockType,
-                title: '2. INVESTIGADORES',
-                isActive: true,
-                config: {
-                    mostrarCedula: true,
-                    mostrarEmail: true,
-                    mostrarTelefono: true,
-                    mostrarNivelAcademico: true,
-                    mostrarHoras: true
-                }
-            },
-            {
-                id: 'block-technical',
-                type: 'project_technical_section' as BlockType,
-                title: '3. ESPECIFICACIÓN DEL PROYECTO',
-                isActive: true,
-                config: {
-                    technicalSections: RESEARCH_TECHNICAL_SUBSECTIONS
-                }
-            },
-            {
-                id: 'block-impacts',
-                type: 'impacts' as BlockType,
-                title: '6. IMPACTO DEL PROYECTO',
-                isActive: true,
-                config: {
-                    showImpactoSocial: true,
-                    showImpactoCientifico: true,
-                    showImpactoEconomico: true,
-                    showImpactoPolitico: true,
-                    showImpactoAmbiental: true
-                }
-            },
-            {
-                id: 'block-gantt',
-                type: 'gantt' as BlockType,
-                title: '7. CRONOGRAMA DE ACTIVIDADES',
-                isActive: true,
-                config: {
-                    ganttMonths: ['Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Sept', 'Octubre', 'Nov', 'Dic', 'Enero', 'Febrero'],
-                    ganttObjectives: [
-                        {
-                            id: `obj-${Date.now()}`,
-                            name: 'OBJETIVO N° 1',
-                            activities: [
-                                { id: `act-${Date.now()}`, name: 'Especificar la actividad', resources: '', startMonth: 0, startWeek: 0, endMonth: 1, endWeek: 3, color: '#60a5fa' as const },
-                                { id: `act-${Date.now() + 1}`, name: 'Especificar la actividad', resources: '', startMonth: 2, startWeek: 0, endMonth: 3, endWeek: 3, color: '#f97316' as const },
-                            ]
-                        }
+                    title: '1. Datos Informativos',
+                    fields: [
+                        { name: 'TituloPractica', label: 'Tema / Título de la Práctica', type: 'text', collaborative: true },
+                        { name: 'NumeroPractica', label: 'Número de Práctica', type: 'number', collaborative: false },
+                        { name: 'LaboratorioEspacio', label: 'Laboratorio / Taller Asignado', type: 'text', collaborative: true },
+                        { name: 'DuracionHoras', label: 'Duración Estimada (Horas Pedagógicas)', type: 'number', collaborative: false }
                     ]
                 }
             },
             {
-                id: 'block-bibliography',
+                id: 'block-guia-objetivos',
                 type: 'rich_text' as BlockType,
-                title: '8. BIBLIOGRAFÍA',
+                title: '2. OBJETIVOS Y RESULTADOS DE APRENDIZAJE',
                 isActive: true,
                 config: {
-                    title: '8. Bibliografía',
-                    placeholder: 'Registrar entre 10 y 15 fuentes bibliográficas con normas APA 7ma edición...'
+                    title: '2. Objetivos y Resultados de Aprendizaje',
+                    placeholder: 'Defina los objetivos formativos y resultados de aprendizaje que el estudiante alcanzará...'
+                }
+            },
+            {
+                id: 'block-guia-fundamento',
+                type: 'rich_text' as BlockType,
+                title: '3. MARCO CONCEPTUAL Y MEDIDAS DE SEGURIDAD',
+                isActive: true,
+                config: {
+                    title: '3. Marco Conceptual y Bioseguridad',
+                    placeholder: 'Detalle el sustento teórico y normas de seguridad en laboratorio...'
+                }
+            },
+            {
+                id: 'block-guia-recursos',
+                type: 'rich_text' as BlockType,
+                title: '4. EQUIPAMIENTO, MATERIALES E INSUMOS',
+                isActive: true,
+                config: {
+                    title: '4. Equipamiento e Insumos',
+                    placeholder: 'Listado de equipos, instrumental, simuladores o licencias requeridas...'
+                }
+            },
+            {
+                id: 'block-guia-procedimiento',
+                type: 'rich_text' as BlockType,
+                title: '5. PROCEDIMIENTO METODOLÓGICO PASO A PASO',
+                isActive: true,
+                config: {
+                    title: '5. Procedimiento Metodológico',
+                    placeholder: 'Instrucciones paso a paso, diagrama de conexión o capturas de referencia...'
+                }
+            },
+            {
+                id: 'block-guia-evaluacion',
+                type: 'rich_text' as BlockType,
+                title: '6. CRITERIOS DE EVALUACIÓN Y BIBLIOGRAFÍA',
+                isActive: true,
+                config: {
+                    title: '6. Evaluación y Bibliografía',
+                    placeholder: 'Rúbrica de calificación del informe y bibliografía de consulta técnica...'
                 }
             },
             createBaseSignaturesBlock([
-                { label: 'Director del Proyecto', name: '{{director_proyecto}}', role: 'Director de Proyecto' },
+                { label: 'Docente Responsable', name: '{{docente_elaborador}}', role: 'Docente de la Asignatura' },
                 { label: 'Coordinación de Carrera', name: '{{coordinador_carrera}}', role: 'Coordinador de Carrera' }
             ])
         ];

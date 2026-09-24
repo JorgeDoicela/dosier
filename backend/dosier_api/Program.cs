@@ -4,8 +4,10 @@
 using Microsoft.EntityFrameworkCore;
 using dosier_infrastructure.Collaboration;
 using dosier_infrastructure.Security;
-using dosier_application.Research;
-using dosier_infrastructure.Research;
+using dosier_application.Calendario;
+using dosier_infrastructure.Calendario;
+using dosier_application.Common.Interfaces;
+using dosier_infrastructure.Common;
 using dosier_application.Common;
 using dosier_api.Controllers;
 using System.Text.Json;
@@ -180,7 +182,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<dosier_application.Security
 // Registrar MediatR para manejar Commands y Queries en dosier_application y dosier_infrastructure
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(dosier_application.Security.IAuthService).Assembly,
-    typeof(dosier_infrastructure.Research.CalendarioService).Assembly
+    typeof(dosier_infrastructure.Calendario.CalendarioService).Assembly
 ));
 
 // 3. Agregar SignalR con límites ampliados para soportar transporte de imágenes Base64 en CoWork
@@ -249,7 +251,7 @@ builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentInstance
 builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentVerificationService, Dosier.Infrastructure.Common.Documents.DocumentVerificationService>();
 builder.Services.AddScoped<Dosier.Application.Common.Documents.IDocumentTemplateAdminService, Dosier.Infrastructure.Common.Documents.DocumentTemplateAdminService>();
 builder.Services.AddScoped<IDocumentDataOrchestrator, DocumentDataOrchestrator>();
-builder.Services.AddScoped<IDocumentDataProvider, ProjectDocumentDataProvider>();
+builder.Services.AddScoped<IDocumentDataProvider, Dosier.Infrastructure.Common.Documents.Providers.PeaDocumentDataProvider>();
 builder.Services.AddSingleton<Dosier.Infrastructure.Common.Storage.IFileStorageService, Dosier.Infrastructure.Common.Storage.LocalFileStorageService>();
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -263,22 +265,6 @@ builder.Services.AddScoped<dosier_application.Security.IPasswordRecoveryService,
 builder.Services.AddScoped<dosier_application.Security.IAuthService, dosier_infrastructure.Security.AuthService>();
 builder.Services.AddScoped<dosier_application.Security.IAdminService, dosier_infrastructure.Security.AdminService>();
 builder.Services.AddScoped<dosier_application.Security.IBackupAdminService, dosier_infrastructure.Security.BackupAdminService>();
-builder.Services.AddScoped<IResearchService, ProjectService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectSecurityService, ProjectSecurityService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectWizardService, ProjectWizardService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectTeamChangeService, dosier_infrastructure.Research.ProjectTeamChangeService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectTeamSyncService, dosier_infrastructure.Research.ProjectTeamSyncService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectTeamService, ProjectTeamService>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectWizardCoreSubservice, dosier_infrastructure.Research.Subservices.ProjectWizardCoreSubservice>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectWizardClassificationSubservice, dosier_infrastructure.Research.Subservices.ProjectWizardClassificationSubservice>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectWizardComponentsSubservice, dosier_infrastructure.Research.Subservices.ProjectWizardComponentsSubservice>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectLookupSubservice, dosier_infrastructure.Research.Subservices.ProjectLookupSubservice>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectDetailSubservice, dosier_infrastructure.Research.Subservices.ProjectDetailSubservice>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectDashboardSubservice, dosier_infrastructure.Research.Subservices.ProjectDashboardSubservice>();
-builder.Services.AddScoped<dosier_infrastructure.Research.Subservices.IProjectActivitySubservice, dosier_infrastructure.Research.Subservices.ProjectActivitySubservice>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectQueryService, ProjectQueryService>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectOrchestrator, ProjectOrchestrator>();
-builder.Services.AddScoped<Dosier.Application.Research.IProjectSigningService, dosier_infrastructure.Research.ProjectSigningService>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationService, dosier_infrastructure.Common.Notifications.NotificationService>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.EmailMasterLayoutRenderer>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.IEmailTemplateService, dosier_infrastructure.Common.Notifications.EmailTemplateService>();
@@ -289,15 +275,14 @@ builder.Services.AddScoped<dosier_application.Common.Notifications.INotification
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.EmailDriver>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.PushDriver>();
 
-builder.Services.AddScoped<ICalendarioService, dosier_infrastructure.Research.CalendarioService>();
+builder.Services.AddScoped<dosier_application.Calendario.ICalendarioService, dosier_infrastructure.Calendario.CalendarioService>();
 builder.Services.AddScoped<IAIAssistantService, AIAssistantService>();
-builder.Services.AddScoped<Dosier.Application.Research.IWorkflowEngineService, Dosier.Infrastructure.Research.WorkflowEngineService>();
 builder.Services.AddScoped<dosier_application.Security.IAuditService, dosier_infrastructure.Security.AuditService>();
 builder.Services.AddScoped<dosier_application.Security.ILopdpService, dosier_infrastructure.Security.LopdpService>();
 builder.Services.AddScoped<dosier_application.Common.Interfaces.ICatalogsService, dosier_infrastructure.Common.CatalogsService>();
 builder.Services.AddScoped<dosier_application.Collaboration.Interfaces.ICollaborationService, dosier_infrastructure.Collaboration.CollaborationService>();
-builder.Services.AddScoped<dosier_application.Research.IRecycleBinService, dosier_infrastructure.Research.RecycleBinService>();
-builder.Services.AddScoped<dosier_application.Research.IReportsService, dosier_infrastructure.Research.ReportsService>();
+builder.Services.AddScoped<dosier_application.Common.Interfaces.IRecycleBinService, dosier_infrastructure.Common.RecycleBinService>();
+builder.Services.AddScoped<dosier_application.Common.Interfaces.IReportsService, dosier_infrastructure.Common.ReportsService>();
 
 // Gobernanza Curricular y Antecedentes Institucionales (CES / CACES / ISTPET)
 builder.Services.AddScoped<dosier_application.Curriculum.Interfaces.INormativaService, dosier_infrastructure.Curriculum.NormativaService>();

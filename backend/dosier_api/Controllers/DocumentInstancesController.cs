@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
-using Dosier.Application.Research;
-using Dosier.Application.Research.Dtos;
 using System;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
@@ -162,7 +160,6 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> UpdateMetadata(
             string uuid,
             [FromBody] System.Text.Json.JsonElement metadata,
-            [FromServices] IProjectOrchestrator projectOrchestrator,
             CancellationToken ct)
         {
             try
@@ -170,102 +167,7 @@ namespace dosier_api.Controllers
                 string metadataJson = metadata.GetRawText();
                 var instance = await _instanceService.UpdateMetadataAsync(uuid, metadataJson, ct);
 
-                if (instance.TemplateCode == "PROTOCOLO_INVESTIGACION")
-                {
-                    try
-                    {
-                        string jsonToDeserialize = instance.DataSnapshotJson ?? metadataJson;
-                        jsonToDeserialize = Dosier.Infrastructure.Common.Documents.Engine.HandlebarsTemplateEngine.CleanAndNormalizeJson(jsonToDeserialize);
-
-                        var dto = System.Text.Json.JsonSerializer.Deserialize<ProyectoDto>(jsonToDeserialize, ProyectoDto.DefaultDeserializerOptions);
-                        if (dto != null)
-                        {
-                            bool isNewProject = string.IsNullOrEmpty(instance.EntityUuid) || instance.EntityUuid == "GLOBAL";
-                            if (isNewProject)
-                            {
-                                dto.Uuid = Guid.NewGuid().ToString();
-                            }
-                            else
-                            {
-                                dto.Uuid = instance.EntityUuid;
-                            }
-
-                            var userIdRef = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                            if (!isNewProject && !string.IsNullOrEmpty(dto.Uuid) && !string.IsNullOrEmpty(userIdRef))
-                            {
-                                var canModify = await projectOrchestrator.UserCanModifyProjectAsync(dto.Uuid, userIdRef);
-                                if (!canModify)
-                                {
-                                    return Forbid();
-                                }
-                            }
-
-                            var result = await projectOrchestrator.SyncProjectWizardDataAsync(dto, userIdRef);
-
-                            if (!result.Success)
-                            {
-                                Console.WriteLine($"[DOSIER ERROR] Sync failed: {result.Message}");
-                                return BadRequest(new { success = false, message = $"Error de sincronización relacional: {result.Message}" });
-                            }
-
-                            if (isNewProject)
-                            {
-                                await _instanceService.SetEntityUuidAsync(instance.Uuid, dto.Uuid, ct);
-                                if (dto.Estado == "Prepropuesta")
-                                    {
-                                        var notificationService = HttpContext.RequestServices.GetRequiredService<dosier_application.Common.Notifications.INotificationService>();
-
-                                        var participantsList = new List<string>();
-                                        if (!string.IsNullOrEmpty(dto.DirectorProyecto))
-                                        {
-                                            participantsList.Add($"{dto.DirectorProyecto} (Director)");
-                                        }
-                                        if (dto.Investigadores != null)
-                                        {
-                                            foreach (var inv in dto.Investigadores)
-                                            {
-                                                if (inv.Nombre != dto.DirectorProyecto && !string.IsNullOrEmpty(inv.Nombre))
-                                                {
-                                                    participantsList.Add($"{inv.Nombre} ({inv.Rol ?? "Investigador"})");
-                                                }
-                                            }
-                                        }
-                                        string participantes = participantsList.Count > 0
-                                            ? string.Join(", ", participantsList)
-                                            : "un docente";
-
-                                        string targetSlug = instance.TemplateCode.ToLower().Replace('_', '-');
-                                        string notifTitle = "Prepropuesta Registrada";
-
-                                        try
-                                        {
-                                            await notificationService.NotifyByRoleCodesAsync(
-                                                notifTitle,
-                                                $"La prepropuesta del proyecto '{dto.Titulo}' (Autores: {participantes}) ha sido registrada/reenviada y está pendiente de aprobación de idea.",
-                                                new[] { "DOSIER_ADMIN" },
-                                                $"/investigacion/workspace/{targetSlug}/{dto.Uuid}"
-                                            );
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Console.WriteLine($"[DOSIER] Error al notificar prepropuesta nueva: {ex.Message}");
-                                        }
-                                    }
-                                }
-                        }
-                        else
-                        {
-                            Console.WriteLine("[DOSIER ERROR] Deserialization returned null for ProyectoDto");
-                            return BadRequest(new { success = false, message = "La metadata enviada no pudo ser deserializada correctamente como Proyecto." });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[DOSIER ERROR] Exception in metadata sync: {ex.ToString()}");
-                        return BadRequest(new { success = false, message = $"Fallo crítico en la sincronización de base de datos: {ex.Message}" });
-                    }
-                }
-                else if (instance.TemplateCode == "PEA_OFICIAL")
+                if (instance.TemplateCode == "PEA_OFICIAL")
                 {
                     try
                     {

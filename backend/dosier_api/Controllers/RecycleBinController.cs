@@ -3,8 +3,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using dosier_application.Research;
-using Dosier.Application.Research;
+using dosier_application.Common.Interfaces;
+using dosier_infrastructure.Common;
 
 namespace dosier_api.Controllers
 {
@@ -14,14 +14,10 @@ namespace dosier_api.Controllers
     public class RecycleBinController : ControllerBase
     {
         private readonly IRecycleBinService _recycleBinService;
-        private readonly IProjectOrchestrator _projectOrchestrator;
 
-        public RecycleBinController(
-            IRecycleBinService recycleBinService,
-            IProjectOrchestrator projectOrchestrator)
+        public RecycleBinController(IRecycleBinService recycleBinService)
         {
             _recycleBinService = recycleBinService;
-            _projectOrchestrator = projectOrchestrator;
         }
 
         private bool IsAdmin()
@@ -35,7 +31,7 @@ namespace dosier_api.Controllers
             var userIdRef = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdRef)) return Unauthorized();
 
-            var projects = await _recycleBinService.GetDeletedProjectsAsync(userIdRef, IsAdmin());
+            var projects = await _recycleBinService.GetDeletedItemsAsync(userIdRef, IsAdmin());
             if (projects == null) return Unauthorized();
 
             return Ok(projects);
@@ -45,42 +41,32 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> Restore(string entityType, string uuid)
         {
             var userIdRef = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            bool success = false;
+            if (string.IsNullOrEmpty(userIdRef)) return Unauthorized();
 
-            if (entityType.Equals("project", StringComparison.OrdinalIgnoreCase))
+            if (_recycleBinService is RecycleBinService service)
             {
-                var result = await _projectOrchestrator.RestoreProjectAsync(uuid, userIdRef);
-                success = result.Success;
-            }
-            else
-            {
-                return BadRequest(new { message = "Tipo de entidad inválido." });
+                var success = await service.RestoreItemAsync(uuid, userIdRef);
+                if (!success) return BadRequest(new { message = "No se pudo restaurar el elemento." });
+                return Ok(new { success = true, message = "Elemento curricular restaurado con éxito." });
             }
 
-            if (!success) return BadRequest(new { message = "No se pudo restaurar el elemento." });
-            return Ok(new { success = true, message = "Elemento restaurado con éxito." });
+            return BadRequest(new { message = "Operación no soportada." });
         }
 
         [HttpDelete("purge/{entityType}/{uuid}")]
         public async Task<IActionResult> Purge(string entityType, string uuid)
         {
             var userIdRef = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            bool success = false;
-            string message = string.Empty;
+            if (string.IsNullOrEmpty(userIdRef)) return Unauthorized();
 
-            if (entityType.Equals("project", StringComparison.OrdinalIgnoreCase))
+            if (_recycleBinService is RecycleBinService service)
             {
-                var result = await _projectOrchestrator.PurgeProjectAsync(uuid, userIdRef);
-                success = result.Success;
-                message = result.Message ?? string.Empty;
-            }
-            else
-            {
-                return BadRequest(new { message = "Tipo de entidad inválido." });
+                var success = await service.PurgeItemAsync(uuid, userIdRef);
+                if (!success) return BadRequest(new { message = "No se pudo eliminar permanentemente el elemento." });
+                return Ok(new { success = true, message = "Elemento eliminado permanentemente." });
             }
 
-            if (!success) return BadRequest(new { message = !string.IsNullOrEmpty(message) ? message : "No se pudo eliminar permanentemente el elemento." });
-            return Ok(new { success = true, message = "Elemento eliminado permanentemente." });
+            return BadRequest(new { message = "Operación no soportada." });
         }
     }
 }

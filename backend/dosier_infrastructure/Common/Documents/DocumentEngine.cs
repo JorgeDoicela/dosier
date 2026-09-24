@@ -14,10 +14,8 @@ using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using Dosier.Infrastructure.Common.Documents.Engine;
 // TemplateImages.cs eliminado — imágenes cargadas desde Resources/Images/ vía ImageResourceLoader
-using Dosier.Infrastructure.Common.Documents.Templates.Investigacion;
 using iText.IO.Image;
 using Microsoft.Extensions.Configuration;
-using Dosier.Application.Research.Dtos;
 using Microsoft.EntityFrameworkCore;
 using dosier_infrastructure.data.models;
 
@@ -483,125 +481,10 @@ namespace Dosier.Infrastructure.Common.Documents
                     extraImageVars["portada_base64"] = coverBase64;
                 }
 
-                if (template.Code == ProyectoInvestigacionTemplate.CODE)
+                var logoBase64 = await _imageLoader.LoadAsBase64Async("logo_istpet_negro.png");
+                if (logoBase64 != null)
                 {
-                    var logoBase64 = await _imageLoader.LoadAsBase64Async("logo_istpet_negro.png");
-                    if (logoBase64 != null)
-                    {
-                        extraImageVars["logo_base64"] = logoBase64;
-                    }
-
-                    ProyectoDto? projectDto = renderData as ProyectoDto;
-                    if (projectDto == null && renderData != null)
-                    {
-                        try
-                        {
-                            var rawText = renderData is System.Text.Json.JsonElement je 
-                                ? je.GetRawText() 
-                                : System.Text.Json.JsonSerializer.Serialize(renderData);
-
-                            // Desempaquetar la envoltura "Data" / "data" si existe en el JSON
-                            using var doc = System.Text.Json.JsonDocument.Parse(rawText);
-                            if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                                (doc.RootElement.TryGetProperty("Data", out var dataProp) || 
-                                 doc.RootElement.TryGetProperty("data", out dataProp)))
-                            {
-                                var nestedRaw = dataProp.GetRawText();
-                                projectDto = System.Text.Json.JsonSerializer.Deserialize<ProyectoDto>(nestedRaw, ProyectoDto.DefaultDeserializerOptions);
-                            }
-                            else
-                            {
-                                var cleanedRaw = Dosier.Infrastructure.Common.Documents.Engine.HandlebarsTemplateEngine.CleanAndNormalizeJson(rawText);
-                                projectDto = System.Text.Json.JsonSerializer.Deserialize<ProyectoDto>(cleanedRaw, ProyectoDto.DefaultDeserializerOptions);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "DOSIER DocumentEngine: No se pudo deserializar request.Data a ProyectoDto para {Code}", template.Code);
-                        }
-                    }
-
-                    if (projectDto != null)
-                    {
-                        if (projectDto.Investigadores != null && projectDto.Investigadores.Any())
-                        {
-                            var cedulas = projectDto.Investigadores
-                                .Where(i => !string.IsNullOrEmpty(i.Cedula))
-                                .Select(i => i.Cedula!.Trim())
-                                .Distinct()
-                                .ToList();
-
-                            if (cedulas.Any())
-                            {
-                                var usersDb = await _db.Users
-                                    .AsNoTracking()
-                                    .Where(u => u.IdSigafi != null && cedulas.Contains(u.IdSigafi.Trim()))
-                                    .Select(u => new { u.IdSigafi, u.IdUsuario })
-                                    .ToListAsync(cancellationToken);
-
-                                var uIds = usersDb.Select(u => u.IdUsuario).Distinct().ToList();
-                                var metasDb = await _db.DocUsuariosMetadata
-                                    .AsNoTracking()
-                                    .Where(m => uIds.Contains(m.IdUsuario))
-                                    .ToDictionaryAsync(m => m.IdUsuario, cancellationToken);
-
-                                var metaByCedula = usersDb
-                                    .Where(u => u.IdSigafi != null && metasDb.ContainsKey(u.IdUsuario))
-                                    .GroupBy(u => u.IdSigafi!.Trim(), StringComparer.OrdinalIgnoreCase)
-                                    .ToDictionary(g => g.Key, g => metasDb[g.First().IdUsuario], StringComparer.OrdinalIgnoreCase);
-
-                                foreach (var inv in projectDto.Investigadores)
-                                {
-                                    if (!string.IsNullOrEmpty(inv.Cedula) && metaByCedula.TryGetValue(inv.Cedula.Trim(), out var m))
-                                    {
-                                        if (!inv.FirmaHabilitada.HasValue) inv.FirmaHabilitada = m.AceptoTerminosFirma;
-                                    }
-                                }
-                            }
-                        }
-
-                        var director = projectDto.Investigadores?.FirstOrDefault(i => i.EsDirector == true)
-                                      ?? projectDto.Investigadores?.FirstOrDefault(i => i.Rol?.Contains("Director", StringComparison.OrdinalIgnoreCase) == true);
-                        
-                        var docentes = projectDto.Investigadores?.Where(i => i != director && 
-                            (i.Rol?.Contains("Docente", StringComparison.OrdinalIgnoreCase) == true || 
-                             i.Rol?.Contains("Co-Investigador", StringComparison.OrdinalIgnoreCase) == true || 
-                             (i.NivelAcademico != "Pregrado" && i.NivelAcademico != "Estudiante"))).ToList();
-                        
-                        var estudiantes = projectDto.Investigadores?.Where(i => i != director && 
-                            (i.Rol?.Contains("Estudiante", StringComparison.OrdinalIgnoreCase) == true || 
-                             i.Rol?.Contains("Alumno", StringComparison.OrdinalIgnoreCase) == true || 
-                             i.NivelAcademico == "Pregrado" || 
-                             (docentes != null && !docentes.Contains(i)))).ToList();
-
-                        var principalCarrera = projectDto.Carrera?.Trim().ToLower();
-                        var coejecutorasSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                        
-                        if (projectDto.Investigadores != null)
-                        {
-                            foreach (var inv in projectDto.Investigadores)
-                            {
-                                if (inv.Activo == false || string.IsNullOrWhiteSpace(inv.Carrera)) continue;
-                                var parts = inv.Carrera.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                                foreach (var part in parts)
-                                {
-                                    var cleanPart = part.Trim();
-                                    if (!string.IsNullOrEmpty(cleanPart) && 
-                                        !cleanPart.Equals(principalCarrera, StringComparison.OrdinalIgnoreCase) &&
-                                        !cleanPart.Equals("Docente", StringComparison.OrdinalIgnoreCase) &&
-                                        !cleanPart.Equals("Estudiante", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        coejecutorasSet.Add(cleanPart.ToUpper());
-                                    }
-                                }
-                            }
-                        }
-
-                        extraImageVars["investigador_director"] = director;
-                        extraImageVars["investigadores_docentes"] = docentes;
-                        extraImageVars["investigadores_estudiantes"] = estudiantes;
-                        extraImageVars["carreras_coejecutoras"] = coejecutorasSet.ToList();
-                    }
+                    extraImageVars["logo_base64"] = logoBase64;
                 }
 
                 // 4.1 Enriquecimiento Curricular Integral para PEA_OFICIAL (Failsafe institucional ante snapshots incompletos)

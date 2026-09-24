@@ -62,80 +62,114 @@ export interface DocumentSchema {
 }
 
 export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
-    PROTOCOLO_INVESTIGACION: {
-        title: "Proyecto de Investigación",
-        subtitle: "Formulación del Proyecto de Investigación - ISTPET",
+    GUIA_PRACTICA_LAB: {
+        title: "Guía de Práctica de Laboratorio / Taller",
+        subtitle: "Formato Institucional de Prácticas Experimentales y de Taller - ISTPET",
         schema: {
             // Sección 1: Identificación
-            Titulo: '',
-            IdCarrera: 0,
+            NumeroPractica: 1,
+            TituloPractica: '',
+            NombreAsignatura: '',
+            Carrera: '',
             Periodo: '',
-            TiempoEjecucion: '',
-            Programa: '',
-            Dominio: '',
-            LineaInvestigacion: '',
-            SublineaInvestigacion: '',
-            TipoInvestigacion: 'APLICADA',       // 'BÁSICA' | 'APLICADA' | 'DESARROLLO EXPERIMENTAL'
-            CampoAmplio: '',
-            CampoEspecifico: '',
-            CampoDetallado: '',
-            DirectorProyecto: '',
-            FechaPresentacion: '',
-            FechaInicio: '',
-            FechaFin: '',
+            Docente: '',
+            LaboratorioEspacio: '',
+            DuracionHoras: 2,
 
-            // Sección 2: Investigadores
-            Investigadores: [],
+            // Sección 2: Objetivos
+            ObjetivoPractica: '',
+            ResultadosAprendizaje: '',
 
-            // Sección 3: Especificación Técnica
-            Antecedentes: '',
-            DescripcionProyecto: '',
-            Justificacion: '',
-            ObjetivoGeneral: '',
-            ObjetivosEspecificos: '',
-            ObjetivosDesarrolloSostenible: '',
-            MarcoTeorico: '',
-            Metodologia: '',
-            Evaluacion: '',
+            // Sección 3: Fundamento y Seguridad
+            FundamentoTeorico: '',
+            NormasSeguridad: '',
 
-            // Sección 4: Recursos, Costo y Financiamiento
-            RecursosDisponibles: [],
-            RecursosNecesarios: [],
-            CostoTotal: 0,
-            FinanciamientoIstpet: false,
-            FinanciamientoOtrasFuentes: false,
-            NombresOtrasFuentes: '',
+            // Sección 4: Recursos
+            EquiposMateriales: '',
+            SoftwareHerramientas: '',
 
-            // Sección 5: Resultados Esperados
-            ResultadosEsperados: [],
+            // Sección 5: Procedimiento
+            ProcedimientoMetodologico: '',
 
-            // Sección 6: Impactos
-            Impacto: { social: '', cientifico: '', economico: '', politico: '', ambiental: '', otro: '' },
-
-            // Sección 7: Cronograma
-            Cronograma: [],
-
-            // Sección 8: Bibliografía
-            Bibliografia: '',
-
-            // Sección 9: Firmas de Responsabilidad
-            FirmasResponsabilidad: {
-                DirectorNombre: '',
-                DirectorCargo: 'Director del Proyecto',
-                CoordinadorNombre: '',
-                CoordinadorCargo: 'Coordinador de Carrera'
-            }
+            // Sección 6: Conclusiones
+            CriteriosEvaluacion: '',
+            BibliografiaRecomendada: ''
         },
-        lists: ['Investigadores', 'RecursosDisponibles', 'RecursosNecesarios', 'Cronograma'],
+        lists: [],
         sections: [
-            { id: 'identificacion', label: '1. Identificación', iconName: 'FileText', componentName: 'ProjectGeneralSection' },
-            { id: 'investigadores', label: '2. Investigadores', iconName: 'Users', componentName: 'ResearchersSection' },
-            { id: 'especificacion', label: '3. Especificación', iconName: 'Layers', componentName: 'ProjectTechnicalSection' },
-            { id: 'recursos', label: '4. Recursos y Presupuesto', iconName: 'DollarSign', componentName: 'ProjectBudgetSection' },
-            { id: 'impactos', label: '6. Impactos', iconName: 'TrendingUp', componentName: 'ImpactsSection' },
-            { id: 'cronograma', label: '7. Cronograma (Gantt)', iconName: 'Calendar', componentName: 'GanttSection' },
-            { id: 'bibliografia', label: '8. Bibliografía', iconName: 'BookOpen', componentName: 'AgnosticSection' },
-            { id: 'firmas', label: '9. Firmas de Responsabilidad', iconName: 'PenTool', componentName: 'SignaturesSection' }
+            {
+                id: 'guia_identificacion',
+                label: '1. Datos Informativos de la Práctica',
+                iconName: 'FileText',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'TituloPractica', label: 'Tema / Título de la Práctica', type: 'text', collaborative: true, placeholder: 'Ej. Configuración de VLANs y Enrutamiento Inter-VLAN...' },
+                        { name: 'NumeroPractica', label: 'Número de Práctica', type: 'number', collaborative: false, min: 1, max: 50 },
+                        { name: 'LaboratorioEspacio', label: 'Laboratorio / Taller Asignado', type: 'text', collaborative: true, placeholder: 'Ej. Laboratorio de Redes y Telecomunicaciones...' },
+                        { name: 'DuracionHoras', label: 'Duración Estimada (Horas Pedagógicas)', type: 'number', collaborative: false, min: 1, max: 20 }
+                    ]
+                }
+            },
+            {
+                id: 'guia_objetivos',
+                label: '2. Objetivos y Resultados de Aprendizaje',
+                iconName: 'Target',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'ObjetivoPractica', label: 'Objetivo General de la Práctica', type: 'rich-text', collaborative: true, placeholder: 'Defina el objetivo observable y procedimental que el estudiante alcanzará...' },
+                        { name: 'ResultadosAprendizaje', label: 'Resultado de Aprendizaje Asociado (del PEA)', type: 'rich-text', collaborative: true, placeholder: 'Copie o vincule el RDA correspondiente del PEA de la asignatura...' }
+                    ]
+                }
+            },
+            {
+                id: 'guia_fundamento',
+                label: '3. Marco Conceptual y Medidas de Seguridad',
+                iconName: 'ShieldAlert',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'FundamentoTeorico', label: 'Fundamento Teórico Resumido', type: 'rich-text', collaborative: true, placeholder: 'Conceptos clave, fórmulas o diagramas base para la práctica...' },
+                        { name: 'NormasSeguridad', label: 'Normas de Bioseguridad y Operación del Laboratorio', type: 'rich-text', collaborative: true, placeholder: 'Reglas de protección personal, manejo de instrumental y prevención de riesgos...' }
+                    ]
+                }
+            },
+            {
+                id: 'guia_recursos',
+                label: '4. Equipamiento, Materiales e Insumos',
+                iconName: 'Wrench',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'EquiposMateriales', label: 'Equipos, Dispositivos e Instrumentos', type: 'rich-text', collaborative: true, placeholder: 'Detalle el instrumental de hardware o componentes requeridos...' },
+                        { name: 'SoftwareHerramientas', label: 'Software, Simuladores o Licencias', type: 'rich-text', collaborative: true, placeholder: 'Versiones de software, entornos de desarrollo o simuladores...' }
+                    ]
+                }
+            },
+            {
+                id: 'guia_procedimiento',
+                label: '5. Procedimiento Metodológico Paso a Paso',
+                iconName: 'ListOrdered',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'ProcedimientoMetodologico', label: 'Guía de Desarrollo Experimental Paso a Paso', type: 'rich-text', collaborative: true, placeholder: 'Instrucciones ordenadas, capturas de referencia, tablas de registro de datos...' }
+                    ]
+                }
+            },
+            {
+                id: 'guia_evaluacion',
+                label: '6. Criterios de Evaluación y Bibliografía',
+                iconName: 'CheckSquare',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'CriteriosEvaluacion', label: 'Criterios y Rúbrica de Calificación', type: 'rich-text', collaborative: true, placeholder: 'Puntaje asignado al informe, desempeño práctico y cuestionario...' },
+                        { name: 'BibliografiaRecomendada', label: 'Bibliografía de Consulta Práctica', type: 'rich-text', collaborative: true, placeholder: 'Manuales técnicos, normas técnicas y referencias...' }
+                    ]
+                }
+            }
         ]
     },
     PEA_OFICIAL: {

@@ -62,12 +62,12 @@ const DocumentTray: React.FC<DocumentTrayProps> = ({ entityUuid, title = "Docume
     const handleCreateNew = async () => {
         try {
             const response = await documentInstanceService.createInstance({
-                templateCode: 'PROTOCOLO_INVESTIGACION',
+                templateCode: 'PEA_OFICIAL',
                 entityUuid: entityUuid,
-                title: `Protocolo - ${new Date().toLocaleDateString()}`
+                title: `PEA - ${new Date().toLocaleDateString()}`
             });
             const newUuid = response?.uuid || response?.data?.uuid;
-            navigate(buildWorkspacePath('PROTOCOLO_INVESTIGACION', newUuid));
+            navigate(buildWorkspacePath('PEA_OFICIAL', newUuid));
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
         } catch (error) {
             alert("No se pudo crear el documento.");

@@ -107,19 +107,18 @@ describe('Sprint 2 Service Layer Tests', () => {
 
     describe('analyticsService', () => {
         it('getProjects y getStats deben llamar a las rutas correctas', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'p1' }] });
-            (api.get as any).mockResolvedValueOnce({ data: { totalProyectos: 10 } });
+            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'p1', nombre_asignatura: 'Matemática', estado: 'Borrador' }] });
+            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'p1', nombre_asignatura: 'Matemática', estado: 'Borrador' }] });
             (api.get as any).mockResolvedValueOnce({ data: [{ nombre: 'Software' }] });
 
             const p = await analyticsService.getProjects();
             const s = await analyticsService.getStats();
             const c = await analyticsService.getCarreras();
 
-            expect(api.get).toHaveBeenCalledWith('/projects');
-            expect(api.get).toHaveBeenCalledWith('/projects/stats');
+            expect(api.get).toHaveBeenCalledWith('/pea/bandeja');
             expect(api.get).toHaveBeenCalledWith('/catalogs/carreras');
             expect(p).toHaveLength(1);
-            expect(s?.totalProyectos).toBe(10);
+            expect(s?.totalProyectos).toBe(1);
             expect(c).toHaveLength(1);
         });
     });

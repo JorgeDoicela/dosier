@@ -286,12 +286,7 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
             // Persistir cambios de la instancia y firma antes de evaluar transiciones de workflow en la base de datos
             await _context.SaveChangesAsync();
 
-            // Transición de Estado de Workflow al firmar Protocolo de Investigación
-            if (instancia.TemplateCode == "PROTOCOLO_INVESTIGACION")
-            {
-                var workflowService = _serviceProvider.GetRequiredService<Dosier.Application.Research.IWorkflowEngineService>();
-                await workflowService.TransicionarEstadoAsync(instancia.EntityUuid, "Enviado", 1, $"Firma Digital DOSIER de Protocolo de Investigación - Hash: {docHash}");
-            }
+
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         }

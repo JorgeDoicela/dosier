@@ -135,24 +135,27 @@ describe('Sprint 3 Service Layer Tests', () => {
             expect(api.get).toHaveBeenCalledWith('/pea/uuid/pea-1');
         });
 
-        it('getProjectDetail sin PEA debe consultar /projects/:uuid/detail', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: { uuid: 'proj-1' } });
-            await curriculumProjectService.getProjectDetail('proj-1', false);
-            expect(api.get).toHaveBeenCalledWith('/projects/proj-1/detail');
+        it('getProjectDetail con documento general debe consultar /documents/instances/:uuid ante fallback', async () => {
+            (api.get as any).mockRejectedValueOnce(new Error('No es PEA'));
+            (api.get as any).mockResolvedValueOnce({ data: { uuid: 'inst-1', title: 'Guía de Práctica' } });
+            const result = await curriculumProjectService.getProjectDetail('inst-1');
+            expect(api.get).toHaveBeenCalledWith('/pea/uuid/inst-1');
+            expect(api.get).toHaveBeenCalledWith('/documents/instances/inst-1');
+            expect(result.title).toBe('Guía de Práctica');
         });
 
-        it('transitionState debe enviar POST a /projects/:uuid/transition con params', async () => {
-            (api.post as any).mockResolvedValueOnce({ data: { success: true } });
+        it('transitionState debe enviar PATCH a /pea/:uuid/estado', async () => {
+            (api.patch as any) = vi.fn().mockResolvedValueOnce({ data: { success: true } });
             await curriculumProjectService.transitionState('proj-1', 'Aprobado', 'Revisión exitosa');
-            expect(api.post).toHaveBeenCalledWith('/projects/proj-1/transition', null, {
-                params: { newState: 'Aprobado', observation: 'Revisión exitosa' }
+            expect(api.patch).toHaveBeenCalledWith('/pea/proj-1/estado', {
+                nuevo_estado: 'Aprobado',
+                motivo: 'Revisión exitosa'
             });
         });
 
-        it('iniciarEjecucion debe enviar POST a /Projects/:uuid/iniciar-ejecucion', async () => {
-            (api.post as any).mockResolvedValueOnce({ data: { success: true } });
-            await curriculumProjectService.iniciarEjecucion('proj-1');
-            expect(api.post).toHaveBeenCalledWith('/Projects/proj-1/iniciar-ejecucion');
+        it('iniciarEjecucion debe resolver exitosamente', async () => {
+            const res = await curriculumProjectService.iniciarEjecucion('proj-1');
+            expect(res.success).toBe(true);
         });
     });
 });

@@ -17,23 +17,20 @@ El objetivo primordial de esta suite es garantizar de forma automatizada e invio
 
 ```text
 backend/dosier_tests/
+├── Calendario/      # Pruebas del servicio de calendario institucional
+│   └── CalendarioServiceTests.cs
 ├── Controllers/     # Pruebas de controladores REST (CatalogsController, LopdpController)
 ├── Curriculum/      # Pruebas del núcleo curricular y circuito colegiado de firmas
 │   └── PeaFirmaTests.cs
 ├── Middleware/      # Pruebas de middleware HTTP (ExceptionMiddleware: 400, 401, 404, 409, 500)
 │   └── ExceptionMiddlewareTests.cs
-├── Research/        # Pruebas de orquestación de proyectos y calendario académico
-│   ├── CalendarioServiceTests.cs
-│   ├── ProjectOrchestratorTests.cs
-│   ├── ProjectSecurityServiceTests.cs
-│   ├── ProjectTeamServiceTests.cs
-│   └── ProjectWizardServiceTests.cs
-├── Security/        # Pruebas de seguridad, criptografía y autenticación
-│   ├── AuthServiceTests.cs
-│   ├── RbacServiceTests.cs
-│   └── TokenServiceTests.cs
-└── UnitTest1.cs     # Pruebas de integración del motor transaccional
+└── Security/        # Pruebas de seguridad, criptografía y autenticación
+    ├── AuthServiceTests.cs
+    ├── RbacServiceTests.cs
+    └── TokenServiceTests.cs
 ```
+
+El estado actual de la suite backend reporta **48 pruebas unitarias e integradas (100% aprobadas)** ejecutadas sobre xUnit. Adicionalmente, el frontend (`dosier_web`) cuenta con **22 suites y 296 pruebas unitarias (100% aprobadas)** ejecutadas sobre Vitest.
 
 ---
 

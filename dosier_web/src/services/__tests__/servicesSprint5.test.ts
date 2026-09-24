@@ -112,38 +112,36 @@ describe('Sprint 5 Service Layer Tests', () => {
     });
 
     describe('curriculumProjectService - extensions', () => {
-        it('getAllProjects debe consultar /projects', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'p1' }] });
+        it('getAllProjects debe consultar /pea/bandeja', async () => {
+            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'p1', nombre_asignatura: 'Matemática' }] });
             const list = await curriculumProjectService.getAllProjects();
-            expect(api.get).toHaveBeenCalledWith('/projects');
+            expect(api.get).toHaveBeenCalledWith('/pea/bandeja');
             expect(list).toHaveLength(1);
         });
 
-        it('getMyProjects debe consultar /projects/my', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: [{ uuid: 'p2' }] });
+        it('getMyProjects debe consultar /docente-asignaturas/mis-materias', async () => {
+            (api.get as any).mockResolvedValueOnce({ data: [{ id_asignacion: 1, uuid_pea: 'p2', nombre_asignatura: 'Física' }] });
             const list = await curriculumProjectService.getMyProjects();
-            expect(api.get).toHaveBeenCalledWith('/projects/my');
+            expect(api.get).toHaveBeenCalledWith('/docente-asignaturas/mis-materias');
             expect(list).toHaveLength(1);
         });
 
-        it('deleteProject debe enviar DELETE a /projects/:uuid', async () => {
+        it('deleteProject debe enviar DELETE a /documents/instances/:uuid', async () => {
             (api.delete as any).mockResolvedValueOnce({ data: { success: true } });
             await curriculumProjectService.deleteProject('p1');
-            expect(api.delete).toHaveBeenCalledWith('/projects/p1');
+            expect(api.delete).toHaveBeenCalledWith('/documents/instances/p1');
         });
 
-        it('getConvocatorias debe consultar /Convocatorias', async () => {
+        it('getConvocatorias debe consultar /docente-asignaturas/periodos', async () => {
             (api.get as any).mockResolvedValueOnce({ data: [{ id: 1 }] });
             const list = await curriculumProjectService.getConvocatorias();
-            expect(api.get).toHaveBeenCalledWith('/Convocatorias');
+            expect(api.get).toHaveBeenCalledWith('/docente-asignaturas/periodos');
             expect(list).toHaveLength(1);
         });
 
-        it('searchGroups debe consultar /Groups?search=:query', async () => {
-            (api.get as any).mockResolvedValueOnce({ data: [{ id: 10, nombre: 'Grupo IA' }] });
+        it('searchGroups debe resolver lista', async () => {
             const list = await curriculumProjectService.searchGroups('IA');
-            expect(api.get).toHaveBeenCalledWith('/Groups?search=IA', undefined);
-            expect(list).toHaveLength(1);
+            expect(Array.isArray(list)).toBe(true);
         });
     });
 
@@ -157,8 +155,8 @@ describe('Sprint 5 Service Layer Tests', () => {
 
         it('getTemplateUiConfig debe consultar /documents/instances/templates/:code/ui-config', async () => {
             (api.get as any).mockResolvedValueOnce({ data: { blocks: [] } });
-            const config = await documentInstanceService.getTemplateUiConfig('PROTOCOLO_INVESTIGACION');
-            expect(api.get).toHaveBeenCalledWith('/documents/instances/templates/PROTOCOLO_INVESTIGACION/ui-config');
+            const config = await documentInstanceService.getTemplateUiConfig('PEA_OFICIAL');
+            expect(api.get).toHaveBeenCalledWith('/documents/instances/templates/PEA_OFICIAL/ui-config');
             expect(config.blocks).toEqual([]);
         });
 

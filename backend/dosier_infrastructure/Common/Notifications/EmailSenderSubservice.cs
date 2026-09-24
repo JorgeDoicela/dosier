@@ -10,11 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using dosier_application.Common.Notifications;
-using Dosier.Application.Research.Dtos;
 using dosier_infrastructure.data.models;
 using dosier_domain.Identity.Entities;
 using Dosier.Application.Common.Documents;
-using Dosier.Application.Research;
 
 namespace dosier_infrastructure.Common.Notifications
 {
@@ -24,7 +22,6 @@ namespace dosier_infrastructure.Common.Notifications
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailSenderSubservice> _logger;
         private readonly IDocumentEngine _documentEngine;
-        private readonly IProjectOrchestrator _projectOrchestrator;
         private readonly dosier_infrastructure.Security.IFirmaElectronicaService _firmaElectronicaService;
         private readonly EmailMasterLayoutRenderer _layoutRenderer;
         private readonly IEmailTemplateService _templateService;
@@ -35,7 +32,6 @@ namespace dosier_infrastructure.Common.Notifications
             IConfiguration configuration,
             ILogger<EmailSenderSubservice> logger,
             IDocumentEngine documentEngine,
-            IProjectOrchestrator projectOrchestrator,
             dosier_infrastructure.Security.IFirmaElectronicaService firmaElectronicaService,
             EmailMasterLayoutRenderer layoutRenderer,
             IEmailTemplateService templateService,
@@ -45,7 +41,6 @@ namespace dosier_infrastructure.Common.Notifications
             _configuration = configuration;
             _logger = logger;
             _documentEngine = documentEngine;
-            _projectOrchestrator = projectOrchestrator;
             _firmaElectronicaService = firmaElectronicaService;
             _layoutRenderer = layoutRenderer;
             _templateService = templateService;

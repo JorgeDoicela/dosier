@@ -40,16 +40,40 @@ export interface CarreraCatalogoDto {
 
 export const analyticsService = {
     /**
-     * Obtiene la nómina de proyectos con sus atributos para agregación analítica.
+     * Obtiene la nómina de instrumentos curriculares con sus atributos para agregación analítica.
      */
     getProjects: (): Promise<AnalyticsProjectDto[]> =>
-        api.get('/projects').then(r => r.data || []),
+        api.get<any[]>('/pea/bandeja').then(r => {
+            const list = Array.isArray(r.data) ? r.data : [];
+            return list.map((p: any) => ({
+                uuid: p.uuid,
+                titulo: p.nombre_asignatura,
+                codigoInstitucional: p.codigo_asignatura,
+                estado: p.estado,
+                carrera: p.nombre_carrera,
+                convocatoriaTitulo: p.id_periodo,
+                porcentajeCompletado: Math.round((p.total_firmas_completadas || 0) * 25),
+                presupuestoTotal: 0
+            }));
+        }).catch(() => []),
 
     /**
      * Obtiene los indicadores y métricas consolidadas del dashboard.
      */
-    getStats: (): Promise<AnalyticsStatsDto | null> =>
-        api.get('/projects/stats').then(r => r.data || null),
+    getStats: async (): Promise<AnalyticsStatsDto | null> => {
+        try {
+            const list = await analyticsService.getProjects();
+            return {
+                totalProyectos: list.length,
+                activos: list.filter(p => p.estado !== 'Aprobado' && p.estado !== 'Rechazado').length,
+                completados: list.filter(p => p.estado === 'Aprobado').length,
+                enRevision: list.filter(p => p.estado === 'EnRevision' || p.estado === 'RevisadoCoord' || p.estado === 'RevisadoAcad').length,
+                presupuestoEjecutado: 0
+            };
+        } catch {
+            return null;
+        }
+    },
 
     /**
      * Obtiene el catálogo de carreras activas registradas en el sistema.

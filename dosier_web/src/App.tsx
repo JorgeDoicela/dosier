@@ -165,7 +165,7 @@ const NavigateToWorkspaceDetail = () => {
     const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
     const prefix = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
-    return <Navigate to={buildWorkspacePath('PROTOCOLO_INVESTIGACION', projectUuid!, '', prefix)} replace />;
+    return <Navigate to={buildWorkspacePath('PEA_OFICIAL', projectUuid!, '', prefix)} replace />;
 };
 
 const NavigateToResearchProjects = () => {
