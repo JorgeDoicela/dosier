@@ -1,5 +1,5 @@
 import { 
-    Shield, History, Settings2, Mail, Award
+    Shield, History, Settings2, Mail, Award, Download
 } from 'lucide-react';
 import type { HelpConfig, MockupProps } from '../types';
 
@@ -159,7 +159,7 @@ export const AUDITORIA_CONFIG: HelpConfig = {
                         <span className="text-[7px] text-text-main font-bold">Registro de auditoría</span>
                     </div>
                     <div className="px-1.5 py-0.5 bg-text-main/10 border border-border-thin text-text-main rounded text-[5px] font-bold flex items-center gap-0.5">
-                        📥 Exportar Reporte <span className="text-[3.5px] text-text-dim font-mono">(certificado)</span>
+                        <Download size={6} className="text-text-main" /> Exportar Reporte <span className="text-[3.5px] text-text-dim font-mono">(certificado)</span>
                     </div>
                 </div>
                 <div className="flex gap-1 text-[4.5px]">

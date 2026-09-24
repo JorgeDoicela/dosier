@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import api from './axios_config';
+import { authService } from '../services/authService';
+import { notificacionesService } from '../services/notificacionesService';
 
 export interface User {
     id_referencia: string;
@@ -78,8 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
         }
         try {
-            const response = await api.get('/auth/me');
-            const data = response.data;
+            const data = await authService.getMe();
             const normalized: User = {
                 ...data,
                 roles: data.role_codes || data.roles || [],
@@ -111,8 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [refreshUser]);
 
     const login = async (credentials: any) => {
-        const response = await api.post('/auth/login', credentials);
-        const data = response.data;
+        const data = await authService.login(credentials);
 
         const normalizedUser: User = {
             ...data,
@@ -134,8 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const loginWithMicrosoft = async (idToken: string) => {
-        const response = await api.post('/auth/microsoft-login', { idToken });
-        const data = response.data;
+        const data = await authService.loginWithMicrosoft(idToken);
 
         const normalizedUser: User = {
             ...data,
@@ -157,8 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const magicLogin = async (token: string) => {
-        const response = await api.post('/auth/magic-login', { token });
-        const { auth, pin } = response.data;
+        const { auth, pin } = await authService.magicLogin(token);
 
         const normalizedUser: User = {
             ...auth,
@@ -171,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const confirmMagicLogin = async (user: User, token: string) => {
-        await api.post('/auth/magic-confirm', { token });
+        await authService.confirmMagicLogin(token);
         setUser(user);
         localStorage.setItem('dosier_logged_in', 'true');
 
@@ -183,8 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const handoffLogin = async (pin: string) => {
-        const response = await api.post('/auth/magic-handoff', { pin });
-        const data = response.data;
+        const data = await authService.handoffLogin(pin);
 
         const normalizedUser: User = {
             ...data,
@@ -223,7 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             const subJson = subscription.toJSON();
                             const tokenString = `${subJson.endpoint}|${subJson.keys?.p256dh || ''}|${subJson.keys?.auth || ''}`;
                             logoutTasks.push(
-                                api.post('/Admin/notifications/unsubscribe', { device_token: tokenString })
+                                notificacionesService.unsubscribeDevice(tokenString)
                                     .catch(e => console.error('Error unsubscribing push on server:', e))
                             );
                             logoutTasks.push(
@@ -234,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                 }
 
-                logoutTasks.push(api.post('/auth/logout').catch(() => { }));
+                logoutTasks.push(authService.logout().catch(() => { }));
                 await Promise.all(logoutTasks);
             } catch (err) {
                 console.error('Error procesando deslogueo en segundo plano:', err);

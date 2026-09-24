@@ -121,7 +121,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                         return hasSignedState || hasSignedFile;
                     };
 
-                    const protoDoc = res.data.find(
+                    const protoDoc = list.find(
                         (d: any) => d.template_code === 'PROTOCOLO_INVESTIGACION' || d.templateCode === 'PROTOCOLO_INVESTIGACION'
                     );
                     setIsProtocoloSigned(isDocValidlySigned(protoDoc));

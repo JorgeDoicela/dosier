@@ -230,10 +230,11 @@ export const useRevisionTecnicaData = ({
             await loadTemplateBlocks(projectUuid);
 
             try {
-                const collabRes = await collaborationService.getPulse(projectUuid);
-                if (collabRes && (collabRes as any).comments) {
+                const collabRes: any = await collaborationService.getPulse(projectUuid);
+                const commentsList = collabRes?.comments || collabRes?.data?.comments || [];
+                if (Array.isArray(commentsList) && commentsList.length > 0) {
                     const backendComments: Record<string, SectionComment[]> = {};
-                    collabRes.data.comments.forEach((c: any) => {
+                    commentsList.forEach((c: any) => {
                         const content = c.contenido || '';
                         const keyMatch = content.match(/^\[KEY:(.*?)\]\s*\[(.*?)\]\s*\((.*?)\):\s*(.*)$/);
                         if (keyMatch) {
@@ -411,7 +412,7 @@ export const useRevisionTecnicaData = ({
 
             const originalState = project.status;
 
-            await curriculumProjectService.transitionState(project.uuid, 'En Corrección', fullObs);
+            await curriculumProjectService.transitionState(project.uuid, 'En Corrección', fullObs, fechaLimite || undefined);
 
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
 

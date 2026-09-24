@@ -28,9 +28,20 @@ namespace dosier_application.Security
         public string Message { get; set; } = string.Empty;
     }
 
+    public class DiskInfoDto
+    {
+        public string DriveName { get; set; } = string.Empty;
+        public string DriveFormat { get; set; } = string.Empty;
+        public long TotalSizeBytes { get; set; }
+        public long FreeSizeBytes { get; set; }
+        public long UsedSizeBytes { get; set; }
+        public double UsedPercentage { get; set; }
+    }
+
     public interface IBackupAdminService
     {
         Task<List<BackupLogDto>> GetBackupLogsAsync();
+        DiskInfoDto GetDiskInfo();
         Task<(string? FilePath, string? FileName)> GetBackupFileForDownloadAsync(Guid uuid);
         Task<BackupVerifyResultDto> VerifyBackupIntegrityAsync(Guid uuid);
         Task<bool> PurgeBackupAsync(Guid uuid);

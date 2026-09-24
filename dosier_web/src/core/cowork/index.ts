@@ -4,10 +4,10 @@
 // Este archivo es el ÚNICO punto de importación para el resto del sistema.
 // Nunca importar desde archivos internos del core directamente.
 //
-// ✅ CORRECTO:
+// [CORRECTO]:
 //   import { useCoWork, CoWorkEditor, coworkUserFromAuth } from '@/core/cowork';
 //
-// ❌ INCORRECTO:
+// [INCORRECTO]:
 //   import { useCoWork } from '@/core/cowork/hooks/useCoWork';
 //
 // Esta convención garantiza que el nucleo sea completamente refactorizable

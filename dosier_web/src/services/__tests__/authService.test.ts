@@ -122,4 +122,66 @@ describe('authService', () => {
             expect(result).toEqual(mockResponse.data);
         });
     });
+
+    describe('sesión institucional', () => {
+        it('getMe debe invocar /auth/me vía GET', async () => {
+            const mockMe = { data: { id_referencia: '123', nombre_completo: 'Test User' } };
+            (api.get as any).mockResolvedValueOnce(mockMe);
+
+            const result = await authService.getMe();
+            expect(api.get).toHaveBeenCalledWith('/auth/me');
+            expect(result).toEqual(mockMe.data);
+        });
+
+        it('login debe invocar /auth/login vía POST con credenciales', async () => {
+            const mockLoginRes = { data: { id_referencia: '123', roles: ['DOSIER_DOCENTE'] } };
+            (api.post as any).mockResolvedValueOnce(mockLoginRes);
+
+            const credentials = { usuario: 'docente', password: '123' };
+            const result = await authService.login(credentials);
+            expect(api.post).toHaveBeenCalledWith('/auth/login', credentials);
+            expect(result).toEqual(mockLoginRes.data);
+        });
+
+        it('loginWithMicrosoft debe enviar el idToken a /auth/microsoft-login', async () => {
+            const mockRes = { data: { id_referencia: 'ms-1' } };
+            (api.post as any).mockResolvedValueOnce(mockRes);
+
+            const result = await authService.loginWithMicrosoft('ms-jwt-token');
+            expect(api.post).toHaveBeenCalledWith('/auth/microsoft-login', { idToken: 'ms-jwt-token' });
+            expect(result).toEqual(mockRes.data);
+        });
+
+        it('magicLogin debe invocar /auth/magic-login con token', async () => {
+            const mockRes = { data: { auth: { token: 'jwt' }, pin: '123456' } };
+            (api.post as any).mockResolvedValueOnce(mockRes);
+
+            const result = await authService.magicLogin('magic-tok');
+            expect(api.post).toHaveBeenCalledWith('/auth/magic-login', { token: 'magic-tok' });
+            expect(result).toEqual(mockRes.data);
+        });
+
+        it('confirmMagicLogin debe invocar /auth/magic-confirm con token', async () => {
+            (api.post as any).mockResolvedValueOnce({ data: {} });
+
+            await authService.confirmMagicLogin('magic-tok');
+            expect(api.post).toHaveBeenCalledWith('/auth/magic-confirm', { token: 'magic-tok' });
+        });
+
+        it('handoffLogin debe invocar /auth/magic-handoff con pin', async () => {
+            const mockRes = { data: { id_referencia: 'ho-1' } };
+            (api.post as any).mockResolvedValueOnce(mockRes);
+
+            const result = await authService.handoffLogin('987654');
+            expect(api.post).toHaveBeenCalledWith('/auth/magic-handoff', { pin: '987654' });
+            expect(result).toEqual(mockRes.data);
+        });
+
+        it('logout debe invocar /auth/logout vía POST', async () => {
+            (api.post as any).mockResolvedValueOnce({ data: {} });
+
+            await authService.logout();
+            expect(api.post).toHaveBeenCalledWith('/auth/logout');
+        });
+    });
 });

@@ -212,7 +212,7 @@ export function useProjectTeam(
                 const updatedProject = await curriculumProjectService.getProjectDetail(currentProject.uuid);
                 setInvestigadores((updatedProject.investigadores || []).map(mapInvestigador));
             } else {
-                addToast("Error de Transferencia", res.data.message || "Error al realizar la transferencia.", "error");
+                addToast("Error de Transferencia", res.data?.message || res.message || "Error al realizar la transferencia.", "error");
             }
         } catch (err: any) {
             console.error("[DOSIER] Error en transferencia de director", err);
@@ -257,7 +257,7 @@ export function useProjectTeam(
                 setInvestigadores((refreshed.investigadores || []).map(mapInvestigador));
                 await fetchTeamChangeRequests(currentProject.uuid);
             } else {
-                addToast("Error al Guardar", res.data.message || 'Error al guardar los cambios.', "error");
+                addToast("Error al Guardar", res.data?.message || res.message || 'Error al guardar los cambios.', "error");
             }
         } catch (err: any) {
             console.error("[DOSIER] Error al guardar equipo de trabajo", err);
@@ -297,7 +297,7 @@ export function useProjectTeam(
                 setRequestSearchQuery('');
                 await fetchTeamChangeRequests(currentProject.uuid);
             } else {
-                addToast("No se pudo registrar", res.data?.message || "Error al registrar solicitud.", "error");
+                addToast("No se pudo registrar", res.data?.message || res.message || "Error al registrar solicitud.", "error");
             }
         } catch (err: any) {
             const errMsg = err.response?.data?.message || 'Error al registrar solicitud de cambio.';
@@ -321,7 +321,7 @@ export function useProjectTeam(
                 const refreshed = await curriculumProjectService.getProjectDetail(currentProject.uuid);
                 setInvestigadores((refreshed.investigadores || []).map(mapInvestigador));
             } else {
-                addToast("Error de revisión", res.data?.message || "No se pudo revisar la solicitud.", "error");
+                addToast("Error de revisión", res.data?.message || res.message || "No se pudo revisar la solicitud.", "error");
             }
         } catch (err: any) {
             const errMsg = err.response?.data?.message || "No se pudo revisar la solicitud.";

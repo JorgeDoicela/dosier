@@ -89,6 +89,48 @@ export const authService = {
         }).then(r => r.data),
 
     /**
+     * Obtiene los datos del perfil y roles del usuario autenticado en la sesión activa.
+     */
+    getMe: (): Promise<any> =>
+        api.get('/auth/me').then(r => r.data),
+
+    /**
+     * Inicia sesión con credenciales tradicionales de usuario y contraseña.
+     */
+    login: (credentials: any): Promise<any> =>
+        api.post('/auth/login', credentials).then(r => r.data),
+
+    /**
+     * Inicia sesión institucional federada mediante token de Microsoft Azure AD / Entra ID.
+     */
+    loginWithMicrosoft: (idToken: string): Promise<any> =>
+        api.post('/auth/microsoft-login', { idToken }).then(r => r.data),
+
+    /**
+     * Inicia sesión con token de acceso rápido (Magic Link).
+     */
+    magicLogin: (token: string): Promise<{ auth: any; pin?: string }> =>
+        api.post('/auth/magic-login', { token }).then(r => r.data),
+
+    /**
+     * Confirma la sesión mediante token de enlace mágico.
+     */
+    confirmMagicLogin: (token: string): Promise<void> =>
+        api.post('/auth/magic-confirm', { token }).then(() => undefined),
+
+    /**
+     * Autentica la sesión mediante código PIN de transferencia entre dispositivos (Handoff).
+     */
+    handoffLogin: (pin: string): Promise<any> =>
+        api.post('/auth/magic-handoff', { pin }).then(r => r.data),
+
+    /**
+     * Cierra la sesión activa en el servidor e invalida la cookie o estado.
+     */
+    logout: (): Promise<void> =>
+        api.post('/auth/logout').then(() => undefined),
+
+    /**
      * Reenvía un enlace mágico de autenticación.
      */
     magicResend: (email: string): Promise<any> =>

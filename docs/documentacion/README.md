@@ -12,7 +12,7 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 | **Desarrollador Frontend (React)** | [01-arquitectura-react-vite.md](./05-frontend-web/01-arquitectura-react-vite.md), [02-componentes-ui-y-builder-shell.md](./05-frontend-web/02-componentes-ui-y-builder-shell.md), [03-integracion-api-y-resiliencia.md](./05-frontend-web/03-integracion-api-y-resiliencia.md) |
 | **Ingeniero de Base de Datos / DBA** | [01-esquema-relacional-sigafi.md](./04-base-de-datos/01-esquema-relacional-sigafi.md), [02-catalogos-normativa-ecuador.md](./04-base-de-datos/02-catalogos-normativa-ecuador.md), [03-gobernanza-lopdp-y-auditoria.md](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md) |
 | **Comisión Curricular / Auditor CACES** | [02-guia-acreditacion-caces-2026.md](./06-despliegue-y-operaciones/02-guia-acreditacion-caces-2026.md), [01-motor-documental-pdf.md](./03-motores-especializados/01-motor-documental-pdf.md), [04-motor-firma-digital-y-sellos.md](./03-motores-especializados/04-motor-firma-digital-y-sellos.md) |
-| **Ingeniero de Operaciones / DevOps** | [01-instalacion-entorno-local.md](./06-despliegue-y-operaciones/01-instalacion-entorno-local.md) |
+| **Ingeniero de Operaciones / DevOps** | [01-instalacion-entorno-local.md](./06-despliegue-y-operaciones/01-instalacion-entorno-local.md), [07-acceso-remoto-cloudflare-tunnel.md](./06-despliegue-y-operaciones/07-acceso-remoto-cloudflare-tunnel.md) |
 
 ---
 
@@ -61,6 +61,7 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 * [04. Seguridad Perimetral: Cifrado SSL/TLS con Cloudflare Origin CA y Nginx](./06-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md): Topología de cifrado de dos niveles, modo Full (Strict), certificados Origin CA válidos hasta 15 años, Quick Tunnels temporales (*.trycloudflare.com) y configuración de proxy inverso.
 * [05. Dimensionamiento de Servidor y Topología en AWS EC2](./06-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md): Justificación técnica de cómputo (c7i-flex.large), huella de memoria (memory footprint), reglas de firewall y volúmenes EBS gp3.
 * [06. Guía de Aprovisionamiento, Migración de Servidores y Rotación de Seguridad](./06-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md): Protocolo paso a paso para desplegar DOSIER en un nuevo servidor, restauración de backups SIGAFI, sincronización de esquemas `doc_*`, resolución de collations y rotación segura de credenciales.
+* [07. Acceso Remoto Seguro con Cloudflare Tunnel](./06-despliegue-y-operaciones/07-acceso-remoto-cloudflare-tunnel.md): Arquitectura de tunel inverso saliente para Staging Local (staging-dosier.doicela.dev), desacoplamiento de certificados en contenedor Nginx y conectividad a base de datos local.
 
 ---
 

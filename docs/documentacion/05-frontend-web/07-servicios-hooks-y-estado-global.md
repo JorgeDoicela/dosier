@@ -53,8 +53,15 @@ Conecta con `/api/calendario`:
 * `getEventosCalendario()`: Fechas límite de entrega, períodos de subsanación y convocatorias académicas.
 * `exportarICalendar()`: Generación de archivo `.ics` para sincronización con Microsoft Outlook y Google Calendar.
 
-### 2.6. `authService.ts`: Autenticación, Credenciales y Recuperación
+### 2.6. `authService.ts`: Autenticación, Credenciales y Sesión Institucional
 Conecta con `/api/auth`:
+* `getMe()`: Consulta el perfil, permisos y roles del usuario activo en la sesión.
+* `login(credentials)`: Autenticación tradicional mediante usuario institucional y contraseña.
+* `loginWithMicrosoft(idToken)`: Inicio de sesión federado mediante token de Azure AD / Entra ID.
+* `magicLogin(token)`: Inicio de sesión sin contraseña mediante enlace o token de acceso rápido.
+* `confirmMagicLogin(token)`: Confirmación y fijación de la sesión autenticada por enlace mágico.
+* `handoffLogin(pin)`: Autenticación cruzada por PIN entre dispositivos en tiempo real.
+* `logout()`: Cierre de sesión en servidor e invalidación de credenciales activas.
 * `recuperarContrasenia(dto)`: Emite solicitudes de recuperación de contraseña institucional (cédula/correo).
 * `verContrasenia(token)`: Valida el token de un solo uso y entrega la contraseña o delega al restablecimiento por hash.
 * `restablecerContraseniaRecuperacion(dto)`: Restablece la contraseña mediante el token de recuperación de autoservicio.
@@ -74,6 +81,8 @@ Conecta con `/api/Admin/notifications`:
 * `markAllAsRead()`: Limpieza global de marcas de lectura pendientes.
 * `deleteNotification(uuid)`: Remoción individual de alertas del historial.
 * `clearReadNotifications()`: Vaciado atómico de notificaciones leídas.
+* `subscribeDevice(payload)`: Registro y sincronización de suscripciones Web Push del navegador.
+* `unsubscribeDevice(deviceToken)`: Revocación de tokens Web Push en el servidor.
 
 ### 2.9. `verificationService.ts`: Verificación Forense Pública de Documentos
 Conecta con `/api/documents`:
@@ -180,6 +189,10 @@ Conecta con `/api/collaboration`:
 * `getPulse(projectUuid)`: Pulso de concurrencia, comentarios acumulados y estados de secciones.
 * `uploadFile(formData, onProgress)`: Carga segura de adjuntos y notas de voz para retroalimentación curricular.
 * `deleteImage(imageUrl)`: Eliminación física de imágenes embebidas en el editor colaborativo.
+
+### 2.22. `reportService.ts`: Generación y Descarga de Reportes Institucionales
+Conecta con `/api/reports`:
+* `downloadAnalyticsReport(period, carrera)`: Generación en streaming y descarga automatizada de informes analíticos y de cumplimiento institucional en formato PDF.
 
 ---
 

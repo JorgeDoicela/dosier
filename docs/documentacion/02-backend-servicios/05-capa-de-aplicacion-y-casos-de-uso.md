@@ -209,7 +209,7 @@ Para dar cumplimiento estricto al principio de inversión de dependencias y Clea
 * **`ICollaborationService`:** Gestiona el pulso de concurrencia en tiempo real (`GetPulseAsync`), comentarios de retroalimentación (`PostCommentAsync`, `UpdateCommentAsync`, `DeleteCommentAsync`) y retransmisión por WebSockets en `CollaborationHub`.
 * **`IRecycleBinService`:** Aísla la gestión de elementos en papelera de reciclaje (`GetDeletedProjectsAsync`), aplicando de forma controlada `.IgnoreQueryFilters()` en la capa de infraestructura según los roles del solicitante.
 * **`IReportsService`:** Consolida los indicadores agregados CACES (producción científica, semilleros), distribución de estados y generación compilada del PDF del reporte de analíticas institucionales.
-* **`IBackupAdminService`:** Administra la bitácora de copias de seguridad (`DocBackupLogs`), cálculo en caliente de checksum SHA-256 para verificación de integridad física y purga forense en disco.
+* **`IBackupAdminService`:** Administra la bitácora de copias de seguridad (`DocBackupLogs`), cálculo en caliente de checksum SHA-256 para verificación de integridad física, diagnóstico del volumen de almacenamiento en disco (`GetDiskInfo`) y purga forense.
 * **`IDocumentVerificationService`:** Orquesta la verificación pública de trazabilidad de documentos por código único o código de firma DFRM, resolviendo la cascada de firmas sin exponer el contexto de datos al controlador público.
 * **`IDocumentTemplateAdminService`:** Administra el catálogo de plantillas oficiales, orden personalizado en JSON, tema visual institucional (`Theme.GlobalConfigJson`) y publicación en caliente hacia clientes conectados.
 

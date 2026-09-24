@@ -144,16 +144,17 @@ export const curriculumProjectService = {
         api.get<TraceabilityItemDto[]>(`/projects/${encodeURIComponent(projectUuid)}/traceability`).then(r => r.data || []),
 
     /**
-     * Ejecuta una transición de estado del proyecto curricular con observaciones.
+     * Ejecuta una transición de estado del proyecto curricular con observaciones y plazo opcional.
      */
-    transitionState: (projectUuid: string, newState: string, observation?: string): Promise<any> => {
+    transitionState: (projectUuid: string, newState: string, observation?: string, fechaLimite?: string): Promise<any> => {
         return api.post(
             `/projects/${encodeURIComponent(projectUuid)}/transition`,
             null,
             {
                 params: {
                     newState,
-                    observation: observation || ''
+                    observation: observation || '',
+                    fechaLimite: fechaLimite || undefined
                 }
             }
         ).then(r => r.data);

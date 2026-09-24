@@ -1,4 +1,4 @@
-services:
+﻿services:
   # ---------------------------------------------------------------------------
   # 1. Base de Datos Relacional (MySQL 8.0 con Auto-Inicialización de Scripts)
   # ---------------------------------------------------------------------------
@@ -46,9 +46,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
-      # Conexión a MySQL por nombre de red Docker (no por IP del host)
-      - ConnectionStrings__default_connection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
-      - ConnectionStrings__DefaultConnection=Server=dosier-db;Port=3306;Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
+      # Conexión a MySQL: dosier-db en Docker o host.docker.internal para MySQL nativo en Windows
+      - ConnectionStrings__default_connection=Server=${DB_HOST:-dosier-db};Port=${DB_PORT_INTERNAL:-3306};Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
+      - ConnectionStrings__DefaultConnection=Server=${DB_HOST:-dosier-db};Port=${DB_PORT_INTERNAL:-3306};Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
       - Jwt__Secret=${JWT_SECRET:-DOSIER_JWT_zsJpOeYEHWFI8QL0dnTxolGUMywNPZB9V512Da3C7biXrtgf}
       - JWTSettings__Secret=${JWT_SETTINGS_SECRET:-DOSIER_SSO_Q612U9OpgHkBdhXTsAonNFC0jzSviWel73rftxRbyE5wMIac}
       - Jwt__Issuer=DosierApi
@@ -57,6 +57,8 @@ services:
       - FrontendUrl=${FRONTEND_URL:-http://localhost:80}
       - Security__SuperAdminCedula=${SECURITY_SUPER_ADMIN_CEDULA}
       - Security__MasterAdminId=${SECURITY_MASTER_ADMIN_ID}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     volumes:
@@ -90,10 +92,7 @@ services:
     container_name: dosier-web
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-80}:80"
-      - "${FRONTEND_SSL_PORT:-443}:443"
-    volumes:
-      - ${CERTS_PATH:-./certs}:/etc/nginx/certs:ro
+      - "${FRONTEND_PORT:-8080}:80"
     logging:
       driver: "json-file"
       options:
@@ -106,16 +105,15 @@ services:
       - dosier-network
 
   # ---------------------------------------------------------------------------
-  # 4. Cloudflare Tunnel (Acceso Remoto HTTPS Público Gratuito / Cero Costos)
+  # 4. Cloudflare Tunnel (Acceso Remoto HTTPS con Dominio Propio o Quick Tunnel)
   # ---------------------------------------------------------------------------
   dosier-tunnel:
     image: cloudflare/cloudflared:latest
     container_name: dosier-tunnel
     restart: unless-stopped
-    # Quick Tunnel: genera URL HTTPS pública temporal sin cuenta ni dominio.
-    # La URL tipo https://xxxx.trycloudflare.com se imprime en los logs.
-    # Uso: docker compose --profile tunnel up dosier-tunnel
-    command: tunnel --no-autoupdate --url http://dosier-web:80
+    # Si CLOUDFLARE_TUNNEL_TOKEN está definido en .env, usa el Named Tunnel persistente (staging-dosier.doicela.dev).
+    # De lo contrario, genera un Quick Tunnel temporal (*.trycloudflare.com).
+    command: ${CLOUDFLARE_TUNNEL_CMD:-tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}}
     networks:
       - dosier-network
     depends_on:

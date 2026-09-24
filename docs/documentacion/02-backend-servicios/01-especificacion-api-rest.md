@@ -259,9 +259,12 @@ Panel de control administrativo institucional (`DOSIER_ADMIN`).
 | `POST`| `/remove-role` | `DOSIER_ADMIN` | Revocación de rol curricular. |
 | `GET` | `/audit-logs` | `DOSIER_ADMIN` | Bitácora inmutable de auditoría con deltas JSON (`values_before`, `values_after`). |
 | `POST`| `/external-users` | `DOSIER_ADMIN` | Alta de evaluadores externos y pares académicos. |
-| `POST`| `/system-roles/toggle` | `DOSIER_ADMIN` | Conmutador de permisos por módulo institucional. |
-| `GET` | `/backups` | `DOSIER_ADMIN` | Historial de copias de seguridad de la base de datos `sigafi_es`. |
-| `POST`| `/backups/trigger` | `DOSIER_ADMIN` | Ejecución forzada e inmediata de respaldo de base de datos. |
+| `GET` | `/backups` | `DOSIER_ADMIN` | Historial de copias de seguridad del sistema. |
+| `GET` | `/backups/disk-info` | `DOSIER_ADMIN` | Obtiene métricas físicas de almacenamiento y espacio libre en disco del servidor. |
+| `POST`| `/backups/trigger` | `DOSIER_ADMIN` | Ejecución asíncrona e inmediata de respaldo integral (base de datos + archivos). |
+| `GET` | `/backups/download/{uuid}` | `DOSIER_ADMIN` | Descarga el archivo físico comprimido de respaldo por su UUID. |
+| `POST`| `/backups/verify/{uuid}` | `DOSIER_ADMIN` | Verificación en vivo de integridad criptográfica SHA-256 contra el hash registrado. |
+| `DELETE`| `/backups/{uuid}` | `DOSIER_ADMIN` | Purga y eliminación definitiva del archivo físico y registro de respaldo. |
 
 ---
 

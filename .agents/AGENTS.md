@@ -7,7 +7,7 @@ Este archivo define el stack tecnológico y las convenciones exclusivas del proy
 ## Stack Tecnológico y Arquitectura
 
 * **Frontend:** React 18, Vite, TypeScript
-  * *Arquitectura:* Feature-Based Modular SPA con Capa de Servicios (Service Layer) y Container/Presenter en Custom Hooks.
+  * *Arquitectura:* Feature-Based Modular SPA con Capa de Servicios (Service Layer).
   * *Motores Desacoplados (`core/`):*
     * `core/cowork/`: Motor de concurrencia en tiempo real basado en CRDTs (Yjs) sobre SignalR WebSockets con el componente `<CoWorkField>`.
     * `core/documents/`: Registro desacoplado de esquemas del PEA en JSON puro (`DocumentTemplateRegistry.ts`) y catálogo de renderers (`DocumentComponentRegistry.ts`).

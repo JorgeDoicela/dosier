@@ -69,6 +69,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("users/{userUuid}/metadata")]
+    [HttpGet("metadata/{userUuid}")]
     public async Task<IActionResult> GetUserMetadata(string userUuid)
     {
         var metadata = await _adminService.GetUserMetadataAsync(userUuid);
@@ -77,6 +78,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("users/{userUuid}/metadata")]
+    [HttpPut("metadata/{userUuid}")]
     public async Task<IActionResult> UpdateUserMetadata(string userUuid, [FromBody] UserMetadataDto dto)
     {
         var result = await _adminService.UpdateUserMetadataAsync(userUuid, dto);
@@ -92,6 +94,19 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Rol asignado con éxito" });
     }
 
+    [HttpPost("roles/assign")]
+    public async Task<IActionResult> AssignRoleLegacy([FromBody] RoleActionRequest request)
+    {
+        var roleIdentifier = !string.IsNullOrEmpty(request.RoleCode) ? request.RoleCode : request.RoleName;
+        if (string.IsNullOrEmpty(request.IdUsuario) || string.IsNullOrEmpty(roleIdentifier))
+        {
+            return BadRequest(new { message = "Datos incompletos" });
+        }
+        var result = await _adminService.AssignRoleAsync(request.IdUsuario, roleIdentifier, request.UserType);
+        if (!result) return BadRequest("No se pudo asignar el rol");
+        return Ok(new { message = "Rol asignado con éxito" });
+    }
+
     [HttpDelete("users/{idUsuario}/roles/{roleCode}")]
     public async Task<IActionResult> RevokeRole(string idUsuario, string roleCode, [FromQuery] string userType = "DOCENTE")
     {
@@ -100,7 +115,21 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Rol revocado con éxito" });
     }
 
+    [HttpPost("roles/revoke")]
+    public async Task<IActionResult> RevokeRoleLegacy([FromBody] RoleActionRequest request)
+    {
+        var roleIdentifier = !string.IsNullOrEmpty(request.RoleCode) ? request.RoleCode : request.RoleName;
+        if (string.IsNullOrEmpty(request.IdUsuario) || string.IsNullOrEmpty(roleIdentifier))
+        {
+            return BadRequest(new { message = "Datos incompletos" });
+        }
+        var result = await _adminService.RevokeRoleAsync(request.IdUsuario, roleIdentifier, request.UserType);
+        if (!result) return BadRequest("No se pudo revocar el rol");
+        return Ok(new { message = "Rol revocado con éxito" });
+    }
+
     [HttpPost("users/external")]
+    [HttpPost("external")]
     public async Task<IActionResult> RegisterExternalUser([FromBody] ExternalUserDto dto)
     {
         var result = await _adminService.RegisterExternalUserAsync(dto);
@@ -109,6 +138,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("audit-logs/recent")]
+    [HttpGet("audit")]
     public async Task<IActionResult> GetRecentAuditLogs()
     {
         var logs = await _adminService.GetRecentAuditLogsAsync();
@@ -116,6 +146,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("audit-logs")]
+    [HttpGet("audit/advanced")]
     public async Task<IActionResult> GetAuditLogsPaged(
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
@@ -137,6 +168,23 @@ public class AdminController : ControllerBase
     {
         var logs = await _backupAdminService.GetBackupLogsAsync();
         return Ok(logs);
+    }
+
+    /// <summary>
+    /// Obtiene información física del volumen de almacenamiento del servidor (Disco).
+    /// </summary>
+    [HttpGet("backups/disk-info")]
+    public IActionResult GetDiskInfo()
+    {
+        try
+        {
+            var diskInfo = _backupAdminService.GetDiskInfo();
+            return Ok(diskInfo);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error al consultar la información del disco del servidor.", detalles = ex.Message });
+        }
     }
 
     /// <summary>

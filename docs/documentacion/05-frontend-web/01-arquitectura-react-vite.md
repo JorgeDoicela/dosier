@@ -2,7 +2,7 @@
 
 ## 1. Visión General y Nombre Oficial de la Arquitectura
 
-El cliente web de DOSIER (`dosier_web`) adopta la arquitectura **Feature-Based Modular SPA con Service Layer y Container/Presenter en Custom Hooks**. Esta es la definición canónica y estable del frontend; cualquier trabajo nuevo debe seguir este estándar sin excepción.
+El cliente web de DOSIER (`dosier_web`) adopta la arquitectura **Feature-Based Modular SPA con Service Layer**. Esta es la definición canónica y estable del frontend; cualquier trabajo nuevo debe seguir este estándar sin excepción.
 
 El stack técnico es:
 * **React 18** y **TypeScript 5.x**.

@@ -54,6 +54,28 @@ namespace dosier_infrastructure.Security
             }).ToList();
         }
 
+        public DiskInfoDto GetDiskInfo()
+        {
+            var destAbsPath = GetBackupDestinationPath();
+            var driveRoot = Path.GetPathRoot(destAbsPath) ?? "C:\\";
+            var drive = new DriveInfo(driveRoot);
+
+            long totalSpace = drive.TotalSize;
+            long freeSpace = drive.AvailableFreeSpace;
+            long usedSpace = totalSpace - freeSpace;
+            double usedPercentage = totalSpace > 0 ? Math.Round((double)usedSpace / totalSpace * 100, 1) : 0;
+
+            return new DiskInfoDto
+            {
+                DriveName = drive.Name,
+                DriveFormat = drive.DriveFormat,
+                TotalSizeBytes = totalSpace,
+                FreeSizeBytes = freeSpace,
+                UsedSizeBytes = usedSpace,
+                UsedPercentage = usedPercentage
+            };
+        }
+
         public async Task<(string? FilePath, string? FileName)> GetBackupFileForDownloadAsync(Guid uuid)
         {
             var log = await _context.DocBackupLogs.AsNoTracking().FirstOrDefaultAsync(l => l.Uuid == uuid);

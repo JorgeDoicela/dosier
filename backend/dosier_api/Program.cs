@@ -63,6 +63,7 @@ builder.Services.AddCors(options =>
                 // 3. Permitir dominios Cloudflare Tunnel y dominios de producción institucionales
                 if (uri.Host.EndsWith(".trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
                     uri.Host.Equals("trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith("doicela.dev", StringComparison.OrdinalIgnoreCase) ||
                     uri.Host.EndsWith("jorgedoicela.com", StringComparison.OrdinalIgnoreCase) ||
                     uri.Host.EndsWith("istpet.edu.ec", StringComparison.OrdinalIgnoreCase))
                 {

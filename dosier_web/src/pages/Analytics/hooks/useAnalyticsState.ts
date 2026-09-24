@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { reportService } from '../../../api/reportService';
+import { reportService } from '../../../services/reportService';
 
 export type AnalyticsTab = 'general' | 'caces' | 'proyectos';
 

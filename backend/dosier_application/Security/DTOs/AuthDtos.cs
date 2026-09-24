@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace dosier_application.Security.DTOs;
 
 public class LoginRequest
@@ -95,12 +97,49 @@ public class PasswordRecoveryValidationResult
 
 public class ChangePasswordRequestDto
 {
-    public string CurrentPassword { get; set; } = null!;
-    public string NewPassword { get; set; } = null!;
+    private string _currentPassword = string.Empty;
+    private string _newPassword = string.Empty;
+
+    public string CurrentPassword
+    {
+        get => _currentPassword;
+        set => _currentPassword = value ?? string.Empty;
+    }
+
+    [JsonPropertyName("current_password")]
+    public string? CurrentPasswordSnake
+    {
+        set { if (!string.IsNullOrEmpty(value)) _currentPassword = value; }
+    }
+
+    public string NewPassword
+    {
+        get => _newPassword;
+        set => _newPassword = value ?? string.Empty;
+    }
+
+    [JsonPropertyName("new_password")]
+    public string? NewPasswordSnake
+    {
+        set { if (!string.IsNullOrEmpty(value)) _newPassword = value; }
+    }
 }
 
 public class RevertPasswordRequestDto
 {
+    private string _newPassword = string.Empty;
+
     public string Token { get; set; } = null!;
-    public string NewPassword { get; set; } = null!;
+
+    public string NewPassword
+    {
+        get => _newPassword;
+        set => _newPassword = value ?? string.Empty;
+    }
+
+    [JsonPropertyName("new_password")]
+    public string? NewPasswordSnake
+    {
+        set { if (!string.IsNullOrEmpty(value)) _newPassword = value; }
+    }
 }

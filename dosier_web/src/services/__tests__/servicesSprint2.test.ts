@@ -63,6 +63,12 @@ describe('Sprint 2 Service Layer Tests', () => {
             await notificacionesService.deleteNotification('notif-1');
             expect(api.delete).toHaveBeenCalledWith('/Admin/notifications/notif-1');
         });
+
+        it('unsubscribeDevice debe enviar POST a /Admin/notifications/unsubscribe', async () => {
+            (api.post as any).mockResolvedValueOnce({ data: {} });
+            await notificacionesService.unsubscribeDevice('token-push-123');
+            expect(api.post).toHaveBeenCalledWith('/Admin/notifications/unsubscribe', { device_token: 'token-push-123' });
+        });
     });
 
     describe('verificationService', () => {

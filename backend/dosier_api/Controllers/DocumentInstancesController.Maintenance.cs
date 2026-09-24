@@ -239,8 +239,9 @@ namespace dosier_api.Controllers
 
                         if (provider.Behavior == BlockBehavior.DataCapture || isEditableWorkspace)
                         {
+                            var dbContext = HttpContext.RequestServices.GetService<DosierContext>();
                             provider.PopulateSchema(block, schemaDict, listsList, richTextFields, ref premiumFieldsCount, template.Code);
-                            await provider.MapToUiSectionAsync(block, title, sectionsList, null!, template.Code, ct);
+                            await provider.MapToUiSectionAsync(block, title, sectionsList, dbContext!, template.Code, ct);
                         }
                     }
                 }
