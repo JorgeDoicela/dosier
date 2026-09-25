@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { User as UserIcon, ChevronRight, Mail, Hash, Activity, GraduationCap, Globe, Shield, Fingerprint, Settings2 } from 'lucide-react';
+import { User as UserIcon, ChevronRight, Mail, Hash, Activity, GraduationCap, Shield, Fingerprint, Settings2, Building2, Briefcase, FlaskConical } from 'lucide-react';
 import type { ManagedUser } from '../../hooks/useUsersPage';
 import { formatCarrera, formatNombre } from './utils';
 
@@ -44,7 +44,7 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                         <div>
                             <h3 className="text-lg font-semibold text-text-main tracking-tight">{formatNombre(detailUser.nombre_completo)}</h3>
                             <p className="section-label text-text-dim">
-                                {detailUser.type === 'DOCENTE' ? 'Docente Investigador' : detailUser.type === 'ESTUDIANTE' ? 'Estudiante' : 'Evaluador Externo'} — DOSIER
+                                {detailUser.type === 'DOCENTE' ? 'Docente del Claustro' : detailUser.type === 'ADMINISTRATIVO' ? 'Personal Administrativo' : detailUser.type === 'ESTUDIANTE' ? 'Estudiante' : 'Usuario Institucional'} — ISTPET
                             </p>
                         </div>
                     </div>
@@ -77,10 +77,10 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                             <div className="divider-vercel !my-0" />
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="section-label text-text-dim mb-1">Horas Docencia Total</p>
+                                    <p className="section-label text-text-dim mb-1">Horas Docencia</p>
                                     <div className="flex items-center gap-1.5 text-sm font-semibold text-text-main">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${((detailUser.horas_docente ?? detailUser.horas_clase ?? detailUser.horas_investigacion) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
-                                        {(detailUser.horas_docente ?? detailUser.horas_clase ?? detailUser.horas_investigacion) || 0}h/sem
+                                        <span className={`w-1.5 h-1.5 rounded-full ${((detailUser.horas_docente ?? detailUser.horas_clase) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
+                                        {(detailUser.horas_docente ?? detailUser.horas_clase) || 0}h/sem
                                     </div>
                                 </div>
                                 <div>
@@ -90,6 +90,15 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                                         {detailUser.materias_asignadas ?? detailUser.catedras_asignadas ?? 0} paralelos
                                     </div>
                                 </div>
+                                {(detailUser.horas_investigacion ?? 0) > 0 && (
+                                    <div className="col-span-2">
+                                        <p className="section-label text-text-dim mb-1">Horas de Investigación</p>
+                                        <div className="flex items-center gap-1.5 text-sm font-semibold text-violet-400">
+                                            <FlaskConical size={14} className="text-violet-400" />
+                                            {detailUser.horas_investigacion}h/sem en proyectos activos
+                                        </div>
+                                    </div>
+                                )}
                                 {detailUser.horas_clase && (
                                     <div className="col-span-2">
                                         <p className="section-label text-text-dim mb-1">Horas Clase Frente a Aula</p>
@@ -104,6 +113,37 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                                     <p className="text-sm font-bold text-text-main flex items-center gap-1.5">
                                         <GraduationCap size={14} className="text-text-dim" />
                                         {formatCarrera(detailUser.carrera)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {detailUser.type === 'ADMINISTRATIVO' && (
+                        <div className="bento-card static p-4 space-y-3">
+                            <label className="section-label text-text-main">
+                                <Building2 size={12} /> Ubicación Institucional
+                            </label>
+                            <div className="divider-vercel !my-0" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <p className="section-label text-text-dim mb-1">Departamento</p>
+                                    <p className="text-sm font-bold text-text-main flex items-center gap-1.5">
+                                        <Building2 size={14} className="text-text-dim" />
+                                        {detailUser.departamento || 'Administración General'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="section-label text-text-dim mb-1">Cargo Institucional</p>
+                                    <p className="text-sm font-bold text-text-main flex items-center gap-1.5">
+                                        <Briefcase size={14} className="text-text-dim" />
+                                        {detailUser.cargo_instituto || 'Personal Administrativo'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="section-label text-text-dim mb-1">Tipo de Contrato</p>
+                                    <p className="text-sm font-bold text-text-main uppercase font-mono">
+                                        {detailUser.tipo_contrato || 'General'}
                                     </p>
                                 </div>
                             </div>

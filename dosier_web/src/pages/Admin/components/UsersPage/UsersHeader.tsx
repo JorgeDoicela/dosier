@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserPlus, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { PageHeader } from '../../../../components/Common/PageHeader';
 
 interface UsersHeaderProps {
@@ -7,10 +7,8 @@ interface UsersHeaderProps {
     setUserType: (type: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO') => void;
     soloConHoras: boolean;
     setSoloConHoras: (val: boolean) => void;
-    estadoEstudiante?: 'ACTIVO' | 'GRADUADO' | 'TODOS';
-    setEstadoEstudiante?: (val: 'ACTIVO' | 'GRADUADO' | 'TODOS') => void;
-    origenEstudiante?: 'INSTITUTO' | 'CONDUCCION' | 'TODOS';
-    setOrigenEstudiante?: (val: 'INSTITUTO' | 'CONDUCCION' | 'TODOS') => void;
+    filtroDocente?: 'CON_DOCENCIA' | 'CON_INVESTIGACION' | 'TODOS';
+    setFiltroDocente?: (val: 'CON_DOCENCIA' | 'CON_INVESTIGACION' | 'TODOS') => void;
     departamento: string;
     setDepartamento: (val: string) => void;
     availableDepartments?: string[];
@@ -18,7 +16,6 @@ interface UsersHeaderProps {
     setSearch: (search: string) => void;
     loading: boolean;
     searchInputRef: React.RefObject<HTMLInputElement | null>;
-    setError: (error: string) => void;
 }
 
 export const UsersHeader: React.FC<UsersHeaderProps> = ({
@@ -26,18 +23,15 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
     setUserType,
     soloConHoras,
     setSoloConHoras,
-    estadoEstudiante,
-    setEstadoEstudiante,
-    origenEstudiante,
-    setOrigenEstudiante,
+    filtroDocente = soloConHoras ? 'CON_DOCENCIA' : 'TODOS',
+    setFiltroDocente,
     departamento,
     setDepartamento,
     availableDepartments = [],
     search,
     setSearch,
     loading,
-    searchInputRef,
-    setError
+    searchInputRef
 }) => {
     return (
         <PageHeader
@@ -112,20 +106,36 @@ export const UsersHeader: React.FC<UsersHeaderProps> = ({
 
                 {/* Subfiltros Contextuales */}
                 {userType === 'DOCENTE' && (
-                    <div className="flex items-center gap-2 pt-1 border-t border-border-thin/40 text-[11px]">
+                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border-thin/40 text-[11px]">
                         <span className="text-text-dim font-medium">Asignación:</span>
                         <div className="flex items-center gap-1 bg-surface border border-border-thin p-0.5 rounded-md">
                             <button
                                 type="button"
-                                onClick={() => setSoloConHoras(true)}
-                                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${soloConHoras ? 'bg-brand/15 text-brand border border-brand/30 shadow-xs' : 'text-text-dim hover:text-text-main'}`}
+                                onClick={() => {
+                                    if (setFiltroDocente) setFiltroDocente('CON_DOCENCIA');
+                                    else setSoloConHoras(true);
+                                }}
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${filtroDocente === 'CON_DOCENCIA' ? 'bg-brand/15 text-brand border border-brand/30 shadow-xs' : 'text-text-dim hover:text-text-main'}`}
                             >
-                                Con Carga Docente Activa
+                                Con Carga Docente
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setSoloConHoras(false)}
-                                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${!soloConHoras ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
+                                onClick={() => {
+                                    if (setFiltroDocente) setFiltroDocente('CON_INVESTIGACION');
+                                    else setSoloConHoras(false);
+                                }}
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${filtroDocente === 'CON_INVESTIGACION' ? 'bg-brand/15 text-brand border border-brand/30 shadow-xs' : 'text-text-dim hover:text-text-main'}`}
+                            >
+                                Con Horas de Investigación
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (setFiltroDocente) setFiltroDocente('TODOS');
+                                    else setSoloConHoras(false);
+                                }}
+                                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition-all cursor-pointer ${filtroDocente === 'TODOS' ? 'bg-surface-hover text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'}`}
                             >
                                 Toda la Planta Docente
                             </button>

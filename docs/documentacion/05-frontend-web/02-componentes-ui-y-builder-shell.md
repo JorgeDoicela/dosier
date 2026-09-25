@@ -134,4 +134,30 @@ graph TD
   * `RecordatorioDocentesModal.tsx`: Despacho multicanal de alertas de urgencia curricular.
 * **Garantía de Diseño Visual:** Todos los contenedores, encabezados y pies de página aplican fondos 100% sólidos y opacos (`bg-white dark:bg-zinc-950` en el cuerpo, `bg-zinc-50 dark:bg-zinc-900` en cabeceras y footers). Se encuentra terminantemente prohibido el uso de opacidades translúcidas (`/50`, `/40`) o difuminados `backdrop-blur` para prevenir sangrado tipográfico.
 
+### 4.11. Consola de Plantillas Oficiales y Visor PDF Embebido (`/admin/templates`)
+* **Ubicación:** `src/pages/Admin/Templates/` (`DocumentTemplatesPage.tsx`, `components/TemplateCatalog.tsx`, `components/TemplatePreviewModal.tsx`, `components/OfficialTemplatesCatalogView.tsx`, `components/BlockProperties.tsx`).
+* **Catálogo Desacoplado:** El panel izquierdo (`TemplateCatalog.tsx`) lista únicamente documentos y formatos oficiales vigentes (Currículo/PEA, Acreditación/CACES, Reportes/Analíticas). Se erradicó la pseudo-plantilla artificial `GLOBAL_THEME` para evitar confusiones de interfaz.
+* **Acciones en Hover por Formato:** Cada fila del catálogo dispone de botones interactivos para previsualización inmediata (`Eye`) y descarga de PDF oficial (`Download`).
+* **Previsualización en Caliente (`TemplatePreviewModal.tsx`):**
+  * Panel lateral deslizable con fondo 100% sólido y visor PDF integrado vía iframe (`src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH"}`).
+  * Compilación en caliente: Si se solicita la vista previa de la plantilla en edición, el frontend empaqueta los bloques actuales y el tema fusionado mediante `POST /api/admin/templates/{code}/render-pdf`, reflejando instantáneamente los cambios sin requerir publicación previa.
+  * Funcionalidades adicionales: Descarga con nomenclatura oficial normalizada, impresión de documento y botón para abrir en pestaña independiente.
+* **Ajuste de Identidad Visual Institucional (`ThemeEditorTab.tsx`):** La personalización de colores primarios, márgenes de página A4, tipografía y membretes se realiza de forma directa en la pestaña *Estilos* del panel derecho de propiedades, vinculada al `themeConfigJson` de la plantilla seleccionada.
+* **Catálogo Bento para Comunidad Académica (`OfficialTemplatesCatalogView.tsx`):** Vista en cuadrícula responsiva tipo Bento Grid con buscador reactivo, filtros por categoría normativa y copia de especificaciones curriculares para docentes y autoridades.
+
+### 4.12. Barra Lateral de Navegación (Sidebar) y Menús Desplegables de Acceso Total
+* **Ubicación:** `src/components/Layout/` (`Sidebar.tsx`, `Sidebar/hooks/useSidebar.ts`, `Sidebar/components/SidebarNav.tsx`, `Sidebar/components/SidebarFooter.tsx`).
+* **Cobertura Total para el Rol Administrador (`DOSIER_ADMIN`):**
+  * Acceso irrestricto y visualización simultánea de todos los módulos del sistema agrupados jerárquicamente:
+    * **Grupo 1 (Operación Diaria):** Tablero General (`/dashboard`), Notificaciones (`/notificaciones`), Calendario y Cronograma Curricular (`/calendario`).
+    * **Grupo 2 (Gestión Documental Curricular):** Documentación Institucional de Supervisión (`/documentacion`), Mis Instrumentos PEA (`/documentacion/mis-proyectos`), Verificación Forense (`/verificacion`).
+    * **Grupo 3 (Gobernanza y Administración del Sistema):** Analíticas e Indicadores CACES (`/analiticas`), Gestión de Usuarios (`/usuarios`), Plantillas Oficiales (`/plantillas`), Motor de Correos (`/emails`) y Bitácora de Auditoría Forense (`/auditoria`). Se erradicaron duplicidades de acceso en el sidebar para *Privacidad LOPDP*, *Configuración* y *Ciclo Documental*, ya que se gestionan desde los centros dedicados en el perfil de usuario y el tablero institucional.
+* **Menús Desplegables Tipo Acordeón (Sliders / Drawers de Navegación):**
+  1. **Documentación:** Lista desplegable de instrumentos curriculares globales en supervisión con paginación y acceso directo al Workspace concurrente.
+  2. **Mis Instrumentos PEA:** Lista desplegable de asignaturas e instrumentos asignados directamente al usuario docente/administrador.
+  3. **Analíticas:** Despliegue de accesos a Métricas Curriculares (`?tab=general`), Cumplimiento CACES (`?tab=caces`) y Portafolio de Instrumentos (`?tab=proyectos`).
+  4. **Usuarios:** Submenú desplegable filtrado por tipo de cuenta (Docentes institucionales y Usuarios externos).
+* **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-[#131720]`), selectores de hover sobrios sin difuminados translúcidos, tipografía Geist Editorial e iconografía técnica de Lucide React sin emojis.
+
+
 

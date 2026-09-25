@@ -78,6 +78,34 @@ export const documentTemplateService = {
      */
     reorderTemplates: (codes: string[]): Promise<any> =>
         api.put('/admin/templates/order', { codes }).then(r => r.data),
+
+    /**
+     * Renderiza el PDF oficial de una plantilla con datos institucionales de muestra.
+     */
+    renderPdfBlob: (code: string, isDraft: boolean = false, download: boolean = false): Promise<Blob> =>
+        api.get(`/admin/templates/${encodeURIComponent(code)}/render-pdf?isDraft=${isDraft}&download=${download}`, {
+            responseType: 'blob'
+        }).then(r => new Blob([r.data], { type: 'application/pdf' })),
+
+    /**
+     * Renderiza un PDF en caliente con el HTML, CSS y Tema visual editados en el diseñador.
+     */
+    renderCustomPdfBlob: (
+        code: string,
+        payload: {
+            htmlContent?: string | null;
+            customCss?: string | null;
+            themeConfigJson?: string | null;
+            sampleData?: any;
+        },
+        isDraft: boolean = false,
+        download: boolean = false
+    ): Promise<Blob> =>
+        api.post(
+            `/admin/templates/${encodeURIComponent(code)}/render-pdf?isDraft=${isDraft}&download=${download}`,
+            payload,
+            { responseType: 'blob' }
+        ).then(r => new Blob([r.data], { type: 'application/pdf' })),
 };
 
 export default documentTemplateService;

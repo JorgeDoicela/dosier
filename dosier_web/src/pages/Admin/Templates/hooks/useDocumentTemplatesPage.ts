@@ -77,6 +77,9 @@ export const useDocumentTemplatesPage = () => {
         return localStorage.getItem('sidebar_collapsed') === 'true';
     });
 
+    const [previewModalOpen, setPreviewModalOpen] = useState(false);
+    const [previewingTemplate, setPreviewingTemplate] = useState<DocumentTemplateDto | null>(null);
+
     useEffect(() => {
         const handleStateChange = (e: Event) => {
             const customEvent = e as CustomEvent;
@@ -162,128 +165,31 @@ export const useDocumentTemplatesPage = () => {
     const handleSelectTemplate = async (tmpl: DocumentTemplateDto) => {
         try {
             setLoading(true);
-            let fullData: any;
             let loadedBlocks: DocumentBlock[] = [];
 
-            if (tmpl.code === 'GLOBAL_THEME') {
-                const resTheme = await documentTemplateService.getGlobalTheme();
-                fullData = {
-                    id: 0,
-                    code: 'GLOBAL_THEME',
-                    name: 'Diseño Global Institucional',
-                    description: 'Configuración visual por defecto para todos los documentos de la institución.',
-                    category: 0,
-                    version: 1,
-                    isActive: true,
-                    requiresLopdpClause: false,
-                    supportsBlindMode: false,
-                    requiresElectronicSignature: false,
-                    signatureType: 'none',
-                    themeConfigJson: resTheme?.themeConfigJson,
-                    htmlContent: '',
-                    customCss: '',
-                    collaborativeFieldsJson: '',
-                    updatedAt: new Date().toISOString(),
-                    updatedBy: null
-                };
-                setSelectedTemplate(fullData);
+            const fullData = await documentTemplateService.getTemplateByCode(tmpl.code);
+            setSelectedTemplate(fullData);
 
-                let parsedTheme: any = {};
-                if (resTheme?.themeConfigJson) {
+            if (fullData.htmlContent) {
+                const match = fullData.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON: (.*?) -->/);
+                if (match && match[1]) {
                     try {
-                        parsedTheme = JSON.parse(resTheme.themeConfigJson);
-                    } catch {}
-                }
-                const savedCoverConfig = parsedTheme?.brand?.coverConfig || {};
-
-                loadedBlocks = [
-                    {
-                        id: "sample-cover",
-                        type: "cover" as const,
-                        title: "Previsualización: Portada Institucional",
-                        isActive: true,
-                        config: {
-                            tituloSuperior: "PORTADA DE PRUEBA DE IDENTIDAD VISUAL",
-                            carreraPorDefecto: "CARRERA / UNIDAD ACADÉMICA DE MUESTRA",
-                            periodoPorDefecto: "PERIODO ACADÉMICO DE PRUEBA",
-                            colorTema: "#1e2a4a",
-                            showInstitution: true,
-                            textoInstitucion: "INSTITUTO TECNOLÓGICO SUPERIOR TRAVERSARI",
-                            posInstitution: "top",
-                            alignInstitution: "center",
-                            showTitle: true,
-                            posTitle: "middle",
-                            alignTitle: "center",
-                            showCarrera: true,
-                            posCarrera: "bottom",
-                            alignCarrera: "center",
-                            showPeriodo: true,
-                            posPeriodo: "bottom",
-                            alignPeriodo: "center",
-                            ...savedCoverConfig
-                        }
-                    },
-                    {
-                        id: "sample-title",
-                        type: "title" as const,
-                        title: "Previsualización: Títulos de Sección",
-                        isActive: true,
-                        config: {
-                            text: "1. EJEMPLO DE ENCABEZADO DE SECCIÓN",
-                            fontSize: "H2",
-                            color: "#222c57",
-                            alignment: "left"
-                        }
-                    },
-                    {
-                        id: "sample-text",
-                        type: "rich_text" as const,
-                        title: "Previsualización: Párrafos de Texto",
-                        isActive: true,
-                        config: {
-                            html: "<p>Este es un párrafo de ejemplo para previsualizar la tipografía, interlineado y colores del tema visual institucional. Todos los reportes generados heredarán estas propiedades a menos que tengan overrides individuales.</p>"
-                        }
-                    },
-                    {
-                        id: "sample-table",
-                        type: "advanced_table" as const,
-                        title: "Previsualización: Tablas Avanzadas",
-                        isActive: true,
-                        config: {
-                            headers: ["Elemento de Muestra", "Valor Configurado"],
-                            colWidths: ["50%", "50%"],
-                            rows: [
-                                { cells: ["Fila de prueba 1", "Valor de prueba A"] },
-                                { cells: ["Fila de prueba 2", "Valor de prueba B"] }
-                            ]
-                        }
-                    }
-                ];
-            } else {
-                fullData = await documentTemplateService.getTemplateByCode(tmpl.code);
-                setSelectedTemplate(fullData);
-
-                if (fullData.htmlContent) {
-                    const match = fullData.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON: (.*?) -->/);
-                    if (match && match[1]) {
-                        try {
-                            const decoded = decodeURIComponent(escape(atob(match[1])));
-                            loadedBlocks = JSON.parse(decoded);
-                        } catch { }
-                    }
-                }
-
-                if (loadedBlocks.length === 0 && fullData.collaborativeFieldsJson) {
-                    try {
-                        const parsed = JSON.parse(fullData.collaborativeFieldsJson);
-                        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
-                            loadedBlocks = parsed;
-                        }
+                        const decoded = decodeURIComponent(escape(atob(match[1])));
+                        loadedBlocks = JSON.parse(decoded);
                     } catch { }
                 }
-                if (loadedBlocks.length === 0) {
-                    loadedBlocks = generateDefaultBlocksForTemplate(tmpl, fullData);
-                }
+            }
+
+            if (loadedBlocks.length === 0 && fullData.collaborativeFieldsJson) {
+                try {
+                    const parsed = JSON.parse(fullData.collaborativeFieldsJson);
+                    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
+                        loadedBlocks = parsed;
+                    }
+                } catch { }
+            }
+            if (loadedBlocks.length === 0) {
+                loadedBlocks = generateDefaultBlocksForTemplate(tmpl, fullData);
             }
 
             setBlocks(loadedBlocks);
@@ -663,46 +569,6 @@ export const useDocumentTemplatesPage = () => {
     const handleSaveTemplate = async () => {
         if (!selectedTemplate) return;
 
-        if (selectedTemplate.code === 'GLOBAL_THEME') {
-            const ok = await confirm({
-                title: 'Guardar Estilos Globales',
-                message: '¿Estás seguro de que deseas actualizar los estilos y la identidad visual institucional global? Todos los nuevos reportes y documentos que no posean estilos específicos heredarán esta configuración.',
-                confirmText: 'Sí, guardar',
-                cancelText: 'Cancelar',
-                variant: 'primary'
-            });
-
-            if (!ok) return;
-
-            setSaving(true);
-            try {
-                const coverBlock = blocks.find(b => b.id === 'sample-cover');
-                let updatedThemeConfigJson = selectedTemplate.themeConfigJson || '{}';
-                if (coverBlock) {
-                    try {
-                        const parsed = JSON.parse(updatedThemeConfigJson);
-                        if (!parsed.brand) parsed.brand = {};
-                        parsed.brand.coverConfig = coverBlock.config;
-                        updatedThemeConfigJson = JSON.stringify(parsed);
-                    } catch (e) {
-                        console.error("Error parsing themeConfigJson during save:", e);
-                    }
-                }
-
-                await documentTemplateService.updateGlobalTheme(updatedThemeConfigJson);
-
-                setSelectedTemplate(prev => prev ? { ...prev, themeConfigJson: updatedThemeConfigJson } : null);
-                addToast("Diseño Global Guardado", "El tema visual institucional ha sido actualizado con éxito.", "success");
-                setIsDirty(false);
-            } catch (err) {
-                console.error(err);
-                addToast("Error al Guardar", "No se pudo actualizar el diseño global institucional.", "error");
-            } finally {
-                setSaving(false);
-            }
-            return;
-        }
-
         let usageMessage = `¿Estás seguro de que deseas publicar la plantilla '${selectedTemplate.name}'? Todos los nuevos documentos generados utilizarán esta versión.`;
         try {
             const usageRes = await documentTemplateService.getTemplateUsageCount(selectedTemplate.code);
@@ -775,7 +641,7 @@ export const useDocumentTemplatesPage = () => {
     };
 
     const handleResetToDefault = async () => {
-        if (!selectedTemplate || selectedTemplate.code === 'GLOBAL_THEME') return;
+        if (!selectedTemplate) return;
         const ok = await confirm({
             title: 'Restablecer Plantilla a Fábrica',
             message: `¿Deseas restablecer la plantilla "${selectedTemplate.name}" a su estructura oficial institucional por defecto? Se cargarán todos los bloques y secciones estándar oficiales.`,
@@ -861,6 +727,56 @@ export const useDocumentTemplatesPage = () => {
         }
     };
 
+    const handleOpenPreview = (tmpl?: DocumentTemplateDto) => {
+        const target = tmpl || selectedTemplate;
+        if (!target) return;
+        setPreviewingTemplate(target);
+        setPreviewModalOpen(true);
+    };
+
+    const handleClosePreview = () => {
+        setPreviewModalOpen(false);
+        setPreviewingTemplate(null);
+    };
+
+    const handleQuickDownloadPdf = async (tmpl: DocumentTemplateDto) => {
+        if (!tmpl) return;
+        try {
+            addToast("Generando PDF", `Preparando descarga de "${tmpl.name}"...`, "info");
+            let blob: Blob;
+
+            if (selectedTemplate && tmpl.code === selectedTemplate.code && blocks && blocks.length > 0) {
+                const mergedTheme = mergeWithDefaults(selectedTemplate.themeConfigJson);
+                const generatedHtml = generateHtmlFromBlocks(blocks, mergedTheme);
+                blob = await documentTemplateService.renderCustomPdfBlob(
+                    tmpl.code,
+                    {
+                        htmlContent: generatedHtml,
+                        customCss: selectedTemplate.customCss || null,
+                        themeConfigJson: JSON.stringify(mergedTheme)
+                    },
+                    false,
+                    true
+                );
+            } else {
+                blob = await documentTemplateService.renderPdfBlob(tmpl.code, false, true);
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tmpl.name.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')}_Oficial.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+            addToast("Descarga Lista", `PDF de "${tmpl.name}" descargado con éxito.`, "success");
+        } catch (err: any) {
+            console.error('Error al descargar PDF oficial de plantilla:', err);
+            addToast("Error de Descarga", "No se pudo generar el PDF oficial. Verifique que la plantilla sea válida.", "error");
+        }
+    };
+
     return {
         templates,
         selectedTemplate,
@@ -884,6 +800,11 @@ export const useDocumentTemplatesPage = () => {
         toggleSidebar,
         sensors,
         activeBlock,
+        previewModalOpen,
+        previewingTemplate,
+        handleOpenPreview,
+        handleClosePreview,
+        handleQuickDownloadPdf,
         fetchTemplates,
         handleSelectTemplate,
         handleAddBlock,

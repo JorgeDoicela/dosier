@@ -108,6 +108,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         location.pathname.startsWith('/documentacion/mis-proyectos')
     );
     const [sidebarProjects, setSidebarProjects] = useState<SidebarProject[]>([]);
+    const [sidebarMyProjects, setSidebarMyProjects] = useState<SidebarProject[]>([]);
     const [sidebarProjectsLoading, setSidebarProjectsLoading] = useState(false);
     const [showAllProjects, setShowAllProjects] = useState(false);
 
@@ -129,6 +130,23 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             });
 
             setSidebarProjects(sorted);
+
+            if (isAdmin) {
+                try {
+                    const myData = await curriculumProjectService.getMyProjects();
+                    const myList = Array.isArray(myData) ? myData : (myData as any)?.items || [];
+                    const mySorted = myList.sort((a: any, b: any) => {
+                        const dateA = a.fecha_modificacion || a.fecha_registro || '';
+                        const dateB = b.fecha_modificacion || b.fecha_registro || '';
+                        return new Date(dateB).getTime() - new Date(dateA).getTime();
+                    });
+                    setSidebarMyProjects(mySorted);
+                } catch {
+                    setSidebarMyProjects([]);
+                }
+            } else {
+                setSidebarMyProjects(sorted);
+            }
         } catch (err) {
             console.error('[DOSIER Sidebar] Error al cargar proyectos para el menú:', err);
         } finally {
@@ -139,6 +157,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
     useEffect(() => {
         if (!user) {
             setSidebarProjects([]);
+            setSidebarMyProjects([]);
             return;
         }
         fetchSidebarProjects();
@@ -258,23 +277,23 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Tablero', icon: Home, path: '/dashboard', roles: ['ANY'], group: 1 },
         { name: 'Notificaciones', icon: Bell, path: '/notificaciones', roles: ['ANY'], group: 1 },
         { name: 'Calendario', icon: Calendar, path: '/calendario', roles: ['ANY'], group: 1 },
-        // ── Ciclo documental y gestión académica (inicio → formulación → revisión → aprobación) ──
+        // ── Ciclo documental y gestión curricular (inicio → formulación → revisión → aprobación) ──
         { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 1, hasChevron: true },
-        { name: 'Mis Instrumentos PEA', icon: ClipboardList, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE'], group: 1, hasChevron: true },
+        { name: 'Mis Instrumentos PEA', icon: BookOpen, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ADMIN'], group: 1, hasChevron: true },
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2, hasChevron: true },
-        // ── Administración del sistema ──────────────────────────────────────
-        { name: 'Usuarios', icon: Users, path: '/usuarios', permission: 'USUARIOS:VER', group: 3, hasChevron: true },
+        // ── Administración y Control Total del Sistema ──────────────────────
+        { name: 'Usuarios', icon: Users, path: '/usuarios', permission: 'USUARIOS:VER', roles: ['DOSIER_ADMIN'], group: 3, hasChevron: true },
         { name: 'Plantillas', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN'], group: 3 },
         { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], group: 3 },
         { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
     ];
 
-    const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
+    const isSupervisorOnly = (isCoordCarrera || isCoordAcad || isVicerrector) && !isAdmin;
 
     const menuItems = allMenuItems.filter(item => {
-        if (item.path === '/documentacion/mis-proyectos' && isSupervisor) return false;
+        if (item.path === '/documentacion/mis-proyectos' && isSupervisorOnly) return false;
 
         if (isAdmin) return true;
         if (item.permission) {
@@ -532,6 +551,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         isMisProyectosOpen,
         setIsMisProyectosOpen,
         sidebarProjects,
+        sidebarMyProjects,
         sidebarProjectsLoading,
         showAllProjects,
         setShowAllProjects,

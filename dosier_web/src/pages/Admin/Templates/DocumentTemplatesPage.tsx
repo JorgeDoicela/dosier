@@ -18,7 +18,8 @@ import {
     Plus,
     ChevronDown,
     RefreshCw,
-    RotateCcw
+    RotateCcw,
+    Eye
 } from 'lucide-react';
 import { DndContext, rectIntersection } from '@dnd-kit/core';
 import type { BlockType } from './types';
@@ -26,7 +27,10 @@ import { TemplateCatalog } from './components/TemplateCatalog';
 import { BlockCanvas } from './components/BlockCanvas';
 import { BlockProperties } from './components/BlockProperties';
 import { BlockPalette } from './components/BlockPalette';
+import { TemplatePreviewModal } from './components/TemplatePreviewModal';
 import { useDocumentTemplatesPage } from './hooks/useDocumentTemplatesPage';
+import { generateHtmlFromBlocks } from './utils/HtmlGenerator';
+import { mergeWithDefaults } from './utils/theme-schema';
 
 /** Tipos de bloques de los que solo se permite una única instancia por plantilla */
 const UNIQUE_BLOCK_TYPES: BlockType[] = [
@@ -59,21 +63,26 @@ export const DocumentTemplatesPage: React.FC = () => {
         blocks,
         activeBlockId,
         setActiveBlockId,
+        loading,
+        saving,
+        isDirty,
+        isDark,
+        showPalette,
+        setShowPalette,
         activeMobileTab,
         setActiveMobileTab,
         paletteRef,
-        showPalette,
-        setShowPalette,
-        isDirty,
-        isDark,
-        loading,
-        saving,
         headerCollapsed,
         setHeaderCollapsed,
         isSidebarCollapsed,
         toggleSidebar,
         sensors,
         activeBlock,
+        previewModalOpen,
+        previewingTemplate,
+        handleOpenPreview,
+        handleClosePreview,
+        handleQuickDownloadPdf,
         handleSelectTemplate,
         handleAddBlock,
         handleDuplicateBlock,
@@ -91,12 +100,9 @@ export const DocumentTemplatesPage: React.FC = () => {
     } = useDocumentTemplatesPage();
 
     return (
-        <main className={`flex-1 bg-bg-deep p-4 md:px-10 md:pb-4 flex flex-col h-full overflow-hidden relative transition-[padding] duration-150 ease-out ${headerCollapsed
-            ? 'md:pt-3'
-            : 'md:pt-10'
-            }`}>
-            {/* Cabecera Principal Colapsable */}
-            <div className={`transition-[max-height,opacity,margin,padding] duration-150 ease-out origin-top shrink-0 relative ${headerCollapsed
+        <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] px-4 sm:px-6 lg:px-8 py-3 overflow-hidden bg-bg-deep select-none">
+            {/* Cabecera de Página Colapsable */}
+            <div className={`relative transition-all duration-300 ease-in-out shrink-0 ${headerCollapsed
                 ? 'max-h-0 opacity-0 mb-0 pb-0 pointer-events-none overflow-hidden'
                 : 'max-h-[170px] opacity-100 pb-5 mb-1 overflow-visible'
                 }`}>
@@ -104,74 +110,42 @@ export const DocumentTemplatesPage: React.FC = () => {
                     kicker="Administración de Plantillas"
                     icon={FileCode2}
                     title="Editor de Plantillas"
-                    description="Creador visual de documentos. Arrastra bloques, añade tablas y define la maquetación del PDF oficial."
+                    description="Diseñador visual de documentos y PEA oficial. Arrastra bloques, añade tablas y define la maquetación del PDF oficial del ISTPET."
                     className="relative z-30"
                 />
 
                 {selectedTemplate && !headerCollapsed && (
                     <div className="absolute bottom-1 right-0 flex items-center gap-2.5 z-30 animate-fade-in">
-                        {selectedTemplate.code !== 'GLOBAL_THEME' && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={handleResetToDefault}
-                                    disabled={loading || saving}
-                                    title="Restablecer la plantilla a la versión oficial de fábrica"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-thin text-text-muted hover:text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover text-xs font-medium transition-all cursor-pointer"
-                                >
-                                    <RotateCcw className="w-3.5 h-3.5" />
-                                    <span>Restablecer a Fábrica</span>
-                                </button>
-
-                                <div ref={paletteRef} className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPalette(p => !p)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover text-xs font-medium transition-all cursor-pointer"
-                                    >
-                                        <Plus className="w-3.5 h-3.5" />
-                                        Agregar Bloque
-                                        <ChevronDown className={`w-3 h-3 transition-transform ${showPalette ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {showPalette && (
-                                        <BlockPalette
-                                            blocks={blocks}
-                                            uniqueBlockTypes={UNIQUE_BLOCK_TYPES}
-                                            onAddBlock={handleAddBlock}
-                                            onClose={() => setShowPalette(false)}
-                                        />
-                                    )}
-                                </div>
-                            </>
-                        )}
+                        <button
+                            type="button"
+                            onClick={() => handleOpenPreview()}
+                            title="Previsualizar PDF en caliente con los bloques y estilos actuales"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover text-xs font-medium transition-all cursor-pointer"
+                        >
+                            <Eye className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span>Previsualizar PDF</span>
+                        </button>
 
                         <button
                             type="button"
-                            onClick={handleSaveTemplate}
-                            disabled={saving || !isDirty}
-                            className="btn-vercel-primary flex items-center gap-1.5 text-xs font-semibold !py-1.5 !px-3 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            onClick={handleResetToDefault}
+                            disabled={loading || saving}
+                            title="Restablecer la plantilla a los archivos oficiales de fábrica"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-thin text-text-muted hover:text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover text-xs font-medium transition-all cursor-pointer"
                         >
-                            <Save className="w-3.5 h-3.5" />
-                            <span>{saving ? 'Publicando...' : 'Publicar Plantilla'}</span>
+                            <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span>Restablecer a Fábrica</span>
                         </button>
-                    </div>
-                )}
-            </div>
 
-
-            {/* Botones Flotantes Circulares cuando la Cabecera está Colapsada */}
-            {selectedTemplate && headerCollapsed && (
-                <div className="absolute top-[13px] right-6 md:right-14 z-50 flex items-center gap-3 animate-fade-in">
-                    {selectedTemplate.code !== 'GLOBAL_THEME' && (
                         <div ref={paletteRef} className="relative">
                             <button
                                 type="button"
                                 onClick={() => setShowPalette(p => !p)}
-                                title="Agregar Bloque"
-                                className="w-10 h-10 rounded-full border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover text-xs font-medium transition-all cursor-pointer"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
+                                Agregar Bloque
+                                <ChevronDown className={`w-3 h-3 transition-transform ${showPalette ? 'rotate-180' : ''}`} />
                             </button>
 
                             {showPalette && (
@@ -183,19 +157,63 @@ export const DocumentTemplatesPage: React.FC = () => {
                                 />
                             )}
                         </div>
-                    )}
+
+                        <button
+                            type="button"
+                            onClick={handleSaveTemplate}
+                            disabled={saving || !isDirty}
+                            className="btn-vercel-primary flex items-center gap-1.5 text-xs font-semibold !py-1.5 !px-3 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            <Save className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            <span>{saving ? 'Publicando...' : 'Publicar Plantilla'}</span>
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Botones Flotantes Circulares cuando la Cabecera está Colapsada */}
+            {selectedTemplate && headerCollapsed && (
+                <div className="absolute top-[13px] right-6 md:right-14 z-50 flex items-center gap-2 animate-fade-in">
+                    <button
+                        type="button"
+                        onClick={() => handleOpenPreview()}
+                        title="Previsualizar PDF oficial"
+                        className="w-9 h-9 rounded-full border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                    >
+                        <Eye className="w-4 h-4" strokeWidth={1.5} />
+                    </button>
+
+                    <div ref={paletteRef} className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setShowPalette(p => !p)}
+                            title="Agregar Bloque"
+                            className="w-9 h-9 rounded-full border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                        >
+                            <Plus className="w-4 h-4" strokeWidth={1.5} />
+                        </button>
+
+                        {showPalette && (
+                            <BlockPalette
+                                blocks={blocks}
+                                uniqueBlockTypes={UNIQUE_BLOCK_TYPES}
+                                onAddBlock={handleAddBlock}
+                                onClose={() => setShowPalette(false)}
+                            />
+                        )}
+                    </div>
 
                     <button
                         type="button"
                         onClick={handleSaveTemplate}
                         disabled={saving || !isDirty}
-                        title={selectedTemplate.code === 'GLOBAL_THEME' ? 'Guardar Diseño Global' : `Guardar y Publicar v${selectedTemplate.version}`}
-                        className="w-10 h-10 rounded-full bg-text-main text-bg-deep flex items-center justify-center hover:opacity-90 transition-all shadow-md disabled:opacity-40 cursor-pointer shrink-0"
+                        title={`Guardar y Publicar v${selectedTemplate.version}`}
+                        className="w-9 h-9 rounded-full bg-text-main text-bg-deep flex items-center justify-center hover:opacity-90 transition-all shadow-md disabled:opacity-40 cursor-pointer shrink-0"
                     >
                         {saving ? (
-                            <RefreshCw className="w-5 h-5 animate-spin" />
+                            <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
                         ) : (
-                            <Save className="w-5 h-5" />
+                            <Save className="w-4 h-4" strokeWidth={1.5} />
                         )}
                     </button>
                 </div>
@@ -237,6 +255,8 @@ export const DocumentTemplatesPage: React.FC = () => {
                             templates={templates}
                             selectedTemplate={selectedTemplate}
                             onSelectTemplate={handleSelectTemplate}
+                            onPreviewTemplate={handleOpenPreview}
+                            onDownloadPdf={handleQuickDownloadPdf}
                             isSidebarCollapsed={isSidebarCollapsed}
                             onToggleSidebar={toggleSidebar}
                             headerCollapsed={headerCollapsed}
@@ -284,6 +304,23 @@ export const DocumentTemplatesPage: React.FC = () => {
                     </div>
                 </DndContext>
             </div>
+
+            {/* Modal de Previsualización y Descarga Oficial del PDF */}
+            <TemplatePreviewModal
+                isOpen={previewModalOpen}
+                template={previewingTemplate}
+                onClose={handleClosePreview}
+                generatedHtml={
+                    selectedTemplate && previewingTemplate?.code === selectedTemplate.code && blocks.length > 0
+                        ? generateHtmlFromBlocks(blocks, mergeWithDefaults(selectedTemplate.themeConfigJson))
+                        : undefined
+                }
+                mergedTheme={
+                    selectedTemplate && previewingTemplate?.code === selectedTemplate.code
+                        ? mergeWithDefaults(selectedTemplate.themeConfigJson)
+                        : undefined
+                }
+            />
         </main>
     );
 };

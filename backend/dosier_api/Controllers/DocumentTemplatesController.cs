@@ -280,6 +280,254 @@ namespace dosier_api.Controllers
             await _templateAdminService.SaveTemplateOrderAsync(request.Codes, ct);
             return Ok(new { message = "Orden de plantillas guardado correctamente." });
         }
+
+        /// <summary>
+        /// Renderiza el PDF oficial de una plantilla con datos institucionales de muestra.
+        /// Permite ver el documento tal cual saldrá al generarse o descargarlo.
+        /// </summary>
+        [HttpGet("{code}/render-pdf")]
+        public async Task<IActionResult> RenderPdf(
+            string code,
+            [FromQuery] bool isDraft = false,
+            [FromQuery] bool download = false,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
+                var template = templates.FirstOrDefault(t => t.Code == code);
+                if (template == null)
+                    return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+
+                var sampleData = CreateTemplateSampleData(code);
+
+                var request = new DocumentRequest
+                {
+                    TemplateCode = code,
+                    Data = sampleData,
+                    IsDraftMode = isDraft,
+                    IsPreview = true,
+                    RequestedBy = User.Identity?.Name ?? "Administrador DOSIER"
+                };
+
+                var result = await _documentEngine.GenerateAsync(request, ct);
+
+                var baseTitle = !string.IsNullOrWhiteSpace(template.Name) ? template.Name : code;
+                var safeName = SanitizeFileName($"{baseTitle}.pdf");
+
+                if (download)
+                {
+                    return File(result.PdfBytes, "application/pdf", safeName);
+                }
+
+                Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = $"inline; filename=\"{safeName}\"";
+                return File(result.PdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Error al renderizar PDF de previsualización: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Renderiza un PDF en caliente a partir del HTML/bloques editados actualmente en el diseñador visual.
+        /// </summary>
+        [HttpPost("{code}/render-pdf")]
+        public async Task<IActionResult> RenderCustomPdf(
+            string code,
+            [FromBody] RenderTemplatePreviewRequest? previewRequest,
+            [FromQuery] bool isDraft = false,
+            [FromQuery] bool download = false,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
+                var template = templates.FirstOrDefault(t => t.Code == code);
+                if (template == null)
+                    return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+
+                var sampleData = previewRequest?.SampleData ?? CreateTemplateSampleData(code);
+
+                var request = new DocumentRequest
+                {
+                    TemplateCode = code,
+                    Data = sampleData,
+                    IsDraftMode = isDraft,
+                    IsPreview = true,
+                    CustomHtmlContent = previewRequest?.HtmlContent,
+                    CustomCss = previewRequest?.CustomCss,
+                    CustomThemeConfigJson = previewRequest?.ThemeConfigJson,
+                    RequestedBy = User.Identity?.Name ?? "Administrador DOSIER"
+                };
+
+                var result = await _documentEngine.GenerateAsync(request, ct);
+
+                var baseTitle = !string.IsNullOrWhiteSpace(template.Name) ? template.Name : code;
+                var safeName = SanitizeFileName($"{baseTitle}.pdf");
+
+                if (download)
+                {
+                    return File(result.PdfBytes, "application/pdf", safeName);
+                }
+
+                Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = $"inline; filename=\"{safeName}\"";
+                return File(result.PdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Error al renderizar PDF de previsualización: {ex.Message}" });
+            }
+        }
+
+        private static string SanitizeFileName(string name)
+        {
+            var invalids = System.IO.Path.GetInvalidFileNameChars();
+            var sanitized = string.Concat(name.Select(c => invalids.Contains(c) ? '_' : c));
+            return string.IsNullOrWhiteSpace(sanitized) ? "documento.pdf" : sanitized;
+        }
+
+        private static object CreateTemplateSampleData(string code)
+        {
+            return new
+            {
+                // Datos Institucionales
+                institucion = "INSTITUTO SUPERIOR TECNOLÓGICO \"MAYOR PEDRO TRAVERSARI\"",
+                institucion_direccion = "MATILDE ALVAREZ S/N Y MARISCAL SUCRE (CHILLOGALLO)",
+                carrera = "DESARROLLO DE SOFTWARE",
+                codigo_carrera = "TSDS-001",
+                modalidad = "Presencial",
+                unidad_organizacion = "Unidad Profesional",
+                periodo = "2026-1 (Mayo 2026 - Septiembre 2026)",
+                periodo_academico = "2026-1 (Mayo 2026 - Septiembre 2026)",
+                semestre = "Cuarto Semestre",
+                nivel = "Cuarto Semestre",
+                paralelo = "A",
+                jornada = "Matutina",
+
+                // Asignatura
+                nombre_asignatura = "DESARROLLO DE APLICACIONES WEB AVANZADAS",
+                asignatura = "DESARROLLO DE APLICACIONES WEB AVANZADAS",
+                codigo_asignatura = "SOF-401",
+                campo_formacion = "Praxis Profesional",
+                creditos = 3.5,
+                total_horas_asignatura = 160,
+                horas_contacto_docente = 64,
+                horas_practicas = 32,
+                horas_autonomas = 64,
+
+                // Docente
+                docente = new
+                {
+                    nombre = "Ing. Juan Carlos Pérez Gómez, Mgtr.",
+                    cedula = "1712345678",
+                    email = "jperez@istpet.edu.ec",
+                    titulo = "Magíster en Sistemas de Información",
+                    telefono = "0991234567"
+                },
+                docente_nombre = "Ing. Juan Carlos Pérez Gómez, Mgtr.",
+                docente_titulo = "Magíster en Sistemas de Información",
+                docente_email = "jperez@istpet.edu.ec",
+
+                // Objetivo y caracterización
+                objetivo_asignatura = "Desarrollar soluciones informáticas web escalables mediante arquitecturas modernas y servicios distribuidos para responder a requerimientos empresariales actuales.",
+                objetivo = "Desarrollar soluciones informáticas web escalables mediante arquitecturas modernas y servicios distribuidos para responder a requerimientos empresariales actuales.",
+                descripcion_asignatura = "La asignatura proporciona al estudiante las competencias técnicas para concebir, diseñar e implementar sistemas web robustos utilizando tecnologías cloud, APIs RESTful y motores concurrentes.",
+
+                // Prerrequisitos y Correquisitos
+                prerrequisitos = new[]
+                {
+                    new { asignatura = "Programación Orientada a Objetos", codigo = "SOF-201", observacion = "Aprobada" },
+                    new { asignatura = "Bases de Datos Relacionales", codigo = "SOF-301", observacion = "Aprobada" }
+                },
+
+                // Resultados de Aprendizaje
+                resultados_aprendizaje_carrera = "Diseña e implementa software de alta calidad aplicando metodologías ágiles, estándares internacionales y criterios de seguridad computacional.",
+                resultados_aprendizaje_asignatura = "Construye arquitecturas web modulares integrando bases de datos, mecanismos de autenticación y servicios concurrentes en tiempo real.",
+
+                // Unidades Temáticas
+                unidades = new[]
+                {
+                    new
+                    {
+                        numero = 1,
+                        titulo = "UNIDAD 1: ARQUITECTURAS WEB Y APIs RESTful",
+                        horas_totales = 40,
+                        horas_docencia = 16,
+                        horas_practicas = 8,
+                        horas_autonomas = 16,
+                        contenidos = "Fundamentos de HTTP/HTTPS, diseño de APIs REST, Clean Architecture, Entity Framework Core y middleware en ASP.NET Core.",
+                        mecanismos_evaluacion = "Talleres prácticos de endpoints y control de versiones."
+                    },
+                    new
+                    {
+                        numero = 2,
+                        titulo = "UNIDAD 2: CLIENTES MODERNOS Y REACT",
+                        horas_totales = 40,
+                        horas_docencia = 16,
+                        horas_practicas = 8,
+                        horas_autonomas = 16,
+                        contenidos = "Componentes funcionales, React Hooks, Vite, Tailwind CSS, TypeScript y consumo de servicios con Axios.",
+                        mecanismos_evaluacion = "Desarrollo de interfaces de usuario interactivas."
+                    },
+                    new
+                    {
+                        numero = 3,
+                        titulo = "UNIDAD 3: CONCURRENCIA, TIEMPO REAL Y SEGURIDAD",
+                        horas_totales = 40,
+                        horas_docencia = 16,
+                        horas_practicas = 8,
+                        horas_autonomas = 16,
+                        contenidos = "WebSockets con SignalR, CRDTs con Yjs para edición colaborativa, autenticación JWT y roles.",
+                        mecanismos_evaluacion = "Prácticas de laboratorio colaborativas en vivo."
+                    },
+                    new
+                    {
+                        numero = 4,
+                        titulo = "UNIDAD 4: DESPLIEGUE Y EVALUACIÓN FINAL",
+                        horas_totales = 40,
+                        horas_docencia = 16,
+                        horas_practicas = 8,
+                        horas_autonomas = 16,
+                        contenidos = "Dockerización de aplicaciones, pipeline CI/CD básico, pruebas automatizadas y entrega del proyecto integrador.",
+                        mecanismos_evaluacion = "Defensa del proyecto final integrador de cátedra."
+                    }
+                },
+
+                // Metodología y Recursos
+                estrategias_metodologicas = "Aprendizaje basado en proyectos (ABP), estudio de casos prácticos, sesiones de pair programming y laboratorios guiados en entornos de simulación.",
+                recursos_didacticos = "Laboratorio de computación con conexión a Internet de alta velocidad, entornos IDE (VS Code / Visual Studio), repositorios Git institucionales y plataforma virtual.",
+
+                // Actividades Prácticas
+                actividades_practicas = new[]
+                {
+                    new { numero_unidad = "1", nombre_practica = "Construcción de API REST modular con EF Core", descripcion = "Implementación de endpoints CRUD con DTOs y validación fluida en Docker." },
+                    new { numero_unidad = "2", nombre_practica = "Integración de Frontend React con Service Layer", descripcion = "Desarrollo de SPA con Vite y gestión de estado reactivo." },
+                    new { numero_unidad = "3", nombre_practica = "Canal de concurrencia SignalR + Yjs", descripcion = "Sincronización en tiempo real de campos compartidos entre múltiples usuarios." }
+                },
+
+                // Criterios de Evaluación
+                criterios_evaluacion = new
+                {
+                    nota_parcial_1 = "10.00 pts",
+                    nota_parcial_2 = "10.00 pts",
+                    nota_examen_final = "10.00 pts"
+                },
+
+                // Bibliografía
+                bibliografia_basica = "Freeman, A. (2022). Pro ASP.NET Core 6: Develop Cloud-Ready Web Applications. Apress.\nBanks, A., & Porcello, E. (2020). Learning React: Modern Patterns for Developing React Apps. O'Reilly Media.",
+                bibliografia_complementaria = "Martin, R. C. (2017). Clean Architecture: A Craftsman's Guide to Software Structure and Design. Prentice Hall.",
+
+                // Firmas Oficiales
+                coordinador_carrera = new { nombre = "Ing. Roberto M. Dávila, Mgtr.", cargo = "Coordinador de Carrera" },
+                coordinador_carrera_nombre = "Ing. Roberto M. Dávila, Mgtr.",
+                coordinador_academico = new { nombre = "Lic. Andrea V. Salazar, Mgtr.", cargo = "Coordinador Académico" },
+                coordinador_academico_nombre = "Lic. Andrea V. Salazar, Mgtr.",
+                vicerrector = new { nombre = "Msc. Carlos E. Morales, Ph.D.", cargo = "Vicerrector Académico" },
+                vicerrector_nombre = "Msc. Carlos E. Morales, Ph.D.",
+                fecha = DateTime.Now.ToString("dd/MM/yyyy")
+            };
+        }
     }
 
     public class UpdateTemplateRequest
@@ -316,5 +564,20 @@ namespace dosier_api.Controllers
     {
         [JsonPropertyName("codes")]
         public List<string> Codes { get; set; } = new();
+    }
+
+    public class RenderTemplatePreviewRequest
+    {
+        [JsonPropertyName("htmlContent")]
+        public string? HtmlContent { get; set; }
+
+        [JsonPropertyName("customCss")]
+        public string? CustomCss { get; set; }
+
+        [JsonPropertyName("themeConfigJson")]
+        public string? ThemeConfigJson { get; set; }
+
+        [JsonPropertyName("sampleData")]
+        public object? SampleData { get; set; }
     }
 }

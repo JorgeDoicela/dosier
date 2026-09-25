@@ -27,7 +27,7 @@ public class UserManagementDto
     // Retrocompatibilidad con vistas previas
     public decimal? HorasInvestigacion { get; set; }
     public decimal? HorasAsignadas { get; set; }
-    public bool TieneHorasInvestigacion => (HorasInvestigacion ?? 0) > 0 || TieneCargaDocente;
+    public bool TieneHorasInvestigacion => (HorasInvestigacion ?? 0) > 0;
     
     // Contexto Laboral e Institucional (Contratos / Cargos)
     public string? Departamento { get; set; }

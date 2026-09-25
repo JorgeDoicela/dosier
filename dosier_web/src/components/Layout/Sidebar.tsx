@@ -47,6 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         isNotificationsOpen,
         setIsNotificationsOpen,
         sidebarProjects,
+        sidebarMyProjects,
         sidebarProjectsLoading,
         showAllProjects,
         setShowAllProjects,
@@ -133,6 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         isParametrosOpen={isParametrosOpen}
                         setIsParametrosOpen={setIsParametrosOpen}
                         sidebarProjects={sidebarProjects}
+                        sidebarMyProjects={sidebarMyProjects}
                         sidebarProjectsLoading={sidebarProjectsLoading}
                         showAllProjects={showAllProjects}
                         setShowAllProjects={setShowAllProjects}

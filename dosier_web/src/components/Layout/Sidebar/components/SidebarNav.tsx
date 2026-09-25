@@ -11,7 +11,10 @@ import {
     TrendingUp, 
     ShieldCheck, 
     ClipboardList, 
-    Loader2 
+    Loader2,
+    FileCheck2,
+    HardDrive,
+    UserCheck
 } from 'lucide-react';
 import type { MenuItem, SidebarProject } from '../types';
 
@@ -67,6 +70,7 @@ interface SidebarNavProps {
     isParametrosOpen: boolean;
     setIsParametrosOpen: (v: boolean) => void;
     sidebarProjects: SidebarProject[];
+    sidebarMyProjects?: SidebarProject[];
     sidebarProjectsLoading: boolean;
     showAllProjects: boolean;
     setShowAllProjects: (v: boolean) => void;
@@ -92,6 +96,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     isParametrosOpen,
     setIsParametrosOpen,
     sidebarProjects,
+    sidebarMyProjects,
     sidebarProjectsLoading,
     showAllProjects,
     setShowAllProjects,
@@ -115,7 +120,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 }
             };
 
-            const relevantProjects = sidebarProjects;
+            const relevantProjects = item.path === '/documentacion/mis-proyectos' ? (sidebarMyProjects || []) : sidebarProjects;
             const displayLimit = 6;
             const shownProjects = showAllProjects ? relevantProjects : relevantProjects.slice(0, displayLimit);
             const hasMore = relevantProjects.length > displayLimit;
@@ -446,18 +451,18 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             );
         }
 
-        if (item.path === '/parametros-normativos') {
+        if (item.path === '/configuracion' || item.path === '/parametros-normativos') {
             const isMenuOpen = isParametrosOpen;
             return (
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
                         className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                            : 'bg-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50'
+                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
+                            : 'bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
                             }`}
                     >
                         <Link
-                            to="/parametros-normativos"
+                            to="/configuracion"
                             onClick={(e) => {
                                 if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
                                     setIsParametrosOpen(true);
@@ -467,12 +472,12 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                             className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
                             <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
+                                ? 'text-zinc-900 dark:text-zinc-100'
+                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                                 }`}>
                                 <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
                             </div>
-                            <span className={`text-[13px] tracking-tight truncate ${isActive ? 'font-semibold text-text-main' : 'font-medium'
+                            <span className={`text-[14px] tracking-tight truncate ${isActive ? 'font-semibold text-text-main' : 'font-medium'
                                 }`}>
                                 {item.name}
                             </span>
@@ -495,12 +500,16 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                     {isMenuOpen && (
                         <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
                             {[
-                                { name: 'Períodos Académicos', path: '/parametros-normativos?tab=periodos', icon: Calendar },
-                                { name: 'Hitos de Calendario', path: '/parametros-normativos?tab=calendario', icon: Calendar }
+                                { name: 'Períodos Académicos', path: '/configuracion?mainTab=parametros&tab=periodos', icon: Calendar, tabMatch: 'periodos' },
+                                { name: 'Hitos de Calendario', path: '/configuracion?mainTab=parametros&tab=calendario', icon: Calendar, tabMatch: 'calendario' },
+                                { name: 'Firmas por Plantilla', path: '/configuracion?mainTab=plantillas', icon: FileCheck2, tabMatch: 'plantillas' },
+                                { name: 'Almacenamiento', path: '/configuracion?mainTab=almacenamiento', icon: HardDrive, tabMatch: 'almacenamiento' },
+                                { name: 'Mi Perfil & Firma', path: '/configuracion', icon: UserCheck, tabMatch: 'perfil' }
                             ].map((subItem) => {
-                                const isSubActive = location.pathname === '/parametros-normativos' && (
-                                    (subItem.path.includes('tab=periodos') && (!location.search || location.search.includes('tab=periodos'))) ||
-                                    location.search.includes(subItem.path.split('?')[1])
+                                const isSubActive = (location.pathname === '/configuracion' || location.pathname === '/parametros-normativos') && (
+                                    subItem.tabMatch === 'perfil'
+                                        ? (!location.search || (!location.search.includes('tab=') && !location.search.includes('mainTab=')))
+                                        : (location.search.includes(subItem.tabMatch))
                                 );
 
                                 return (

@@ -286,13 +286,13 @@ namespace Dosier.Infrastructure.Common.Documents
                 var fileHtml = await _templateFileLoader.LoadAsync(template.Code);
                 var fileCss  = await _templateFileLoader.LoadCssAsync(template.Code);
 
-                var htmlToRender = !string.IsNullOrWhiteSpace(fileHtml) 
-                    ? fileHtml 
-                    : template.HtmlContent;
+                var htmlToRender = !string.IsNullOrWhiteSpace(request.CustomHtmlContent)
+                    ? request.CustomHtmlContent
+                    : (!string.IsNullOrWhiteSpace(fileHtml) ? fileHtml : template.HtmlContent);
 
-                var cssToUse = !string.IsNullOrWhiteSpace(fileCss)
-                    ? fileCss
-                    : template.CustomCss;
+                var cssToUse = !string.IsNullOrWhiteSpace(request.CustomCss)
+                    ? request.CustomCss
+                    : (!string.IsNullOrWhiteSpace(fileCss) ? fileCss : template.CustomCss);
 
 
                 // 4. Cargar imágenes desde disco e inyectar como variables extra en Handlebars
@@ -406,6 +406,40 @@ namespace Dosier.Infrastructure.Common.Documents
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "DOSIER DocumentEngine: Error al fusionar ThemeConfigJson para {Code}.", template.Code);
+                    }
+                }
+
+                // Aplicar Overrides en Caliente para Diseñador / Previsualización
+                if (!string.IsNullOrEmpty(request.CustomThemeConfigJson))
+                {
+                    try
+                    {
+                        var customTheme = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(request.CustomThemeConfigJson);
+                        if (customTheme != null)
+                        {
+                            foreach (var categoryKey in customTheme.Keys)
+                            {
+                                if (customTheme[categoryKey] is System.Text.Json.JsonElement catVal && catVal.ValueKind == System.Text.Json.JsonValueKind.Object)
+                                {
+                                    var categoryDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(catVal.GetRawText()) ?? new Dictionary<string, object>();
+                                    if (baseThemeDict.TryGetValue(categoryKey, out var existingCategory) && existingCategory is Dictionary<string, object> baseCatDict)
+                                    {
+                                        foreach (var kv in categoryDict)
+                                        {
+                                            baseCatDict[kv.Key] = kv.Value;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        baseThemeDict[categoryKey] = categoryDict;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "DOSIER DocumentEngine: Error al fusionar CustomThemeConfigJson de previsualización.");
                     }
                 }
 

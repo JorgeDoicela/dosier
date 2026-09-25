@@ -119,3 +119,25 @@ graph LR
 2. **Snapshot Inmutable (`template_config_snapshot_json`):** Al iniciarse la planificación de una asignatura, `DocumentInstanceService` clona la versión de la plantilla y guarda el snapshot exacto de los bloques en ese momento.
 3. **Protección Histórica (`Estado != Borrador`):** Los documentos revisados, aprobados o legalizados leen **exclusivamente su Snapshot**, conservando el formato visual con el que fueron oficializados.
 4. **Desacoplamiento de Contenido:** Los textos de redacción colaborativa se indexan por clave de campo (`field_key`), desacoplados de la presentación visual.
+
+---
+
+## 6. Previsualización en Caliente y Renderizado Oficial de Plantillas
+
+Para permitir la inspección en tiempo real sin alterar la base de datos ni los documentos en curso, el subsistema expone dos endpoints especializados en `DocumentTemplatesController`:
+
+### 6.1. Endpoint de Renderizado Oficial
+* **Ruta:** `GET /api/admin/templates/{code}/render-pdf`
+* **Parámetros de Consulta:**
+  * `isDraft` (booleano): Indica si se inyecta marca de agua de borrador institucional.
+  * `download` (booleano): Devuelve el archivo con cabecera `Content-Disposition: attachment` para descarga directa, o `inline` para renderizado en el visor embebido.
+* **Propósito:** Genera el PDF con los datos institucionales oficiales de muestra del ISTPET (asignatura de software, 160h, docentes y autoridades firmantes).
+
+### 6.2. Endpoint de Previsualización en Caliente
+* **Ruta:** `POST /api/admin/templates/{code}/render-pdf`
+* **Cuerpo de la Solicitud (`RenderTemplatePreviewRequest`):**
+  * `htmlContent`: Marcado HTML con los bloques del lienzo actualmente en edición.
+  * `customCss`: Estilos CSS personalizados de la plantilla.
+  * `themeConfigJson`: Configuración visual del tema fusionado (colores institucionales, márgenes A4, tipografía).
+* **Propósito:** Renderiza un PDF en vivo a partir de las modificaciones no publicadas del diseñador visual. Permite al administrador validar visualmente la maqueta antes de comprometer una nueva versión de fábrica.
+

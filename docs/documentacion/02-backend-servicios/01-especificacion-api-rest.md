@@ -249,7 +249,7 @@ Panel de control administrativo institucional (`DOSIER_ADMIN`).
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/users` | `DOSIER_ADMIN` | Gestión paginada de docentes, directivos y estudiantes con filtros de carga. |
+| `GET` | `/users` | `DOSIER_ADMIN` | Gestión paginada de docentes, directivos, administrativos y estudiantes con filtros de carga docente (`soloConHoras`), horas de investigación (`soloConInvestigacion`) y departamento. |
 | `GET` | `/roles` | `DOSIER_ADMIN` | Catálogo de roles curriculares institucionales. |
 | `GET` | `/departments` | `DOSIER_ADMIN` | Departamentos y áreas académicas. |
 | `GET` | `/metadata/{uuid}` | `DOSIER_ADMIN` | Metadatos de perfil extendido de un usuario. |

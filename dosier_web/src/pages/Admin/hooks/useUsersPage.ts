@@ -35,7 +35,9 @@ export const useUsersPage = () => {
     const openUuid = searchParams.get('open');
 
     // Subfiltros de segmentación
-    const [soloConHoras, setSoloConHoras] = useState(true);
+    const [filtroDocente, setFiltroDocente] = useState<'CON_DOCENCIA' | 'CON_INVESTIGACION' | 'TODOS'>('CON_DOCENCIA');
+    const soloConHoras = filtroDocente === 'CON_DOCENCIA';
+    const setSoloConHoras = (val: boolean) => setFiltroDocente(val ? 'CON_DOCENCIA' : 'TODOS');
     const [estadoEstudiante, setEstadoEstudiante] = useState<'ACTIVO' | 'GRADUADO' | 'TODOS'>('ACTIVO');
     const [origenEstudiante, setOrigenEstudiante] = useState<'INSTITUTO' | 'CONDUCCION' | 'TODOS'>('INSTITUTO');
     const [departamento, setDepartamento] = useState('');
@@ -78,28 +80,43 @@ export const useUsersPage = () => {
 
     const fetchUsers = async () => {
         setLoading(true);
+        setError('');
         try {
             const params = new URLSearchParams({
                 search,
                 type: userType,
                 page: String(page),
                 pageSize: String(pageSize),
-                soloConHoras: String(soloConHoras),
+                soloConHoras: String(filtroDocente === 'CON_DOCENCIA'),
+                soloConInvestigacion: String(filtroDocente === 'CON_INVESTIGACION'),
                 estadoEstudiante,
                 origenEstudiante,
                 departamento
             });
             const data = await usersService.getUsers(params);
-            const items: ManagedUser[] = data.items;
+            const items: ManagedUser[] = data.items || [];
             setUsers(items);
-            setTotalCount(data.total_count);
-            setTotalPages(data.total_pages);
-        } catch (error) {
-            console.error('Error fetching users:', error);
+            setTotalCount(data.total_count ?? 0);
+            setTotalPages(data.total_pages ?? 0);
+        } catch (err: any) {
+            console.error('Error fetching users:', err);
+            setError(err?.response?.data?.message || 'Error al consultar la lista de personal y usuarios.');
+            setUsers([]);
+            setTotalCount(0);
+            setTotalPages(0);
         } finally {
             setLoading(false);
         }
     };
+
+    // Disparo reactivo de búsqueda con debounce al modificar filtros
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchUsers();
+        }, search ? 280 : 0);
+
+        return () => clearTimeout(timer);
+    }, [search, userType, page, filtroDocente, departamento]);
 
     // Deep-link from CommandPalette
     useEffect(() => {
@@ -273,6 +290,8 @@ export const useUsersPage = () => {
         setUserType,
         soloConHoras,
         setSoloConHoras,
+        filtroDocente,
+        setFiltroDocente,
         estadoEstudiante,
         setEstadoEstudiante,
         origenEstudiante,

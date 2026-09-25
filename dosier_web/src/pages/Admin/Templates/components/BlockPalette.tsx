@@ -52,20 +52,7 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
 }) => {
     const categories: PaletteCategory[] = [
         {
-            title: 'Bloques Estructurales & Contenido',
-            items: [
-                { type: 'cover', icon: Image, label: 'Portada Institucional', desc: 'Portada del PDF con logos y título.', color: 'text-blue-500 bg-blue-500/5' },
-                { type: 'title', icon: Heading1, label: 'Título de Sección', desc: 'Encabezado de sección para el PDF.', color: 'text-blue-500 bg-blue-500/5' },
-                { type: 'rich_text', icon: AlignLeft, label: 'Párrafo Enriquecido', desc: 'Editor colaborativo en el Workspace.', color: 'text-pink-500 bg-pink-500/5' },
-                { type: 'advanced_table', icon: Grid, label: 'Tabla Avanzada', desc: 'Tabla con filas y columnas fijas.', color: 'text-blue-500 bg-blue-500/5' },
-                { type: 'multi_section_table', icon: LayoutTemplate, label: 'Tabla Multi-Sección', desc: 'Conjunto de sub-tablas fijas.', color: 'text-blue-500 bg-blue-500/5' },
-                { type: 'two_column', icon: Columns2, label: 'Dos Columnas', desc: 'Dos bloques de texto lado a lado.', color: 'text-blue-500 bg-blue-500/5' },
-                { type: 'page_break', icon: Minus, label: 'Salto de Página', desc: 'Forzar salto de página en el PDF.', color: 'text-zinc-400 bg-zinc-400/5' },
-                { type: 'gantt', icon: BarChart2, label: 'Diagrama de Gantt', desc: 'Pestaña de Cronograma en Workspace.', color: 'text-indigo-500 bg-indigo-500/5' }
-            ]
-        },
-        {
-            title: 'Bloques Curriculares (PEA Oficial ISTPET - Secciones a a k)',
+            title: 'Bloques Curriculares (PEA Oficial ISTPET - Secciones A a K)',
             items: [
                 { type: 'pea_general_section', icon: GraduationCap, label: 'a) Datos Generales', desc: 'Asignatura, código, carrera, modalidad y horas normadas.', color: 'text-violet-500 bg-violet-500/5' },
                 { type: 'pea_objective_section', icon: Target, label: 'b) Objetivo de Asignatura', desc: 'Meta formativa con verbo en infinitivo y propósito.', color: 'text-violet-500 bg-violet-500/5' },
@@ -78,6 +65,19 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
                 { type: 'pea_evaluation_section', icon: CheckSquare, label: 'i) Evaluación del Aprendizaje', desc: 'Matriz oficial de 3 componentes (10.00 pts c/u).', color: 'text-violet-500 bg-violet-500/5' },
                 { type: 'pea_bibliography_section', icon: Library, label: 'j) Bibliografía (APA 7ma)', desc: 'Bibliografía básica y de consulta institucional.', color: 'text-violet-500 bg-violet-500/5' },
                 { type: 'pea_signatures_section', icon: ShieldCheck, label: 'k) Firmas de Responsabilidad', desc: 'Circuito institucional de 4 firmas: Docente a Vicerrector.', color: 'text-violet-500 bg-violet-500/5' }
+            ]
+        },
+        {
+            title: 'Bloques Estructurales & Contenido',
+            items: [
+                { type: 'cover', icon: Image, label: 'Portada Institucional', desc: 'Portada del PDF con logos y título.', color: 'text-blue-500 bg-blue-500/5' },
+                { type: 'title', icon: Heading1, label: 'Título de Sección', desc: 'Encabezado de sección para el PDF.', color: 'text-blue-500 bg-blue-500/5' },
+                { type: 'rich_text', icon: AlignLeft, label: 'Párrafo Enriquecido', desc: 'Editor colaborativo en el Workspace.', color: 'text-pink-500 bg-pink-500/5' },
+                { type: 'advanced_table', icon: Grid, label: 'Tabla Avanzada', desc: 'Tabla con filas y columnas fijas.', color: 'text-blue-500 bg-blue-500/5' },
+                { type: 'multi_section_table', icon: LayoutTemplate, label: 'Tabla Multi-Sección', desc: 'Conjunto de sub-tablas fijas.', color: 'text-blue-500 bg-blue-500/5' },
+                { type: 'two_column', icon: Columns2, label: 'Dos Columnas', desc: 'Dos bloques de texto lado a lado.', color: 'text-blue-500 bg-blue-500/5' },
+                { type: 'page_break', icon: Minus, label: 'Salto de Página', desc: 'Forzar salto de página en el PDF.', color: 'text-zinc-400 bg-zinc-400/5' },
+                { type: 'gantt', icon: BarChart2, label: 'Diagrama de Gantt', desc: 'Pestaña de Cronograma en Workspace.', color: 'text-indigo-500 bg-indigo-500/5' }
             ]
         },
         {

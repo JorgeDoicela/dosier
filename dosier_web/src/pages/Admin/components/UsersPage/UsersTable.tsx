@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon, Settings2, ShieldCheck, Activity } from 'lucide-react';
+import { User as UserIcon, Settings2 } from 'lucide-react';
 import type { ManagedUser, Role } from '../../hooks/useUsersPage';
 import { formatCarrera, formatNombre, highlightText } from './utils';
 
@@ -14,13 +14,11 @@ interface UsersTableProps {
     totalCount: number;
     totalPages: number;
     loading: boolean;
-    updating: string | null;
     detailUser: ManagedUser | null;
     setDetailUser: (user: ManagedUser | null) => void;
     lastActiveUserId: string | null;
     setLastActiveUserId: (id: string | null) => void;
     setSelectedUser: (user: ManagedUser | null) => void;
-    handleRoleToggle: (userId: string, userName: string, roleCode: string, roleName: string, hasRole: boolean) => void;
     openedAtRef: React.MutableRefObject<number>;
 }
 
@@ -35,13 +33,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     totalCount,
     totalPages,
     loading,
-    updating,
     detailUser,
     setDetailUser,
     lastActiveUserId,
     setLastActiveUserId,
     setSelectedUser,
-    handleRoleToggle,
     openedAtRef
 }) => {
     return (
@@ -107,9 +103,15 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                         <div className="space-y-1">
                                             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
                                                 <span className="text-text-dim flex items-center gap-1.5" title="Horas de Docencia / Clases en Distributivo (SIGAFI)">
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${((u.horas_docente ?? u.horas_clase ?? u.horas_investigacion) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
-                                                    Docencia: <span className="font-semibold text-text-main">{u.horas_docente ?? u.horas_clase ?? u.horas_investigacion ?? 0}h/sem</span>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${((u.horas_docente ?? u.horas_clase) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
+                                                    Docencia: <span className="font-semibold text-text-main">{u.horas_docente ?? u.horas_clase ?? 0}h/sem</span>
                                                 </span>
+                                                {(u.horas_investigacion ?? 0) > 0 && (
+                                                    <span className="text-text-dim flex items-center gap-1.5" title="Horas asignadas a Proyectos de Investigación (SIGAFI)">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                                                        Investigación: <span className="font-semibold text-violet-400">{u.horas_investigacion}h/sem</span>
+                                                    </span>
+                                                )}
                                                 <span className="text-text-dim flex items-center gap-1.5" title="Materias / Paralelos Activos asignados en el Período">
                                                     <span className={`w-1.5 h-1.5 rounded-full ${((u.materias_asignadas ?? u.catedras_asignadas) || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
                                                     Materias: <span className="font-semibold text-text-main">{u.materias_asignadas ?? u.catedras_asignadas ?? 0}</span>

@@ -27,6 +27,7 @@ public class AdminService : IAdminService
         int pageSize = 10, 
         string? carrera = null, 
         bool soloConHoras = false, 
+        bool soloConInvestigacion = false,
         string estadoEstudiante = "ACTIVO",
         string origenEstudiante = "INSTITUTO",
         string? departamento = null)
@@ -37,14 +38,14 @@ public class AdminService : IAdminService
 
         // Obtener periodo académico (Lógica Resiliente de Descubrimiento con AsNoTracking y Proyección Directa)
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var periodId = await _context.Periodos.AsNoTracking()
-            .Where(p => p.EsInstituto == 1)
+        var periodos = await _context.Periodos.AsNoTracking().ToListAsync();
+        var periodId = periodos
             .OrderByDescending(p => p.Periodoactivoinstituto == 1) // 1. Marcado explícitamente para el sistema
             .ThenByDescending(p => p.Activo == true)             // 2. Marcado como activo genérico
             .ThenByDescending(p => p.FechaInicial <= today && p.FechaFinal >= today) // 3. El que cubre la fecha de hoy
             .ThenByDescending(p => p.FechaInicial)               // 4. El más reciente cronológicamente
             .Select(p => p.IdPeriodo)
-            .FirstOrDefaultAsync();
+            .FirstOrDefault();
 
         var docenciaSubcats = await _context.SubcategoriasActividades.AsNoTracking()
             .Where(s => s.Subcategoria == "HORAS CLASES" || s.IdCategoria == 1 || s.EsDocencia == 1)
@@ -286,8 +287,16 @@ public class AdminService : IAdminService
                  || _context.ProfesoresActividades.Any(pa => pa.IdProfesor == p.IdProfesor)
                 ));
 
-            // Filtrar por docentes que tengan materias asignadas o carga docente en el periodo actual SOLO si soloConHoras es true
-            if (soloConHoras && !string.IsNullOrEmpty(periodId))
+            // Filtrar por docentes que tengan investigación o carga docente en el periodo actual
+            if (soloConInvestigacion)
+            {
+                query = query.Where(p => _context.ProfesoresActividades.Any(pa =>
+                    pa.IdProfesor == p.IdProfesor &&
+                    pa.IdSubcategoria == 7 &&
+                    (string.IsNullOrEmpty(periodId) || pa.IdPeriodo == periodId) &&
+                    pa.HorasSemana > 0));
+            }
+            else if (soloConHoras && !string.IsNullOrEmpty(periodId))
             {
                 query = query.Where(p =>
                     _context.AsignacionesProfesores.Any(ap => ap.IdProfesor == p.IdProfesor && ap.IdPeriodo == periodId && ap.Activo == 1) ||
@@ -406,6 +415,7 @@ public class AdminService : IAdminService
                 var horasClase = profActividades.Where(h => h.IdSubcategoria == 1).Sum(h => h.HorasSemana);
                 var horasDocenciaTotal = profActividades.Where(h => docenciaSubcats.Contains(h.IdSubcategoria)).Sum(h => h.HorasSemana);
                 if (horasDocenciaTotal == 0 && horasClase > 0) horasDocenciaTotal = horasClase;
+                var horasInvestigacion = profActividades.Where(h => h.IdSubcategoria == 7).Sum(h => h.HorasSemana);
                 var numMaterias = activeAssignments.Count(a => a.IdProfesor == pId);
 
                 var roleInfo = userRoles.Where(ur => ur.IdSigafi == pId).ToList();
@@ -437,8 +447,8 @@ public class AdminService : IAdminService
                     HorasClase = horasClase > 0 ? horasClase : (decimal?)null,
                     MateriasAsignadas = numMaterias,
                     CatedrasAsignadas = numMaterias,
-                    HorasInvestigacion = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : 0),
-                    HorasAsignadas = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : 0),
+                    HorasInvestigacion = horasInvestigacion > 0 ? horasInvestigacion : (decimal?)null,
+                    HorasAsignadas = (horasDocenciaTotal + horasInvestigacion) > 0 ? (horasDocenciaTotal + horasInvestigacion) : null,
                     Departamento = contract?.Departamento,
                     CargoInstituto = contract?.CargoInstituto,
                     TipoContrato = contract?.TipoContrato

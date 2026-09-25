@@ -17,10 +17,8 @@ const UsersPage = () => {
         setUserType,
         soloConHoras,
         setSoloConHoras,
-        estadoEstudiante,
-        setEstadoEstudiante,
-        origenEstudiante,
-        setOrigenEstudiante,
+        filtroDocente,
+        setFiltroDocente,
         departamento,
         setDepartamento,
         availableDepartments,
@@ -30,15 +28,12 @@ const UsersPage = () => {
         totalCount,
         totalPages,
         loading,
-        updating,
         selectedUser,
         setSelectedUser,
         detailUser,
         setDetailUser,
         lastActiveUserId,
         setLastActiveUserId,
-        error,
-        setError,
         pendingUserDraft,
         setPendingUserDraft,
         confirmDialog,
@@ -48,8 +43,7 @@ const UsersPage = () => {
         fetchUsers,
         handleCloseDetail,
         handleRestoreUserDraft,
-        handleDiscardUserDraft,
-        handleRoleToggle
+        handleDiscardUserDraft
     } = useUsersPage();
 
     const openedAtRef = React.useRef<number>(0);
@@ -69,10 +63,8 @@ const UsersPage = () => {
                     setUserType={setUserType}
                     soloConHoras={soloConHoras}
                     setSoloConHoras={setSoloConHoras}
-                    estadoEstudiante={estadoEstudiante}
-                    setEstadoEstudiante={setEstadoEstudiante}
-                    origenEstudiante={origenEstudiante}
-                    setOrigenEstudiante={setOrigenEstudiante}
+                    filtroDocente={filtroDocente}
+                    setFiltroDocente={setFiltroDocente}
                     departamento={departamento}
                     setDepartamento={setDepartamento}
                     availableDepartments={availableDepartments}
@@ -80,7 +72,6 @@ const UsersPage = () => {
                     setSearch={setSearch}
                     loading={loading}
                     searchInputRef={searchInputRef}
-                    setError={setError}
                 />
 
                 <DraftBanners
@@ -100,13 +91,11 @@ const UsersPage = () => {
                     totalCount={totalCount}
                     totalPages={totalPages}
                     loading={loading}
-                    updating={updating}
                     detailUser={detailUser}
                     setDetailUser={setDetailUser}
                     lastActiveUserId={lastActiveUserId}
                     setLastActiveUserId={setLastActiveUserId}
                     setSelectedUser={setSelectedUser}
-                    handleRoleToggle={handleRoleToggle}
                     openedAtRef={openedAtRef}
                 />
             </div>

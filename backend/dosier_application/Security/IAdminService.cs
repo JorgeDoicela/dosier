@@ -11,6 +11,7 @@ public interface IAdminService
         int pageSize = 10, 
         string? carrera = null, 
         bool soloConHoras = false, 
+        bool soloConInvestigacion = false,
         string estadoEstudiante = "ACTIVO",
         string origenEstudiante = "INSTITUTO",
         string? departamento = null);

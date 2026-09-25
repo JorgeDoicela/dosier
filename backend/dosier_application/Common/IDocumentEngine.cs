@@ -46,6 +46,26 @@ namespace Dosier.Application.Common.Documents
         public List<byte[]>? AttachmentsToMerge { get; init; }
 
         /// <summary>
+        /// Si se envía HTML personalizado en caliente (modo diseñador/preview), tiene máxima prioridad de renderizado.
+        /// </summary>
+        public string? CustomHtmlContent { get; init; }
+
+        /// <summary>
+        /// CSS personalizado opcional para la previsualización en caliente.
+        /// </summary>
+        public string? CustomCss { get; init; }
+
+        /// <summary>
+        /// Configuración JSON de colores, márgenes y tipografía institucional para la previsualización.
+        /// </summary>
+        public string? CustomThemeConfigJson { get; init; }
+
+        /// <summary>
+        /// Si true, el renderizado se ejecuta en modo previsualización interactiva.
+        /// </summary>
+        public bool IsPreview { get; init; } = false;
+
+        /// <summary>
         /// Identidad del usuario que solicita el documento (para auditoría LOPDP).
         /// </summary>
         public string? RequestedBy { get; init; }

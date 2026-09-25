@@ -37,6 +37,7 @@ public class AdminController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string? carrera = null,
         [FromQuery] bool soloConHoras = false,
+        [FromQuery] bool soloConInvestigacion = false,
         [FromQuery] string estadoEstudiante = "ACTIVO",
         [FromQuery] string origenEstudiante = "INSTITUTO",
         [FromQuery] string? departamento = null)
@@ -48,6 +49,7 @@ public class AdminController : ControllerBase
             pageSize, 
             carrera, 
             soloConHoras, 
+            soloConInvestigacion,
             estadoEstudiante, 
             origenEstudiante,
             departamento);
