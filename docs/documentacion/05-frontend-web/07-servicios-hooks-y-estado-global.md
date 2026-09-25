@@ -111,7 +111,6 @@ Conecta con `/api/Admin`:
 * `getRoles()`: Catálogo oficial de roles del sistema.
 * `getDepartments()`: Listado de departamentos institucionales.
 * `assignRole(dto)` / `revokeRole(dto)`: Asignación y revocación segura de roles curriculares.
-* `createExternalUser(dto)`: Registro de usuarios externos o pares evaluadores.
 * `getUserMetadata(uuid)` / `updateUserMetadata(uuid, meta)`: Gestión de metadatos de usuario.
 
 ### 2.14. `auditService.ts`: Auditoría Forense y Trazabilidad

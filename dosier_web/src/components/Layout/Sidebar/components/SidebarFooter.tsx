@@ -78,7 +78,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = ({
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
                     <div className="absolute bottom-14 left-3 right-3 bg-bg-deep border border-border-thin rounded-lg shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in duration-200 slide-in-from-bottom-2">
-                        {availableRoles && availableRoles.length > 1 && (
+                        {isAdmin && availableRoles && availableRoles.length > 1 && (
                             <div className="px-2 py-1.5 border-b border-border-thin mb-1">
                                 <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider block mb-1.5">
                                     Rol Institucional Activo

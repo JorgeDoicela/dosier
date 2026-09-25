@@ -135,8 +135,6 @@ export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNod
 
     if (isVicerrector && allowedRoles.includes('DOSIER_VICERRECTOR')) return <>{children}</>;
 
-    if (isRevisor && (allowedRoles.includes('DOSIER_REVISOR') || allowedRoles.includes('DOSIER_REVISOR_EXTERNO'))) return <>{children}</>;
-
     if (isEstudiante && allowedRoles.includes('DOSIER_ESTUDIANTE')) return <>{children}</>;
 
     return <Navigate to="/dashboard" replace />;

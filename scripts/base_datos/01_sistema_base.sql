@@ -135,7 +135,7 @@ CREATE TABLE doc_tokens_acceso (
     idPea           INT          NULL         COMMENT 'Vínculo opcional al PEA para enlace público/firma',
     token           VARCHAR(255) NOT NULL UNIQUE,
     idReferencia    INT          NOT NULL,
-    tipoReferencia  VARCHAR(50)  NOT NULL DEFAULT 'Externo',
+    tipoReferencia  VARCHAR(50)  NOT NULL DEFAULT 'Docente',
     scopes          VARCHAR(255),
     maxUsos         INT          DEFAULT 1,
     usosActuales    INT          DEFAULT 0,

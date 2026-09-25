@@ -27,7 +27,6 @@ export const ACTION_LABELS: Record<string, string> = {
     ACTUALIZAR_METADATA: 'Actualizar datos del documento',
     ACTUALIZAR_PROYECTO: 'Actualizar proyecto',
     ACTUALIZAR_EQUIPO_PROYECTO: 'Actualizar equipo del proyecto',
-    REGISTRO_EXTERNO: 'Registro externo',
     ASIGNAR_ROL: 'Asignar rol',
     REVOCAR_ROL: 'Revocar rol',
     CREAR_GRUPO: 'Crear grupo',

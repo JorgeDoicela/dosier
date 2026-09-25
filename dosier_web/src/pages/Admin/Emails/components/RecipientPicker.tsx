@@ -14,22 +14,21 @@ export interface SelectedPerson {
 export const USER_TYPES = [
     { value: 'DOCENTE', label: 'Docente' },
     { value: 'ADMINISTRATIVO', label: 'Personal Administrativo / Departamentos' },
-    { value: 'ESTUDIANTE', label: 'Estudiante' },
-    { value: 'EXTERNO', label: 'Árbitro / Colaborador Externo' }
+    { value: 'ESTUDIANTE', label: 'Estudiante' }
 ];
 
 export const ROLE_OPTIONS = [
-    { value: 'DOSIER_DOCENTE', label: 'Docentes Investigadores' },
-    { value: 'DOSIER_ADMIN', label: 'Administradores DOSIER' },
-    { value: 'DOSIER_REVISOR_EXTERNO', label: 'Árbitros Externos' },
-    { value: 'DOSIER_ESTUDIANTE', label: 'Semilleristas (Estudiantes)' }
+    { value: 'DOSIER_DOCENTE', label: 'Docentes' },
+    { value: 'DOSIER_COORD_CARRERA', label: 'Coordinadores de Carrera' },
+    { value: 'DOSIER_COORD_ACAD', label: 'Coordinación Académica' },
+    { value: 'DOSIER_VICERRECTOR', label: 'Vicerrectorado Académico' },
+    { value: 'DOSIER_ADMIN', label: 'Administradores DOSIER' }
 ];
 
 export const TYPE_BADGE: Record<string, string> = {
     DOCENTE: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     ADMINISTRATIVO: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-    ESTUDIANTE: 'bg-green-500/10 text-green-600 dark:text-green-400',
-    EXTERNO: 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
+    ESTUDIANTE: 'bg-green-500/10 text-green-600 dark:text-green-400'
 };
 
 export interface RecipientPickerProps {
@@ -89,7 +88,7 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
         setSearching(true);
         setSearchError(null);
         try {
-            const typesToFetch = type ? [type] : (['DOCENTE', 'ADMINISTRATIVO', 'ESTUDIANTE', 'EXTERNO'] as const);
+            const typesToFetch = type ? [type] : (['DOCENTE', 'ADMINISTRATIVO', 'ESTUDIANTE'] as const);
             const carreraLabel = carreraId
                 ? carreras.find(c => c.idCarrera.toString() === carreraId)?.carrera1
                 : '';

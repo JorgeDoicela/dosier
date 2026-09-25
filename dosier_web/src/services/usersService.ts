@@ -42,13 +42,6 @@ export interface UserRoleActionDto {
     user_type: string;
 }
 
-export interface ExternalUserCreateDto {
-    cedula: string;
-    nombres: string;
-    apellidos: string;
-    email: string;
-    institucion: string;
-}
 
 export interface UsersQueryResponseDto {
     items: ManagedUserDto[];
@@ -109,11 +102,6 @@ export const usersService = {
     revokeRole: (dto: UserRoleActionDto): Promise<{ message: string }> =>
         api.post('/Admin/roles/revoke', dto).then(r => r.data),
 
-    /**
-     * Registra un usuario externo (revisor o par evaluador).
-     */
-    createExternalUser: (dto: ExternalUserCreateDto): Promise<{ message: string }> =>
-        api.post('/Admin/external', dto).then(r => r.data),
 
     /**
      * Obtiene los metadatos editables de perfil de una cuenta de usuario.

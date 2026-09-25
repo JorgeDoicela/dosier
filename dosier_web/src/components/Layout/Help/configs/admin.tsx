@@ -7,28 +7,28 @@ export const USUARIOS_CONFIG: HelpConfig = {
     icon: <Shield size={24} className="text-brand" />,
     title: "Consola de Gestión de Usuarios y Roles",
     summary: "Control administrativo de identidades, perfiles académicos y asignación de capacidades del claustro.",
-    description: "Sección para gestionar accesos y permisos de usuarios en DOSIER. Permite asignar roles, habilitar firmas digitales y registrar evaluadores y revisores externos para procesos de evaluación anónima.",
+    description: "Sección para gestionar accesos y permisos de usuarios en DOSIER. Permite asignar roles curriculares oficiales, habilitar firmas digitales PKCS#12 y consultar el personal docente y administrativo institucional sincronizado con SIGAFI.",
     steps: [
         {
             title: "Asignación dinámica de roles y capacidades",
-            description: "Administra los accesos activando o desactivando permisos específicos directamente en la lista de usuarios. Puedes otorgar múltiples roles a un docente (por ejemplo: Docente e Investigador o Revisor Externo) lo que modificará de inmediato las vistas, opciones del menú lateral y facultades operativas del usuario al iniciar sesión.",
+            description: "Administra los accesos activando o desactivando permisos específicos directamente en la lista de usuarios. Puedes otorgar roles institucionales (por ejemplo: Docente, Coordinador de Carrera, Coordinador Académico o Vicerrector), lo que adaptará de inmediato las vistas y facultades operativas del usuario.",
             highlight: 'content-bottom'
         },
         {
-            title: "Registro formal de evaluadores externos",
-            description: "Usa el botón de acción rápida 'Nuevo Externo' para registrar profesionales evaluadores de otras universidades del país o del extranjero. Es obligatorio detallar su cédula o pasaporte, afiliación institucional, correo electrónico formal, especialidad UNESCO y su enlace de perfil ORCID para la validación automática de producción científica.",
+            title: "Gestión del Claustro y Personal Administrativo",
+            description: "Filtra la lista de usuarios entre Docentes y Administrativos para auditar la vinculación institucional registrada en SIGAFI, verificando departamentos académicos, asignación horaria y estado de acreditación de credenciales.",
             highlight: 'content-top'
         },
         {
             title: "Auditoría de firmas y perfiles digitales académicos",
-            description: "Haz clic en cualquier usuario de la tabla para abrir el panel lateral de detalles de metadatos. Aquí se almacena la información complementaria de la hoja de vida académica, el estado de validación de su firma electrónica (firma en archivo o token), su historial de accesos recientes e IP de conexión para fines de control de seguridad.",
+            description: "Haz clic en cualquier usuario de la tabla para abrir el panel lateral de detalles de metadatos. Aquí se almacena la información complementaria de la hoja de vida académica, el estado de validación de su firma electrónica (PKCS#12), su historial de accesos recientes e IP de conexión para fines de control de seguridad.",
             highlight: 'content-bottom'
         }
     ],
-    compliance: "Respalda la transparencia en la conformación del tribunal evaluador externo exigido por el CACES, asegurando el debido proceso y la idoneidad técnica en las evaluaciones de proyectos bajo normas nacionales e internacionales.",
+    compliance: "Respalda la trazabilidad y rigor institucional exigidos por el CACES para la firma digital de instrumentos curriculares (PEA), asegurando el debido proceso y la idoneidad técnica en las responsabilidades académicas.",
     tips: [
-        "Al crear un nuevo evaluador externo, el sistema le enviará de manera automática un correo con sus credenciales de acceso seguras y un enlace temporal de activación de firma electrónica.",
-        "Utiliza el filtro de roles para listar únicamente a los usuarios con permisos de revisión académica externa para agilizar las designaciones de tribunales."
+        "Las cuentas se sincronizan directamente con el sistema académico SIGAFI; las credenciales iniciales coinciden con el usuario institucional.",
+        "Utiliza el filtro de roles para listar únicamente a los usuarios con permisos de coordinación o vicerrectorado para agilizar revisiones curriculares."
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>
@@ -39,15 +39,12 @@ export const USUARIOS_CONFIG: HelpConfig = {
                         <span className="text-[4px] text-text-dim uppercase font-mono tracking-wider font-semibold">Control de Accesos</span>
                         <span className="text-[7px] text-text-main font-bold">Gestión de Usuarios</span>
                     </div>
-                    <div className="px-1.5 py-0.5 bg-brand text-white rounded text-[5px] font-bold">
-                        + Nuevo Externo
-                    </div>
                 </div>
                 {/* Segmented Tab Switcher */}
                 <div className="flex gap-1.5 border-b border-border-thin pb-0.5 text-[5px] font-medium">
                     <span className="text-brand font-semibold border-b border-brand pb-0.5">Todos</span>
                     <span className="text-text-dim pb-0.5">Docentes</span>
-                    <span className="text-text-dim pb-0.5">Externos</span>
+                    <span className="text-text-dim pb-0.5">Administrativos</span>
                     <div className="ml-auto flex items-center gap-1">
                         <span className="text-[4px] text-text-dim font-mono">Solo Activos</span>
                         <div className="w-4 h-2.5 rounded-full bg-brand p-[1px] flex justify-end items-center"><div className="w-1.8 h-1.8 rounded-full bg-white"/></div>
@@ -61,7 +58,7 @@ export const USUARIOS_CONFIG: HelpConfig = {
                     <thead>
                         <tr className="border-b border-border-thin/60 text-[3.5px] font-mono text-text-dim uppercase tracking-wider">
                             <th className="pb-1 font-bold">Usuario</th>
-                            <th className="pb-1 font-bold">Filiación / ORCID</th>
+                            <th className="pb-1 font-bold">Filiación / Departamento</th>
                             <th className="pb-1 font-bold">Roles</th>
                             <th className="pb-1 font-bold">Firma</th>
                             <th className="pb-1 font-bold text-right">Estado</th>
@@ -70,22 +67,22 @@ export const USUARIOS_CONFIG: HelpConfig = {
                     <tbody className="divide-y divide-border-thin/30">
                         <tr className="hover:bg-surface/30">
                             <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Dr. Carlos Mendoza</span>
-                                <span className="text-[3.5px] font-mono text-text-dim">c.mendoza@dosier.edu</span>
+                                <span className="text-text-main font-semibold block leading-tight">Ing. Carlos Mendoza</span>
+                                <span className="text-[3.5px] font-mono text-text-dim">c.mendoza@istpet.edu.ec</span>
                             </td>
                             <td className="py-1">
                                 <span className="text-text-main block leading-tight">Dpto. Sistemas</span>
-                                <span className="text-[3.5px] font-mono text-brand font-semibold">0000-0002-3489-1209</span>
+                                <span className="text-[3.5px] font-mono text-brand font-semibold">Desarrollo de Software</span>
                             </td>
                             <td className="py-1">
                                 <div className="flex flex-wrap gap-0.5">
                                     <span className="px-0.5 py-0.2 bg-brand/10 border border-brand/20 text-brand rounded-[2px] text-[3.5px]">Docente</span>
-                                    <span className="px-0.5 py-0.2 bg-success/10 border border-success/20 text-success rounded-[2px] text-[3.5px]">Investigador</span>
+                                    <span className="px-0.5 py-0.2 bg-success/10 border border-success/20 text-success rounded-[2px] text-[3.5px]">Coord. Carrera</span>
                                 </div>
                             </td>
                             <td className="py-1">
                                 <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded-[2px] text-[3.5px] font-semibold">
-                                    ✓ Archivo
+                                    ✓ PKCS#12
                                 </span>
                             </td>
                             <td className="py-1 text-right">
@@ -94,21 +91,21 @@ export const USUARIOS_CONFIG: HelpConfig = {
                         </tr>
                         <tr className="hover:bg-surface/30">
                             <td className="py-1">
-                                <span className="text-text-main font-semibold block leading-tight">Dra. Elena Rostova</span>
-                                <span className="text-[3.5px] font-mono text-text-dim">e.rostova@univ-paris.fr</span>
+                                <span className="text-text-main font-semibold block leading-tight">Lic. Elena Morales</span>
+                                <span className="text-[3.5px] font-mono text-text-dim">e.morales@istpet.edu.ec</span>
                             </td>
                             <td className="py-1">
-                                <span className="text-text-main block leading-tight">Univ. de Paris (Ext)</span>
-                                <span className="text-[3.5px] font-mono text-brand font-semibold">0000-0001-8890-4122</span>
+                                <span className="text-text-main block leading-tight">Coordinación Académica</span>
+                                <span className="text-[3.5px] font-mono text-brand font-semibold">Gestión Curricular</span>
                             </td>
                             <td className="py-1">
                                 <div className="flex flex-wrap gap-0.5">
-                                    <span className="px-0.5 py-0.2 bg-warning/10 border border-warning/20 text-warning rounded-[2px] text-[3.5px]">Revisor Ext.</span>
+                                    <span className="px-0.5 py-0.2 bg-warning/10 border border-warning/20 text-warning rounded-[2px] text-[3.5px]">Coord. Académica</span>
                                 </div>
                             </td>
                             <td className="py-1">
-                                <span className="px-1 py-0.2 bg-text-dim/15 border border-border-thin text-text-dim rounded-[2px] text-[3.5px] font-semibold">
-                                    No Def.
+                                <span className="px-1 py-0.2 bg-success/15 border border-success/35 text-success rounded-[2px] text-[3.5px] font-semibold">
+                                    ✓ PKCS#12
                                 </span>
                             </td>
                             <td className="py-1 text-right">

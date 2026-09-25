@@ -15,7 +15,7 @@ public class AuthResponse
     public string Role { get; set; } = null!;
     public List<string> Roles { get; set; } = new();
     public List<string> RoleCodes { get; set; } = new();
-    public string TipoUsuario { get; set; } = null!; // profesor, alumno, externo, admin
+    public string TipoUsuario { get; set; } = null!; // profesor, alumno, admin
     public List<string> Permissions { get; set; } = new();
     public string Token { get; set; } = null!;
     public string? RefreshToken { get; set; }
@@ -92,7 +92,6 @@ public class PasswordRecoveryValidationResult
     public string? NombreUsuario { get; set; }
     /// <summary>Cuando la contraseña en SIGAFI está hasheada (BCrypt) y no puede recuperarse.</summary>
     public bool EsHashInaccesible { get; set; }
-    public bool EsRevisorExterno { get; set; }
 }
 
 public class ChangePasswordRequestDto

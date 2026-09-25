@@ -276,7 +276,7 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
             {session.isBlindMode && (
                 <div className="px-5 py-2.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2 text-amber-500 text-[10px] font-semibold tracking-wide uppercase select-none">
                     <EyeOff size={13} className="shrink-0 animate-pulse text-amber-400" />
-                    <span>Evaluacion anonima activa: las identidades del autor y del revisor estan ocultas segun normativa CACES.</span>
+                    <span>Modo de revisión curricular activo: edición controlada según lineamientos institucionales.</span>
                 </div>
             )}
 

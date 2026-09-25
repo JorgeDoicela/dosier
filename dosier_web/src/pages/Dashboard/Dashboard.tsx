@@ -37,10 +37,26 @@ const Dashboard: React.FC = () => {
         return <FullscreenLoader message="Cargando panel de control y circuito curricular..." />;
     }
 
+    // Para usuarios regulares (Docentes, Coordinadores, Vicerrector): vista limpia y directa de su dashboard institucional
+    if (!isAdmin) {
+        return (
+            <main className="flex-1 bg-bg-deep transition-colors duration-200">
+                <div className="max-w-[1440px] mx-auto p-4 md:p-8 space-y-6">
+                    {isVicerrector && <VicerrectorDashboard />}
+                    {isCoordAcad && !isVicerrector && <CoordAcadDashboard />}
+                    {isCoordCarrera && !isCoordAcad && !isVicerrector && <CoordCarreraDashboard />}
+                    {isDocente && !isCoordCarrera && !isCoordAcad && !isVicerrector && <DocentePeaDashboard />}
+                    {!isVicerrector && !isCoordAcad && !isCoordCarrera && !isDocente && <DocentePeaDashboard />}
+                </div>
+            </main>
+        );
+    }
+
+    // Para el Superadministrador / Desarrollador: consola con selector de flujo de roles para auditar y verificar el sistema
     return (
         <main className="flex-1 bg-bg-deep transition-colors duration-200">
             <div className="max-w-[1440px] mx-auto p-4 md:p-8 space-y-6">
-                {/* Selector Segmentado de Roles (Vercel Geist) */}
+                {/* Selector Segmentado de Roles Exclusivo para Superadministrador */}
                 <RoleFlowBanner
                     rolActivo={rolSimulado}
                     onCambiarRol={setRolSimulado}
@@ -48,7 +64,7 @@ const Dashboard: React.FC = () => {
                     rolReal={roleDisplayName}
                 />
 
-                {/* Vistas Limpias de Gestión por Rol */}
+                {/* Vistas Limpias de Gestión por Rol Simulado */}
                 <div>
                     {rolSimulado === 'COORD_ACAD' && <CoordAcadDashboard />}
                     {rolSimulado === 'COORD_CARRERA' && <CoordCarreraDashboard />}

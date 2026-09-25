@@ -193,7 +193,6 @@ function useRoleFilter() {
             if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
             if (checkRoles.includes('DOSIER_VICERRECTOR') && isVicerrector) return true;
             if (checkRoles.includes('DOSIER_ESTUDIANTE') && isEstudiante) return true;
-            if (checkRoles.includes('DOSIER_REVISOR_EXTERNO') && isRevisor) return true;
             return item.roles.some(r => roles.includes(r.toUpperCase()));
         }
         return true;
@@ -453,9 +452,9 @@ export const CommandPalette = () => {
         try {
             const promises: Promise<void>[] = [];
 
-            // Usuarios (admin con permiso) — busca docentes, estudiantes y externos
+            // Usuarios (admin con permiso) — busca docentes y administrativos
             if (isAdmin || hasPermission('USUARIOS', 'VER')) {
-                const userTypes = ['DOCENTE', 'ESTUDIANTE', 'EXTERNO'];
+                const userTypes = ['DOCENTE', 'ADMINISTRATIVO'];
                 userTypes.forEach(type => {
                     promises.push(
                         usersService.getUsers(`search=${encodeURIComponent(queryClean)}&type=${type}&page=1&pageSize=3`).then(res => {

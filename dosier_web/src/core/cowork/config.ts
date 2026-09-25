@@ -27,10 +27,10 @@ export const COWORK_CONFIG = {
      * porque el color se deriva del UUID del usuario, no de un random().
      */
     USER_COLORS: [
-        '#4f46e9', // Indigo   — Director
-        '#0ea5e9', // Sky      — Investigador
-        '#10b981', // Esmeralda — Estudiante
-        '#f59e0b', // Ámbar    — Revisor externo
+        '#4f46e9', // Indigo   — Coordinador / Vicerrector
+        '#0ea5e9', // Sky      — Docente Autor
+        '#10b981', // Esmeralda — Auditor Curricular
+        '#f59e0b', // Ámbar    — Revisor Curricular
         '#8b5cf6', // Violeta
         '#ec4899', // Rosa
         '#14b8a6', // Teal

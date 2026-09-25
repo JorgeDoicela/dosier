@@ -9,8 +9,8 @@
  */
 export interface CoWorkUser {
     id: string;        // UUID del usuario (del JWT: user_uuid)
-    name: string;      // Nombre completo del investigador
-    role: string;      // Rol en DOSIER (Investigador, Director, Revisor, etc.)
+    name: string;      // Nombre completo del docente o autoridad
+    role: string;      // Rol en DOSIER (Docente, Coordinador, Vicerrector, Admin)
     color: string;     // Color persistente del cursor (generado desde el ID)
     initials: string;  // Iniciales para el avatar (ej: "JS" para Jorge Sánchez)
     tabId?: string;    // ID único de la sesión/pestaña (para diferenciar sesiones)
@@ -21,7 +21,7 @@ export interface CoWorkUser {
  * Contiene configuraciones críticas inyectadas por el backend.
  */
 export interface HandshakeResponse {
-    isBlindMode: boolean;        // ¿Debe anonimizarse a los usuarios? (CACES Double Blind)
+    isBlindMode: boolean;        // ¿Modo de revisión restringida activo?
     readOnly: boolean;           // ¿El documento ya está firmado o es lectura?
     isOversightObserver: boolean; // ¿El admin está en modo supervisión (no miembro del equipo)?
     serverTimestamp: string;     // Para sincronización horaria
@@ -52,7 +52,7 @@ export interface CoWorkConfig {
     documentId: string;
     user: CoWorkUser;
     transportUrl?: string;       // URL del hub SignalR (opcional, usa la default)
-    readonly?: boolean;          // Modo solo lectura (para revisores en doble ciego)
+    readonly?: boolean;          // Modo solo lectura (para revisores o autoridades)
     enabled?: boolean;           // ¿Debe conectarse automáticamente? (Default: true)
     onSynced?: () => void;       // Callback: documento sincronizado con el servidor
     onError?: (msg: string) => void;  // Callback: error de conexión

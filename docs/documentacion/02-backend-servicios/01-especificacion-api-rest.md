@@ -258,7 +258,6 @@ Panel de control administrativo institucional (`DOSIER_ADMIN`).
 | `POST`| `/assign-role` | `DOSIER_ADMIN` | Asignación de rol curricular RBAC a un usuario. |
 | `POST`| `/remove-role` | `DOSIER_ADMIN` | Revocación de rol curricular. |
 | `GET` | `/audit-logs` | `DOSIER_ADMIN` | Bitácora inmutable de auditoría con deltas JSON (`values_before`, `values_after`). |
-| `POST`| `/external-users` | `DOSIER_ADMIN` | Alta de evaluadores externos y pares académicos. |
 | `GET` | `/backups` | `DOSIER_ADMIN` | Historial de copias de seguridad del sistema. |
 | `GET` | `/backups/disk-info` | `DOSIER_ADMIN` | Obtiene métricas físicas de almacenamiento y espacio libre en disco del servidor. |
 | `POST`| `/backups/trigger` | `DOSIER_ADMIN` | Ejecución asíncrona e inmediata de respaldo integral (base de datos + archivos). |

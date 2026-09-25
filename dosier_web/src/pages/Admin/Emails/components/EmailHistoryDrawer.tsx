@@ -68,7 +68,7 @@ export const EmailHistoryDrawer: React.FC<EmailHistoryDrawerProps> = ({ historyH
                             </div>
                             <div>
                                 <div className="text-xs font-bold text-text-main">
-                                    {selectedHistoryLog.nombreDestinatario || 'Destinatario Externo'}
+                                    {selectedHistoryLog.nombreDestinatario || 'Destinatario Institucional'}
                                 </div>
                                 <div className="text-xs text-text-dim font-mono mt-1">
                                     {selectedHistoryLog.destinatario}

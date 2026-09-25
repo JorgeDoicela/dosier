@@ -130,15 +130,6 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Rol revocado con éxito" });
     }
 
-    [HttpPost("users/external")]
-    [HttpPost("external")]
-    public async Task<IActionResult> RegisterExternalUser([FromBody] ExternalUserDto dto)
-    {
-        var result = await _adminService.RegisterExternalUserAsync(dto);
-        if (!result) return BadRequest("No se pudo registrar el usuario externo");
-        return Ok(new { message = "Usuario externo registrado con éxito" });
-    }
-
     [HttpGet("audit-logs/recent")]
     [HttpGet("audit")]
     public async Task<IActionResult> GetRecentAuditLogs()

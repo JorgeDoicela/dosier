@@ -195,7 +195,6 @@ builder.Services.AddSignalR(options =>
 // Infrastructure Services
 builder.Services.AddSingleton<dosier_application.Common.IAppUrlService, dosier_infrastructure.Common.AppUrlService>();
 builder.Services.AddScoped<dosier_infrastructure.Security.IFirmaElectronicaService, dosier_infrastructure.Security.FirmaElectronicaService>();
-builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 builder.Services.AddScoped<dosier_application.Academico.IAsignaturasDocenteService, dosier_infrastructure.Academico.AsignaturasDocenteService>();
 builder.Services.AddScoped<dosier_application.Academico.IAcademicContextResolver, dosier_infrastructure.Academico.AcademicContextResolver>();
 

@@ -261,8 +261,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
             Valido = true,
             Password = passwordOriginal,
             NombreUsuario = user.Nombre,
-            EsHashInaccesible = esHashInaccesible,
-            EsRevisorExterno = (user.TablaSigafi == "otros")
+            EsHashInaccesible = esHashInaccesible
         };
     }
 

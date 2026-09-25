@@ -146,7 +146,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
         if (isAdmin) list.push('admin');
         if (isDocente) list.push('docente');
         if (isEstudiante) list.push('estudiante');
-        if (isRevisor) list.push('revisor', 'externo');
+        if (isRevisor) list.push('revisor');
         return list;
     }, [isAdmin, isDocente, isEstudiante, isRevisor]);
 

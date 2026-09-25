@@ -381,7 +381,7 @@ export const CONVOCATORIAS_CONFIG: HelpConfig = {
         },
         {
             title: "Creación y configuración de convocatorias (Administrador)",
-            description: "Crea y configura nuevos ciclos de investigación definiendo las fechas de postulación, las fechas de evaluación ciega, el presupuesto total institucional asignado, y viniendo la rúbrica de evaluación CACES obligatoria que utilizarán los revisores externos.",
+            description: "Crea y configura nuevos ciclos de revisión curricular definiendo las fechas de entrega, periodos lectivos y la rúbrica de evaluación CACES obligatoria que utilizarán las comisiones de revisión curricular.",
             highlight: 'content-top'
         }
     ],

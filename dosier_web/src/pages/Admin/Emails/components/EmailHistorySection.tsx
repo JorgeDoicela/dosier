@@ -109,7 +109,7 @@ export const EmailHistorySection: React.FC<EmailHistorySectionProps> = ({ histor
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="text-xs font-bold text-text-main">{log.nombreDestinatario || 'Externo / Desconocido'}</div>
+                                                <div className="text-xs font-bold text-text-main">{log.nombreDestinatario || 'Destinatario Institucional'}</div>
                                                 <div className="text-[10px] font-mono text-text-dim mt-0.5 truncate max-w-xs">{log.destinatario}</div>
                                             </td>
                                             <td className="p-4">

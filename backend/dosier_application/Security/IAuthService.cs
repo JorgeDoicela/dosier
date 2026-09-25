@@ -28,7 +28,7 @@ public interface IAuthService
     Task<PasswordRecoveryValidationResult> ValidatePasswordRecoveryTokenAsync(string plainToken, string? ipAddress);
 
     /// <summary>
-    /// Cambia la contraseña de un usuario si no es institucional (ej. evaluadores externos).
+    /// Cambia la contraseña de un usuario en DOSIER.
     /// </summary>
     Task<bool> ChangePasswordAsync(int idUsuario, string currentPassword, string newPassword);
 
@@ -38,7 +38,7 @@ public interface IAuthService
     Task<bool> RevertSuspiciousPasswordChangeAsync(string plainToken, string newPassword, string? ipAddress);
 
     /// <summary>
-    /// Restablece la contraseña de un usuario mediante token de recuperación de contraseña ordinario (solo para evaluadores externos).
+    /// Restablece la contraseña de un usuario mediante token de recuperación de contraseña ordinario.
     /// </summary>
     Task<bool> ResetPasswordWithRecoveryTokenAsync(string plainToken, string newPassword, string? ipAddress);
 

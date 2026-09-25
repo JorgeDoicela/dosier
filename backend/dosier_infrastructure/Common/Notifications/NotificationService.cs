@@ -287,8 +287,8 @@ namespace dosier_infrastructure.Common.Notifications
             return role.ToUpperInvariant() switch
             {
                 "DOCENTE" => "profesor",
+                "ADMINISTRATIVO" => "profesor",
                 "ESTUDIANTE" => "alumno",
-                "EXTERNO" => "otros",
                 _ => null
             };
         }

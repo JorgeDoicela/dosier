@@ -3,7 +3,7 @@ using System;
 namespace dosier_infrastructure.data.models;
 
 /// <summary>
-/// [SISTEMA] Seguridad para accesos externos (Evaluadores por Pares, Revisores Éticos)
+/// [SISTEMA] Tokens de acceso seguro temporal (verificación, invitaciones institucionales)
 /// </summary>
 public partial class AccessToken
 {
@@ -15,7 +15,7 @@ public partial class AccessToken
     public int? IdProyecto { get; set; }
     
     public int IdReferencia { get; set; }
-    public string TipoReferencia { get; set; } = "Externo"; // Externo, Profesor, etc.
+    public string TipoReferencia { get; set; } = "Docente"; // Docente, etc.
     
     public string? Scopes { get; set; } // Ej: 'REVIEW:READ', 'REVIEW:WRITE'
     

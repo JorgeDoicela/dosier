@@ -639,7 +639,7 @@ namespace dosier_infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)")
                         .HasColumnName("tipoReferencia")
-                        .HasDefaultValueSql("'Externo'");
+                        .HasDefaultValueSql("'Docente'");
 
                     b.Property<string>("Token")
                         .IsRequired()

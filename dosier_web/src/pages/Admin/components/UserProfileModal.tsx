@@ -207,7 +207,7 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
                                     onChange={(e) => setMetadata({...metadata, nombre: e.target.value})}
                                     className="input-vercel"
                                     placeholder="Nombres y Apellidos"
-                                    disabled={user.type !== 'EXTERNO'}
+                                    disabled={true}
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -218,7 +218,7 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
                                     onChange={(e) => setMetadata({...metadata, email: e.target.value})}
                                     className="input-vercel"
                                     placeholder="correo@ejemplo.com"
-                                    disabled={user.type !== 'EXTERNO'}
+                                    disabled={true}
                                 />
                             </div>
                         </section>
@@ -226,17 +226,7 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
                 </div>
 
                 <div className="modal-footer">
-                    <button onClick={handleCloseModal} className="btn-vercel-secondary">Cancelar</button>
-                    {user.type === 'EXTERNO' && (
-                        <button 
-                            onClick={handleSave}
-                            disabled={saving || loading}
-                            className="btn-vercel-primary flex items-center gap-2"
-                        >
-                            {saving ? <RefreshCw className="animate-spin" size={14} /> : <Save size={14} />}
-                            {saving ? 'Guardando...' : 'Guardar Cambios'}
-                        </button>
-                    )}
+                    <button onClick={handleCloseModal} className="btn-vercel-secondary">Cerrar</button>
                 </div>
             </div>
         </div>

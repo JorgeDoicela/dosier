@@ -122,8 +122,8 @@ const AuditPage: React.FC = () => {
                                 <option value="">Todas las Acciones</option>
                                 <option value="ASIGNAR_ROL">Asignar Rol</option>
                                 <option value="REVOCAR_ROL">Revocar Rol</option>
-                                <option value="REGISTRO_EXTERNO">Registro Externo</option>
                                 <option value="ACTUALIZAR_METADATA">Actualizar datos del documento</option>
+
                                 <option value="LOGIN">Inicio de Sesión</option>
                                 <option value="CREAR_GRUPO">Crear Grupo</option>
                                 <option value="EDITAR_GRUPO">Editar Grupo</option>

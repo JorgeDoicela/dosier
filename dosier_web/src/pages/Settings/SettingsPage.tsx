@@ -19,7 +19,7 @@ interface PerfilData {
 
 const SettingsPage: React.FC = () => {
     const { addToast } = useNotifications();
-    const { logout, isRevisor, isAdmin } = useAuth();
+    const { logout, isAdmin } = useAuth();
     const confirm = useConfirm();
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -68,7 +68,7 @@ const SettingsPage: React.FC = () => {
     const [templates, setTemplates] = useState<any[]>([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
-    // Formulario de cambio de contraseña para revisores externos
+    // Formulario de cambio de contraseña institucional
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',

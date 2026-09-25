@@ -23,7 +23,6 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
     const [copiado, setCopiado] = useState(false);
     const [mensajeError, setMensajeError] = useState('');
 
-    const [esRevisorExterno, setEsRevisorExterno] = useState(false);
     const [formPassword, setFormPassword] = useState({ newPassword: '', confirmPassword: '' });
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -44,7 +43,6 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
             const data = await authService.verContrasenia(tok);
 
             setNombre(data.nombre ?? '');
-            setEsRevisorExterno(Boolean(data.esRevisorExterno ?? data.es_revisor_externo));
 
             if (data.esHashInaccesible ?? data.es_hash_inaccesible) {
                 setEstado('hash_inaccesible');

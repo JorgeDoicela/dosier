@@ -318,7 +318,7 @@ export function useCoWork(config: CoWorkConfig): CoWorkHandle {
                 const userToAnnounce = { ...config.user, tabId };
 
                 if (isBlindMode) {
-                    const prefix = config.user.role === 'Revisor' ? 'Revisor Anónimo' : 'Investigador (Autor)';
+                    const prefix = config.user.role === 'Revisor' ? 'Comisión Revisora' : 'Docente Autor';
                     userToAnnounce.name = `${prefix} #${tabId.substring(0, 3)}`;
                 }
 

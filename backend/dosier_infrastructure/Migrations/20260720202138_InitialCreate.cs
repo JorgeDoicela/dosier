@@ -3077,7 +3077,7 @@ namespace dosier_infrastructure.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     idProyecto = table.Column<int>(type: "int", nullable: true),
                     idReferencia = table.Column<int>(type: "int", nullable: false),
-                    tipoReferencia = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, defaultValueSql: "'Externo'")
+                    tipoReferencia = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, defaultValueSql: "'Docente'")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     scopes = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),

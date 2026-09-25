@@ -428,7 +428,6 @@ public class AuthController : ControllerBase
                 valido = true,
                 esHashInaccesible = true,
                 nombre = resultado.NombreUsuario,
-                esRevisorExterno = resultado.EsRevisorExterno,
                 message = "Tu contraseña está protegida y encriptada. Puedes definir una nueva contraseña a continuación."
             });
 

@@ -7,7 +7,7 @@ export interface SelectedMemberResult {
     cedula: string;
     nombre_completo: string;
     email: string;
-    tipo: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO';
+    tipo: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE';
     carrera?: string;
     departamento?: string;
     cargo_instituto?: string;
@@ -22,8 +22,8 @@ export interface SelectedMemberResult {
 interface MemberSearchSelectorProps {
     onAddMember?: (member: SelectedMemberResult) => void;
     existingCedulas?: string[];
-    allowedTypes?: ('DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO')[];
-    defaultType?: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO';
+    allowedTypes?: ('DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE')[];
+    defaultType?: 'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE';
     title?: string;
     subtitle?: string;
     excludeCoordinatorCedula?: string;
@@ -45,10 +45,10 @@ export const formatNombre = (nombre: string | null | undefined) => {
 export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
     onAddMember = () => {},
     existingCedulas = [],
-    allowedTypes = ['DOCENTE', 'ADMINISTRATIVO', 'ESTUDIANTE', 'EXTERNO'],
+    allowedTypes = ['DOCENTE', 'ADMINISTRATIVO', 'ESTUDIANTE'],
     defaultType = 'DOCENTE',
     title = 'Añadir Integrante al Grupo',
-    subtitle = 'Busque y seleccione personal docente, administrativo, estudiantes o colaboradores externos.',
+    subtitle = 'Busque y seleccione personal docente, administrativo o estudiantes.',
     excludeCoordinatorCedula,
     isCoordinatorSelectorOnly = false,
     onSelectCoordinator,
@@ -57,7 +57,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
     estadoEstudiante = 'TODOS',
     variant = 'card'
 }) => {
-    const [selectedType, setSelectedType] = useState<'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE' | 'EXTERNO'>(defaultType);
+    const [selectedType, setSelectedType] = useState<'DOCENTE' | 'ADMINISTRATIVO' | 'ESTUDIANTE'>(defaultType);
     const [searchQuery, setSearchQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -77,8 +77,6 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                 return ['Personal de Apoyo Técnico', 'Gestor Administrativo', 'Co-Investigador Técnico'];
             case 'ESTUDIANTE':
                 return ['Semillerista', 'Auxiliar de Investigación', 'Investigador Egresado/Graduado'];
-            case 'EXTERNO':
-                return ['Investigador Asociado', 'Asesor Científico', 'Evaluador Externo'];
             default:
                 return ['Co-Investigador', 'Semillerista', 'Personal de Apoyo'];
         }
@@ -250,17 +248,6 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                 }`}
                             >
                                 Administrativos
-                            </button>
-                        )}
-                        {allowedTypes.includes('EXTERNO') && (
-                            <button
-                                type="button"
-                                onClick={() => { setSelectedType('EXTERNO'); setResults([]); }}
-                                className={`px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                                    selectedType === 'EXTERNO' ? 'bg-surface text-text-main shadow-xs' : 'text-text-dim hover:text-text-main'
-                                }`}
-                            >
-                                Externos
                             </button>
                         )}
                     </div>
@@ -449,11 +436,6 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                                             Alumno
                                                         </span>
                                                     )}
-                                                    {candidate.type === 'EXTERNO' && (
-                                                        <span className="badge-vercel badge-vercel-warning text-[9px] uppercase">
-                                                            Externo
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </button>
                                         );
@@ -470,8 +452,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                         <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-surface border border-border-thin flex items-center justify-center text-text-dim">
                                 {selectedCandidate.type === 'DOCENTE' ? <GraduationCap size={16} /> :
-                                 selectedCandidate.type === 'ADMINISTRATIVO' ? <Briefcase size={16} /> :
-                                 selectedCandidate.type === 'EXTERNO' ? <Globe size={16} /> : <GraduationCap size={16} />}
+                                 selectedCandidate.type === 'ADMINISTRATIVO' ? <Briefcase size={16} /> : <GraduationCap size={16} />}
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-text-main">

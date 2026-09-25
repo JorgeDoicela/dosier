@@ -258,7 +258,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return rawRoles.map(r => r.toUpperCase());
     }, [user]);
 
+    const isAdmin = React.useMemo(() => {
+        return Boolean(user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('ADMIN'));
+    }, [user, roles]);
+
     const availableRoles = React.useMemo<RoleOption[]>(() => {
+        if (isAdmin) {
+            // El Superadministrador / Desarrollador tiene a disposición todos los roles institucionales para validar flujos
+            return Object.keys(ROLE_DISPLAY_NAMES).map(code => ({
+                code,
+                name: ROLE_DISPLAY_NAMES[code]
+            })).sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b.code] || 0) - (ROLE_HIERARCHY_WEIGHT[a.code] || 0));
+        }
+
         return roles
             .filter(code => code in ROLE_DISPLAY_NAMES || code.startsWith('DOSIER_'))
             .map(code => ({
@@ -266,11 +278,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 name: ROLE_DISPLAY_NAMES[code] || code
             }))
             .sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b.code] || 0) - (ROLE_HIERARCHY_WEIGHT[a.code] || 0));
-    }, [roles]);
-
-    const isAdmin = React.useMemo(() => {
-        return Boolean(user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('ADMIN'));
-    }, [user, roles]);
+    }, [roles, isAdmin]);
 
     const isDocente = React.useMemo(() => {
         return roles.includes('DOSIER_DOCENTE') || roles.includes('DOCENTE');
@@ -291,8 +299,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isEstudiante = false;
 
     const isRevisor = React.useMemo(() => {
-        return isCoordCarrera || isCoordAcad || isVicerrector || roles.includes('DOSIER_REVISOR') || roles.includes('DOSIER_REVISOR_EXTERNO');
-    }, [isCoordCarrera, isCoordAcad, isVicerrector, roles]);
+        return isCoordCarrera || isCoordAcad || isVicerrector;
+    }, [isCoordCarrera, isCoordAcad, isVicerrector]);
 
     const roleDisplayName = React.useMemo(() => {
         if (activeRole && ROLE_DISPLAY_NAMES[activeRole]) {

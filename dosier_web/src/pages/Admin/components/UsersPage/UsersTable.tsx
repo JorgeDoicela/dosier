@@ -7,7 +7,7 @@ interface UsersTableProps {
     users: ManagedUser[];
     roles: Role[];
     search: string;
-    userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO';
+    userType: 'DOCENTE' | 'ADMINISTRATIVO';
     page: number;
     setPage: React.Dispatch<React.SetStateAction<number>> | ((page: number | ((p: number) => number)) => void);
     pageSize: number;

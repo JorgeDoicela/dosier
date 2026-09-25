@@ -156,7 +156,7 @@ graph TD
   1. **Documentación:** Lista desplegable de instrumentos curriculares globales en supervisión con paginación y acceso directo al Workspace concurrente.
   2. **Mis Instrumentos PEA:** Lista desplegable de asignaturas e instrumentos asignados directamente al usuario docente/administrador.
   3. **Analíticas:** Despliegue de accesos a Métricas Curriculares (`?tab=general`), Cumplimiento CACES (`?tab=caces`) y Portafolio de Instrumentos (`?tab=proyectos`).
-  4. **Usuarios:** Submenú desplegable filtrado por tipo de cuenta (Docentes institucionales y Usuarios externos).
+  4. **Usuarios:** Submenú desplegable filtrado por tipo de cuenta (Docentes institucionales y Personal administrativo).
 * **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-[#131720]`), selectores de hover sobrios sin difuminados translúcidos, tipografía Geist Editorial e iconografía técnica de Lucide React sin emojis.
 
 

@@ -21,8 +21,6 @@ export interface VerContraseniaResponseDto {
     es_hash_inaccesible?: boolean;
     nombre?: string;
     password?: string;
-    esRevisorExterno?: boolean;
-    es_revisor_externo?: boolean;
     message?: string;
 }
 

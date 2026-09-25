@@ -155,7 +155,7 @@ public partial class DosierContext
             entity.Property(e => e.Token).HasColumnName("token").HasMaxLength(255).IsRequired();
             entity.HasIndex(e => e.Token).IsUnique();
             entity.Property(e => e.IdReferencia).HasColumnName("idReferencia");
-            entity.Property(e => e.TipoReferencia).HasColumnName("tipoReferencia").HasMaxLength(50).HasDefaultValueSql("'Externo'");
+            entity.Property(e => e.TipoReferencia).HasColumnName("tipoReferencia").HasMaxLength(50).HasDefaultValueSql("'Docente'");
             entity.Property(e => e.Scopes).HasColumnName("scopes").HasMaxLength(255);
             entity.Property(e => e.MaxUsos).HasColumnName("maxUsos").HasDefaultValueSql("'1'");
             entity.Property(e => e.UsosActuales).HasColumnName("usosActuales").HasDefaultValueSql("'0'");

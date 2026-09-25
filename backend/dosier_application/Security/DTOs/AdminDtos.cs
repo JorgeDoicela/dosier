@@ -10,7 +10,7 @@ public class UserManagementDto
     public string NombreCompleto { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string UserUuid { get; set; } = string.Empty;
-    public string Type { get; set; } = "DOCENTE"; // DOCENTE, ESTUDIANTE, EXTERNO
+    public string Type { get; set; } = "DOCENTE"; // DOCENTE, ADMINISTRATIVO
     public List<string> Roles { get; set; } = new();
     public List<string> RoleCodes { get; set; } = new();
 
@@ -85,18 +85,4 @@ public class AuditLogDto
     public string? ValuesBefore { get; set; } // JSON
     public string? ValuesAfter { get; set; }  // JSON
     public DateTime Date { get; set; }
-}
-
-public class ExternalUserDto
-{
-    public string Cedula { get; set; } = string.Empty;
-    public string? FullName { get; set; } = string.Empty;
-    public string Nombres { get; set; } = string.Empty;
-    public string Apellidos { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-
-    [JsonPropertyName("institucion")]
-    public string? Institucion { get; set; }
-
-    public string DefaultRole { get; set; } = "DOSIER_REVISOR_EXTERNO";
 }

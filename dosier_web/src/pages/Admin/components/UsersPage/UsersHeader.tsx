@@ -3,8 +3,8 @@ import { Search, X } from 'lucide-react';
 import { PageHeader } from '../../../../components/Common/PageHeader';
 
 interface UsersHeaderProps {
-    userType: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO';
-    setUserType: (type: 'DOCENTE' | 'ADMINISTRATIVO' | 'EXTERNO') => void;
+    userType: 'DOCENTE' | 'ADMINISTRATIVO';
+    setUserType: (type: 'DOCENTE' | 'ADMINISTRATIVO') => void;
     soloConHoras: boolean;
     setSoloConHoras: (val: boolean) => void;
     filtroDocente?: 'CON_DOCENCIA' | 'CON_INVESTIGACION' | 'TODOS';
