@@ -56,7 +56,8 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
     * Sellado criptográfico unitario SHA-256 e inmutabilidad forense (*State Locking*).
     * Generación y descarga del Dossier Curricular Institucional foliado para auditoría CACES.
 * **`AdminPeaDashboard.tsx` (`DOSIER_ADMIN`):**
-  * Monitor del estado de salud del sistema, métricas globales de avance, configuración de mallas curriculares y sincronización con SIGAFI.
+  * Monitor del estado de salud del sistema, métricas globales de avance, configuración de mallas curriculares y sincronización con SIGAFI (Solo Lectura).
+  * Integra el **Simulador del Circuito Curricular Oficial** (`PipelineCurricularStepper`), permitiendo explorar detalladamente las 5 fases del PEA (Apertura, Formulación, Aval de Carrera, Aval Académico y Legalización/Firma), con sus actores, herramientas operativas y la capacidad de conmutar en vivo al rol respectivo para validar el flujo completo.
 
 #### 2.1.2. Modales Operativos Institucionales (`src/pages/Dashboard/Roles/Modals/`)
 1. **`AperturaConvocatoriaModal.tsx`:** Fija fecha de inicio, fecha límite de entrega, período académico y notifica a los docentes vía correo y SignalR.
@@ -95,8 +96,11 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
   * Asignación de roles curriculares RBAC (`idSistema = 6`).
   * Bloqueo y reseteo de credenciales de acceso.
 * **Diseñador de Plantillas / Canvas Builder (`/plantillas`):**
-  * Maquetador visual de bloques curriculares (`BlockCanvas.tsx`, `availableBlocks.ts`).
-  * Configuración de propiedades JSON y previsualización de folios A4.
+  * Maquetador visual e interactivo de bloques curriculares (`BlockCanvas.tsx`, `availableBlocks.ts`).
+  * Soporte nativo para la totalidad de bloques del PEA oficial (Secciones a hasta k) con vistas previas idénticas al formato institucional físico del ISTPET.
+  * Inspector lateral reactivo de propiedades (`BlockProperties.tsx`) con 9 formularios específicos para editar parámetros de configuración (horas, unidades temáticas, matrices de evaluación, rúbricas y firmas).
+  * Renderizadores de Lienzo A4 con subcabeceras celestes institucionales (`#bdd7ee`), líneas continuas de escritura y fondos 100% sólidos.
+  * Compilación y exportación de plantillas HTML/PDF mediante generadores modulares (`peaGenerators.ts`, `HtmlGenerator.ts`) con sincronización bidireccional hacia la persistencia del backend (`PEA_OFICIAL.html`).
 * **Bitácora de Auditoría Forense (`/auditoria`):**
   * Consulta de registros de `doc_audit_logs` con filtros por fecha UTC, usuario, dirección IP y acción.
 * **Motor de Correo Transaccional (`/emails`):**

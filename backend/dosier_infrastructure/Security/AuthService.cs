@@ -333,8 +333,11 @@ public class AuthService : IAuthService
             .Where(ur => ur.IdUsuario == user.IdUsuario && (ur.EsActivo ?? true))
             .ToListAsync();
 
-        // Orden jerárquico institucional oficial: DOSIER_ADMIN > DOSIER_VICERRECTOR > DOSIER_COORD_ACAD > DOSIER_COORD_CARRERA > DOSIER_DOCENTE
+        // Aislamiento de Sistema: en DOSIER únicamente se gestionan y emiten roles curriculares del sistema (ID 6 / DOSIER_*)
         userRoles = userRoles
+            .Where(ur => ur.Role != null && (
+                ur.Role.CodigoRol.StartsWith("DOSIER_") ||
+                ur.Role.RoleModuleOperations.Any(rmo => rmo.ModuleOperation?.Module?.Sistema?.Codigo == "DOSIER")))
             .OrderBy(ur => ur.Role.CodigoRol switch
             {
                 "DOSIER_ADMIN" => 1,

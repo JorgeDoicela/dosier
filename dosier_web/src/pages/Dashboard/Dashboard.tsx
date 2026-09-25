@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
                     {rolSimulado === 'COORD_CARRERA' && <CoordCarreraDashboard />}
                     {rolSimulado === 'DOCENTE' && <DocentePeaDashboard />}
                     {rolSimulado === 'VICERRECTOR' && <VicerrectorDashboard />}
-                    {rolSimulado === 'ADMIN' && <AdminPeaDashboard />}
+                    {rolSimulado === 'ADMIN' && <AdminPeaDashboard onCambiarRol={setRolSimulado} />}
                 </div>
             </div>
         </main>

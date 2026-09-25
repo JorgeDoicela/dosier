@@ -19,6 +19,21 @@ import {
     generateSignaturesHtml,
     generatePageBreakHtml,
 } from './htmlGenerators/miscGenerators';
+import {
+    generatePeaGeneralHtml,
+    generatePeaObjectiveHtml,
+    generatePeaPrerequisitesHtml,
+    generatePeaCareerOutcomesHtml,
+    generatePeaSubjectOutcomesHtml,
+    generatePeaCharacterizationHtml,
+    generatePeaCompetenciesRdaHtml,
+    generatePeaContentsHtml,
+    generatePeaMethodologyHtml,
+    generatePeaResourcesHtml,
+    generatePeaEvaluationHtml,
+    generatePeaBibliographyHtml,
+    generatePeaSignaturesHtml,
+} from './htmlGenerators/peaGenerators';
 
 export { renderSection };
 
@@ -72,6 +87,46 @@ export const generateHtmlFromBlocks = (blockList: DocumentBlock[], themeConfig?:
                 break;
             case 'impacts':
                 html += generateImpactsHtml(block);
+                break;
+            // ── BLOQUES CURRICULARES OFICIALES PEA (SECCIONES A a K) ──
+            case 'pea_general_section':
+                html += generatePeaGeneralHtml(block);
+                break;
+            case 'pea_objective_section':
+                html += generatePeaObjectiveHtml(block);
+                break;
+            case 'pea_prerequisites_section':
+                html += generatePeaPrerequisitesHtml(block);
+                break;
+            case 'pea_career_outcomes_section':
+                html += generatePeaCareerOutcomesHtml(block);
+                break;
+            case 'pea_subject_outcomes_section':
+                html += generatePeaSubjectOutcomesHtml(block);
+                break;
+            case 'pea_characterization_section':
+                html += generatePeaCharacterizationHtml(block);
+                break;
+            case 'pea_competencies_rda_section':
+                html += generatePeaCompetenciesRdaHtml(block);
+                break;
+            case 'pea_contents_section':
+                html += generatePeaContentsHtml(block);
+                break;
+            case 'pea_methodology_section':
+                html += generatePeaMethodologyHtml(block);
+                break;
+            case 'pea_resources_section':
+                html += generatePeaResourcesHtml(block);
+                break;
+            case 'pea_evaluation_section':
+                html += generatePeaEvaluationHtml(block);
+                break;
+            case 'pea_bibliography_section':
+                html += generatePeaBibliographyHtml(block);
+                break;
+            case 'pea_signatures_section':
+                html += generatePeaSignaturesHtml(block);
                 break;
             default:
                 break;

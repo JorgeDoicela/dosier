@@ -11,6 +11,18 @@ import { ProjectGeneralProperties } from './properties/ProjectGeneralProperties'
 import { ProjectTechnicalProperties } from './properties/ProjectTechnicalProperties';
 import { ImpactsProperties } from './properties/ImpactsProperties';
 import { PeaGeneralProperties } from './properties/PeaGeneralProperties';
+import { PeaObjectiveProperties } from './properties/PeaObjectiveProperties';
+import { PeaPrerequisitesProperties } from './properties/PeaPrerequisitesProperties';
+import { PeaCareerOutcomesProperties } from './properties/PeaCareerOutcomesProperties';
+import { PeaSubjectOutcomesProperties } from './properties/PeaSubjectOutcomesProperties';
+import { PeaCharacterizationProperties } from './properties/PeaCharacterizationProperties';
+import { PeaCompetenciesProperties } from './properties/PeaCompetenciesProperties';
+import { PeaContentsProperties } from './properties/PeaContentsProperties';
+import { PeaMethodologyProperties } from './properties/PeaMethodologyProperties';
+import { PeaResourcesProperties } from './properties/PeaResourcesProperties';
+import { PeaEvaluationProperties } from './properties/PeaEvaluationProperties';
+import { PeaBibliographyProperties } from './properties/PeaBibliographyProperties';
+import { PeaSignaturesProperties } from './properties/PeaSignaturesProperties';
 import { ThemeEditorTab } from './ThemeEditorTab';
 import { CoverProperties } from './properties/CoverProperties';
 
@@ -449,9 +461,45 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                                 <ImpactsProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
                             )}
 
-                            {/* ── METADATOS PEA OFICIAL ────────────────────────────────────── */}
+                            {/* ── METADATOS PEA OFICIAL (SECCIONES A a K) ────────────────── */}
                             {activeBlock.type === 'pea_general_section' && (
                                 <PeaGeneralProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_objective_section' && (
+                                <PeaObjectiveProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_prerequisites_section' && (
+                                <PeaPrerequisitesProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_career_outcomes_section' && (
+                                <PeaCareerOutcomesProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_subject_outcomes_section' && (
+                                <PeaSubjectOutcomesProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_characterization_section' && (
+                                <PeaCharacterizationProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_competencies_rda_section' && (
+                                <PeaCompetenciesProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_contents_section' && (
+                                <PeaContentsProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_methodology_section' && (
+                                <PeaMethodologyProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_resources_section' && (
+                                <PeaResourcesProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_evaluation_section' && (
+                                <PeaEvaluationProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_bibliography_section' && (
+                                <PeaBibliographyProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
+                            )}
+                            {activeBlock.type === 'pea_signatures_section' && (
+                                <PeaSignaturesProperties block={activeBlock} onUpdateConfig={onUpdateConfig} />
                             )}
                         </div>
                     )}

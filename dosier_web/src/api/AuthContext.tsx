@@ -24,7 +24,15 @@ export const ROLE_DISPLAY_NAMES: Record<string, string> = {
     DOSIER_VICERRECTOR: 'Vicerrectorado Académico',
     DOSIER_COORD_ACAD: 'Coordinación Académica',
     DOSIER_COORD_CARRERA: 'Coordinación de Carrera',
-    DOSIER_DOCENTE: 'Docente Elaborador',
+    DOSIER_DOCENTE: 'Docente',
+};
+
+export const ROLE_HIERARCHY_WEIGHT: Record<string, number> = {
+    DOSIER_ADMIN: 5,
+    DOSIER_VICERRECTOR: 4,
+    DOSIER_COORD_ACAD: 3,
+    DOSIER_COORD_CARRERA: 2,
+    DOSIER_DOCENTE: 1,
 };
 
 export interface RoleOption {
@@ -251,10 +259,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user]);
 
     const availableRoles = React.useMemo<RoleOption[]>(() => {
-        return roles.map(code => ({
-            code,
-            name: ROLE_DISPLAY_NAMES[code] || code
-        }));
+        return roles
+            .filter(code => code in ROLE_DISPLAY_NAMES || code.startsWith('DOSIER_'))
+            .map(code => ({
+                code,
+                name: ROLE_DISPLAY_NAMES[code] || code
+            }))
+            .sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b.code] || 0) - (ROLE_HIERARCHY_WEIGHT[a.code] || 0));
     }, [roles]);
 
     const isAdmin = React.useMemo(() => {

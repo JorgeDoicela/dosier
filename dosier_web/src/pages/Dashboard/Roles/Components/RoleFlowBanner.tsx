@@ -21,9 +21,9 @@ export const RoleFlowBanner: React.FC<Props> = ({
         representante: string;
     }> = [
         {
-            id: 'COORD_ACAD',
-            nombre: 'Coord. Académica',
-            representante: 'Msc. Cristian Cobos'
+            id: 'DOCENTE',
+            nombre: 'Docente',
+            representante: 'Ing. Edison Pérez'
         },
         {
             id: 'COORD_CARRERA',
@@ -31,9 +31,9 @@ export const RoleFlowBanner: React.FC<Props> = ({
             representante: 'Ing. Wilfrido Trujillo'
         },
         {
-            id: 'DOCENTE',
-            nombre: 'Docente de Cátedra',
-            representante: 'Ing. Edison Pérez'
+            id: 'COORD_ACAD',
+            nombre: 'Coord. Académica',
+            representante: 'Msc. Cristian Cobos'
         },
         {
             id: 'VICERRECTOR',

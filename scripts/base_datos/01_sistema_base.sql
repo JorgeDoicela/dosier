@@ -61,7 +61,20 @@ DROP TABLE IF EXISTS
     -- Módulo Calendario (orden inverso por FK)
     doc_calendario_alertas_enviadas,
     doc_ical_tokens,
-    doc_calendario_eventos_normativos;
+    doc_calendario_eventos_normativos,
+
+    -- Tablas residuales históricas y modelos deprecados (limpieza total de desarrollo)
+    doc_bibliografia_proyecto,
+    doc_bibliografia_proyectos,
+    doc_objetivos_proyecto,
+    doc_proyecto_participantes,
+    doc_proyectos_carreras,
+    doc_trazabilidad_proyectos,
+    doc_cronograma,
+    doc_cronogramas,
+    doc_tipo_investigacion,
+    doc_proyectos,
+    documentos_adjuntos;
 
 -- =============================================================================
 -- SECCIÓN: AUDITORÍA ADMINISTRATIVA Y FORENSE (CACES/SENESCYT)

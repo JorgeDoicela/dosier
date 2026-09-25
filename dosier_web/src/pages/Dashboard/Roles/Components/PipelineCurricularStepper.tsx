@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
 import {
-    Calendar,
-    PenTool,
-    CheckCircle2,
-    ShieldCheck,
-    Award,
-    ChevronRight,
-    ArrowRight,
     Clock,
-    Users,
-    FileCheck2,
-    AlertCircle,
-    Info
+    CheckCircle2,
+    ChevronRight,
+    ArrowRight
 } from 'lucide-react';
+import { type RolSimulado } from './RoleFlowBanner';
 
 interface Props {
     faseActiva?: number;
     onSelectFase?: (faseIndex: number) => void;
+    onSimularRol?: (rol: RolSimulado) => void;
 }
 
-export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onSelectFase }) => {
+export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onSelectFase, onSimularRol }) => {
     const [selectedFase, setSelectedFase] = useState<number>(faseActiva);
 
     const handleSelect = (idx: number) => {
@@ -27,14 +21,25 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
         onSelectFase?.(idx);
     };
 
-    const FASES = [
+    const FASES: Array<{
+        num: number;
+        titulo: string;
+        subtitulo: string;
+        rol: string;
+        rolEquivalente: RolSimulado;
+        actor: string;
+        accionPrincipal: string;
+        descripcion: string;
+        botonesClave: string[];
+        resultado: string;
+    }> = [
         {
             num: 0,
             titulo: 'Fase 0: Apertura',
             subtitulo: 'Apertura y Convocatoria',
             rol: 'Coordinación Académica',
+            rolEquivalente: 'COORD_ACAD',
             actor: 'Msc. Cristian Cobos',
-            color: 'blue',
             accionPrincipal: 'Activar Convocatoria y Notificar',
             descripcion: 'Coordinación Académica sincroniza el distributivo SIGAFI, fija el calendario con fechas límites y dispara la notificación masiva a todos los docentes.',
             botonesClave: [
@@ -48,9 +53,9 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
             num: 1,
             titulo: 'Fase 1: Formulación',
             subtitulo: 'Co-redacción y Validación',
-            rol: 'Docente de Cátedra',
+            rol: 'Docente',
+            rolEquivalente: 'DOCENTE',
             actor: 'Ing. Edison Pérez',
-            color: 'amber',
             accionPrincipal: 'Elaborar y Enviar a Revisión',
             descripcion: 'Los docentes pueden clonar el PEA del período anterior, co-redactar concurrentemente las 11 secciones con Yjs y verificar que las horas cuadren 100% con el Art. 21 CES.',
             botonesClave: [
@@ -66,8 +71,8 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
             titulo: 'Fase 2: Aval de Carrera',
             subtitulo: 'Revisión Disciplinar',
             rol: 'Coordinador de Carrera',
+            rolEquivalente: 'COORD_CARRERA',
             actor: 'Ing. Wilfrido Trujillo (Software)',
-            color: 'purple',
             accionPrincipal: 'Emitir Aval de Carrera',
             descripcion: 'El Coordinador supervisa los PEAs de su carrera, verifica pertinencia de contenidos, unidades y bibliografía. Puede devolver con observaciones o emitir el Aval de Carrera.',
             botonesClave: [
@@ -82,8 +87,8 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
             titulo: 'Fase 3: Aval Académico',
             subtitulo: 'Auditoría CACES',
             rol: 'Coordinación Académica',
+            rolEquivalente: 'COORD_ACAD',
             actor: 'Msc. Cristian Cobos',
-            color: 'emerald',
             accionPrincipal: 'Emitir Aval Institucional',
             descripcion: 'Control de calidad institucional: auditoría automática del régimen académico CES, matriz de 30 pts y bibliografía APA. Emite el segundo aval para elevar a Vicerrectorado.',
             botonesClave: [
@@ -98,8 +103,8 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
             titulo: 'Fase 4: Legalización',
             subtitulo: 'Firma Legal y Publicación',
             rol: 'Vicerrectorado Académico',
+            rolEquivalente: 'VICERRECTOR',
             actor: 'Msc. Freddy Baño',
-            color: 'rose',
             accionPrincipal: 'Firma Digital y Publicación QR',
             descripcion: 'Máxima autoridad curricular. Firma individual o en bloque todos los PEAs avalados, sella el hash inmutable SHA-256 y activa el código QR público para acreditación.',
             botonesClave: [
@@ -115,13 +120,13 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
     const currentFase = FASES[selectedFase];
 
     return (
-        <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-xs space-y-4">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-900 pb-3">
                 <div>
                     <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                        Circuito Curricular Institucional Oficial
+                        Simulador del Circuito Curricular Oficial
                     </span>
                     <h2 className="text-base font-semibold text-zinc-900 dark:text-white mt-0.5">
                         Pipeline de Gestión y Gobernanza del PEA (5 Fases)
@@ -131,7 +136,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                     <span className="text-xs text-zinc-500">
                         Paso {selectedFase + 1} de 5
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                    <span className="badge-subtle">
                         {currentFase.rol}
                     </span>
                 </div>
@@ -145,16 +150,16 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                         <button
                             key={idx}
                             onClick={() => handleSelect(idx)}
-                            className={`p-3 rounded-lg border text-left transition-all ${
+                            className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
                                 isSelected
-                                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-md scale-[1.02]'
-                                    : 'bg-zinc-50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
+                                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-xs'
+                                    : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
                             }`}
                         >
                             <div className="flex items-center justify-between mb-1">
-                                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold ${
                                     isSelected
-                                        ? 'bg-white/20 text-white dark:bg-black/20 dark:text-black font-semibold'
+                                        ? 'bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-950'
                                         : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
                                 }`}>
                                     Fase {fase.num}
@@ -167,7 +172,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                                 {fase.subtitulo}
                             </p>
                             <p className={`text-[11px] truncate mt-0.5 ${
-                                isSelected ? 'text-zinc-300 dark:text-zinc-700' : 'text-zinc-500'
+                                isSelected ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500'
                             }`}>
                                 {fase.rol}
                             </p>
@@ -177,7 +182,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
             </div>
 
             {/* Detalle interactivo de la fase seleccionada */}
-            <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-3">
+            <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                     <div>
                         <span className="text-[11px] font-medium text-zinc-500">
@@ -187,7 +192,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                             {currentFase.titulo} — {currentFase.subtitulo}
                         </h3>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Meta: {currentFase.accionPrincipal}
                     </span>
@@ -200,7 +205,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                 <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
-                            Herramientas y Botones que tiene este rol en su pantalla:
+                            Herramientas y Botones de este rol:
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                             {currentFase.botonesClave.map((btn, bIdx) => (
@@ -215,7 +220,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                     </div>
                     <div>
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1">
-                            Resultado Entregable hacia la siguiente fase:
+                            Resultado Entregable a la siguiente fase:
                         </span>
                         <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium flex items-center gap-1.5">
                             <ArrowRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
@@ -223,6 +228,19 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ faseActiva = 0, onS
                         </p>
                     </div>
                 </div>
+
+                {/* Botón de acción para simular directamente el rol */}
+                {onSimularRol && (
+                    <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
+                        <button
+                            onClick={() => onSimularRol(currentFase.rolEquivalente)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors shadow-xs cursor-pointer"
+                        >
+                            <span>Simular pantalla de {currentFase.rol}</span>
+                            <ArrowRight size={13} />
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

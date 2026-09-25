@@ -33,8 +33,13 @@ SET @idSistemaDosier = COALESCE(
 );
 
 -- -----------------------------------------------------------------------------
--- 2. LIMPIEZA DE PERMISOS PREVIOS DEL SISTEMA DOSIER (Evitar duplicidades)
+-- 2. LIMPIEZA DE PERMISOS Y ASIGNACIONES PREVIAS DEL SISTEMA DOSIER (Reinicio Total)
 -- -----------------------------------------------------------------------------
+-- Eliminar asignaciones previas de usuarios a roles curriculares de DOSIER
+DELETE ur FROM rbac_usuario_rol ur
+JOIN rbac_rol r ON ur.idRol = r.idRol
+WHERE r.codigo_rol IN ('DOSIER_ADMIN', 'DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR');
+
 -- Eliminar asignaciones de operaciones a roles de DOSIER
 DELETE rmo FROM rbac_rol_modulo_operacion rmo
 JOIN rbac_modulos_operaciones mo ON rmo.idModulosOperaciones = mo.idModulosOperaciones
@@ -83,10 +88,11 @@ INSERT INTO rbac_rol (Nombre, codigo_rol, esActivo)
 SELECT 'Administrador DOSIER', 'DOSIER_ADMIN', 1
 WHERE NOT EXISTS (SELECT 1 FROM rbac_rol WHERE CONVERT(codigo_rol USING utf8mb4) = 'DOSIER_ADMIN');
 
--- Rol 2: Docente Elaborador (14 chars)
+-- Rol 2: Docente (7 chars)
 INSERT INTO rbac_rol (Nombre, codigo_rol, esActivo)
-SELECT 'Docente Elaborador DOSIER', 'DOSIER_DOCENTE', 1
+SELECT 'Docente', 'DOSIER_DOCENTE', 1
 WHERE NOT EXISTS (SELECT 1 FROM rbac_rol WHERE CONVERT(codigo_rol USING utf8mb4) = 'DOSIER_DOCENTE');
+UPDATE rbac_rol SET Nombre = 'Docente' WHERE CONVERT(codigo_rol USING utf8mb4) = 'DOSIER_DOCENTE';
 
 -- Rol 3: Coordinador de Carrera - Revisor Curricular (19 chars)
 INSERT INTO rbac_rol (Nombre, codigo_rol, esActivo)

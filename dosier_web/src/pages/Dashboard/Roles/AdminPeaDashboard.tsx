@@ -8,11 +8,16 @@ import {
     ArrowRight, 
     RefreshCw, 
     Database, 
-    Layers,
     CheckCircle2
 } from 'lucide-react';
+import { PipelineCurricularStepper } from './Components/PipelineCurricularStepper';
+import { type RolSimulado } from './Components/RoleFlowBanner';
 
-export const AdminPeaDashboard: React.FC = () => {
+interface AdminPeaDashboardProps {
+    onCambiarRol?: (rol: RolSimulado) => void;
+}
+
+export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarRol }) => {
     const { addToast } = useNotifications();
     const [isSyncing, setIsSyncing] = useState(false);
 
@@ -62,7 +67,7 @@ export const AdminPeaDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link
                     to="/usuarios"
-                    className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
                 >
                     <div className="space-y-3">
                         <div className="w-8 h-8 rounded-lg surface-subtle flex items-center justify-center text-zinc-700 dark:text-zinc-300">
@@ -85,7 +90,7 @@ export const AdminPeaDashboard: React.FC = () => {
 
                 <Link
                     to="/auditoria"
-                    className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
                 >
                     <div className="space-y-3">
                         <div className="w-8 h-8 rounded-lg surface-subtle flex items-center justify-center text-zinc-700 dark:text-zinc-300">
@@ -108,7 +113,7 @@ export const AdminPeaDashboard: React.FC = () => {
 
                 <Link
                     to="/plantillas"
-                    className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
                 >
                     <div className="space-y-3">
                         <div className="w-8 h-8 rounded-lg surface-subtle flex items-center justify-center text-zinc-700 dark:text-zinc-300">
@@ -130,91 +135,39 @@ export const AdminPeaDashboard: React.FC = () => {
                 </Link>
             </div>
 
-            {/* Detalle Técnico de Integración (Limpio, sin cajas dentro de cajas) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
-                    <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.05]">
-                        <div className="flex items-center gap-2">
-                            <Database size={15} className="text-zinc-600 dark:text-zinc-400" />
-                            <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                                Frontera SIGAFI (Solo Lectura)
-                            </h2>
-                        </div>
-                        <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            <CheckCircle2 size={12} /> Activo
-                        </span>
-                    </div>
+            {/* Simulador Interactivo del Circuito Curricular Oficial */}
+            <PipelineCurricularStepper onSimularRol={onCambiarRol} />
 
-                    <div className="divide-y divide-black/[0.04] dark:divide-white/[0.04] text-xs">
-                        <div className="flex items-center justify-between py-2.5">
-                            <span className="text-zinc-500 dark:text-zinc-400">Base de Datos Institucional:</span>
-                            <span className="badge-subtle">sigafi_es (MySQL 3306)</span>
-                        </div>
-                        <div className="flex items-center justify-between py-2.5">
-                            <span className="text-zinc-500 dark:text-zinc-400">Carreras del Instituto:</span>
-                            <span className="badge-subtle">3 Carreras Activas</span>
-                        </div>
-                        <div className="flex items-center justify-between py-2.5">
-                            <span className="text-zinc-500 dark:text-zinc-400">Distributivo y Profesores:</span>
-                            <span className="badge-subtle">28 Docentes Sincronizados</span>
-                        </div>
-                        <div className="flex items-center justify-between py-2.5">
-                            <span className="text-zinc-500 dark:text-zinc-400">Asignaturas Normadas:</span>
-                            <span className="badge-subtle">42 Cátedras con Art. 21 CES</span>
-                        </div>
+            {/* Frontera SIGAFI (Solo Lectura) */}
+            <div className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.05]">
+                    <div className="flex items-center gap-2">
+                        <Database size={15} className="text-zinc-600 dark:text-zinc-400" />
+                        <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                            Frontera SIGAFI (Solo Lectura)
+                        </h2>
                     </div>
+                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Activo
+                    </span>
                 </div>
 
-                <div className="p-5 rounded-lg bg-white dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
-                    <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.05]">
-                        <div className="flex items-center gap-2">
-                            <Layers size={15} className="text-zinc-600 dark:text-zinc-400" />
-                            <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                                Circuito Curricular Institucional
-                            </h2>
-                        </div>
-                        <span className="badge-subtle">
-                            5 Roles RBAC
-                        </span>
+                <div className="divide-y divide-black/[0.04] dark:divide-white/[0.04] text-xs">
+                    <div className="flex items-center justify-between py-2.5">
+                        <span className="text-zinc-500 dark:text-zinc-400">Base de Datos Institucional:</span>
+                        <span className="badge-subtle">sigafi_es (MySQL 3306)</span>
                     </div>
-
-                    <div className="divide-y divide-black/[0.04] dark:divide-white/[0.04] text-xs">
-                        <div className="flex items-center justify-between py-2.5">
-                            <div>
-                                <span className="font-medium text-zinc-900 dark:text-zinc-100">1. Formulación de Cátedra</span>
-                                <p className="text-[11px] text-zinc-400">Docente Responsable del PEA</p>
-                            </div>
-                            <span className="badge-subtle">
-                                DOSIER_DOCENTE
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2.5">
-                            <div>
-                                <span className="font-medium text-zinc-900 dark:text-zinc-100">2. Revisión Curricular</span>
-                                <p className="text-[11px] text-zinc-400">Coordinador de Carrera</p>
-                            </div>
-                            <span className="badge-subtle">
-                                DOSIER_COORD_CARRERA
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2.5">
-                            <div>
-                                <span className="font-medium text-zinc-900 dark:text-zinc-100">3. Aval Académico</span>
-                                <p className="text-[11px] text-zinc-400">Coordinación Académica General</p>
-                            </div>
-                            <span className="badge-subtle">
-                                DOSIER_COORD_ACAD
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2.5">
-                            <div>
-                                <span className="font-medium text-zinc-900 dark:text-zinc-100">4. Legalización y Sello CACES</span>
-                                <p className="text-[11px] text-zinc-400">Vicerrectorado Académico</p>
-                            </div>
-                            <span className="badge-subtle">
-                                DOSIER_VICERRECTOR
-                            </span>
-                        </div>
+                    <div className="flex items-center justify-between py-2.5">
+                        <span className="text-zinc-500 dark:text-zinc-400">Carreras del Instituto:</span>
+                        <span className="badge-subtle">3 Carreras Activas</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5">
+                        <span className="text-zinc-500 dark:text-zinc-400">Distributivo y Profesores:</span>
+                        <span className="badge-subtle">28 Docentes Sincronizados</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2.5">
+                        <span className="text-zinc-500 dark:text-zinc-400">Asignaturas Normadas:</span>
+                        <span className="badge-subtle">42 Cátedras con Art. 21 CES</span>
                     </div>
                 </div>
             </div>

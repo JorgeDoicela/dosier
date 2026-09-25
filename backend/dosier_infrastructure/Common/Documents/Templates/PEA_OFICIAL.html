@@ -1,659 +1,347 @@
-<!-- DOSIER_SECTIONS_JSON: W3siaWQiOiJibG9jay1jb3Zlci0xNzg5Mjc5MjcwNTk4IiwidHlwZSI6ImNvdmVyIiwidGl0bGUiOiJQb3J0YWRhIEluc3RpdHVjaW9uYWwgKFJvbWJvcykiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7InRpdHVsb1N1cGVyaW9yIjoiUFJPR1JBTUEgREUgRVNUVURJTyBERSBMQSBBU0lHTkFUVVJBIChQRUEpIiwiY29sb3JUaXR1bG9TdXBlcmlvciI6Im5hdnkiLCJwcmVmaWpvQ2FycmVyYSI6IlRFQ05PTE9Hw41BIFNVUEVSSU9SIEVOIiwicHJlZmlqb1BlcmlvZG8iOiJQRVJJT0RPIEFDQUTDiU1JQ08iLCJjb2xvclRlbWEiOiIjMWUyYTRhIiwiY29sb3JDYXJyZXJhIjoiIzFlMmE0YSIsImNvbG9yUGVyaW9kbyI6IiM0NzU1NjkiLCJjb2xvclRlbWFQcm95ZWN0byI6IiMxZTJhNGEiLCJjb2xvckluc3RpdHV0aW9uIjoiIzFlMmE0YSIsImluc3RpdHV0aW9uVmFyaWFudCI6ImNsZWFuIiwiaW5zdGl0dXRpb25Gb250U2l6ZSI6MTEsImluc3RpdHV0aW9uSXRhbGljYSI6ZmFsc2UsInNob3dJbnN0aXR1dGlvbiI6dHJ1ZSwidGV4dG9JbnN0aXR1Y2lvbiI6IklOU1RJVFVUTyBURUNOT0zDk0dJQ08gU1VQRVJJT1IgTUFZT1IgUEVEUk8gVFJBVkVSU0FSSSIsInhMb2dvIjoxMCwieUxvZ28iOjMsInhJbnN0aXR1dGlvbiI6MTAsInlJbnN0aXR1dGlvbiI6MTMsInNob3dUaXRsZSI6dHJ1ZSwieFRpdGxlIjoxMCwieVRpdGxlIjozMiwic2hvd1RlbWFQcm95ZWN0byI6dHJ1ZSwieFRlbWEiOjEwLCJ5VGVtYSI6NDYsInNob3dDYXJyZXJhIjp0cnVlLCJ4Q2FycmVyYSI6MTAsInlDYXJyZXJhIjo3MCwic2hvd1BlcmlvZG8iOnRydWUsInhQZXJpb2RvIjoxMCwieVBlcmlvZG8iOjgwfX0seyJpZCI6ImJsb2NrLXBlYS1nZW5lcmFsIiwidHlwZSI6InBlYV9nZW5lcmFsX3NlY3Rpb24iLCJ0aXRsZSI6ImEpIERBVE9TIEdFTkVSQUxFUyBERSBMQSBBU0lHTkFUVVJBIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJoZWFkZXJDb2xvciI6IiMxZTJhNGEiLCJib3JkZXJTdHlsZSI6InNvbGlkIiwic2hvd0FzaWduYXR1cmEiOnRydWUsInNob3dDYXJyZXJhIjp0cnVlLCJzaG93Tml2ZWxNb2RhbGlkYWQiOnRydWUsInNob3dVbmlkYWRPcmdhbml6YWNpb24iOnRydWUsInNob3dSZXF1aXNpdG9zIjp0cnVlLCJzaG93RG9jZW50ZSI6dHJ1ZSwiY3VzdG9tRmllbGRzIjpbXX19LHsiaWQiOiJibG9jay1wZWEtY2hhcmFjdGVyaXphdGlvbiIsInR5cGUiOiJwZWFfY2hhcmFjdGVyaXphdGlvbl9zZWN0aW9uIiwidGl0bGUiOiJiKSBPQkpFVElWTyBERSBMQSBBU0lHTkFUVVJBIFkgYykgUFJFUlJFUVVJU0lUT1MiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSJ9fSx7ImlkIjoiYmxvY2stcGVhLWNvbXBldGVuY2llcy1yZGEiLCJ0eXBlIjoicGVhX2NvbXBldGVuY2llc19yZGFfc2VjdGlvbiIsInRpdGxlIjoiZCkgUkVTVUxUQURPUyBERSBBUFJFTkRJWkFKRSBERSBMQSBDQVJSRVJBIFkgZSkgREUgTEEgQVNJR05BVFVSQSIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIn19LHsiaWQiOiJibG9jay1wZWEtY29udGVudHMiLCJ0eXBlIjoicGVhX2NvbnRlbnRzX3NlY3Rpb24iLCJ0aXRsZSI6ImYpIENPTlRFTklET1MgREUgRU5TRcORQU5aQSIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIn19LHsiaWQiOiJibG9jay1wZWEtbWV0aG9kb2xvZ3kiLCJ0eXBlIjoicGVhX21ldGhvZG9sb2d5X3NlY3Rpb24iLCJ0aXRsZSI6ImcpIE1FVE9ET0xPR8ONQSBERSBFTlNFw5FBTlpBIFkgUkVDVVJTT1MgRElEw4FDVElDT1MiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSJ9fSx7ImlkIjoiYmxvY2stcGVhLXJlc291cmNlcyIsInR5cGUiOiJwZWFfcmVzb3VyY2VzX3NlY3Rpb24iLCJ0aXRsZSI6ImgpIEFDVElWSURBREVTIFBSw4FDVElDQVMiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSJ9fSx7ImlkIjoiYmxvY2stcGVhLWV2YWx1YXRpb24iLCJ0eXBlIjoicGVhX2V2YWx1YXRpb25fc2VjdGlvbiIsInRpdGxlIjoiaSkgRVZBTFVBQ0nDk04gREVMIEFQUkVORElaQUpFIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJoZWFkZXJDb2xvciI6IiMxZTJhNGEifX0seyJpZCI6ImJsb2NrLXBlYS1iaWJsaW9ncmFwaHkiLCJ0eXBlIjoicGVhX2JpYmxpb2dyYXBoeV9zZWN0aW9uIiwidGl0bGUiOiJqKSBCSUJMSU9HUkFGw41BIELDgVNJQ0EgWSBERSBDT05TVUxUQSIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIn19LHsiaWQiOiJibG9jay1wZWEtc2lnbmF0dXJlcyIsInR5cGUiOiJwZWFfc2lnbmF0dXJlc19zZWN0aW9uIiwidGl0bGUiOiJrKSBGSVJNQVMgREUgUkVTUE9OU0FCSUxJREFEIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJoZWFkZXJDb2xvciI6IiMxZTJhNGEifX1d -->
+<!-- DOSIER_SECTIONS_JSON:W3siaWQiOiJibG9jay1wZWEtZ2VuZXJhbCIsInR5cGUiOiJwZWFfZ2VuZXJhbF9zZWN0aW9uIiwidGl0bGUiOiJhKSBEQVRPUyBHRU5FUkFMRVMgREUgTEEgQVNJR05BVFVSQToiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSIsImJvcmRlclN0eWxlIjoic29saWQiLCJzaG93SGVhZGVyIjp0cnVlLCJpbnN0aXR1dGlvbk5hbWUiOiJJTlNUSVRVVE8gU1VQRVJJT1IgVEVDTk9Mw5NHSUNPIFwiTUFZT1IgUEVEUk8gVFJBVkVSU0FSSVwiIiwiaW5zdGl0dXRpb25BZGRyZXNzIjoiTUFUSUxERSBBTFZBUkVaIFMvTiBZIE1BUklTQ0FMIFNVQ1JFIChDSElMTE9HQUxMTykiLCJkb2N1bWVudFRpdGxlIjoiUFJPR1JBTUEgREUgRVNUVURJTyBERSBMQSBBU0lHTkFUVVJBIiwic2hvd0FzaWduYXR1cmEiOnRydWUsInNob3dDb2RpZ29DYXJyZXJhIjp0cnVlLCJzaG93Q2FycmVyYSI6dHJ1ZSwic2hvd01vZGFsaWRhZCI6dHJ1ZSwic2hvd1VuaWRhZE9yZ2FuaXphY2lvbiI6dHJ1ZSwic2hvd1BlcmlvZG8iOnRydWUsInNob3dTZW1lc3RyZSI6dHJ1ZSwic2hvd1RvdGFsSG9yYXMiOnRydWUsInNob3dDcmVkaXRvcyI6dHJ1ZSwic2hvd09yZ2FuaXphY2lvbkFwcmVuZGl6YWplIjp0cnVlLCJjdXN0b21GaWVsZHMiOltdfX0seyJpZCI6ImJsb2NrLXBlYS1vYmplY3RpdmUiLCJ0eXBlIjoicGVhX29iamVjdGl2ZV9zZWN0aW9uIiwidGl0bGUiOiJiKSBPQkpFVElWTyBERSBMQSBBU0lHTkFUVVJBIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJoZWFkZXJDb2xvciI6IiMxZTJhNGEiLCJvYmpldGl2b0xhYmVsIjoiYikgT0JKRVRJVk8gREUgTEEgQVNJR05BVFVSQSIsIm9iamV0aXZvUGxhY2Vob2xkZXIiOiJGb3JtdWxhciBjb24gVmVyYm8gZW4gaW5maW5pdGl2byArIMK/UXXDqT8gKyDCv0PDs21vPyArIMK/UGFyYSBxdcOpPyBhcnRpY3VsYWRvIGFsIG5pdmVsIGZvcm1hdGl2byBkZSBsYSBjYXJyZXJhLiIsImxpbmVDb3VudCI6NH19LHsiaWQiOiJibG9jay1wZWEtcHJlcmVxdWlzaXRlcyIsInR5cGUiOiJwZWFfcHJlcmVxdWlzaXRlc19zZWN0aW9uIiwidGl0bGUiOiJjKSBQUkVSUkVRVUlTSVRPUzoiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSIsInByZXJyZXF1aXNpdG9zTGFiZWwiOiJjKSBQUkVSUkVRVUlTSVRPUzoiLCJwcmVycmVxdWlzaXRvc0NvbEFzaWduYXR1cmEiOiJBc2lnbmF0dXJhIiwicHJlcnJlcXVpc2l0b3NDb2xPYnNlcnZhY2lvbiI6Ik9ic2VydmFjacOzbiIsImZpbGFzVmFjaWFzIjoyfX0seyJpZCI6ImJsb2NrLXBlYS1jYXJlZXItb3V0Y29tZXMiLCJ0eXBlIjoicGVhX2NhcmVlcl9vdXRjb21lc19zZWN0aW9uIiwidGl0bGUiOiJkKVJFU1VMVEFET1MgREUgQVBSRU5ESVpBSkUgREUgTEEgQ0FSUkVSQSBBIExPUyBRVUUgTEEgQVNJR05BVFVSQSBBUE9SVEEiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSIsInJkYUNhcnJlcmFMYWJlbCI6ImQpUkVTVUxUQURPUyBERSBBUFJFTkRJWkFKRSBERSBMQSBDQVJSRVJBIEEgTE9TIFFVRSBMQSBBU0lHTkFUVVJBIEFQT1JUQSIsInJkYUNhcnJlcmFQbGFjZWhvbGRlciI6IlJlc3VsdGFkb3MgZGUgYXByZW5kaXphamUgZGVsIHBlcmZpbCBkZSBlZ3Jlc28gYSBsb3MgcXVlIHRyaWJ1dGEgbGEgYXNpZ25hdHVyYS4iLCJsaW5lQ291bnQiOjR9fSx7ImlkIjoiYmxvY2stcGVhLXN1YmplY3Qtb3V0Y29tZXMiLCJ0eXBlIjoicGVhX3N1YmplY3Rfb3V0Y29tZXNfc2VjdGlvbiIsInRpdGxlIjoiZSkgUkVTVUxUQURPUyBERSBBUFJFTkRJWkFKRSBERSBMQSBBU0lHTkFUVVJBOiIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIiwicmRhQXNpZ25hdHVyYUxhYmVsIjoiZSkgUkVTVUxUQURPUyBERSBBUFJFTkRJWkFKRSBERSBMQSBBU0lHTkFUVVJBOiIsInJkYUFzaWduYXR1cmFQbGFjZWhvbGRlciI6IlJlc3VsdGFkb3MgZGUgYXByZW5kaXphamUgZXNwZWPDrWZpY29zIGFsY2FuemFibGVzIHBvciBlbCBlc3R1ZGlhbnRlIGFsIGZpbmFsaXphciBlbCBjdXJzby4iLCJsaW5lQ291bnQiOjV9fSx7ImlkIjoiYmxvY2stcGVhLWJyZWFrLTEiLCJ0eXBlIjoicGFnZV9icmVhayIsInRpdGxlIjoiU2FsdG8gZGUgUMOhZ2luYSBBNCAoUMOhZ2luYSAxIOKGkiBQw6FnaW5hIDIpIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6e319LHsiaWQiOiJibG9jay1wZWEtY29udGVudHMiLCJ0eXBlIjoicGVhX2NvbnRlbnRzX3NlY3Rpb24iLCJ0aXRsZSI6ImYpIENPTlRFTklET1MgREUgRU5TRcORQU5aQToiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSIsInN1YkhlYWRlckNvbG9yIjoiI2JkZDdlZSIsInVuaWRhZGVzIjpbeyJudW0iOjEsInRpdHVsbyI6IlVOSURBRCAxOiBJTlRST0RVQ0NJw5NOIFkgRlVOREFNRU5UT1MiLCJob3Jhc1RvdGFsIjozMCwiaG9yYXNDRCI6MTIsImhvcmFzQVBFIjo2LCJob3Jhc1RBIjoxMn0seyJudW0iOjIsInRpdHVsbyI6IlVOSURBRCAyOiBERVNBUlJPTExPIFkgQVBMSUNBQ0nDk04gUFLDgUNUSUNBIiwiaG9yYXNUb3RhbCI6MzAsImhvcmFzQ0QiOjEyLCJob3Jhc0FQRSI6NiwiaG9yYXNUQSI6MTJ9LHsibnVtIjozLCJ0aXR1bG8iOiJVTklEQUQgMzogSU5URUdSQUNJw5NOIFkgRVZBTFVBQ0nDk04iLCJob3Jhc1RvdGFsIjozMCwiaG9yYXNDRCI6MTIsImhvcmFzQVBFIjo2LCJob3Jhc1RBIjoxMn1dfX0seyJpZCI6ImJsb2NrLXBlYS1tZXRob2RvbG9neSIsInR5cGUiOiJwZWFfbWV0aG9kb2xvZ3lfc2VjdGlvbiIsInRpdGxlIjoiZykgTUVUT0RPTE9Hw41BIERFIEVOU0XDkUFOWkEiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSIsImVzdHJhdGVnaWFzTGFiZWwiOiJFU1RSQVRFR0lBUyBNRVRPRE9Mw5NHSUNBUyIsInJlY3Vyc29zTGFiZWwiOiJSRUNVUlNPUyBESUTDgUNUSUNPUyAvIElORk9STUFUSVpBQ0nDk04gREVMIEFQUkVORElaQUpFIiwiZXN0cmF0ZWdpYXNMaW5lQ291bnQiOjQsInJlY3Vyc29zTGluZUNvdW50Ijo0fX0seyJpZCI6ImJsb2NrLXBlYS1yZXNvdXJjZXMiLCJ0eXBlIjoicGVhX3Jlc291cmNlc19zZWN0aW9uIiwidGl0bGUiOiJoKSBBQ1RJVklEQURFUyBQUsOBQ1RJQ0FTIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJoZWFkZXJDb2xvciI6IiMxZTJhNGEiLCJjb2xVbmlkYWQiOiJVbmlkYWQiLCJjb2xOb21icmUiOiJOb21icmUgZGUgbGEgcHLDoWN0aWNhIHkgY2FyYWN0ZXJpemFjacOzbiBkZSBsYSBhY3RpdmlkYWQiLCJmaWxhc1ZhY2lhcyI6Mn19LHsiaWQiOiJibG9jay1wZWEtZXZhbHVhdGlvbiIsInR5cGUiOiJwZWFfZXZhbHVhdGlvbl9zZWN0aW9uIiwidGl0bGUiOiJpKSBFVkFMVUFDScOTTiBERUwgQVBSRU5ESVpBSkUiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImhlYWRlckNvbG9yIjoiIzFlMmE0YSIsInN1YkhlYWRlckNvbG9yIjoiI2JkZDdlZSIsIm5vdGFQYXJjaWFsMSI6MTAsIm5vdGFQYXJjaWFsMiI6MTAsIm5vdGFGaW5hbCI6MTB9fSx7ImlkIjoiYmxvY2stcGVhLWJyZWFrLTIiLCJ0eXBlIjoicGFnZV9icmVhayIsInRpdGxlIjoiU2FsdG8gZGUgUMOhZ2luYSBBNCAoUMOhZ2luYSAyIOKGkiBQw6FnaW5hIDMpIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6e319LHsiaWQiOiJibG9jay1wZWEtYmlibGlvZ3JhcGh5IiwidHlwZSI6InBlYV9iaWJsaW9ncmFwaHlfc2VjdGlvbiIsInRpdGxlIjoiaikgQklCTElPR1JBRsONQSIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIiwic3ViSGVhZGVyQ29sb3IiOiIjZjhmYWZjIiwiYmFzaWNhTGFiZWwiOiJCaWJsaW9ncmFmw61hIGLDoXNpY2EiLCJjb25zdWx0YUxhYmVsIjoiQmlibGlvZ3JhZsOtYSBkZSBjb25zdWx0YSIsImJhc2ljYUxpbmVDb3VudCI6NCwiY29uc3VsdGFMaW5lQ291bnQiOjR9fSx7ImlkIjoiYmxvY2stcGVhLXNpZ25hdHVyZXMiLCJ0eXBlIjoicGVhX3NpZ25hdHVyZXNfc2VjdGlvbiIsInRpdGxlIjoiaykgRklSTUFTIERFIFJFU1BPTlNBQklMSURBRCIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIiwiZmlybWFzIjpbeyJyb2wiOiJFbGFib3JhZG8gcG9yIiwiY2FyZ28iOiJEb2NlbnRlIiwibm9tYnJlIjoie3tkb2NlbnRlLm5vbWJyZX19IiwiZGVzY3JpcGNpb24iOiJFTEFCT1JBRE8ifSx7InJvbCI6IlJldmlzYWRvIHBvciIsImNhcmdvIjoiQ29vcmRpbmFkb3IgZGUgQ2FycmVyYSIsIm5vbWJyZSI6Int7Y29vcmRpbmFkb3JfY2FycmVyYS5ub21icmV9fSIsImRlc2NyaXBjaW9uIjoiUkVWSVNBRE8ifSx7InJvbCI6IlJldmlzYWRvIHBvciIsImNhcmdvIjoiQ29vcmRpbmFkb3IgQWNhZMOpbWljbyIsIm5vbWJyZSI6Int7Y29vcmRpbmFkb3JfYWNhZGVtaWNvLm5vbWJyZX19IiwiZGVzY3JpcGNpb24iOiJSRVZJU0FETyJ9LHsicm9sIjoiQXByb2JhZG8gcG9yIiwiY2FyZ28iOiJWaWNlcnJlY3RvcmFkbyIsIm5vbWJyZSI6Int7dmljZXJyZWN0b3Iubm9tYnJlfX0iLCJkZXNjcmlwY2lvbiI6IkFQUk9CQURPIn1dfX1d -->
 <style>
   * { box-sizing: border-box; }
   
   @page {
-      margin-top: {{default theme.layout.margin_top "2.5cm"}};
+      margin-top: {{default theme.layout.margin_top "2cm"}};
       margin-bottom: {{default theme.layout.margin_bottom "1.5cm"}};
-      margin-left: {{default theme.layout.margin_left "2cm"}};
-      margin-right: {{default theme.layout.margin_right "2cm"}};
+      margin-left: {{default theme.layout.margin_left "1.8cm"}};
+      margin-right: {{default theme.layout.margin_right "1.8cm"}};
   }
 
-  /* Reset y Core del Documento con Tematización Dinámica */
   .doc-container { 
-      font-family: {{ theme.typography.font_family }}; 
-      font-size: {{default theme.typography.base_size "10pt"}};
-      color: {{ theme.colors.text }}; 
-      line-height: {{ theme.typography.line_height }};
-      padding: 0; 
-      background: transparent; 
-  }
-  
-  /* Marca de Agua / Imagen de Fondo de Hojas Paginadas (PDF Paged Media) */
-  .doc-watermark {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 210mm;
-      height: 0;
-      line-height: 0;
-      font-size: 0;
-      z-index: -1;
-      pointer-events: none;
-      {{#if theme.brand.background_image}}
-      background-image: url('{{ theme.brand.background_image }}');
-      background-size: {{default theme.brand.background_fit "contain"}};
-      background-position: center center;
-      background-repeat: no-repeat;
-      opacity: {{default theme.brand.background_opacity "0.12"}};
-      {{/if}}
-  }
-  
-  /* Portada (Cover Page) Full Bleed con Imagen de Fondo y Z-Index */
-  .cover-page {
-      font-family: {{ theme.typography.font_family }};
-      position: relative;
-      width: 210mm;
-      height: 296.5mm;
-      min-height: 296.5mm;
-      max-height: 296.5mm;
-      box-sizing: border-box;
-      padding: 0;
-      margin: 0;
-      {{#if portada_base64}}
-      background-image: url('data:image/jpeg;base64,{{portada_base64}}');
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
-      {{/if}}
-      color: {{ theme.colors.primary }};
-      z-index: 1000;
-      overflow: hidden;
-      page-break-inside: avoid;
-      page-break-after: always;
-  }
-
-  .cover-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      padding: 3cm 2cm;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      justify-content: space-around;
-  }
-
-  .main-label {
-      font-family: {{ theme.typography.font_family }};
-      font-size: 24pt;
-      font-weight: bold;
-      color: {{ theme.colors.secondary }};
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 0;
-      width: 100%;
-  }
-
-  .project-theme {
-      font-family: {{ theme.typography.font_family }};
-      font-size: 16pt;
-      font-weight: bold;
-      color: {{ theme.colors.primary }};
-      text-transform: uppercase;
-      margin: 1.5cm 0;
+      font-family: {{default theme.typography.font_family "'Inter', 'Calibri', Arial, sans-serif"}}; 
+      font-size: {{default theme.typography.base_size "8.5pt"}};
+      color: {{default theme.colors.text "#000000"}}; 
       line-height: 1.3;
-      width: 100%;
-      word-wrap: break-word;
-  }
-
-  .career-container {
-      margin: 1cm 0;
-      text-align: center;
-      width: 100%;
-  }
-
-  .career-label {
-      font-family: {{ theme.typography.font_family }};
-      font-size: 12pt;
-      font-weight: bold;
-      color: {{ theme.colors.primary }};
-      text-transform: uppercase;
-  }
-
-  .career-value {
-      font-family: {{ theme.typography.font_family }};
-      font-size: 12pt;
-      font-weight: normal;
-      color: {{ theme.colors.primary }};
-      text-transform: uppercase;
-      margin-top: 4px;
-  }
-
-  .period-container {
-      width: 100%;
-      margin-top: 1cm;
-      text-align: center;
-  }
-
-  .period-label {
-      font-family: {{ theme.typography.font_family }};
-      font-size: 11pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      color: {{ theme.colors.primary }};
-  }
-
-  .period-value {
-      font-family: {{ theme.typography.font_family }};
-      font-size: 11pt;
-      font-weight: normal;
-      text-transform: uppercase;
-      color: {{ theme.colors.primary }};
-      margin-top: 2px;
-  }
-
-  /* Títulos de sección */
-  .title-h1 { 
-      font-size: 16pt; 
-      font-weight: bold; 
-      color: {{default theme.colors.primary "#222c57"}}; 
-      margin-top: 35px; 
-      text-transform: uppercase; 
-  }
-  .title-h2 { 
-      font-size: 10pt; 
-      font-weight: 800; 
-      background: {{default theme.colors.table_header_bg "#222c57"}}; 
-      color: {{default theme.colors.table_header_color "#ffffff"}} !important; 
-      padding: 6px 12px; 
-      margin-top: 25px; 
-      text-transform: uppercase; 
-  }
-  .title-h3 { 
-      font-size: 9.5pt; 
-      font-weight: bold; 
-      color: {{default theme.colors.secondary "#c4a857"}}; 
-      margin-top: 15px; 
-      text-transform: uppercase; 
-  }
-  
-  /* Tablas generales compactas con bordes negros (formato premium original) */
-  .info-table, .data-table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-bottom: 12px; 
-      font-size: 9pt; 
+      padding: 0; 
       background: #ffffff; 
   }
-  .info-table td, .info-table th, .data-table td, .data-table th { 
-      border: 1px solid #000000; 
-      padding: 0 8px; 
-      height: 0.6cm;
-      vertical-align: middle; 
-      color: #000000;
-  }
-  .info-table th, .data-table th { 
-      font-weight: bold; 
-      text-transform: uppercase; 
-      font-size: 8.5pt; 
-      background: {{ theme.colors.table_header_bg }};
-      color: {{ theme.colors.table_header_color }};
-      text-align: center;
-  }
-  .label-cell { 
-      font-weight: bold; 
-      background: {{ theme.colors.table_header_bg }}; 
-      color: {{ theme.colors.table_header_color }};
-      width: 35%; 
-      text-transform: uppercase; 
-      font-size: 8.5pt; 
-  }
   
-  /* Texto enriquecido */
-  .rich-content { 
-      font-size: 9.5pt; 
-      text-align: justify; 
-      color: #000000; 
-      margin-top: 10px; 
-      line-height: 1.4; 
-  }
-  .rich-content p { margin: 6px 0; }
-  .rich-content ul, .rich-content ol { padding-left: 20px; margin: 6px 0; }
-  .rich-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-  .rich-content table td, .rich-content table th { border: 1px solid #000000; padding: 6px 8px; font-size: 9pt; }
-  .rich-content table th { background: {{ theme.colors.table_header_bg }}; color: {{ theme.colors.table_header_color }}; font-weight: bold; }
-  
-  /* Dos columnas */
-  .two-col-wrapper { display: table; width: 100%; border-collapse: collapse; margin-top: 15px; }
-  .two-col-cell    { display: table-cell; width: 50%; border: 1px solid #000000; vertical-align: top; }
-  .col-header      { padding: 8px 12px; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
-  .col-body        { padding: 10px 12px; font-size: 9pt; line-height: 1.4; }
-  
-  /* Salto de página */
   .page-break { page-break-after: always; height: 0; }
-  
-  /* Firmas y Trazabilidad */
-  .signatures-row { display: flex; justify-content: space-around; margin-top: 80px; flex-wrap: wrap; gap: 20px; page-break-inside: avoid; }
-  .sig-box        { text-align: center; min-width: 180px; padding-top: 12px; border-top: 1px solid #000000; font-size: 9pt; line-height: 1.5; }
-  .sig-label      { font-weight: bold; font-size: 8pt; color: #475569; text-transform: uppercase; margin-bottom: 6px; }
-  .sig-footer     { text-align: center; font-size: 8pt; color: #94a3b8; margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+  .table-bordered { width: 100%; border-collapse: collapse; border: 1px solid #000000; font-size: 8pt; background: #ffffff; }
+  .table-bordered td, .table-bordered th { border: 1px solid #000000; padding: 4px 6px; }
+  .header-primary { background-color: {{default theme.colors.primary "#1e2a4a"}}; color: #ffffff; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; border: 1px solid #000000; }
+  .header-sub { background-color: #bdd7ee; color: #000000; font-weight: bold; font-size: 8pt; }
 </style>
 
 <div class="doc-container">
-  <!-- BLOQUE: PORTADA CANVAS LIBRE -->
-  <div class="cover-page">
-    
-    
-    <div style="position:absolute; left:21.0mm; top:35.1mm; width:174.0mm; text-align:center;">
-      <span style="font-family: {{ theme.typography.font_family }}; font-size:11pt;  font-weight:bold; text-transform:uppercase; color:#1e2a4a; display:inline-block;">INSTITUTO TECNOLÓGICO SUPERIOR MAYOR PEDRO TRAVERSARI</span>
-    </div>
-    
-    <div style="position:absolute; left:21.0mm; top:86.4mm; width:174.0mm; text-align:center;">
-      <div style="font-family: {{ theme.typography.font_family }}; font-size:20pt; font-weight:bold;  color: {{ theme.colors.primary }}; text-transform:uppercase; line-height:1.2;">
-        PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)
-      </div>
-    </div>
-    
-    <div style="position:absolute; left:21.0mm; top:124.2mm; width:174.0mm; text-align:center;">
-      <div style="font-family: {{ theme.typography.font_family }}; font-size:13pt; font-weight:bold;  color: #1e2a4a; text-transform:uppercase; line-height:1.3; word-wrap:break-word;">
-        {{default NombreAsignatura (default nombre_asignatura (default titulo (default title 'ESCRIBIR EL TEMA EN MAYÚSCULAS')))}}
-      </div>
-    </div>
-    
-    <div style="position:absolute; left:21.0mm; top:189.0mm; width:174.0mm; text-align:center;">
-      <div style="font-family: {{ theme.typography.font_family }}; font-size:9pt; font-weight:bold; color: #1e2a4a; text-transform:uppercase;">TECNOLOGÍA SUPERIOR EN</div>
-      <div style="font-family: {{ theme.typography.font_family }}; font-size:10pt; font-weight:bold;  color: #1e2a4a; text-transform:uppercase; margin-top:2px;">
-        {{default Carrera (default carrera "[NOMBRE DE LA CARRERA]")}}
-      </div>
-    </div>
-    
-    <div style="position:absolute; left:21.0mm; top:202.5mm; width:174.0mm; text-align:center;">
-      <div style="font-family: {{ theme.typography.font_family }}; font-size:8pt; font-weight:bold; color: #475569; text-transform:uppercase;">PERIODO ACADÉMICO</div>
-      <div style="font-family: {{ theme.typography.font_family }}; font-size:9pt; font-weight:normal;  color: #475569; text-transform:uppercase; margin-top:2px;">
-        {{default Periodo (default periodo "[PERIODO ACADÉMICO ACTIVO]")}}
-      </div>
-    </div>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- PÁGINA 1: CABECERA, DATOS GENERALES, OBJETIVO, PRERREQUISITOS Y RDAS -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- CABECERA OFICIAL ISTPET -->
+  <table style="width: 100%; border-collapse: collapse; border: 1px solid #000000; margin-bottom: 0; background: #ffffff;">
+    <tr>
+      <td style="width: 28%; border: 1px solid #000000; padding: 8px; text-align: center; vertical-align: middle;">
+        <div style="font-weight: 900; font-size: 16pt; color: #1e2a4a; line-height: 1;">IST</div>
+        <div style="font-size: 7.5pt; font-weight: bold; color: #334155; line-height: 1.1; text-transform: uppercase;">
+          TECNOLÓGICO<br/>TRAVERSARI
+        </div>
+      </td>
+      <td style="padding: 6px 10px; text-align: center; vertical-align: middle; border: 1px solid #000000;">
+        <div style="font-size: 9.5pt; font-weight: bold; text-transform: uppercase; color: #000000;">INSTITUTO SUPERIOR TECNOLÓGICO "MAYOR PEDRO TRAVERSARI"</div>
+        <div style="font-size: 7.5pt; font-weight: 600; text-transform: uppercase; color: #1e293b; margin-top: 2px;">MATILDE ALVAREZ S/N Y MARISCAL SUCRE (CHILLOGALLO)</div>
+        <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; color: #000000; margin-top: 4px;">PROGRAMA DE ESTUDIO DE LA ASIGNATURA</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- a) DATOS GENERALES DE LA ASIGNATURA -->
+  <div class="header-primary" style="border-top: none;">
+    a) DATOS GENERALES DE LA ASIGNATURA:
   </div>
-
-  <div class="page-break"></div>
-
-  <!-- SECCIÓN A: DATOS GENERALES DE LA ASIGNATURA -->
-  <div class="title-h2">a) DATOS GENERALES DE LA ASIGNATURA</div>
-  <table class="info-table" style="margin-top: 10px;">
+  <table class="table-bordered" style="border-top: none;">
     <tbody>
       <tr>
-        <td class="label-cell" style="width: 38%;">Nombre de la asignatura:</td>
-        <td style="font-weight: bold; text-transform: uppercase;">{{default NombreAsignatura (default nombre_asignatura (default titulo (default title "---")))}}</td>
+        <td style="width: 42%; font-weight: bold;">Nombre de la asignatura:</td>
+        <td style="font-weight: bold; text-transform: uppercase;">{{default NombreAsignatura (default nombre_asignatura (default asignatura "---"))}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Código de la asignatura:</td>
-        <td>{{default CodigoAsignatura (default codigo_asignatura (default codigo "---"))}}</td>
+        <td style="font-weight: bold;">Código de carrera:</td>
+        <td style="font-family: monospace;">{{default CodigoCarrera (default codigo_carrera "---")}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Carrera:</td>
+        <td style="font-weight: bold;">Carrera:</td>
         <td style="text-transform: uppercase;">{{default Carrera (default carrera "---")}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Modalidad de estudio:</td>
+        <td style="font-weight: bold;">Modalidad de estudio:</td>
         <td>{{default Modalidad (default modalidad "Presencial")}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Unidad de Organización Curricular:</td>
-        <td>{{default UnidadOrganizacion (default unidad_organizacion "---")}}</td>
+        <td style="font-weight: bold;">Unidad de Organización Curricular:</td>
+        <td>{{default UnidadOrganizacion (default unidad_organizacion "Unidad Profesional")}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Periodo académico:</td>
-        <td>{{default Periodo (default periodo "---")}}</td>
+        <td style="font-weight: bold;">Periodo académico:</td>
+        <td style="font-weight: bold;">{{default Periodo (default periodo "---")}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Semestre / Nivel:</td>
-        <td>{{default Nivel (default nivel (default semestre "---"))}}</td>
+        <td style="font-weight: bold;">Semestre:</td>
+        <td>{{default Semestre (default semestre "---")}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Número de horas de la asignatura:</td>
-        <td><strong>{{default TotalHorasAsignatura (default total_horas_asignatura (default horas_totales 0))}} horas</strong></td>
+        <td style="font-weight: bold;">Número de horas de la asignatura:</td>
+        <td style="font-weight: bold;">{{default TotalHorasAsignatura (default total_horas_asignatura 0)}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Número de créditos:</td>
-        <td><strong>{{default Creditos (default creditos 0)}} créditos</strong></td>
+        <td style="font-weight: bold;">Número de créditos:</td>
+        <td style="font-weight: bold;">{{default Creditos (default creditos 0)}}</td>
       </tr>
       <tr>
-        <td class="label-cell">Docente elaborador:</td>
-        <td style="font-weight: bold; text-transform: uppercase;">{{default DocenteElaborador (default docente (default docente_elaborador "---"))}}</td>
+        <td style="font-weight: bold; vertical-align: top;">
+          Organización de aprendizajes por modalidad, número de horas destinadas a cada componente
+        </td>
+        <td style="padding: 0; vertical-align: top;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
+            <tr>
+              <td style="border: none; border-bottom: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 6px; width: 65%;">Total horas de contacto docente:</td>
+              <td style="border: none; border-bottom: 1px solid #000000; padding: 4px 6px; font-weight: bold;">{{default HorasContactoDocente (default horas_contacto_docente 0)}}</td>
+            </tr>
+            <tr>
+              <td style="border: none; border-bottom: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 6px;">Total horas de aprendizaje experimental:</td>
+              <td style="border: none; border-bottom: 1px solid #000000; padding: 4px 6px; font-weight: bold;">{{default HorasPracticoExperimental (default horas_practico_experimental 0)}}</td>
+            </tr>
+            <tr>
+              <td style="border: none; border-right: 1px solid #000000; padding: 4px 6px;">Total horas de practico autónomo:</td>
+              <td style="border: none; padding: 4px 6px; font-weight: bold;">{{default HorasAutonomo (default horas_autonomo 0)}}</td>
+            </tr>
+          </table>
+        </td>
       </tr>
     </tbody>
   </table>
 
-  <div class="title-h3" style="margin-top: 14px;">Organización de aprendizajes por componente</div>
-  <table class="data-table" style="margin-top: 6px;">
+  <!-- b) OBJETIVO DE LA ASIGNATURA -->
+  <div class="header-primary" style="margin-top: 6px;">
+    b) OBJETIVO DE LA ASIGNATURA
+  </div>
+  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 6px;">
+    {{default ObjetivoAsignatura (default objetivo_asignatura "---")}}
+  </div>
+
+  <!-- c) PRERREQUISITOS -->
+  <div class="header-primary">
+    c) PRERREQUISITOS:
+  </div>
+  <table class="table-bordered" style="border-top: none;">
     <thead>
-      <tr>
-        <th style="width: 70%; text-align: left;">Componente de Aprendizaje</th>
-        <th style="width: 30%; text-align: center;">Horas Asignadas</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Componente de docencia (Aprendizaje en contacto con el docente - CD)</td>
-        <td style="text-align: center; font-weight: bold;">{{default HorasContactoDocente (default horas_contacto_docente 0)}} horas</td>
-      </tr>
-      <tr>
-        <td>Componente de prácticas de aplicación y experimentación de los aprendizajes (APE)</td>
-        <td style="text-align: center; font-weight: bold;">{{default HorasPracticoExperimental (default horas_practico_experimental 0)}} horas</td>
-      </tr>
-      <tr>
-        <td>Componente de aprendizaje autónomo (AA)</td>
-        <td style="text-align: center; font-weight: bold;">{{default HorasAutonomo (default horas_autonomo 0)}} horas</td>
-      </tr>
       <tr style="background: #f8fafc; font-weight: bold;">
-        <td>TOTAL DE HORAS DE LA ASIGNATURA</td>
-        <td style="text-align: center;">{{default TotalHorasAsignatura (default total_horas_asignatura 0)}} horas</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- SECCIÓN B: OBJETIVO DE LA ASIGNATURA -->
-  <div class="title-h2">b) OBJETIVO DE LA ASIGNATURA</div>
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff; min-height: 40px;">
-    {{{default ObjetivoAsignatura (default objetivo_asignatura "<p>Desarrollar y consolidar las competencias técnicas y conocimientos fundamentales de la asignatura orientados a la formación profesional integral.</p>")}}}}
-  </div>
-
-  <!-- SECCIÓN C: PRERREQUISITOS -->
-  <div class="title-h2">c) PRERREQUISITOS DE LA ASIGNATURA</div>
-  <table class="data-table" style="margin-top: 10px;">
-    <thead>
-      <tr>
-        <th style="width: 50%; text-align: left;">Asignatura Prerrequisito</th>
-        <th style="width: 50%; text-align: left;">Observación / Justificación Curricular</th>
+        <th style="width: 50%; text-align: left;">Asignatura</th>
+        <th style="width: 50%; text-align: left;">Observación</th>
       </tr>
     </thead>
     <tbody>
-      {{#if Prerrequisitos}}
-        {{#each Prerrequisitos}}
-        <tr>
-          <td>{{default this.NombreAsignatura (default this.nombre_asignatura (default this.[0] "---"))}}</td>
-          <td>{{default this.Observacion (default this.observacion (default this.[1] "Asignatura aprobada previa"))}}</td>
-        </tr>
-        {{/each}}
-      {{else}}
-        <tr>
-          <td colspan="2" style="text-align: center; color: #64748b; font-style: italic; padding: 10px;">No registra prerrequisitos curriculares normativos específicos.</td>
-        </tr>
-      {{/if}}
-    </tbody>
-  </table>
-
-  <!-- SECCIÓN D: RDAs DE CARRERA -->
-  <div class="title-h2">d) RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA</div>
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff; min-height: 40px;">
-    {{{default RdaCarrera (default rda_carrera "<p>Aplica principios técnicos y metodológicos alineados al perfil de egreso para la resolución de problemáticas del contexto laboral y productivo.</p>")}}}}
-  </div>
-
-  <!-- SECCIÓN E: RDAs DE ASIGNATURA -->
-  <div class="title-h2">e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA</div>
-  {{#if ResultadosAprendizaje}}
-  <table class="data-table" style="margin-top: 10px;">
-    <thead>
+      {{#each Prerrequisitos}}
       <tr>
-        <th style="width: 15%; text-align: center;">Código</th>
-        <th style="width: 65%; text-align: left;">Descripción del Resultado de Aprendizaje</th>
-        <th style="width: 20%; text-align: center;">Nivel de Dominio</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each ResultadosAprendizaje}}
-      <tr>
-        <td style="text-align: center; font-weight: bold;">{{default this.CodigoRda (default this.codigo_rda (default this.Codigo "RDA"))}}</td>
-        <td>{{default this.Descripcion (default this.descripcion "---")}}</td>
-        <td style="text-align: center;">{{default this.NivelDesarrollo (default this.nivel_desarrollo (default this.Nivel "Medio"))}}</td>
+        <td>{{this.Asignatura}}</td>
+        <td>{{this.Observacion}}</td>
       </tr>
       {{/each}}
     </tbody>
   </table>
-  {{else}}
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff; min-height: 40px;">
-    {{{default resultados_aprendizaje "<p>Comprende y ejecuta los fundamentos teóricos y metodológicos correspondientes al campo de estudio de la asignatura con criterio técnico y calidad profesional.</p>"}}}}
-  </div>
-  {{/if}}
 
+  <!-- d) RESULTADOS DE APRENDIZAJE DE LA CARRERA -->
+  <div class="header-primary" style="margin-top: 6px;">
+    d)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA
+  </div>
+  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 6px;">
+    {{default RdaCarrera (default rda_carrera "---")}}
+  </div>
+
+  <!-- e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA -->
+  <div class="header-primary">
+    e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:
+  </div>
+  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
+    {{default ResultadosAprendizaje (default rda_asignatura "---")}}
+  </div>
+
+  <!-- SALTO A PÁGINA 2 -->
   <div class="page-break"></div>
 
-  <!-- SECCIÓN F: CONTENIDOS DE ENSEÑANZA -->
-  <div class="title-h2">f) CONTENIDOS DE ENSEÑANZA (UNIDADES Y TEMAS)</div>
-  {{#if Unidades}}
-    {{#each Unidades}}
-    <div style="margin-top: 14px; margin-bottom: 14px; page-break-inside: avoid;">
-      <div style="background: #1e2a4a; color: #ffffff; padding: 6px 10px; font-weight: bold; font-size: 9.5pt; text-transform: uppercase;">
-        UNIDAD {{default this.NumeroUnidad (default this.numero_unidad @index)}}: {{default this.NombreUnidad (default this.nombre_unidad "---")}}
-      </div>
-      
-      <table class="data-table" style="margin-top: 0; border-top: none;">
-        <thead>
-          <tr style="background: #f1f5f9;">
-            <th style="text-align: center; font-size: 8pt; width: 25%;">Total Horas Unidad</th>
-            <th style="text-align: center; font-size: 8pt; width: 25%;">Docencia (CD)</th>
-            <th style="text-align: center; font-size: 8pt; width: 25%;">Práctico-Exp. (APE)</th>
-            <th style="text-align: center; font-size: 8pt; width: 25%;">Autónomo (AA)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="text-align: center; font-weight: bold;">{{default this.TotalHorasUnidad (default this.total_horas_unidad 0)}} h</td>
-            <td style="text-align: center;">{{default this.HorasDocencia (default this.horas_docencia 0)}} h</td>
-            <td style="text-align: center;">{{default this.HorasPracticoExp (default this.horas_practico_exp 0)}} h</td>
-            <td style="text-align: center;">{{default this.HorasAutonomo (default this.horas_autonomo 0)}} h</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- PÁGINA 2: CONTENIDOS, METODOLOGÍA, ACTIVIDADES PRÁCTICAS Y EVALUACIÓN -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
 
-      <div style="border: 1px solid #000000; border-top: none; padding: 8px 12px; background: #ffffff; font-size: 9pt;">
-        <strong>Unidades de estudio y temas:</strong>
-        {{#if this.Temas}}
-        <ul style="margin: 6px 0; padding-left: 20px;">
-          {{#each this.Temas}}
-          <li style="margin-bottom: 4px;">
-            <strong>Tema {{default this.NumeroTema (default this.numero_tema @index)}}: {{default this.TituloTema (default this.titulo_tema "---")}}</strong>
-            {{#if this.DescripcionSubtemas}}
-            <div style="font-size: 8.5pt; color: #334155; margin-top: 2px;">{{this.DescripcionSubtemas}}</div>
-            {{else if this.descripcion_subtemas}}
-            <div style="font-size: 8.5pt; color: #334155; margin-top: 2px;">{{this.descripcion_subtemas}}</div>
-            {{/if}}
-          </li>
-          {{/each}}
-        </ul>
-        {{else}}
-        <p style="color: #64748b; font-style: italic; margin: 4px 0;">Contenidos teóricos y prácticos orientados a la unidad formativa.</p>
-        {{/if}}
-      </div>
-    </div>
-    {{/each}}
-  {{else}}
-    <div style="border: 1px solid #000000; padding: 12px; font-style: italic; color: #64748b; margin-top: 10px;">
-      No se registran unidades de contenidos curriculares ingresadas.
-    </div>
-  {{/if}}
-
-  <!-- SECCIÓN G: METODOLOGÍA Y RECURSOS -->
-  <div class="title-h2">g) METODOLOGÍA DE ENSEÑANZA Y RECURSOS DIDÁCTICOS</div>
-  
-  <div class="title-h3" style="margin-top: 12px;">Estrategias metodológicas</div>
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff;">
-    {{{default MetodologiaEnsenanza (default metodologia_ensenanza "<p>En la propuesta pedagógica establecida en el Modelo Educativo del ISTPET se aplica una metodología activa centrada en el estudiante, fundamentada en el aprendizaje basado en problemas (ABP), estudios de caso y prácticas guiadas orientadas al saber hacer.</p>")}}}}
+  <!-- f) CONTENIDOS DE ENSEÑANZA -->
+  <div class="header-primary" style="margin-top: 6px;">
+    f) CONTENIDOS DE ENSEÑANZA:
   </div>
-
-  <div class="title-h3" style="margin-top: 14px;">Recursos didácticos e informatización del aprendizaje</div>
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff;">
-    {{{default RecursosDidacticos (default recursos_didacticos "<ul><li>Entorno Virtual de Aprendizaje (Moodle / EVA institucional).</li><li>Presentaciones y material audiovisual de apoyo a la asignatura.</li><li>Guías estructuradas de prácticas de aplicación y experimentación (APE).</li><li>Plataformas de evaluación formativa y recursos digitales interactivos.</li><li>Bibliografía especializada física y bases de datos académicas digitales.</li></ul>")}}}}
-  </div>
-
-  <!-- SECCIÓN H: ACTIVIDADES PRÁCTICAS -->
-  <div class="title-h2">h) ACTIVIDADES PRÁCTICAS</div>
-  <table class="data-table" style="margin-top: 10px;">
+  <table class="table-bordered" style="border-top: none;">
     <thead>
-      <tr>
-        <th style="width: 12%; text-align: center;">N°</th>
-        <th style="width: 73%; text-align: left;">Nombre de la Práctica y Caracterización de la Actividad</th>
-        <th style="width: 15%; text-align: center;">Duración</th>
+      <tr style="background-color: #1e2a4a; color: #ffffff; text-align: center;">
+        <th style="width: 6%;">No</th>
+        <th>UNIDADES DE ESTUDIO Y SUS CONTENIDOS</th>
       </tr>
     </thead>
     <tbody>
-      {{#if ActividadesPracticas}}
-        {{#each ActividadesPracticas}}
-        <tr>
-          <td style="text-align: center; font-weight: bold;">{{default this.NumeroPractica (default this.numero_practica @index)}}</td>
-          <td>
-            <strong>{{default this.NombrePractica (default this.nombre_practica "Práctica experimental")}}</strong>
-            {{#if this.Caracterizacion}}
-            <div style="font-size: 8.5pt; color: #475569; margin-top: 2px;">{{this.Caracterizacion}}</div>
-            {{else if this.caracterizacion}}
-            <div style="font-size: 8.5pt; color: #475569; margin-top: 2px;">{{this.caracterizacion}}</div>
-            {{/if}}
-          </td>
-          <td style="text-align: center; font-weight: bold;">{{default this.DuracionHoras (default this.duracion_horas 2)}} h</td>
-        </tr>
-        {{/each}}
-      {{else}}
-        <tr>
-          <td colspan="3" style="text-align: center; color: #64748b; font-style: italic; padding: 10px;">No registra actividades prácticas normativas desglosadas.</td>
-        </tr>
-      {{/if}}
+      {{#each Unidades}}
+      <tr style="page-break-inside: avoid;">
+        <td style="text-align: center; font-weight: bold; font-size: 11pt; vertical-align: middle;">
+          {{this.Numero}}
+        </td>
+        <td style="padding: 0; vertical-align: top;">
+          <div style="background-color: #bdd7ee; color: #000000; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid #000000;">
+            <span>UNIDAD {{this.Numero}}: {{this.Titulo}}</span>
+            <span>Total de horas por unidad: {{this.TotalHoras}}</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; background-color: #bdd7ee; border-bottom: 1px solid #000000;">
+            <tr>
+              <td style="border: none; border-right: 1px solid #000000; padding: 3px 6px; width: 33.3%;">Horas contacto con el docente: <strong>{{this.HorasCD}}</strong></td>
+              <td style="border: none; border-right: 1px solid #000000; padding: 3px 6px; width: 33.3%;">Horas Práctico-experimental: <strong>{{this.HorasAPE}}</strong></td>
+              <td style="border: none; padding: 3px 6px; width: 33.3%;">Horas de aprendizaje autónomo: <strong>{{this.HorasTA}}</strong></td>
+            </tr>
+          </table>
+          <div style="padding: 6px 8px; font-size: 8pt; min-height: 40px; background: #ffffff;">
+            {{this.Contenidos}}
+          </div>
+        </td>
+      </tr>
+      {{/each}}
     </tbody>
   </table>
 
-  <!-- SECCIÓN I: EVALUACIÓN DEL APRENDIZAJE -->
-  <div class="title-h2">i) EVALUACIÓN DEL APRENDIZAJE</div>
-  {{#if EvaluacionAprendizaje}}
-  <div class="rich-content" style="border: 1px solid #000000; padding: 8px 12px; background: #ffffff; margin-bottom: 10px;">
-    {{{EvaluacionAprendizaje}}}
+  <!-- g) METODOLOGÍA DE ENSEÑANZA -->
+  <div class="header-primary" style="margin-top: 6px;">
+    g) METODOLOGÍA DE ENSEÑANZA
   </div>
-  {{/if}}
+  <div style="border: 1px solid #000000; border-top: none; background: #ffffff; margin-bottom: 6px;">
+    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
+      ESTRATEGIAS METODOLÓGICAS
+    </div>
+    <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt; border-bottom: 1px solid #000000;">
+      {{default MetodologiaEnsenanza (default metodologia "---")}}
+    </div>
+    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
+      RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE
+    </div>
+    <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt;">
+      {{default RecursosDidacticos "---"}}
+    </div>
+  </div>
 
-  <table class="data-table" style="margin-top: 6px;">
+  <!-- h) ACTIVIDADES PRÁCTICAS -->
+  <div class="header-primary">
+    h) ACTIVIDADES PRÁCTICAS
+  </div>
+  <table class="table-bordered" style="border-top: none; margin-bottom: 6px;">
     <thead>
-      <tr>
-        <th style="width: 25%; text-align: left;">Componente de Nota</th>
-        <th style="width: 55%; text-align: left;">Tipo de Evaluación y Caracterización</th>
-        <th style="width: 20%; text-align: center;">Calificación</th>
+      <tr style="background: #f8fafc; font-weight: bold;">
+        <th style="width: 20%; text-align: center;">Unidad</th>
+        <th style="text-align: left;">Nombre de la práctica y caracterización de la actividad</th>
       </tr>
     </thead>
     <tbody>
-      {{#if Evaluaciones}}
-        {{#each Evaluaciones}}
-        <tr>
-          <td style="font-weight: bold;">{{default this.Denominacion (default this.denominacion (default this.[0] "Nota"))}}</td>
-          <td>{{default this.TipoEvaluacion (default this.tipo_evaluacion (default this.[1] "Evaluación de aprendizajes"))}}</td>
-          <td style="text-align: center; font-weight: bold;">{{default this.CalificacionMaxima (default this.calificacion_maxima (default this.[2] "10"))}} pts</td>
-        </tr>
-        {{/each}}
-      {{else}}
-        <tr>
-          <td style="font-weight: bold;">Nota Parcial 1</td>
-          <td>Actividades autónomas y práctico-experimentales (frecuentes / formativas)</td>
-          <td style="text-align: center; font-weight: bold;">10 puntos</td>
-        </tr>
-        <tr>
-          <td style="font-weight: bold;">Nota Parcial 2</td>
-          <td>Evaluaciones sumativas de las unidades de estudio (examen parcial)</td>
-          <td style="text-align: center; font-weight: bold;">10 puntos</td>
-        </tr>
-        <tr>
-          <td style="font-weight: bold;">Evaluación Final</td>
-          <td>Evaluación final integradora de la asignatura (examen general)</td>
-          <td style="text-align: center; font-weight: bold;">10 puntos</td>
-        </tr>
-      {{/if}}
+      {{#each ActividadesPracticas}}
+      <tr>
+        <td style="text-align: center; font-weight: bold;">{{this.Unidad}}</td>
+        <td>{{this.NombreCaracterizacion}}</td>
+      </tr>
+      {{/each}}
     </tbody>
   </table>
 
-  <!-- SECCIÓN J: BIBLIOGRAFÍA -->
-  <div class="title-h2">j) BIBLIOGRAFÍA</div>
-  
-  <div class="title-h3" style="margin-top: 12px;">Bibliografía básica (Normas APA)</div>
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff;">
-    {{#if BibliografiaBasica}}
-      {{{BibliografiaBasica}}}
-    {{else if bibliografia_basica}}
-      {{{bibliografia_basica}}}
-    {{else}}
-      <ol style="margin: 6px 0; padding-left: 20px;">
-        <li>Texto guía institucional y material bibliográfico base especificado por la carrera.</li>
-      </ol>
-    {{/if}}
+  <!-- i) EVALUACIÓN DEL APRENDIZAJE -->
+  <div class="header-primary">
+    i) EVALUACIÓN DEL APRENDIZAJE
   </div>
-
-  <div class="title-h3" style="margin-top: 14px;">Bibliografía de consulta (Normas APA)</div>
-  <div class="rich-content" style="border: 1px solid #000000; padding: 10px 14px; background: #ffffff;">
-    {{#if BibliografiaConsulta}}
-      {{{BibliografiaConsulta}}}
-    {{else if bibliografia_consulta}}
-      {{{bibliografia_consulta}}}
-    {{else}}
-      <ol style="margin: 6px 0; padding-left: 20px;">
-        <li>Artículos científicos indexados, normas técnicas y recursos digitales de consulta especializada.</li>
-      </ol>
-    {{/if}}
-  </div>
-
-  <!-- SECCIÓN K: FIRMAS DE RESPONSABILIDAD -->
-  <div class="title-h2" style="page-break-before: auto;">k) FIRMAS DE RESPONSABILIDAD</div>
-  <table class="data-table" style="margin-top: 12px; page-break-inside: avoid;">
+  <table class="table-bordered" style="border-top: none;">
     <thead>
-      <tr style="background: #1e2a4a; color: #ffffff;">
-        <th style="width: 25%; text-align: center; padding: 6px;">ELABORADO POR</th>
-        <th style="width: 25%; text-align: center; padding: 6px;">REVISADO POR</th>
-        <th style="width: 25%; text-align: center; padding: 6px;">REVISADO POR</th>
-        <th style="width: 25%; text-align: center; padding: 6px;">APROBADO POR</th>
+      <tr style="background-color: #bdd7ee; color: #000000; font-weight: bold; text-align: center;">
+        <th style="width: 22%; text-align: left;">Notas</th>
+        <th style="width: 58%;">TIPO DE EVALUACIÓN</th>
+        <th style="width: 20%;">CALIFICACION</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td style="height: 2.2cm; vertical-align: bottom; text-align: center; padding-bottom: 8px;">
-          <div style="font-size: 8pt; color: #166534; font-weight: bold;">
-            {{#if FirmaElaboradoDocente}}
-              [FIRMADO DIGITALMENTE]<br/><span style="font-size: 7pt; color: #475569;">{{FirmaElaboradoDocente}}</span>
-            {{else}}
-              <span style="color: #94a3b8; font-style: italic;">Pendiente de firma</span>
-            {{/if}}
-          </div>
-        </td>
-        <td style="height: 2.2cm; vertical-align: bottom; text-align: center; padding-bottom: 8px;">
-          <div style="font-size: 8pt; color: #166534; font-weight: bold;">
-            {{#if FirmaRevisadoCoord}}
-              [FIRMADO DIGITALMENTE]<br/><span style="font-size: 7pt; color: #475569;">{{FirmaRevisadoCoord}}</span>
-            {{else}}
-              <span style="color: #94a3b8; font-style: italic;">Pendiente de revisión</span>
-            {{/if}}
-          </div>
-        </td>
-        <td style="height: 2.2cm; vertical-align: bottom; text-align: center; padding-bottom: 8px;">
-          <div style="font-size: 8pt; color: #166534; font-weight: bold;">
-            {{#if FirmaRevisadoAcad}}
-              [FIRMADO DIGITALMENTE]<br/><span style="font-size: 7pt; color: #475569;">{{FirmaRevisadoAcad}}</span>
-            {{else}}
-              <span style="color: #94a3b8; font-style: italic;">Pendiente de revisión</span>
-            {{/if}}
-          </div>
-        </td>
-        <td style="height: 2.2cm; vertical-align: bottom; text-align: center; padding-bottom: 8px;">
-          <div style="font-size: 8pt; color: #166534; font-weight: bold;">
-            {{#if FirmaAprobadoVicerrector}}
-              [FIRMADO DIGITALMENTE]<br/><span style="font-size: 7pt; color: #475569;">{{FirmaAprobadoVicerrector}}</span>
-            {{else}}
-              <span style="color: #94a3b8; font-style: italic;">Pendiente de aprobación</span>
-            {{/if}}
-          </div>
-        </td>
+        <td style="font-weight: bold;">NOTA PARCIAL 1</td>
+        <td>ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)</td>
+        <td style="text-align: center; font-weight: bold;">10,00</td>
       </tr>
-      <tr style="background: #f8fafc; font-size: 8.5pt;">
-        <td style="text-align: center;">
-          <strong>{{default DocenteElaborador (default docente (default docente_elaborador "Docente Responsable"))}}</strong><br/>
-          <span style="font-size: 8pt; color: #64748b;">DOCENTE ELABORADOR</span>
-        </td>
-        <td style="text-align: center;">
-          <strong>{{default CoordinadorNombre (default coordinador_nombre "Coordinación de Carrera")}}</strong><br/>
-          <span style="font-size: 8pt; color: #64748b;">COORDINADOR DE CARRERA</span>
-        </td>
-        <td style="text-align: center;">
-          <strong>{{default CoordinadorAcadNombre (default coordinador_acad_nombre "Coordinación Académica")}}</strong><br/>
-          <span style="font-size: 8pt; color: #64748b;">COORDINACIÓN ACADÉMICA</span>
-        </td>
-        <td style="text-align: center;">
-          <strong>{{default VicerrectorNombre (default vicerrector_nombre "Vicerrectorado Académico")}}</strong><br/>
-          <span style="font-size: 8pt; color: #64748b;">VICERRECTORADO ACADÉMICO</span>
-        </td>
+      <tr>
+        <td style="font-weight: bold;">NOTA PARCIAL 2</td>
+        <td>EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)</td>
+        <td style="text-align: center; font-weight: bold;">10,00</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;">EVALUACIÓN FINAL</td>
+        <td>EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)</td>
+        <td style="text-align: center; font-weight: bold;">10,00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SALTO A PÁGINA 3 -->
+  <div class="page-break"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- PÁGINA 3: BIBLIOGRAFÍA Y FIRMAS DE RESPONSABILIDAD ─────────────── -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <!-- j) BIBLIOGRAFÍA -->
+  <div class="header-primary" style="margin-top: 6px;">
+    j) BIBLIOGRAFÍA
+  </div>
+  <div style="border: 1px solid #000000; border-top: none; background: #ffffff; margin-bottom: 12px;">
+    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
+      Bibliografía básica
+    </div>
+    <div style="padding: 6px 8px; min-height: 45px; font-size: 8pt; border-bottom: 1px solid #000000;">
+      {{default BibliografiaBasica "---"}}
+    </div>
+    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
+      Bibliografía de consulta
+    </div>
+    <div style="padding: 6px 8px; min-height: 45px; font-size: 8pt;">
+      {{default BibliografiaConsulta "---"}}
+    </div>
+  </div>
+
+  <!-- k) FIRMAS DE RESPONSABILIDAD -->
+  <div class="header-primary">
+    k) FIRMAS DE RESPONSABILIDAD
+  </div>
+  <table class="table-bordered" style="border-top: none; text-align: center; page-break-inside: avoid;">
+    <thead>
+      <tr style="background: #f8fafc; font-weight: bold;">
+        <th style="width: 20%; text-align: left;">DESCRIPCIÓN</th>
+        <th style="width: 20%;">ELABORADO</th>
+        <th style="width: 20%;">REVISADO</th>
+        <th style="width: 20%;">REVISADO</th>
+        <th style="width: 20%;">APROBADO</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="height: 55px;">
+        <td style="font-weight: bold; text-align: left; vertical-align: middle;">FIRMA</td>
+        <td style="vertical-align: bottom;">{{default firma_docente_base64 ""}}</td>
+        <td style="vertical-align: bottom;">{{default firma_coordinador_carrera_base64 ""}}</td>
+        <td style="vertical-align: bottom;">{{default firma_coordinador_academico_base64 ""}}</td>
+        <td style="vertical-align: bottom;">{{default firma_vicerrector_base64 ""}}</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; text-align: left;">NOMBRE</td>
+        <td style="font-weight: bold;">{{default DocenteElaborador (default docente_elaborador "")}}</td>
+        <td style="font-weight: bold;">{{default CoordinadorCarrera (default coordinador_carrera "")}}</td>
+        <td style="font-weight: bold;">{{default CoordinadorAcademico (default coordinador_academico "")}}</td>
+        <td style="font-weight: bold;">{{default Vicerrector (default vicerrector "")}}</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; text-align: left;">CARGO</td>
+        <td>Docente</td>
+        <td>Coordinador de Carrera</td>
+        <td>Coordinador Académico</td>
+        <td>Vicerrectorado</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; text-align: left;">FECHA</td>
+        <td>{{default FechaElaborado (default fecha_elaborado "")}}</td>
+        <td>{{default FechaRevisadoCarrera (default fecha_revisado_carrera "")}}</td>
+        <td>{{default FechaRevisadoAcademico (default fecha_revisado_academico "")}}</td>
+        <td>{{default FechaAprobado (default fecha_aprobado "")}}</td>
       </tr>
     </tbody>
   </table>

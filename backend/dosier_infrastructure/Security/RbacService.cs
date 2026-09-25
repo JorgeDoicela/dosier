@@ -125,7 +125,7 @@ public class RbacService : IRbacService
         var officialRoles = new[]
         {
             ("DOSIER_ADMIN", "Administrador DOSIER"),
-            ("DOSIER_DOCENTE", "Docente Elaborador DOSIER"),
+            ("DOSIER_DOCENTE", "Docente"),
             ("DOSIER_COORD_CARRERA", "Coordinador de Carrera DOSIER"),
             ("DOSIER_COORD_ACAD", "Coordinación Académica DOSIER"),
             ("DOSIER_VICERRECTOR", "Vicerrectorado Académico DOSIER")
@@ -288,7 +288,7 @@ public class RbacService : IRbacService
                     {
                         CodigoRol = requiredRoleCode,
                         Nombre = requiredRoleCode == "DOSIER_ADMIN" ? "Administrador DOSIER" :
-                                 requiredRoleCode == "DOSIER_DOCENTE" ? "Docente Elaborador DOSIER" :
+                                 requiredRoleCode == "DOSIER_DOCENTE" ? "Docente" :
                                  requiredRoleCode == "DOSIER_COORD_CARRERA" ? "Coordinador de Carrera DOSIER" :
                                  requiredRoleCode == "DOSIER_COORD_ACAD" ? "Coordinación Académica DOSIER" :
                                  requiredRoleCode == "DOSIER_VICERRECTOR" ? "Vicerrectorado Académico DOSIER" : requiredRoleCode,

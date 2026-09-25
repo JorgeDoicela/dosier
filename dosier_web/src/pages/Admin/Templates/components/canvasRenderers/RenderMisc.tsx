@@ -19,8 +19,8 @@ import { CSS } from '@dnd-kit/utilities';
 import type { GanttObjective } from '../../types';
 import { DYN_COLORS, getHeaderStylePair } from './RenderCover';
 
-export const RenderTitle: React.FC<{ config: any; themeConfig?: any }> = ({ config, themeConfig }) => {
-    const text = config.text || 'TÍTULO DE SECCIÓN';
+export const RenderTitle: React.FC<{ config: any; themeConfig?: any; title?: string }> = ({ config, themeConfig, title }) => {
+    const text = title || config?.titleText || config?.text || 'TÍTULO DE SECCIÓN';
     const fontSize = (config.fontSize || config.level || 'H2').toUpperCase();
     const align = config.alignment || 'left';
 

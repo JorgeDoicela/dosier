@@ -65,17 +65,19 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
             ]
         },
         {
-            title: 'Bloques Curriculares (PEA Oficial)',
+            title: 'Bloques Curriculares (PEA Oficial ISTPET - Secciones a a k)',
             items: [
-                { type: 'pea_general_section', icon: GraduationCap, label: 'Datos Generales y Carga Horaria', desc: 'Asignatura, carrera, modalidad y horas RRA Art. 21.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_characterization_section', icon: Target, label: 'Caracterización y Objetivos', desc: 'Objetivo general, específicos y perfil de egreso.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_competencies_rda_section', icon: Award, label: 'Competencias y RDAs', desc: 'Resultados de aprendizaje articulados a unidades.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_contents_section', icon: Layers, label: 'Matriz de Contenidos y Horas', desc: 'Unidades, temas, horas CD/APE/TA y CoWork.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_methodology_section', icon: Lightbulb, label: 'Metodología y Ambientes', desc: 'Estrategias pedagógicas y escenarios didácticos.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_resources_section', icon: Cpu, label: 'Recursos y Equipamiento', desc: 'Talleres, laboratorios, plataformas y software.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_evaluation_section', icon: CheckSquare, label: 'Sistema de Evaluación', desc: 'Ponderaciones oficiales y criterios RRA Art. 84.', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_bibliography_section', icon: Library, label: 'Bibliografía APA', desc: 'Referencias básicas y complementarias (APA 7ma).', color: 'text-violet-500 bg-violet-500/5' },
-                { type: 'pea_signatures_section', icon: ShieldCheck, label: 'Firmas Curriculares (4 Niveles)', desc: 'Docente, Coordinador, Académica y Vicerrector.', color: 'text-violet-500 bg-violet-500/5' }
+                { type: 'pea_general_section', icon: GraduationCap, label: 'a) Datos Generales', desc: 'Asignatura, código, carrera, modalidad y horas normadas.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_objective_section', icon: Target, label: 'b) Objetivo de Asignatura', desc: 'Meta formativa con verbo en infinitivo y propósito.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_prerequisites_section', icon: Layers, label: 'c) Prerrequisitos', desc: 'Tabla de materias previas y condiciones de aprobación.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_career_outcomes_section', icon: Award, label: 'd) RDAs de la Carrera', desc: 'Resultados de aprendizaje del perfil de egreso.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_subject_outcomes_section', icon: CheckSquare, label: 'e) RDAs de la Asignatura', desc: 'Logros observables y evaluables del curso.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_contents_section', icon: Layers, label: 'f) Contenidos (Unidades)', desc: 'Unidades temáticas, desglose CD, APE, TA y CoWork.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_methodology_section', icon: Lightbulb, label: 'g) Metodología de Enseñanza', desc: 'Estrategias metodológicas y recursos de informatización.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_resources_section', icon: Cpu, label: 'h) Actividades Prácticas', desc: 'Nombre de la práctica y caracterización de la actividad.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_evaluation_section', icon: CheckSquare, label: 'i) Evaluación del Aprendizaje', desc: 'Matriz oficial de 3 componentes (10.00 pts c/u).', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_bibliography_section', icon: Library, label: 'j) Bibliografía (APA 7ma)', desc: 'Bibliografía básica y de consulta institucional.', color: 'text-violet-500 bg-violet-500/5' },
+                { type: 'pea_signatures_section', icon: ShieldCheck, label: 'k) Firmas de Responsabilidad', desc: 'Circuito institucional de 4 firmas: Docente a Vicerrector.', color: 'text-violet-500 bg-violet-500/5' }
             ]
         },
         {

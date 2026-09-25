@@ -100,63 +100,118 @@ const RESEARCH_TECHNICAL_SUBSECTIONS: TechnicalSubsection[] = [
  */
 export function createPeaDefaultBlocks(): DocumentBlock[] {
     return [
-        createBaseCoverBlock('PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)', {
-            colorTitle: 'navy',
-            showInstitution: true,
-            carrera: 'TECNOLOGÍA SUPERIOR',
-            periodo: 'PERÍODO ACADÉMICO 2026-I'
-        }),
+        // ── PÁGINA 1: CABECERA, DATOS GENERALES, OBJETIVO, PRERREQUISITOS Y RESULTADOS ──
         {
             id: 'block-pea-general',
             type: 'pea_general_section' as BlockType,
-            title: 'a) DATOS GENERALES DE LA ASIGNATURA',
+            title: 'a) DATOS GENERALES DE LA ASIGNATURA:',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
                 borderStyle: 'solid',
+                showHeader: true,
+                institutionName: 'INSTITUTO SUPERIOR TECNOLÓGICO "MAYOR PEDRO TRAVERSARI"',
+                institutionAddress: 'MATILDE ALVAREZ S/N Y MARISCAL SUCRE (CHILLOGALLO)',
+                documentTitle: 'PROGRAMA DE ESTUDIO DE LA ASIGNATURA',
                 showAsignatura: true,
+                showCodigoCarrera: true,
                 showCarrera: true,
-                showNivelModalidad: true,
+                showModalidad: true,
                 showUnidadOrganizacion: true,
-                showRequisitos: true,
-                showDocente: true,
+                showPeriodo: true,
+                showSemestre: true,
+                showTotalHoras: true,
+                showCreditos: true,
+                showOrganizacionAprendizaje: true,
                 customFields: []
             }
         },
         {
-            id: 'block-pea-characterization',
-            type: 'pea_characterization_section' as BlockType,
-            title: 'b) OBJETIVO DE LA ASIGNATURA Y c) PRERREQUISITOS',
+            id: 'block-pea-objective',
+            type: 'pea_objective_section' as BlockType,
+            title: 'b) OBJETIVO DE LA ASIGNATURA',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                objetivoLabel: 'b) OBJETIVO DE LA ASIGNATURA',
+                objetivoPlaceholder: 'Formular con Verbo en infinitivo + ¿Qué? + ¿Cómo? + ¿Para qué? articulado al nivel formativo de la carrera.',
+                lineCount: 4
             }
         },
         {
-            id: 'block-pea-competencies-rda',
-            type: 'pea_competencies_rda_section' as BlockType,
-            title: 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA Y e) DE LA ASIGNATURA',
+            id: 'block-pea-prerequisites',
+            type: 'pea_prerequisites_section' as BlockType,
+            title: 'c) PRERREQUISITOS:',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                prerrequisitosLabel: 'c) PRERREQUISITOS:',
+                prerrequisitosColAsignatura: 'Asignatura',
+                prerrequisitosColObservacion: 'Observación',
+                filasVacias: 2
             }
         },
+        {
+            id: 'block-pea-career-outcomes',
+            type: 'pea_career_outcomes_section' as BlockType,
+            title: 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a',
+                rdaCarreraLabel: 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
+                rdaCarreraPlaceholder: 'Resultados de aprendizaje del perfil de egreso a los que tributa la asignatura.',
+                lineCount: 4
+            }
+        },
+        {
+            id: 'block-pea-subject-outcomes',
+            type: 'pea_subject_outcomes_section' as BlockType,
+            title: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a',
+                rdaAsignaturaLabel: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
+                rdaAsignaturaPlaceholder: 'Resultados de aprendizaje específicos alcanzables por el estudiante al finalizar el curso.',
+                lineCount: 5
+            }
+        },
+
+        // ── SALTO DE PÁGINA (PÁGINA 1 → PÁGINA 2) ───────────────────────────
+        {
+            id: 'block-pea-break-1',
+            type: 'page_break' as BlockType,
+            title: 'Salto de Página A4 (Página 1 → Página 2)',
+            isActive: true,
+            config: {}
+        },
+
+        // ── PÁGINA 2: CONTENIDOS, METODOLOGÍA, ACTIVIDADES PRÁCTICAS Y EVALUACIÓN ─
         {
             id: 'block-pea-contents',
             type: 'pea_contents_section' as BlockType,
-            title: 'f) CONTENIDOS DE ENSEÑANZA',
+            title: 'f) CONTENIDOS DE ENSEÑANZA:',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                subHeaderColor: '#bdd7ee',
+                unidades: [
+                    { num: 1, titulo: 'UNIDAD 1: INTRODUCCIÓN Y FUNDAMENTOS', horasTotal: 30, horasCD: 12, horasAPE: 6, horasTA: 12 },
+                    { num: 2, titulo: 'UNIDAD 2: DESARROLLO Y APLICACIÓN PRÁCTICA', horasTotal: 30, horasCD: 12, horasAPE: 6, horasTA: 12 },
+                    { num: 3, titulo: 'UNIDAD 3: INTEGRACIÓN Y EVALUACIÓN', horasTotal: 30, horasCD: 12, horasAPE: 6, horasTA: 12 }
+                ]
             }
         },
         {
             id: 'block-pea-methodology',
             type: 'pea_methodology_section' as BlockType,
-            title: 'g) METODOLOGÍA DE ENSEÑANZA Y RECURSOS DIDÁCTICOS',
+            title: 'g) METODOLOGÍA DE ENSEÑANZA',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                estrategiasLabel: 'ESTRATEGIAS METODOLÓGICAS',
+                estrategiasPlaceholder: 'En la propuesta pedagógica establecida en el Modelo Educativo del ISTPET se tiene la sig. metodología...',
+                recursosLabel: 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE',
+                recursosPlaceholder: 'Simuladores, presentaciones, videos educativos, plataformas virtuales y herramientas interactivas.'
             }
         },
         {
@@ -165,7 +220,9 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
             title: 'h) ACTIVIDADES PRÁCTICAS',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                colUnidadLabel: 'Unidad',
+                colPracticaLabel: 'Nombre de la práctica y caracterización de la actividad'
             }
         },
         {
@@ -174,16 +231,41 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
             title: 'i) EVALUACIÓN DEL APRENDIZAJE',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                tableHeaderBg: '#bdd7ee',
+                colNotasLabel: 'Notas',
+                colTipoLabel: 'TIPO DE EVALUACIÓN',
+                colCalifLabel: 'CALIFICACION',
+                parcial1Desc: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)',
+                parcial1Nota: '10,00',
+                parcial2Desc: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)',
+                parcial2Nota: '10,00',
+                finalDesc: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)',
+                finalNota: '10,00'
             }
         },
+
+        // ── SALTO DE PÁGINA (PÁGINA 2 → PÁGINA 3) ───────────────────────────
+        {
+            id: 'block-pea-break-2',
+            type: 'page_break' as BlockType,
+            title: 'Salto de Página A4 (Página 2 → Página 3)',
+            isActive: true,
+            config: {}
+        },
+
+        // ── PÁGINA 3: BIBLIOGRAFÍA Y FIRMAS DE RESPONSABILIDAD ───────────────
         {
             id: 'block-pea-bibliography',
             type: 'pea_bibliography_section' as BlockType,
-            title: 'j) BIBLIOGRAFÍA BÁSICA Y DE CONSULTA',
+            title: 'j) BIBLIOGRAFÍA',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                basicaLabel: 'Bibliografía básica',
+                basicaPlaceholder: 'Texto base o guía según normas APA 7ma edición.',
+                consultaLabel: 'Bibliografía de consulta',
+                consultaPlaceholder: 'Artículos científicos, libros complementarios o recursos web indexados.'
             }
         },
         {
@@ -192,7 +274,11 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
             title: 'k) FIRMAS DE RESPONSABILIDAD',
             isActive: true,
             config: {
-                headerColor: '#1e2a4a'
+                headerColor: '#1e2a4a',
+                cargoElaborado: 'Docente',
+                cargoRevisado1: 'Coordinador de Carrera',
+                cargoRevisado2: 'Coordinador Académico',
+                cargoAprobado: 'Vicerrectorado'
             }
         }
     ];

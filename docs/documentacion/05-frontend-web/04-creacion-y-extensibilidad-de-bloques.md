@@ -13,19 +13,27 @@ Cada bloque curricular cuenta con:
 
 ---
 
-## 2. Diagrama de Flujo de Extensibilidad de Bloques
+## 2. Bloques Oficiales del Programa de Estudio de la Asignatura (PEA ISTPET)
 
-```mermaid
-graph TD
-    Step1[1. Declaración de BlockType\nen types.ts] --> Step2[2. Registro en Catálogo\nen availableBlocks.ts]
-    Step2 --> Step3[3. Renderizador Canvas A4\nen canvasRenderers/]
-    Step3 --> Step4[4. Componente de Edición\ncon CoWorkField]
-    Step4 --> Step5[5. Compilador HTML / PDF\nHandlebars & C# iText 9]
-```
+El formato oficial del PEA institucional del ISTPET se compone de **11 bloques curriculares atómicos e independientes** (Secciones a hasta k) distribuidos en 3 folios normalizados A4, articulados con saltos de página técnicos (`page_break`):
+
+| Sección | Bloque (`BlockType`) | Título Canónico | Inspector de Propiedades | Renderizador A4 | Variables Scriban / Modelo |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **a** | `pea_general_section` | SECCIÓN A: DATOS GENERALES | `PeaGeneralProperties.tsx` | Cabecera institucional ISTPET (Chillogallo) y tabla de 10 campos con desglose CD, APE, TA. | `{{ asignatura.nombre }}`, `{{ periodo.nombre }}`, horas normadas |
+| **b** | `pea_objective_section` | SECCIÓN B: OBJETIVO DE LA ASIGNATURA | `PeaObjectiveProperties.tsx` | Recuadro con barra azul y líneas continuas para objetivo formativo con verbo en infinitivo. | `{{ objetivo_asignatura }}` |
+| **c** | `pea_prerequisites_section` | SECCIÓN C: PRERREQUISITOS | `PeaPrerequisitesProperties.tsx` | Tabla comparativa oficial: Asignatura \| Observación. | `{{ prerrequisitos }}` |
+| **d** | `pea_career_outcomes_section` | SECCIÓN D: RESULTADOS DE CARRERA | `PeaCareerOutcomesProperties.tsx` | Contenedor rayado para aportes al perfil de egreso de la carrera. | `{{ resultados_carrera }}` |
+| **e** | `pea_subject_outcomes_section` | SECCIÓN E: RESULTADOS DE ASIGNATURA | `PeaSubjectOutcomesProperties.tsx` | Contenedor rayado para resultados de aprendizaje específicos de la cátedra. | `{{ resultados_asignatura }}` |
+| **f** | `pea_contents_section` | SECCIÓN F: CONTENIDOS DE ENSEÑANZA | `PeaContentsProperties.tsx` | Tabla No \| UNIDADES DE ESTUDIO con subcabeceras celestes (`#bdd7ee`) y desglose de horas por unidad. | `{{ unidades }}` con horas CD, APE, TA |
+| **g** | `pea_methodology_section` | SECCIÓN G: METODOLOGÍA DE ENSEÑANZA | `PeaMethodologyProperties.tsx` | Bloque dual: Estrategias metodológicas y Recursos didácticos / informatización. | `{{ metodologia.estrategias }}`, `{{ metodologia.recursos }}` |
+| **h** | `pea_resources_section` | SECCIÓN H: ACTIVIDADES PRÁCTICAS | `PeaResourcesProperties.tsx` | Tabla institucional: Unidad \| Nombre de la práctica y caracterización de la actividad. | `{{ actividades_practicas }}` |
+| **i** | `pea_evaluation_section` | SECCIÓN I: EVALUACIÓN DEL APRENDIZAJE | `PeaEvaluationProperties.tsx` | Matriz oficial con fondo celeste: Parcial 1 (10 pts), Parcial 2 (10 pts), Examen Final (10 pts). | `{{ evaluacion.parcial1 }}`, `{{ evaluacion.parcial2 }}`, `{{ evaluacion.final }}` |
+| **j** | `pea_bibliography_section` | SECCIÓN J: BIBLIOGRAFÍA | `PeaBibliographyProperties.tsx` | Esquema estructurado para Bibliografía Básica y Bibliografía de Consulta (Norma APA 7ma). | `{{ bibliografia.basica }}`, `{{ bibliografia.consulta }}` |
+| **k** | `pea_signatures_section` | SECCIÓN K: FIRMAS DE RESPONSABILIDAD | `PeaSignaturesProperties.tsx` | Matriz formal de 4 columnas: Docente, Coordinador de Carrera, Coordinador Académico, Vicerrectorado. | `{{ firmas }}` con sellado DFRM / P12 |
 
 ---
 
-## 3. Guía Paso a Paso para la Creación de un Nuevo Bloque
+## 3. Diagrama de Flujo de Extensibilidad de Bloques
 
 A continuación se detalla el procedimiento técnico para incorporar un nuevo bloque curricular (por ejemplo, `cur_rubrica_evaluacion_practica`):
 

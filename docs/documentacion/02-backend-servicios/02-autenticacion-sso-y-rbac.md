@@ -135,8 +135,10 @@ classDiagram
    * `ver`: Visualización de parámetros de períodos académicos y mallas.
    * `editar`: Modificación de fechas límite de entrega y parámetros del sistema.
 
-### 3.3. Sincronización Automática en la Capa de Infraestructura
+### 3.3. Sincronización Automática y Aislamiento de Roles en Infraestructura
 La clase `RbacService` asegura que al arrancar el sistema o registrarse un nuevo usuario docente, la estructura del sistema `DOSIER` (ID 6) en `rbac_sistema`, sus módulos en `rbac_modulos`, sus operaciones en `rbac_modulos_operaciones` y la asignación por defecto a `rbac_rol_modulo_operacion` se mantengan íntegras de manera automática e idempotente.
+
+Asimismo, dado que la base de datos `sigafi_es` alberga roles compartidos de otros subsistemas institucionales (DIITRA, GRECUH, GACAD, Bienestar), `AuthService` en `GetAuthResponseAsync` aplica un filtro de aislamiento estricto que restringe los claims emitidos en el JWT y la sesión del usuario exclusivamente a los roles oficiales de DOSIER (`ur.Role.CodigoRol.StartsWith("DOSIER_")` o asociados al sistema ID 6), garantizando que ningún rol ajeno contamine la autorización curricular o la interfaz de usuario.
 
 ### 3.4. Matriz de Autorización en el Ciclo de Vida y Firma del PEA
 

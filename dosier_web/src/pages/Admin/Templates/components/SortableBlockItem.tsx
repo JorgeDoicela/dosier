@@ -23,6 +23,10 @@ import {
 } from './canvasRenderers/RenderSections';
 import {
     RenderPeaGeneralSection,
+    RenderPeaObjectiveSection,
+    RenderPeaPrerequisitesSection,
+    RenderPeaCareerOutcomesSection,
+    RenderPeaSubjectOutcomesSection,
     RenderPeaCharacterizationSection,
     RenderPeaCompetenciesRdaSection,
     RenderPeaContentsSection,
@@ -43,6 +47,10 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'signatures',
     'impacts',
     'pea_general_section',
+    'pea_objective_section',
+    'pea_prerequisites_section',
+    'pea_career_outcomes_section',
+    'pea_subject_outcomes_section',
     'pea_characterization_section',
     'pea_competencies_rda_section',
     'pea_contents_section',
@@ -71,7 +79,7 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
     index,
     isActive,
     coverImage: _coverImage,
-    themeConfig: _themeConfig,
+    themeConfig,
     onSelectBlock,
     onToggleActive,
     onDuplicateBlock,
@@ -99,7 +107,7 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
             case 'cover':
                 return <RenderCover config={block.config} />;
             case 'title':
-                return <RenderTitle config={block.config} title={block.title} />;
+                return <RenderTitle config={block.config} title={block.title} themeConfig={themeConfig} />;
             case 'rich_text':
                 return <RenderRichText config={block.config} />;
             case 'advanced_table':
@@ -122,6 +130,14 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 return <RenderImpacts config={block.config} />;
             case 'pea_general_section':
                 return <RenderPeaGeneralSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_objective_section':
+                return <RenderPeaObjectiveSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_prerequisites_section':
+                return <RenderPeaPrerequisitesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_career_outcomes_section':
+                return <RenderPeaCareerOutcomesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'pea_subject_outcomes_section':
+                return <RenderPeaSubjectOutcomesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'pea_characterization_section':
                 return <RenderPeaCharacterizationSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'pea_competencies_rda_section':
