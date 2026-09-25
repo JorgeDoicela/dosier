@@ -2,7 +2,7 @@
 
 La API REST de **DOSIER** (`dosier_api`) está construida sobre **ASP.NET Core 8.0**, proporcionando el conjunto completo de servicios web consumidos por la aplicación web institucional SPA (`dosier_web`).
 
-El sistema expone **22 controladores especializados** que orquestan los casos de uso curriculares, motores documentales, validaciones normativas, seguridad RBAC, criptografía y colaboración concurrente.
+El sistema expone **23 controladores especializados** que orquestan los casos de uso curriculares, motores documentales, validaciones normativas, seguridad RBAC, criptografía, colaboración concurrente y gestión integral de incidencias.
 
 ---
 
@@ -34,9 +34,9 @@ Ejemplo de payload para guardado del PEA:
 
 ---
 
-## 3. Catálogo Exhaustivo de los 22 Controladores REST
+## 3. Catálogo Exhaustivo de los 23 Controladores REST
 
-Los 22 controladores de la API operan bajo el estándar estricto de **Clean Architecture pura**. Ningún controlador inyecta directamente el contexto de base de datos (`DosierContext`) ni formula consultas LINQ contra la persistencia; todos los controladores delegan exclusivamente en fachadas e interfaces de servicio tipadas en `dosier_application` e implementadas en `dosier_infrastructure`.
+Los 23 controladores de la API operan bajo el estándar estricto de **Clean Architecture pura**. Ningún controlador inyecta directamente el contexto de base de datos (`DosierContext`) ni formula consultas LINQ contra la persistencia; todos los controladores delegan exclusivamente en fachadas e interfaces de servicio tipadas en `dosier_application` e implementadas en `dosier_infrastructure`.
 
 A continuación se detalla la especificación técnica de cada uno de los controladores del backend:
 
@@ -60,16 +60,17 @@ Controladores del Backend DOSIER:
 |   `-- 13. LopdpController (/api/lopdp)
 |-- Subsistema de Colaboración:
 |   `-- 14. CollaborationController (/api/collaboration)
-|-- Subsistema de Comunicación y Analítica:
+|-- Subsistema de Comunicación, Soporte y Analítica:
 |   |-- 15. NotificationsController (/api/Admin/notifications)
 |   |-- 16. EmailEngineController (/api/Admin/email-engine)
 |   |-- 17. CalendarioController (/api/calendario)
-|   `-- 18. ReportsController (/api/reports)
+|   |-- 18. ReportsController (/api/reports)
+|   `-- 19. FeedbackController (/api/feedback)
 `-- Subsistema de Mantenimiento y Utilidades:
-    |-- 19. RecycleBinController (/api/recyclebin)
-    |-- 20. StorageController (/api/storage)
-    |-- 21. HealthController (/api/health)
-    `-- 22. Endpoint Mínimo Ping (/api/ping)
+    |-- 20. RecycleBinController (/api/recyclebin)
+    |-- 21. StorageController (/api/storage)
+    |-- 22. HealthController (/api/health)
+    `-- 23. Endpoint Mínimo Ping (/api/ping)
 ```
 
 ---
@@ -354,7 +355,24 @@ Tableros analíticos y paquetes de evidencias para acreditación CACES 2026.
 
 ---
 
-### 3.19. `RecycleBinController` (`/api/recyclebin`)
+### 3.19. `FeedbackController` (`/api/feedback`)
+Gestión institucional de incidencias técnicas, reportes de bugs, sugerencias y solicitudes de mejora. Incluye carga controlada de archivos adjuntos (imágenes hasta 5MB y videos hasta 15MB), hilo interactivo de mensajes bidireccionales entre usuarios y administradores, integración con notificaciones del sistema e identificación de entorno y navegador.
+
+| Método | Ruta | Autorización | Descripción |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/config` | Autenticado | Obtiene la configuración de soporte (número y disponibilidad de WhatsApp de soporte técnico). |
+| `GET` | `/attachments/{yearMonth}/{fileName}` | Autenticado | Descarga o previsualiza archivos adjuntos de reportes verificando acceso institucional. |
+| `POST`| `/` | Autenticado (`[FromForm]`) | Crea un nuevo reporte de incidencia con adjuntos opcionales y metadata del cliente. Notifica a administradores. |
+| `GET` | `/my` | Autenticado | Lista las incidencias registradas por el usuario autenticado con conteo de respuestas no leídas. |
+| `GET` | `/` | `DOSIER_ADMIN` | Bandeja maestra de administración con filtros por tipo, estado y búsqueda de texto. |
+| `PATCH`| `/{id:int}/status` | `DOSIER_ADMIN` | Actualiza el estado del reporte (`Pendiente`, `En Revisión`, `Resuelto`, `Descartado`) y notifica al autor. |
+| `PUT` | `/{id:int}` | Autenticado | Edita el título o descripción de una incidencia mientras permanezca en estado `Pendiente`. |
+| `POST`| `/{id:int}/messages` | Autenticado | Envía una nueva respuesta al hilo de conversación del ticket y emite notificación al interlocutor. |
+| `DELETE`| `/{id:int}` | Autenticado | Elimina el reporte si pertenece al usuario (en `Pendiente`) o con privilegios de `DOSIER_ADMIN`. |
+
+---
+
+### 3.20. `RecycleBinController` (`/api/recyclebin`)
 Papelera de reciclaje lógica y recuperación de registros eliminados.
 
 | Método | Ruta | Autorización | Descripción |
@@ -365,7 +383,7 @@ Papelera de reciclaje lógica y recuperación de registros eliminados.
 
 ---
 
-### 3.20. `StorageController` (`/api/storage`)
+### 3.21. `StorageController` (`/api/storage`)
 Despacho de archivos estáticos, evidencias y firmas institucionales.
 
 | Método | Ruta | Autorización | Descripción |
@@ -374,7 +392,7 @@ Despacho de archivos estáticos, evidencias y firmas institucionales.
 
 ---
 
-### 3.21. `HealthController` (`/api/health`)
+### 3.22. `HealthController` (`/api/health`)
 Comprobación de estado y disponibilidad del servicio API.
 
 | Método | Ruta | Autorización | Descripción |
@@ -383,9 +401,10 @@ Comprobación de estado y disponibilidad del servicio API.
 
 ---
 
-### 3.22. Endpoint Mínimo `/api/ping`
+### 3.23. Endpoint Mínimo `/api/ping`
 Ruta mapeada en `Program.cs` para chequeos de salud de balanceadores de carga y proxies:
 * **Método:** `GET`
 * **Ruta:** `/api/ping`
 * **Autenticación:** Ninguna (Acceso abierto).
 * **Respuesta:** `{ "status": "healthy", "timestamp": "..." }`.
+

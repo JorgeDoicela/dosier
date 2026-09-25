@@ -145,3 +145,24 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 * **`src/pages/Notificaciones/`:** Bandeja centralizada de alertas transaccionales recibidas por WebSocket SignalR.
 * **`src/pages/RecycleBin/`:** Papelera de reciclaje lógica para recuperación controlada de registros curriculares dados de baja.
 * **`src/pages/Settings/`:** Gestión del perfil docente, actualización de correo, cambio de clave y selector de tema visual (Claro / Oscuro).
+
+---
+
+### 2.7. Módulo de Incidencias y Soporte Técnico
+
+* **Modal Global de Captura (`FeedbackModal.tsx`):**
+  * Disparador global accesible desde el encabezado superior (desktop y móvil) y mediante el evento `dosier-open-feedback`.
+  * Captura de capturas de pantalla desde el portapapeles (`Ctrl+V`), arrastre (*drag and drop*) o selector de archivos.
+  * Validación estricta de adjuntos (imágenes hasta 5MB, videos explicativos hasta 15MB).
+  * Recolección automática de metadatos de entorno (navegador, versión, resolución, sistema operativo y ruta activa).
+  * Enlace directo a WhatsApp institucional preformateado con los detalles del reporte.
+* **Buzón del Docente / Usuario (`UserFeedbackPage.tsx` - `/incidencias`):**
+  * Historial de incidencias reportadas por el usuario autenticado con filtros por estado (`Pendiente`, `En Revisión`, `Resuelto`, `Descartado`) y tipo (`Error / Fallo`, `Sugerencia`, `Consulta`, `Otro`).
+  * Indicador de respuestas y mensajes no leídos sincronizado con el centro de notificaciones.
+  * Hilo de conversación interactivo bidireccional con el equipo técnico y de administración.
+  * Edición y eliminación de reportes en estado inicial de espera.
+* **Bandeja Maestra de Administración (`AdminFeedbackPage.tsx` - `/admin/incidencias`):**
+  * Vista centralizada para administradores (`DOSIER_ADMIN`) con tabla interactiva, filtros combinados y buscador de texto completo.
+  * Panel de diagnóstico técnico con visualización de metadatos de máquina, agente de usuario y visor multimedia con navegación por teclado y deslizamiento.
+  * Gestión de ciclo de vida del reporte (transición de estados) y respuesta técnica directa desde el hilo de soporte.
+

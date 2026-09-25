@@ -24,8 +24,9 @@ public partial class DosierContext
         modelBuilder.ApplyConfiguration(new DocIcalTokenConfiguration());
         modelBuilder.ApplyConfiguration(new DocCalendarioAlertaEnviadaConfiguration());
 
-        // Configuraciones de Workflow
+        // Configuraciones de Workflow y Feedback
         modelBuilder.ApplyConfiguration(new DocConfigWorkflowConfiguration());
+        modelBuilder.ApplyConfiguration(new DocFeedbackReporteConfiguration());
 
         // Gobernanza Curricular y Antecedentes Institucionales
         modelBuilder.ApplyConfiguration(new DocNormativaConfiguration());

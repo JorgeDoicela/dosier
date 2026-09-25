@@ -3,13 +3,14 @@ import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
 import Sidebar from './Sidebar';
 import { CommandPalette } from '../Common/CommandPalette';
-import { Menu, HelpCircle } from 'lucide-react';
+import { Menu, HelpCircle, MessageSquarePlus } from 'lucide-react';
 import NotificationBell from '../Notifications/NotificationBell';
 import { HelpModal } from './Help/HelpModal';
 import { WelcomeModal } from './WelcomeModal/WelcomeModal';
 import { notificacionesService } from '../../services/notificacionesService';
 import { StickyNotesFloatingButton } from '../Common/StickyNotesFloatingButton';
 import { getStickyNotes } from '../../services/calendarioService';
+import { FeedbackModal } from '../Feedback/FeedbackModal';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -34,6 +35,8 @@ const getPageTitle = (pathname: string): string => {
     if (pathname.startsWith('/documentacion/monitoreo/')) return 'Monitoreo de Expediente';
     if (pathname === '/convocatorias') return 'Convocatorias';
     if (pathname === '/verificacion' || pathname.startsWith('/verificacion/')) return 'Verificación Documental';
+    if (pathname === '/incidencias' || pathname === '/feedback' || pathname === '/sugerencias') return 'Buzón de Incidencias';
+    if (pathname === '/admin/incidencias') return 'Gestión de Incidencias (Admin)';
     return '';
 };
 
@@ -43,6 +46,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
     const isWorkspace = location.pathname.includes('/workspace/');
     const isFullHeightPage = isWorkspace || location.pathname === '/plantillas' || location.pathname === '/admin/plantillas';
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showHeader, setShowHeader] = useState(true);
@@ -67,6 +71,13 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
         }, 500);
         return () => clearTimeout(timer);
     }, [user, isAuthenticated, isLoading, isWorkspace]);
+
+    // ── Listener para apertura global de reporte de incidencias ─────────────
+    useEffect(() => {
+        const handleOpenFeedback = () => setIsFeedbackOpen(true);
+        window.addEventListener('dosier-open-feedback', handleOpenFeedback);
+        return () => window.removeEventListener('dosier-open-feedback', handleOpenFeedback);
+    }, []);
 
     // ── Contador de notas rápidas sin planificar (badge del botón flotante) ─────
     const [pendingNotesCount, setPendingNotesCount] = useState(0);
@@ -294,7 +305,15 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                 {getPageTitle(location.pathname)}
                             </div>
 
-                            <div className="flex items-center">
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setIsFeedbackOpen(true)}
+                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+                                    title="Reportar problema o sugerencia"
+                                    aria-label="Abrir formulario de feedback e incidencias"
+                                >
+                                    <MessageSquarePlus size={16} className="text-text-main" />
+                                </button>
                                 <button
                                     onClick={() => setIsHelpOpen(true)}
                                     className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
@@ -328,6 +347,14 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                             />
                         </Link>
                         <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => setIsFeedbackOpen(true)}
+                                className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer"
+                                title="Reportar problema o sugerencia"
+                                aria-label="Abrir formulario de feedback e incidencias"
+                            >
+                                <MessageSquarePlus size={20} className="text-text-main" />
+                            </button>
                             <button
                                 onClick={() => setIsHelpOpen(true)}
                                 className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer"
@@ -368,6 +395,11 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
 
             <StickyNotesFloatingButton
                 pendingCount={pendingNotesCount}
+            />
+
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
             />
         </div>
     );

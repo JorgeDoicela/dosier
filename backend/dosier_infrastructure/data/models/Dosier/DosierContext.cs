@@ -36,6 +36,7 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocMagicLink>        DocMagicLinks          { get; set; }
     public virtual DbSet<DocConfigGeneral>    DocConfigsGenerales    { get; set; }
     public virtual DbSet<DocBackupLog>        DocBackupLogs          { get; set; }
+    public virtual DbSet<DocFeedbackReporte>  DocFeedbackReportes    { get; set; }
 
     // --- Módulo Calendario ---
     public virtual DbSet<DocCalendarioEventoNormativo>  DocCalendarioEventosNormativos  { get; set; }

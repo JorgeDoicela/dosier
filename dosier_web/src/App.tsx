@@ -40,6 +40,8 @@ const RecycleBinPage         = lazy(() => import('./pages/RecycleBin/RecycleBinP
 const ResetAlertPage         = lazy(() => import('./pages/Auth/ResetAlertPage'));
 const DocumentMaintenancePage = lazy(() => import('./pages/Admin/DocumentMaintenancePage'));
 const DocumentTemplatesPage   = lazy(() => import('./pages/Admin/Templates/DocumentTemplatesPage'));
+const AdminFeedbackPage       = lazy(() => import('./pages/Admin/Feedback/AdminFeedbackPage').then(m => ({ default: m.AdminFeedbackPage })));
+const UserFeedbackPage        = lazy(() => import('./pages/Feedback/UserFeedbackPage').then(m => ({ default: m.UserFeedbackPage })));
 
 // ─── Fallback de carga ────────────────────────────────────────────────────────
 const PageLoader = () => (
@@ -163,6 +165,14 @@ const NavigateToCurriculumProjects = () => {
     return <Navigate to={target} replace />;
 };
 
+const FeedbackRouteDispatcher = () => {
+    const { isAdmin } = useAuth();
+    if (isAdmin) {
+        return <AdminFeedbackPage />;
+    }
+    return <UserFeedbackPage />;
+};
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 function App() {
     const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -247,6 +257,11 @@ function App() {
                              <Route path="/plantillas" element={<AdminRoute><DocumentTemplatesPage /></AdminRoute>} />
                              <Route path="/admin/plantillas" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/templates" element={<RedirectPreserveSearch to="/plantillas" />} />
+                             <Route path="/incidencias" element={<FeedbackRouteDispatcher />} />
+                             <Route path="/feedback" element={<RedirectPreserveSearch to="/incidencias" />} />
+                             <Route path="/sugerencias" element={<RedirectPreserveSearch to="/incidencias" />} />
+                             <Route path="/admin/incidencias" element={<AdminRoute><AdminFeedbackPage /></AdminRoute>} />
+                             <Route path="/mis-incidencias" element={<UserFeedbackPage />} />
                              <Route path="/admin" element={<Navigate to="/usuarios" replace />} />
                              <Route path="/admin/audit" element={<Navigate to="/auditoria" replace />} />
                              <Route path="/admin/configuracion" element={<RedirectPreserveSearch to="/parametros-normativos" />} />

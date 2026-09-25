@@ -1,0 +1,17 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using dosier_application.Feedback.DTOs;
+
+namespace dosier_application.Feedback;
+
+public interface IFeedbackService
+{
+    FeedbackSupportConfigDto GetSupportConfig();
+    Task<FeedbackReporteDto> CreateFeedbackAsync(CreateFeedbackDto dto, int? idUsuario, string? cedula, string nombreUsuario, string rolUsuario);
+    Task<List<FeedbackReporteDto>> GetAllFeedbackAsync(string? tipo = null, string? estado = null);
+    Task<List<FeedbackReporteDto>> GetMyFeedbackAsync(int? idUsuario, string? cedula);
+    Task<FeedbackReporteDto?> UpdateStatusAsync(int idFeedback, UpdateFeedbackStatusDto dto);
+    Task<FeedbackReporteDto?> UpdateUserFeedbackAsync(int idFeedback, UpdateUserFeedbackDto dto, int? idUsuario, string? cedula, bool isSuperAdmin);
+    Task<FeedbackReporteDto?> AddMessageAsync(int idFeedback, CreateFeedbackMensajeDto dto, int? idUsuario, string? cedula, string nombreUsuario, string rolUsuario, bool isSuperAdmin);
+    Task<bool> DeleteFeedbackAsync(int idFeedback, int? idUsuario, string? cedula, bool isSuperAdmin);
+}

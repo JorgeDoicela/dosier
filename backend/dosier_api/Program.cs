@@ -268,6 +268,7 @@ builder.Services.AddScoped<dosier_application.Security.IBackupAdminService, dosi
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationService, dosier_infrastructure.Common.Notifications.NotificationService>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.EmailMasterLayoutRenderer>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.IEmailTemplateService, dosier_infrastructure.Common.Notifications.EmailTemplateService>();
+builder.Services.AddScoped<dosier_application.Feedback.IFeedbackService, dosier_infrastructure.Feedback.FeedbackService>();
 builder.Services.AddScoped<dosier_infrastructure.Common.Notifications.IEmailSenderSubservice, dosier_infrastructure.Common.Notifications.EmailSenderSubservice>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.IEmailEngineService, dosier_infrastructure.Common.Notifications.EmailEngineService>();
 // Notificación Drivers
