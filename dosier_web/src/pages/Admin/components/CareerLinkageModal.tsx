@@ -39,17 +39,15 @@ export const CareerLinkageModal: React.FC<CareerLinkageModalProps> = ({
     return (
         <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
             <div
-                className="absolute inset-0 bg-bg-deep/80 backdrop-blur-sm cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onClick={onClose}
             />
-            <div className="relative w-full max-w-2xl bg-surface border border-border-thin rounded-lg shadow-2xl flex flex-col z-10 animate-fade-up overflow-hidden max-h-[85vh]">
-                <div className="p-5 border-b border-border-thin flex justify-between items-center bg-bg-deep/25">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                            <GraduationCap size={18} />
-                        </div>
+            <div className="relative w-full max-w-2xl bg-surface border border-border-thin rounded-lg shadow-xl flex flex-col z-10 animate-fade-up overflow-hidden max-h-[85vh]">
+                <div className="p-5 border-b border-border-thin flex justify-between items-center bg-surface">
+                    <div className="flex items-center gap-3">
+                        <GraduationCap size={22} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <div>
-                            <h3 className="text-sm font-black text-text-main uppercase tracking-widest leading-none mb-1">
+                            <h3 className="text-sm font-bold text-text-main uppercase tracking-wider leading-none mb-1">
                                 Detalle de Carreras por Integrante
                             </h3>
                             <p className="text-[10px] text-text-dim uppercase font-bold tracking-tight">

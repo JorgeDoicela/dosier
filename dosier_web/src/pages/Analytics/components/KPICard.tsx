@@ -34,16 +34,16 @@ export const KPICard: React.FC<KPICardProps> = ({
     }[accentColor] || 'bg-surface-hover text-text-dim border border-border-thin';
 
     return (
-        <div className="bento-card static p-5 space-y-4 relative overflow-hidden group select-none hover:-translate-y-1 hover:shadow-md hover:shadow-brand/5 hover:border-brand/35 transition-all duration-300">
+        <div className="bento-card static p-5 space-y-4 relative overflow-hidden group select-none hover:border-[#0070f3] dark:hover:border-blue-500 transition-colors">
             <div className="flex items-center justify-between">
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-text-dim font-mono">{title}</span>
-                <span className={`p-2 rounded-lg transition-all duration-300 group-hover:scale-105 ${iconBgClass}`}>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-dim font-mono">{title}</span>
+                <span className="text-text-dim group-hover:text-brand transition-colors">
                     {icon}
                 </span>
             </div>
             
             <div className="space-y-1">
-                <h3 className="text-3xl font-semibold tracking-tight text-text-main font-sans">{value}</h3>
+                <h3 className="text-2xl font-bold tracking-tight text-text-main font-sans">{value}</h3>
                 {subText && (
                     <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-text-dim uppercase">
                         {badgeText && (

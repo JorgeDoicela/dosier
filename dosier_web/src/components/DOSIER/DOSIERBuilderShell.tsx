@@ -107,8 +107,8 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                     isDirectorOrAdmin: layout.isDirectorOrAdmin,
                     onUpdateField
                 }}>
-                    <div className="fixed inset-0 z-[100] bg-bg-deep flex justify-center items-center p-0 md:p-0 backdrop-blur-sm">
-                        <div className="bg-surface w-full h-full flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+                    <div className="fixed inset-0 z-[100] bg-bg-deep flex justify-center items-center p-0 md:p-0">
+                        <div className="bg-surface w-full h-full flex flex-col shadow-xl overflow-hidden animate-fade-in">
                             {/* ── Header Universal ── */}
                             <BuilderHeader
                                 title={title}
@@ -378,13 +378,13 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
 
                     {/* ── Modal de Alerta Centrado: Nueva Versión de Plantilla ── */}
                     {hasTemplateUpdate && !readOnly && onUpgradeTemplate && showUpdateModal && (
-                        <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-                            <div className="bg-surface border border-border-thin rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative flex flex-col gap-6 animate-scale-in">
+                        <div className="fixed inset-0 z-[300] bg-black/70 flex items-center justify-center p-4 animate-fade-in">
+                            <div className="bg-surface border border-border-thin rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-xl relative flex flex-col gap-6 animate-scale-in">
                                 {/* Botón cerrar X */}
                                 <button
                                     type="button"
                                     onClick={() => setShowUpdateModal(false)}
-                                    className="absolute top-4 right-4 text-text-dim hover:text-text-main p-1.5 rounded-full hover:bg-border-thin/30 transition-all cursor-pointer"
+                                    className="absolute top-4 right-4 text-text-dim hover:text-text-main p-1.5 rounded-lg hover:bg-border-thin/30 transition-all cursor-pointer"
                                     title="Cerrar (Mantener versión actual arriba)"
                                 >
                                     <X size={18} />
@@ -392,11 +392,9 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
 
                                 {/* Encabezado */}
                                 <div className="flex items-start gap-4">
-                                    <div className="p-3 bg-info/10 text-info rounded-xl shrink-0">
-                                        <Award size={28} />
-                                    </div>
+                                    <Award size={28} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                                     <div className="space-y-1 pr-6">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-info bg-info/10 px-2.5 py-0.5 rounded-full">
+                                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#0070f3] dark:text-blue-400">
                                             Actualización disponible
                                         </span>
                                         <h3 className="text-xl sm:text-2xl font-black text-text-main tracking-tight mt-1">

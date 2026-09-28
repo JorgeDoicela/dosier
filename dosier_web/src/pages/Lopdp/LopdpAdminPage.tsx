@@ -62,7 +62,7 @@ const LopdpAdminPage: React.FC = () => {
                         <ShieldCheck size={16} />
                         Registro de Consentimientos LOPDP
                     </h2>
-                    <span className="text-xs text-text-dim font-medium bg-surface px-3 py-1 rounded-full border border-border-thin">
+                    <span className="text-xs text-text-dim font-mono font-medium">
                         Total: {consents.length}
                     </span>
                 </div>

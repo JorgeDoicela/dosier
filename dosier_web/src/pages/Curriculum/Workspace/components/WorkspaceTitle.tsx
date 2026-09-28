@@ -51,12 +51,9 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
             </header>
 
             {templateCode && templateCode !== 'PEA_OFICIAL' && (
-                <div className="mb-8 p-6 rounded-2xl bg-surface border border-brand/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in shadow-xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-3xl -mr-5 -mt-5 group-hover:bg-brand/10 transition-colors duration-500" />
+                <div className="mb-8 p-6 rounded-xl bg-white dark:bg-zinc-950 border border-slate-200/60 dark:border-zinc-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in relative overflow-hidden">
                     <div className="flex items-start gap-4">
-                        <div className="icon-circle-brand shrink-0 !p-3">
-                            <FileSignature size={18} className="text-brand" />
-                        </div>
+                        <FileSignature size={22} className="text-[#0070f3] dark:text-blue-400 shrink-0 mt-0.5" />
                         <div>
                             <h3 className="text-xs font-semibold text-text-main uppercase tracking-widest">
                                 Documento en Edición

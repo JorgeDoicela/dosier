@@ -95,7 +95,7 @@ const EmailEnginePage: React.FC = () => {
                         <button
                             onClick={() => handleTabChange('send')}
                             className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all cursor-pointer ${activeTab === 'send'
-                                ? 'bg-bg-deep border border-border-thin text-text-main shadow-sm'
+                                ? 'bg-bg-deep border border-border-thin text-text-main'
                                 : 'text-text-dim hover:text-text-main'
                                 }`}
                         >
@@ -105,7 +105,7 @@ const EmailEnginePage: React.FC = () => {
                         <button
                             onClick={() => handleTabChange('templates')}
                             className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all cursor-pointer ${activeTab === 'templates'
-                                ? 'bg-bg-deep border border-border-thin text-text-main shadow-sm'
+                                ? 'bg-bg-deep border border-border-thin text-text-main'
                                 : 'text-text-dim hover:text-text-main'
                                 }`}
                         >
@@ -115,7 +115,7 @@ const EmailEnginePage: React.FC = () => {
                         <button
                             onClick={() => handleTabChange('history')}
                             className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all cursor-pointer ${activeTab === 'history'
-                                ? 'bg-bg-deep border border-border-thin text-text-main shadow-sm'
+                                ? 'bg-bg-deep border border-border-thin text-text-main'
                                 : 'text-text-dim hover:text-text-main'
                                 }`}
                         >

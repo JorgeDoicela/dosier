@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
-    ArrowLeft, Activity, Calendar, 
-    CheckCircle2, Clock, BookOpen, Layers, Award, Shield, FileCheck
+    ArrowLeft, Activity, 
+    CheckCircle2, Layers, FileCheck
 } from 'lucide-react';
 import { monitoreoService, type ProjectMonitoringDetailDto } from '../../../services/monitoreoService';
 import { useWorkflowStates } from '../../../hooks/useWorkflowStates';
@@ -59,7 +59,7 @@ export const MonitoringPage: React.FC = () => {
     if (error || !projectDetail) {
         return (
             <div className="flex-1 bg-bg-deep flex items-center justify-center min-h-screen p-8 text-center">
-                <div className="bg-surface border border-red-500/20 p-8 rounded-3xl max-w-md shadow-2xl">
+                <div className="bg-surface border border-red-500/20 p-8 rounded-xl max-w-md shadow-sm">
                     <h3 className="text-red-500 text-lg font-bold uppercase tracking-wider mb-2">Error de Carga</h3>
                     <p className="text-text-dim text-sm font-medium mb-6">
                         {error || 'No se pudo resolver la información del instrumento curricular.'}
@@ -75,7 +75,7 @@ export const MonitoringPage: React.FC = () => {
     return (
         <div className="flex-1 bg-bg-deep min-h-screen text-text-main p-4 md:p-10 overflow-y-auto selection:bg-text-main selection:text-bg-deep">
             {/* Header Curricular */}
-            <header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 md:gap-0 sticky top-0 bg-bg-deep/95 backdrop-blur z-20 pb-4 border-b border-border-thin">
+            <header className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 md:gap-0 sticky top-0 bg-bg-deep z-20 pb-4 border-b border-border-thin">
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={() => navigate(-1)} 

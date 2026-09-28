@@ -41,10 +41,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
     openedAtRef
 }) => {
     return (
-        <div className="overflow-x-auto custom-scrollbar border border-border-thin rounded-xl bg-surface/50">
+        <div className="overflow-x-auto custom-scrollbar border border-border-thin rounded-xl bg-surface">
             <table className="w-full text-left border-collapse min-w-[850px]">
                 <thead>
-                    <tr className="bg-surface/50 border-b border-border-thin text-[10px] font-mono text-text-dim uppercase">
+                    <tr className="bg-zinc-50 dark:bg-zinc-900 border-b border-border-thin text-[10px] font-mono text-text-dim uppercase">
                         <th className="p-4 font-semibold tracking-widest">Usuario / Identificación</th>
                         <th className="p-4 font-semibold tracking-widest">
                             {userType === 'DOCENTE' ? 'Horas / Carrera' : userType === 'ADMINISTRATIVO' ? 'Departamento / Cargo' : 'Validación Perfil'}

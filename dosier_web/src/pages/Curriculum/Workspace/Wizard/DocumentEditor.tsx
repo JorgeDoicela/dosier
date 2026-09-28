@@ -246,7 +246,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
     if (!effectiveConfig) {
         return (
             <div className="min-h-screen bg-bg-deep flex flex-col items-center justify-center p-8 text-center">
-                <div className="bg-surface border border-red-500/30 p-8 rounded-3xl max-w-md shadow-2xl">
+                <div className="bg-surface border border-red-500/30 p-8 rounded-xl max-w-md shadow-sm">
                     <h3 className="text-red-500 text-lg font-black uppercase tracking-wider mb-2">Error de Inicialización</h3>
                     <p className="text-text-dim text-sm font-medium mb-6">
                         No se pudo resolver la estructura de la plantilla "{templateCode}".

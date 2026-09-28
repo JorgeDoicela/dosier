@@ -100,7 +100,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
 
             {/* Panel lateral deslizable con fondo 100% sólido (blanco en claro, zinc-950 en oscuro) */}
             <div
-                className="relative z-10 w-full max-w-xl bg-white dark:bg-zinc-950 border-l border-border-thin shadow-2xl flex flex-col h-full overflow-hidden animate-slide-left"
+                className="relative z-10 w-full max-w-xl bg-white dark:bg-zinc-950 border-l border-border-thin shadow-xl flex flex-col h-full overflow-hidden animate-slide-left"
                 role="dialog"
                 aria-modal="true"
             >

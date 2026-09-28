@@ -100,11 +100,11 @@ export const CalendarioTab: React.FC<CalendarioTabProps> = ({ hook, setDetailIte
             {isCalendarioModalOpen && (
                 <div className="fixed inset-0 z-[9999] flex justify-end">
                     <div 
-                        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" 
+                        className="fixed inset-0 bg-black/60 transition-opacity animate-in fade-in duration-200" 
                         onClick={() => setIsCalendarioModalOpen(false)} 
                     />
                     
-                    <div className="relative w-full max-w-lg bg-bg-deep border-l border-border-thin shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-300">
+                    <div className="relative w-full max-w-lg bg-bg-deep border-l border-border-thin shadow-xl flex flex-col h-full animate-in slide-in-from-right duration-300">
                         <div className="modal-header">
                             <div>
                                 <span className="text-[10px] uppercase font-mono tracking-widest text-text-dim">Módulo Calendario</span>

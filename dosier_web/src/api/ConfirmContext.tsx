@@ -75,10 +75,10 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
                         }
                     }}
                 >
-                    <div className="absolute inset-0 bg-bg-deep/80 backdrop-blur-sm animate-fade-in" />
+                    <div className="absolute inset-0 bg-black/60 animate-fade-in" />
 
                     {options.position === 'right' ? (
-                        <div className="relative w-full max-w-lg h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-slide-in-right shadow-2xl">
+                        <div className="relative w-full max-w-lg h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-slide-in-right shadow-xl">
                             {/* Header */}
                             <div className="modal-header border-b border-border-thin flex justify-between items-center py-4 px-6 bg-surface">
                                 <div className="flex items-center gap-2.5">

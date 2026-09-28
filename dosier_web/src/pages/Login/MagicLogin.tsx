@@ -112,7 +112,7 @@ const MagicLogin = ({ currentTheme = 'dark', toggleTheme }: { currentTheme?: 'da
                 </div>
 
                 {/* Card Container */}
-                <div className="bento-card static p-8 border border-border-thin bg-surface/30 backdrop-blur-md rounded-2xl shadow-xl space-y-6">
+                <div className="bento-card static p-8 border border-border-thin bg-surface rounded-2xl space-y-6">
 
                     {/* ── Estado: sin token ── */}
                     {!token ? (

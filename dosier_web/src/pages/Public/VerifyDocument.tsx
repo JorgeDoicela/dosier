@@ -324,7 +324,7 @@ const VerifyDocument = () => {
                                             <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand animate-pulse shadow-[0_0_10px_#0070f3]" style={{ animation: 'bounce 2s infinite' }} />
                                             <ScanLine className="text-brand/50 animate-pulse" size={28} />
                                         </div>
-                                        <span className="text-[10px] font-medium text-white/90 bg-black/70 px-2.5 py-0.5 rounded-full mt-2.5 backdrop-blur-sm">
+                                        <span className="text-[10px] font-mono text-white/90 bg-black/80 px-2.5 py-1 rounded-md mt-2.5">
                                             Apunta al código QR del documento
                                         </span>
                                     </div>

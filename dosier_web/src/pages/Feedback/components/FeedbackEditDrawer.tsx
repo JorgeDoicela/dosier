@@ -86,12 +86,10 @@ export const FeedbackEditDrawer: React.FC<FeedbackEditDrawerProps> = ({
                 onClick={() => !isSaving && onClose()}
             />
 
-            <div className="relative w-full max-w-lg h-full bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            <div className="relative w-full max-w-lg h-full bg-white dark:bg-zinc-950 border-l border-slate-200/80 dark:border-zinc-800 shadow-xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-                            <Pencil size={15} />
-                        </div>
+                        <Pencil size={18} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <h3 className="text-[15px] font-bold text-text-main tracking-tight">
                             Editar Incidencia
                         </h3>

@@ -274,14 +274,14 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
             aria-modal="true"
             aria-label={`Guía Interactiva: ${config.title}`}
         >
-            {/* Backdrop Blur Overlay */}
+            {/* Overlay Sólido */}
             <div 
-                className="absolute inset-0 bg-bg-deep/75 backdrop-blur-md cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onClick={onClose}
             />
 
             {/* Modal Dialog Card */}
-            <div className="relative w-full max-w-3xl bg-surface border border-border-thin rounded-xl shadow-2xl flex flex-col z-10 animate-scale-up overflow-hidden max-h-[90vh]">
+            <div className="relative w-full max-w-3xl bg-surface border border-border-thin rounded-xl shadow-xl flex flex-col z-10 animate-scale-up overflow-hidden max-h-[90vh]">
                 
                 {/* Header Vercel Geist */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border-thin bg-surface shrink-0">
@@ -295,12 +295,12 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, pathname 
                                     DOSIER
                                 </span>
                                 <span className="text-text-dim">/</span>
-                                <span className="text-[10px] font-mono text-text-dim px-2 py-0.5 rounded-full border border-border-thin bg-surface-hover">
+                                <span className="text-[10px] font-mono text-text-dim">
                                     Guía del Módulo
                                 </span>
                                 {roleDisplayName && (
-                                    <span className="text-[10px] font-mono text-text-dim px-2 py-0.5 rounded-full border border-border-thin bg-surface">
-                                        {roleDisplayName}
+                                    <span className="text-[10px] font-mono text-text-dim">
+                                        ({roleDisplayName})
                                     </span>
                                 )}
                             </div>

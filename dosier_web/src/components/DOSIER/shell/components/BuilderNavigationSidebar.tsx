@@ -120,7 +120,7 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
                                     </span>
                                     <div className="flex items-center gap-2 shrink-0 ml-2">
                                         {progress !== null && (
-                                            <span className={`text-[9px] font-black tracking-normal px-1.5 py-0.5 rounded-full border ${activeTab === section.id ? 'text-bg-deep border-bg-deep/20 bg-bg-deep/5' : 'text-text-dim border-border-thin bg-surface/30'}`}>
+                                            <span className={`text-[9px] font-mono font-bold tracking-normal ${activeTab === section.id ? 'text-bg-deep' : 'text-text-dim'}`}>
                                                 {progress}%
                                             </span>
                                         )}

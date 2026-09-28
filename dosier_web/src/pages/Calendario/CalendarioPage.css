@@ -37,7 +37,7 @@ de estilo modularizadas de cada vista y componente para evitar archivos extensos
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.03);
+    box-shadow: none;
     min-width: 0;
 }
 

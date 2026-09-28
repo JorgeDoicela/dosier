@@ -219,9 +219,7 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
                         </div>
                     ) : (
                         <div className="h-full flex flex-col justify-center items-center text-center text-text-dim p-6 py-12">
-                            <div className="p-3 bg-surface rounded-full border border-border-thin mb-3 shadow-sm text-text-dim/60">
-                                <CheckCircle2 size={20} className="text-emerald-500" />
-                            </div>
+                            <CheckCircle2 size={24} className="text-emerald-500 mb-2" />
                             <p className="text-[11px] font-black text-text-main uppercase tracking-wider">
                                 Sin observaciones
                             </p>

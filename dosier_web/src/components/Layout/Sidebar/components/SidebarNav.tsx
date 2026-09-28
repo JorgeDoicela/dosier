@@ -129,10 +129,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             return (
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
-                        className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
-                            : 'bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
-                            }`}
+                        className={`flex items-center justify-between rounded-md transition-colors duration-150 group w-full ${
+                            isActive
+                                ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
+                        }`}
                     >
                         <Link
                             to={targetBasePath}
@@ -146,44 +147,44 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     if (onClose) onClose();
                                 }
                             }}
-                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
+                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-md border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
-                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'text-zinc-900 dark:text-zinc-100'
-                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
-                                }`}>
-                                <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
-                            </div>
-                            <span className={`text-[14px] tracking-tight truncate ${isActive ? 'font-semibold text-text-main' : 'font-medium'
-                                }`}>
+                            <item.icon
+                                size={15}
+                                strokeWidth={isActive ? 2 : 1.75}
+                                className={`shrink-0 ${
+                                    isActive
+                                        ? 'text-[#0070f3] dark:text-blue-400'
+                                        : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
+                                }`}
+                            />
+                            <span className={`text-[13.5px] tracking-tight truncate ${
+                                isActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                            }`}>
                                 {item.name}
                             </span>
                         </Link>
                         <button
                             onClick={toggleOpen}
-                            className="p-1.5 mr-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-inherit border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
+                            className="p-1.5 mr-1 rounded text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
                             title="Expandir"
                         >
-                            <ChevronRightIcon className={`shrink-0 transition-all duration-200 ${isMenuOpen ? 'rotate-90' : ''
-                                } ${isActive ? 'text-text-main/50' : 'text-text-dim/30 group-hover:text-text-dim/70'
-                                }`} />
+                            <ChevronRightIcon className={`shrink-0 transition-transform duration-200 ${
+                                isMenuOpen ? 'rotate-90' : ''
+                            }`} />
                         </button>
                     </div>
 
                     {isMenuOpen && (
                         <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
                             {sidebarProjectsLoading && relevantProjects.length === 0 ? (
-                                <div className="flex items-center gap-2.5 px-2.5 py-1 ml-2 pl-2.5 text-[13px] text-text-dim/40 font-medium italic select-none">
-                                    <div className="w-7 h-7 flex items-center justify-center shrink-0">
-                                        <Loader2 size={13} className="shrink-0 animate-spin opacity-40" />
-                                    </div>
+                                <div className="flex items-center gap-2 px-3 py-1.5 ml-3 text-[12px] font-mono text-slate-400 dark:text-zinc-500 select-none">
+                                    <Loader2 size={12} className="shrink-0 animate-spin text-slate-400" />
                                     <span>Cargando...</span>
                                 </div>
                             ) : relevantProjects.length === 0 ? (
-                                <div className="flex items-center gap-2.5 px-2.5 py-1 ml-2 pl-2.5 text-[13px] text-text-dim/40 font-medium italic select-none">
-                                    <div className="w-7 h-7 flex items-center justify-center shrink-0">
-                                        <BookOpen size={13} strokeWidth={1} className="shrink-0 opacity-40" />
-                                    </div>
+                                <div className="flex items-center gap-2 px-3 py-1.5 ml-3 text-[12px] font-mono text-slate-400 dark:text-zinc-500 select-none">
+                                    <BookOpen size={13} strokeWidth={1.5} className="shrink-0 text-slate-300 dark:text-zinc-600" />
                                     <span>Sin instrumentos</span>
                                 </div>
                             ) : (
@@ -203,20 +204,26 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                                     onClick={() => {
                                                         if (onClose) onClose();
                                                     }}
-                                                    className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 ${isSubActive
-                                                        ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                                                        : 'text-text-dim hover:text-text-main hover:bg-surface-hover/50'
-                                                        }`}
+                                                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 ${
+                                                        isSubActive
+                                                            ? 'bg-blue-50/70 dark:bg-blue-950/30 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                                            : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40'
+                                                    }`}
                                                 >
-                                                    <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                                                        <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isSubActive
-                                                            ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                                            : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
-                                                            }`}>
-                                                            <BookOpen size={13} strokeWidth={isSubActive ? 2 : 1.5} className="shrink-0" />
-                                                        </div>
-                                                        <span className={`text-[13px] tracking-tight truncate ${isSubActive ? 'font-semibold text-text-main' : 'font-medium'
-                                                            }`} title={p.titulo?.trim() || '(Sin título)'}>
+                                                    <div className="flex items-center gap-2 min-w-0 py-0.5">
+                                                        <BookOpen
+                                                            size={13}
+                                                            strokeWidth={isSubActive ? 2 : 1.75}
+                                                            className={`shrink-0 ${
+                                                                isSubActive ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
+                                                            }`}
+                                                        />
+                                                        <span
+                                                            className={`text-[12.5px] tracking-tight truncate ${
+                                                                isSubActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                                                            }`}
+                                                            title={p.titulo?.trim() || '(Sin título)'}
+                                                        >
                                                             {p.titulo?.trim() || '(Sin título)'}
                                                         </span>
                                                     </div>
@@ -231,16 +238,12 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                                 e.stopPropagation();
                                                 setShowAllProjects(true);
                                             }}
-                                            className="flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 text-text-dim hover:text-text-main hover:bg-surface-hover/50 border-0 bg-transparent w-full text-left"
+                                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40 border-0 bg-transparent w-full text-left"
                                         >
-                                            <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                                                <div className="w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 bg-transparent border border-transparent text-text-dim group-hover:text-text-main">
-                                                    <MoreHorizontalIcon className="shrink-0" />
-                                                </div>
-                                                <span className="text-[12px] font-semibold tracking-tight">
-                                                    Ver {sidebarProjects.length - displayLimit} más
-                                                </span>
-                                            </div>
+                                            <MoreHorizontalIcon className="shrink-0 text-slate-400" size={13} />
+                                            <span className="text-[11.5px] font-mono font-medium tracking-tight">
+                                                Ver {sidebarProjects.length - displayLimit} más
+                                            </span>
                                         </button>
                                     )}
                                     {hasMore && showAllProjects && (
@@ -250,16 +253,12 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                                 e.stopPropagation();
                                                 setShowAllProjects(false);
                                             }}
-                                            className="flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 text-text-dim hover:text-text-main hover:bg-surface-hover/50 border-0 bg-transparent w-full text-left"
+                                            className="flex items-center gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40 border-0 bg-transparent w-full text-left"
                                         >
-                                            <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                                                <div className="w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 bg-transparent border border-transparent text-text-dim group-hover:text-text-main">
-                                                    <ChevronRightIcon className="shrink-0 -rotate-90" />
-                                                </div>
-                                                <span className="text-[12px] font-semibold tracking-tight">
-                                                    Ver menos
-                                                </span>
-                                            </div>
+                                            <ChevronRightIcon className="shrink-0 -rotate-90 text-slate-400" size={12} />
+                                            <span className="text-[11.5px] font-mono font-medium tracking-tight">
+                                                Ver menos
+                                            </span>
                                         </button>
                                     )}
                                 </>
@@ -275,10 +274,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             return (
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
-                        className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-zinc-200/75 dark:bg-zinc-800 text-text-main font-semibold shadow-xs'
-                            : 'bg-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50'
-                            }`}
+                        className={`flex items-center justify-between rounded-md transition-colors duration-150 group w-full ${
+                            isActive
+                                ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
+                        }`}
                     >
                         <Link
                             to="/analiticas"
@@ -288,16 +288,20 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     if (onClose) onClose();
                                 }
                             }}
-                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
+                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-md border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
-                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'bg-surface dark:bg-zinc-800 shadow-[0_1px_2px_rgba(15,23,42,0.08)] border border-border text-brand'
-                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
-                                }`}>
-                                <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
-                            </div>
-                            <span className={`text-[14px] tracking-tight truncate ${isActive ? 'font-semibold text-text-main' : 'font-medium'
-                                }`}>
+                            <item.icon
+                                size={15}
+                                strokeWidth={isActive ? 2 : 1.75}
+                                className={`shrink-0 ${
+                                    isActive
+                                        ? 'text-[#0070f3] dark:text-blue-400'
+                                        : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
+                                }`}
+                            />
+                            <span className={`text-[13.5px] tracking-tight truncate ${
+                                isActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                            }`}>
                                 {item.name}
                             </span>
                         </Link>
@@ -307,12 +311,12 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                 e.stopPropagation();
                                 setIsAnalyticsOpen(!isAnalyticsOpen);
                             }}
-                            className="p-1.5 mr-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-inherit border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
+                            className="p-1.5 mr-1 rounded text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
                             title="Expandir"
                         >
-                            <ChevronRightIcon className={`shrink-0 transition-all duration-200 ${isMenuOpen ? 'rotate-90' : ''
-                                } ${isActive ? 'text-text-main/50' : 'text-text-dim/30 group-hover:text-text-dim/70'
-                                }`} />
+                            <ChevronRightIcon className={`shrink-0 transition-transform duration-200 ${
+                                isMenuOpen ? 'rotate-90' : ''
+                            }`} />
                         </button>
                     </div>
 
@@ -335,20 +339,23 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                         onClick={() => {
                                             if (onClose) onClose();
                                         }}
-                                        className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 ${isSubActive
-                                            ? 'bg-[#ededed] dark:bg-[#1a1a1a] text-text-main'
-                                            : 'text-text-dim hover:text-text-main hover:bg-surface-hover/50'
-                                            }`}
+                                        className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 ${
+                                            isSubActive
+                                                ? 'bg-blue-50/70 dark:bg-blue-950/30 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40'
+                                        }`}
                                     >
-                                        <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isSubActive
-                                                ? 'bg-white dark:bg-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.08)] border border-black/10 dark:border-white/10 text-text-main'
-                                                : 'bg-transparent border border-transparent text-text-dim group-hover:text-text-main'
-                                                }`}>
-                                                <subItem.icon size={13} strokeWidth={isSubActive ? 2 : 1.5} className="shrink-0" />
-                                            </div>
-                                            <span className={`text-[13px] tracking-tight truncate ${isSubActive ? 'font-semibold text-text-main' : 'font-medium'
-                                                }`}>
+                                        <div className="flex items-center gap-2 min-w-0 py-0.5">
+                                            <subItem.icon
+                                                size={13}
+                                                strokeWidth={isSubActive ? 2 : 1.75}
+                                                className={`shrink-0 ${
+                                                    isSubActive ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
+                                                }`}
+                                            />
+                                            <span className={`text-[12.5px] tracking-tight truncate ${
+                                                isSubActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                                            }`}>
                                                 {subItem.name}
                                             </span>
                                         </div>
@@ -366,10 +373,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             return (
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
-                        className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
-                            : 'bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
-                            }`}
+                        className={`flex items-center justify-between rounded-md transition-colors duration-150 group w-full ${
+                            isActive
+                                ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
+                        }`}
                     >
                         <Link
                             to="/usuarios"
@@ -379,16 +387,20 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     if (onClose) onClose();
                                 }
                             }}
-                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
+                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-md border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
-                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'text-zinc-900 dark:text-zinc-100'
-                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
-                                }`}>
-                                <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
-                            </div>
-                            <span className={`text-[14px] tracking-tight truncate ${isActive ? 'font-semibold text-text-main' : 'font-medium'
-                                }`}>
+                            <item.icon
+                                size={15}
+                                strokeWidth={isActive ? 2 : 1.75}
+                                className={`shrink-0 ${
+                                    isActive
+                                        ? 'text-[#0070f3] dark:text-blue-400'
+                                        : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
+                                }`}
+                            />
+                            <span className={`text-[13.5px] tracking-tight truncate ${
+                                isActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                            }`}>
                                 {item.name}
                             </span>
                         </Link>
@@ -398,12 +410,12 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                 e.stopPropagation();
                                 setIsUsersOpen(!isUsersOpen);
                             }}
-                            className="p-1.5 mr-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-inherit border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
+                            className="p-1.5 mr-1 rounded text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
                             title="Expandir"
                         >
-                            <ChevronRightIcon className={`shrink-0 transition-all duration-200 ${isMenuOpen ? 'rotate-90' : ''
-                                } ${isActive ? 'text-text-main/50' : 'text-text-dim/30 group-hover:text-text-dim/70'
-                                }`} />
+                            <ChevronRightIcon className={`shrink-0 transition-transform duration-200 ${
+                                isMenuOpen ? 'rotate-90' : ''
+                            }`} />
                         </button>
                     </div>
 
@@ -425,20 +437,23 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                         onClick={() => {
                                             if (onClose) onClose();
                                         }}
-                                        className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 ${isSubActive
-                                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
-                                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
-                                            }`}
+                                        className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 ${
+                                            isSubActive
+                                                ? 'bg-blue-50/70 dark:bg-blue-950/30 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40'
+                                        }`}
                                     >
-                                        <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isSubActive
-                                                ? 'text-zinc-900 dark:text-zinc-100'
-                                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
-                                                }`}>
-                                                <subItem.icon size={13} strokeWidth={isSubActive ? 2 : 1.5} className="shrink-0" />
-                                            </div>
-                                            <span className={`text-[12px] tracking-tight truncate ${isSubActive ? 'font-semibold text-text-main' : 'font-medium'
-                                                }`}>
+                                        <div className="flex items-center gap-2 min-w-0 py-0.5">
+                                            <subItem.icon
+                                                size={13}
+                                                strokeWidth={isSubActive ? 2 : 1.75}
+                                                className={`shrink-0 ${
+                                                    isSubActive ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
+                                                }`}
+                                            />
+                                            <span className={`text-[12.5px] tracking-tight truncate ${
+                                                isSubActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                                            }`}>
                                                 {subItem.name}
                                             </span>
                                         </div>
@@ -456,10 +471,11 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             return (
                 <div key={item.name} className="flex flex-col gap-0.5">
                     <div
-                        className={`flex items-center justify-between rounded-lg transition-all duration-150 group w-full ${isActive
-                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
-                            : 'bg-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
-                            }`}
+                        className={`flex items-center justify-between rounded-md transition-colors duration-150 group w-full ${
+                            isActive
+                                ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
+                        }`}
                     >
                         <Link
                             to="/configuracion"
@@ -469,16 +485,20 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     if (onClose) onClose();
                                 }
                             }}
-                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-lg border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
+                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-md border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
                         >
-                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                                ? 'text-zinc-900 dark:text-zinc-100'
-                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
-                                }`}>
-                                <item.icon size={15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
-                            </div>
-                            <span className={`text-[14px] tracking-tight truncate ${isActive ? 'font-semibold text-text-main' : 'font-medium'
-                                }`}>
+                            <item.icon
+                                size={15}
+                                strokeWidth={isActive ? 2 : 1.75}
+                                className={`shrink-0 ${
+                                    isActive
+                                        ? 'text-[#0070f3] dark:text-blue-400'
+                                        : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
+                                }`}
+                            />
+                            <span className={`text-[13.5px] tracking-tight truncate ${
+                                isActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                            }`}>
                                 {item.name}
                             </span>
                         </Link>
@@ -488,12 +508,12 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                 e.stopPropagation();
                                 setIsParametrosOpen(!isParametrosOpen);
                             }}
-                            className="p-1.5 mr-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 text-inherit border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
+                            className="p-1.5 mr-1 rounded text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
                             title="Expandir"
                         >
-                            <ChevronRightIcon className={`shrink-0 transition-all duration-200 ${isMenuOpen ? 'rotate-90' : ''
-                                } ${isActive ? 'text-text-main/50' : 'text-text-dim/30 group-hover:text-text-dim/70'
-                                }`} />
+                            <ChevronRightIcon className={`shrink-0 transition-transform duration-200 ${
+                                isMenuOpen ? 'rotate-90' : ''
+                            }`} />
                         </button>
                     </div>
 
@@ -519,20 +539,23 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                         onClick={() => {
                                             if (onClose) onClose();
                                         }}
-                                        className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ml-2 pl-2.5 ${isSubActive
-                                            ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
-                                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
-                                            }`}
+                                        className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 ${
+                                            isSubActive
+                                                ? 'bg-blue-50/70 dark:bg-blue-950/30 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40'
+                                        }`}
                                     >
-                                        <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                                            <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isSubActive
-                                                ? 'text-zinc-900 dark:text-zinc-100'
-                                                : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
-                                                }`}>
-                                                <subItem.icon size={13} strokeWidth={isSubActive ? 2 : 1.5} className="shrink-0" />
-                                            </div>
-                                            <span className={`text-[12px] tracking-tight truncate ${isSubActive ? 'font-semibold text-text-main' : 'font-medium'
-                                                }`}>
+                                        <div className="flex items-center gap-2 min-w-0 py-0.5">
+                                            <subItem.icon
+                                                size={13}
+                                                strokeWidth={isSubActive ? 2 : 1.75}
+                                                className={`shrink-0 ${
+                                                    isSubActive ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
+                                                }`}
+                                            />
+                                            <span className={`text-[12.5px] tracking-tight truncate ${
+                                                isSubActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                                            }`}>
                                                 {subItem.name}
                                             </span>
                                         </div>
@@ -552,48 +575,56 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 onClick={() => {
                     if (onClose) onClose();
                 }}
-                className={`flex items-center justify-between px-2.5 py-1 rounded-lg cursor-pointer transition-all duration-150 group no-underline ${item.indent ? 'ml-2 pl-2.5' : ''
-                    } ${isActive
-                        ? 'bg-zinc-100 dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 font-medium'
-                        : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40'
-                    }`}
+                className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ${
+                    item.indent ? 'ml-3' : ''
+                } ${
+                    isActive
+                        ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
+                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
+                }`}
             >
                 <div className="flex items-center gap-2.5 min-w-0 py-0.5">
-                    <div className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 shrink-0 ${isActive
-                        ? 'text-zinc-900 dark:text-zinc-100'
-                        : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
-                        }`}>
-                        <item.icon size={item.indent ? 13 : 15} strokeWidth={isActive ? 2 : 1.5} className="shrink-0" />
-                    </div>
-                    <span className={`text-[14px] tracking-tight truncate ${item.indent ? 'text-[13px]' : ''
-                        } ${isActive ? 'font-semibold text-text-main' : 'font-medium'
-                        }`}>
+                    <item.icon
+                        size={item.indent ? 13 : 15}
+                        strokeWidth={isActive ? 2 : 1.75}
+                        className={`shrink-0 ${
+                            isActive
+                                ? 'text-[#0070f3] dark:text-blue-400'
+                                : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
+                        }`}
+                    />
+                    <span className={`text-[13.5px] tracking-tight truncate ${
+                        item.indent ? 'text-[12.5px]' : ''
+                    } ${
+                        isActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                    }`}>
                         {item.name}
                     </span>
                 </div>
                 {item.hasChevron && (
-                    <ChevronRightIcon className={`shrink-0 ml-1.5 transition-colors ${isActive ? 'text-text-main/50' : 'text-text-dim/30 group-hover:text-text-dim/70'
-                        }`} />
+                    <ChevronRightIcon className={`shrink-0 ml-1.5 transition-colors ${
+                        isActive ? 'text-[#0070f3]/70 dark:text-blue-400/70' : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-600 dark:group-hover:text-zinc-300'
+                    }`} />
                 )}
             </Link>
         );
     };
 
     return (
-        <nav className="flex-1 min-h-0 overflow-y-auto pr-1 scroll-pb-24 select-none outline-none relative">
-            <div className="px-2.5 space-y-1">
+        <nav className="flex-1 min-h-0 overflow-y-auto pr-1 scroll-pb-24 select-none outline-none relative custom-scrollbar">
+            <div className="px-2 space-y-0.5">
                 {group1.map(renderMenuItem)}
 
                 {group2.length > 0 && (
                     <>
-                        <div className="border-t border-black/[0.04] dark:border-white/[0.05] my-2 mx-1" />
+                        <div className="border-t border-slate-100 dark:border-zinc-800/80 my-2 mx-1.5" />
                         {group2.map(renderMenuItem)}
                     </>
                 )}
 
                 {group3.length > 0 && (
                     <>
-                        <div className="border-t border-black/[0.04] dark:border-white/[0.05] my-2 mx-1" />
+                        <div className="border-t border-slate-100 dark:border-zinc-800/80 my-2 mx-1.5" />
                         {group3.map(renderMenuItem)}
                     </>
                 )}

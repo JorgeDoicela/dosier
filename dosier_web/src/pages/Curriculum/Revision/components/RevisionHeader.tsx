@@ -53,27 +53,38 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
 
     const getStatusBadge = () => {
         if (!projectStatus) return null;
-        let colorClass = 'bg-surface border-border-thin text-text-dim';
-        if (projectStatus === 'Enviado') colorClass = 'bg-brand/10 border-brand/30 text-brand';
-        else if (projectStatus === 'En Corrección') colorClass = 'bg-warning/10 border-warning/30 text-warning';
-        else if (projectStatus === 'En Revisión') colorClass = 'bg-blue-500/10 border-blue-500/30 text-blue-500';
-        else if (projectStatus === 'Aprobado' || projectStatus === 'En Ejecución') colorClass = 'bg-success/10 border-success/30 text-success';
+        let dotColor = 'bg-slate-400';
+        let textColor = 'text-slate-600 dark:text-zinc-400';
+        if (projectStatus === 'Enviado') {
+            dotColor = 'bg-[#0070f3]';
+            textColor = 'text-[#0070f3] dark:text-blue-400';
+        } else if (projectStatus === 'En Corrección') {
+            dotColor = 'bg-amber-500';
+            textColor = 'text-amber-600 dark:text-amber-400';
+        } else if (projectStatus === 'En Revisión') {
+            dotColor = 'bg-blue-500';
+            textColor = 'text-blue-600 dark:text-blue-400';
+        } else if (projectStatus === 'Aprobado' || projectStatus === 'En Ejecución') {
+            dotColor = 'bg-emerald-500';
+            textColor = 'text-emerald-600 dark:text-emerald-400';
+        }
         
         return (
-            <span className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border font-mono ${colorClass}`}>
-                {projectStatus}
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-medium ${textColor}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                <span>{projectStatus}</span>
             </span>
         );
     };
 
     return (
-        <div className="px-4 md:px-6 py-2.5 border-b border-border-thin bg-bg-deep/85 backdrop-blur-md flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0 z-[50] shrink-0 font-sans">
+        <div className="px-4 md:px-6 py-2.5 border-b border-border-thin bg-surface flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0 z-[50] shrink-0 font-sans">
             <div className="flex items-center justify-between w-full md:w-auto gap-4">
                 <div className="flex items-center gap-3">
                     {/* Botón Volver */}
                     <button
                         onClick={onNavigateBack}
-                        className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-xl border border-border-thin hover:bg-surface-hover text-text-dim hover:text-text-main transition-all duration-200 group cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-surface shadow-2xs active:scale-95"
+                        className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-border-thin hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors group cursor-pointer text-[10px] font-semibold uppercase tracking-wider bg-surface"
                         title="Volver al Workspace"
                         aria-label="Volver al Workspace"
                     >

@@ -178,7 +178,7 @@ export const PeaSupervisionTray: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* ── BARRA DE FILTROS Y CONTROLES ── */}
-            <div className="bg-surface p-4 rounded-xl border border-border-thin shadow-2xs space-y-3">
+            <div className="bg-surface p-4 rounded-xl border border-border-thin space-y-3">
                 <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center">
                     <div className="relative flex-1">
                         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-dim" />

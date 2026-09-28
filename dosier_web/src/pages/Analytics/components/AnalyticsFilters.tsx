@@ -19,7 +19,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
     dbCareers
 }) => {
     return (
-        <div className="bento-card static p-4 flex flex-wrap items-center justify-between gap-4 bg-surface/40 backdrop-blur-md">
+        <div className="bento-card static p-4 flex flex-wrap items-center justify-between gap-4 bg-surface">
             <div className="flex items-center gap-2">
                 <Filter size={13} className="text-text-dim" />
                 <span className="text-[9px] font-black uppercase tracking-widest text-text-main">Variables de Corte:</span>

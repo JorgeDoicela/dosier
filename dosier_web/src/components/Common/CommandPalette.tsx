@@ -6,7 +6,6 @@ import { usersService } from '../../services/usersService';
 import { buildWorkspacePath } from '../../core/documents/templateUrl';
 import {
     Search,
-    PlusCircle,
     LayoutDashboard,
     Users,
     Settings,
@@ -14,20 +13,13 @@ import {
     ClipboardList,
     Activity,
     BarChart3,
-    Award,
     ShieldCheck,
     FileDown,
     PenTool,
     Bell,
     ListChecks,
-    Gavel,
     Mail,
-    Globe,
-    GraduationCap,
-    TrendingUp,
     Calendar,
-    Tag,
-    BookOpen,
     FileCode2,
     ArrowRight,
     Hash,
@@ -35,7 +27,6 @@ import {
     Loader2,
     User,
     FolderOpen,
-    Sparkles,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -177,7 +168,7 @@ const HighlightedText = ({
 // ─── Role filter ──────────────────────────────────────────────────────────────
 
 function useRoleFilter() {
-    const { isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, roles, hasPermission } = useAuth();
+    const { isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, hasPermission } = useAuth();
     return useCallback((item: SearchItem): boolean => {
         if (item.id === 'derechos-arco' && isAdmin) return false;
         if (isAdmin) return true;
@@ -196,12 +187,12 @@ function useRoleFilter() {
             return item.roles.some(r => roles.includes(r.toUpperCase()));
         }
         return true;
-    }, [isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, roles, hasPermission]);
+    }, [isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, hasPermission]);
 }
 
 // ─── Static catalog ───────────────────────────────────────────────────────────
 
-function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boolean, isDocente: boolean, isEstudiante: boolean, isRevisor: boolean): SearchItem[] {
+function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boolean, isDocente: boolean): SearchItem[] {
     return [
         // ── Navegación ──────────────────────────────────────────────────
         { id: 'dashboard', label: 'Tablero Principal', description: 'Vista general con métricas y actividad reciente', category: 'Navegación', icon: LayoutDashboard, path: '/dashboard', shortcut: 'D', roles: ['ANY'], keywords: ['inicio', 'home', 'panel', 'resumen'], boost: 8 },
@@ -372,12 +363,12 @@ export const CommandPalette = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<AbortController | null>(null);
-    const { isAdmin, isDocente, isEstudiante, isRevisor, roleDisplayName, hasPermission } = useAuth();
+    const { isAdmin, isDocente, roleDisplayName, hasPermission } = useAuth();
     const passesRoleFilter = useRoleFilter();
 
     const staticItems = React.useMemo(
-        () => buildStaticItems(navigate, isAdmin, isDocente, isEstudiante, isRevisor),
-        [navigate, isAdmin, isDocente, isEstudiante, isRevisor]
+        () => buildStaticItems(navigate, isAdmin, isDocente),
+        [navigate, isAdmin, isDocente]
     );
 
     // Ref keeps the current flatItems list accessible inside useEffect without
@@ -535,7 +526,7 @@ export const CommandPalette = () => {
         for (const item of preloadedItems) {
             const res = scoreItem(item, queryClean);
             if (res && res.score > 0) {
-                const boost = item.category === 'Mis Proyectos' ? 15 : 0;
+                const boost = item.category === 'Mis Asignaturas' ? 15 : 0;
                 results.push({ item, score: res.score + boost, labelRanges: res.labelRanges });
             }
         }
@@ -609,33 +600,29 @@ export const CommandPalette = () => {
     // ── Grouping ──────────────────────────────────────────────────────────────
 
     const categoryOrder: Category[] = [
-        'Mis Proyectos', 'Todos los Proyectos', 'Mis Revisiones', 'Convocatorias', 'Usuarios', 'Grupos',
-        'Navegación', 'Acciones Rápidas', 'Administración', 'Configuración',
+        'Mis Asignaturas', 'Todos los PEAs', 'Usuarios',
+        'Navegación', 'Acciones Rápidas', 'Administración', 'Parámetros Normativos', 'Configuración',
     ];
 
     const categoryIcons: Record<string, React.ReactNode> = {
         'Navegación': <Hash size={10} className="opacity-60" />,
         'Acciones Rápidas': <Zap size={10} className="opacity-60" />,
         'Administración': <Settings size={10} className="opacity-60" />,
+        'Parámetros Normativos': <Settings size={10} className="opacity-60" />,
         'Configuración': <Settings size={10} className="opacity-60" />,
-        'Mis Proyectos': <FolderOpen size={10} className="opacity-60" />,
-        'Todos los Proyectos': <ClipboardList size={10} className="opacity-60" />,
-        'Convocatorias': <PenTool size={10} className="opacity-60" />,
+        'Mis Asignaturas': <FolderOpen size={10} className="opacity-60" />,
+        'Todos los PEAs': <ClipboardList size={10} className="opacity-60" />,
         'Usuarios': <Users size={10} className="opacity-60" />,
-        'Mis Revisiones': <ShieldCheck size={10} className="opacity-60" />,
-        'Grupos': <Users size={10} className="opacity-60" />,
     };
 
     const categoryLabels: Record<string, string> = {
-        'Mis Proyectos': 'Mis Proyectos',
-        'Todos los Proyectos': 'Proyectos del Sistema',
-        'Convocatorias': 'Convocatorias',
+        'Mis Asignaturas': 'Mis Asignaturas (PEA)',
+        'Todos los PEAs': 'Todos los PEAs (Sistema)',
         'Usuarios': 'Usuarios',
-        'Mis Revisiones': 'Mis Revisiones',
-        'Grupos': 'Grupos de Investigación',
         'Navegación': 'Navegación',
         'Acciones Rápidas': 'Acciones Rápidas',
         'Administración': 'Administración',
+        'Parámetros Normativos': 'Parámetros Normativos',
         'Configuración': 'Configuración',
     };
 
@@ -650,7 +637,7 @@ export const CommandPalette = () => {
 
     return (
         <div
-            className="fixed inset-0 z-[10000] flex items-start justify-center pt-[10vh] px-4 bg-black/70 backdrop-blur-[3px]"
+            className="fixed inset-0 z-[10000] flex items-start justify-center pt-[10vh] px-4 bg-black/70"
             onClick={() => setTimeout(() => setIsOpen(false), 0)}
         >
             <div

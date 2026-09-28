@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Globe, Layers, Fingerprint, Laptop, Copy, Check, ShieldCheck } from 'lucide-react';
+import { X, Calendar, Globe, Layers, Fingerprint, Laptop, Copy, Check } from 'lucide-react';
 import { useNotifications } from '../../../api/NotificationsContext';
 
 export interface ConsentimientoData {
@@ -51,9 +51,9 @@ export const ConsentDetailPanel: React.FC<ConsentDetailPanelProps> = ({
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end">
-            {/* Backdrop con desenfoque suave sobre toda la ventana */}
+            {/* Backdrop sólido sobre toda la ventana */}
             <div
-                className="absolute inset-0 bg-bg-deep/90 backdrop-blur-sm cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onClick={onClose}
             />
 

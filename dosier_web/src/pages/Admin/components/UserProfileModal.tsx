@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Award, Link, BookOpen, Fingerprint, Save, RefreshCw, ChevronRight, FileText } from 'lucide-react';
+import { Award, RefreshCw, ChevronRight, FileText } from 'lucide-react';
 import { usersService } from '../../../services/usersService';
 import { useConfirm } from '../../../api/ConfirmContext';
 
@@ -24,7 +24,6 @@ const formatNombre = (nombre: string | null | undefined) => {
 const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalProps) => {
     const confirm = useConfirm();
     const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [metadata, setMetadata] = useState({
         nombre: '',
         email: ''
@@ -126,33 +125,16 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
         }
     };
 
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            await usersService.updateUserMetadata(user.user_uuid, metadata);
-            clearDraft();
-            onClose();
-        } catch (error: any) {
-            console.error('Error saving metadata:', error);
-            const msg = error.response?.data?.message || 'Ocurrió un error inesperado al actualizar el perfil.';
-            alert(msg);
-        } finally {
-            setSaving(false);
-        }
-    };
-
     return (
         <div className="fixed inset-0 z-[9999] flex justify-end">
             <div 
-                className="absolute inset-0 bg-bg-deep/90 backdrop-blur-sm cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onClick={handleCloseModal}
             />
             <div className="relative w-full max-w-md h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-fade-up overflow-hidden">
                 <div className="modal-header">
                     <div className="flex items-center gap-3">
-                        <div className="icon-circle icon-circle-brand">
-                            <Award size={20} />
-                        </div>
+                        <Award size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <div>
                             <h3 className="text-lg font-semibold text-text-main tracking-tight">{formatNombre(user.nombre_completo)}</h3>
                             <p className="section-label text-text-dim">Gestión de Cuenta de Usuario</p>

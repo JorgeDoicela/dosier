@@ -22,7 +22,7 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end">
             <div
-                className="absolute inset-0 bg-bg-deep/90 backdrop-blur-sm cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onMouseDown={(e) => {
                     if (e.target === e.currentTarget) {
                         isOverlayMouseDownRef.current = true;
@@ -38,9 +38,7 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
             <div className="relative w-full max-w-xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-slide-in-right overflow-hidden">
                 <div className="modal-header">
                     <div className="flex items-center gap-3">
-                        <div className="icon-circle icon-circle-brand">
-                            <UserIcon size={20} />
-                        </div>
+                        <UserIcon size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <div>
                             <h3 className="text-lg font-semibold text-text-main tracking-tight">{formatNombre(detailUser.nombre_completo)}</h3>
                             <p className="section-label text-text-dim">

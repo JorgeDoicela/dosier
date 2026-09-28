@@ -70,7 +70,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link
                     to="/usuarios"
-                    className="p-5 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-xs transition-all group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 transition-all group flex flex-col justify-between space-y-4 no-underline"
                 >
                     <div className="space-y-2.5">
                         <Users size={18} className="text-[#0070f3] dark:text-blue-400" />
@@ -91,7 +91,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
 
                 <Link
                     to="/auditoria"
-                    className="p-5 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-xs transition-all group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 transition-all group flex flex-col justify-between space-y-4 no-underline"
                 >
                     <div className="space-y-2.5">
                         <ShieldCheck size={18} className="text-[#0070f3] dark:text-blue-400" />
@@ -112,7 +112,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
 
                 <Link
                     to="/plantillas"
-                    className="p-5 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-xs transition-all group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 transition-all group flex flex-col justify-between space-y-4 no-underline"
                 >
                     <div className="space-y-2.5">
                         <FileCode size={18} className="text-[#0070f3] dark:text-blue-400" />
@@ -136,7 +136,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
             <PipelineCurricularStepper onSimularRol={onCambiarRol} />
 
             {/* Frontera SIGAFI (Solo Lectura) */}
-            <div className="p-6 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 shadow-2xs">
+            <div className="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
                     <div className="flex items-center gap-2">
                         <Database size={15} className="text-[#0070f3] dark:text-blue-400" />

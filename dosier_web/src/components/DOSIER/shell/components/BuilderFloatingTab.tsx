@@ -33,7 +33,7 @@ export const BuilderFloatingTab: React.FC<BuilderFloatingTabProps> = ({
             }}
             className={`absolute ${isLeft ? 'left-0' : 'right-0'} z-[60] bg-surface hover:bg-bg-deep border border-border-thin text-text-dim hover:text-text-main py-8 px-2.5 shadow-xl flex flex-col items-center gap-2.5 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing ${
                 isDragging || xOffset > 5
-                    ? 'rounded-full scale-[1.05] shadow-2xl border-text-main text-text-main bg-bg-deep'
+                    ? 'rounded-xl border-text-main text-text-main bg-bg-deep shadow-xl'
                     : isLeft ? 'rounded-r-xl border-l-0' : 'rounded-l-xl border-r-0'
             }`}
             title={isLeft ? 'Mostrar navegación del documento' : 'Mostrar actividad del equipo'}

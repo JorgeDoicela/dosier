@@ -24,15 +24,13 @@ export const ConfiguracionDetailDrawer: React.FC<ConfiguracionDetailDrawerProps>
     return (
         <div className="fixed inset-0 z-[9999] flex justify-end">
             <div 
-                className="absolute inset-0 bg-bg-deep/90 backdrop-blur-sm cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onClick={() => setDetailItem(null)}
             />
             <div className="relative w-full max-w-xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-fade-up overflow-hidden">
                 <div className="modal-header">
                     <div className="flex items-center gap-3">
-                        <div className="icon-circle icon-circle-brand">
-                            <Calendar size={20} />
-                        </div>
+                        <Calendar size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <div>
                             <h3 className="text-lg font-bold text-text-main uppercase tracking-tight">
                                 {detailItem.type === 'periodo' && ((detailItem.data as PeriodoAcademico).detalle || (detailItem.data as PeriodoAcademico).idPeriodo)}

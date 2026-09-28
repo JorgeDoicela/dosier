@@ -130,7 +130,7 @@ export const RenderProjectGeneralSection: React.FC<{
         return (
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="opacity-0 group-hover/row:opacity-100 transition-opacity absolute top-1 right-2 flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs px-1.5 py-0.5 rounded-md shadow-md border border-slate-200 dark:border-slate-700 text-[8px] z-30 font-sans select-none"
+                className="opacity-0 group-hover/row:opacity-100 transition-opacity absolute top-1 right-2 flex items-center gap-1 bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded-md shadow-sm border border-slate-200/80 dark:border-zinc-800 text-[8px] z-30 font-sans select-none"
             >
                 <button
                     type="button"
@@ -1051,7 +1051,7 @@ export const RenderProjectTechnicalSection: React.FC<{
     const renderDirectControlsPill = (sub: any, isFirst: boolean, isLast: boolean) => (
         <div
             onClick={(e) => e.stopPropagation()}
-            className="opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs px-1.5 py-0.5 rounded shadow-sm border border-slate-200 dark:border-slate-700 text-[8px] z-20 font-sans"
+            className="opacity-0 group-hover/cell:opacity-100 transition-opacity flex items-center gap-1 bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded shadow-sm border border-slate-200/80 dark:border-zinc-800 text-[8px] z-20 font-sans"
         >
             <button
                 type="button"
@@ -1368,7 +1368,7 @@ export const RenderFinalReportWritingSection: React.FC<{
                         {onUpdateConfig && (
                             <div
                                 onClick={e => e.stopPropagation()}
-                                className="opacity-0 group-hover/sub:opacity-100 transition-opacity absolute top-2 right-2 flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs px-1.5 py-0.5 rounded-md shadow-md border border-slate-200 dark:border-slate-700 text-[8px] z-30 font-sans select-none"
+                                className="opacity-0 group-hover/sub:opacity-100 transition-opacity absolute top-2 right-2 flex items-center gap-1 bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded-md shadow-sm border border-slate-200/80 dark:border-zinc-800 text-[8px] z-30 font-sans select-none"
                             >
                                 <button
                                     type="button"

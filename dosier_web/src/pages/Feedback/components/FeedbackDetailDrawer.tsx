@@ -192,12 +192,10 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            <div className="relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-slate-200/80 dark:border-zinc-800 shadow-xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                        <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
-                            {isCurrentVideo ? <Video size={16} /> : <ImageIcon size={16} />}
-                        </div>
+                        {isCurrentVideo ? <Video size={18} className="text-[#0070f3] dark:text-blue-400 shrink-0" /> : <ImageIcon size={18} className="text-[#0070f3] dark:text-blue-400 shrink-0" />}
                         <div className="min-w-0">
                             <h3 className="text-[13.5px] font-semibold text-text-main truncate">
                                 {isCurrentVideo ? 'Video Adjunto' : 'Captura Adjunta'}

@@ -19,7 +19,7 @@ description: Activa esta skill para el sistema de diseño visual de DOSIER basad
 * **Azul Eléctrico Corporativo (`#0070f3` / `blue-600`):** Utilizado para el estado activo de navegación, fases en curso, botones de acción primaria (`bg-[#0070f3] text-white hover:bg-[#005bb5]`) y badges de gobernanza institucional (`bg-blue-50 text-[#0070f3] border-blue-200/60`).
 * **Verde Esmeralda Normativo (`emerald-600` / `emerald-700`):** Utilizado para hitos aprobados, metas alcanzadas, estado de validación CACES y badges de entrega (`bg-emerald-50 text-emerald-700 border-emerald-200/80`).
 * **Ámbar de Advertencia (`amber-600` / `amber-700`):** Para observaciones pendientes o alertas curriculares.
-* **Bases Sólidas:** Fondos 100% opacos: blanco puro (`bg-white`) en modo claro y grafito oscuro (`bg-zinc-950` o `bg-zinc-900`) en modo oscuro.
+* **Bases y Lienzo Sólido:** Lienzo general en gris pizarra sutil (`#f8fafc` / `slate-50`) para descanso visual y contraste nítido; tarjetas, folios y modales en blanco puro 100% sólido (`#ffffff`) en modo claro y grafito oscuro (`#0b0d11` a `#131720`) en modo oscuro, con bordes definidos de precisión (`#e2e8f0` / `border-slate-200/90`).
 
 ### 1.3. Regla Estricta: Prohibición de Cápsulas y Burbujas Envolventes ("Eso que rodea")
 * **Definición de "Eso que rodea":** Cápsulas, píldoras o burbujas con bordes redondeados y fondos tintados (`rounded-full border border-... bg-... px-3 py-1`) que la IA suele colocar alrededor de palabras, metas, etiquetas o iconos SVG.

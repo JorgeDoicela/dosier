@@ -349,8 +349,8 @@ const Login = ({ currentTheme = 'dark', toggleTheme }: LoginProps) => {
 
             {/* Microsoft Simulation Mock Modal */}
             {showMockModal && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-[380px] bg-bg-deep border border-border-thin rounded-2xl p-6 space-y-6 shadow-2xl animate-fade-up relative">
+                <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+                    <div className="w-full max-w-[380px] bg-bg-deep border border-border-thin rounded-2xl p-6 space-y-6 shadow-xl animate-fade-up relative">
                         <button
                             onClick={() => setShowMockModal(false)}
                             className="absolute top-4 right-4 text-text-dim hover:text-text-main text-sm"

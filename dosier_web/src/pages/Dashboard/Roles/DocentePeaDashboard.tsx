@@ -129,8 +129,8 @@ export const DocentePeaDashboard: React.FC = () => {
             </div>
 
             {/* Folio Unificado con Tabla de Asignaturas */}
-            <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
-                <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900/40">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-slate-50/50 dark:bg-zinc-900">
                     <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                         Instrumentos Curriculares a Elaborar
                     </h2>
@@ -141,7 +141,7 @@ export const DocentePeaDashboard: React.FC = () => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
+                        <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
                             <tr>
                                 <th className="py-2.5 px-5">Asignatura y Ciclo</th>
                                 <th className="py-2.5 px-4">Carga Horaria</th>
@@ -151,7 +151,7 @@ export const DocentePeaDashboard: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                             {misPeas.map(pea => (
-                                <tr key={pea.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/30 transition-colors">
+                                <tr key={pea.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50 transition-colors">
                                     <td className="py-3 px-5">
                                         <div className="space-y-0.5">
                                             <div className="flex items-center gap-2">

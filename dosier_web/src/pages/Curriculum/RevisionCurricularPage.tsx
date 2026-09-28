@@ -10,6 +10,7 @@ import { SectionsSidebar } from './Revision/components/SectionsSidebar';
 import { FloatingSidebarButtons } from './Revision/components/FloatingSidebarButtons';
 import { FinalizeAuditModal } from './Revision/components/FinalizeAuditModal';
 import { AdminRevisionHistoryPanel } from './Revision/components/AdminRevisionHistoryPanel';
+import { FIELD_LABELS } from './Revision/types/revisionTecnicaTypes';
 import { useAuth } from '../../api/AuthContext';
 
 /**
@@ -58,9 +59,7 @@ export const RevisionCurricularPage: React.FC = () => {
             >
                 <MessageSquare size={13} className={hasComment ? 'fill-amber-500/5 text-amber-500' : ''} />
                 {hasComment && (
-                    <span className="text-[8px] font-mono font-bold leading-none bg-amber-500 text-bg-deep px-1 py-0.5 rounded-full">
-                        !
-                    </span>
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
                 )}
             </button>
         );
@@ -107,13 +106,18 @@ export const RevisionCurricularPage: React.FC = () => {
                             />
                         )}
 
-                        {/* Botón flotante para reabrir Panel Izquierdo */}
+                        {/* Botón flotante para reabrir Panel Izquierdo y Derecho */}
                         <FloatingSidebarButtons
                             isLeftSidebarOpen={layout.isLeftSidebarOpen}
+                            seccionesButtonTop={layout.seccionesButtonTop}
+                            seccionesButtonLeft={layout.seccionesButtonLeft}
+                            isDraggingSeccionesButton={layout.isDraggingSeccionesButton}
+                            handleSeccionesButtonDragStart={layout.handleSeccionesButtonDragStart}
                             isRightSidebarOpen={layout.isRightSidebarOpen}
-                            viewMode={layout.viewMode}
-                            onOpenLeft={() => layout.setIsLeftSidebarOpen(true)}
-                            onOpenRight={() => layout.setIsRightSidebarOpen(true)}
+                            auditoriaButtonTop={layout.auditoriaButtonTop}
+                            auditoriaButtonLeft={layout.auditoriaButtonLeft}
+                            isDraggingButton={layout.isDraggingButton}
+                            handleButtonDragStart={layout.handleButtonDragStart}
                         />
 
                         {/* Contenido Central: Vista Interactiva o Visor PDF */}
@@ -168,18 +172,27 @@ export const RevisionCurricularPage: React.FC = () => {
                         <ObservationsSidebar
                             isOpen={layout.isRightSidebarOpen}
                             width={layout.rightSidebarWidth}
-                            isDraggingRight={layout.isDraggingRight}
-                            rightSidebarRef={layout.rightSidebarRef}
+                            isDragging={layout.isDraggingRight}
+                            startDragging={layout.startDraggingRight}
+                            toggleOpen={() => layout.setIsRightSidebarOpen()}
                             activeCommentField={layout.activeCommentField}
+                            setActiveCommentField={layout.setActiveCommentField}
+                            activeSection={layout.activeSection}
+                            setActiveSection={layout.setActiveSection}
+                            projectUuid={projectUuid}
                             comments={commentsState.comments}
                             contextualInput={commentsState.contextualInput}
-                            isReadonly={isReadonlyResult}
-                            onClose={() => layout.setIsRightSidebarOpen(false)}
-                            startDraggingRight={layout.startDraggingRight}
-                            setActiveCommentField={layout.setActiveCommentField}
                             setContextualInput={commentsState.setContextualInput}
-                            handleAddContextualComment={commentsState.handleAddContextualComment}
-                            handleDeleteComment={commentsState.handleDeleteComment}
+                            isListening={commentsState.isListening}
+                            submitting={data.submitting}
+                            editingCommentId={commentsState.editingCommentId}
+                            setEditingCommentId={commentsState.setEditingCommentId}
+                            saveContextualComment={commentsState.saveContextualComment}
+                            handleStartListening={commentsState.handleStartListening}
+                            removeCommentLocal={commentsState.removeCommentLocal}
+                            FIELD_LABELS={FIELD_LABELS}
+                            templateBlocks={data.templateBlocks}
+                            readOnly={isReadonlyResult}
                         />
                     </div>
                 )}
@@ -188,14 +201,12 @@ export const RevisionCurricularPage: React.FC = () => {
             {/* Modal de Dictamen / Finalización */}
             <FinalizeAuditModal
                 isOpen={layout.isFinalizeModalOpen}
-                totalCommentsCount={commentsState.totalCommentsCount}
-                submitting={data.submitting}
-                auditVerdict={layout.auditVerdict}
-                auditNotes={layout.auditNotes}
-                setAuditVerdict={layout.setAuditVerdict}
-                setAuditNotes={layout.setAuditNotes}
                 onClose={() => layout.setIsFinalizeModalOpen(false)}
-                onFinalize={data.handleFinalizeAudit}
+                generalFeedback={layout.generalFeedback}
+                setGeneralFeedback={layout.setGeneralFeedback}
+                submitting={data.submitting}
+                onAprobar={() => data.handleAprobar(layout.generalFeedback)}
+                onDevolver={(fechaLimite) => data.handleDevolver(layout.generalFeedback, fechaLimite)}
             />
         </div>,
         document.body

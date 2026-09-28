@@ -231,12 +231,11 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                             }`}>
                                 Revisión Técnica {isAprobado ? 'Aprobada' : 'Devuelta para Correcciones'}
                             </h2>
-                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border font-mono ${
-                                isAprobado
-                                    ? 'bg-success/10 border-success/30 text-success'
-                                    : 'bg-warning/10 border-warning/30 text-warning'
+                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-medium ${
+                                isAprobado ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                             }`}>
-                                {isAprobado ? '→ Revisión Técnica Aprobada' : '→ En Corrección'}
+                                <span className={`w-1.5 h-1.5 rounded-full ${isAprobado ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                <span>{isAprobado ? 'Revisión Técnica Aprobada' : 'En Corrección'}</span>
                             </span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-text-dim font-mono">
@@ -330,12 +329,11 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                                             }
                                         </div>
                                         <span className="flex-1 text-xs font-semibold text-text-main truncate">{label}</span>
-                                        <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border font-mono shrink-0 ${
-                                            isOk
-                                                ? 'text-success bg-success/10 border-success/20'
-                                                : 'text-warning bg-warning/10 border-warning/20'
+                                        <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-medium shrink-0 ${
+                                            isOk ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                                         }`}>
-                                            {isOk ? 'Aprobado' : 'Corregir'}
+                                            <span className={`w-1.5 h-1.5 rounded-full ${isOk ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                            <span>{isOk ? 'Aprobado' : 'Corregir'}</span>
                                         </span>
                                         {isExpanded
                                             ? <ChevronUp size={13} className="text-text-dim shrink-0" />

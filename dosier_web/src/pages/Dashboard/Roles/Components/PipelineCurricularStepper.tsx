@@ -134,7 +134,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
     const currentFase = FASES[selectedFase];
 
     return (
-        <div className="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-xs space-y-6">
+        <div className="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 space-y-6">
             
             {/* Encabezado Editorial Formal con Identidad de Marca */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-zinc-800">
@@ -182,11 +182,12 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                             return (
                                 <button
                                     key={idx}
+                                    type="button"
                                     onClick={() => handleSelect(idx)}
-                                    className={`w-full text-left p-2.5 rounded-lg transition-all flex items-start gap-3 cursor-pointer group ${
+                                    className={`w-full text-left p-2.5 rounded-lg transition-all flex items-start gap-3 cursor-pointer group outline-none focus:outline-none ${
                                         isSelected
-                                            ? 'bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/60 shadow-xs'
-                                            : 'hover:bg-slate-50 dark:hover:bg-zinc-850/60 border border-transparent'
+                                            ? 'bg-blue-50/70 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900 shadow-xs'
+                                            : 'bg-transparent hover:bg-slate-50 dark:hover:bg-zinc-800 border border-transparent'
                                     }`}
                                 >
                                     {/* Indicador Numérico / Icono con Estado de Conexión */}
@@ -195,7 +196,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                                             ? 'bg-[#0070f3] text-white ring-4 ring-blue-100 dark:ring-blue-950 shadow-xs'
                                             : isPast
                                             ? 'bg-emerald-500 text-white'
-                                            : 'bg-white dark:bg-zinc-900 border-2 border-slate-300 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 group-hover:border-slate-400'
+                                            : 'bg-white dark:bg-zinc-900 border-2 border-slate-300 dark:border-zinc-700 text-slate-500 dark:text-zinc-400 group-hover:border-slate-400 dark:group-hover:border-zinc-500'
                                     }`}>
                                         {isPast ? <Check size={14} className="stroke-[3]" /> : fase.paso}
                                     </div>
@@ -227,7 +228,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                 </div>
 
                 {/* ─── Folio Unificado de Especificación Técnica (Derecha) ─── */}
-                <div className="lg:col-span-8 p-6 rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-2xs space-y-6">
+                <div className="lg:col-span-8 p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-6">
                     
                     {/* Cabecera del Folio */}
                     <div className="pb-4 border-b border-slate-100 dark:border-zinc-800">

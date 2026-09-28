@@ -78,10 +78,10 @@ const MicrosoftCallback = () => {
                     </div>
                 </div>
 
-                <div className="bento-card static p-8 border border-border-thin bg-surface/30 backdrop-blur-md rounded-2xl shadow-xl space-y-6">
+                <div className="bento-card static p-8 border border-border-thin bg-surface rounded-2xl space-y-6">
                     {error ? (
                         <div className="space-y-4 text-center animate-in fade-in">
-                            <div className="mx-auto w-12 h-12 rounded-full bg-error/10 flex items-center justify-center text-error">
+                            <div className="mx-auto flex items-center justify-center text-error">
                                 <AlertTriangle size={24} />
                             </div>
                             <h3 className="text-sm font-semibold text-text-main uppercase">Error de Acceso</h3>

@@ -278,7 +278,7 @@ export const MisAsignaturasPage: React.FC = () => {
 
             {/* Tablero de Métricas Curriculares (Bento Grid) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
                     <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
                         <span>Asignaturas Asignadas</span>
                         <BookOpen className="w-4 h-4 text-zinc-400" />
@@ -291,7 +291,7 @@ export const MisAsignaturasPage: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
                     <div className="flex items-center justify-between text-xs font-medium text-emerald-600 dark:text-emerald-400">
                         <span>PEAs Aprobados</span>
                         <CheckCircle2 className="w-4 h-4" />
@@ -304,7 +304,7 @@ export const MisAsignaturasPage: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
                     <div className="flex items-center justify-between text-xs font-medium text-amber-600 dark:text-amber-400">
                         <span>En Revisión Colegiada</span>
                         <Clock className="w-4 h-4" />
@@ -317,7 +317,7 @@ export const MisAsignaturasPage: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm space-y-1">
+                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
                     <div className="flex items-center justify-between text-xs font-medium text-blue-600 dark:text-blue-400">
                         <span>Pendientes / Borrador</span>
                         <FileText className="w-4 h-4" />
@@ -414,7 +414,7 @@ export const MisAsignaturasPage: React.FC = () => {
                         return (
                             <div
                                 key={materia.id_asignacion}
-                                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between space-y-4"
+                                className="rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 transition-colors flex flex-col justify-between space-y-4"
                             >
                                 {/* Top: Carrera y Estado */}
                                 <div className="space-y-2">

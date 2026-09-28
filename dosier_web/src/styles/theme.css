@@ -5,6 +5,7 @@
  */
 
 :root {
+    color-scheme: dark;
     /* MODO OSCURO: Grafito Institucional Profundo (Cero fatiga visual) */
     --bg: #0b0d11;
     --fg: #f1f5f9;
@@ -13,14 +14,14 @@
     --surface: #131720;
     --surface-hover: #1b212d;
 
-    /* Superficie sutil para segmentados, píldoras y badges (Gris Muted) */
-    --subtle: #181d27;
-    --subtle-border: rgba(255, 255, 255, 0.07);
-    --subtle-hover: #222938;
+    /* Superficie sutil para segmentados, píldoras y badges */
+    --subtle: #0e1117;
+    --subtle-border: rgba(255, 255, 255, 0.08);
+    --subtle-hover: #161b24;
 
     /* Delimitadores finos institucionales */
-    --border: rgba(255, 255, 255, 0.07);
-    --border-hover: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.15);
 
     /* Textos secundarios y metadatos curriculares */
     --text-dim: #94a3b8;
@@ -62,22 +63,23 @@
 }
 
 [data-theme="light"], .force-light-theme {
-    /* TEMA CLARO: Limpieza y sobriedad minimalista */
-    --bg: #fafafa;
-    --fg: #09090b;
+    color-scheme: light;
+    /* TEMA CLARO: Modern Enterprise Docs (Stripe / Linear / Mintlify) */
+    --bg: #f8fafc;
+    --fg: #0f172a;
     --surface: #ffffff;
-    --surface-hover: #f4f4f5;
+    --surface-hover: #f1f5f9;
 
-    /* Superficie sutil para segmentados, píldoras y badges (Gris Muted) */
-    --subtle: #f2f4f7;
-    --subtle-border: rgba(0, 0, 0, 0.05);
-    --subtle-hover: #e4e7ec;
+    /* Superficie sutil para controles segmentados y badges */
+    --subtle: #f1f5f9;
+    --subtle-border: #e2e8f0;
+    --subtle-hover: #e2e8f0;
 
-    --border: rgba(0, 0, 0, 0.05);
-    --border-hover: rgba(0, 0, 0, 0.10);
-    --text-dim: #71717a;
-    --accent: #09090b;
-    --grid-color: rgba(15, 23, 42, 0.015);
+    --border: rgba(226, 232, 240, 0.75);
+    --border-hover: #cbd5e1;
+    --text-dim: #64748b;
+    --accent: #0f172a;
+    --grid-color: rgba(15, 23, 42, 0.025);
     --selection-bg: #0070f3;
     --selection-fg: #ffffff;
 

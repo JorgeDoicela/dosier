@@ -26,14 +26,14 @@ export const SidebarBrand: React.FC<SidebarBrandProps> = ({ currentTheme, onClos
                     if (onClose) onClose();
                     if (onBrandClick) onBrandClick();
                 }}
-                className="px-4 mb-4 flex items-center gap-2 cursor-pointer select-none no-underline"
+                className="px-4 mb-3.5 flex items-center gap-2.5 cursor-pointer select-none no-underline group"
             >
                 <img
                     src={currentTheme === 'dark' ? `${import.meta.env.BASE_URL}logo_blanco.png` : `${import.meta.env.BASE_URL}logo_negro.png`}
                     alt="DOSIER Logo"
-                    className="h-6 w-auto object-contain"
+                    className="h-6 w-auto object-contain transition-transform group-hover:scale-105"
                 />
-                <span className="text-[12px] font-semibold text-text-main tracking-[0.4em] font-sans uppercase">
+                <span className="text-[12px] font-bold text-slate-900 dark:text-zinc-100 tracking-[0.35em] font-mono uppercase">
                     DOSIER
                 </span>
             </Link>

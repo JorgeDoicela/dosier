@@ -97,9 +97,7 @@ const AnalyticsPage: React.FC = () => {
             {activeTab === 'general' && (
                 filteredProjects.length === 0 && !stats ? (
                     <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
-                        <div className="p-4 bg-surface rounded-full border border-border-thin">
-                            <FolderOpen size={32} className="text-text-dim/60" />
-                        </div>
+                        <FolderOpen size={36} className="text-text-dim/60" />
                         <div className="space-y-1">
                             <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
                             <p className="text-xs text-text-dim max-w-sm leading-relaxed">
@@ -138,9 +136,7 @@ const AnalyticsPage: React.FC = () => {
             {activeTab === 'proyectos' && (
                 filteredProjects.length === 0 ? (
                     <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
-                        <div className="p-4 bg-surface rounded-full border border-border-thin">
-                            <FolderOpen size={32} className="text-text-dim/60" />
-                        </div>
+                        <FolderOpen size={36} className="text-text-dim/60" />
                         <div className="space-y-1">
                             <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
                             <p className="text-xs text-text-dim max-w-sm leading-relaxed">

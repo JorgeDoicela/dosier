@@ -152,7 +152,7 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
                 
                 {/* BARRA DE FILTROS Y BÚSQUEDA */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-lg bg-white dark:bg-zinc-950 border border-slate-200/50 dark:border-zinc-800">
                     {/* Filtros de categoría */}
                     <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0">
                         <button
@@ -249,7 +249,7 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                             return (
                                 <div
                                     key={tmpl.code}
-                                    className="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all relative overflow-hidden"
+                                    className="group rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 flex flex-col justify-between hover:border-[#0070f3] dark:hover:border-blue-500 transition-colors relative overflow-hidden"
                                 >
                                     <div>
                                         {/* Cabecera de la Tarjeta */}

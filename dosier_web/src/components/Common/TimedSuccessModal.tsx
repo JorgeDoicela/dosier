@@ -80,16 +80,16 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
 
     return createPortal(
         <div className="fixed inset-0 z-[10000] flex justify-end select-none">
-            {/* Backdrop con desenfoque suave */}
+            {/* Backdrop sólido */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
+                className="absolute inset-0 bg-black/60 transition-opacity duration-300"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
             {/* Panel Lateral Derecho (Side Drawer) */}
             <div
-                className="relative flex h-full w-full max-w-lg bg-surface border-l border-border-thin shadow-2xl flex-col z-10 animate-fade-in-right overflow-hidden font-sans"
+                className="relative flex h-full w-full max-w-lg bg-surface border-l border-border-thin shadow-xl flex-col z-10 animate-fade-in-right overflow-hidden font-sans"
                 onClick={e => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"

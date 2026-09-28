@@ -206,14 +206,14 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
                             <div className="flex items-center gap-1.5 shrink-0">
                                 {commentCount > 0 ? (
                                     <span
-                                        className={`flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                                        className={`inline-flex items-center gap-1 text-[10px] font-mono font-medium ${
                                             isActive
-                                                ? 'bg-bg-deep/15 text-bg-deep border-bg-deep/30'
-                                                : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                ? 'text-bg-deep'
+                                                : 'text-amber-600 dark:text-amber-400'
                                         }`}
                                         title={`${commentCount} observación(es)`}
                                     >
-                                        <AlertCircle size={10} className="shrink-0" />
+                                        <AlertCircle size={11} className="shrink-0" />
                                         <span>{commentCount}</span>
                                     </span>
                                 ) : (

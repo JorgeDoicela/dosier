@@ -220,7 +220,7 @@ const ImageNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, select
                 {/* Main Floating Toolbar */}
                 {showToolbar && isEditable && (
                     <div 
-                        className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col gap-1.5 p-1.5 rounded-lg border border-border-thin backdrop-blur-md bg-surface/90 shadow-xl z-40 animate-fade-in text-text-main"
+                        className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col gap-1.5 p-1.5 rounded-lg border border-border-thin bg-surface shadow-xl z-40 animate-fade-in text-text-main"
                         onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
@@ -450,8 +450,8 @@ const ImageNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, select
 
             {/* Premium Crop Modal Dialog Overlay */}
             {isCropping && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-                    <div className="bg-bg-deep border border-border-thin rounded-xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4 text-text-main">
+                <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4">
+                    <div className="bg-bg-deep border border-border-thin rounded-xl max-w-xl w-full p-6 shadow-xl flex flex-col gap-4 text-text-main">
                         <div className="flex items-center justify-between border-b border-border-thin pb-3">
                             <span className="text-xs font-black uppercase tracking-widest text-text-dim flex items-center gap-1.5">
                                 <CropIcon size={16} className="text-indigo-500" /> Recortar Imagen de Colaboración

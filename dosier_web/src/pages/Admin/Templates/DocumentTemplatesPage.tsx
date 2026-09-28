@@ -171,14 +171,14 @@ export const DocumentTemplatesPage: React.FC = () => {
                 )}
             </div>
 
-            {/* Botones Flotantes Circulares cuando la Cabecera está Colapsada */}
+            {/* Botones Flotantes de Acción cuando la Cabecera está Colapsada */}
             {selectedTemplate && headerCollapsed && (
                 <div className="absolute top-[13px] right-6 md:right-14 z-50 flex items-center gap-2 animate-fade-in">
                     <button
                         type="button"
                         onClick={() => handleOpenPreview()}
                         title="Previsualizar PDF oficial"
-                        className="w-9 h-9 rounded-full border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                        className="w-9 h-9 rounded-lg border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-sm shrink-0"
                     >
                         <Eye className="w-4 h-4" strokeWidth={1.5} />
                     </button>
@@ -188,7 +188,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                             type="button"
                             onClick={() => setShowPalette(p => !p)}
                             title="Agregar Bloque"
-                            className="w-9 h-9 rounded-full border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0"
+                            className="w-9 h-9 rounded-lg border border-border-thin text-text-main bg-surface hover:bg-surface-hover hover:border-border-hover flex items-center justify-center transition-all cursor-pointer shadow-sm shrink-0"
                         >
                             <Plus className="w-4 h-4" strokeWidth={1.5} />
                         </button>

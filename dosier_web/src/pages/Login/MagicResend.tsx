@@ -73,7 +73,7 @@ const MagicResend = ({ currentTheme = 'dark', toggleTheme }: { currentTheme?: 'd
                 </div>
 
                 {/* Form Card */}
-                <div className="bento-card static p-8 border border-border-thin bg-surface/30 backdrop-blur-md rounded-2xl shadow-xl space-y-6">
+                <div className="bento-card static p-8 border border-border-thin bg-surface rounded-2xl space-y-6">
                     <div className="space-y-4 text-center">
                         <div className="mx-auto flex items-center justify-center text-text-main">
                             <Mail size={24} />

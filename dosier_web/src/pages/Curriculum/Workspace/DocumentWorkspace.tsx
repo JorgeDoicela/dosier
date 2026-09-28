@@ -115,14 +115,12 @@ export const DocumentWorkspace: React.FC = () => {
 
     // Contenedor mutable para evitar recrear listeners en cada render
     const syncCallbacksRef = useRef({
-        fetchProject,
-        populateTeam: team.populateTeamFromProject
+        fetchProject
     });
 
     useEffect(() => {
         syncCallbacksRef.current = {
-            fetchProject,
-            populateTeam: team.populateTeamFromProject
+            fetchProject
         };
     });
 
@@ -132,11 +130,9 @@ export const DocumentWorkspace: React.FC = () => {
         lastSyncTimestampRef.current = Date.now();
 
         try {
-            const { fetchProject: doFetchProject, populateTeam: doPopulateTeam } = syncCallbacksRef.current;
+            const { fetchProject: doFetchProject } = syncCallbacksRef.current;
             await Promise.allSettled([
-                doFetchProject((data) => {
-                    if (data) doPopulateTeam(data);
-                })
+                doFetchProject()
             ]);
         } finally {
             isSyncingRef.current = false;

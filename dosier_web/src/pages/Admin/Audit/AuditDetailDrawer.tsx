@@ -153,13 +153,11 @@ export const AuditDetailDrawer: React.FC<AuditDetailDrawerProps> = ({
     const isOtherAction = !hasBefore && !hasAfter;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex justify-end animate-fade-in">
-            <div className="w-full max-w-2xl bg-surface border-l border-border-thin h-full flex flex-col shadow-2xl animate-slide-left">
-                <div className="p-6 border-b border-border-thin flex items-center justify-between bg-bg-deep/50">
+        <div className="fixed inset-0 bg-black/60 z-50 flex justify-end animate-fade-in">
+            <div className="w-full max-w-2xl bg-surface border-l border-border-thin h-full flex flex-col shadow-xl animate-slide-left">
+                <div className="p-6 border-b border-border-thin flex items-center justify-between bg-surface">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded bg-brand/10 border border-brand/20 text-brand">
-                            <Shield size={18} />
-                        </div>
+                        <Shield size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <div>
                             <h3 className="text-base font-bold text-text-main">Detalle del Registro de Auditoría</h3>
                             <p className="text-xs text-text-dim">ID Registro: #{log.id_audit}</p>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scale, X, Loader2, CheckCircle, RotateCcw, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Scale, X, Loader2, CheckCircle, RotateCcw, Clock } from 'lucide-react';
 
 interface FinalizeAuditModalProps {
     isOpen: boolean;
@@ -38,8 +38,8 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/65 backdrop-blur-sm animate-fade-in font-sans">
-            <div className="w-[520px] max-w-[92%] bg-surface border border-border-thin rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.35)] p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 animate-fade-in font-sans">
+            <div className="w-[520px] max-w-[92%] bg-surface border border-border-thin rounded-2xl shadow-xl p-5 space-y-4 animate-scale-up">
                 <div className="flex items-center justify-between border-b border-border-thin/50 pb-3.5">
                     <div className="flex items-center gap-2">
                         <Scale size={16} className="text-brand" />

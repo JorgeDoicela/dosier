@@ -66,7 +66,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end">
             <div
-                className="absolute inset-0 bg-bg-deep/90 backdrop-blur-sm cursor-pointer"
+                className="absolute inset-0 bg-black/60 cursor-pointer"
                 onClick={onClose}
             />
 

@@ -71,14 +71,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             aria-modal="true"
             aria-label="Bienvenida a DOSIER"
         >
-            {/* Backdrop Blur Overlay */}
+            {/* Overlay Sólido */}
             <div 
-                className="absolute inset-0 bg-bg-deep/80 backdrop-blur-sm cursor-pointer animate-fade-in"
+                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
                 onClick={handleFinish}
             />
 
             {/* Panel lateral derecho (Drawer Vercel Geist) */}
-            <div className="relative w-full max-w-lg md:max-w-xl h-full bg-surface border-l border-border-thin shadow-2xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            <div className="relative w-full max-w-lg md:max-w-xl h-full bg-surface border-l border-border-thin shadow-xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
                 
                 {/* Header Institucional */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border-thin bg-surface shrink-0">
@@ -87,7 +87,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                             DOSIER
                         </span>
                         <span className="text-text-dim/40 font-light">/</span>
-                        <span className="rounded-full border border-border-thin bg-surface-hover text-[10.5px] font-mono font-medium px-2.5 py-0.5 text-text-dim">
+                        <span className="text-[11px] font-mono font-medium text-text-dim">
                             {roleDisplayName || config.roleLabel}
                         </span>
                     </div>
@@ -141,7 +141,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                                                 {benefit.title}
                                             </h3>
                                         </div>
-                                        <span className="rounded-md border border-border-thin bg-surface-hover text-[10px] font-mono font-medium px-2 py-0.5 text-text-dim shrink-0">
+                                        <span className="text-[10px] font-mono text-text-dim shrink-0">
                                             {benefit.tag}
                                         </span>
                                     </div>

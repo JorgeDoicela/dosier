@@ -39,7 +39,7 @@ export const FloatingSidebarButtons: React.FC<FloatingSidebarButtonsProps> = ({
                     }}
                     className={`fixed z-[60] py-7 px-2.5 bg-surface hover:bg-bg-deep border border-border-thin text-text-dim hover:text-text-main shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
                         isDraggingSeccionesButton || (seccionesButtonLeft !== null && seccionesButtonLeft > 5)
-                            ? 'rounded-full scale-[1.05] shadow-2xl border-text-main text-text-main bg-bg-deep'
+                            ? 'rounded-xl border-text-main text-text-main bg-bg-deep shadow-xl'
                             : 'rounded-r-xl border-l-0'
                     }`}
                     title="Arrastra para mover / Clic para abrir navegación"
@@ -63,7 +63,7 @@ export const FloatingSidebarButtons: React.FC<FloatingSidebarButtonsProps> = ({
                     }}
                     className={`fixed z-[60] py-7 px-2.5 bg-surface hover:bg-bg-deep border border-border-thin text-text-dim hover:text-text-main shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
                         isDraggingButton || (auditoriaButtonLeft !== null)
-                            ? 'rounded-full scale-[1.05] shadow-2xl border-text-main text-text-main bg-bg-deep'
+                            ? 'rounded-xl border-text-main text-text-main bg-bg-deep shadow-xl'
                             : 'rounded-l-xl border-r-0'
                     }`}
                     title="Arrastra para mover / Clic para abrir auditoría"

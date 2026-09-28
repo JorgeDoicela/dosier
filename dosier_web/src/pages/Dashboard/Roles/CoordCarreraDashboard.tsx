@@ -101,8 +101,8 @@ export const CoordCarreraDashboard: React.FC = () => {
             </div>
 
             {/* Bandeja de Supervisión Disciplinar */}
-            <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
-                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-zinc-900/40">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl overflow-hidden">
+                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-zinc-900">
                     <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                         Bandeja de Asignaturas: {carreraActiva}
                     </h2>
@@ -134,7 +134,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                 {/* Tabla de la Carrera */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
+                        <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
                             <tr>
                                 <th className="py-2.5 px-4">Asignatura y Ciclo</th>
                                 <th className="py-2.5 px-3">Docente Elaborador</th>
@@ -145,7 +145,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                             {peasCarrera.map(p => (
-                                <tr key={p.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/30 transition-colors">
+                                <tr key={p.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50 transition-colors">
                                     <td className="py-2.5 px-4">
                                         <div className="space-y-0.5">
                                             <div className="flex items-center gap-2">

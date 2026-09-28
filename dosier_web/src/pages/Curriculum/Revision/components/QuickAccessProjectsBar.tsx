@@ -83,16 +83,14 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
     }
 
     return (
-        <div className="mb-6 bg-gradient-to-r from-slate-900/60 via-slate-900/40 to-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-md">
+        <div className="mb-6 bg-white dark:bg-zinc-950 border border-slate-200/60 dark:border-zinc-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                        <Sparkles className="w-4 h-4 animate-pulse" />
-                    </div>
+                    <Sparkles className="w-4 h-4 text-[#0070f3] dark:text-blue-400 shrink-0" />
                     <div>
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                            Espacio de Trabajo Inteligente
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                        <h3 className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
+                            Espacio de Trabajo
+                            <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 font-normal">
                                 {pinnedProjects.length > 0 ? `${pinnedProjects.length} fijado(s)` : ''}
                                 {pinnedProjects.length > 0 && recentProjects.length > 0 ? ' • ' : ''}
                                 {recentProjects.length > 0 ? `${recentProjects.length} reciente(s)` : ''}
@@ -109,17 +107,17 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
                     return (
                         <div
                             key={`pinned-${project.uuid}`}
-                            className="group relative flex flex-col justify-between p-3.5 rounded-xl bg-slate-950/70 border border-amber-500/30 hover:border-amber-500/60 transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/5"
+                            className="group relative flex flex-col justify-between p-3.5 rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 hover:border-[#0070f3] transition-colors"
                         >
                             <div>
                                 <div className="flex items-center justify-between gap-2 mb-1.5">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                                            <Pin className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                                        <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                                            <Pin className="w-2.5 h-2.5 fill-current" />
                                             Fijado
                                         </span>
                                         {project.codigo_institucional && (
-                                            <span className="text-[10px] font-mono text-slate-400 truncate max-w-[100px]">
+                                            <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate max-w-[100px]">
                                                 {project.codigo_institucional}
                                             </span>
                                         )}
@@ -132,28 +130,28 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
                                             onTogglePin(project.uuid);
                                         }}
                                         title="Desfijar de accesos rápidos"
-                                        className="p-1 rounded-lg text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition-colors"
+                                        className="p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors"
                                     >
-                                        <Pin className="w-3.5 h-3.5 fill-amber-400" />
+                                        <Pin className="w-3.5 h-3.5 fill-current" />
                                     </button>
                                 </div>
 
                                 <Link
                                     to={workspaceUrl}
-                                    className="block font-semibold text-xs text-slate-100 hover:text-indigo-300 transition-colors line-clamp-2 leading-snug"
+                                    className="block font-semibold text-xs text-slate-800 dark:text-zinc-100 hover:text-[#0070f3] dark:hover:text-blue-400 transition-colors line-clamp-2 leading-snug"
                                     title={project.titulo}
                                 >
                                     {project.titulo || 'PROYECTO SIN TÍTULO'}
                                 </Link>
                             </div>
 
-                            <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                                <span className="text-slate-400 text-[10px] truncate max-w-[130px]">
+                            <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-zinc-800 flex items-center justify-between text-[11px]">
+                                <span className="text-slate-500 dark:text-zinc-400 text-[10px] truncate max-w-[130px]">
                                     {project.estado}
                                 </span>
                                 <Link
                                     to={workspaceUrl}
-                                    className="inline-flex items-center gap-0.5 font-medium text-indigo-400 hover:text-indigo-300 group-hover:translate-x-0.5 transition-transform text-[11px]"
+                                    className="inline-flex items-center gap-0.5 font-medium text-[#0070f3] dark:text-blue-400 hover:underline text-[11px]"
                                 >
                                     Abrir
                                     <ArrowUpRight className="w-3 h-3" />
@@ -170,17 +168,17 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
                     return (
                         <div
                             key={`recent-${project.uuid}`}
-                            className="group relative flex flex-col justify-between p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-slate-700 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/5"
+                            className="group relative flex flex-col justify-between p-3.5 rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 hover:border-[#0070f3] transition-colors"
                         >
                             <div>
                                 <div className="flex items-center justify-between gap-2 mb-1.5">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
-                                            <Clock className="w-2.5 h-2.5 text-slate-400" />
+                                        <span className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-zinc-400">
+                                            <Clock className="w-2.5 h-2.5" />
                                             {lastVisitedAt ? formatRelativeTime(lastVisitedAt) : 'reciente'}
                                         </span>
                                         {project.codigo_institucional && (
-                                            <span className="text-[10px] font-mono text-slate-400 truncate max-w-[90px]">
+                                            <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 truncate max-w-[90px]">
                                                 {project.codigo_institucional}
                                             </span>
                                         )}
@@ -193,7 +191,7 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
                                             onTogglePin(project.uuid);
                                         }}
                                         title="Fijar en accesos rápidos"
-                                        className="p-1 rounded-lg text-slate-500 hover:text-amber-400 hover:bg-slate-800 transition-colors"
+                                        className="p-1 rounded text-slate-400 hover:text-amber-500 hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors"
                                     >
                                         <Pin className="w-3.5 h-3.5" />
                                     </button>
@@ -201,20 +199,20 @@ export const QuickAccessProjectsBar: React.FC<QuickAccessProjectsBarProps> = ({
 
                                 <Link
                                     to={workspaceUrl}
-                                    className="block font-medium text-xs text-slate-200 hover:text-indigo-300 transition-colors line-clamp-2 leading-snug"
+                                    className="block font-medium text-xs text-slate-700 dark:text-zinc-200 hover:text-[#0070f3] dark:hover:text-blue-400 transition-colors line-clamp-2 leading-snug"
                                     title={project.titulo}
                                 >
                                     {project.titulo || 'PROYECTO SIN TÍTULO'}
                                 </Link>
                             </div>
 
-                            <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                                <span className="text-slate-400 text-[10px] truncate max-w-[130px]">
+                            <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-zinc-800 flex items-center justify-between text-[11px]">
+                                <span className="text-slate-500 dark:text-zinc-400 text-[10px] truncate max-w-[130px]">
                                     {project.estado}
                                 </span>
                                 <Link
                                     to={workspaceUrl}
-                                    className="inline-flex items-center gap-0.5 font-medium text-slate-400 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all text-[11px]"
+                                    className="inline-flex items-center gap-0.5 font-medium text-slate-500 dark:text-zinc-400 hover:text-[#0070f3] dark:hover:text-blue-400 transition-colors text-[11px]"
                                 >
                                     Abrir
                                     <ArrowUpRight className="w-3 h-3" />
