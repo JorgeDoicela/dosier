@@ -65,9 +65,7 @@ export const ObservacionesDisciplinarModal: React.FC<Props> = ({
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
-                            <AlertTriangle className="w-5 h-5" />
-                        </div>
+                        <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0" />
                         <div>
                             <h2 className="text-base font-semibold text-zinc-900 dark:text-white">
                                 Solicitar Correcciones Disciplinares

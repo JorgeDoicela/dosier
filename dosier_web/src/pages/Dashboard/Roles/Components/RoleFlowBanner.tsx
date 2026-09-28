@@ -74,7 +74,7 @@ export const RoleFlowBanner: React.FC<Props> = ({
                     <span className="text-zinc-400 dark:text-zinc-500">Sesión activa:</span>
                     <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{nombreUsuarioReal}</strong>
                     <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                    <span className="badge-subtle">
+                    <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 font-medium">
                         {rolReal}
                     </span>
                 </div>

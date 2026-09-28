@@ -1,6 +1,6 @@
 ---
 name: frontend-dosier
-description: Extiende la skill global de frontend con la arquitectura Feature-Based Modular SPA (React 18 + Vite + TypeScript), Capa de Servicios (Service Layer), motor concurrente Yjs (CoWorkField), registro documental desacoplado (DocumentTemplateRegistry en JSON puro), regla de fondos 100% sólidos y suite Vitest.
+description: Extiende la skill global de frontend con la arquitectura Feature-Based Modular SPA (React 18 + Vite + TypeScript), Capa de Servicios (Service Layer), motor concurrente Yjs (CoWorkField), registro documental desacoplado (DocumentTemplateRegistry en JSON puro), regla de fondos 100% sólidos, estilo visual Modern Enterprise Docs puro y suite Vitest.
 ---
 # Convenciones y Arquitectura de Frontend — DOSIER (React 18 + Vite + TypeScript)
 
@@ -20,27 +20,32 @@ dosier_web/src/
 │   └── documents/   # Registro documental: esquemas en JSON puro (DocumentTemplateRegistry) y renderers (DocumentComponentRegistry)
 ├── services/        # Capa de Fachadas REST / Service Layer (peaService, docenteAsignaturasService, etc.)
 ├── hooks/           # Capa de Lógica de Estado y Orquestación (useDOSIERBuilderShell, useWorkflowStates)
-├── components/      # Componentes UI Reutilizables (Geist Editorial / Enterprise Docs)
+├── components/      # Componentes UI Reutilizables (Modern Enterprise Docs Puro)
 │   ├── Common/      # Modales base, selectores tipados, tablas semánticas y alertas
 │   └── DOSIER/      # Shell del PEA (DOSIERBuilderShell) y secciones modulares pea/ (Secciones A - K)
 └── pages/           # Vistas y Rutas por Dominio / Módulos de Funcionalidad
     ├── Dashboard/   # Paneles especializados por rol institucional (Docente, Coordinadores, Vicerrector, Admin)
-    │   └── Roles/   # Modales curriculares (AuditoriaCacesModal, LegalizacionFirmaModal, etc.)
+    │   └── Roles/   # Modales curriculares (AuditoriaCacesModal, LegalizacionFirmaModal, etc.) y componentes de flujo
     ├── Calendario/  # Cronograma curricular y eventos normativos CACES
     └── Admin/       # Administración de usuarios, plantillas institucionales y auditoría LOPDP
 ```
 
 ---
 
-## 2. Regla Cardinal de Diseño Visual: Fondos 100% Sólidos y Cero Transparencias
+## 2. Estándar Visual Obligatorio: Modern Enterprise Docs Profesional
 
 > [!IMPORTANT]
-> **Prohibición Total de Transparencias en Componentes Superpuestos:**
-> * Todos los modales curriculares (`src/pages/Dashboard/Roles/Modals/`), popovers, menús desplegables (`GeistSelect`), selectores de fecha (`GeistDatePicker`), drawers y tooltips deben tener **fondos 100% sólidos y opacos**:
->   * **Modo Claro:** Fondo sólido `bg-white` (`#ffffff`) con bordes contrastantes `border border-zinc-200` y sombras profundas `shadow-xl`.
->   * **Modo Oscuro:** Fondo sólido `bg-zinc-950` (`#09090b`) o `bg-[#131720]` con bordes `border border-zinc-800`.
->   * **Cabeceras y Pies de Modales:** Fondo sólido `bg-zinc-50 dark:bg-zinc-900` completamente opaco.
-> * **Prohibición Terminante:** Queda estrictamente prohibido utilizar clases translúcidas con opacidades intermedias (como `bg-white/80`, `bg-black/60`, `dark:bg-zinc-900/50`, `dark:bg-zinc-900/40` o `backdrop-blur` sin color pleno de fondo) a fin de prevenir el sangrado tipográfico (*text bleed-through*).
+> **Reglas Inquebrantables de Maquetación y UX/UI:**
+> 1. **Estilo Modern Enterprise Docs:** Inspirado en la documentación técnica corporativa de élite (Stripe Docs, Mintlify, GitBook Enterprise, Linear Docs).
+> 2. **Paleta Cromática con Acentos Vivos:** Fondo blanco u oscuro sólido con acentos técnicos en azul eléctrico corporativo (`#0070f3`), verde esmeralda normativo (`emerald-600/700`, `bg-emerald-50`), y ámbar para observaciones. Botones de acción principal en `#0070f3` o contraste alto.
+> 3. **Prohibición Absoluta de Cápsulas y Burbujas Envolventes ("Eso que rodea"):** Queda terminantemente prohibido rodear palabras, metas, acciones, etiquetas, roles, simuladores o iconos SVG con cápsulas o píldoras tintadas (`rounded-full border bg-... px-3 py-1`). Textos como "Sincronizar y Notificar Distributivo", "Gobernanza Curricular", "Simulador Activo" o "Coordinación Académica" se presentan directos con su tipografía limpia, icono desnudo y punto indicador discreto (`w-1.5 h-1.5 rounded-full`), **sin ninguna cápsula ni píldora con fondo o borde alrededor**. Cero excepciones en toda la aplicación.
+> 4. **Steppers y Conectores Verticales (Connected Rails):** Riel continuo con nodos circulares numerados (`w-8 h-8 rounded-full`), paso activo destacado con halo azul sutil (`bg-[#0070f3] text-white ring-4 ring-blue-100`) y tarjetas de fase claras.
+> 5. **Fichas Técnicas Clave-Valor:** Etiquetas monoespaciadas en mayúsculas (`font-mono text-slate-400 uppercase tracking-wider text-[11px]`) y especificaciones directas con viñetas de confirmación.
+> 6. **Cero Amontonamiento:** Folios espaciosos (`p-6` a `p-8`, `gap-6` a `gap-8`) sin anidamiento excesivo de cajas dentro de cajas.
+> 7. **Cero KPIs Gigantes:** No números monumentales `4xl/5xl` decorativos ni sparklines ficticios. Métricas expresadas en fichas técnicas o tablas directas.
+> 8. **Cero Información Irrelevante o Fluff:** Prohibido saturar la interfaz con etiquetas o textos que no aportan valor operativo (ejemplos prohibidos: "Simulador Activo", "Sincronizar y Notificar Distributivo", "Modo Simulación" o explicaciones obvias de lo que hace un botón o pantalla). Si un título o acción ya es claro, prohibido duplicarlo con metas o subtítulos redundantes. Presentar exclusivamente datos reales útiles: códigos, materias, horas, fechas límite y acciones concretas.
+> 9. **Fondos 100% Sólidos:** Modales, popovers, selectores y drawers con fondos opacos absolutos sin transparencias ni sangrado.
+> 10. **Cero Emojis:** Empleo exclusivo de iconografía técnica vectorial con Lucide React.
 
 ---
 
@@ -110,6 +115,11 @@ El árbol de rutas en `src/App.tsx` protege el acceso declarativamente por roles
 ## 8. Checklist de Entrega para Tareas de Frontend
 
 Antes de finalizar cualquier tarea en el cliente web de DOSIER:
+* [ ] ¿El diseño es **Modern Enterprise Docs puro** sin amontonar, con folio unificado y sin mezclas con estilos de marketing?
+* [ ] ¿Se eliminaron los **wrappers/cajas alrededor de iconos SVG** (iconos limpios y directos)?
+* [ ] ¿Se eliminaron las **burbujas/cápsulas alrededor de palabras o textos**?
+* [ ] ¿Se eliminaron los **KPIs gigantes**, utilizando especificaciones clave-valor o tablas directas?
+* [ ] ¿Se eliminaron las **palabras y textos redundantes o innecesarios**?
 * [ ] ¿Todos los modales, selectores y drawers tienen fondos 100% sólidos sin transparencias ni sangrado visual?
 * [ ] ¿Las llamadas a la API se canalizaron a través de la Capa de Servicios (`src/services/`) y no directamente desde JSX?
 * [ ] ¿Se manejaron las propiedades de la API esperando `snake_case` con tipado defensivo?

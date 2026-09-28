@@ -48,39 +48,42 @@ export const CoordAcadDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-5">
-            {/* Encabezado Vercel Geist */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <div className="space-y-6">
+            {/* Encabezado Modern Enterprise Docs */}
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div className="space-y-1">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#0070f3] dark:text-blue-400 block">
+                        Gobernanza Curricular • Coordinación Académica
+                    </span>
+                    <div className="flex items-baseline gap-2.5">
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                             Coordinación Académica Institucional
                         </h1>
-                        <span className="badge-subtle">
+                        <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono font-medium">
                             Msc. Cristian Cobos
                         </span>
                     </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        Gobernanza curricular, apertura de convocatorias, auditoría CACES y aval normativo institucional
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Gobernanza curricular, apertura de convocatorias, auditoría CACES y aval normativo institucional.
                     </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                     <button
                         onClick={() => setIsAperturaOpen(true)}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
+                        className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
                     >
                         Aperturar Convocatoria 2025-A
                     </button>
                     <button
                         onClick={() => setIsRecordatorioOpen(true)}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                        className="px-3 py-2 text-xs font-medium rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         Notificar Rezagados
                     </button>
                     <button
                         onClick={() => setIsProrrogaOpen(true)}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                        className="px-3 py-2 text-xs font-medium rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         Conceder Prórroga
                     </button>
@@ -88,9 +91,9 @@ export const CoordAcadDashboard: React.FC = () => {
             </div>
 
             {/* Matriz de Gestión de PEAs Institucionales */}
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/30">
-                    <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+            <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
+                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-zinc-900/40">
+                    <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                         Supervisión Curricular Institucional (Período 2025-A)
                     </h2>
 
@@ -101,13 +104,13 @@ export const CoordAcadDashboard: React.FC = () => {
                             placeholder="Buscar asignatura, docente o código..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-500 w-56"
+                            className="px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 w-56"
                         />
 
                         <select
                             value={selectedCarrera}
                             onChange={e => setSelectedCarrera(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white focus:outline-none"
+                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none"
                         >
                             <option value="todas">Todas las Carreras</option>
                             <option value="Desarrollo de Software">Desarrollo de Software</option>
@@ -118,7 +121,7 @@ export const CoordAcadDashboard: React.FC = () => {
                         <select
                             value={selectedEstado}
                             onChange={e => setSelectedEstado(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white focus:outline-none"
+                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none"
                         >
                             <option value="todos">Todos los Estados</option>
                             <option value="Borrador">Borrador</option>
@@ -148,18 +151,18 @@ export const CoordAcadDashboard: React.FC = () => {
                             {peasFiltrados.map(p => (
                                 <tr key={p.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/30 transition-colors">
                                     <td className="py-2.5 px-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
-                                                {p.codigo_asignatura}
-                                            </span>
-                                            <div>
+                                        <div className="space-y-0.5">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-mono text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                                    {p.codigo_asignatura}
+                                                </span>
                                                 <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                                                     {p.nombre_asignatura}
                                                 </p>
-                                                <p className="text-[11px] text-zinc-500">
-                                                    {p.carrera} • {p.semestre}
-                                                </p>
                                             </div>
+                                            <p className="text-[11px] text-zinc-500">
+                                                {p.carrera} • {p.semestre}
+                                            </p>
                                         </div>
                                     </td>
                                     <td className="py-2.5 px-3">
@@ -174,34 +177,40 @@ export const CoordAcadDashboard: React.FC = () => {
                                     </td>
                                     <td className="py-2.5 px-3">
                                         {p.estado_workflow === 'Borrador' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                                Borrador Docente
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
+                                                <span>Borrador Docente</span>
+                                            </div>
                                         )}
                                         {p.estado_workflow === 'En_Revision_Carrera' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-medium">
-                                                Revisión de Carrera
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                                                <span>Revisión de Carrera</span>
+                                            </div>
                                         )}
                                         {p.estado_workflow === 'Con_Observaciones' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-medium">
-                                                Observaciones Pendientes
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                                                <span>Observaciones Pendientes</span>
+                                            </div>
                                         )}
                                         {p.estado_workflow === 'Avalado_Carrera' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-medium">
-                                                Aval de Carrera Emitido
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0" />
+                                                <span>Aval de Carrera Emitido</span>
+                                            </div>
                                         )}
                                         {p.estado_workflow === 'Avalado_Academica' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-600 text-white font-medium">
-                                                Aval Académico Concedido
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                                <span>Aval Académico Concedido</span>
+                                            </div>
                                         )}
                                         {p.estado_workflow === 'Legalizado' && (
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-600 text-white">
-                                                Legalizado Vicerrectorado
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                                <span>Legalizado Vicerrectorado</span>
+                                            </div>
                                         )}
                                     </td>
                                     <td className="py-2.5 px-3 text-zinc-500 font-mono text-[11px]">
@@ -211,7 +220,7 @@ export const CoordAcadDashboard: React.FC = () => {
                                         <div className="flex items-center justify-end gap-1.5">
                                             <button
                                                 onClick={() => setAuditoriaPea(p)}
-                                                className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
+                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
                                             >
                                                 Auditar
                                             </button>
@@ -219,7 +228,7 @@ export const CoordAcadDashboard: React.FC = () => {
                                             {p.estado_workflow === 'Avalado_Carrera' && (
                                                 <button
                                                     onClick={() => handleEmitirAvalAcademico(p.id, p.nombre_asignatura)}
-                                                    className="px-2.5 py-1 text-xs font-medium rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
+                                                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
                                                 >
                                                     Emitir Aval
                                                 </button>

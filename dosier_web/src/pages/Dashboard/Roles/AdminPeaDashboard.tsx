@@ -35,18 +35,21 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
 
     return (
         <div className="space-y-6">
-            {/* Encabezado Institucional Minimalista */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-2.5">
-                        <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {/* Encabezado Institucional Modern Enterprise Docs */}
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div className="space-y-1">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#0070f3] dark:text-blue-400 block">
+                        Superadministración Curricular • Modo Gobernanza
+                    </span>
+                    <div className="flex items-baseline gap-2.5">
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                             Administración Curricular y Datos Maestros
                         </h1>
-                        <span className="badge-subtle">
+                        <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono font-medium">
                             DOSIER_ADMIN
                         </span>
                     </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
                         Conexión con SIGAFI institucional (Solo Lectura), distributivo docente de cátedras y gobernanza RBAC.
                     </p>
                 </div>
@@ -55,7 +58,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                     <button
                         onClick={handleSincronizarSigafi}
                         disabled={isSyncing}
-                        className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 inline-flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                        className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] inline-flex items-center gap-2 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                     >
                         <RefreshCw size={13} className={`shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />
                         <span>{isSyncing ? 'Sincronizando con SIGAFI...' : 'Sincronizar SIGAFI'}</span>
@@ -63,26 +66,24 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                 </div>
             </div>
 
-            {/* Accesos Rápidos a Módulos */}
+            {/* Accesos Rápidos a Módulos (Modern Enterprise Docs) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link
                     to="/usuarios"
-                    className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-xs transition-all group flex flex-col justify-between space-y-4 no-underline"
                 >
-                    <div className="space-y-3">
-                        <div className="w-8 h-8 rounded-lg surface-subtle flex items-center justify-center text-zinc-700 dark:text-zinc-300">
-                            <Users size={16} />
-                        </div>
+                    <div className="space-y-2.5">
+                        <Users size={18} className="text-[#0070f3] dark:text-blue-400" />
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
                                 Usuarios y Roles RBAC
                             </h3>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">
                                 Administre asignaciones de roles institucionales (5 perfiles), permisos por módulo y credenciales SSO.
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-zinc-400 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
                         <span>Gestionar identidades</span>
                         <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                     </div>
@@ -90,22 +91,20 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
 
                 <Link
                     to="/auditoria"
-                    className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-xs transition-all group flex flex-col justify-between space-y-4 no-underline"
                 >
-                    <div className="space-y-3">
-                        <div className="w-8 h-8 rounded-lg surface-subtle flex items-center justify-center text-zinc-700 dark:text-zinc-300">
-                            <ShieldCheck size={16} />
-                        </div>
+                    <div className="space-y-2.5">
+                        <ShieldCheck size={18} className="text-[#0070f3] dark:text-blue-400" />
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
                                 Trazabilidad y Auditoría
                             </h3>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">
                                 Bitácora inmutable de eventos normativos CACES: emisión de avales, legalizaciones y firmas digitales.
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-zinc-400 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
                         <span>Explorar registros</span>
                         <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                     </div>
@@ -113,22 +112,20 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
 
                 <Link
                     to="/plantillas"
-                    className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] hover:border-black/[0.12] dark:hover:border-white/[0.16] transition-colors shadow-xs group flex flex-col justify-between space-y-4 no-underline"
+                    className="p-5 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-xs transition-all group flex flex-col justify-between space-y-4 no-underline"
                 >
-                    <div className="space-y-3">
-                        <div className="w-8 h-8 rounded-lg surface-subtle flex items-center justify-center text-zinc-700 dark:text-zinc-300">
-                            <FileCode size={16} />
-                        </div>
+                    <div className="space-y-2.5">
+                        <FileCode size={18} className="text-[#0070f3] dark:text-blue-400" />
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
                                 Plantillas Curriculares
                             </h3>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">
                                 Formulario oficial del PEA institucional en sus 11 secciones estructuradas con Yjs colaborativo.
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-zinc-400 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
                         <span>Estructurar formato</span>
                         <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                     </div>
@@ -139,11 +136,11 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
             <PipelineCurricularStepper onSimularRol={onCambiarRol} />
 
             {/* Frontera SIGAFI (Solo Lectura) */}
-            <div className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
-                <div className="flex items-center justify-between pb-3 border-b border-black/[0.04] dark:border-white/[0.05]">
+            <div className="p-6 rounded-xl bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 shadow-2xs">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
                     <div className="flex items-center gap-2">
-                        <Database size={15} className="text-zinc-600 dark:text-zinc-400" />
-                        <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                        <Database size={15} className="text-[#0070f3] dark:text-blue-400" />
+                        <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                             Frontera SIGAFI (Solo Lectura)
                         </h2>
                     </div>
@@ -152,22 +149,22 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                     </span>
                 </div>
 
-                <div className="divide-y divide-black/[0.04] dark:divide-white/[0.04] text-xs">
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
                     <div className="flex items-center justify-between py-2.5">
                         <span className="text-zinc-500 dark:text-zinc-400">Base de Datos Institucional:</span>
-                        <span className="badge-subtle">sigafi_es (MySQL 3306)</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">sigafi_es (MySQL 3306)</span>
                     </div>
                     <div className="flex items-center justify-between py-2.5">
                         <span className="text-zinc-500 dark:text-zinc-400">Carreras del Instituto:</span>
-                        <span className="badge-subtle">3 Carreras Activas</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">3 Carreras Activas</span>
                     </div>
                     <div className="flex items-center justify-between py-2.5">
                         <span className="text-zinc-500 dark:text-zinc-400">Distributivo y Profesores:</span>
-                        <span className="badge-subtle">28 Docentes Sincronizados</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">28 Docentes Sincronizados</span>
                     </div>
                     <div className="flex items-center justify-between py-2.5">
                         <span className="text-zinc-500 dark:text-zinc-400">Asignaturas Normadas:</span>
-                        <span className="badge-subtle">42 Cátedras con Art. 21 CES</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">42 Cátedras con Art. 21 CES</span>
                     </div>
                 </div>
             </div>

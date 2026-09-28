@@ -54,20 +54,23 @@ export const VicerrectorDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-5">
-            {/* Encabezado Vercel Geist */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <div className="space-y-6">
+            {/* Encabezado Modern Enterprise Docs */}
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div className="space-y-1">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#0070f3] dark:text-blue-400 block">
+                        Legalización Curricular • Vicerrectorado Académico
+                    </span>
+                    <div className="flex items-baseline gap-2.5">
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                             Despacho de Vicerrectorado Académico
                         </h1>
-                        <span className="badge-subtle">
+                        <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono font-medium">
                             Msc. Freddy Baño
                         </span>
                     </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                        Legalización curricular en firme, firma criptográfica institucional y certificación pública CACES
+                    <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        Legalización curricular en firme, firma criptográfica institucional y certificación pública CACES.
                     </p>
                 </div>
 
@@ -75,7 +78,7 @@ export const VicerrectorDashboard: React.FC = () => {
                     <button
                         onClick={() => setIsFirmaMasivaOpen(true)}
                         disabled={peasListosParaFirma.length === 0}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors disabled:opacity-40"
+                        className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs disabled:opacity-40 cursor-pointer"
                     >
                         Firma Masiva ({peasListosParaFirma.length})
                     </button>
@@ -87,7 +90,7 @@ export const VicerrectorDashboard: React.FC = () => {
                                 'success'
                             );
                         }}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                        className="px-3 py-2 text-xs font-medium rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         Descargar Dossier (PDF)
                     </button>
@@ -95,9 +98,9 @@ export const VicerrectorDashboard: React.FC = () => {
             </div>
 
             {/* Bandeja de Despacho y Firma Legal */}
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/30">
-                    <h2 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+            <div className="bg-white dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
+                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-zinc-900/40">
+                    <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                         Cola de Legalización y Archivo Oficial de PEAs
                     </h2>
 
@@ -107,13 +110,13 @@ export const VicerrectorDashboard: React.FC = () => {
                             placeholder="Buscar asignatura o docente..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-500 w-56"
+                            className="px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 w-56"
                         />
 
                         <select
                             value={filterCarrera}
                             onChange={e => setFilterCarrera(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-zinc-900 dark:text-white focus:outline-none"
+                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none"
                         >
                             <option value="todas">Todas las Carreras</option>
                             <option value="Desarrollo de Software">Desarrollo de Software</option>
@@ -152,50 +155,43 @@ export const VicerrectorDashboard: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="py-2.5 px-3">
-                                        <div className="flex items-center gap-1 text-[10px] font-mono">
-                                            <span className={`px-1.5 py-0.5 rounded ${
-                                                p.estado_workflow !== 'Borrador'
-                                                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 font-semibold'
-                                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
-                                            }`}>
-                                                1. Docente
+                                        <div className="flex items-center gap-2 text-xs font-mono">
+                                            <span className={p.estado_workflow !== 'Borrador' ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 dark:text-zinc-600'}>
+                                                {p.estado_workflow !== 'Borrador' ? '✓ ' : '1. '}Docente
                                             </span>
-                                            <span className={`px-1.5 py-0.5 rounded ${
-                                                p.tiene_aval_carrera
-                                                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 font-semibold'
-                                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
-                                            }`}>
-                                                2. Carrera
+                                            <span className="text-zinc-300 dark:text-zinc-700">/</span>
+                                            <span className={p.tiene_aval_carrera ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 dark:text-zinc-600'}>
+                                                {p.tiene_aval_carrera ? '✓ ' : '2. '}Carrera
                                             </span>
-                                            <span className={`px-1.5 py-0.5 rounded ${
-                                                p.tiene_aval_academica
-                                                    ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 font-semibold'
-                                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
-                                            }`}>
-                                                3. Académica
+                                            <span className="text-zinc-300 dark:text-zinc-700">/</span>
+                                            <span className={p.tiene_aval_academica ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 dark:text-zinc-600'}>
+                                                {p.tiene_aval_academica ? '✓ ' : '3. '}Académica
                                             </span>
                                         </div>
                                     </td>
                                     <td className="py-2.5 px-3">
                                         {p.estado_workflow === 'Legalizado' ? (
-                                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-600 text-white">
-                                                Legalizado en Firme
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                                <span>Legalizado en Firme</span>
+                                            </div>
                                         ) : p.estado_workflow === 'Avalado_Academica' ? (
-                                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
-                                                Listo para Firma Legal
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0" />
+                                                <span>Listo para Firma Legal</span>
+                                            </div>
                                         ) : (
-                                            <span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800">
-                                                En Proceso de Avales
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
+                                                <span>En Proceso de Avales</span>
+                                            </div>
                                         )}
                                     </td>
                                     <td className="py-2.5 px-4 text-right">
                                         <div className="flex items-center justify-end gap-1.5">
                                             <button
                                                 onClick={() => setAuditoriaPea(p)}
-                                                className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
+                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
                                             >
                                                 Ver
                                             </button>
@@ -203,7 +199,7 @@ export const VicerrectorDashboard: React.FC = () => {
                                             {p.estado_workflow === 'Avalado_Academica' && (
                                                 <button
                                                     onClick={() => setFirmaModalPea(p)}
-                                                    className="px-2.5 py-1 text-xs font-medium rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
+                                                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
                                                 >
                                                     Firmar PEA
                                                 </button>
@@ -218,7 +214,7 @@ export const VicerrectorDashboard: React.FC = () => {
                                                             'info'
                                                         );
                                                     }}
-                                                    className="px-2.5 py-1 text-xs font-medium rounded border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors font-mono"
+                                                    className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors font-mono cursor-pointer"
                                                 >
                                                     QR CACES
                                                 </button>

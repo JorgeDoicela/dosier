@@ -122,9 +122,13 @@ Los tokens están declarados como variables CSS semánticas en `src/styles/theme
 
 ---
 
-## 6. Reglas de Implementación en Nuevas Vistas y Componentes
+## 6. Reglas de Implementación en Nuevas Vistas y Componentes (Modern Enterprise Docs Puro)
 
-1. **Priorizar el contenido sobre el contenedor:** No envolver elementos en múltiples tarjetas anidadas (*cards inside cards*). Preferir una sola superficie limpia con espaciado vertical (`space-y-*`).
-2. **Tablas antes que tarjetas aisladas:** Si se presentan múltiples registros (PEAs, asignaturas, docentes), maquetar siempre en tablas estructuradas con cabeceras sobrias y tipografía monoespaciada para números y códigos.
-3. **Cero Fondos Translúcidos:** Todo nuevo modal, menú desplegable, tooltip o drawer debe incluir la clase `bg-white dark:bg-zinc-950` o `bg-surface` sin modificadores de opacidad como `/80` o `backdrop-blur`.
-4. **Cero Emojis:** Emplear únicamente texto descriptivo formal o iconos de la suite Lucide React con tamaño consistente (13px a 16px).
+1. **Priorizar el contenido sobre el contenedor (Cero Amontonamiento):** No envolver elementos en múltiples tarjetas anidadas (*cards inside cards*). Preferir un folio unificado con espaciado amplio y divisiones tenues.
+2. **Cero Wrappers en Iconos SVG:** Prohibido encerrar iconos dentro de recuadros o círculos coloreados (`w-9 h-9 rounded-lg bg-purple-50`). Los iconos vectoriales de Lucide React deben ser libres y directos, flotando junto a su texto correspondiente.
+3. **Cero Cápsulas o Píldoras en Palabras:** Prohibido envolver palabras comunes, títulos o estados en píldoras con borde redondeado (`rounded-full border bg-emerald-50`). El texto se presenta de forma tipográfica limpia y sobria, usando color y peso o un punto indicador discreto.
+4. **Cero KPIs Gigantescos:** Eliminar tarjetas con números 4xl/5xl y gráficos sparkline decorativos. Maquetar datos técnicos en fichas de especificación clave-valor (`<dl>`) o tablas estructuradas.
+5. **Cero Información Irrelevante o Fluff:** Prohibido saturar la interfaz con etiquetas, indicadores o textos artificiales que no aporten valor operativo al usuario (ej: "Simulador Activo", "Sincronizar y Notificar Distributivo", "Modo Simulación" o explicaciones obvias de botones o pantallas). Prohibido duplicar títulos con metas redundantes. Presentar únicamente datos reales y procesables: materias, códigos, horas, fechas límite y acciones directas.
+6. **Tablas antes que tarjetas aisladas:** Si se presentan múltiples registros (PEAs, asignaturas, docentes), maquetar siempre en tablas estructuradas con cabeceras sobrias y tipografía monoespaciada para números y códigos.
+7. **Cero Fondos Translúcidos:** Todo nuevo modal, menú desplegable, tooltip o drawer debe incluir la clase `bg-white dark:bg-zinc-950` o `bg-surface` sin modificadores de opacidad como `/80` o `backdrop-blur`.
+8. **Cero Emojis:** Empleo exclusivo de iconografía técnica vectorial con Lucide React con trazo fino (`strokeWidth={1.5}` o `1.75`).
