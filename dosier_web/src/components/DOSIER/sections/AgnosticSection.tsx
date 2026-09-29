@@ -376,7 +376,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                         <Lock size={10} className="text-text-dim opacity-70" /> {label} (Privado)
                     </label>
                     {type === 'number' && (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-text-main/10 text-text-main">
+                        <span className="text-[10px] font-mono text-text-muted">
                             {val} / {max} pts
                         </span>
                     )}

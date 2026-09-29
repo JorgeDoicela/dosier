@@ -53,13 +53,13 @@ const DocumentMaintenancePage: React.FC<DocumentMaintenancePageProps> = ({ isEmb
     } = useDocumentMaintenance();
 
     return (
-        <div className={isEmbedded ? "space-y-6 animate-fade-up mt-2" : "p-4 md:p-10 space-y-8 animate-fade-up"}>
+        <div className={isEmbedded ? "space-y-6 animate-fade-up mt-2" : "min-h-screen bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 space-y-8 animate-fade-up"}>
             {/* Cabecera / Botón de Acción Superior */}
             <header className={`flex flex-col md:flex-row md:items-center ${isEmbedded ? 'justify-end mb-6' : 'justify-between border-b border-border-thin/60 pb-6 mb-6'} gap-4`}>
                 {!isEmbedded && (
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 text-[10px] font-semibold text-text-dim uppercase tracking-[0.3em]">
-                            <HardDrive size={12} className="text-brand" />
+                            <HardDrive size={12} className="text-[#0070f3]" />
                             <span>Consola Enterprise de Almacenamiento</span>
                         </div>
                         <h1 className="text-2xl md:text-3xl font-semibold text-text-main tracking-tight">Almacenamiento y Copias de Seguridad</h1>
@@ -72,7 +72,7 @@ const DocumentMaintenancePage: React.FC<DocumentMaintenancePageProps> = ({ isEmb
                 <button
                     type="button"
                     onClick={() => { fetchDiagnosis(); fetchBackups(); fetchDiskInfo(); }}
-                    className="btn-vercel-secondary !py-1.5 !px-3 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                    className="bg-surface hover:bg-slate-50 dark:hover:bg-zinc-800 text-text-main border border-slate-200/90 dark:border-zinc-800 rounded-lg shadow-2xs !py-1.5 !px-3 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
                     title="Recargar todos los diagnósticos y métricas"
                 >
                     <RefreshCw size={12} className={(loadingDocs || loadingBackups || loadingDiskInfo) ? 'animate-spin' : ''} />
@@ -91,7 +91,7 @@ const DocumentMaintenancePage: React.FC<DocumentMaintenancePageProps> = ({ isEmb
                 >
                     <FileText size={14} />
                     <span>Versiones Documentales</span>
-                    <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-surface border border-border-thin text-text-dim font-mono">
+                    <span className="ml-1 text-xs text-text-dim font-mono">
                         {totalPendingCountDocs}
                     </span>
                 </button>
@@ -104,7 +104,7 @@ const DocumentMaintenancePage: React.FC<DocumentMaintenancePageProps> = ({ isEmb
                 >
                     <Database size={14} />
                     <span>Copias de Seguridad</span>
-                    <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-surface border border-border-thin text-text-dim font-mono">
+                    <span className="ml-1 text-xs text-text-dim font-mono">
                         {backups.length}
                     </span>
                 </button>

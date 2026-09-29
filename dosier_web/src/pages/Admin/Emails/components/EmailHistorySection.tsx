@@ -125,7 +125,7 @@ export const EmailHistorySection: React.FC<EmailHistorySectionProps> = ({ histor
                                             </td>
                                             <td className="p-4 text-center">
                                                 {attCount > 0 ? (
-                                                    <span className="badge-vercel badge-vercel-info text-[9px] font-mono font-bold">
+                                                    <span className="text-[11px] font-mono text-[#0070f3]">
                                                         {attCount} adj.
                                                     </span>
                                                 ) : (

@@ -39,8 +39,8 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                 <form onSubmit={handleSaveTemplate}>
                     <div className="modal-body space-y-4 max-h-[70vh] overflow-y-auto">
                         {templateError && (
-                            <div className="badge-vercel-error !rounded-xl !p-3 text-xs flex items-center gap-2">
-                                <AlertTriangle size={14} className="shrink-0" />
+                            <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
+                                <AlertTriangle size={14} className="shrink-0 text-rose-600 dark:text-rose-400" />
                                 <span>{templateError}</span>
                             </div>
                         )}

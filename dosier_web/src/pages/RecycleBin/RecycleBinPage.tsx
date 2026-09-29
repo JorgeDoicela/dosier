@@ -96,7 +96,7 @@ const RecycleBinPage: React.FC = () => {
     ];
 
     return (
-        <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-6">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto space-y-6">
             <PageHeader
                 kicker="Mantenimiento del Sistema"
                 icon={Trash2}
@@ -105,7 +105,7 @@ const RecycleBinPage: React.FC = () => {
             />
 
             {/* Tabs */}
-            <div className="flex border-b border-black/5 dark:border-white/5">
+            <div className="flex border-b border-slate-200/90 dark:border-zinc-800">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -113,13 +113,13 @@ const RecycleBinPage: React.FC = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 px-5 py-3 border-b-2 font-medium text-sm transition-all cursor-pointer ${
+                            className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-medium text-xs transition-colors cursor-pointer ${
                                 isActive
-                                    ? 'border-red-600 text-red-600'
-                                    : 'border-transparent text-text-dim hover:text-text-main hover:border-black/10 dark:hover:border-white/10'
+                                    ? 'border-[#0070f3] text-[#0070f3]'
+                                    : 'border-transparent text-text-dim hover:text-text-main'
                             }`}
                         >
-                            <Icon size={16} />
+                            <Icon size={14} />
                             {tab.name}
                         </button>
                     );
@@ -129,33 +129,31 @@ const RecycleBinPage: React.FC = () => {
             {/* Content list */}
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <RefreshCw size={32} className="animate-spin text-red-600" />
-                    <span className="text-sm text-text-dim font-medium">Cargando elementos...</span>
+                    <RefreshCw size={24} className="animate-spin text-[#0070f3]" />
+                    <span className="text-xs text-text-dim font-medium">Cargando elementos...</span>
                 </div>
             ) : items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 border border-dashed border-black/10 dark:border-white/10 rounded-xl bg-surface/30">
-                    <div className="w-12 h-12 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-text-dim/60 mb-3">
-                        <Trash size={22} />
-                    </div>
-                    <h3 className="text-base font-semibold text-text-main">La papelera está vacía</h3>
-                    <p className="text-sm text-text-dim mt-1 text-center max-w-sm">
+                <div className="flex flex-col items-center justify-center py-16 border border-dashed border-slate-200/90 dark:border-zinc-800 rounded-lg bg-surface">
+                    <Trash size={28} className="text-text-dim/40 mb-2" />
+                    <h3 className="text-sm font-semibold text-text-main">La papelera está vacía</h3>
+                    <p className="text-xs text-text-dim mt-1 text-center max-w-sm">
                         No hay proyectos eliminados en este momento.
                     </p>
                 </div>
             ) : (
-                <div className="border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-surface">
+                <div className="border border-slate-200/90 dark:border-zinc-800 rounded-lg overflow-hidden bg-surface">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-black/5 dark:border-white/5 bg-black/2 dark:bg-white/2 text-[12px] font-semibold text-text-dim uppercase tracking-wider">
-                                    <th className="px-6 py-4">Título / Nombre</th>
-                                    <th className="px-6 py-4">Código / Estado</th>
-                                    <th className="px-6 py-4">Fecha de Eliminación</th>
-                                    <th className="px-6 py-4">Eliminado Por</th>
-                                    <th className="px-6 py-4 text-right">Acciones</th>
+                                <tr className="border-b border-slate-200/90 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 text-xs font-mono text-text-dim tracking-wider uppercase">
+                                    <th className="px-6 py-3">Título / Nombre</th>
+                                    <th className="px-6 py-3">Código / Estado</th>
+                                    <th className="px-6 py-3">Fecha de Eliminación</th>
+                                    <th className="px-6 py-3">Eliminado Por</th>
+                                    <th className="px-6 py-3 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-black/5 dark:divide-white/5 text-sm text-text-main">
+                            <tbody className="divide-y divide-slate-200/90 dark:divide-zinc-800 text-xs text-text-main">
                                 {items.map((item) => {
                                     const title = item.titulo || item.nombre || 'Sin título';
                                     const code = item.codigoInstitucional || item.siglas || '-';

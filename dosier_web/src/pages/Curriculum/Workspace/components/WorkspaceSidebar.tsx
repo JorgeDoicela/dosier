@@ -91,12 +91,11 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
         <div className="flex flex-col gap-3">
             {/* Banner de Revisión Técnica para el Administrador */}
             {isAdmin && currentProject.status === 'Enviado' && resolvedProjectUuid && isAllFormulationSigned && (
-                <div className="bento-card static p-5 flex flex-col justify-between border border-brand/30 bg-brand/[0.03] shadow-md animate-fade-in relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full blur-xl -mr-6 -mt-6 pointer-events-none" />
+                <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-5 flex flex-col justify-between shadow-xs animate-fade-in group">
                     <div>
                         <div className="flex items-center gap-2 mb-1.5">
-                            <Shield size={13} className="text-brand animate-pulse" />
-                            <span className="section-label text-brand">Revisión Técnica Requerida</span>
+                            <Shield size={14} className="text-[#0070f3]" />
+                            <span className="text-xs font-bold text-[#0070f3] uppercase tracking-wider">Revisión Técnica Requerida</span>
                         </div>
                         <p className="text-xs text-text-dim leading-relaxed">
                             El protocolo ha sido remitido por el Director para su revisión técnica.
@@ -105,7 +104,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                     <div className="mt-4">
                         <Link
                             to={`/documentacion/revision-tecnica/${resolvedProjectUuid}`}
-                            className="w-full btn-brand py-2 px-3 text-[10px] rounded-md no-underline flex items-center justify-center gap-1.5"
+                            className="w-full bg-[#0070f3] text-white hover:bg-[#005bb5] py-2 px-3 text-xs font-semibold rounded-md no-underline flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         >
                             <Shield size={12} />
                             <span>Iniciar Revisión Técnica</span>
@@ -116,12 +115,11 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
 
             {/* Banner de Correcciones Requeridas para el Docente/Investigador */}
             {!isAdmin && currentProject.status === 'En Corrección' && (
-                <div className="bento-card static p-5 flex flex-col justify-between border border-warning/30 bg-warning/[0.03] shadow-md animate-fade-in relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-warning/5 rounded-full blur-xl -mr-6 -mt-6 pointer-events-none" />
+                <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-5 flex flex-col justify-between shadow-xs animate-fade-in group">
                     <div>
                         <div className="flex items-center gap-2 mb-1.5">
-                            <AlertCircle size={13} className="text-warning animate-pulse" />
-                            <span className="section-label text-warning">Correcciones Requeridas</span>
+                            <AlertCircle size={14} className="text-amber-500" />
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Correcciones Requeridas</span>
                         </div>
                         <p className="text-xs text-text-dim leading-relaxed">
                             El revisor ha retornado el instrumento con observaciones que deben ser atendidas en su contenido curricular.
@@ -133,7 +131,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                             onClick={() => {
                                 if (setActiveDocument) setActiveDocument('PEA_OFICIAL');
                             }}
-                            className="w-full btn-vercel-primary py-2 px-3 text-[10px] rounded-md flex items-center justify-center gap-1.5"
+                            className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white py-2 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
                         >
                             <FileText size={12} />
                             <span>Atender Observaciones</span>
@@ -144,7 +142,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
 
             {/* Panel de Actividad Reciente */}
             {resolvedProjectUuid && (
-                <div className="bento-card static flex flex-col overflow-hidden">
+                <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg flex flex-col overflow-hidden">
                     <WorkspaceActivityPanel
                         projectUuid={resolvedProjectUuid}
                     />
@@ -153,15 +151,15 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
 
             {/* Botón de Acceso a Monitoreo Gantt */}
             {resolvedProjectUuid && (
-                <div className="bento-card static p-4 flex flex-col gap-3">
+                <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-4 flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <BarChart3 size={13} className="text-brand" />
-                            <span className="section-label text-text-main">
+                            <BarChart3 size={13} className="text-[#0070f3]" />
+                            <span className="text-xs font-semibold text-text-main">
                                 Monitoreo & Gantt
                             </span>
                         </div>
-                        <span className="badge-vercel-neutral text-[9px] font-mono">
+                        <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-zinc-400">
                             Fase C
                         </span>
                     </div>
@@ -170,11 +168,11 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                     </p>
                     <Link
                         to={monitoringUrl}
-                        className="btn-vercel-secondary py-2 px-3 text-xs rounded-md no-underline flex items-center justify-center gap-2 hover:border-brand/40 group transition-all"
+                        className="w-full bg-surface hover:bg-zinc-50 dark:hover:bg-zinc-800 text-text-main border border-slate-200/90 dark:border-zinc-800 py-2 px-3 text-xs rounded-lg no-underline flex items-center justify-center gap-2 group transition-all"
                     >
-                        <BarChart3 size={13} className="text-text-dim group-hover:text-brand transition-colors" />
-                        <span className="font-medium text-text-main group-hover:text-brand transition-colors">Monitoreo Gantt</span>
-                        <ArrowUpRight size={12} className="text-text-dim group-hover:text-brand ml-auto transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        <BarChart3 size={13} className="text-slate-400 dark:text-zinc-500 group-hover:text-[#0070f3] transition-colors" />
+                        <span className="font-medium text-text-main group-hover:text-[#0070f3] transition-colors">Monitoreo Gantt</span>
+                        <ArrowUpRight size={12} className="text-slate-400 dark:text-zinc-500 group-hover:text-[#0070f3] ml-auto transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </Link>
                 </div>
             )}

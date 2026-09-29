@@ -143,40 +143,48 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                             </p>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-center gap-1">
-                                            <span className={`badge-vercel ${u.firma_habilitada ? 'badge-vercel-success' : 'badge-vercel-warning'} !text-[9px]`}>
-                                                {u.firma_habilitada ? 'Firma Habilitada' : 'Sin Consentimiento'}
+                                        <div className="flex flex-col items-start gap-1">
+                                            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${u.firma_habilitada ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${u.firma_habilitada ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                                <span>{u.firma_habilitada ? 'Firma Habilitada' : 'Sin Consentimiento'}</span>
                                             </span>
                                         </div>
                                     )}
                                 </td>
                                 <td className="p-4">
-                                    <div className="flex flex-wrap gap-1.5 items-center">
+                                    <div className="flex flex-wrap gap-2.5 items-center">
                                         {userActiveRoles.length > 0 ? (
                                             userActiveRoles.map(r => {
                                                 const isBrand = r.codigo_rol === 'DOSIER_ADMIN';
-                                                const isDocente = r.codigo_rol === 'DOSIER_DOCENTE';
-                                                const isCoordCarrera = r.codigo_rol === 'DOSIER_COORD_CARRERA';
-                                                const isCoordAcad = r.codigo_rol === 'DOSIER_COORD_ACAD';
                                                 const isVicerrector = r.codigo_rol === 'DOSIER_VICERRECTOR';
-                                                const badgeClass = isBrand 
-                                                    ? 'badge-vercel-info' 
+                                                const isCoordAcad = r.codigo_rol === 'DOSIER_COORD_ACAD';
+                                                const isCoordCarrera = r.codigo_rol === 'DOSIER_COORD_CARRERA';
+                                                const colorClass = isBrand 
+                                                    ? 'text-[#0070f3] dark:text-blue-400' 
                                                     : isVicerrector 
-                                                    ? 'badge-vercel-amber' 
+                                                    ? 'text-amber-600 dark:text-amber-400' 
                                                     : isCoordAcad 
-                                                    ? 'badge-vercel-cyan' 
+                                                    ? 'text-teal-600 dark:text-teal-400' 
                                                     : isCoordCarrera 
-                                                    ? 'badge-vercel-violet' 
-                                                    : isDocente 
-                                                    ? 'badge-vercel-neutral' 
-                                                    : 'badge-vercel-neutral';
+                                                    ? 'text-indigo-600 dark:text-indigo-400' 
+                                                    : 'text-zinc-700 dark:text-zinc-300';
+                                                const dotClass = isBrand 
+                                                    ? 'bg-[#0070f3]' 
+                                                    : isVicerrector 
+                                                    ? 'bg-amber-500' 
+                                                    : isCoordAcad 
+                                                    ? 'bg-teal-500' 
+                                                    : isCoordCarrera 
+                                                    ? 'bg-indigo-500' 
+                                                    : 'bg-zinc-400';
 
                                                 return (
                                                     <span
                                                         key={r.id_rol}
-                                                        className={`badge-vercel ${badgeClass} text-[9px] font-bold tracking-wider uppercase py-0.5 px-2`}
+                                                        className={`inline-flex items-center gap-1.5 text-xs font-medium ${colorClass}`}
                                                     >
-                                                        {r.nombre}
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+                                                        <span>{r.nombre}</span>
                                                     </span>
                                                 );
                                             })

@@ -423,13 +423,13 @@ export const ProjectTechnicalProperties: React.FC<ProjectTechnicalPropertiesProp
                                                         {sec.title}
                                                     </span>
                                                     {sec.pageBreakBefore && (
-                                                        <span className="badge-vercel-neutral text-[7.5px] px-1.5 py-0.2">Salto Pág</span>
+                                                        <span className="text-[10px] font-mono text-text-dim">Salto Pág</span>
                                                     )}
                                                     {sec.variant === 'banner_gold' && (
-                                                        <span className="badge-vercel-warning text-[8px] px-1.5 py-0.2">Dorado</span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-400"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Dorado</span>
                                                     )}
                                                     {sec.variant === 'banner_navy' && (
-                                                        <span className="badge-vercel-info text-[8px] px-1.5 py-0.2">Azul</span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-blue-600 dark:text-blue-400"><span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />Azul</span>
                                                     )}
                                                 </div>
                                                 {sec.requirementText && (

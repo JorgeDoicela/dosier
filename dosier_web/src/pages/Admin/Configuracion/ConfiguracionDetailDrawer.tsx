@@ -70,17 +70,25 @@ export const ConfiguracionDetailDrawer: React.FC<ConfiguracionDetailDrawerProps>
                                     <div className="bento-card static p-4">
                                         <label className="section-label text-text-dim mb-2">Estado</label>
                                         {p.activo ? (
-                                             <span className="badge-vercel badge-vercel-success"><CheckCircle size={10} /> Activo</span>
+                                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Activo
+                                             </span>
                                         ) : (
-                                            <span className="badge-vercel badge-vercel-error"><XCircle size={10} /> Inactivo</span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" /> Inactivo
+                                            </span>
                                         )}
                                     </div>
                                     <div className="bento-card static p-4">
                                         <label className="section-label text-text-dim mb-2">Cerrado</label>
                                         {p.cerrado ? (
-                                            <span className="badge-vercel badge-vercel-error"><XCircle size={10} /> Cerrado</span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Cerrado
+                                            </span>
                                         ) : (
-                                            <span className="badge-vercel badge-vercel-success"><CheckCircle size={10} /> Abierto</span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Abierto
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -100,9 +108,13 @@ export const ConfiguracionDetailDrawer: React.FC<ConfiguracionDetailDrawerProps>
                                     <div className="bento-card static p-4">
                                         <label className="section-label text-text-dim mb-2">Estado</label>
                                         {c.activo ? (
-                                            <span className="badge-vercel badge-vercel-success"><CheckCircle size={10} /> Activo</span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Activo
+                                            </span>
                                         ) : (
-                                            <span className="badge-vercel badge-vercel-error"><XCircle size={10} /> Inactivo</span>
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" /> Inactivo
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -113,7 +125,10 @@ export const ConfiguracionDetailDrawer: React.FC<ConfiguracionDetailDrawerProps>
                                     </div>
                                     <div className="bento-card static p-4">
                                         <label className="section-label text-text-dim mb-2">Tipo</label>
-                                        <span className="badge-vercel badge-vercel-brand">{c.tipoEvento}</span>
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0070f3]">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
+                                            {c.tipoEvento}
+                                        </span>
                                     </div>
                                     <div className="bento-card static p-4">
                                         <label className="section-label text-text-dim mb-2">Recurrente</label>

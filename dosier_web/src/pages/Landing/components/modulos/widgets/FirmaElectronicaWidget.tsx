@@ -29,15 +29,17 @@ export const FirmaElectronicaWidget: React.FC<FirmaElectronicaWidgetProps> = ({
             <div className="flex-1 flex flex-col justify-center font-mono text-[9px]">
 
                 {/* Folio del Documento Digital Interactivo */}
-                <div className="bg-surface/30 p-2 rounded border border-border-thin/30 text-left font-mono mb-2">
-                    <div className="flex justify-between items-center text-[8.5px] border-b border-border-thin/20 pb-1.5 mb-1">
+                <div className="bg-surface p-2.5 rounded-lg border border-border-thin text-left font-mono mb-2 shadow-sm">
+                    <div className="flex justify-between items-center text-[8.5px] border-b border-border-thin/40 pb-1.5 mb-1.5">
                         <span className="font-bold text-text-main">DOCUMENTO: pea_oficial_2026.pdf</span>
-                        <span className={`text-[7.5px] px-1.5 py-0.5 rounded-full font-bold font-sans uppercase tracking-wider ${signState === 'signed' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning animate-pulse'
-                            }`}>
-                            {signState === 'signed' ? 'FIRMADO' : 'PENDIENTE FIRMA'}
-                        </span>
+                        <div className="flex items-center gap-1.5 font-mono text-[8px]">
+                            <span className={`w-1.5 h-1.5 rounded-full ${signState === 'signed' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
+                            <span className={signState === 'signed' ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-amber-600 dark:text-amber-400 font-medium'}>
+                                {signState === 'signed' ? 'FIRMADO' : 'PENDIENTE'}
+                            </span>
+                        </div>
                     </div>
-                    <div className="space-y-1 opacity-65 text-[7.5px] text-text-dim">
+                    <div className="space-y-1 text-[8px] text-text-dim">
                         <p>ASIGNATURA: Desarrollo de Software - Nivel IV (DOSIER-ISTPET)</p>
                     </div>
                 </div>
@@ -45,14 +47,14 @@ export const FirmaElectronicaWidget: React.FC<FirmaElectronicaWidgetProps> = ({
                 {signState === 'idle' && (
                     <div className="space-y-3">
                         <p className="text-[9px] text-text-dim uppercase tracking-wider font-mono">// DISPOSITIVO DE FIRMA LISTO</p>
-                        <div className="p-3.5 border border-dashed border-border-thin rounded flex items-center justify-center bg-bg-deep/30">
+                        <div className="p-3.5 border border-dashed border-border-thin rounded-lg flex items-center justify-center bg-bg-deep">
                             <span className="text-[9px] text-text-dim/80">Certificado digital p12 cargado.</span>
                         </div>
                         <button
                             onClick={startSigning}
-                            className="w-full py-3 bg-text-main text-bg-deep rounded font-bold font-sans text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+                            className="w-full py-2.5 bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg font-medium font-sans text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
                         >
-                            <Key size={12} />
+                            <Key size={13} strokeWidth={1.5} />
                             Firmar PEA y Sílabo Oficial
                         </button>
                     </div>
@@ -60,18 +62,18 @@ export const FirmaElectronicaWidget: React.FC<FirmaElectronicaWidgetProps> = ({
 
                 {signState === 'scanning' && (
                     <div className="space-y-3">
-                        <div className="relative h-20 border border-brand/20 bg-bg-deep rounded flex flex-col items-center justify-center overflow-hidden">
+                        <div className="relative h-20 border border-[#0070f3]/20 bg-bg-deep rounded-lg flex flex-col items-center justify-center overflow-hidden">
                             <div className="animate-scan-line" />
-                            <Key size={28} className="text-brand/60 animate-pulse" />
-                            <span className="text-[9px] text-brand font-semibold mt-2 tracking-widest animate-pulse">GENERANDO FIRMA CRIPTOGRÁFICA...</span>
+                            <Key size={28} className="text-[#0070f3]/60 animate-pulse" strokeWidth={1.5} />
+                            <span className="text-[9px] text-[#0070f3] font-semibold mt-2 tracking-widest animate-pulse">GENERANDO FIRMA CRIPTOGRÁFICA...</span>
                         </div>
                         <div className="space-y-1">
-                            <div className="flex justify-between text-[9px] text-brand/80 font-mono">
+                            <div className="flex justify-between text-[9px] text-[#0070f3]/80 font-mono">
                                 <span>APLICANDO SELLO CRIPTOGRÁFICO P12</span>
                                 <span>{signProgress}%</span>
                             </div>
-                            <div className="w-full h-1 bg-border-thin rounded-full overflow-hidden">
-                                <div className="h-full bg-brand transition-all duration-75" style={{ width: `${signProgress}%` }} />
+                            <div className="w-full h-1 bg-border-thin rounded-sm overflow-hidden">
+                                <div className="h-full bg-[#0070f3] transition-all duration-75" style={{ width: `${signProgress}%` }} />
                             </div>
                         </div>
                     </div>
@@ -80,21 +82,19 @@ export const FirmaElectronicaWidget: React.FC<FirmaElectronicaWidgetProps> = ({
                 {signState === 'signed' && (
                     <div className="space-y-3 animate-fade-in text-left">
                         {/* Encabezado del Certificado Digital */}
-                        <div className="flex justify-between items-center bg-success/10 border border-success/30 p-2.5 rounded-lg">
+                        <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 p-2.5 rounded-lg">
                             <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-success/20 flex items-center justify-center text-success">
-                                    <Check size={12} strokeWidth={3} className="animate-scale-up" />
-                                </div>
+                                <Check size={16} strokeWidth={2} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                                 <div>
-                                    <p className="text-[9.5px] font-bold text-success font-sans leading-none">CERTIFICACIÓN VÁLIDA</p>
+                                    <p className="text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 font-sans leading-none">CERTIFICACIÓN VÁLIDA</p>
                                     <p className="text-[8px] text-text-dim mt-0.5 font-mono">Banco Central del Ecuador</p>
                                 </div>
                             </div>
                             <button
                                 onClick={resetSignature}
-                                className="text-text-dim hover:text-text-main text-[8.5px] font-mono border border-border-thin px-2 py-1 rounded cursor-pointer transition-all hover:bg-surface/50 active:scale-95 flex items-center gap-1.5 bg-surface/30"
+                                className="text-text-dim hover:text-text-main text-[8.5px] font-mono border border-border-thin px-2 py-1 rounded cursor-pointer transition-all hover:bg-surface active:scale-95 flex items-center gap-1.5 bg-surface"
                             >
-                                <RefreshCw size={10} /> REINICIAR
+                                <RefreshCw size={10} strokeWidth={1.5} /> REINICIAR
                             </button>
                         </div>
 

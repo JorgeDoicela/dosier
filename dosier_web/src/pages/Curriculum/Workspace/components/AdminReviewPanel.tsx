@@ -167,14 +167,13 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
     };
 
     return (
-        <div className="bento-card p-6 rounded-2xl border border-brand/20 bg-brand/[0.01] shadow-md flex flex-col gap-6 animate-fade-in">
+        <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-6 flex flex-col gap-6 shadow-sm animate-fade-in">
             {/* Cabecera */}
-            <div className="border-b border-border pb-4">
+            <div className="border-b border-slate-200/90 dark:border-zinc-800 pb-3">
                 <h3 className="text-xs font-bold text-text-main uppercase tracking-widest flex items-center gap-2">
-                    <Shield size={15} className="text-brand animate-pulse" />
-                    Revisión Técnica Admin
+                    <Shield size={15} className="text-[#0070f3]" />
+                    Revisión Técnica Curricular
                 </h3>
-                <p className="text-[9px] text-text-dim font-bold uppercase tracking-widest mt-1">Control de Calidad e Integridad</p>
             </div>
 
             {/* Checklist de Validación Automatizada */}
@@ -184,18 +183,18 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
                 {/* 2. Equipo Humano */}
                 <div className="flex items-start gap-2.5 text-xs">
                     {isTeamOk ? (
-                        <CheckCircle2 size={14} className="text-success shrink-0 mt-0.5" />
+                        <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     ) : (
-                        <AlertTriangle size={14} className="text-error shrink-0 mt-0.5 animate-pulse" />
+                        <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5 animate-pulse" />
                     )}
                     <div className="flex-1 leading-snug">
-                        <p className="font-semibold text-text-main">Investigadores Registrados</p>
+                        <p className="font-semibold text-text-main">Docentes / Elaboradores Registrados</p>
                         <p className="text-[10px] text-text-dim mt-0.5">
                             {!hasTeam 
-                                ? 'No hay investigadores agregados.' 
+                                ? 'No hay docentes agregados.' 
                                 : !hasPrincipalInvestigator 
-                                    ? 'Falta Director/Investigador Principal.' 
-                                    : `Total: ${investigadores.length} investigadores registrados.`}
+                                    ? 'Falta Docente Principal / Elaborador.' 
+                                    : `Total: ${investigadores.length} docentes registrados.`}
                         </p>
                     </div>
                 </div>
@@ -203,9 +202,9 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
                 {/* 3. Carga Horaria */}
                 <div className="flex items-start gap-2.5 text-xs">
                     {isHoursOk ? (
-                        <CheckCircle2 size={14} className="text-success shrink-0 mt-0.5" />
+                        <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     ) : (
-                        <AlertTriangle size={14} className="text-warning shrink-0 mt-0.5 animate-pulse" />
+                        <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5 animate-pulse" />
                     )}
                     <div className="flex-1 leading-snug">
                         <p className="font-semibold text-text-main">Carga Horaria Docente</p>
@@ -219,7 +218,7 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
 
                 {/* 4. Sello Digital */}
                 <div className="flex items-start gap-2.5 text-xs">
-                    <CheckCircle2 size={14} className="text-success shrink-0 mt-0.5" />
+                    <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <div className="flex-1 leading-snug">
                         <p className="font-semibold text-text-main">Firma e Inmutabilidad</p>
                         <p className="text-[10px] text-text-dim mt-0.5">
@@ -244,11 +243,11 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
             </div>
 
             {/* Acciones */}
-            <div className="flex flex-col gap-2 pt-2 border-t border-border-thin/40">
+            <div className="flex flex-col gap-2 pt-2 border-t border-slate-200/90 dark:border-zinc-800">
                 <button
                     onClick={handleAprobar}
                     disabled={submitting}
-                    className="w-full flex items-center justify-center gap-1.5 btn-vercel-primary py-2.5 text-[10px] font-bold uppercase tracking-wider disabled:opacity-40"
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold rounded-lg uppercase tracking-wider bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm transition-all disabled:opacity-40 cursor-pointer"
                 >
                     {submitting ? <Loader2 size={12} className="animate-spin" /> : <Scale size={12} />}
                     Aprobar Revisión Técnica
@@ -257,7 +256,7 @@ export const AdminReviewPanel: React.FC<AdminReviewPanelProps> = ({
                 <button
                     onClick={handleDevolver}
                     disabled={submitting || !feedback.trim()}
-                    className="w-full flex items-center justify-center gap-1.5 bg-transparent hover:bg-error/10 text-error border border-error/20 hover:border-error/40 rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-40"
+                    className="w-full flex items-center justify-center gap-1.5 bg-transparent hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40 rounded-lg py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-40 cursor-pointer"
                 >
                     {submitting ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
                     Devolver para Correcciones

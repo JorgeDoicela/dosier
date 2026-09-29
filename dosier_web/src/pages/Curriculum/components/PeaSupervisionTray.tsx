@@ -141,32 +141,38 @@ export const PeaSupervisionTray: React.FC = () => {
             case 'Publicado':
                 return {
                     label: 'Aprobado Institucional',
-                    className: 'badge-vercel-success'
+                    dotClass: 'bg-emerald-500',
+                    textClass: 'text-emerald-600 dark:text-emerald-400'
                 };
             case 'RevisadoAcad':
                 return {
                     label: 'Aval Académico',
-                    className: 'badge-vercel-info'
+                    dotClass: 'bg-[#0070f3]',
+                    textClass: 'text-[#0070f3] dark:text-blue-400'
                 };
             case 'RevisadoCoord':
                 return {
                     label: 'Aval Carrera',
-                    className: 'badge-vercel-info'
+                    dotClass: 'bg-blue-500',
+                    textClass: 'text-blue-600 dark:text-blue-400'
                 };
             case 'EnRevision':
                 return {
                     label: 'En Revisión',
-                    className: 'badge-vercel-warning'
+                    dotClass: 'bg-amber-500',
+                    textClass: 'text-amber-600 dark:text-amber-400'
                 };
             case 'Observado':
                 return {
                     label: 'Con Observaciones',
-                    className: 'badge-vercel-error'
+                    dotClass: 'bg-rose-500',
+                    textClass: 'text-rose-600 dark:text-rose-400'
                 };
             default:
                 return {
                     label: 'Borrador Docente',
-                    className: 'badge-vercel-neutral'
+                    dotClass: 'bg-zinc-400 dark:bg-zinc-500',
+                    textClass: 'text-zinc-600 dark:text-zinc-400'
                 };
         }
     };
@@ -272,8 +278,8 @@ export const PeaSupervisionTray: React.FC = () => {
 
             {/* ── ESTADOS DE CARGA Y ERROR ── */}
             {error && (
-                <div className="badge-vercel-error !rounded-xl !p-4 text-sm flex items-center gap-3">
-                    <AlertCircle size={18} />
+                <div className="p-4 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-sm flex items-center gap-3">
+                    <AlertCircle size={18} className="shrink-0 text-rose-600 dark:text-rose-400" />
                     <span>{error}</span>
                 </div>
             )}
@@ -299,24 +305,26 @@ export const PeaSupervisionTray: React.FC = () => {
                         return (
                             <div
                                 key={pea.uuid}
-                                className="bg-surface hover:bg-surface-hover/50 p-4 rounded-xl border border-border-thin transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                                className="bg-surface hover:bg-slate-50 dark:hover:bg-zinc-850/50 p-4 rounded-lg border border-slate-200/90 dark:border-zinc-800 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
                             >
                                 {/* Bloque de Asignatura y Carrera */}
                                 <div className="space-y-1.5 flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <h3 className="text-sm font-bold text-text-main tracking-tight truncate">
+                                    <div className="flex flex-wrap items-center gap-2.5">
+                                        <h3 className="text-sm font-semibold text-text-main tracking-tight truncate">
                                             {pea.nombre_asignatura}
                                         </h3>
                                         {pea.codigo_asignatura && (
-                                            <span className="font-mono text-[10.5px] px-1.5 py-0.5 bg-bg-deep rounded text-text-dim border border-border-thin">
+                                            <span className="font-mono text-xs text-text-dim">
                                                 {pea.codigo_asignatura}
                                             </span>
                                         )}
-                                        <span className={badge.className}>
+                                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${badge.textClass}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
                                             {badge.label}
                                         </span>
                                         {pea.total_observaciones_pendientes > 0 && (
-                                            <span className="badge-vercel-error !text-[10px]">
+                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                                 {pea.total_observaciones_pendientes} Obs. Pendiente{pea.total_observaciones_pendientes > 1 ? 's' : ''}
                                             </span>
                                         )}
@@ -324,7 +332,7 @@ export const PeaSupervisionTray: React.FC = () => {
 
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-dim">
                                         <span className="flex items-center gap-1 font-medium text-text-main/80">
-                                            <GraduationCap size={13} className="text-brand" />
+                                            <GraduationCap size={13} className="text-[#0070f3]" />
                                             {pea.nombre_carrera}
                                         </span>
                                         <span>•</span>
@@ -346,42 +354,46 @@ export const PeaSupervisionTray: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Circuito de 4 Firmas (Stepper Compacto) */}
-                                <div className="flex items-center gap-1.5 shrink-0 bg-bg-deep px-3 py-2 rounded-lg border border-border-thin text-[10.5px]">
-                                    <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider mr-1">Circuito:</span>
+                                {/* Circuito de 4 Firmas (Puntos Discretos, Cero Cápsulas) */}
+                                <div className="flex items-center gap-2 shrink-0 bg-slate-50 dark:bg-zinc-900/60 px-3 py-1.5 rounded-md border border-slate-200/90 dark:border-zinc-800 text-xs">
+                                    <span className="text-[11px] font-medium text-text-dim uppercase tracking-wider mr-1">Circuito:</span>
                                     
                                     {/* 1. Docente */}
                                     <span
                                         title={pea.firma_docente ? `Elaborado por Docente (${pea.fecha_elaborado || 'Firmado'})` : 'Pendiente firma docente'}
-                                        className={`px-2 py-0.5 rounded font-medium ${pea.firma_docente ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-text-dim/60 line-through'}`}
+                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_docente ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60 line-through'}`}
                                     >
+                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_docente ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                                         Docente
                                     </span>
-                                    <ChevronRight size={10} className="text-text-dim/40" />
+                                    <ChevronRight size={11} className="text-text-dim/40" />
 
                                     {/* 2. Coordinador de Carrera */}
                                     <span
                                         title={pea.firma_coord ? `Revisado por Coordinación de Carrera (${pea.fecha_revisado_coord || 'Firmado'})` : 'Pendiente revisión coordinador'}
-                                        className={`px-2 py-0.5 rounded font-medium ${pea.firma_coord ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-text-dim/60'}`}
+                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_coord ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60'}`}
                                     >
+                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_coord ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                                         Coord. Carrera
                                     </span>
-                                    <ChevronRight size={10} className="text-text-dim/40" />
+                                    <ChevronRight size={11} className="text-text-dim/40" />
 
                                     {/* 3. Coordinador Académico */}
                                     <span
                                         title={pea.firma_acad ? `Aprobado por Coordinación Académica (${pea.fecha_revisado_acad || 'Firmado'})` : 'Pendiente aval académico'}
-                                        className={`px-2 py-0.5 rounded font-medium ${pea.firma_acad ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-text-dim/60'}`}
+                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_acad ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60'}`}
                                     >
+                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_acad ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                                         Coord. Acad.
                                     </span>
-                                    <ChevronRight size={10} className="text-text-dim/40" />
+                                    <ChevronRight size={11} className="text-text-dim/40" />
 
                                     {/* 4. Vicerrectorado */}
                                     <span
                                         title={pea.firma_vicerrector ? `Legalizado por Vicerrectorado (${pea.fecha_aprobado || 'Firmado'})` : 'Pendiente legalización vicerrectorado'}
-                                        className={`px-2 py-0.5 rounded font-medium ${pea.firma_vicerrector ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-text-dim/60'}`}
+                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_vicerrector ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60'}`}
                                     >
+                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_vicerrector ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
                                         Vicerrector
                                     </span>
                                 </div>
@@ -390,7 +402,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 <div className="flex items-center gap-2 shrink-0">
                                     <button
                                         onClick={() => handleAbrirPea(pea.uuid)}
-                                        className="btn-vercel-primary h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-lg font-semibold cursor-pointer"
+                                        className="h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-md font-medium text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer"
                                     >
                                         <Eye size={13} />
                                         <span>Revisar PEA</span>

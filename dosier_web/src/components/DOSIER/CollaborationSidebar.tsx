@@ -545,12 +545,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         const chatComments = comments.filter(c => parseAuditComment(c.contenido) === null);
                                         if (chatComments.length === 0) {
                                             return (
-                                                <div className="text-center py-12 opacity-50 flex flex-col items-center justify-center">
-                                                    <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
-                                                        <MessageSquare size={20} className="text-text-dim" />
-                                                    </div>
-                                                    <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Sin comentarios aún</p>
-                                                    <p className="text-[8px] text-text-dim mt-1 max-w-[150px] leading-relaxed">Escribe un mensaje para coordinar la redacción.</p>
+                                                <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
+                                                    <MessageSquare size={24} className="text-text-dim mb-2" />
+                                                    <p className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Sin comentarios aún</p>
+                                                    <p className="text-xs text-text-dim mt-1 max-w-[180px] leading-relaxed">Escribe un mensaje para coordinar la redacción.</p>
                                                 </div>
                                             );
                                         }
@@ -809,12 +807,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         {activeTab === 'activity' && (
                             <div>
                                 {activities.length === 0 ? (
-                                    <div className="text-center py-12 opacity-50 flex flex-col items-center justify-center">
-                                        <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
-                                            <Activity size={20} className="text-text-dim" />
-                                        </div>
-                                        <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Esperando actividad...</p>
-                                        <p className="text-[8px] text-text-dim mt-1 max-w-[150px] leading-relaxed">Los movimientos del equipo aparecerán en este panel en tiempo real.</p>
+                                    <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
+                                        <Activity size={24} className="text-text-dim mb-2" />
+                                        <p className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Esperando actividad...</p>
+                                        <p className="text-xs text-text-dim mt-1 max-w-[180px] leading-relaxed">Los movimientos del equipo aparecerán en este panel en tiempo real.</p>
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-border-thin/40 border-y border-border-thin/40">
@@ -846,20 +842,20 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             <div className="flex flex-col h-full flex-1 overflow-hidden space-y-5">
                                 {/* Observación General del Administrador y Plazo */}
                                 {ultimaObservacion && (
-                                    <div className="p-4 rounded-xl border border-error/20 bg-error/[0.02] space-y-2.5 animate-fade-in shadow-inner">
+                                    <div className="p-4 rounded-lg border border-rose-500/20 bg-rose-500/[0.02] space-y-2.5 animate-fade-in">
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-2">
-                                                <Shield size={13} className="text-error shrink-0" />
-                                                <span className="text-[10px] font-black text-error uppercase tracking-widest block">Observación General del Administrador</span>
+                                                <Shield size={14} className="text-rose-500 shrink-0" />
+                                                <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">Observación General del Administrador</span>
                                             </div>
                                         </div>
-                                        <p className="text-[11px] text-text-main font-medium italic font-mono leading-relaxed break-words pl-5">
+                                        <p className="text-xs text-text-main font-medium italic font-mono leading-relaxed break-words pl-5">
                                             "{ultimaObservacion}"
                                         </p>
                                         {deadlineBadge && (
-                                            <div className={`mt-2 flex items-center justify-between px-3 py-2 rounded-lg border text-[10px] font-mono font-bold ${deadlineBadge.colorClass}`}>
+                                            <div className={`mt-2 flex items-center justify-between px-3 py-2 rounded-md border text-xs font-mono font-medium ${deadlineBadge.colorClass}`}>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Clock size={12} className="shrink-0" />
+                                                    <Clock size={13} className="shrink-0" />
                                                     <span>{deadlineBadge.text}</span>
                                                 </div>
                                                 <span className="opacity-80">{deadlineBadge.date}</span>
@@ -871,8 +867,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                 {/* Checklist de correcciones por sección */}
                                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                                     <div className="pb-1.5 border-b border-border-thin flex justify-between items-center">
-                                        <h4 className="text-[9px] font-black text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
-                                        <span className="text-[8px] font-mono font-bold text-text-dim/60">
+                                        <h4 className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Ajustes Solicitados</h4>
+                                        <span className="text-xs font-mono text-text-dim/60">
                                             {comments.filter(c => parseAuditComment(c.contenido) !== null).length} Observaciones
                                         </span>
                                     </div>
@@ -885,11 +881,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         if (auditItems.length === 0) {
                                             return (
                                                 <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
-                                                    <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
-                                                        <CheckCircle size={20} className="text-success" />
-                                                    </div>
-                                                    <p className="text-[9px] font-bold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
-                                                    <p className="text-[8px] text-text-dim mt-1 max-w-[180px] leading-relaxed">El administrador no ha registrado observaciones específicas en los campos del protocolo.</p>
+                                                    <CheckCircle size={24} className="text-emerald-500 mb-2" />
+                                                    <p className="text-[10px] font-semibold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
+                                                    <p className="text-xs text-text-dim mt-1 max-w-[180px] leading-relaxed">El administrador no ha registrado observaciones específicas en los campos del protocolo.</p>
                                                 </div>
                                             );
                                         }
@@ -899,16 +893,19 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                 {auditItems.map((item, idx) => {
                                                     const isAprobado = item.audit.estado === 'Aprobado';
                                                     return (
-                                                        <div key={idx} className="p-3.5 rounded-2xl border border-border-thin bg-surface hover:border-border-hover transition-all space-y-2 shadow-sm">
+                                                        <div key={idx} className="p-3.5 rounded-lg border border-slate-200/90 dark:border-zinc-800 bg-surface space-y-2">
                                                             <div className="flex justify-between items-center gap-2">
-                                                                <span className="text-[9px] font-black text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
+                                                                <span className="text-xs font-medium text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
                                                                     {item.audit.seccion}
                                                                 </span>
-                                                                <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 ${
+                                                                 <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-medium ${
                                                                     isAprobado 
-                                                                        ? 'bg-success/15 text-success border border-success/20' 
-                                                                        : 'bg-warning/15 text-warning border border-warning/20'
+                                                                        ? 'text-emerald-600 dark:text-emerald-400' 
+                                                                        : 'text-amber-600 dark:text-amber-400'
                                                                 }`}>
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                                                        isAprobado ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                    }`} />
                                                                     {item.audit.estado}
                                                                 </span>
                                                             </div>

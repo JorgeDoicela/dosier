@@ -26,7 +26,7 @@ const ConfiguracionPage: React.FC<ConfiguracionPageProps> = ({ embedded = false 
     } | null>(null);
 
     return (
-        <main className={`flex-1 ${embedded ? '' : 'bg-bg-deep p-4 md:p-10 overflow-y-auto'}`}>
+        <main className={`flex-1 ${embedded ? '' : 'bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto'}`}>
             <header className={`flex flex-col lg:flex-row ${embedded ? 'justify-end mb-6' : 'justify-between mb-10 lg:mb-16'} items-start lg:items-end animate-fade-up gap-8 lg:gap-0`}>
                 {!embedded && (
                     <div className="space-y-2">

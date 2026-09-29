@@ -15,7 +15,6 @@ import {
     BarChart3,
     ShieldCheck,
     FileDown,
-    PenTool,
     Bell,
     ListChecks,
     Mail,
@@ -257,14 +256,30 @@ function usuarioToItem(u: any): SearchItem {
     };
 }
 
-const getBadgeClass = (badge?: string) => {
-    if (!badge) return '';
+const renderItemBadge = (badge?: string) => {
+    if (!badge) return null;
     const lower = badge.toLowerCase();
-    if (lower.includes('aprobado') || lower.includes('finalizado') || lower.includes('activa')) return 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-success/10 text-success border border-success/20';
-    if (lower.includes('revisión') || lower.includes('revision') || lower.includes('enviado')) return 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-warning/10 text-warning border border-warning/20';
-    if (lower.includes('rechazado') || lower.includes('cerrada')) return 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-error/10 text-error border border-error/20';
-    if (lower.includes('ejecución') || lower.includes('ejecucion')) return 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-brand/10 text-brand border border-brand/20';
-    return 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-surface text-text-dim border border-border-thin';
+    let dotColor = 'bg-zinc-400';
+    let textColor = 'text-zinc-500';
+    if (lower.includes('aprobado') || lower.includes('finalizado') || lower.includes('activa')) {
+        dotColor = 'bg-emerald-500';
+        textColor = 'text-emerald-600 dark:text-emerald-400';
+    } else if (lower.includes('revisión') || lower.includes('revision') || lower.includes('enviado')) {
+        dotColor = 'bg-amber-500';
+        textColor = 'text-amber-600 dark:text-amber-400';
+    } else if (lower.includes('rechazado') || lower.includes('cerrada')) {
+        dotColor = 'bg-red-500';
+        textColor = 'text-red-600 dark:text-red-400';
+    } else if (lower.includes('ejecución') || lower.includes('ejecucion')) {
+        dotColor = 'bg-[#0070f3]';
+        textColor = 'text-[#0070f3]';
+    }
+    return (
+        <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0 ${textColor}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+            <span>{badge}</span>
+        </span>
+    );
 };
 
 const CommandPaletteItem = React.memo(({
@@ -292,20 +307,14 @@ const CommandPaletteItem = React.memo(({
             className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 group ${
                 globalIdx === 0 ? 'scroll-mt-10' : ''
             } ${isActive
-                    ? 'bg-surface-hover text-text-main'
-                    : 'hover:bg-surface/50 text-text-dim'
+                    ? 'bg-zinc-100 dark:bg-zinc-900 text-text-main'
+                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/60 text-text-dim'
                 }`}
             onMouseEnter={() => onMouseEnter(globalIdx)}
             onClick={() => onClick(item)}
         >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-all duration-100 ${
-                    isActive
-                        ? 'bg-bg-deep border border-border-thin shadow-sm text-text-main'
-                        : 'text-text-dim group-hover:text-text-main'
-                }`}>
-                    <Icon size={13} strokeWidth={isActive ? 2 : 1.5} />
-                </div>
+                <Icon size={15} strokeWidth={1.5} className={isActive ? 'text-[#0070f3] shrink-0' : 'text-text-dim shrink-0'} />
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <HighlightedText
@@ -314,11 +323,7 @@ const CommandPaletteItem = React.memo(({
                             className={`text-[13px] font-medium truncate transition-colors ${isActive ? 'text-text-main' : ''}`}
                             highlightClass="text-text-main font-bold"
                         />
-                        {item.badge && (
-                            <span className={`shrink-0 ${getBadgeClass(item.badge)}`}>
-                                {item.badge}
-                            </span>
-                        )}
+                        {renderItemBadge(item.badge)}
                     </div>
                     {item.description && (
                         <span className={`text-[11px] truncate block transition-colors ${isActive ? 'text-text-dim' : 'text-text-dim/50'}`}>
@@ -421,7 +426,7 @@ export const CommandPalette = () => {
         };
 
         preloadData();
-    }, [isOpen, isAdmin, isRevisor]);
+    }, [isOpen, isAdmin]);
 
     // ── Live search for database-heavy items (Users, Groups) ──────────────────
 
@@ -641,11 +646,11 @@ export const CommandPalette = () => {
             onClick={() => setTimeout(() => setIsOpen(false), 0)}
         >
             <div
-                className="w-full max-w-[580px] bg-bg-deep border border-border-thin rounded-xl overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.7)] animate-in fade-in zoom-in-95 duration-150"
+                className="w-full max-w-[580px] bg-white dark:bg-zinc-950 border border-slate-200/90 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Search input */}
-                <div className="flex items-center px-4 py-3.5 border-b border-border-thin gap-3">
+                <div className="flex items-center px-4 py-3.5 border-b border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 gap-3">
                     {isLoadingLive || isLoadingPreload
                         ? <Loader2 size={15} className="text-text-dim shrink-0 animate-spin" />
                         : <Search size={15} className="text-text-dim shrink-0" />
@@ -730,7 +735,7 @@ export const CommandPalette = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-2.5 border-t border-border-thin flex items-center justify-between">
+                <div className="px-4 py-2.5 border-t border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between">
                     <div className="flex items-center gap-3 text-[10px] text-text-dim/50">
                         <span className="flex items-center gap-1"><kbd className="font-mono">↑↓</kbd> navegar</span>
                         <span className="flex items-center gap-1"><kbd className="font-mono">↵</kbd> abrir</span>

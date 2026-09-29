@@ -178,14 +178,15 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                 {isAuditActive ? (
                     <button
                         onClick={onOpenFinalizeModal}
-                        className="px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-brand text-white hover:bg-brand/90 shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                        className="px-3.5 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                     >
                         <Scale size={12} />
                         Emitir Dictamen
                     </button>
                 ) : (
-                    <span className="px-2.5 py-1 rounded-xl text-[9px] font-bold uppercase tracking-wider bg-surface border border-border-thin text-text-dim flex items-center gap-1.5 font-mono shadow-2xs">
-                        Consulta
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-dim">
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                        Modo Consulta
                     </span>
                 )}
             </div>

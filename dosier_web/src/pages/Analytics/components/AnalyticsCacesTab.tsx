@@ -18,12 +18,6 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
 }) => {
     const selectedInd = cacesIndicators.find(i => i.code === activeCacesCode) || cacesIndicators[0];
 
-    const statusBadge = {
-        CUMPLIDO: 'badge-vercel-success',
-        'EN PROCESO': 'badge-vercel-warning',
-        ALERTA: 'badge-vercel-error'
-    }[selectedInd.status] || 'badge-vercel-neutral';
-
     const progressColor = {
         CUMPLIDO: 'text-success',
         'EN PROCESO': 'text-warning',
@@ -41,10 +35,10 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
 
     return (
         <div className="space-y-6 animate-fade-up">
-            <div className="p-4 bg-brand/5 border border-brand/20 rounded-2xl flex items-start gap-3">
-                <AlertCircle size={16} className="text-brand mt-0.5 shrink-0" />
+            <div className="p-4 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 rounded-lg flex items-start gap-3">
+                <AlertCircle size={16} className="text-[#0070f3] mt-0.5 shrink-0" />
                 <div className="space-y-1">
-                    <h4 className="text-xs font-semibold uppercase text-brand tracking-widest">Modelos de Evaluación del CACES</h4>
+                    <h4 className="text-xs font-semibold uppercase text-text-main tracking-wider">Modelos de Evaluación del CACES</h4>
                     <p className="text-xs text-text-dim leading-relaxed font-medium">
                         Análisis dinámico de cumplimiento de estándares del Consejo de Aseguramiento de la Calidad de la Educación Superior (CACES) calculados a partir de los datos en tiempo real del sistema.
                     </p>
@@ -56,49 +50,43 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                 
                 {/* Menú Lateral Izquierdo: Lista de Estándares */}
                 <div className="space-y-2 lg:col-span-1">
-                    <span className="text-[9px] font-medium uppercase tracking-widest text-text-dim block mb-3 pl-1 font-mono">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-text-dim block mb-3 pl-1 font-mono">
                         Estándares de Evaluación
                     </span>
                     {cacesIndicators.map((ind) => {
                         const isActive = activeCacesCode === ind.code;
                         const barColor = {
-                            CUMPLIDO: 'bg-success',
-                            'EN PROCESO': 'bg-warning',
-                            ALERTA: 'bg-error'
-                        }[ind.status] || 'bg-text-dim';
-
-                        const badgeColor = {
-                            CUMPLIDO: 'text-success bg-success/10 border-success/20',
-                            'EN PROCESO': 'text-warning bg-warning/10 border-warning/20',
-                            ALERTA: 'text-error bg-error/10 border-error/20'
-                        }[ind.status] || 'text-text-dim bg-surface border-border-thin';
+                            CUMPLIDO: 'bg-emerald-500',
+                            'EN PROCESO': 'bg-amber-500',
+                            ALERTA: 'bg-rose-500'
+                        }[ind.status] || 'bg-zinc-400';
 
                         return (
                             <button
                                 key={ind.code}
                                 onClick={() => setActiveCacesCode(ind.code)}
-                                className={`w-full text-left p-3.5 rounded-xl border transition-all duration-200 select-none group flex flex-col gap-2.5 relative overflow-hidden ${
+                                className={`w-full text-left p-3 rounded-lg border transition-colors select-none group flex flex-col gap-2 relative overflow-hidden ${
                                     isActive 
-                                        ? 'bg-surface border-brand shadow-sm scale-102 z-10' 
-                                        : 'bg-surface/40 hover:bg-surface/80 border-border-thin hover:border-text-dim/30'
+                                        ? 'bg-surface border-[#0070f3] ring-1 ring-[#0070f3]/20 shadow-sm' 
+                                        : 'bg-surface hover:bg-slate-50 dark:hover:bg-zinc-850/50 border-slate-200/90 dark:border-zinc-800'
                                 }`}
                             >
                                 {isActive && (
-                                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-brand" />
+                                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-[#0070f3]" />
                                 )}
                                 <div className="flex items-center justify-between gap-2 w-full">
-                                    <span className="text-[10px] font-medium font-mono text-text-dim">
+                                    <span className="text-xs font-mono text-text-dim">
                                         {ind.code}
                                     </span>
-                                    <span className={`text-[8.5px] font-medium px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                    <span className="text-xs font-mono text-text-main">
                                         {ind.progress}%
                                     </span>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <h5 className="text-[11px] font-medium text-text-main group-hover:text-brand transition-colors line-clamp-1">
+                                    <h5 className="text-xs font-medium text-text-main group-hover:text-[#0070f3] transition-colors line-clamp-1">
                                         {ind.name}
                                     </h5>
-                                    <div className="w-full bg-border-thin/35 h-1 rounded-full overflow-hidden">
+                                    <div className="w-full bg-slate-100 dark:bg-zinc-800 h-1 rounded-full overflow-hidden">
                                         <div 
                                             className={`h-full rounded-full ${barColor}`} 
                                             style={{ width: `${ind.progress}%` }} 
@@ -111,26 +99,39 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                 </div>
 
                 {/* Panel Central de Detalle y Gráficos Visuales */}
-                <div className="lg:col-span-3 bento-card static p-6 flex flex-col justify-between h-auto min-h-[400px] bg-surface border border-border-thin shadow-sm rounded-xl">
+                <div className="lg:col-span-3 p-6 flex flex-col justify-between h-auto min-h-[400px] bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg">
                     <div className="space-y-6">
                         {/* Header Detalle */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-thin/50 pb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/90 dark:border-zinc-800 pb-4">
                             <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-medium font-mono text-brand uppercase tracking-wider">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xs font-mono text-text-dim">
                                         Estándar {selectedInd.code}
                                     </span>
-                                    <span className={`badge-vercel ${statusBadge}`}>
+                                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                                        selectedInd.status === 'CUMPLIDO'
+                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                            : selectedInd.status === 'EN PROCESO'
+                                                ? 'text-amber-600 dark:text-amber-400'
+                                                : 'text-rose-600 dark:text-rose-400'
+                                    }`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${
+                                            selectedInd.status === 'CUMPLIDO'
+                                                ? 'bg-emerald-500'
+                                                : selectedInd.status === 'EN PROCESO'
+                                                    ? 'bg-amber-500'
+                                                    : 'bg-rose-500'
+                                        }`} />
                                         {selectedInd.status}
                                     </span>
                                 </div>
-                                <h3 className="text-lg font-medium text-text-main leading-snug">
+                                <h3 className="text-base font-semibold text-text-main leading-snug">
                                     {selectedInd.name}
                                 </h3>
                             </div>
-                            <div className="text-left sm:text-right shrink-0 bg-bg-deep/50 border border-border-thin px-4 py-2 rounded-xl">
-                                <span className="text-[8px] font-medium uppercase text-text-dim block tracking-wider">Cumplimiento Global</span>
-                                <span className={`text-2xl font-medium font-mono ${progressColor}`}>{selectedInd.progress}%</span>
+                            <div className="text-left sm:text-right shrink-0 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 px-3.5 py-2 rounded-md">
+                                <span className="text-[10px] font-medium uppercase text-text-dim block tracking-wider">Cumplimiento Global</span>
+                                <span className={`text-xl font-semibold font-mono ${progressColor}`}>{selectedInd.progress}%</span>
                             </div>
                         </div>
 
@@ -140,7 +141,7 @@ export const AnalyticsCacesTab: React.FC<AnalyticsCacesTabProps> = ({
                         </p>
 
                         {/* Gráfico SVG de Cumplimiento */}
-                        <div className="p-5 bg-bg-deep/30 border border-border-thin/40 rounded-2xl flex flex-col md:flex-row items-center justify-around gap-6 select-none animate-fade-up">
+                        <div className="p-5 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-200/90 dark:border-zinc-800 rounded-lg flex flex-col md:flex-row items-center justify-around gap-6 select-none animate-fade-up">
                             {/* SVG Circular de Cumplimiento */}
                             <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">

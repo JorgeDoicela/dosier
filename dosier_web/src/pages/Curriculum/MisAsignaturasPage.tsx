@@ -479,7 +479,7 @@ export const MisAsignaturasPage: React.FC = () => {
                                     {tienePea ? (
                                         <button
                                             onClick={() => handleContinuarPea(materia)}
-                                            className="btn-vercel-primary inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                                            className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                                         >
                                             <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
                                             <ArrowRight className="w-3.5 h-3.5" />
@@ -488,7 +488,7 @@ export const MisAsignaturasPage: React.FC = () => {
                                         <button
                                             onClick={() => handleCrearPea(materia)}
                                             disabled={isCreating}
-                                            className="btn-vercel-primary inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all"
+                                            className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                         >
                                             {isCreating ? (
                                                 <>

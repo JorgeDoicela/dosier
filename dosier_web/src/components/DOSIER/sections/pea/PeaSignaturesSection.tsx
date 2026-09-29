@@ -108,17 +108,19 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                             className="rounded-xl border border-border-thin bg-surface p-4 flex flex-col justify-between shadow-xs space-y-4 hover:border-brand/30 transition-colors"
                         >
                             {/* Rol y Estado */}
-                            <div className="border-b border-border-thin pb-2 flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-text-main">
+                            <div className="border-b border-slate-200/90 dark:border-zinc-800 pb-2 flex items-center justify-between">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-text-main">
                                     {rol.etiqueta}
                                 </span>
                                 {rol.firmado ? (
-                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                                        <CheckCircle2 size={11} /> Firmado
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        Firmado
                                     </span>
                                 ) : (
-                                    <span className="inline-flex items-center gap-1 text-[9px] font-medium text-text-dim bg-bg-deep px-2 py-0.5 rounded-full">
-                                        <Clock size={11} /> Pendiente
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-dim">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-600" />
+                                        Pendiente
                                     </span>
                                 )}
                             </div>

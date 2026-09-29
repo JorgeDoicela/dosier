@@ -19,13 +19,6 @@ export const KPICard: React.FC<KPICardProps> = ({
     accentColor = 'brand',
     footerItems
 }) => {
-    const badgeClass = {
-        brand: 'badge-vercel-info',
-        success: 'badge-vercel-success',
-        warning: 'badge-vercel-warning',
-        violet: 'badge-vercel-violet'
-    }[accentColor] || 'badge-vercel-neutral';
-
     const iconBgClass = {
         brand: 'bg-brand-subtle text-brand border border-brand/10',
         success: 'bg-success-subtle text-success border border-success/10',
@@ -43,11 +36,12 @@ export const KPICard: React.FC<KPICardProps> = ({
             </div>
             
             <div className="space-y-1">
-                <h3 className="text-2xl font-bold tracking-tight text-text-main font-sans">{value}</h3>
+                <h3 className="text-2xl font-semibold tracking-tight text-text-main font-sans">{value}</h3>
                 {subText && (
-                    <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-text-dim uppercase">
+                    <div className="flex items-center gap-1.5 mt-1 text-[10px] font-mono text-text-dim uppercase">
                         {badgeText && (
-                            <span className={`badge-vercel ${badgeClass} scale-90 -ml-1`}>
+                            <span className="inline-flex items-center gap-1 text-[#0070f3]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
                                 {badgeText}
                             </span>
                         )}

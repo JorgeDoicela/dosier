@@ -275,10 +275,10 @@ const Roles: React.FC = () => {
             </div>
 
             {/* Panel Principal Dashboard Rediseñado */}
-            <div className="border border-border-thin rounded-xl bg-surface/35 shadow-xl font-sans relative overflow-hidden backdrop-blur-sm flex flex-col md:flex-row min-h-[480px]">
+            <div className="border border-border-thin rounded-xl bg-surface shadow-xl font-sans relative overflow-hidden flex flex-col md:flex-row min-h-[480px]">
                 
                 {/* Lateral: Selector de Roles */}
-                <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border-thin bg-surface/50 p-2.5 flex flex-col gap-1.5 shrink-0">
+                <div className="w-full md:w-56 border-b md:border-b-0 md:border-r border-border-thin bg-surface p-2.5 flex flex-col gap-1.5 shrink-0">
                     {ROLES_DATA.map((item, idx) => {
                         const Icon = item.icon;
                         const isSelected = activeRole === idx;
@@ -301,15 +301,11 @@ const Roles: React.FC = () => {
                                 }}
                                 className={`w-full flex items-center gap-2.5 py-2 px-2.5 rounded-md text-left transition-all duration-200 cursor-pointer ${
                                     isSelected 
-                                        ? 'bg-brand-subtle border border-brand/20 text-brand shadow-[0_2px_10px_rgba(0,112,243,0.04)] font-semibold scale-[1.01]' 
-                                        : 'hover:bg-surface-hover/60 border border-transparent text-text-dim hover:text-text-main hover:translate-x-0.5'
+                                        ? 'bg-blue-50/60 dark:bg-[#0070f3]/10 border border-[#0070f3]/30 text-[#0070f3] font-semibold' 
+                                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/60 border border-transparent text-text-dim hover:text-text-main'
                                 }`}
                             >
-                                <div className={`p-1 rounded border transition-colors ${
-                                    isSelected ? 'bg-brand/10 border-brand/35 text-brand' : 'bg-bg-deep border-border-thin text-text-dim'
-                                }`}>
-                                    <Icon size={13} strokeWidth={1.5} />
-                                </div>
+                                <Icon size={15} strokeWidth={1.5} className={isSelected ? 'text-[#0070f3] shrink-0' : 'text-text-dim shrink-0'} />
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-[10.5px] md:text-[11.5px] tracking-tight truncate leading-none font-medium">
                                         {item.role}
@@ -326,13 +322,14 @@ const Roles: React.FC = () => {
                     {/* Info de Rol & Badges de Permisos */}
                     <div className="space-y-2.5">
                         <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2.5">
                                 <h3 className="text-[13px] md:text-[14px] font-bold text-text-main">
                                     {ROLES_DATA[activeRole].role}
                                 </h3>
-                                <span className="text-[8.5px] md:text-[9px] font-mono px-1.5 py-0.5 border border-brand/20 bg-brand-subtle text-brand rounded-full uppercase font-bold">
-                                    Nivel 0{activeRole + 1}
-                                </span>
+                                <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#0070f3]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
+                                    <span>Nivel 0{activeRole + 1}</span>
+                                </div>
                             </div>
                             <p className="text-[11px] md:text-[11.5px] text-text-dim leading-relaxed max-w-2xl">
                                 {ROLES_DATA[activeRole].desc}

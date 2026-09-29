@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-    MessageSquare,
     CheckCircle2,
     Send,
     Mic,
@@ -170,9 +169,7 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
                                 >
                                     <div className="flex items-center justify-between border-b border-border-thin/40 pb-2">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center text-[9px] font-bold">
-                                                <Shield size={11} />
-                                            </div>
+                                            <Shield size={14} className="text-amber-500 shrink-0" strokeWidth={1.5} />
                                             <span className="text-[10px] font-bold text-text-main font-mono">
                                                 {com.nombreUsuario || 'Revisor'}
                                             </span>
@@ -211,7 +208,7 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
                                         </div>
                                     </div>
 
-                                    <p className="text-xs text-text-main font-mono leading-relaxed break-words bg-bg-deep/50 p-2.5 rounded-lg border border-border-thin/30">
+                                    <p className="text-xs text-text-main font-mono leading-relaxed break-words bg-bg-deep p-2.5 rounded-lg border border-border-thin">
                                         {com.text}
                                     </p>
                                 </div>
@@ -232,7 +229,7 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
 
                 {/* Input de Feedback Inferior (solo administradores / revisores activos) */}
                 {!readOnly && (
-                    <div className="shrink-0 p-4 border-t border-border-thin bg-surface/30 space-y-2">
+                    <div className="shrink-0 p-4 border-t border-border-thin bg-surface space-y-2">
                         {editingCommentId && (
                             <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg">
                                 <span className="text-[9px] font-bold text-amber-500 uppercase tracking-wider font-mono">
@@ -277,7 +274,7 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
                                     type="button"
                                     onClick={saveContextualComment}
                                     disabled={!contextualInput.trim() || submitting}
-                                    className="p-2 rounded-xl bg-text-main hover:opacity-90 text-bg-deep disabled:opacity-30 transition-all cursor-pointer shadow-xs active:scale-95"
+                                    className="p-2 rounded-xl bg-[#0070f3] hover:bg-[#0060df] text-white disabled:opacity-30 transition-all cursor-pointer shadow-xs active:scale-95"
                                     title="Registrar observación"
                                 >
                                     <Send size={14} />

@@ -6,14 +6,18 @@ import api from '../api/axios_config';
 
 export interface ConsentimientoDto {
     id_consentimiento: number;
+    uuid?: string;
     id_usuario: number;
     nombre_usuario: string;
     version_politica: string;
+    canal: string;
+    fecha_consentimiento: string;
+    fecha_registro?: string;
+    ip_direccion?: string;
     ip_registro?: string;
     user_agent?: string;
-    canal: string;
-    fecha_registro: string;
-    revocado: boolean;
+    estado: string;
+    revocado?: boolean;
     fecha_revocacion?: string;
 }
 

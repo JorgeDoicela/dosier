@@ -157,11 +157,11 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
             case 'page_break':
                 return (
                     <div className="w-full flex items-center justify-between py-2 select-none">
-                        <div className="flex-1 border-t-2 border-dashed border-border-thin" />
-                        <div className="mx-3 flex items-center gap-2 px-3 py-1 bg-surface border border-border-thin text-text-dim rounded-full text-[9.5px] font-bold shadow-xs">
+                        <div className="flex-1 border-t border-dashed border-slate-300 dark:border-zinc-700" />
+                        <div className="mx-3 flex items-center gap-2 px-2.5 py-1 bg-slate-100 dark:bg-zinc-800 border border-slate-200/90 dark:border-zinc-700 text-text-dim rounded-md text-xs font-mono">
                             <span className="uppercase tracking-wider">Salto de Página A4</span>
                         </div>
-                        <div className="flex-1 border-t-2 border-dashed border-border-thin" />
+                        <div className="flex-1 border-t border-dashed border-slate-300 dark:border-zinc-700" />
                     </div>
                 );
             default:

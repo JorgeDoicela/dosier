@@ -53,12 +53,12 @@ const LopdpConsentPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-bg-deep flex flex-col items-center justify-center p-4 md:p-6">
-            <div className="w-full max-w-2xl bento-card static p-6 md:p-8 space-y-6 shadow-sm border border-border-thin rounded-lg animate-scale-up">
+        <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0d11] flex flex-col items-center justify-center p-4 md:p-6">
+            <div className="w-full max-w-2xl bg-surface p-6 md:p-8 space-y-6 border border-slate-200/90 dark:border-zinc-800 rounded-lg animate-scale-up">
                 
                 {/* Header */}
                 <div className="flex flex-col items-center text-center space-y-3">
-                    <div className="text-text-main mb-1">
+                    <div className="text-[#0070f3] mb-1">
                         <ShieldCheck size={32} strokeWidth={1.5} />
                     </div>
                     <h1 className="text-xl md:text-2xl font-bold tracking-tight text-text-main">
@@ -73,7 +73,7 @@ const LopdpConsentPage: React.FC = () => {
                 <div 
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
-                    className="border border-border-thin bg-bg-deep/40 rounded-lg p-4 md:p-6 h-[340px] overflow-y-auto custom-scrollbar text-xs md:text-sm text-text-dim space-y-4 leading-relaxed"
+                    className="border border-slate-200/90 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 rounded-lg p-4 md:p-6 h-[340px] overflow-y-auto custom-scrollbar text-xs md:text-sm text-text-dim space-y-4 leading-relaxed"
                 >
                     <h3 className="font-bold text-text-main text-center uppercase tracking-wider text-xs md:text-sm mb-2">
                         TÉRMINOS DE CONSENTIMIENTO Y POLÍTICA DE PROTECCIÓN DE DATOS PERSONALES
@@ -125,18 +125,18 @@ const LopdpConsentPage: React.FC = () => {
                 )}
 
                 {/* Checkbox Acceptance */}
-                <div className={`flex items-start gap-3 p-3 bg-surface border rounded-lg transition-all duration-300 ${hasRead ? 'border-border-thin opacity-100' : 'border-border-thin/40 opacity-50'}`}>
+                <div className={`flex items-start gap-3 p-3.5 bg-surface border rounded-lg transition-colors ${hasRead ? 'border-slate-200/90 dark:border-zinc-800 opacity-100' : 'border-slate-200/50 dark:border-zinc-850 opacity-50'}`}>
                     <input
                         type="checkbox"
                         id="lopdpAcceptanceCheckbox"
                         disabled={!hasRead}
                         checked={accepted}
                         onChange={(e) => setAccepted(e.target.checked)}
-                        className="mt-1 h-3.5 w-3.5 rounded border-border-thin text-accent-vercel focus:ring-0 cursor-pointer disabled:cursor-not-allowed"
+                        className="mt-1 h-3.5 w-3.5 rounded border-slate-300 dark:border-zinc-700 accent-[#0070f3] cursor-pointer disabled:cursor-not-allowed"
                     />
                     <label 
                         htmlFor="lopdpAcceptanceCheckbox"
-                        className={`text-xs md:text-sm leading-relaxed select-none ${hasRead ? 'text-text-main cursor-pointer' : 'text-text-dim cursor-not-allowed'}`}
+                        className={`text-xs md:text-sm leading-relaxed select-none ${hasRead ? 'text-text-main cursor-pointer font-medium' : 'text-text-dim cursor-not-allowed'}`}
                     >
                         Declaro que he leído atentamente y otorgo mi consentimiento libre, específico, informado e inequívoco para el tratamiento de mis datos personales y autorizo el procesamiento temporal de mi firma electrónica en DOSIER según los términos descritos.
                     </label>
@@ -147,9 +147,9 @@ const LopdpConsentPage: React.FC = () => {
                     <button
                         type="button"
                         onClick={handleLogout}
-                        className="btn-vercel-secondary sm:w-1/3 order-2 sm:order-1"
+                        className="btn-vercel-secondary sm:w-1/3 order-2 sm:order-1 cursor-pointer"
                     >
-                        <LogOut size={12} />
+                        <LogOut size={13} />
                         Cerrar Sesión
                     </button>
                     
@@ -157,18 +157,18 @@ const LopdpConsentPage: React.FC = () => {
                         type="button"
                         disabled={!hasRead || !accepted || isSubmitting}
                         onClick={handleSubmit}
-                        className="btn-vercel-primary flex-1 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-10 px-4 rounded-md font-medium text-xs text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors flex-1 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                     >
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="animate-spin" size={12} />
+                                <Loader2 className="animate-spin" size={13} />
                                 Registrando...
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 size={12} />
+                                <CheckCircle2 size={13} />
                                 Aceptar y Continuar
-                                <ArrowRight size={12} />
+                                <ArrowRight size={13} />
                             </>
                         )}
                     </button>

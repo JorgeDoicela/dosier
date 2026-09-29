@@ -16,15 +16,14 @@ export const DraftBanners: React.FC<DraftBannersProps> = ({
     if (!pendingUserDraft) return null;
 
     return (
-        <div className="bento-card static p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-up mb-8">
-            <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-surface-hover border border-border-thin flex items-center justify-center text-text-main shrink-0">
-                    <FileText size={16} />
-                </div>
+        <div className="bg-surface p-4 rounded-lg border border-slate-200/90 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-fade-up mb-8">
+            <div className="flex items-center gap-3.5">
+                <FileText size={20} className="text-[#0070f3] shrink-0" />
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
                         <h4 className="text-sm font-semibold text-text-main">Perfil en borrador</h4>
-                        <span className="badge-vercel badge-vercel-neutral text-[9px] font-mono py-0.5 px-2 leading-none shrink-0">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                             No guardado
                         </span>
                     </div>
@@ -40,13 +39,13 @@ export const DraftBanners: React.FC<DraftBannersProps> = ({
             <div className="flex gap-2 w-full md:w-auto shrink-0">
                 <button
                     onClick={handleRestoreUserDraft}
-                    className="btn-vercel-primary !py-1.5 !px-3 !text-xs !normal-case !tracking-normal font-medium flex items-center justify-center gap-1.5"
+                    className="h-8 px-3.5 text-xs rounded-md font-medium text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer"
                 >
                     Restaurar perfil
                 </button>
                 <button
                     onClick={handleDiscardUserDraft}
-                    className="btn-vercel-secondary !py-1.5 !px-3 !text-xs !normal-case !tracking-normal font-medium flex items-center justify-center gap-1.5"
+                    className="h-8 px-3.5 text-xs rounded-md font-medium text-text-main bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                 >
                     Descartar
                 </button>

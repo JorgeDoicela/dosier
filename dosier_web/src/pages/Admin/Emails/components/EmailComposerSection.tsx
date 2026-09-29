@@ -214,13 +214,14 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
 
                 {/* Datos automáticos del sistema */}
                 {autoFilledTokens.length > 0 && (
-                    <div className="space-y-2 p-4 rounded-xl border border-border-thin bg-surface shadow-sm">
-                        <span className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
-                            <CheckCircle2 size={11} className="text-success" /> Autocompletados al enviar
+                    <div className="space-y-2 p-4 rounded-lg border border-slate-200/90 dark:border-zinc-800 bg-surface">
+                        <span className="text-[10px] font-semibold text-text-main uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                            <CheckCircle2 size={13} className="text-emerald-500" /> Autocompletados al enviar
                         </span>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-2">
                             {autoFilledTokens.map(tok => (
-                                <span key={tok} className="text-[8px] px-2 py-0.5 rounded-full bg-surface border border-border-thin text-text-dim">
+                                <span key={tok} className="inline-flex items-center gap-1.5 text-xs font-mono text-text-dim">
+                                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
                                     {getTokenLabel(tok)}
                                 </span>
                             ))}
@@ -230,7 +231,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
 
                 {/* Campos editables con etiquetas en español */}
                 {userFacingTokens.length > 0 && (
-                    <div className="space-y-4 p-4 bg-surface border border-border-thin rounded-xl shadow-sm">
+                    <div className="space-y-4 p-4 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg">
                         <div className="flex items-center gap-2">
                             <Layers size={14} className="text-brand" />
                             <h5 className="text-[10px] font-black text-text-main uppercase tracking-widest">

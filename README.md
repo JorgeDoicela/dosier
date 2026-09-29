@@ -104,10 +104,13 @@ Los scripts ubicados en `scripts/base_datos/` administran el esquema del módulo
 
 ## 5. Directrices de Interfaz de Usuario y Estándar Visual
 
-El diseño visual de DOSIER sigue estrictamente el **Vercel Geist Design System**:
-* **Fondos Sólidos y Cero Transparencia:** Prohibido el uso de glassmorphism translúcido o `backdrop-blur` en modales, selectores, menús flotantes, popovers y drawers. Todos los elementos superpuestos emplean fondos 100% opacos (`bg-white` en tema claro, `bg-zinc-950` / `bg-surface` sólido en oscuro) con bordes definidos (`border border-zinc-200 dark:border-zinc-800`) y sombras profundas (`shadow-xl`) para evitar el traslape visual de textos.
-* **Densidad de Datos:** Presentación sobria y jerarquizada de información académica sin tarjetas gigantes innecesarias ni anidamiento excesivo de cajas.
-* **Cero Emojis:** Empleo exclusivo de iconografía técnica vectorial con Lucide React (`strokeWidth={1.5}` o `1.75`).
+El diseño visual de DOSIER sigue estrictamente el estándar **Modern Enterprise Docs** (inspirado en Stripe Docs, Mintlify, GitBook Enterprise y Linear con tipografía Inter Puro):
+* **Fondos Sólidos y Cero Transparencia:** Prohibido el uso de glassmorphism translúcido o `backdrop-blur` en modales, selectores, menús flotantes, popovers y drawers. Todos los elementos superpuestos emplean fondos 100% opacos (`bg-white` en tema claro, `bg-zinc-950` / `bg-[#131720]` en oscuro; cabeceras y pies en `bg-zinc-50 dark:bg-zinc-900`) con bordes definidos (`border border-zinc-200 dark:border-zinc-800`) y sombras profundas para evitar el sangrado de texto (*text bleed-through*).
+* **Paleta Cromática con Acentos Vivos:** Acento técnico azul eléctrico corporativo (`#0070f3`), verde esmeralda normativo (`emerald-600/700`, `bg-emerald-50`), y ámbar para observaciones. Botones de acción destacados en `#0070f3` o alto contraste.
+* **Prohibición Absoluta de Cápsulas Envolventes ("Eso que rodea"):** Queda terminantemente prohibido rodear palabras, metas, acciones, etiquetas, roles, simuladores o iconos SVG con cápsulas o píldoras tintadas (`rounded-full border bg-...`). Cero recuadros en iconos SVG y cero cápsulas en nombres, códigos o encabezados. En tablas usar exclusivamente puntos discretos de estado (`w-1.5 h-1.5 rounded-full`) y tipografía limpia.
+* **Steppers y Rieles Conectores:** Líneas continuas con nodos circulares numerados (`w-8 h-8 rounded-full`), paso activo destacado con halo azul sutil (`bg-[#0070f3] text-white ring-4 ring-blue-100`).
+* **Densidad de Datos y Cero KPIs Gigantes:** Presentación sobria y jerarquizada de información académica en fichas clave-valor (`<dl>`) o tablas directas, sin tarjetas gigantes (`text-4xl`, `text-5xl`) ni sparklines decorativos. Cero información irrelevante o de relleno (cero botones macOS semáforo, cero URLs falsas).
+* **Cero Emojis:** Empleo exclusivo de iconografía técnica vectorial con Lucide React desnuda (`strokeWidth={1.5}` o `1.75`).
 
 ---
 

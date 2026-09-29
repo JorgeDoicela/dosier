@@ -5,11 +5,7 @@ import {
     AlertTriangle,
     Database,
     HardDrive,
-    CheckCircle,
-    Info,
-    Clock,
     Trash2,
-    XCircle,
     Check,
     Copy,
     RefreshCw,
@@ -69,7 +65,7 @@ export const BackupsTab: React.FC<BackupsTabProps> = ({
 }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-            <div className="lg:col-span-3 bento-card p-6 space-y-6">
+            <div className="lg:col-span-3 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xs p-6 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-2 flex-1">
                         <div className="relative flex-1 min-w-[200px] max-w-xs">
@@ -123,7 +119,7 @@ export const BackupsTab: React.FC<BackupsTabProps> = ({
                             type="button"
                             onClick={handleTriggerBackup}
                             disabled={triggeringBackup}
-                            className="btn-vercel-primary flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider !py-2 !px-3 bg-brand cursor-pointer"
+                            className="bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider !py-2 !px-3 cursor-pointer disabled:opacity-50"
                         >
                             <Play size={12} className={triggeringBackup ? 'animate-spin' : ''} />
                             <span>{triggeringBackup ? "Generando Respaldo..." : "Generar Respaldo Ahora"}</span>
@@ -160,10 +156,10 @@ export const BackupsTab: React.FC<BackupsTabProps> = ({
                                 {filteredBackups.map(b => (
                                     <tr key={b.uuid} className="hover:bg-surface-hover/30 transition-colors">
                                         <td className="py-4 px-4">
-                                            <span className="badge-vercel text-[11px] font-mono text-text-main bg-surface border border-border-thin">
-                                                {b.tipo === 'BaseDatos' ? <Database size={11} className="text-text-dim" /> : <HardDrive size={11} className="text-text-dim" />}
+                                            <div className="flex items-center gap-1.5 font-mono text-xs text-text-main">
+                                                {b.tipo === 'BaseDatos' ? <Database size={13} className="text-[#0070f3]" /> : <HardDrive size={13} className="text-[#0070f3]" />}
                                                 <span>{b.tipo === 'BaseDatos' ? 'BaseDatos (.sql)' : 'Uploads (.zip)'}</span>
-                                            </span>
+                                            </div>
                                         </td>
                                         <td className="py-4 px-4 font-mono font-medium text-text-main max-w-[200px] truncate" title={b.nombreArchivo}>
                                             {b.nombreArchivo}
@@ -177,25 +173,30 @@ export const BackupsTab: React.FC<BackupsTabProps> = ({
                                         <td className="py-4 px-4">
                                             {b.estado === 'Exitoso' ? (
                                                 b.isFilePresent !== false ? (
-                                                    <span className="badge-vercel badge-vercel-success text-[11px]" title="Archivo físico listo en disco">
-                                                        <CheckCircle size={11} /> Exitoso (En Disco)
+                                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400" title="Archivo físico listo en disco">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                        Exitoso (En Disco)
                                                     </span>
                                                 ) : (
-                                                    <span className="badge-vercel badge-vercel-warning text-[11px]" title="El archivo físico fue depurado por la política de retención (30 días).">
-                                                        <Info size={11} /> Purga por Retención
+                                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400" title="El archivo físico fue depurado por la política de retención (30 días).">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                                        Purga por Retención
                                                     </span>
                                                 )
                                             ) : b.estado === 'En_Proceso' ? (
-                                                <span className="badge-vercel badge-vercel-info text-[11px]">
-                                                    <Clock size={11} className="animate-spin" /> En Proceso
+                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0070f3] dark:text-blue-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] animate-pulse" />
+                                                    En Proceso
                                                 </span>
                                             ) : b.estado === 'Purgado' ? (
-                                                <span className="badge-vercel text-[11px] text-text-dim border-border-thin" title={b.errorMensaje ?? "Archivo eliminado"}>
-                                                    <Trash2 size={11} /> Purgado
+                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-dim" title={b.errorMensaje ?? "Archivo eliminado"}>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                                                    Purgado
                                                 </span>
                                             ) : (
-                                                <span className="badge-vercel badge-vercel-error text-[11px]" title={b.errorMensaje ?? "Falló el respaldo"}>
-                                                    <XCircle size={11} /> Fallido
+                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400" title={b.errorMensaje ?? "Falló el respaldo"}>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                                    Fallido
                                                 </span>
                                             )}
                                         </td>
@@ -267,9 +268,9 @@ export const BackupsTab: React.FC<BackupsTabProps> = ({
             </div>
 
             {/* Resumen lateral de Backups & Disco */}
-            <div className="bento-card-static p-5 space-y-4 lg:col-span-1">
+            <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xs p-5 space-y-4 lg:col-span-1">
                 <div className="flex items-center gap-2 pb-3 border-b border-border-thin/60">
-                    <Database size={16} className="text-brand shrink-0" />
+                    <Database size={16} className="text-[#0070f3] shrink-0" />
                     <h3 className="font-semibold text-text-main text-sm">Resumen de Respaldos</h3>
                 </div>
                 <div className="divide-y divide-border-thin/40 text-xs">

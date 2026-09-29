@@ -204,11 +204,14 @@ export const PeaObservationsDrawer: React.FC<PeaObservationsDrawerProps> = ({
                                                 <UserCheck size={12} className="text-text-dim" />
                                                 {obs.nombreObservador || obs.rolObservador || 'Comisión Revisora'}
                                             </span>
-                                            <span className={`px-2 py-0.5 rounded text-[9.5px] font-bold uppercase tracking-wider ${
+                                            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
                                                 esPendiente
-                                                    ? 'badge-vercel-warning'
-                                                    : 'badge-vercel-success'
+                                                    ? 'text-amber-600 dark:text-amber-400'
+                                                    : 'text-emerald-600 dark:text-emerald-400'
                                             }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                                    esPendiente ? 'bg-amber-500' : 'bg-emerald-500'
+                                                }`} />
                                                 {obs.estado}
                                             </span>
                                         </div>

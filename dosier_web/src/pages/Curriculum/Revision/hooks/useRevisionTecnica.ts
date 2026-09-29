@@ -62,12 +62,12 @@ export const useRevisionTecnica = () => {
 
     const getFieldCardClasses = (fieldKey: string, extraClasses: string = 'space-y-1') => {
         const isActive = layout.activeCommentField === fieldKey && layout.isRightSidebarOpen;
-        const borderClass = 'border-border-thin bg-surface';
+        const borderClass = 'border-slate-200/90 dark:border-zinc-800 bg-surface';
         const activeClass = isActive
-            ? '!border-brand/45 bg-brand/[0.003] shadow-[0_4px_20px_rgba(99,102,241,0.04)] ring-1 ring-brand/5 scale-[1.002]'
+            ? '!border-[#0070f3] ring-1 ring-[#0070f3]/20 shadow-sm'
             : '';
 
-        return `p-4 rounded-xl border ${extraClasses} relative cursor-pointer hover:bg-surface-hover/80 active:scale-[0.99] transition-all duration-200 ${borderClass} ${activeClass}`;
+        return `p-4 rounded-lg border ${extraClasses} relative cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-850/50 transition-colors ${borderClass} ${activeClass}`;
     };
 
     const renderFieldStatusBadge = (fieldKey: string) => {
@@ -75,8 +75,8 @@ export const useRevisionTecnica = () => {
         if (fieldComments && fieldComments.length > 0) {
             return React.createElement(
                 'span',
-                { className: 'inline-flex items-center gap-1 text-[8px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-mono uppercase tracking-wider' },
-                React.createElement('span', { className: 'w-1 h-1 rounded-full bg-amber-500 animate-pulse' }),
+                { className: 'inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400' },
+                React.createElement('span', { className: 'w-1.5 h-1.5 rounded-full bg-amber-500' }),
                 `Con Observaciones (${fieldComments.length})`
             );
         }

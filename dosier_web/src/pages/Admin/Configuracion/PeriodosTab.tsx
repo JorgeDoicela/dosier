@@ -51,12 +51,14 @@ export const PeriodosTab: React.FC<PeriodosTabProps> = ({ hook, setDetailItem })
                             </td>
                             <td className="p-4">
                                 {p.activo ? (
-                                    <span className="badge-vercel badge-vercel-success">
-                                        <CheckCircle size={10} strokeWidth={3} /> Activo
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        Activo
                                     </span>
                                 ) : (
-                                    <span className="badge-vercel badge-vercel-error">
-                                        <XCircle size={10} strokeWidth={3} /> Inactivo
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                                        Inactivo
                                     </span>
                                 )}
                             </td>

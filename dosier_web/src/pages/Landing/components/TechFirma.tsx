@@ -57,17 +57,18 @@ const TechFirma: React.FC = () => {
                 }
             `}} />
 
-            {/* Split panel layout bento-card */}
-            <div className="bento-card-static p-8 relative min-h-[220px]">
+            {/* Split panel layout */}
+            <div className="border border-border-thin rounded-xl bg-surface p-8 relative min-h-[220px] shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                     
                     {/* Left panel: Info & Description */}
                     <div className="md:col-span-7 space-y-4">
-                        <div className="flex items-center gap-2.5">
-                            <div className="p-2 border border-border-thin rounded bg-bg-deep">
-                                <FileSignature size={18} strokeWidth={1.5} className="text-text-main" />
+                        <div className="flex items-center gap-3">
+                            <FileSignature size={20} strokeWidth={1.5} className="text-[#0070f3]" />
+                            <div className="flex items-center gap-1.5 font-mono text-[10px] text-text-dim uppercase tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
+                                <span>Firma_Digital</span>
                             </div>
-                            <span className="text-[9px] font-mono text-text-dim px-2 py-0.5 border border-border-thin rounded-full uppercase">Firma_Digital (Interactivo)</span>
                         </div>
                         
                         <div className="space-y-2">
@@ -80,13 +81,13 @@ const TechFirma: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2 text-[9px] font-mono text-text-main uppercase font-semibold pt-2">
-                            <Key size={12} className="text-brand animate-pulse" />
+                            <Key size={12} className="text-[#0070f3]" strokeWidth={1.5} />
                             <span>Integración Segura FirmaEC (Banco Central)</span>
                         </div>
                     </div>
 
                     {/* Right panel: Interactive Signature Area */}
-                    <div className="md:col-span-5 bg-surface/50 border border-border-thin rounded p-4 font-mono text-[9px]">
+                    <div className="md:col-span-5 bg-surface border border-border-thin rounded-lg p-4 font-mono text-[9px]">
                         {signState === 'idle' && (
                             <div className="space-y-3">
                                 <p className="text-[8px] text-text-dim uppercase tracking-wider font-mono">// DISPOSITIVO DE FIRMA LISTO</p>
@@ -95,9 +96,9 @@ const TechFirma: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={startSigning}
-                                    className="w-full py-3 bg-text-main text-bg-deep rounded font-bold font-sans text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer shadow-md"
+                                    className="w-full py-2.5 bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg font-medium font-sans text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
                                 >
-                                    <Key size={12} />
+                                    <Key size={12} strokeWidth={1.5} />
                                     Firmar Documento Oficial
                                 </button>
                             </div>
@@ -105,18 +106,18 @@ const TechFirma: React.FC = () => {
 
                         {signState === 'scanning' && (
                             <div className="space-y-3">
-                                <div className="relative h-20 border border-brand/20 bg-bg-deep rounded flex flex-col items-center justify-center overflow-hidden">
+                                <div className="relative h-20 border border-[#0070f3]/20 bg-bg-deep rounded flex flex-col items-center justify-center overflow-hidden">
                                     <div className="animate-scan-line" />
-                                    <Key size={28} className="text-brand/60 animate-pulse" />
-                                    <span className="text-[8px] text-brand font-semibold mt-2 tracking-widest animate-pulse">GENERANDO FIRMA CRIPTOGRÁFICA...</span>
+                                    <Key size={28} className="text-[#0070f3]/60 animate-pulse" strokeWidth={1.5} />
+                                    <span className="text-[8px] text-[#0070f3] font-semibold mt-2 tracking-widest animate-pulse">GENERANDO FIRMA CRIPTOGRÁFICA...</span>
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-[8px] text-brand/80 font-mono">
+                                    <div className="flex justify-between text-[8px] text-[#0070f3]/80 font-mono">
                                         <span>APLICANDO SELLO CRIPTOGRÁFICO P12</span>
                                         <span>{signProgress}%</span>
                                     </div>
-                                    <div className="w-full h-1 bg-border-thin rounded-full overflow-hidden">
-                                        <div className="h-full bg-brand transition-all duration-75" style={{ width: `${signProgress}%` }} />
+                                    <div className="w-full h-1 bg-border-thin rounded-sm overflow-hidden">
+                                        <div className="h-full bg-[#0070f3] transition-all duration-75" style={{ width: `${signProgress}%` }} />
                                     </div>
                                 </div>
                             </div>

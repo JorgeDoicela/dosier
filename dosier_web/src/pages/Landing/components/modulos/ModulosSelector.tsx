@@ -52,20 +52,20 @@ export const ModulosSelector: React.FC<ModulosSelectorProps> = ({
                 : 'opacity-0 translate-y-4 scale-95 pointer-events-none h-0 overflow-hidden lg:h-auto lg:opacity-0'
                 }`}>
                 {activeModule !== null && (
-                    <div className="custom-blur-panel bg-surface/85 dark:bg-black/75 border border-border-thin rounded-2xl p-6.5 relative space-y-4.5 animate-scale-up">
+                    <div className="bg-surface border border-border-thin rounded-2xl p-6 relative space-y-4 shadow-xl animate-scale-up">
 
                         {/* Botón de cierre superior derecho del panel */}
                         <button
                             onClick={() => onModuleSelect(null)}
-                            className="absolute top-4 right-4 p-1.5 rounded-full border border-border-thin text-text-dim hover:text-text-main bg-bg-deep/50 hover:bg-bg-deep transition-all cursor-pointer"
+                            className="absolute top-4 right-4 p-1.5 rounded-lg border border-border-thin text-text-dim hover:text-text-main bg-surface hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer shadow-sm"
                             title="Volver al Dashboard"
                         >
-                            <X size={12} />
+                            <X size={12} strokeWidth={2} />
                         </button>
 
                         {/* Cabecera del Tooltip */}
                         <div className="space-y-1 pr-6">
-                            <span className="text-[10px] font-mono font-semibold text-brand tracking-widest block uppercase">MÓDULO 0{activeModule} // AUTOMÁTICO</span>
+                            <span className="text-[10px] font-mono font-semibold text-[#0070f3] tracking-widest block uppercase">MÓDULO 0{activeModule} // AUTOMÁTICO</span>
                             <h3 className="text-xl font-bold tracking-tight text-text-main">
                                 {modulesList[activeModule - 1].subtitle}
                             </h3>

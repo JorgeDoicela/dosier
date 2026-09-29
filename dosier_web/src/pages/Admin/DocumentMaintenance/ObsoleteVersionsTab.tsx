@@ -37,7 +37,7 @@ export const ObsoleteVersionsTab: React.FC<ObsoleteVersionsTabProps> = ({
 }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-            <div className="lg:col-span-3 bento-card p-6 space-y-6">
+            <div className="lg:col-span-3 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xs p-6 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" size={14} />
@@ -54,7 +54,7 @@ export const ObsoleteVersionsTab: React.FC<ObsoleteVersionsTabProps> = ({
                             type="button"
                             onClick={handlePurgeAll}
                             disabled={bulkLoading || loadingDocs || totalPendingCountDocs === 0}
-                            className="btn-vercel-primary flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider !py-2 !px-3 cursor-pointer"
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider !py-2 !px-3 cursor-pointer disabled:opacity-40"
                         >
                             <Trash2 size={12} />
                             <span>{bulkLoading ? "Depurando..." : "Depuración Masiva"}</span>
@@ -98,23 +98,24 @@ export const ObsoleteVersionsTab: React.FC<ObsoleteVersionsTabProps> = ({
                                             {d.document_title}
                                         </td>
                                         <td className="py-4 px-4">
-                                            <span className="px-2 py-0.5 rounded bg-surface border border-border-thin text-[10px] font-mono text-text-main">
+                                            <span className="font-mono text-xs text-text-main">
                                                 v{d.version}
                                             </span>
                                         </td>
-                                        <td className="py-4 px-4 text-text-dim">
+                                        <td className="py-4 px-4 text-text-dim text-xs">
                                             {d.created_by}
                                         </td>
-                                        <td className="py-4 px-4 text-text-dim font-mono text-[11px]">
+                                        <td className="py-4 px-4 text-text-dim font-mono text-xs">
                                             {formatDate(d.created_at)}
                                         </td>
-                                        <td className="py-4 px-4 font-medium text-text-main">
+                                        <td className="py-4 px-4 font-medium text-text-main text-xs">
                                             {d.file_size_formatted}
                                         </td>
                                         <td className="py-4 px-4">
                                             {d.is_file_purged ? (
                                                 <div className="space-y-1">
-                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold tracking-wider text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase">
+                                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                         Purgado
                                                     </span>
                                                     <div className="text-[10px] text-text-dim flex items-center gap-1 truncate max-w-[200px]" title={d.final_pdf_path ?? ""}>
@@ -124,16 +125,19 @@ export const ObsoleteVersionsTab: React.FC<ObsoleteVersionsTabProps> = ({
                                                 </div>
                                             ) : (
                                                 <div className="flex flex-col gap-1 items-start">
-                                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase">
+                                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                                                         Físico en disco
                                                     </span>
                                                     {d.is_protected_by_retention && (
-                                                        <span className="inline-flex items-center gap-1 text-[9px] font-medium text-text-dim bg-surface border border-border-thin px-1.5 py-0.2 rounded-full uppercase" title="Evidencia protegida por política CACES (Retención 5 años).">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-text-dim font-mono" title="Evidencia protegida por política CACES (Retención 5 años).">
+                                                            <span className="w-1 h-1 rounded-full bg-zinc-400" />
                                                             Retenido CACES
                                                         </span>
                                                     )}
                                                     {d.is_backup_version && (
-                                                        <span className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-500 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 rounded-full uppercase" title="Respaldo de seguridad de la versión inmediatamente anterior. Se recomienda conservar.">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-[#0070f3] dark:text-blue-400 font-mono" title="Respaldo de seguridad de la versión inmediatamente anterior. Se recomienda conservar.">
+                                                            <span className="w-1 h-1 rounded-full bg-[#0070f3]" />
                                                             Respaldo Anterior
                                                         </span>
                                                     )}
@@ -164,7 +168,7 @@ export const ObsoleteVersionsTab: React.FC<ObsoleteVersionsTabProps> = ({
             </div>
 
             {/* Resumen lateral */}
-            <div className="bento-card-static p-5 space-y-4 lg:col-span-1">
+            <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xs p-5 space-y-4 lg:col-span-1">
                 <div className="flex items-center gap-2 pb-3 border-b border-border-thin/60">
                     <FileText size={16} className="text-text-dim shrink-0" />
                     <h3 className="font-semibold text-text-main text-sm">Resumen de Borradores</h3>

@@ -53,21 +53,21 @@ const PageBreakIndicator: React.FC<{
 }> = ({ pageNum, pageBreakBlockId, onDeleteBlock }) => {
     return (
         <div className="w-full flex items-center justify-between my-4 select-none group">
-            <div className="flex-1 border-t-2 border-dashed border-slate-300 dark:border-slate-700" />
-            <div className="mx-4 flex items-center gap-2 px-3 py-1 bg-slate-800 text-white rounded-full text-[10px] font-bold shadow-sm">
+            <div className="flex-1 border-t border-dashed border-slate-300 dark:border-zinc-700" />
+            <div className="mx-4 flex items-center gap-2 px-2.5 py-1 bg-slate-100 dark:bg-zinc-800 text-text-dim border border-slate-200/90 dark:border-zinc-700 rounded-md text-xs font-mono font-medium">
                 <span>PÁGINA {pageNum}</span>
                 {pageBreakBlockId && (
                     <button
                         type="button"
                         onClick={() => onDeleteBlock(pageBreakBlockId)}
-                        className="p-0.5 hover:bg-white/20 rounded text-slate-300 hover:text-red-300 transition-colors cursor-pointer"
+                        className="p-0.5 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded text-text-dim hover:text-rose-500 transition-colors cursor-pointer"
                         title="Eliminar salto de página"
                     >
                         <Trash2 className="w-3 h-3" />
                     </button>
                 )}
             </div>
-            <div className="flex-1 border-t-2 border-dashed border-slate-300 dark:border-slate-700" />
+            <div className="flex-1 border-t border-dashed border-slate-300 dark:border-zinc-700" />
         </div>
     );
 };

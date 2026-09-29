@@ -265,7 +265,7 @@ const Caces: React.FC = () => {
                 </div>
 
                 {/* Derecha (col-span-8): Mockup en HTML/CSS de Indicadores CACES */}
-                <div className="lg:col-span-8 lg:sticky lg:top-[32vh] order-first lg:order-last border border-border-thin rounded-xl bg-surface/35 shadow-xl p-6 font-mono text-[11px] tracking-tight relative overflow-hidden backdrop-blur-sm">
+                <div className="lg:col-span-8 lg:sticky lg:top-[32vh] order-first lg:order-last border border-border-thin rounded-xl bg-surface shadow-xl p-6 font-mono text-[11px] tracking-tight relative overflow-hidden">
                     {/* Decoraciones del panel */}
                     <div className="flex items-center justify-between border-b border-border-thin pb-4 mb-5">
                         <span className="text-[10px] font-semibold text-text-main font-mono">// PANEL INDICADORES CACES (PORTAFOLIO DOCENTE)</span>

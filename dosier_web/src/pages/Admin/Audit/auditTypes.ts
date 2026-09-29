@@ -93,3 +93,17 @@ export const getActionBadge = (action: string): string => {
     if (a.includes('UPDATE') || a.includes('EDIT') || a.includes('MODIFY') || a.includes('ACTUALIZAR') || a.includes('CAMBIAR') || a.includes('TRANSICIONAR') || a.includes('EVALUAR') || a.includes('RECHAZAR') || a.includes('TRANSFERIR')) return 'badge-vercel-warning';
     return 'badge-vercel-info';
 };
+
+export const getActionDotClass = (action: string): { dot: string; text: string } => {
+    const a = action.toUpperCase();
+    if (a.includes('REVOKE') || a.includes('REVOCAR') || a.includes('DELETE') || a.includes('REMOVE') || a.includes('ELIMINAR') || a.includes('DESACTIVAR')) {
+        return { dot: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400' };
+    }
+    if (a.includes('ASIGN') || a.includes('REGISTER') || a.includes('CREATE') || a.includes('ADD') || a.includes('CREAR') || a.includes('AGREGAR') || a.includes('APROBAR')) {
+        return { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' };
+    }
+    if (a.includes('UPDATE') || a.includes('EDIT') || a.includes('MODIFY') || a.includes('ACTUALIZAR') || a.includes('CAMBIAR') || a.includes('TRANSICIONAR') || a.includes('EVALUAR') || a.includes('RECHAZAR') || a.includes('TRANSFERIR')) {
+        return { dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' };
+    }
+    return { dot: 'bg-[#0070f3]', text: 'text-[#0070f3] dark:text-blue-400' };
+};

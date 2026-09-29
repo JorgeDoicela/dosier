@@ -96,22 +96,22 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
 
         if (diffDays < 0) {
             return (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full font-mono">
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-red-600 dark:text-red-400">
                     <AlertCircle size={11} className="shrink-0" />
                     <span>Vencido ({Math.abs(diffDays)}d)</span>
                 </span>
             );
         } else if (diffDays <= 3) {
             return (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono animate-pulse">
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-amber-600 dark:text-amber-400">
                     <Clock size={11} className="shrink-0" />
                     <span>{diffDays === 0 ? 'Vence hoy' : diffDays === 1 ? 'Vence mañana' : `Vence en ${diffDays}d`}</span>
                 </span>
             );
         } else {
             return (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-text-dim bg-surface border border-border-thin px-2 py-0.5 rounded-full font-mono">
-                    <Clock size={11} className="shrink-0 text-text-dim/70" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-slate-500 dark:text-zinc-400">
+                    <Clock size={11} className="shrink-0 text-slate-400 dark:text-zinc-500" />
                     <span>{prefix}: {formattedDate} ({diffDays}d)</span>
                 </span>
             );
@@ -145,7 +145,7 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
     }, [resolvedProjectUuid, currentProject.status, projectDocuments]);
 
     return (
-        <div className="bento-card static p-6 flex flex-col justify-between group">
+        <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-6 flex flex-col justify-between group">
             <div className="flex items-center gap-2.5 mb-2">
                 <h3 className="text-xs font-semibold tracking-widest text-text-main uppercase opacity-90">
                     Flujo Institucional
@@ -198,9 +198,9 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
 
                             {/* Step Dot */}
                             <div className={`absolute -left-[38px] top-0.5 w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 z-10 ${showChecked
-                                ? 'bg-emerald-500 text-white border-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.4)]'
+                                ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
                                 : isCurrentActive
-                                    ? 'bg-text-main border-text-main text-bg-deep ring-4 ring-text-main/10 shadow-[0_0_12px_rgba(0,0,0,0.08)] animate-pulse'
+                                    ? 'bg-[#0070f3] text-white ring-4 ring-blue-100 dark:ring-blue-950 shadow-xs'
                                     : 'bg-surface border-border-thin text-text-dim'
                                 }`}>
                                 {showChecked ? (
@@ -227,13 +227,13 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                         }
                                     }
                                 }}
-                                className={`p-4 rounded-xl border transition-all duration-300 ${isCurrentActive
-                                    ? 'bg-surface border-text-dim/40 shadow-[0_2px_16px_rgba(0,0,0,0.06)] cursor-pointer ring-1 ring-text-dim/10'
+                                className={`p-4 rounded-lg border transition-all duration-300 ${isCurrentActive
+                                    ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-900/60 cursor-pointer'
                                     : showChecked
-                                        ? 'bg-surface/20 border-border-thin cursor-pointer opacity-55 hover:opacity-80'
+                                        ? 'bg-surface border-slate-200/90 dark:border-zinc-800 cursor-pointer opacity-70 hover:opacity-100'
                                         : isFuture
-                                            ? 'bg-transparent border-transparent opacity-30 select-none'
-                                            : 'bg-transparent border-transparent hover:border-border-thin/40 hover:bg-surface-hover/10'
+                                            ? 'bg-transparent border-transparent opacity-40 select-none'
+                                            : 'bg-transparent border-transparent hover:border-slate-200/90 dark:hover:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-850/50'
                                     }`}
                             >
                                 <div className="flex items-center justify-between gap-2">
@@ -265,8 +265,8 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                             to={buildWorkspacePath(templateCode, resolvedProjectUuid, `?edit=${templateCodeToEditParam(templateCode)}`, urlPrefix)}
                                             onClick={(e) => { e.stopPropagation(); }}
                                             className={`w-full justify-center py-2.5 transition-all duration-300 font-semibold flex items-center gap-1.5 ${isCurrentActive
-                                                ? 'btn-vercel-primary shadow-[0_4px_12px_rgba(0,112,243,0.1)]'
-                                                : 'btn-vercel-secondary'
+                                                ? 'bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm'
+                                                : 'bg-surface hover:bg-slate-50 dark:hover:bg-zinc-800 text-text-main border border-slate-200/90 dark:border-zinc-800 rounded-lg shadow-2xs'
                                                 }`}
                                         >
                                             <FileText size={14} />
@@ -287,16 +287,16 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
                                                 to={`/documentacion/revision-tecnica/${resolvedProjectUuid}`}
                                                 onClick={(e) => { e.stopPropagation(); }}
                                                 className={`w-full justify-center py-2.5 transition-all duration-300 font-semibold flex items-center gap-1.5 ${isCurrentActive
-                                                    ? 'btn-vercel-primary shadow-[0_4px_12px_rgba(0,112,243,0.1)]'
-                                                    : 'btn-vercel-secondary'
+                                                    ? 'bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm'
+                                                    : 'bg-surface hover:bg-slate-50 dark:hover:bg-zinc-800 text-text-main border border-slate-200/90 dark:border-zinc-800 rounded-lg shadow-2xs'
                                                     }`}
                                             >
                                                 <Shield size={14} />
                                                 <span>{isCurrentActive ? 'Iniciar Revisión Técnica' : 'Ver Revisión Técnica'}</span>
                                             </Link>
                                         ) : (
-                                            <div className="w-full py-2.5 px-3 bg-surface/50 border border-border-thin rounded-xl text-center flex items-center justify-center gap-2 text-text-dim text-xs font-medium select-none">
-                                                <Clock size={14} className="text-brand animate-pulse" />
+                                            <div className="w-full py-2 px-3 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-md text-center flex items-center justify-center gap-2 text-text-dim text-xs font-medium select-none">
+                                                <Clock size={14} className="text-[#0070f3] animate-pulse" />
                                                 <span>En espera de dictamen institucional</span>
                                             </div>
                                         )}
@@ -309,14 +309,14 @@ export const CacesWorkflow: React.FC<CacesWorkflowProps> = ({
             </div>
 
             {/* Acceso a Marco Normativo y Acreditación (CES / CACES / MED) */}
-            <div className="pt-4 mt-4 border-t border-border-thin">
+            <div className="pt-4 mt-4 border-t border-slate-200/90 dark:border-zinc-800">
                 <button
                     type="button"
                     onClick={() => setIsNormativaDrawerOpen(true)}
-                    className="w-full py-2.5 px-3 rounded-xl border border-border-thin bg-surface hover:bg-surface-hover text-text-main text-xs font-medium flex items-center justify-between transition-colors group/norm"
+                    className="w-full py-2.5 px-3 rounded-md border border-slate-200/90 dark:border-zinc-800 bg-surface hover:bg-slate-50 dark:hover:bg-zinc-850 text-text-main text-xs font-medium flex items-center justify-between transition-colors group/norm cursor-pointer"
                 >
                     <div className="flex items-center gap-2">
-                        <Scale size={14} className="text-brand group-hover/norm:scale-110 transition-transform shrink-0" />
+                        <Scale size={14} className="text-[#0070f3] group-hover/norm:scale-110 transition-transform shrink-0" />
                         <span className="font-semibold text-text-main">Marco Normativo CES / CACES</span>
                     </div>
                     <ChevronRight size={13} className="text-text-dim group-hover/norm:translate-x-0.5 transition-transform" />

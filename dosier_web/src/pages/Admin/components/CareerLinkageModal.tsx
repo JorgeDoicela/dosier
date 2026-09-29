@@ -89,12 +89,13 @@ export const CareerLinkageModal: React.FC<CareerLinkageModalProps> = ({
                                             : [];
                                         if (cleanCareers.length > 0) {
                                             return cleanCareers.map((c, i) => (
-                                                <span key={i} className="badge-vercel badge-vercel-info text-[8px] py-0.5 px-2 font-bold uppercase truncate">
+                                                <span key={i} className="inline-flex items-center gap-1 text-[11px] font-mono text-[#0070f3] uppercase truncate">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
                                                     {formatCareerName(c)}
                                                 </span>
                                             ));
                                         }
-                                        return <span className="text-[9px] font-bold text-text-dim uppercase italic">Sin carrera registrada</span>;
+                                        return <span className="text-[11px] font-mono text-text-dim uppercase italic">Sin carrera registrada</span>;
                                     })()}
                                 </div>
                             </div>
@@ -104,20 +105,21 @@ export const CareerLinkageModal: React.FC<CareerLinkageModalProps> = ({
                         {groupMembers.map((member) => (
                             <div
                                 key={member.id_grupo_miembro}
-                                className="p-4 bg-bg-deep/20 border border-border-thin rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-border-thin/80 transition-all"
+                                className="p-4 bg-surface border border-border-thin rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-border-hover transition-all"
                             >
                                 <div className="space-y-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <h4 className="text-xs font-black text-text-main uppercase truncate">
+                                        <h4 className="text-xs font-semibold text-text-main uppercase truncate">
                                             {member.nombre_completo}
                                         </h4>
-                                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter bg-blue-500/15 border border-blue-500/20 text-blue-400">
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-blue-600 dark:text-blue-400">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                                             {member.rol}
                                         </span>
                                     </div>
-                                    <p className="text-[9px] font-mono text-text-dim">C.I. {member.cedula || 'S/D'}</p>
+                                    <p className="text-[10px] font-mono text-text-dim">C.I. {member.cedula || 'S/D'}</p>
                                 </div>
-                                <div className="flex flex-wrap gap-1.5 shrink-0 max-w-[280px]">
+                                <div className="flex flex-wrap gap-2 shrink-0 max-w-[280px]">
                                     {(() => {
                                         const cleanCareers = member.carrera
                                             ? member.carrera.split(',').map(c => c.trim()).filter(c => {
@@ -127,12 +129,13 @@ export const CareerLinkageModal: React.FC<CareerLinkageModalProps> = ({
                                             : [];
                                         if (cleanCareers.length > 0) {
                                             return cleanCareers.map((c, i) => (
-                                                <span key={i} className="badge-vercel badge-vercel-info text-[8px] py-0.5 px-2 font-bold uppercase truncate">
+                                                <span key={i} className="inline-flex items-center gap-1 text-[11px] font-mono text-[#0070f3] uppercase truncate">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
                                                     {formatCareerName(c)}
                                                 </span>
                                             ));
                                         }
-                                        return <span className="text-[9px] font-bold text-text-dim uppercase italic">Sin carrera registrada</span>;
+                                        return <span className="text-[11px] font-mono text-text-dim uppercase italic">Sin carrera registrada</span>;
                                     })()}
                                 </div>
                             </div>

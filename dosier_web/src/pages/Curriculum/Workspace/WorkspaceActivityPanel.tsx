@@ -35,15 +35,6 @@ function getIconComponent(icono: string) {
     return <Edit3 size={12} className="text-text-dim shrink-0" />;
 }
 
-function getBadgeClass(tipo: string): string {
-    switch (tipo) {
-        case 'seccion':   return 'badge-vercel badge-vercel-success';
-        case 'workflow':  return 'badge-vercel badge-vercel-violet';
-        case 'comentario': return 'badge-vercel badge-vercel-warning';
-        default:           return 'badge-vercel badge-vercel-neutral';
-    }
-}
-
 function getTypoLabel(tipo: string): string {
     switch (tipo) {
         case 'seccion':   return 'Sección';
@@ -160,10 +151,10 @@ const WorkspaceActivityPanel: React.FC<WorkspaceActivityPanelProps> = ({ project
                         {actividad.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="flex items-start gap-3 px-4 py-3 hover:bg-surface/50 transition-colors group"
+                                className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-850/50 transition-colors group"
                             >
-                                {/* Ícono en contenedor Vercel Geist */}
-                                <div className="w-6 h-6 rounded-md bg-surface border border-border-thin flex items-center justify-center shrink-0 mt-0.5 group-hover:border-border-hover transition-colors">
+                                {/* Ícono directo y desnudo */}
+                                <div className="shrink-0 mt-1 text-slate-400 dark:text-zinc-500">
                                     {getIconComponent(item.icono)}
                                 </div>
 
@@ -173,8 +164,8 @@ const WorkspaceActivityPanel: React.FC<WorkspaceActivityPanelProps> = ({ project
                                         <span className="text-xs font-medium text-text-main truncate">
                                             {item.nombreUsuario || 'Usuario'}
                                         </span>
-                                        <span className={`${getBadgeClass(item.tipo)} text-[8.5px] px-1.5 py-0`}>
-                                            {getTypoLabel(item.tipo)}
+                                        <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-zinc-400">
+                                            · {getTypoLabel(item.tipo)}
                                         </span>
                                     </div>
                                     <p className="text-xs text-text-dim leading-snug">

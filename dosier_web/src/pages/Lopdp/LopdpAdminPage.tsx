@@ -35,7 +35,7 @@ const LopdpAdminPage: React.FC = () => {
     };
 
     return (
-        <div className="p-4 md:p-10 space-y-8 animate-fade-up">
+        <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 space-y-8 animate-fade-up">
             {/* Breadcrumb / Back Button */}
             <div className="flex items-center gap-2 text-xs select-none">
                 <button
@@ -56,7 +56,7 @@ const LopdpAdminPage: React.FC = () => {
                 description="Audite el registro histórico de consentimientos otorgados bajo la normativa de protección de datos personales."
             />
 
-            <div className="bento-card static p-6 space-y-6">
+            <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xs p-6 space-y-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold uppercase tracking-widest text-text-main flex items-center gap-2">
                         <ShieldCheck size={16} />
@@ -116,8 +116,8 @@ const LopdpAdminPage: React.FC = () => {
                                             {consent.user_agent || 'N/D'}
                                         </td>
                                         <td className="py-3.5 px-4 text-right">
-                                            <span className={`badge-vercel ${consent.estado === 'Otorgado' ? 'badge-vercel-emerald' : 'badge-vercel-rose'} !py-0.5 !px-2 font-medium`}>
-                                                <span className="dot" />
+                                            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${consent.estado === 'Otorgado' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${consent.estado === 'Otorgado' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                                                 {consent.estado}
                                             </span>
                                         </td>

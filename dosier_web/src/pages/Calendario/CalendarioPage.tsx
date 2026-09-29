@@ -138,7 +138,7 @@ export const CalendarioPage: React.FC = () => {
     });
 
     return (
-        <main className="flex-1 bg-bg-deep p-4 md:p-10 flex flex-col h-[calc(100vh-56px)] overflow-hidden font-sans gap-6">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 flex flex-col h-[calc(100vh-56px)] overflow-hidden font-sans gap-6">
             <PageHeader
                 kicker="Planificación y Seguimiento"
                 icon={Calendar}

@@ -60,9 +60,17 @@ export const EmailTemplatesSection: React.FC<EmailTemplatesSectionProps> = ({
                                             {t.asunto}
                                         </td>
                                         <td className="p-4">
-                                            <span className={`status-tag ${t.activo ? 'badge-vercel-success' : 'badge-vercel-neutral'}`}>
-                                                {t.activo ? 'Activa' : 'Inactiva'}
-                                            </span>
+                                            {t.activo ? (
+                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    Activa
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                                                    Inactiva
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex justify-end gap-1.5">

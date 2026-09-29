@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
     // Para usuarios regulares (Docentes, Coordinadores, Vicerrector): vista limpia y directa de su dashboard institucional
     if (!isAdmin) {
         return (
-            <main className="flex-1 bg-bg-deep transition-colors duration-200">
+            <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] transition-colors duration-200">
                 <div className="max-w-[1440px] mx-auto p-4 md:p-8 space-y-6">
                     {isVicerrector && <VicerrectorDashboard />}
                     {isCoordAcad && !isVicerrector && <CoordAcadDashboard />}
@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
 
     // Para el Superadministrador / Desarrollador: consola con selector de flujo de roles para auditar y verificar el sistema
     return (
-        <main className="flex-1 bg-bg-deep transition-colors duration-200">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] transition-colors duration-200">
             <div className="max-w-[1440px] mx-auto p-4 md:p-8 space-y-6">
                 {/* Selector Segmentado de Roles Exclusivo para Superadministrador */}
                 <RoleFlowBanner

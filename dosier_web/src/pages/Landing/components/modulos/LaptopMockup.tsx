@@ -40,10 +40,10 @@ export const LaptopMockup: React.FC<LaptopMockupProps> = ({
                 {activeModule !== null && (
                     <button
                         onClick={() => onModuleSelect(null)}
-                        className="absolute -top-6 right-0 lg:-right-4 z-30 w-8 h-8 rounded-full border border-border-thin text-text-dim hover:text-text-main bg-surface/95 dark:bg-black/90 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                        className="absolute -top-6 right-0 lg:-right-4 z-30 w-8 h-8 rounded-lg border border-border-thin text-text-dim hover:text-text-main bg-white dark:bg-zinc-900 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center shadow-sm"
                         title="Cerrar detalle"
                     >
-                        <X size={14} className="stroke-[2.5]" />
+                        <X size={14} className="stroke-[2]" />
                     </button>
                 )}
 
@@ -52,17 +52,17 @@ export const LaptopMockup: React.FC<LaptopMockupProps> = ({
                     <div className="absolute -left-6 lg:-left-12 top-[74%] -translate-y-1/2 z-30 flex flex-col gap-2">
                         <button
                             onClick={onPrevModule}
-                            className="w-8.5 h-8.5 rounded-full border border-border-thin text-text-dim hover:text-text-main bg-surface dark:bg-black/95 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center shadow-md hover:border-border-hover"
+                            className="w-8 h-8 rounded-lg border border-border-thin text-text-dim hover:text-text-main bg-white dark:bg-zinc-900 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center shadow-sm hover:border-border-hover"
                             title="Módulo Anterior"
                         >
-                            <ChevronUp size={14} className="stroke-[2.5]" />
+                            <ChevronUp size={14} className="stroke-[2]" />
                         </button>
                         <button
                             onClick={onNextModule}
-                            className="w-8.5 h-8.5 rounded-full border border-border-thin text-text-dim hover:text-text-main bg-surface dark:bg-black/95 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center shadow-md hover:border-border-hover"
+                            className="w-8 h-8 rounded-lg border border-border-thin text-text-dim hover:text-text-main bg-white dark:bg-zinc-900 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center shadow-sm hover:border-border-hover"
                             title="Módulo Siguiente"
                         >
-                            <ChevronDown size={14} className="stroke-[2.5]" />
+                            <ChevronDown size={14} className="stroke-[2]" />
                         </button>
                     </div>
                 )}

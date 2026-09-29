@@ -39,11 +39,11 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 animate-fade-in font-sans">
-            <div className="w-[520px] max-w-[92%] bg-surface border border-border-thin rounded-2xl shadow-xl p-5 space-y-4 animate-scale-up">
+            <div className="w-[520px] max-w-[92%] bg-white dark:bg-zinc-950 border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-2xl p-5 space-y-4 animate-scale-up">
                 <div className="flex items-center justify-between border-b border-border-thin/50 pb-3.5">
                     <div className="flex items-center gap-2">
-                        <Scale size={16} className="text-brand" />
-                        <span className="text-[11px] font-black text-text-main uppercase tracking-widest font-mono">Dictamen de Revisión Técnica</span>
+                        <Scale size={16} className="text-[#0070f3]" />
+                        <span className="text-[11px] font-semibold text-text-main uppercase tracking-widest font-mono">Dictamen de Revisión Técnica</span>
                     </div>
                     <button
                         onClick={onClose}
@@ -109,7 +109,7 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                             if (success) onClose();
                         }}
                         disabled={submitting}
-                        className="flex items-center justify-center gap-1.5 btn-vercel-primary py-2.5 text-xs font-bold uppercase tracking-wider disabled:opacity-40 cursor-pointer active:scale-95 transition-all"
+                        className="flex items-center justify-center gap-1.5 bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm py-2.5 text-xs font-semibold uppercase tracking-wider disabled:opacity-40 cursor-pointer active:scale-95 transition-all"
                     >
                         {submitting ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
                         Aprobar Requisitos
@@ -121,7 +121,7 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                             if (success) onClose();
                         }}
                         disabled={submitting}
-                        className="flex items-center justify-center gap-1.5 bg-transparent hover:bg-error/10 text-error border border-error/20 hover:border-error/40 rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 cursor-pointer active:scale-95"
+                        className="flex items-center justify-center gap-1.5 bg-transparent hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40 rounded-lg py-2.5 text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 cursor-pointer active:scale-95"
                     >
                         {submitting ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
                         Devolver con Plazo

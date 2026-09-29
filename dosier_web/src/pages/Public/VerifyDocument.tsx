@@ -441,14 +441,14 @@ const VerifyDocument = () => {
                                                 ? 'Firma Auténtica Registrada' 
                                                 : 'Documento Auténtico'}
                                         </h3>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            <div className="badge-vercel badge-vercel-success">
-                                                <span className="dot dot-success" />
+                                        <div className="flex flex-wrap items-center gap-3 mt-2">
+                                            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                 Integridad verificada
                                             </div>
                                             {result.signatures && result.signatures.length > 0 && (
-                                                <div className="badge-vercel badge-vercel-success bg-brand/10 border-brand/20 text-brand-light">
-                                                    <span className="dot bg-brand animate-pulse" />
+                                                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0070f3]">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] animate-pulse" />
                                                     {result.signatures.length} {result.signatures.length === 1 ? 'Firma activa' : 'Firmas activas'}
                                                 </div>
                                             )}

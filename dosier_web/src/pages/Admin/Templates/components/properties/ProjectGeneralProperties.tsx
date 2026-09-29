@@ -342,13 +342,13 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
                                                     <div className="flex items-center gap-1.5 flex-wrap">
                                                         <span className="text-xs font-bold text-text-main truncate block">{customLabel}</span>
                                                         {customVariant === 'banner_gold' && (
-                                                             <span className="badge-vercel-warning text-[8px] px-1 py-0.2">Dorado</span>
+                                                             <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-400"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Dorado</span>
                                                         )}
                                                         {customVariant === 'banner_navy' && (
-                                                            <span className="badge-vercel-info text-[8px] px-1 py-0.2">Azul</span>
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-blue-600 dark:text-blue-400"><span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />Azul</span>
                                                         )}
                                                         {customLabel !== item.defaultLabel && (
-                                                            <span className="badge-vercel-neutral text-[8px] font-mono px-1 py-0.2">personalizado</span>
+                                                            <span className="text-[10px] font-mono text-text-dim">personalizado</span>
                                                         )}
                                                     </div>
                                                     <span className="text-[9.5px] text-text-dim block mt-0.5 leading-tight truncate">{item.desc}</span>
@@ -693,13 +693,9 @@ export const ProjectGeneralProperties: React.FC<ProjectGeneralPropertiesProps> =
                                                     )}
                                                     <span className="text-xs font-bold text-text-main truncate">{field.label}</span>
                                                     {field.isGroupHeader ? (
-                                                        <span className="badge-vercel-warning text-[8px] px-1.5 py-0.2">
-                                                            Banner Grupo
-                                                        </span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-600 dark:text-amber-400"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Banner Grupo</span>
                                                     ) : (
-                                                        <span className="badge-vercel-neutral font-mono text-[8px] px-1.5 py-0.2 uppercase">
-                                                            {field.fieldType}
-                                                        </span>
+                                                        <span className="text-[10px] font-mono text-text-dim uppercase">{field.fieldType}</span>
                                                     )}
                                                 </div>
                                                 {!field.isGroupHeader && (

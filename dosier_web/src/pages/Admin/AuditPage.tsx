@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuditLogs } from './Audit/useAuditLogs';
 import { AuditDetailDrawer } from './Audit/AuditDetailDrawer';
-import { formatDateSafe, formatActionLabel, getActionBadge } from './Audit/auditTypes';
+import { formatDateSafe, formatActionLabel, getActionBadge, getActionDotClass } from './Audit/auditTypes';
 
 const AuditPage: React.FC = () => {
     const {
@@ -56,7 +56,7 @@ const AuditPage: React.FC = () => {
     };
 
     return (
-        <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto">
             <div className="max-w-[1600px] mx-auto">
                 <PageHeader
                     kicker="Seguridad Institucional"
@@ -83,7 +83,7 @@ const AuditPage: React.FC = () => {
                     </div>
                 </PageHeader>
 
-                <div className="bento-card static p-6 mb-8 animate-fade-up [animation-delay:100ms]">
+                <div className="bg-surface p-6 rounded-lg border border-slate-200/90 dark:border-zinc-800 mb-8 animate-fade-up [animation-delay:100ms]">
                     <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                         <div className="relative group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim group-focus-within:text-text-main transition-colors" />
@@ -169,7 +169,7 @@ const AuditPage: React.FC = () => {
 
                         <button
                             type="submit"
-                            className="btn-vercel-primary !py-2.5 !text-sm flex items-center justify-center gap-2 cursor-pointer"
+                            className="h-10 px-4 rounded-md font-medium text-xs text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <Filter size={14} />
                             Aplicar Filtros
@@ -177,20 +177,20 @@ const AuditPage: React.FC = () => {
                     </form>
                 </div>
 
-                <div className="bento-card static p-0 overflow-hidden mb-8 animate-fade-up [animation-delay:200ms]">
+                <div className="bg-surface rounded-lg border border-slate-200/90 dark:border-zinc-800 overflow-hidden mb-8 animate-fade-up [animation-delay:200ms]">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-border-thin bg-bg-deep/50 text-[11px] font-mono text-text-dim tracking-wider uppercase">
-                                    <th className="py-3.5 px-6">Fecha / Hora</th>
-                                    <th className="py-3.5 px-6">Usuario / Rol</th>
-                                    <th className="py-3.5 px-6">Acción</th>
-                                    <th className="py-3.5 px-6">Módulo / Objeto</th>
-                                    <th className="py-3.5 px-6">Origen / Red</th>
-                                    <th className="py-3.5 px-6 text-right">Acción</th>
+                                <tr className="border-b border-slate-200/90 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/60 text-xs font-mono text-text-dim tracking-wider uppercase">
+                                    <th className="py-3 px-6">Fecha / Hora</th>
+                                    <th className="py-3 px-6">Usuario / Rol</th>
+                                    <th className="py-3 px-6">Acción</th>
+                                    <th className="py-3 px-6">Módulo / Objeto</th>
+                                    <th className="py-3 px-6">Origen / Red</th>
+                                    <th className="py-3 px-6 text-right">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border-thin text-xs">
+                            <tbody className="divide-y divide-slate-200/90 dark:border-zinc-800 text-xs">
                                 {loading ? (
                                     <tr>
                                         <td colSpan={6} className="py-12 text-center text-text-dim font-mono">
@@ -204,49 +204,53 @@ const AuditPage: React.FC = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    logs.map((log) => (
-                                        <tr
-                                            key={log.id_audit}
-                                            className="hover:bg-bg-deep/40 transition-colors group cursor-pointer"
-                                            onClick={() => {
-                                                setSelectedLog(log);
-                                                setIsDrawerOpen(true);
-                                            }}
-                                        >
-                                            <td className="py-4 px-6 font-mono text-text-dim whitespace-nowrap">
-                                                {formatDateSafe(log.date, "dd/MM/yyyy HH:mm:ss")}
-                                            </td>
-                                            <td className="py-4 px-6">
-                                                <div className="font-semibold text-text-main group-hover:text-brand transition-colors">
-                                                    {log.admin_name || 'Sistema / Automático'}
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-6">
-                                                <span className={`badge-vercel ${getActionBadge(log.action)} font-mono uppercase text-[10px]`}>
-                                                    {formatActionLabel(log.action)}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-6">
-                                                <div className="font-medium text-text-main">{log.modulo || 'GENERAL'}</div>
-                                                <div className="text-[11px] text-text-dim font-mono truncate max-w-xs">{log.target_name || 'Global'}</div>
-                                            </td>
-                                            <td className="py-4 px-6 font-mono text-[11px] text-text-dim">
-                                                <div className="flex items-center gap-1.5">
-                                                    <MapPin size={12} className="text-text-dim/60" />
-                                                    <span>{log.ip_address || '127.0.0.1'}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5 text-[10px] text-text-dim/60 truncate max-w-[150px]">
-                                                    <Monitor size={10} />
-                                                    <span className="truncate">{log.user_agent || 'Navegador Web'}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-6 text-right font-mono">
-                                                <span className="text-brand hover:underline font-medium text-xs">
-                                                    Ver Detalle &rarr;
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    logs.map((log) => {
+                                        const actionDot = getActionDotClass(log.action);
+                                        return (
+                                            <tr
+                                                key={log.id_audit}
+                                                className="hover:bg-slate-50 dark:hover:bg-zinc-850/50 transition-colors group cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedLog(log);
+                                                    setIsDrawerOpen(true);
+                                                }}
+                                            >
+                                                <td className="py-4 px-6 font-mono text-text-dim whitespace-nowrap">
+                                                    {formatDateSafe(log.date, "dd/MM/yyyy HH:mm:ss")}
+                                                </td>
+                                                <td className="py-4 px-6">
+                                                    <div className="font-semibold text-text-main group-hover:text-[#0070f3] transition-colors">
+                                                        {log.admin_name || 'Sistema / Automático'}
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 px-6">
+                                                    <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-medium ${actionDot.text}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${actionDot.dot}`} />
+                                                        {formatActionLabel(log.action)}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-6">
+                                                    <div className="font-medium text-text-main">{log.modulo || 'GENERAL'}</div>
+                                                    <div className="text-xs text-text-dim font-mono truncate max-w-xs">{log.target_name || 'Global'}</div>
+                                                </td>
+                                                <td className="py-4 px-6 font-mono text-xs text-text-dim">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <MapPin size={12} className="text-text-dim/60" />
+                                                        <span>{log.ip_address || '127.0.0.1'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-text-dim/60 truncate max-w-[150px]">
+                                                        <Monitor size={10} />
+                                                        <span className="truncate">{log.user_agent || 'Navegador Web'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 px-6 text-right font-mono">
+                                                    <span className="text-[#0070f3] hover:underline font-medium text-xs">
+                                                        Ver Detalle &rarr;
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>

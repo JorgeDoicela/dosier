@@ -51,13 +51,13 @@ Para garantizar que el agente aplique tanto los estándares globales como los pa
   2. Activar skill local `backend-dosier` (Clean Architecture en 4 capas, DosierContext modular, firmas DFRM/P12, PEA oficial en sus 11 secciones, gobernanza curricular y esquemas SIGAFI de solo lectura).
 
 * **Tareas de Documentación Técnica, Memoria de Tesis y Especificación Académica:**
-  * Activar skill local `documentacion-dosier` (sincronización obligatoria de `docs/documentacion/`, creación/edición/eliminación de `.md`, cero emojis, protección total de `docs/tesis/` y consistencia para la titulación del ISTPET).
+  * Activar skill local `documentacion-dosier` (sincronización obligatoria de `docs/documentacion/`, creación/edición/eliminación de documentos técnicos en `docs/documentacion/`, cero emojis, protección total de `docs/tesis/` y consistencia para la titulación del ISTPET). Las skills son de solo lectura y nunca deben modificarse.
 
 * **Tareas de Seguridad, Login, Credenciales o Base de Datos Sensible:**
-  * Activar skill global `gobernanza-datos-segura`.
+  * Activar skill global `datos-seguros`.
 
 * **Tareas de Restricción de Alcance o Respuestas Rápidas:**
-  * Activar skill global `respuesta-eficiente`.
+  * Activar skill global `ahorro-tokens`.
 
 ---
 

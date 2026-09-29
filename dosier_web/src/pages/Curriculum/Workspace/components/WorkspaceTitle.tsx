@@ -31,18 +31,18 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
                     </h1>
 
                     {/* Metadatos y Badges en una sola línea ordenada */}
-                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    <div className="flex flex-wrap items-center gap-3 pt-0.5">
                         {((currentProject as any).codigo_institucional || (currentProject as any).codigo) && (
-                            <span className="text-[11px] font-mono bg-surface border border-border-thin rounded px-2 py-0.5 text-text-dim font-medium">
+                            <span className="text-[11px] font-mono text-text-dim font-medium">
                                 {(currentProject as any).codigo_institucional || (currentProject as any).codigo}
                             </span>
                         )}
-                        <div className={`badge-vercel ${cfg.badge} text-[11px] !py-0.5 !px-2.5 font-medium`} style={cfg.style}>
-                            <span className={`dot ${cfg.dot}`} style={cfg.dotStyle} />
-                            {cfg.label}
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium" style={cfg.style}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} style={cfg.dotStyle} />
+                            <span>{cfg.label}</span>
                         </div>
                         {(currentProject as any).linea && (
-                            <span className="text-[11px] text-text-dim bg-surface border border-border-thin rounded px-2 py-0.5 truncate max-w-[280px]" title={(currentProject as any).linea}>
+                            <span className="text-[11px] text-text-dim truncate max-w-[280px]" title={(currentProject as any).linea}>
                                 {(currentProject as any).linea}
                             </span>
                         )}
@@ -65,7 +65,7 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
                     </div>
                     <button
                         onClick={() => setActiveDocument(templateCode)}
-                        className="btn-vercel-primary py-3 px-6 text-xs w-full md:w-auto shrink-0 justify-center"
+                        className="px-5 py-2.5 rounded-lg bg-[#0070f3] hover:bg-[#0060df] text-white text-xs font-semibold tracking-tight transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer w-full md:w-auto shrink-0"
                     >
                         <FileSignature size={14} />
                         <span>Continuar Editando</span>

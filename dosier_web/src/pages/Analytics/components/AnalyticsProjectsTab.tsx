@@ -77,19 +77,24 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                         const pctAvance = getProgressPct(selectedProj.estado);
 
                         return (
-                            <div className="lg:col-span-3 bento-card static p-6 flex flex-col justify-between h-auto min-h-[400px] bg-surface border border-border-thin shadow-sm rounded-xl space-y-6">
+                            <div className="lg:col-span-3 p-6 flex flex-col justify-between h-auto min-h-[400px] bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg space-y-6">
                                 {/* Header Instrumento */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-thin/50 pb-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/90 dark:border-zinc-800 pb-4">
                                     <div className="space-y-1.5">
-                                        <div className="flex flex-wrap items-center gap-1.5">
-                                            <span className="text-[10px] font-semibold font-mono text-brand uppercase tracking-wider">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="text-xs font-mono text-text-dim">
                                                 {selectedProj.codigoInstitucional || `PEA-${selectedProj.uuid.substring(0, 5).toUpperCase()}`}
                                             </span>
-                                            <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-bold ${
+                                            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
                                                 selectedProj.estado === 'Aprobado' || selectedProj.estado === 'En Ejecución'
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                                    : 'text-amber-600 dark:text-amber-400'
                                             }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                                    selectedProj.estado === 'Aprobado' || selectedProj.estado === 'En Ejecución'
+                                                        ? 'bg-emerald-500'
+                                                        : 'bg-amber-500'
+                                                }`} />
                                                 {selectedProj.estado}
                                             </span>
                                         </div>
@@ -97,21 +102,21 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                             {selectedProj.titulo}
                                         </h3>
                                     </div>
-                                    <div className="text-left sm:text-right shrink-0 bg-bg-deep/50 border border-border-thin px-4 py-2.5 rounded-xl">
-                                        <span className="text-[8px] font-medium uppercase text-text-dim block tracking-wider">Período Académico</span>
-                                        <span className="text-sm font-semibold font-mono text-text-main">{selectedProj.periodoConvocatoria || selectedProj.periodo || 'Período Vigente'}</span>
+                                    <div className="text-left sm:text-right shrink-0 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 px-3.5 py-2 rounded-md">
+                                        <span className="text-[10px] font-medium uppercase text-text-dim block tracking-wider">Período Académico</span>
+                                        <span className="text-xs font-semibold font-mono text-text-main">{selectedProj.periodoConvocatoria || selectedProj.periodo || 'Período Vigente'}</span>
                                     </div>
                                 </div>
 
                                 {/* Fila Detalle KPIs */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-bg-deep/20 border border-border-thin/40 rounded-2xl select-none">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-200/90 dark:border-zinc-800 rounded-lg select-none">
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Estado Curricular</span>
-                                        <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.estado}</span>
+                                        <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider block">Estado Curricular</span>
+                                        <span className="text-xs font-semibold font-mono text-text-main block mt-0.5">{selectedProj.estado}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Docentes Asignados</span>
-                                        <span className="text-xs font-bold font-mono text-text-main block mt-0.5">{selectedProj.totalInvestigadores || 1} docente(s)</span>
+                                        <span className="text-[10px] font-semibold text-text-dim uppercase tracking-wider block">Docentes Asignados</span>
+                                        <span className="text-xs font-semibold font-mono text-text-main block mt-0.5">{selectedProj.totalInvestigadores || 1} docente(s)</span>
                                     </div>
                                     <div>
                                         <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Revisiones Técnicas</span>

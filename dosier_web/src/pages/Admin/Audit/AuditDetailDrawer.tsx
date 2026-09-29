@@ -33,11 +33,13 @@ const renderValue = (value: unknown) => {
 
     if (typeof value === 'boolean') {
         return value ? (
-            <span className="badge-vercel badge-vercel-success py-0 px-2 text-[9px] font-semibold">
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 SÍ
             </span>
         ) : (
-            <span className="badge-vercel badge-vercel-error py-0 px-2 text-[9px] font-semibold">
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-rose-600 dark:text-rose-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                 NO
             </span>
         );
@@ -46,9 +48,9 @@ const renderValue = (value: unknown) => {
     if (Array.isArray(value)) {
         if (value.length === 0) return <span className="text-text-dim/40 italic">vacío</span>;
         return (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
                 {value.map((item, idx) => (
-                    <span key={idx} className="badge-vercel badge-vercel-neutral py-0 px-1.5 text-[9px] font-mono">
+                    <span key={idx} className="text-[11px] font-mono text-text-muted">
                         {String(item)}
                     </span>
                 ))}

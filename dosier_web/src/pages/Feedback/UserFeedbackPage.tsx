@@ -175,7 +175,7 @@ export const UserFeedbackPage: React.FC = () => {
     };
 
     return (
-        <main className="flex-1 bg-bg-deep p-6 md:p-8 lg:p-10 space-y-6">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 space-y-6">
             <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-1 text-xs text-text-dim animate-fade-in select-none">
                 <Link
                     to="/dashboard"
@@ -202,9 +202,9 @@ export const UserFeedbackPage: React.FC = () => {
             >
                 <button
                     onClick={() => window.dispatchEvent(new CustomEvent('dosier-open-feedback'))}
-                    className="btn-vercel-primary w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    className="px-3.5 py-2 rounded-lg bg-[#0070f3] hover:bg-[#0060df] text-white font-medium text-xs tracking-tight transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto shrink-0"
                 >
-                    <Plus size={14} strokeWidth={3} />
+                    <Plus size={14} strokeWidth={2} />
                     <span>Reportar Incidencia</span>
                 </button>
             </PageHeader>

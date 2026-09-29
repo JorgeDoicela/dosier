@@ -83,9 +83,9 @@ const Workspace: React.FC = () => {
 
     // Fases del Portafolio interactivo en la pestaña 4
     const [timelinePhases, setTimelinePhases] = useState([
-        { name: '1. PEA Curricular', status: 'Completado', color: 'text-success border-success/30 bg-success-subtle' },
-        { name: '2. Sílabo 19 Semanas', status: 'En Proceso', color: 'text-warning border-warning/30 bg-warning-subtle' },
-        { name: '3. Guías APE y Rúbricas', status: 'Pendiente', color: 'text-text-dim border-border-thin bg-surface/50' }
+        { name: '1. PEA Curricular', status: 'Completado', dotColor: 'bg-emerald-500', textColor: 'text-emerald-700 dark:text-emerald-400' },
+        { name: '2. Sílabo 19 Semanas', status: 'En Proceso', dotColor: 'bg-amber-500', textColor: 'text-amber-700 dark:text-amber-400' },
+        { name: '3. Guías APE y Rúbricas', status: 'Pendiente', dotColor: 'bg-zinc-400', textColor: 'text-zinc-600 dark:text-zinc-400' }
     ]);
 
     const cyclePhaseStatus = (idx: number) => {
@@ -93,11 +93,11 @@ const Workspace: React.FC = () => {
         setTimelinePhases(timelinePhases.map((phase, pIdx) => {
             if (pIdx === idx) {
                 if (phase.status === 'Pendiente') {
-                    return { ...phase, status: 'En Proceso', color: 'text-warning border-warning/30 bg-warning-subtle' };
+                    return { ...phase, status: 'En Proceso', dotColor: 'bg-amber-500', textColor: 'text-amber-700 dark:text-amber-400' };
                 } else if (phase.status === 'En Proceso') {
-                    return { ...phase, status: 'Completado', color: 'text-success border-success/30 bg-success-subtle' };
+                    return { ...phase, status: 'Completado', dotColor: 'bg-emerald-500', textColor: 'text-emerald-700 dark:text-emerald-400' };
                 } else {
-                    return { ...phase, status: 'Pendiente', color: 'text-text-dim border-border-thin bg-surface/50' };
+                    return { ...phase, status: 'Pendiente', dotColor: 'bg-zinc-400', textColor: 'text-zinc-600 dark:text-zinc-400' };
                 }
             }
             return phase;
@@ -188,18 +188,13 @@ const Workspace: React.FC = () => {
                 <div className="lg:col-span-8 lg:sticky lg:top-[32vh] border border-border-thin rounded-xl bg-surface shadow-md p-7 font-mono text-xs tracking-tight relative overflow-hidden">
                     {/* Decoraciones del editor */}
                     <div className="flex items-center justify-between border-b border-border-thin pb-3.5 mb-5.5">
-                        <div className="flex items-center gap-2">
-                            <span className="w-3.5 h-3.5 rounded-full bg-error/50" />
-                            <span className="w-3.5 h-3.5 rounded-full bg-warning/50" />
-                            <span className="w-3.5 h-3.5 rounded-full bg-success/50" />
+                        <span className="text-xs font-mono font-medium text-text-main tracking-tight">pea-desarrollo-software-istpet.doc</span>
+                        <div className="flex items-center gap-2 font-mono text-[11px]">
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
+                            <span className={isSaving ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                                {isSaving ? 'GUARDANDO...' : 'SINCRONIZADO'}
+                            </span>
                         </div>
-                        <span className="text-xs text-text-dim font-mono">Workspace://pea-desarrollo-software-istpet.doc</span>
-                        <span className={`px-2.5 py-0.5 rounded border text-[10px] font-mono transition-all duration-300 ${isSaving
-                            ? 'border-warning/30 bg-warning-subtle text-warning'
-                            : 'border-success/30 bg-success-subtle text-success'
-                            }`}>
-                            {isSaving ? 'GUARDANDO...' : 'SINCRONIZADO'}
-                        </span>
                     </div>
 
                     {/* Layout del mockup */}
@@ -321,10 +316,8 @@ const Workspace: React.FC = () => {
                                                 <span className="w-1.5 h-3.5 bg-success inline-block animate-pulse ml-0.5 translate-y-0.5" />
                                             </p>
                                         </div>
-                                        <div className="border border-border-thin rounded p-2.5 bg-surface/50 flex items-center gap-2.5">
-                                            <div className="w-9 h-9 rounded bg-success/10 border border-success/20 flex items-center justify-center text-success shrink-0">
-                                                <BookOpen size={16} />
-                                            </div>
+                                        <div className="border border-border-thin rounded-lg p-3 bg-surface flex items-center gap-3">
+                                            <BookOpen size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" strokeWidth={1.5} />
                                             <div className="text-xs">
                                                 <p className="text-text-main font-semibold font-mono">Malla SIGAFI Enlazada</p>
                                                 <p className="text-text-dim">Validación matemática de 160 horas curriculares.</p>
@@ -398,12 +391,15 @@ const Workspace: React.FC = () => {
                                                 <button
                                                     key={idx}
                                                     onClick={() => cyclePhaseStatus(idx)}
-                                                    className="w-full p-1.5 px-2.5 border border-border-thin rounded bg-bg-deep flex justify-between items-center text-left transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-brand/40 cursor-pointer font-sans"
+                                                    className="w-full p-2 px-3 border border-border-thin rounded-lg bg-bg-deep flex justify-between items-center text-left transition-all duration-300 hover:border-[#0070f3]/40 cursor-pointer font-sans"
                                                 >
                                                     <span className="text-xs text-text-main font-medium">{phase.name}</span>
-                                                    <span className={`text-[8px] border px-2.5 py-0.5 rounded font-mono uppercase font-semibold transition-all duration-300 ${phase.color}`}>
-                                                        {phase.status}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${phase.dotColor}`} />
+                                                        <span className={`uppercase font-medium ${phase.textColor}`}>
+                                                            {phase.status}
+                                                        </span>
+                                                    </div>
                                                 </button>
                                             ))}
                                         </div>

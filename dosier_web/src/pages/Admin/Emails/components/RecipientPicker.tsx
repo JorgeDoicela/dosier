@@ -295,10 +295,10 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-full ${TYPE_BADGE[p.tipo] ?? 'bg-surface text-text-dim'}`}>
+                                                    <span className="text-xs text-text-dim font-mono">
                                                         {USER_TYPES.find(t => t.value === p.tipo)?.label ?? p.tipo}
                                                     </span>
-                                                    {alreadyAdded && <CheckCircle2 size={12} className="text-success" />}
+                                                    {alreadyAdded && <CheckCircle2 size={13} className="text-emerald-500" />}
                                                 </div>
                                             </button>
                                         );
@@ -314,22 +314,20 @@ export const RecipientPicker: React.FC<RecipientPickerProps> = ({
                             {selected.map(p => (
                                 <div
                                     key={personKey(p)}
-                                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border-thin bg-surface text-xs max-w-full"
+                                    className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-slate-200/90 dark:border-zinc-800 bg-surface text-xs max-w-full"
                                     title={p.email || 'Correo desde cuenta DOSIER'}
                                 >
-                                    <span className={`text-[8px] font-semibold px-1 rounded-full ${TYPE_BADGE[p.tipo] ?? 'bg-surface text-text-dim'}`}>
-                                        {p.tipo.charAt(0)}
-                                    </span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] shrink-0" />
                                     <span className="font-medium text-text-main truncate max-w-[130px]">{p.nombre}</span>
-                                    <span className="text-[8px] text-text-dim font-mono truncate hidden sm:block max-w-[120px]">
+                                    <span className="text-[10px] text-text-dim font-mono truncate hidden sm:block max-w-[120px]">
                                         {p.email}
                                     </span>
                                     <button
                                         type="button"
                                         onClick={() => remove(p)}
-                                        className="text-text-dim hover:text-error transition-colors ml-0.5 cursor-pointer shrink-0"
+                                        className="text-text-dim hover:text-rose-500 transition-colors ml-0.5 cursor-pointer shrink-0"
                                     >
-                                        <X size={11} />
+                                        <X size={12} />
                                     </button>
                                 </div>
                             ))}

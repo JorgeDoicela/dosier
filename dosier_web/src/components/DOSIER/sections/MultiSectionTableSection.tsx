@@ -135,7 +135,7 @@ export const MultiSectionTableSection: React.FC<MultiSectionTableSectionProps> =
                                     {sec.title || `Sección ${secIdx + 1}`}
                                 </h4>
                             </div>
-                            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-secondary/40 border border-border-thin text-muted-foreground font-semibold">
+                            <span className="text-[10px] font-mono text-muted-foreground font-semibold">
                                 {headers.length} Columnas
                             </span>
                         </div>

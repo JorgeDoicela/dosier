@@ -169,7 +169,7 @@ export const AdminFeedbackPage: React.FC = () => {
     };
 
     return (
-        <main className="flex-1 bg-bg-deep p-6 md:p-8 lg:p-10 space-y-6">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 space-y-6">
             <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-1 text-xs text-text-dim animate-fade-in select-none">
                 <Link
                     to="/dashboard"

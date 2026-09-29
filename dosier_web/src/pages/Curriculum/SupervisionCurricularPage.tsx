@@ -12,7 +12,7 @@ import { PeaSupervisionTray } from './components/PeaSupervisionTray';
  */
 export const SupervisionCurricularPage: React.FC = () => {
     return (
-        <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto space-y-8">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto space-y-6">
             <PageHeader
                 kicker="Gobernanza Curricular Institucional"
                 icon={BookOpen}

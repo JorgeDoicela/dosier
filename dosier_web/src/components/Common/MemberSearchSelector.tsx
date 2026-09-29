@@ -353,17 +353,20 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
 
                                                 <div className="shrink-0 flex items-center gap-2">
                                                     {((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) || 0) > 0) && (
-                                                        <span className="badge-vercel badge-vercel-success text-[9px] px-2 py-0.5 font-mono">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                             {candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia
                                                         </span>
                                                     )}
                                                     {candidate.type === 'ESTUDIANTE' && candidate.es_graduado === false && (
-                                                        <span className="badge-vercel badge-vercel-info text-[9px] px-2 py-0.5">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[#0070f3]">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
                                                             Matriculado
                                                         </span>
                                                     )}
                                                     {isAlreadyMember && (
-                                                        <span className="badge-vercel badge-vercel-neutral text-[9px]">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-text-dim">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
                                                             En el equipo
                                                         </span>
                                                     )}
@@ -410,9 +413,7 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                                     <p className="font-semibold text-text-main text-xs flex items-center gap-2 truncate">
                                                         <span>{formatNombre(candidate.nombre_completo || candidate.nombre)}</span>
                                                         {((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) || 0) > 0) && (
-                                                            <span className="badge-vercel badge-vercel-success text-[9px] px-1.5 py-0.5">
-                                                                {candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia
-                                                            </span>
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia</span>
                                                         )}
                                                     </p>
                                                     <p className="text-text-dim font-mono text-[10px] truncate">
@@ -422,19 +423,13 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
 
                                                 <div className="shrink-0 flex items-center gap-1">
                                                     {candidate.type === 'DOCENTE' && (
-                                                        <span className="badge-vercel badge-vercel-violet text-[9px] uppercase">
-                                                            Docente
-                                                        </span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-purple-600 dark:text-purple-400"><span className="w-1.5 h-1.5 rounded-full bg-purple-500" />Docente</span>
                                                     )}
                                                     {candidate.type === 'ADMINISTRATIVO' && (
-                                                        <span className="badge-vercel badge-vercel-neutral text-[9px] uppercase">
-                                                            Admin
-                                                        </span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-text-dim"><span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />Admin</span>
                                                     )}
                                                     {candidate.type === 'ESTUDIANTE' && (
-                                                        <span className="badge-vercel badge-vercel-info text-[9px] uppercase">
-                                                            Alumno
-                                                        </span>
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#0070f3]"><span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />Alumno</span>
                                                     )}
                                                 </div>
                                             </button>

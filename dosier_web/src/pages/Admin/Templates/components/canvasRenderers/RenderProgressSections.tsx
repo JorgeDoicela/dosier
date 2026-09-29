@@ -120,7 +120,7 @@ export const RenderProgressHeaderSection: React.FC<{
                                 {/* Floating pill controls */}
                                 {onUpdateConfig && blockId && (
                                     <div
-                                        className="absolute right-1 top-1 z-20 flex items-center gap-0.5 bg-slate-900/90 text-white p-0.5 rounded shadow-sm opacity-0 group-hover/cell:opacity-100 transition-opacity"
+                                        className="absolute right-1 top-1 z-20 flex items-center gap-0.5 bg-slate-900 text-white p-0.5 rounded shadow-sm opacity-0 group-hover/cell:opacity-100 transition-opacity"
                                         onClick={e => e.stopPropagation()}
                                     >
                                         <button

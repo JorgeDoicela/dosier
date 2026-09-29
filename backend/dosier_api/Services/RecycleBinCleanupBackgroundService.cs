@@ -60,7 +60,7 @@ namespace dosier_api.Services
             // 1. Purgar PEAs inactivos que hayan superado los 30 días de retención
             var expiredPeas = await context.Set<dosier_domain.Curriculum.Entities.DocPea>()
                 .IgnoreQueryFilters()
-                .Where(p => !p.Activo && p.FechaModificacion != null && p.FechaModificacion < expirationLimit)
+                .Where(p => !p.Activo && p.FechaModificacion < expirationLimit)
                 .ToListAsync();
 
             if (expiredPeas.Any())

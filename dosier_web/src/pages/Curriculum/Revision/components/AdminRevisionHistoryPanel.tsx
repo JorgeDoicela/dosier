@@ -214,20 +214,20 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
             <div className="max-w-3xl mx-auto p-6 space-y-5">
 
                 {/* ── Cabecera de resultado ── */}
-                <div className={`rounded-2xl border p-5 flex items-start gap-4 ${
+                <div className={`rounded-xl border p-5 flex items-start gap-4 ${
                     isAprobado
-                        ? 'bg-success/5 border-success/25'
-                        : 'bg-warning/5 border-warning/25'
+                        ? 'bg-emerald-500/5 border-emerald-500/20'
+                        : 'bg-amber-500/5 border-amber-500/20'
                 }`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        isAprobado ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
-                    }`}>
-                        {isAprobado ? <FileCheck size={20} /> : <AlertTriangle size={20} />}
-                    </div>
+                    {isAprobado ? (
+                        <FileCheck size={24} className="text-emerald-500 shrink-0 mt-0.5" />
+                    ) : (
+                        <AlertTriangle size={24} className="text-amber-500 shrink-0 mt-0.5" />
+                    )}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                             <h2 className={`text-sm font-black uppercase tracking-wider ${
-                                isAprobado ? 'text-success' : 'text-warning'
+                                isAprobado ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                             }`}>
                                 Revisión Técnica {isAprobado ? 'Aprobada' : 'Devuelta para Correcciones'}
                             </h2>
@@ -275,12 +275,12 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                         <div className="flex items-center gap-2 px-4 py-3 border-b border-border-thin bg-surface-hover/30">
                             <MessageSquare size={13} className="text-text-dim" />
                             <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
-                                {isAdmin ? 'Dictamen General del Administrador' : 'Mensaje del Coordinador de Investigación'}
+                                {isAdmin ? 'Dictamen General del Administrador' : 'Mensaje del Coordinador Curricular'}
                             </span>
                         </div>
                         <div className="p-4">
                             <blockquote className={`text-xs leading-relaxed border-l-2 pl-3 text-text-main/80 italic ${
-                                isAprobado ? 'border-success/40' : 'border-warning/40'
+                                isAprobado ? 'border-emerald-500/40' : 'border-amber-500/40'
                             }`}>
                                 {revision.feedbackGeneral}
                             </blockquote>
@@ -311,8 +311,8 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                                     key={fieldKey}
                                     className={`rounded-xl border overflow-hidden transition-all duration-200 ${
                                         isOk
-                                            ? 'border-success/20 bg-success/[0.02]'
-                                            : 'border-warning/25 bg-warning/[0.02]'
+                                            ? 'border-emerald-500/20 bg-emerald-500/[0.02]'
+                                            : 'border-amber-500/25 bg-amber-500/[0.02]'
                                     }`}
                                 >
                                     <button
@@ -320,14 +320,11 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                                         onClick={() => toggleSection(fieldKey)}
                                         className="w-full flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-hover/30 transition-colors text-left"
                                     >
-                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                                            isOk ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
-                                        }`}>
-                                            {isOk
-                                                ? <CheckCircle2 size={13} className="stroke-[2.5]" />
-                                                : <AlertTriangle size={13} className="stroke-[2.5]" />
-                                            }
-                                        </div>
+                                        {isOk ? (
+                                            <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
+                                        ) : (
+                                            <AlertTriangle size={15} className="text-amber-500 shrink-0" />
+                                        )}
                                         <span className="flex-1 text-xs font-semibold text-text-main truncate">{label}</span>
                                         <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-medium shrink-0 ${
                                             isOk ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
@@ -346,7 +343,7 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                                             <div className="border-t border-border-thin/50 pt-3 space-y-2">
                                                 {items.map((obs, idx) => (
                                                     <div key={idx} className="flex items-start gap-2 text-xs text-text-main/80">
-                                                        <ArrowRight size={12} className={`shrink-0 mt-0.5 ${isOk ? 'text-success/60' : 'text-warning/60'}`} />
+                                                        <ArrowRight size={12} className={`shrink-0 mt-0.5 ${isOk ? 'text-emerald-500/60' : 'text-amber-500/60'}`} />
                                                         <span className="leading-relaxed">{obs.text}</span>
                                                     </div>
                                                 ))}
@@ -362,11 +359,11 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                 {/* ── Sin secciones detalladas, mostrar texto plano ── */}
                 {totalSecciones === 0 && !revision.feedbackGeneral && (
                     <div className="flex items-start gap-3 bg-surface border border-border-thin rounded-xl p-4">
-                        <Info size={15} className="text-brand shrink-0 mt-0.5" />
+                        <Info size={15} className="text-[#0070f3] shrink-0 mt-0.5" />
                         <p className="text-xs text-text-dim leading-relaxed">
                             {isAprobado
-                                ? 'El Coordinador de Investigación aprobó el protocolo sin observaciones adicionales. El cumplimiento de todos los controles CACES fue verificado.'
-                                : 'El Coordinador de Investigación solicitó correcciones. Consulte las observaciones detalladas con su director de proyecto.'}
+                                ? 'La Coordinación Curricular aprobó el protocolo sin observaciones adicionales. El cumplimiento de todos los controles CACES fue verificado.'
+                                : 'La Coordinación Curricular solicitó correcciones. Consulte las observaciones detalladas con su docente responsable.'}
                         </p>
                     </div>
                 )}
@@ -377,7 +374,7 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                         <User size={11} className="shrink-0 mt-0.5" />
                         <span>
                             Esta vista muestra únicamente el dictamen de la revisión técnica institucional.
-                            Los detalles internos de auditoría son confidenciales y accesibles solo al Coordinador de Investigación.
+                            Los detalles internos de auditoría son confidenciales y accesibles solo al Coordinador Curricular.
                         </span>
                     </div>
                 )}

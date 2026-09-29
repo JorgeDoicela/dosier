@@ -5,7 +5,7 @@ import { useNotifications } from '../../../api/NotificationsContext';
 
 export interface ConsentimientoData {
     id_consentimiento: number;
-    uuid: string;
+    uuid?: string;
     id_usuario: number;
     nombre_usuario: string;
     version_politica: string;
@@ -58,16 +58,16 @@ export const ConsentDetailPanel: React.FC<ConsentDetailPanelProps> = ({
             />
 
             {/* Drawer Lateral idéntico al estándar de Convocatorias / Paneles DOSIER */}
-            <div className="relative w-full max-w-2xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-fade-up overflow-hidden">
+            <div className="relative w-full max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-slate-200/90 dark:border-zinc-800 flex flex-col z-10 animate-fade-up overflow-hidden">
                 {/* Top Bar / Header */}
-                <div className="flex items-center justify-between px-8 py-6 border-b border-border-thin bg-surface shrink-0">
+                <div className="flex items-center justify-between px-8 py-6 border-b border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                     <div className="flex items-center gap-3">
                         <span className="px-2.5 py-1 bg-bg-deep text-text-dim border border-border-thin text-[10px] font-mono uppercase rounded-md">
                             ID #{detailConsent.id_usuario}
                         </span>
                         <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider">
-                            <span className={`dot dot-pulse ${isOtorgado ? 'dot-success' : 'dot-warning'}`} />
-                            <span className={isOtorgado ? 'text-success' : 'text-warning'}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isOtorgado ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                            <span className={isOtorgado ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}>
                                 {isOtorgado ? 'Consentimiento Activo' : `Estado: ${detailConsent.estado}`}
                             </span>
                         </div>
@@ -170,7 +170,7 @@ export const ConsentDetailPanel: React.FC<ConsentDetailPanelProps> = ({
                             </div>
 
                             {/* User Agent */}
-                            <div className="p-4 bento-card static space-y-2">
+                            <div className="p-4 border border-slate-200/90 dark:border-zinc-800 rounded-xl bg-surface space-y-2">
                                 <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold text-text-dim tracking-wider">
                                     <Laptop size={12} />
                                     <span>Huella del Navegador y Sistema Operativo (User Agent)</span>
@@ -184,10 +184,10 @@ export const ConsentDetailPanel: React.FC<ConsentDetailPanelProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="p-8 border-t border-border-thin bg-surface flex gap-4 shrink-0">
+                <div className="p-6 border-t border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex gap-4 shrink-0">
                     <button
                         onClick={onClose}
-                        className="btn-vercel-primary flex-1 py-3 text-center cursor-pointer"
+                        className="bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm flex-1 py-2.5 text-center text-xs font-semibold cursor-pointer transition-colors"
                     >
                         Cerrar Detalle
                     </button>

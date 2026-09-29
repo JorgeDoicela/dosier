@@ -245,7 +245,7 @@ export const FeedbackEditDrawer: React.FC<FeedbackEditDrawerProps> = ({
                             type="submit"
                             form="edit-feedback-form"
                             disabled={isSaving || !titulo.trim() || !descripcion.trim()}
-                            className="btn-vercel-primary text-xs px-4 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                            className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm text-xs px-4 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors font-semibold"
                         >
                             {isSaving && <Loader2 size={12} className="animate-spin" />}
                             <span>Guardar cambios</span>

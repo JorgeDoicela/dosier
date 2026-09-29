@@ -73,7 +73,7 @@ export const SignatureProfileCard: React.FC = () => {
                     <div className="empty-icon" />
                     <h4>Su firma no está configurada</h4>
                     <p>Para poder firmar protocolos de investigación, informes de avance u actas oficiales, debe configurar su trazo y cargo institucional.</p>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); sig.setIsEditing(true); }} className="btn-vercel-primary text-xs">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); sig.setIsEditing(true); }} className="bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm px-4 py-2 font-semibold text-xs transition-colors">
                         Configurar Ahora
                     </button>
                 </div>
@@ -169,7 +169,7 @@ export const SignatureProfileCard: React.FC = () => {
 
                     <div className="sig-form-actions">
                         <button type="button" onClick={sig.cancelEdit} className="btn-vercel-secondary text-xs">Cancelar</button>
-                        <button type="submit" disabled={sig.saving || !sig.firmaImagenB64} className="btn-vercel-primary text-xs">
+                        <button type="submit" disabled={sig.saving || !sig.firmaImagenB64} className="bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm px-4 py-2 font-semibold text-xs transition-colors disabled:opacity-50">
                             {sig.saving ? 'Guardando...' : 'Guardar y Activar Firma'}
                         </button>
                     </div>
@@ -258,7 +258,7 @@ export const SignatureProfileCard: React.FC = () => {
                         </div>
 
                         {/* Pie de página con botones fluidos y borde superior */}
-                        <div className="p-8 border-t border-border-thin bg-surface flex gap-4">
+                        <div className="p-6 border-t border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex gap-4">
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmModal(false)}
@@ -269,7 +269,7 @@ export const SignatureProfileCard: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handleConfirmSave}
-                                className="btn-vercel-primary flex-1"
+                                className="bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg shadow-sm py-2.5 font-semibold text-xs transition-colors flex-1"
                             >
                                 Confirmar y Activar
                             </button>

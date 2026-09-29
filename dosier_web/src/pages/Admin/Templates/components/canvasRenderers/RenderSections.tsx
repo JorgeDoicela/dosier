@@ -1704,7 +1704,7 @@ export const RenderImpacts: React.FC<{
         const id = cat.id || cat.key || '';
         return (
             <div
-                className="absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center gap-0.5 bg-slate-900/90 text-white p-0.5 rounded shadow-sm opacity-0 group-hover/cell:opacity-100 transition-opacity"
+                className="absolute right-1 top-1/2 -translate-y-1/2 z-20 flex items-center gap-0.5 bg-slate-900 text-white p-0.5 rounded shadow-sm opacity-0 group-hover/cell:opacity-100 transition-opacity"
                 onClick={e => e.stopPropagation()}
             >
                 <button

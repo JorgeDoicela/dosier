@@ -11,7 +11,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import React, { useEffect, useCallback, useRef } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, AlertTriangle } from 'lucide-react';
 import { FullscreenLoader } from '../../../components/Common/FullscreenLoader';
 import DocumentEditor from './Wizard/DocumentEditor';
 
@@ -37,7 +37,6 @@ export const DocumentWorkspace: React.FC = () => {
         setActiveDocument,
         isSidebarCollapsed,
         currentProject,
-        setCurrentProject,
         projectDocuments,
         isLoading,
         resolvedProjectUuid,
@@ -198,19 +197,15 @@ export const DocumentWorkspace: React.FC = () => {
 
     if (isNotFound) {
         return (
-            <div className="flex-1 bg-bg-deep flex items-center justify-center min-h-[60vh] p-6 text-center">
-                <div className="bento-card static p-8 max-w-md w-full flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center text-error">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <h3 className="text-sm font-semibold text-text-main uppercase tracking-widest">Proyecto no encontrado</h3>
+            <div className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] flex items-center justify-center min-h-[60vh] p-6 text-center">
+                <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl p-8 max-w-md w-full flex flex-col items-center gap-4 shadow-sm">
+                    <AlertTriangle size={36} className="text-red-500" strokeWidth={1.5} />
+                    <h3 className="text-sm font-semibold text-text-main uppercase tracking-widest">Instrumento no encontrado</h3>
                     <p className="text-xs text-text-dim leading-relaxed">
-                        El proyecto solicitado no existe o ha sido eliminado del sistema.
+                        El instrumento curricular solicitado no existe o ha sido eliminado del sistema.
                     </p>
-                    <button onClick={() => navigate(urlPrefix)} className="btn-vercel-primary text-xs w-full justify-center">
-                        Volver a Proyectos
+                    <button onClick={() => navigate(urlPrefix)} className="px-4 py-2.5 rounded-lg bg-[#0070f3] hover:bg-[#0060df] text-white text-xs font-semibold tracking-tight transition-all shadow-sm w-full text-center cursor-pointer">
+                        Volver a Asignaturas
                     </button>
                 </div>
             </div>
@@ -219,15 +214,15 @@ export const DocumentWorkspace: React.FC = () => {
 
     if (isUnauthorized) {
         return (
-            <div className="flex-1 bg-bg-deep flex items-center justify-center min-h-[60vh] p-6 text-center">
-                <div className="bento-card static p-8 max-w-md w-full flex flex-col items-center gap-4">
-                    <Shield size={48} className="text-error" />
+            <div className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] flex items-center justify-center min-h-[60vh] p-6 text-center">
+                <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl p-8 max-w-md w-full flex flex-col items-center gap-4 shadow-sm">
+                    <Shield size={36} className="text-red-500" strokeWidth={1.5} />
                     <h3 className="text-sm font-semibold text-text-main uppercase tracking-widest">Acceso Restringido</h3>
                     <p className="text-xs text-text-dim leading-relaxed">
-                        No tienes permisos para visualizar ni participar en este proyecto de investigación colaborativo.
+                        No tienes permisos para visualizar ni participar en este instrumento curricular.
                     </p>
-                    <button onClick={() => navigate(urlPrefix)} className="btn-vercel-primary text-xs w-full justify-center">
-                        Volver a Proyectos
+                    <button onClick={() => navigate(urlPrefix)} className="px-4 py-2.5 rounded-lg bg-[#0070f3] hover:bg-[#0060df] text-white text-xs font-semibold tracking-tight transition-all shadow-sm w-full text-center cursor-pointer">
+                        Volver a Asignaturas
                     </button>
                 </div>
             </div>
@@ -284,7 +279,7 @@ export const DocumentWorkspace: React.FC = () => {
     }
 
     return (
-        <div className="h-screen w-full flex flex-col bg-bg-deep overflow-hidden selection:bg-text-main selection:text-bg-deep transition-colors duration-300">
+        <div className="h-screen w-full flex flex-col bg-[#f8fafc] dark:bg-[#0b0d11] overflow-hidden transition-colors duration-300">
             <WorkspaceHeader
                 currentProject={currentProject}
                 isSidebarCollapsed={isSidebarCollapsed}

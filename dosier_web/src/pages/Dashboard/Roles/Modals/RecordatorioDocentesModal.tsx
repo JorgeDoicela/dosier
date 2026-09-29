@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, AlertTriangle, Send, X, CheckCircle2, User, Clock } from 'lucide-react';
+import { Bell, Send, X, Clock } from 'lucide-react';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { MOCK_DOCENTES_REZAGADOS } from '../data/mockCurricularData';
 
@@ -115,9 +115,10 @@ export const RecordatorioDocentesModal: React.FC<Props> = ({
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                            {d.estado}
-                                        </span>
+                                        <div className="flex items-center justify-end gap-1.5 font-mono text-[10px] text-amber-600 dark:text-amber-400">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                            <span className="font-medium">{d.estado}</span>
+                                        </div>
                                         <p className="text-[10px] text-zinc-400 mt-0.5">
                                             Quedan {d.dias_restantes} días
                                         </p>

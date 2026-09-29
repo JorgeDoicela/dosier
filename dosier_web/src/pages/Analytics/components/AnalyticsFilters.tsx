@@ -19,10 +19,10 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
     dbCareers
 }) => {
     return (
-        <div className="bento-card static p-4 flex flex-wrap items-center justify-between gap-4 bg-surface">
+        <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
             <div className="flex items-center gap-2">
-                <Filter size={13} className="text-text-dim" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-text-main">Variables de Corte:</span>
+                <Filter size={13} className="text-[#0070f3]" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-main">Variables de Corte:</span>
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
@@ -32,7 +32,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
                     <select
                         value={period}
                         onChange={(e) => setPeriod(e.target.value)}
-                        className="input-vercel !pl-8 !pr-7 !py-1.5 text-[10px] font-black uppercase tracking-wider bg-bg-deep cursor-pointer focus:border-text-main"
+                        className="!pl-8 !pr-7 !py-1.5 text-[10px] font-medium uppercase tracking-wider bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-md cursor-pointer text-text-main focus:outline-none focus:border-[#0070f3]"
                         id="period-filter-select"
                     >
                         <option value="TODOS">Todos los Periodos</option>
@@ -48,7 +48,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
                     <select
                         value={carrera}
                         onChange={(e) => setCarrera(e.target.value)}
-                        className="input-vercel !pl-8 !pr-7 !py-1.5 text-[10px] font-black uppercase tracking-wider bg-bg-deep cursor-pointer focus:border-text-main"
+                        className="!pl-8 !pr-7 !py-1.5 text-[10px] font-medium uppercase tracking-wider bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-md cursor-pointer text-text-main focus:outline-none focus:border-[#0070f3]"
                         id="carrera-filter-select"
                     >
                         <option value="TODAS">Todas las Tecnologías</option>

@@ -24,7 +24,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
     const projectCode = (currentProject as any).codigo_institucional || (currentProject as any).codigo || `Instrumento #${currentProject.id}`;
 
     return (
-        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 sm:px-10 py-3.5 bg-bg-deep border-b border-border-thin z-50 gap-4 sm:gap-0">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 sm:px-10 py-3.5 bg-surface border-b border-slate-200/90 dark:border-zinc-800 z-50 gap-4 sm:gap-0">
             <div className="flex items-center gap-3">
                 {isSidebarCollapsed && (
                     <>

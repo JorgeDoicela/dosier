@@ -3,23 +3,18 @@ import {
     Scale,
     X,
     Search,
-    BookOpen,
     CheckCircle2,
     Shield,
-    ExternalLink,
     FileText,
-    Award,
     ChevronDown,
     ChevronUp,
     RefreshCw
 } from 'lucide-react';
 import {
-    getNormativas,
     getChecklistCurricular,
     getModeloEducativo
 } from '../../../../services/normativaService';
 import type {
-    NormativaDto,
     NormativaArticuloDto,
     ModeloEducativoDto
 } from '../../../../services/normativaService';
@@ -30,7 +25,6 @@ interface NormativaDrawerProps {
 }
 
 export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClose }) => {
-    const [normativas, setNormativas] = useState<NormativaDto[]>([]);
     const [checklist, setChecklist] = useState<NormativaArticuloDto[]>([]);
     const [modeloEducativo, setModeloEducativo] = useState<ModeloEducativoDto | null>(null);
     const [loading, setLoading] = useState(true);
@@ -41,12 +35,10 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
     const loadData = async () => {
         setLoading(true);
         try {
-            const [normList, checkList, med] = await Promise.all([
-                getNormativas(),
+            const [checkList, med] = await Promise.all([
                 getChecklistCurricular(),
                 getModeloEducativo()
             ]);
-            setNormativas(normList);
             setChecklist(checkList);
             setModeloEducativo(med);
         } catch (err) {
@@ -107,15 +99,13 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                 {/* Cabecera del Drawer */}
                 <div className="p-5 border-b border-border-thin bg-surface flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center text-brand">
-                            <Scale size={18} />
-                        </div>
+                        <Scale size={20} className="text-[#0070f3] shrink-0" strokeWidth={1.5} />
                         <div>
                             <div className="flex items-center gap-2">
                                 <h3 className="text-sm font-semibold text-text-main tracking-tight">
                                     Marco Normativo y Acreditación
                                 </h3>
-                                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-brand/10 text-brand border border-brand/20">
+                                <span className="font-mono text-[11px] text-text-dim">
                                     ISTPET
                                 </span>
                             </div>
@@ -147,7 +137,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                 </div>
 
                 {/* Filtros y Búsqueda */}
-                <div className="p-4 border-b border-border-thin bg-surface/50 space-y-3">
+                <div className="p-4 border-b border-border-thin bg-surface space-y-3">
                     <div className="relative">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim pointer-events-none" />
                         <input
@@ -155,7 +145,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Buscar por artículo, resolución o palabra clave..."
-                            className="w-full pl-9 pr-3 py-2 text-xs rounded-lg bg-surface border border-border-thin text-text-main placeholder:text-text-dim focus:outline-none focus:border-brand transition-colors"
+                            className="w-full pl-9 pr-3 py-2 text-xs rounded-lg bg-surface border border-border-thin text-text-main placeholder:text-text-dim focus:outline-none focus:border-[#0070f3] transition-colors"
                         />
                     </div>
 
@@ -165,7 +155,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                             onClick={() => setSelectedOrganismo('TODOS')}
                             className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-colors ${
                                 selectedOrganismo === 'TODOS'
-                                    ? 'bg-brand text-white'
+                                    ? 'bg-[#0070f3] text-white'
                                     : 'bg-surface text-text-dim hover:text-text-main border border-border-thin'
                             }`}
                         >
@@ -176,7 +166,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                             onClick={() => setSelectedOrganismo('CES')}
                             className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-colors ${
                                 selectedOrganismo === 'CES'
-                                    ? 'bg-brand text-white'
+                                    ? 'bg-[#0070f3] text-white'
                                     : 'bg-surface text-text-dim hover:text-text-main border border-border-thin'
                             }`}
                         >
@@ -187,7 +177,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                             onClick={() => setSelectedOrganismo('CACES')}
                             className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-colors ${
                                 selectedOrganismo === 'CACES'
-                                    ? 'bg-brand text-white'
+                                    ? 'bg-[#0070f3] text-white'
                                     : 'bg-surface text-text-dim hover:text-text-main border border-border-thin'
                             }`}
                         >
@@ -198,7 +188,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                             onClick={() => setSelectedOrganismo('MED')}
                             className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-colors ${
                                 selectedOrganismo === 'MED'
-                                    ? 'bg-brand text-white'
+                                    ? 'bg-[#0070f3] text-white'
                                     : 'bg-surface text-text-dim hover:text-text-main border border-border-thin'
                             }`}
                         >
@@ -258,7 +248,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                                 return (
                                     <div
                                         key={art.idArticulo || art.uuid}
-                                        className="rounded-xl border border-border-thin bg-surface hover:border-brand/40 transition-colors overflow-hidden"
+                                        className="rounded-xl border border-border-thin bg-surface hover:border-[#0070f3]/40 transition-colors overflow-hidden"
                                     >
                                         <div
                                             className="p-3.5 cursor-pointer flex items-start justify-between gap-3 select-none"
@@ -266,15 +256,12 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                                         >
                                             <div className="space-y-1 flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span
-                                                        className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                                                            isCes
-                                                                ? 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-                                                                : 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                                        }`}
-                                                    >
-                                                        {art.organismoEmisor} • {art.numeroArticulo}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5 font-mono text-[10.5px]">
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${isCes ? 'bg-blue-500' : 'bg-indigo-500'}`} />
+                                                        <span className={isCes ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-indigo-600 dark:text-indigo-400 font-semibold'}>
+                                                            {art.organismoEmisor} • {art.numeroArticulo}
+                                                        </span>
+                                                    </div>
                                                     <span className="text-[10px] font-mono text-text-dim">
                                                         {art.codigoResolucion}
                                                     </span>
@@ -310,7 +297,7 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
 
                                         {/* Contenido Legal Completo Expandido */}
                                         {isExpanded && (
-                                            <div className="px-3.5 pb-3.5 pt-1 border-t border-border-thin/60 bg-surface/50 space-y-2 text-xs text-text-dim leading-relaxed">
+                                            <div className="px-3.5 pb-3.5 pt-1 border-t border-border-thin/60 bg-surface space-y-2 text-xs text-text-dim leading-relaxed">
                                                 <span className="text-[10px] font-semibold text-text-main uppercase tracking-wider block">
                                                     Texto Oficial de la Resolución
                                                 </span>

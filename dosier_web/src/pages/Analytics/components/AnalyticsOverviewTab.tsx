@@ -93,11 +93,11 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
             {/* Gráficos Consolidados */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-up [animation-delay:100ms]">
                 {/* Estado Donut Chart */}
-                <div className="bento-card static p-5 flex flex-col justify-between h-[360px] border border-border-thin hover:border-brand/20 transition-all duration-300">
+                <div className="bg-surface p-5 rounded-lg border border-slate-200/90 dark:border-zinc-800 flex flex-col justify-between h-[360px]">
                     <div>
                         <div className="flex items-center justify-between">
-                            <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">Estado de Instrumentos PEA</h4>
-                            <PieChart size={13} className="text-brand" />
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-text-dim font-mono">Estado de Instrumentos PEA</h4>
+                            <PieChart size={14} className="text-[#0070f3]" />
                         </div>
                         <p className="text-xs text-text-dim mt-1 font-medium font-sans">Estado de la documentación curricular</p>
                     </div>
@@ -110,12 +110,12 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                     />
 
                     {/* Leyenda */}
-                    <div className="grid grid-cols-2 gap-1 text-[9px] font-bold border-t border-border-thin/60 pt-3.5">
+                    <div className="grid grid-cols-2 gap-1 text-[11px] font-medium border-t border-slate-200/90 dark:border-zinc-800 pt-3.5">
                         {proyectosPorEstado.map((item, idx) => (
                             <div
                                 key={idx}
                                 className={`flex items-center gap-1.5 p-1 rounded transition-colors cursor-pointer ${
-                                    selectedChartSegment === item.estado ? 'bg-surface-hover' : ''
+                                    selectedChartSegment === item.estado ? 'bg-slate-100 dark:bg-zinc-800' : ''
                                 }`}
                                 onMouseEnter={() => setSelectedChartSegment(item.estado)}
                                 onMouseLeave={() => setSelectedChartSegment(null)}
@@ -129,13 +129,13 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                 </div>
 
                 {/* Líneas de Investigación */}
-                <div className="bento-card static p-5 lg:col-span-2 flex flex-col justify-between h-[360px] border border-border-thin hover:border-brand/20 transition-all duration-300">
+                <div className="bg-surface p-5 lg:col-span-2 flex flex-col justify-between h-[360px] rounded-lg border border-slate-200/90 dark:border-zinc-800">
                     <div>
                         <div className="flex items-center justify-between">
-                            <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-text-dim font-mono">
                                 Distribución por Campo / Área Curricular
                             </h4>
-                            <TrendingUp size={13} className="text-emerald-500" />
+                            <TrendingUp size={14} className="text-emerald-500" />
                         </div>
                         <p className="text-xs text-text-dim mt-1 font-medium font-sans">Instrumentos curriculares asociados a áreas del instituto</p>
                     </div>
@@ -156,10 +156,10 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                     <Globe size={11} key={6} />
                                 ];
                                 return (
-                                    <div key={idx} className="space-y-2 p-3 bg-surface/30 hover:bg-surface/50 border border-border-thin/60 hover:border-border-thin rounded-xl transition-all duration-300 group">
-                                        <div className="flex justify-between items-start gap-3 text-[10px] font-bold">
+                                    <div key={idx} className="space-y-2 p-3 bg-surface hover:bg-slate-50 dark:hover:bg-zinc-850/50 border border-slate-200/90 dark:border-zinc-800 rounded-lg transition-colors group">
+                                        <div className="flex justify-between items-start gap-3 text-xs font-medium">
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <span className="p-1.5 rounded-md bg-bg-deep border border-border-thin text-text-dim group-hover:text-brand group-hover:border-brand/30 transition-all duration-300 shrink-0">
+                                                <span className="text-text-dim group-hover:text-[#0070f3] transition-colors shrink-0">
                                                     {lineIcons[idx % lineIcons.length]}
                                                 </span>
                                                 <span className="text-text-main truncate leading-normal" title={line.nombre}>
@@ -168,10 +168,10 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                             </div>
                                             <div className="text-right shrink-0">
                                                 <span className="text-text-main font-mono block">{line.proyectos} {line.proyectos === 1 ? 'Instrumento' : 'Instrumentos'}</span>
-                                                <span className="text-text-dim font-mono text-[8px] block">{line.pct}% del total</span>
+                                                <span className="text-text-dim font-mono text-[10px] block">{line.pct}% del total</span>
                                             </div>
                                         </div>
-                                        <div className="w-full bg-border-thin/35 h-1 rounded-full overflow-hidden">
+                                        <div className="w-full bg-slate-100 dark:bg-zinc-800 h-1 rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full transition-all duration-1000 rounded-full ${line.colorClass}`}
                                                 style={{ width: `${line.pct}%` }}
@@ -188,41 +188,40 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
             {/* Bitácora y Estado del Repositorio */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-up [animation-delay:200ms]">
                 {/* Actividad */}
-                <div className="bento-card static p-5 lg:col-span-2 space-y-4 border border-border-thin hover:border-brand/20 transition-all duration-300">
+                <div className="bg-surface p-5 lg:col-span-2 space-y-4 rounded-lg border border-slate-200/90 dark:border-zinc-800">
                     <div>
-                        <h4 className="text-[9px] font-black uppercase tracking-widest text-text-dim font-mono">Bitácora de Gestión Curricular</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-dim font-mono">Bitácora de Gestión Curricular</h4>
                         <p className="text-xs text-text-dim mt-1 font-medium font-sans">Historial reciente de auditoría y actualizaciones curriculares</p>
                     </div>
 
                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                         {stats?.actividadReciente && stats.actividadReciente.length > 0 ? (
                             stats.actividadReciente.map((act, i) => (
-                                <div key={`${act.tipo}-${act.uuid || i}-${i}`} className="flex items-center gap-3.5 p-3 bg-surface/30 hover:bg-surface/60 border border-border-thin/50 hover:border-border-thin rounded-xl transition-all duration-300 select-none group">
-                                    <span className={`p-2 rounded-lg shrink-0 border transition-all duration-300 ${
-                                        act.tipo === 'proyecto'
-                                            ? 'bg-brand-subtle text-brand border-brand/10 group-hover:border-brand/35'
-                                            : act.tipo === 'informe'
-                                                ? 'bg-success-subtle text-success border-success/10 group-hover:border-success/35'
-                                                : 'bg-warning-subtle text-warning border-warning/10 group-hover:border-warning/35'
-                                    }`}>
-                                        {act.tipo === 'proyecto' ? <Cpu size={13} /> : act.tipo === 'informe' ? <BookOpen size={13} /> : <FileText size={13} />}
+                                <div key={`${act.tipo}-${act.uuid || i}-${i}`} className="flex items-center gap-3.5 p-3 bg-surface hover:bg-slate-50 dark:hover:bg-zinc-850/50 border border-slate-200/90 dark:border-zinc-800 rounded-lg transition-colors select-none group">
+                                    <span className="text-text-dim shrink-0">
+                                        {act.tipo === 'proyecto' ? <Cpu size={14} /> : act.tipo === 'informe' ? <BookOpen size={14} /> : <FileText size={14} />}
                                     </span>
                                     <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-[11.5px] font-semibold text-text-main group-hover:text-brand transition-colors truncate leading-relaxed">
+                                        <p className="text-xs font-medium text-text-main group-hover:text-[#0070f3] transition-colors truncate leading-relaxed">
                                             {act.descripcion}
                                         </p>
-                                        <div className="flex items-center gap-2 text-[8.5px] text-text-dim font-bold font-mono">
+                                        <div className="flex items-center gap-2 text-[10.5px] text-text-dim font-mono">
                                             <span className="uppercase tracking-wider">{act.tipo}</span>
                                             <span>•</span>
                                             <span>{formatDate(act.fecha)}</span>
                                             {act.estado && (
                                                 <>
                                                     <span>•</span>
-                                                    <span className={`px-2 py-0.5 rounded-full text-[7.5px] font-extrabold ${
+                                                    <span className={`inline-flex items-center gap-1 font-medium ${
                                                         act.estado === 'Aprobado' || act.estado === 'En Ejecución'
-                                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                                            : 'text-amber-600 dark:text-amber-400'
                                                     }`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${
+                                                            act.estado === 'Aprobado' || act.estado === 'En Ejecución'
+                                                                ? 'bg-emerald-500'
+                                                                : 'bg-amber-500'
+                                                        }`} />
                                                         {act.estado}
                                                     </span>
                                                 </>
@@ -232,14 +231,11 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                                 </div>
                             ))
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-14 px-6 border border-dashed border-border-thin/70 rounded-2xl bg-bg-deep/10 text-center select-none space-y-3.5 animate-fade-up">
-                                <div className="relative flex items-center justify-center w-11 h-11 rounded-full bg-surface border border-border-thin text-text-dim/60 shadow-sm">
-                                    <Clock size={16} className="text-brand/80" />
-                                    <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-brand animate-pulse shadow-[0_0_6px_rgba(var(--brand),0.5)]" />
-                                </div>
+                            <div className="flex flex-col items-center justify-center py-14 px-6 border border-dashed border-slate-200/90 dark:border-zinc-800 rounded-lg bg-slate-50/50 dark:bg-zinc-900/40 text-center select-none space-y-3">
+                                <Clock size={20} className="text-text-dim/60" />
                                 <div className="space-y-1 max-w-xs">
-                                    <h5 className="text-[10.5px] font-black uppercase text-text-main tracking-wider">Bitácora Técnica Inactiva</h5>
-                                    <p className="text-[10px] text-text-dim leading-relaxed font-medium">
+                                    <h5 className="text-xs font-semibold uppercase text-text-main tracking-wider">Bitácora Técnica Inactiva</h5>
+                                    <p className="text-xs text-text-dim leading-relaxed font-medium">
                                         No se registran firmas ni cambios de estado en este periodo. Los cambios del portafolio se reflejan aquí en tiempo real.
                                     </p>
                                 </div>
@@ -249,11 +245,11 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                 </div>
 
                 {/* Integraciones */}
-                <div className="bento-card static p-5 lg:col-span-1 flex flex-col justify-between gap-4 bg-gradient-to-b from-surface to-brand/5 border border-border-thin/60 hover:border-brand/20 transition-all duration-300">
+                <div className="bg-surface p-5 lg:col-span-1 flex flex-col justify-between gap-4 rounded-lg border border-slate-200/90 dark:border-zinc-800">
                     <div className="space-y-2">
-                        <div className="flex items-center gap-1.5 text-brand">
-                            <Globe size={14} className="animate-pulse" />
-                            <h4 className="text-[9px] font-semibold uppercase tracking-widest font-mono">Servicios Conectados</h4>
+                        <div className="flex items-center gap-1.5 text-[#0070f3]">
+                            <Globe size={14} />
+                            <h4 className="text-[10px] font-semibold uppercase tracking-wider font-mono">Servicios Conectados</h4>
                         </div>
                         <h3 className="text-sm font-semibold text-text-main font-sans tracking-tight">Preservación Digital Institucional</h3>
                         <p className="text-xs text-text-dim leading-relaxed font-medium">
@@ -261,25 +257,25 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
                         </p>
                     </div>
 
-                    <div className="p-3.5 bg-bg-deep/60 border border-border-thin/80 rounded-2xl space-y-3 text-[9.5px] font-bold font-mono">
+                    <div className="p-3.5 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/90 dark:border-zinc-800 rounded-md space-y-2.5 text-xs font-mono">
                         <div className="flex items-center justify-between">
-                            <span className="text-text-dim uppercase tracking-wider text-[8px]">Repositorio Digital</span>
-                            <span className="text-success flex items-center gap-1.5 font-bold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(16,185,129,0.7)] animate-pulse" />
+                            <span className="text-text-dim uppercase tracking-wider text-[10px]">Repositorio Digital</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-medium">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 En línea
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-text-dim uppercase tracking-wider text-[8px]">Acceso institucional</span>
-                            <span className="text-success flex items-center gap-1.5 font-bold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(16,185,129,0.7)] animate-pulse" />
+                            <span className="text-text-dim uppercase tracking-wider text-[10px]">Acceso institucional</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-medium">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 En línea
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-text-dim uppercase tracking-wider text-[8px]">Integridad de Firma</span>
-                            <span className="text-success flex items-center gap-1.5 font-bold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
+                            <span className="text-text-dim uppercase tracking-wider text-[10px]">Integridad de Firma</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-medium">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 Seguro
                             </span>
                         </div>

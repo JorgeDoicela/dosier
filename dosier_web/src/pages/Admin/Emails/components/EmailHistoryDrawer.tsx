@@ -74,7 +74,7 @@ export const EmailHistoryDrawer: React.FC<EmailHistoryDrawerProps> = ({ historyH
                                     {selectedHistoryLog.destinatario}
                                 </div>
                                 {selectedHistoryLog.idUsuarioDestinatario && (
-                                    <span className="inline-block mt-2 badge-vercel badge-vercel-neutral text-[9px] font-mono">
+                                    <span className="inline-block mt-2 text-[10px] font-mono text-text-dim">
                                         ID Usuario: {selectedHistoryLog.idUsuarioDestinatario}
                                     </span>
                                 )}
