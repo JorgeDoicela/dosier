@@ -118,7 +118,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PROTOCOLO_INVESTIGACION"]       = "Investigacion/ProyectoInvestigacion.html",
-                ["REPORTE_ANALITICAS"]            = "Investigacion/ReporteAnaliticas.html",
             };
 
             if (map.TryGetValue(templateCode, out var relativePath))

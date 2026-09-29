@@ -86,7 +86,82 @@ El editor del PEA está diseñado para desacoplar completamente la definición d
 
 ---
 
-## 5. Co-Redacción Concurrente en Tiempo Real (Yjs + `<CoWorkField>`)
+## 5. Gobernanza de Bloques y Preservación Innegociable de Editabilidad
+
+### 5.1. Preservación del 100% de la Reactividad y Controles
+* **PROHIBIDO VOLVER ESTÁTICOS LOS BLOQUES:** Queda terminantemente prohibido eliminar, aplanar o sustituir campos de edición activa por etiquetas HTML estáticas (`<p>`, `<span>`, `<div>` de texto plano hardcodeado) con la excusa de que "se parezca al PDF final".
+* **Conservación de la Interactividad:**
+  - Todo input (`<input>`, `<textarea>`, `<select>`, `<CoWorkField>`), estado local (`useState`), hook y callback (`onUpdateConfig`, `onChange`, `onBlur`) debe mantenerse plenamente operativo.
+  - Los botones de acción dinámicos (**+ Agregar fila/unidad/tema/práctica**, **Eliminar**, **Reordenar con flechas**, **Selector de variantes**, **Toggles**, **Modales** y **Popovers de configuración**) deben permanecer accesibles e interactivos en el lienzo/editor.
+  - Las propiedades de configuración (`config.xxx`) deben poderse seguir editando tanto desde el lienzo interactivo como desde el panel lateral de propiedades (`BlockProperties`).
+* **Regla para Salidas de Exportación/Impresión:**
+  - Si un botón de control no debe aparecer en el documento final impreso, debe ocultarse exclusivamente mediante clases de impresión (ej. `print:hidden`) o flags condicionales de exportación (`isExportingMode`), **NUNCA eliminándolo ni deshabilitándolo en el componente React del editor**.
+
+### 5.2. Regla Fundamental de Expansión (El Bloque Crece, Jamás se Comprime ni Asfixia)
+* **Expansión Vertical Libre y Holgada (`h-auto`, `min-h-fit`):**
+  - Si para acomodar el formato oficial de producción, nuevas columnas, tablas institucionales complejas, matrices CACES, horas o herramientas de edición se requiere más espacio, **el bloque DEBE EXPANDIRSE verticalmente hacia abajo todo lo necesario**.
+  - No existen límites artificiales de altura: el contenedor del bloque debe fluir de forma natural adaptándose al volumen del contenido y a sus herramientas de edición.
+* **Prohibición Estricta de Compresión y Asfixia:**
+  - **Cero Alturas Rígidas o Fijas:** Queda prohibido forzar alturas arbitrarias (`h-[400px]`, `h-[500px]`) que encierren el contenido en un tamaño prefijado.
+  - **Cero Scroll Interno Asfixiante en Bloques:** Queda prohibido aplicar `max-h-[...] overflow-y-auto` en el cuerpo de los bloques del lienzo. El lienzo completo o la página es la que hace scroll; los bloques no deben ser cajas comprimidas con barras de scroll individuales que entorpezcan la edición.
+  - **Cero Reducción Artificial de Tipografía:** Prohibido reducir el tamaño de fuentes a escalas ilegibles (`text-[8px]`, `text-[9px]`, `text-[10px]`) para hacer entrar más datos en menos espacio vertical. Los estándares de legibilidad se respetan y el bloque crece hacia abajo.
+  - **Cero Supresión de Márgenes o Paddings:** No comprimir los paddings (`py-1`, `gap-0.5`) para ahorrar píxeles. La ergonomía visual y la comodidad de interacción requieren márgenes de respiración adecuados (`py-3`, `gap-3` o superior).
+  - **Cero Truncamientos (`truncate`, `line-clamp`):** En áreas de edición activa, está estrictamente prohibido cortar texto con puntos suspensivos o `overflow: hidden`. El usuario debe ver y editar el contenido completo.
+* **Cero Eliminación de Controles por Falta de Espacio:** Jamás se debe omitir un campo, una columna o un botón con el pretexto de "falta de espacio". Si el bloque requiere más elementos, **el bloque se expande hacia abajo; nunca se reduce ni se mutila**.
+
+### 5.3. Separación Estricta de Capas
+1. **Lienzo de Edición / Diseñador Visual (`pages/Admin/Templates/components/`):** Entorno 100% interactivo, reactivo y de altura libremente expansible. No debe forzarse a simular cortes de página rígidos que mutilen los componentes.
+2. **Workspace Colaborativo (`pages/Curriculum/Workspace/` y secciones `pea/`):** Colaboración en tiempo real con `<CoWorkField>` y Yjs, con altura dinámica según el volumen redactado por los docentes.
+3. **Motor Documental (`DocumentEngine` C# con iText 9 / Print CSS):** Es el único responsable de la paginación formal A4, saltos de página y generación final estática de PDF con firmas electrónicas y sellos DFRM.
+
+### 5.4. Evolución Aditiva de los Bloques (Añadir Libremente, Jamás Quitar)
+* **Plena Libertad para Editar y Enriquecer:** El agente tiene **autorización total y activa** para modificar y editar los bloques (`canvasRenderers/`, `DocumentTemplateRegistry`, paneles de propiedades, schemas) con el objetivo de **añadir todo lo necesario** para que se adapten al 100% a los formatos oficiales del ISTPET, CACES o normativas CES.
+* **Principio Aditivo Estricto (Añadir, Nunca Restar):**
+  - Si un formato oficial requiere nuevos campos de texto, selectores de catálogo, tablas anidadas, columnas metodológicas, sub-secciones de evaluación o metadatos, **se añaden directamente al bloque**.
+  - **PROHIBIDO QUITAR COSAS:** Nunca elimines campos, configuraciones previas o herramientas existentes con la excusa de simplificar o por falta de espacio. Se conservan los existentes y se incorporan los nuevos requerimientos.
+  - El bloque crece verticalmente con holgura (`h-auto`) para alojar todas las nuevas adiciones sin asfixiar la interfaz.
+
+### 5.5. Matriz de Patrones: Anti-Patrón vs Patrón Correcto
+
+| Aspecto | Anti-Patrón (Prohibido) | Patrón Correcto (Obligatorio) |
+| :--- | :--- | :--- |
+| **Interactividad** | Convertir inputs a `<p>` o `<span>` para que "se vea como el PDF final". | Mantener inputs, textareas y bindings reactivos con estilo visual de alta fidelidad. |
+| **Botones de Acción** | Quitar "+ Agregar fila" o botones de borrado para "limpiar la vista". | Mantener todos los botones de acción en el canvas; usar `print:hidden` para ocultarlos al exportar. |
+| **Altura del Bloque** | Usar `h-[350px] overflow-y-auto` para que no ocupe mucho en el lienzo. | Usar `h-auto min-h-fit` permitiendo que el bloque se expanda naturalmente hacia abajo. |
+| **Densidad y Espacio** | Achicar fuentes a `text-[9px]` o quitar padding para que "quepa en una hoja". | Mantener tipografía legible y espaciado ergonómico; el bloque crece verticalmente. |
+| **Manejo de Textos** | Usar `truncate` o `line-clamp-2` ocultando texto del usuario en edición. | Mostrar todo el texto sin truncamientos, expandiendo la altura del campo automáticamente. |
+
+---
+
+## 6. Blindaje de Secciones Curriculares: `SectionBlockGuard`
+
+Cada sección del PEA en el Workspace se envuelve con `<SectionBlockGuard>`, centralizando:
+1. **Control de Concurrencia (Inline Lock):** Con `showInlineLock={true}`, previene colisiones visuales mostrando el estado de edición activa y presencia en vivo mediante SignalR y Yjs.
+2. **Bloqueo por Estado del Workflow y Rol (`readOnly` / `readOnlyReason`):**
+   - Cuando el PEA avanza a revisión o aprobación (`EnRevision`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`), se bloquea la edición sin alterar la presentación visual de alta fidelidad.
+   - Si un usuario no tiene permisos sobre la sección (ej. docente intentando modificar un PEA en revisión), se despliega el motivo descriptivo (`readOnlyReason`), impidiendo modificaciones accidentales.
+
+---
+
+## 7. Trayecto de Vida del Documento Curricular (Lifecycle)
+
+El instrumento curricular recorre un pipeline estricto donde el diseño y los datos permanecen desacoplados:
+
+```text
+1. MOLDE MAESTRO           2. RESOLUCIÓN / INSTANCIA   3. WORKSPACE COLABORATIVO     4. CADENA COLEGIADA          5. EMISIÓN FORENSE
+   /admin/templates    →      doc_documentos_instancias →  DocumentWorkspace + CoWork → Coordinación Carrera/Acad →   DocumentEngine
+   (Bloques, Paleta,          (Clonación snapshot JSON,    (Yjs en tiempo real,         (Avales, observaciones,      (PDF iText 9, SHA-256,
+    Lienzo interactivo)        versión de plantilla)        persistencia por field_key)  candados de aprobación)      QR y firmas digitales)
+```
+
+* **Molde (`/admin/templates`):** El Administrador diseña los bloques en el lienzo ([BlockCanvas](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Admin/Templates/components/BlockCanvas.tsx)). Los cambios aquí son moldes para futuros PEAs.
+* **Instancia Inmutable:** Al asignar la materia se resuelve la instancia (`GET /api/documents/instances/resolve`) y se enlaza la versión vigente de la plantilla. Los documentos en curso leen su snapshot; nunca sufren desconfiguración por cambios posteriores en la plantilla maestra.
+* **Workspace Activo (`DocumentWorkspace`):** Los docentes redactan colaborativamente con `<CoWorkField>`. Los datos se guardan desacoplados por `field_key` (`data_snapshot_json` / `doc_documentos_secciones_metadata`).
+* **Preservación Innegociable:** En ninguna etapa de edición se aplanan los bloques a HTML estático ni se eliminan inputs/botones dinámicos.
+
+---
+
+## 8. Co-Redacción Concurrente en Tiempo Real (Yjs + `<CoWorkField>`)
 
 * Las secciones del PEA que admiten trabajo simultáneo entre docentes de la misma cátedra (Objetivos, Unidades Temáticas, Metodología, Bibliografía) deben encapsularse con el componente `<CoWorkField>`.
 * El componente enlaza con el `ydoc` de Yjs a través de WebSockets con SignalR, aplicando resolución de conflictos en cliente con cero latencia y autoguardado en segundo plano (*debounced*).
@@ -94,7 +169,7 @@ El editor del PEA está diseñado para desacoplar completamente la definición d
 
 ---
 
-## 6. Enrutamiento y Control de Acceso RBAC (React Router v6)
+## 9. Enrutamiento y Control de Acceso RBAC (React Router v6)
 
 El árbol de rutas en `src/App.tsx` protege el acceso declarativamente por roles institucionales:
 * `<RoleRoute allowedRoles={['DOSIER_DOCENTE']}>`: Paneles de formulación del PEA y distributivo académico personal.
@@ -104,7 +179,7 @@ El árbol de rutas en `src/App.tsx` protege el acceso declarativamente por roles
 
 ---
 
-## 7. Estándares de Tipado, Modularización y Pruebas con Vitest
+## 10. Estándares de Tipado, Modularización y Pruebas con Vitest
 
 * **Tipado Estricto:** Prohibido el uso de `any` en interfaces, propiedades o retornos de servicios. Definir contratos claros en `src/types/`.
 * **Umbral de Modularización:** Ningún archivo de componente o hook debe exceder las **700 líneas de código**. Cuando un componente crezca, extraer subcomponentes en carpetas modulares (`components/`, `hooks/`, `types/`).
@@ -112,7 +187,7 @@ El árbol de rutas en `src/App.tsx` protege el acceso declarativamente por roles
 
 ---
 
-## 8. Checklist de Entrega para Tareas de Frontend
+## 11. Checklist de Entrega para Tareas de Frontend
 
 Antes de finalizar cualquier tarea en el cliente web de DOSIER:
 * [ ] ¿El diseño es **Modern Enterprise Docs puro** sin amontonar, con folio unificado y sin mezclas con estilos de marketing?

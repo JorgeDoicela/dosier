@@ -39,21 +39,6 @@ namespace Dosier.Infrastructure.Common.Documents
                 collaborativeFields: "[\"programa\", \"grupo_investigacion\", \"dominio\", \"linea_investigacion\", \"sublinea_investigacion\", \"tipo_investigacion\", \"campo_amplio\", \"campo_especifico\", \"campo_detallado\", \"antecedentes\", \"descripcion_proyecto\", \"justificacion\", \"objetivo_general\", \"objetivos_especificos\", \"marco_teorico\", \"metodologia\", \"evaluacion\", \"bibliografia\"]",
                 version: 410);
 
-            // ══════════════════════════════════════════════════════════════
-            // OTRAS ÁREAS (Registro de marcadores de posición)
-            // ══════════════════════════════════════════════════════════════
-
-            yield return DocumentTemplate.Create(
-                code: ReporteAnaliticasTemplate.CODE,
-                name: "Reporte de Analíticas y Portafolio Documental",
-                description: "Reporte directivo con indicadores KPI, cumplimiento CACES y portafolio de proyectos para acreditación institucional.",
-                category: DocumentCategory.ReporteAnaliticas,
-                htmlContent: "<!-- Cargado desde Templates/Investigacion/ReporteAnaliticas.html -->",
-                requiresLopdp: true,
-                supportsBlind: false,
-                requiresTraceability: true,
-                requiresSignature: false,
-                version: 20);
 
             // ══════════════════════════════════════════════════════════════
             // ÁREA: CURRÍCULO ACADÉMICO (PEA OFICIAL)

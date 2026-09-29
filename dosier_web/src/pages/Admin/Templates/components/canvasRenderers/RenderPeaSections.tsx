@@ -272,7 +272,7 @@ export const RenderPeaGeneralSection: React.FC<{
                                         </tr>
                                         <tr className="border-b border-black">
                                             <td className={`p-1.5 font-medium ${cellBorderCss}`}>
-                                                Total horas de aprendizaje experimental:
+                                                Total horas de práctico experimental:
                                             </td>
                                             <td className="p-1.5 text-slate-700 font-semibold">
                                                 32
@@ -280,7 +280,7 @@ export const RenderPeaGeneralSection: React.FC<{
                                         </tr>
                                         <tr>
                                             <td className={`p-1.5 font-medium ${cellBorderCss}`}>
-                                                Total horas de practico autónomo:
+                                                Total horas de aprendizaje autónomo:
                                             </td>
                                             <td className="p-1.5 text-slate-700 font-semibold">
                                                 64

@@ -177,13 +177,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
         subtitle: "Formato Curricular Oficial Normalizado - ISTPET",
         schema: {
             // Datos Generales de la Asignatura
-            CodigoAsignatura: '',
             NombreAsignatura: '',
+            CodigoCarrera: '',
             Carrera: '',
-            Periodo: '',
+            CodigoAsignatura: '',
             Modalidad: 'Presencial',
+            UnidadOrganizacion: 'Unidad Profesional',
+            Periodo: '',
             Nivel: '',
-            UnidadOrganizacion: '',
             TotalHorasAsignatura: 0,
             Creditos: 0,
             HorasContactoDocente: 0,
@@ -212,37 +213,38 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             // Firmas de Responsabilidad Institucional
             FirmasResponsabilidad: {
                 DocenteNombre: '',
-                DocenteCargo: 'Docente Elaborador',
+                DocenteCargo: 'Docente',
                 CoordinadorNombre: '',
                 CoordinadorCargo: 'Coordinador de Carrera',
                 CoordinadorAcadNombre: '',
-                CoordinadorAcadCargo: 'Coordinación Académica',
+                CoordinadorAcadCargo: 'Coordinador Académico',
                 VicerrectorNombre: '',
-                VicerrectorCargo: 'Vicerrectorado Académico'
+                VicerrectorCargo: 'Vicerrectorado'
             }
         },
         lists: ['Prerrequisitos', 'Unidades', 'ActividadesPracticas', 'Bibliografias', 'Evaluaciones', 'FirmasResponsabilidadDetalle'],
         sections: [
             {
                 id: 'pea_general_section',
-                label: 'a) Datos Generales y Carga Horaria',
+                label: 'a) DATOS GENERALES DE LA ASIGNATURA:',
                 iconName: 'FileText',
                 componentName: 'PeaGeneralSection',
                 config: {
                     fields: [
                         { name: 'NombreAsignatura', label: 'Nombre de la Asignatura', type: 'text', collaborative: true, placeholder: 'Ej. Desarrollo de Software' },
-                        { name: 'CodigoAsignatura', label: 'Código de la Asignatura', type: 'text', collaborative: true, placeholder: 'Ej. DS-301' },
+                        { name: 'CodigoCarrera', label: 'Código de Carrera', type: 'text', collaborative: true, placeholder: 'Ej. SOF-01' },
                         { name: 'Carrera', label: 'Carrera Institucional', type: 'text', collaborative: true, placeholder: 'Ej. Tecnología Superior en Desarrollo de Software' },
-                        { name: 'Periodo', label: 'Período Académico', type: 'text', collaborative: true, placeholder: 'Ej. OCT2025' },
+                        { name: 'CodigoAsignatura', label: 'Código de la Asignatura', type: 'text', collaborative: true, placeholder: 'Ej. DS-301' },
                         { name: 'Modalidad', label: 'Modalidad de Estudio', type: 'select', collaborative: true, options: ['Presencial', 'Semipresencial', 'En Línea', 'Híbrida'] },
-                        { name: 'Nivel', label: 'Semestre / Nivel Curricular', type: 'text', collaborative: true, placeholder: 'Ej. Tercer Semestre' },
                         { name: 'UnidadOrganizacion', label: 'Unidad de Organización Curricular', type: 'select', collaborative: true, options: ['Unidad Básica', 'Unidad Profesional', 'Unidad de Integración Curricular'] },
-                        { name: 'TotalHorasAsignatura', label: 'Total Horas de la Asignatura', type: 'number', collaborative: true, placeholder: 'Ej. 160' },
-                        { name: 'Creditos', label: 'Número de Créditos', type: 'number', collaborative: true, placeholder: 'Ej. 3' },
-                        { name: 'HorasContactoDocente', label: 'Horas Contacto Docente (CD)', type: 'number', collaborative: true, placeholder: 'Ej. 64' },
-                        { name: 'HorasPracticoExperimental', label: 'Horas Práctico-Experimental (APE)', type: 'number', collaborative: true, placeholder: 'Ej. 32' },
-                        { name: 'HorasAutonomo', label: 'Horas Trabajo Autónomo', type: 'number', collaborative: true, placeholder: 'Ej. 64' },
-                        { name: 'DocenteElaborador', label: 'Docente Responsable / Elaborador', type: 'text', collaborative: true, placeholder: 'Nombre del docente titular' }
+                        { name: 'Periodo', label: 'Periodo Académico', type: 'text', collaborative: true, placeholder: 'Ej. OCT2025' },
+                        { name: 'Nivel', label: 'Semestre', type: 'text', collaborative: true, placeholder: 'Ej. Tercer Semestre' },
+                        { name: 'TotalHorasAsignatura', label: 'Número de horas de la asignatura', type: 'number', collaborative: true, placeholder: 'Ej. 160' },
+                        { name: 'Creditos', label: 'Número de créditos', type: 'number', collaborative: true, placeholder: 'Ej. 3' },
+                        { name: 'HorasContactoDocente', label: 'Total horas de contacto docente', type: 'number', collaborative: true, placeholder: 'Ej. 64' },
+                        { name: 'HorasPracticoExperimental', label: 'Total horas de práctico experimental', type: 'number', collaborative: true, placeholder: 'Ej. 32' },
+                        { name: 'HorasAutonomo', label: 'Total horas de aprendizaje autónomo', type: 'number', collaborative: true, placeholder: 'Ej. 64' },
+                        { name: 'DocenteElaborador', label: 'Docente Elaborador', type: 'text', collaborative: true, placeholder: 'Nombre del docente titular' }
                     ]
                 }
             },
@@ -386,17 +388,17 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                         },
                         {
                             name: 'Evaluaciones',
-                            label: 'Matriz Oficial de Calificaciones (RRA Art. 21 / ISTPET)',
+                            label: 'i) EVALUACIÓN DEL APRENDIZAJE',
                             type: 'table',
                             collaborative: true,
                             config: {
-                                columns: ['Notas', 'Tipo de Evaluación', 'Calificación Máxima'],
+                                columns: ['Notas', 'TIPO DE EVALUACIÓN', 'CALIFICACION'],
                                 allowDynamicRows: true,
                                 headerStyle: 'blue',
                                 defaultRows: [
-                                    { '0': 'Nota Parcial 1', '1': 'Actividades autónomas y práctico-experimentales (frecuentes)', '2': '10' },
-                                    { '0': 'Nota Parcial 2', '1': 'Evaluaciones sumativas de las unidades de estudio (parcial)', '2': '10' },
-                                    { '0': 'Evaluación Final', '1': 'Evaluación final de la asignatura (examen)', '2': '10' }
+                                    { '0': 'NOTA PARCIAL 1', '1': 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', '2': '10,00' },
+                                    { '0': 'NOTA PARCIAL 2', '1': 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', '2': '10,00' },
+                                    { '0': 'EVALUACIÓN FINAL', '1': 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', '2': '10,00' }
                                 ]
                             }
                         }
@@ -405,14 +407,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_bibliography_section',
-                label: 'j) Bibliografía Básica y de Consulta',
+                label: 'j) BIBLIOGRAFÍA',
                 iconName: 'Library',
                 componentName: 'PeaBibliographySection',
                 config: {
                     fields: [
                         {
                             name: 'BibliografiaBasica',
-                            label: 'Bibliografía Básica (Normas APA)',
+                            label: 'Bibliografía básica',
                             type: 'rich-text',
                             collaborative: true,
                             headerStyle: 'blue',
@@ -420,7 +422,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                         },
                         {
                             name: 'BibliografiaConsulta',
-                            label: 'Bibliografía de Consulta y Recursos Digitales (Normas APA)',
+                            label: 'Bibliografía de consulta',
                             type: 'rich-text',
                             collaborative: true,
                             headerStyle: 'blue',
@@ -431,25 +433,25 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_signatures_section',
-                label: 'k) Firmas de Responsabilidad',
+                label: 'k) FIRMAS DE RESPONSABILIDAD',
                 iconName: 'Shield',
                 componentName: 'PeaSignaturesSection',
                 config: {
                     fields: [
                         {
                             name: 'FirmasResponsabilidadDetalle',
-                            label: 'k) Firmas de Responsabilidad Institucional',
+                            label: 'k) FIRMAS DE RESPONSABILIDAD',
                             type: 'table',
                             collaborative: true,
                             config: {
-                                columns: ['Instancia', 'Nombre del Responsable', 'Cargo', 'Estado / Fecha'],
+                                columns: ['DESCRIPCIÓN', 'ELABORADO', 'REVISADO', 'REVISADO', 'APROBADO'],
                                 allowDynamicRows: false,
                                 headerStyle: 'blue',
                                 defaultRows: [
-                                    { '0': 'Elaborado por', '1': '', '2': 'Docente de la Asignatura', '3': 'Pendiente' },
-                                    { '0': 'Revisado por', '1': '', '2': 'Coordinador de Carrera', '3': 'Pendiente' },
-                                    { '0': 'Revisado por', '1': '', '2': 'Coordinador Académico', '3': 'Pendiente' },
-                                    { '0': 'Aprobado por', '1': '', '2': 'Vicerrectorado Académico', '3': 'Pendiente' }
+                                    { '0': 'FIRMA', '1': '', '2': '', '3': '', '4': '' },
+                                    { '0': 'NOMBRE', '1': '', '2': '', '3': '', '4': '' },
+                                    { '0': 'CARGO', '1': 'Docente', '2': 'Coordinador de Carrera', '3': 'Coordinador Académico', '4': 'Vicerrectorado' },
+                                    { '0': 'FECHA', '1': '', '2': '', '3': '', '4': '' }
                                 ]
                             }
                         }

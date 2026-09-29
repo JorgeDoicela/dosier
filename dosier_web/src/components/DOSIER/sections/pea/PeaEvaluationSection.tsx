@@ -39,25 +39,25 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
 
     const defaultEvaluaciones: EvaluacionItem[] = [
         {
-            nota: 'Nota Parcial 1',
-            tipo: 'Actividades autónomas y práctico-experimentales (evaluación formativa frecuente)',
+            nota: 'NOTA PARCIAL 1',
+            tipo: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)',
             calificacion: 10
         },
         {
-            nota: 'Nota Parcial 2',
-            tipo: 'Evaluaciones sumativas de las unidades de estudio (pruebas parciales y talleres)',
+            nota: 'NOTA PARCIAL 2',
+            tipo: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)',
             calificacion: 10
         },
         {
-            nota: 'Evaluación Final',
-            tipo: 'Evaluación final integradora de la asignatura (examen / proyecto técnico)',
+            nota: 'EVALUACIÓN FINAL',
+            tipo: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)',
             calificacion: 10
         }
     ];
 
     const evaluaciones: EvaluacionItem[] = rawEvaluaciones.length > 0 ? rawEvaluaciones.map(e => ({
-        nota: e.nota || e.Nota || e['0'] || 'Nota Parcial',
-        tipo: e.tipo || e.Tipo || e['1'] || 'Evaluación',
+        nota: e.nota || e.Nota || e['0'] || 'NOTA PARCIAL',
+        tipo: e.tipo || e.Tipo || e['1'] || 'EVALUACIÓN',
         calificacion: Number(e.calificacion ?? e.Calificacion ?? e['2'] ?? 10)
     })) : defaultEvaluaciones;
 
@@ -172,8 +172,8 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                             <thead>
                                 <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
                                     <th className="p-3 w-[25%] border-r border-border-thin">Notas</th>
-                                    <th className="p-3 w-[55%] border-r border-border-thin">Tipo de Evaluación y Caracterización</th>
-                                    <th className="p-3 w-[15%] text-center border-r border-border-thin">Calificación Máxima</th>
+                                    <th className="p-3 w-[55%] border-r border-border-thin">TIPO DE EVALUACIÓN</th>
+                                    <th className="p-3 w-[15%] text-center border-r border-border-thin">CALIFICACION</th>
                                     {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
                                 </tr>
                             </thead>

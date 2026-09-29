@@ -37,7 +37,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         {
             key: 'Docente',
             etiqueta: 'ELABORADO:',
-            cargo: 'Docente Responsable',
+            cargo: 'Docente',
             nombreField: 'DocenteNombre',
             fechaField: 'DocenteFecha',
             firmado: Boolean(firmas.DocenteFirmado || firmas.docente_firmado),
@@ -55,20 +55,20 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         {
             key: 'CoordinadorAcad',
             etiqueta: 'REVISADO:',
-            cargo: 'Coordinación Académica',
+            cargo: 'Coordinador Académico',
             nombreField: 'CoordinadorAcadNombre',
             fechaField: 'CoordinadorAcadFecha',
             firmado: Boolean(firmas.CoordinadorAcadFirmado || firmas.coordinador_acad_firmado),
-            placeholder: 'Nombre Coordinación Académica'
+            placeholder: 'Nombre Coordinador Académico'
         },
         {
             key: 'Vicerrector',
             etiqueta: 'APROBADO:',
-            cargo: 'Vicerrectorado Académico',
+            cargo: 'Vicerrectorado',
             nombreField: 'VicerrectorNombre',
             fechaField: 'VicerrectorFecha',
             firmado: Boolean(firmas.VicerrectorFirmado || firmas.vicerrector_firmado),
-            placeholder: 'Nombre Vicerrector/a Académico/a'
+            placeholder: 'Nombre Vicerrector/a'
         }
     ];
 

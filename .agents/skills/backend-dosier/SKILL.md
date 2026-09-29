@@ -163,7 +163,28 @@ $$\text{Horas Docencia (CD)} + \text{Horas APE} + \text{Horas Autónomo (TA)} \e
 
 ---
 
-## 8. Suite de Pruebas Unitarias y de Integración (`dosier_tests`)
+## 8. Motor Documental — Patrón Molde vs Instancia (Inmutabilidad Curricular)
+
+* **Separación Estricta:**
+  - `doc_document_templates` (Molde Maestro): Administrado en `/admin/templates` ([DocumentTemplatesController.cs](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/backend/dosier_api/Controllers/DocumentTemplatesController.cs)). Las actualizaciones aquí sirven como molde para futuros PEAs o instrumentos sin alterar retroactivamente documentos históricos o legalizados.
+  - `doc_documentos_instancias` (Instancia Curricular): Al resolver o crear un documento (`DocumentInstancesController.Resolve`), se registra la relación con la asignatura y se clona la versión vigente de la plantilla.
+* **Protección de Datos Docentes en Producción:**
+  - Los documentos en estados de revisión o aprobados (`EnRevision`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`) leen **exclusivamente su Snapshot** (`data_snapshot_json`).
+  - Los datos de redacción colaborativa se almacenan indexados por claves atómicas de campo (`field_key`), desacoplados de la presentación visual, garantizando que futuros rediseños de plantillas no dañen ni sobreescriban los datos pedagógicos cargados por los docentes.
+
+---
+
+## 9. Gobernanza de Bloques y Esquemas JSON Dinámicos en la API
+
+* **Agnosticismo de Bloques en API:**
+  - El backend almacena la estructura de bloques, metadatos y configuración de UI en columnas JSON dinámicas (`doc_documentos_secciones_metadata`, `collaborative_fields_json`, `theme_config_json`).
+  - Nunca hardcodees estructuras visuales rígidas en entidades C# que limiten o vuelvan inflexibles los bloques del diseñador visual del frontend.
+* **Integridad de Claves de Datos Curriculares:**
+  - Al emitir DTOs de documentos, procesar sincronizaciones con `IPeaService` o ejecutar migraciones/seeders, preserva siempre los nombres de clave exactos del PEA (`objetivo_asignatura`, `prerrequisitos`, `rdas_carrera`, `rdas_asignatura`, `contenidos_unidades`, `metodologia_propuesta`, `recursos_didacticos`, `actividades_practicas`, `sistema_evaluacion`, `bibliografia_basica`, `bibliografia_consulta`) para garantizar que la concurrencia Yjs y los componentes de React mantengan su vinculación sin pérdida de información.
+
+---
+
+## 10. Suite de Pruebas Unitarias y de Integración (`dosier_tests`)
 
 * Todas las reglas de negocio, cálculos de horas, validaciones de permisos RBAC y transformaciones DTO deben estar cubiertas con pruebas unitarias en `backend/dosier_tests/`.
 * Tecnologías de testing: **xUnit**, **Moq** para simulación de dependencias y **FluentAssertions** para aserciones legibles.
@@ -171,13 +192,14 @@ $$\text{Horas Docencia (CD)} + \text{Horas APE} + \text{Horas Autónomo (TA)} \e
 
 ---
 
-## 9. Checklist de Entrega para Tareas de Backend
+## 11. Checklist de Entrega para Tareas de Backend
 
 Antes de finalizar cualquier tarea en el backend de DOSIER:
 * [ ] ¿El código respeta estrictamente la Clean Architecture y no viola las dependencias de capas?
 * [ ] ¿Se utilizó `.AsNoTracking()` en todas las consultas linq a tablas de SIGAFI?
 * [ ] ¿Todas las entidades creadas tienen prefijo `Doc*.cs` y tablas `doc_*`?
 * [ ] ¿La respuesta de los endpoints está serializada en `snake_case`?
+* [ ] ¿Se preservaron las claves canónicas de datos curriculares (`field_key`) sin aplanar esquemas JSON?
 * [ ] ¿Se verificó que `dotnet build backend/dosier.sln` termine con 0 Errores y 0 Advertencias?
 * [ ] ¿Se ejecutó `dotnet test` y el 100% de las pruebas pasaron en verde?
 * [ ] ¿Se documentó oportunamente en `docs/documentacion/` según los criterios de `documentacion-dosier`?
