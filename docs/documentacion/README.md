@@ -35,7 +35,7 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 
 ### Sección 03: Motores Especializados
 * [01. Motor de Generación Documental PDF e Integridad Forense](./03-motores-especializados/01-motor-documental-pdf.md): Pipeline `DocumentEngine`, plantilla oficial del PEA institucional, membrete ISTPET, iText 9, Hash SHA-256 y Código QR de verificación pública sin login.
-* [02. Motor Colaborativo en Tiempo Real (CoWork)](./03-motores-especializados/02-motor-colaborativo-cowork.md): `CollaborationHub` SignalR, sincronización Yjs CRDT para co-redacción concurrente de materias y componente `<CoWorkField>`.
+* [02. Motor Colaborativo en Tiempo Real (CoWork)](./03-motores-especializados/02-motor-colaborativo-cowork.md): `CollaborationHub` SignalR, sincronización Yjs CRDT para co-redacción concurrente de asignaturas y componente `<CoWorkField>`.
 * [03. Motor de Revisión Colegiada Curricular](./03-motores-especializados/03-motor-revision-colegiada-curricular.md): Flujo de revisión por Coordinación de Carrera y Coordinación Académica, bitácora de observaciones por sección y control de subsanaciones.
 * [04. Motor de Firma Digital, Criptografía y Sellos](./03-motores-especializados/04-motor-firma-digital-y-sellos.md): Certificados PKCS#12 (.p12) / FirmaEC, sellos de tiempo UTC, código DFRM-XXXX y estampado visual en PDF bajo Ley 67 del Ecuador.
 * [05. Motor de Notificaciones Multicanal](./03-motores-especializados/05-motor-notificaciones-multicanal.md): WebSockets in-app (`SignalRDriver`), notificaciones push VAPID (`PushDriver`) y correos HTML institucionales.

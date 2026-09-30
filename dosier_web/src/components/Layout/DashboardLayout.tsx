@@ -11,6 +11,8 @@ import { notificacionesService } from '../../services/notificacionesService';
 import { StickyNotesFloatingButton } from '../Common/StickyNotesFloatingButton';
 import { getStickyNotes } from '../../services/calendarioService';
 import { FeedbackModal } from '../Feedback/FeedbackModal';
+import api from '../../api/axios_config';
+import { useNotifications } from '../../api/NotificationsContext';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -42,6 +44,7 @@ const getPageTitle = (pathname: string): string => {
 
 const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }) => {
     const { isAuthenticated, isLoading, user } = useAuth();
+    const { addToast, fetchNotifications, isConnected } = useNotifications();
     const location = useLocation();
     const isWorkspace = location.pathname.includes('/workspace/');
     const isFullHeightPage = isWorkspace || location.pathname === '/plantillas' || location.pathname === '/admin/plantillas';
@@ -56,6 +59,22 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
         return saved === 'true';
     });
     const [topBarCollapsed, setTopBarCollapsed] = useState(false);
+
+    // ── Cierre de Bienvenida y Activación Única de Notificación de Bienvenida ──
+    const handleWelcomeClose = useCallback(async () => {
+        setIsWelcomeOpen(false);
+        try {
+            const res = await api.post('/Admin/notifications/trigger-welcome');
+            if (res.data?.sent) {
+                if (!isConnected && res.data.titulo && res.data.mensaje) {
+                    addToast(res.data.titulo, res.data.mensaje, 'default', res.data.url_accion || '/notificaciones');
+                }
+                await fetchNotifications();
+            }
+        } catch (err) {
+            console.warn('Error al activar notificación inicial de bienvenida:', err);
+        }
+    }, [isConnected, addToast, fetchNotifications]);
 
     // ── Disparador de Pantalla de Bienvenida Inicial (Drawer) ─────────────────
     useEffect(() => {
@@ -384,9 +403,9 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
 
             <WelcomeModal
                 isOpen={isWelcomeOpen}
-                onClose={() => setIsWelcomeOpen(false)}
+                onClose={handleWelcomeClose}
                 onOpenGuide={() => {
-                    setIsWelcomeOpen(false);
+                    handleWelcomeClose();
                     setIsHelpOpen(true);
                 }}
             />

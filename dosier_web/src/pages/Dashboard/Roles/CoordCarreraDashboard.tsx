@@ -101,14 +101,6 @@ export const CoordCarreraDashboard: React.FC = () => {
         });
     }, [peas, filterEstado, search]);
 
-    // Métricas en vivo
-    const stats = useMemo(() => {
-        const total = peas.length;
-        const pendientes = peas.filter(p => p.estado === 'EnRevision' || (p.firma_docente && !p.firma_coord)).length;
-        const conObservaciones = peas.filter(p => p.estado === 'Observado' || p.total_observaciones_pendientes > 0).length;
-        const avalados = peas.filter(p => p.firma_coord || p.estado === 'RevisadoCoord' || p.estado === 'RevisadoAcad' || p.estado === 'Aprobado').length;
-        return { total, pendientes, conObservaciones, avalados };
-    }, [peas]);
 
     // Emisión formal de Aval de Carrera
     const handleEmitirAvalCarrera = async (peaItem: PeaBandejaItemDto) => {
@@ -237,41 +229,6 @@ export const CoordCarreraDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Fichas Clave-Valor de Métricas Reales */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 block uppercase">
-                        Total Asignaturas
-                    </span>
-                    <span className="text-xl font-bold font-mono text-slate-900 dark:text-white mt-1 block">
-                        {stats.total}
-                    </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400 block uppercase">
-                        Listos para Revisión
-                    </span>
-                    <span className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 mt-1 block">
-                        {stats.pendientes}
-                    </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 block uppercase">
-                        Con Observaciones
-                    </span>
-                    <span className="text-xl font-bold font-mono text-amber-600 dark:text-amber-400 mt-1 block">
-                        {stats.conObservaciones}
-                    </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 block uppercase">
-                        Avalados por Carrera
-                    </span>
-                    <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1 block">
-                        {stats.avalados}
-                    </span>
-                </div>
-            </div>
 
             {/* Bandeja de Supervisión Disciplinar */}
             <div className="bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl overflow-hidden">
@@ -285,7 +242,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                             <input
                                 type="text"
-                                placeholder="Buscar materia o docente..."
+                                placeholder="Buscar asignatura o docente..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 className="pl-7 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] w-52"

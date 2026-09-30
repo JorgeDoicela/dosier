@@ -251,7 +251,7 @@ graph TD
 | **`GeistDatePicker`** | `GeistDatePicker.tsx` | Selector de fechas adaptado al calendario académico del ISTPET con validación de rangos. |
 | **`GeistCalendar`** | `GeistCalendar.tsx` | Calendario mensual interactivo con marcadores visuales para hitos de entrega. |
 | **`CommandPalette`** | `CommandPalette.tsx` | Paleta de comandos rápidos global (`Ctrl + K` / `Cmd + K`) para navegación inmediata a asignaturas, PEAs y configuraciones. |
-| **`MemberSearchSelector`** | `MemberSearchSelector.tsx` | Selector predictivo de docentes de cátedra y miembros de comisiones con búsqueda por cédula o apellido. |
+| **`MemberSearchSelector`** | `MemberSearchSelector.tsx` | Selector predictivo de docentes de asignatura y miembros de comisiones con búsqueda por cédula o apellido. |
 | **`TimedSuccessModal`** | `TimedSuccessModal.tsx` | Modal con temporizador visual para confirmar el sellado exitoso de un PEA o firma registrada. |
 | **`StickyNotesFloatingButton`** | `StickyNotesFloatingButton.tsx` | Botón flotante para anotaciones rápidas de trabajo docente durante la planificación curricular. |
 | **`ProximosEventosWidget`** | `ProximosEventosWidget.tsx` | Widget de escritorio para visualizar plazos perentorios del cronograma académico. |

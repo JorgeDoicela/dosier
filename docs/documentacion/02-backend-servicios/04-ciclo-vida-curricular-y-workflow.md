@@ -44,7 +44,7 @@ Antes de permitir la transición a `EnRevision`, el `CurricularValidationEngine`
 2. **Componentes de Aprendizaje:**
    $$\text{Horas Docencia} + \text{Horas APE} + \text{Horas Autónomo} = \text{Horas Totales Asignatura}$$
    $$\text{Horas Autónomo} = \text{Horas Totales} - (\text{Horas Docencia} + \text{Horas APE})$$
-3. **Carga Práctico-Experimental:** La suma de horas de las actividades prácticas planificadas no puede exceder las horas APE autorizadas para la materia.
+3. **Carga Práctico-Experimental:** La suma de horas de las actividades prácticas planificadas no puede exceder las horas APE autorizadas para la asignatura.
 4. **Articulación al Perfil de Egreso:** Cada resultado de aprendizaje de la asignatura (RDA) debe estar vinculado a al menos un resultado del Perfil de Egreso de la carrera.
 5. **Bibliografía Mínima:** Presencia obligatoria de bibliografía básica con justificación académica.
 
@@ -68,7 +68,7 @@ Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COO
 * **Filtros de Consulta:** Permite filtrar por período académico (`idPeriodo`), carrera (`idCarrera`) y estado del documento (`estado`).
 * **Seguridad y Alcance RBAC:**
   * Administrador, Vicerrector y Coordinador Académico: Acceso irrestricto a todas las carreras y asignaturas del instituto (`esInstituto = 1`).
-  * Coordinador de Carrera: Supervisión acotada a las materias de su carrera respectiva.
-  * Docente: Visualización exclusiva de sus cátedras asignadas.
+  * Coordinador de Carrera: Supervisión acotada a las asignaturas de su carrera respectiva.
+  * Docente: Visualización exclusiva de sus asignaturas asignadas.
 * **Optimización de Carga:** Mapeo mediante carga por lotes (batching) en memoria de diccionarios de carreras, asignaturas y profesores para erradicar el problema de consultas N+1 en bases de datos relacionales.
 

@@ -2,7 +2,7 @@
 -- DOSIER / SIGAFI - Base de Datos Institucional Anonimizada (LOPDP Compliant)
 -- =============================================================================
 -- Generado con Pipeline de Sanitización Oficial para el ISTPET.
--- Conserva el catálogo curricular real (carreras, mallas, periodos, materias),
+-- Conserva el catálogo curricular real (carreras, mallas, periodos, asignaturas),
 -- la estructura organizacional (departamentos, cargos, contratos, distributivos)
 -- y anonimiza estrictamente datos personales y credenciales bajo la LOPDP.
 -- =============================================================================

@@ -241,7 +241,7 @@ export const CoordAcadDashboard: React.FC = () => {
                             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                             <input
                                 type="text"
-                                placeholder="Buscar materia, docente o carrera..."
+                                placeholder="Buscar asignatura, docente o carrera..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 className="pl-7 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] w-56"

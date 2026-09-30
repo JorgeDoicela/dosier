@@ -12,10 +12,6 @@ import {
 import { crearPeaDesdeAsignacion } from '../../../services/peaService';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import {
-    BookOpen,
-    Clock,
-    FileText,
-    CheckCircle2,
     AlertCircle,
     ArrowRight,
     PlusCircle,
@@ -122,11 +118,7 @@ export const DocentePeaDashboard: React.FC = () => {
         navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
     };
 
-    // Métricas reales
-    const totalMaterias = materias.length;
-    const materiasBorrador = useMemo(() => materias.filter(m => m.estado_pea === 'Borrador' || m.estado_pea === 'Corregido').length, [materias]);
-    const materiasRevision = useMemo(() => materias.filter(m => m.estado_pea === 'EnRevision' || m.estado_pea === 'RevisadoCoord' || m.estado_pea === 'RevisadoAcad').length, [materias]);
-    const materiasAprobadas = useMemo(() => materias.filter(m => m.estado_pea === 'Aprobado').length, [materias]);
+    // Alerta de observaciones
     const materiasObservadas = useMemo(() => materias.filter(m => m.estado_pea === 'Observado'), [materias]);
 
     // Filtrado de materias
@@ -183,71 +175,13 @@ export const DocentePeaDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Fichas Clave-Valor de Métricas Reales */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between">
-                    <div>
-                        <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                            Total Cátedras Asignadas
-                        </span>
-                        <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">
-                            {totalMaterias}
-                        </span>
-                    </div>
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/50 flex items-center justify-center text-[#0070f3] dark:text-blue-400">
-                        <BookOpen className="w-5 h-5" />
-                    </div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between">
-                    <div>
-                        <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                            En Elaboración (Borrador)
-                        </span>
-                        <span className="text-2xl font-bold text-zinc-700 dark:text-zinc-300 font-mono">
-                            {materiasBorrador}
-                        </span>
-                    </div>
-                    <div className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400">
-                        <FileText className="w-5 h-5" />
-                    </div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between">
-                    <div>
-                        <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                            En Revisión Colegiada
-                        </span>
-                        <span className="text-2xl font-bold text-[#0070f3] dark:text-blue-400 font-mono">
-                            {materiasRevision}
-                        </span>
-                    </div>
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/50 flex items-center justify-center text-[#0070f3] dark:text-blue-400">
-                        <Clock className="w-5 h-5" />
-                    </div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-between">
-                    <div>
-                        <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                            PEAs Aprobados
-                        </span>
-                        <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                            {materiasAprobadas}
-                        </span>
-                    </div>
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="w-5 h-5" />
-                    </div>
-                </div>
-            </div>
 
             {/* Listado y Filtros */}
             <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden">
                 <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
                         <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                            Cátedras Asignadas en Distributivo Institucional
+                            Asignaturas Asignadas en Distributivo Institucional
                         </h2>
                         {refreshing && <RefreshCw className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
                     </div>

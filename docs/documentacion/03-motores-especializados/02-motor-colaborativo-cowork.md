@@ -2,7 +2,7 @@
 
 ## 1. Visión General del Subsistema CoWork
 
-El motor colaborativo CoWork proporciona la infraestructura de sincronización en tiempo real que permite a múltiples docentes de una misma materia, área académica o comisión curricular redactar simultáneamente las secciones del **Programa de Estudio de la Asignatura (PEA)** y documentos oficiales de planificación.
+El motor colaborativo CoWork proporciona la infraestructura de sincronización en tiempo real que permite a múltiples docentes de una misma asignatura, área académica o comisión curricular redactar simultáneamente las secciones del **Programa de Estudio de la Asignatura (PEA)** y documentos oficiales de planificación.
 
 El subsistema combina **SignalR WebSockets**, compresión de carga útil vía **GZip**, tipos de datos replicados sin conflictos (**Yjs CRDT**) y un mecanismo de bloqueo granular de secciones (`SectionBlockGuard`).
 
@@ -18,7 +18,7 @@ graph TD
     subgraph BackendProcess [Procesamiento Backend]
         Hub --> GZip[GZipHelper: Descompresión]
         GZip --> LockManager[Section Lock Manager]
-        LockManager --> Broadcast[Broadcasting a Miembros de la Materia]
+        LockManager --> Broadcast[Broadcasting a Miembros de la Asignatura]
         LockManager --> Persistence[Persistencia Asíncrona DB]
     end
 
@@ -34,7 +34,7 @@ graph TD
 
 ### 3.1. Gateway de Comunicación (`CollaborationHub`)
 Clase derivada de `Hub` en SignalR que gestiona las conexiones en tiempo real:
-* **Grupos de Materia / Asignatura (*Rooms*):** Los clientes se unen a grupos identificados por la instancia del documento curricular (`EntidadUuid`).
+* **Grupos de Asignatura (*Rooms*):** Los clientes se unen a grupos identificados por la instancia del documento curricular (`EntidadUuid`).
 * **Presencia de Docentes:** Controla la lista de docentes activos conectados a la redacción del PEA y el estado de su cursor en los campos colaborativos.
 
 ### 3.2. Compresión de Carga Útil (`GZipHelper`)

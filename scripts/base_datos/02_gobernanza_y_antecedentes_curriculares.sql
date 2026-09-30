@@ -219,7 +219,7 @@ CREATE TABLE doc_expedientes_curriculares (
 CREATE TRIGGER trg_doc_expedientes_curriculares_uuid BEFORE INSERT ON doc_expedientes_curriculares FOR EACH ROW
 SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
--- Mapeo de asignaciones docentes y paralelos al expediente de la materia (Materia Compartida)
+-- Mapeo de asignaciones docentes y paralelos al expediente de la asignatura (Asignatura Compartida)
 CREATE TABLE doc_expediente_asignaciones (
     idExpediente            INT             NOT NULL,
     idAsignacion            INT(11)         NOT NULL,
@@ -229,7 +229,7 @@ CREATE TABLE doc_expediente_asignaciones (
     INDEX idx_exp_asig_id (idAsignacion),
     FOREIGN KEY (idExpediente) REFERENCES doc_expedientes_curriculares(idExpediente) ON DELETE CASCADE,
     FOREIGN KEY (idAsignacion) REFERENCES asignaciones_profesores(idAsignacion) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Mapeo de asignaciones docentes y paralelos al expediente de la materia';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Mapeo de asignaciones docentes y paralelos al expediente de la asignatura';
 
 -- =============================================================================
 -- 5. SEMILLAS BASE: NORMAS SUPERIORES Y MODELO EDUCATIVO OFICIAL
@@ -275,7 +275,7 @@ INSERT INTO doc_normativa_articulos (uuid, idNormativa, numeroArticulo, titulo, 
     @idNormativaCes,
     'Art. 27',
     'Planificación Microcurricular',
-    'Cada materia debe contar con una planificación microcurricular que articule los contenidos, estrategias metodológicas, resultados de aprendizaje y mecanismos de evaluación.',
+    'Cada asignatura debe contar con una planificación microcurricular que articule los contenidos, estrategias metodológicas, resultados de aprendizaje y mecanismos de evaluación.',
     'Verificar la coherencia interna entre unidades temáticas, actividades prácticas y ponderaciones evaluativas.',
     2
 );

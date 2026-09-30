@@ -107,7 +107,7 @@ export const CATEGORIAS_CONFIG: Record<string, { label: string; color: string }>
     EntregaPea:  { label: 'Entrega PEA Docente',      color: '#3B82F6' },
     Revision:    { label: 'Revisión Coordinación',    color: '#8B5CF6' },
     Firmas:      { label: 'Legalización y Firmas',    color: '#10B981' },
-    Reunion:     { label: 'Reunión de Área / Cátedra', color: '#EC4899' },
+    Reunion:     { label: 'Reunión de Área / Asignatura', color: '#EC4899' },
     Personal:    { label: 'Mis Tareas / Agenda',       color: '#F59E0B' },
     // Compatibilidad retroactiva con eventos preexistentes
     Convocatoria:{ label: 'Entrega PEA Docente',      color: '#3B82F6' },

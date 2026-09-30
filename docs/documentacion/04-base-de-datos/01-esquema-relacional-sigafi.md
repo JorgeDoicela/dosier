@@ -56,7 +56,7 @@ erDiagram
 | `mallas` | `idMalla`, `idCarrera`, `descripcion`, `codigoResolucion` | Mallas curriculares aprobadas. |
 | `mallas_periodos` | `idMallaPeriodo`, `idMalla`, `idPeriodo` | Tabla pivote de resolución de cohorte curricular por período lectivo. |
 | `detallemallas` | `idDetalleMalla`, `idMalla`, `idAsignatura`, `horasDocencia`, `horasApe`, `horasAutonomo`, `creditos` | Regla matemática inalterable de distribución horaria oficial. |
-| `asignaturas` | `idAsignatura`, `asignatura`, `codigo` | Catálogo de materias del plan de estudios. |
+| `asignaturas` | `idAsignatura`, `asignatura`, `codigo` | Catálogo de asignaturas del plan de estudios. |
 | `asignaciones_profesores` | `idAsignacion`, `idProfesor`, `idPeriodo`, `idAsignatura`, `idCarrera`, `paralelo` | Carga horaria docente asignada. Es el punto de partida para instanciar el PEA. |
 
 ---
@@ -104,7 +104,7 @@ erDiagram
 * **`doc_expedientes_curriculares`:**
   * Contenedor maestro que unifica la carrera, período, asignatura, proyecto CES, perfil de egreso y modelo educativo con el PEA.
 * **`doc_expediente_asignaciones`:**
-  * Resuelve asignaturas compartidas y cátedras paralelas en relación N:M (`idExpediente`, `idAsignacion`, `esDocenteLider`).
+  * Resuelve asignaturas compartidas y paralelos en relación N:M (`idExpediente`, `idAsignacion`, `esDocenteLider`).
 * **`doc_autoridades_curriculares`:**
   * Designación formal de autoridades (`VICERRECTOR`, `COORD_ACADEMICO`, `COORD_CARRERA`) para legalizar su potestad de firma en el PEA.
 

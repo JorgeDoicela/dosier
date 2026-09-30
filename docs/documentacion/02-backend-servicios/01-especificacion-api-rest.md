@@ -101,10 +101,10 @@ Frontera de integración de solo lectura con las asignaciones académicas de SIG
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/contexto/{idAsignacion:int}` | Autenticado | Resuelve el contexto curricular oficial de la materia asignada (horas, créditos, prerrequisitos). |
+| `GET` | `/contexto/{idAsignacion:int}` | Autenticado | Resuelve el contexto curricular oficial de la asignatura asignada (horas, créditos, prerrequisitos). |
 | `GET` | `/periodo-activo` | Autenticado | Retorna el período académico activo institucional de SIGAFI. |
 | `GET` | `/periodos` | Autenticado | Lista los períodos académicos disponibles. |
-| `GET` | `/mis-asignaturas` | Autenticado | Retorna las materias asignadas al docente autenticado con el estado actual de su PEA. |
+| `GET` | `/mis-asignaturas` | Autenticado | Retorna las asignaturas asignadas al docente autenticado con el estado actual de su PEA. |
 | `GET` | `/curriculo` | Autenticado | Información detallada de una asignatura y carrera (`idAsignatura`, `idCarrera`). |
 
 ---
@@ -118,7 +118,7 @@ Gestión del Expediente Curricular Maestro por Asignatura y Período.
 | `GET` | `/{id:int}/detalle` | Autenticado | Expediente consolidado con proyecto de carrera CES, modelo educativo y matriz de tributación. |
 | `GET` | `/asignacion/{idAsignacion:int}` | Autenticado | Obtiene el expediente vinculado a una asignación docente. |
 | `GET` | `/periodo/{idPeriodo}` | Autenticado | Lista expedientes curriculares por período y carrera opcional. |
-| `POST`| `/asegurar/asignacion/{idAsignacion:int}` | Autenticado | Obtiene o crea automáticamente el expediente curricular maestro para la cátedra. |
+| `POST`| `/asegurar/asignacion/{idAsignacion:int}` | Autenticado | Obtiene o crea automáticamente el expediente curricular maestro para la asignatura. |
 
 ---
 

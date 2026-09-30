@@ -192,7 +192,7 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
                                         </div>
                                         <div className="flex items-center gap-3 shrink-0">
                                             <span className="text-[8px] font-semibold">
-                                                Total horas: <span className="font-bold">{u.horasTotal ?? 0}</span>
+                                                Total de horas por unidad: <span className="font-bold">{u.horasTotal ?? 0}</span>
                                             </span>
                                             {unidades.length > 1 && (
                                                 <button
@@ -213,7 +213,7 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
                                         style={{ backgroundColor: subHeaderBg, color: '#000000' }}
                                     >
                                         <div className="p-1 flex items-center justify-between">
-                                            <span className="font-medium">Horas contacto docente:</span>
+                                            <span className="font-medium">Horas contacto con el docente:</span>
                                             <input
                                                 type="number"
                                                 min={0}
@@ -235,7 +235,7 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
                                             />
                                         </div>
                                         <div className="p-1 flex items-center justify-between">
-                                            <span className="font-medium">Horas aprendizaje autónomo:</span>
+                                            <span className="font-medium">Horas de aprendizaje autónomo:</span>
                                             <input
                                                 type="number"
                                                 min={0}

@@ -10,7 +10,7 @@ export interface RoleInfo {
 
 export const ROLES_DATA: RoleInfo[] = [
     { 
-        role: 'Docente de Materia', 
+        role: 'Docente de Asignatura', 
         desc: 'Docentes que elaboran y co-redactan PEAs, Sílabos (19 semanas) y Guías de Práctica APE.', 
         icon: Users,
         permissions: ['Co-redacción en tiempo real', 'Validación matemática de horas', 'Generación de Guías APE y Estudio']

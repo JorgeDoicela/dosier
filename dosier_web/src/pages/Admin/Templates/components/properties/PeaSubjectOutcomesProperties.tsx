@@ -28,7 +28,7 @@ export const PeaSubjectOutcomesProperties: React.FC<PeaSubjectOutcomesProperties
                     </span>
                 </div>
                 <p className="text-[11px] text-text-dim leading-relaxed">
-                    Logros pedagógicos observables y medibles que el estudiante adquiere al culminar el ciclo de formación en la cátedra (Taxonomía de Bloom aplicada a la tecnología).
+                    Logros pedagógicos observables y medibles que el estudiante adquiere al culminar el ciclo de formación en la asignatura (Taxonomía de Bloom aplicada a la tecnología).
                 </p>
             </div>
 

@@ -72,7 +72,7 @@ $$\sum_{u=1}^{n} (\text{Horas CD}_u + \text{Horas APE}_u + \text{Horas TA}_u) \e
 
 ### Reglas de Validación Bloqueantes
 1. **Consistencia con Malla Vigente:** Las horas de las unidades temáticas y los componentes no pueden exceder ni ser inferiores a la carga oficial de `detallemallas`.
-2. **Componente APE:** Las horas asignadas a actividades prácticas no pueden superar el total de horas APE autorizadas para la materia.
+2. **Componente APE:** Las horas asignadas a actividades prácticas no pueden superar el total de horas APE autorizadas para la asignatura.
 3. **Aporte al Perfil de Egreso:** Todo resultado de aprendizaje (RDA) formulado en la asignatura debe articularse obligatoriamente con al menos un RDA del Perfil de Egreso oficial de la carrera.
 4. **Bibliografía Obligatoria:** Exigencia de al menos una referencia básica con justificación pedagógica debidamente registrada.
 
@@ -135,12 +135,12 @@ Cuando el PEA avanza a la etapa `EnRevision`, `RevisadoCoord` o `Aprobado`, el o
 
 ## 7. CRDT Realtime Collaboration Architecture (CoWork Engine para Docentes)
 
-Para permitir que los docentes que imparten la misma materia o colaboran en su diseño redacten el PEA de manera concurrente y síncrona, el sistema utiliza una arquitectura basada en **CRDT (Conflict-free Replicated Data Types)** mediante **Yjs** y **SignalR WebSockets**.
+Para permitir que los docentes que imparten la misma asignatura o colaboran en su diseño redacten el PEA de manera concurrente y síncrona, el sistema utiliza una arquitectura basada en **CRDT (Conflict-free Replicated Data Types)** mediante **Yjs** y **SignalR WebSockets**.
 
 ```mermaid
 graph TD
     UserA["Docente A (Elaborador)\nReact SPA"]
-    UserB["Docente B (Co-Docente Materia)\nReact SPA"]
+    UserB["Docente B (Co-Docente Asignatura)\nReact SPA"]
 
     subgraph SignalRHub [CollaborationHub Backend .NET]
         WsGateway["WebSocket Gateway / SignalR"]

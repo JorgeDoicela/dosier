@@ -291,7 +291,7 @@ public class DocPea
 ### 4.4. Expediente Curricular Maestro y Antecedentes
 
 * **`DocExpedienteCurricular`:** Agrupador formal que unifica la oferta académica de SIGAFI con los antecedentes curriculares: `IdCarrera`, `IdPeriodo`, `IdMalla`, `IdAsignatura`, `Paralelo`, `IdProyectoCurricular`, `IdPerfilEgreso`, `IdModeloEducativo` y `EstadoGeneral` (`Abierto`, `EnRevision`, `Aprobado`, `Cerrado`).
-* **`DocExpedienteAsignacion`:** Resuelve la relación N:M para materias compartidas o cátedras paralelas, indicando si un profesor actúa como `EsDocenteLider`.
+* **`DocExpedienteAsignacion`:** Resuelve la relación N:M para asignaturas compartidas o asignaturas paralelas, indicando si un profesor actúa como `EsDocenteLider`.
 * **`DocAutoridadCurricular`:** Registro formal de autoridades institucionales designadas (`VICERRECTOR`, `COORD_ACADEMICO`, `COORD_CARRERA`) para validar la potestad de firma.
 * **`DocModeloEducativo`:** Versionamiento institucional del modelo pedagógico (`Codigo`, `ResolucionAprobacion`, `FechaVigenciaDesde`, `FechaVigenciaHasta`).
 * **`DocNormativa` y `DocNormativaArticulo`:** Repositorio inmutable de regulaciones nacionales (CES, CACES, SENESCYT) y desglose de artículos que alimentan el validador pedagógico.
@@ -310,7 +310,7 @@ public class DocPea
 * **`Role` y `UserRole`:**
   * Soporta los 5 roles institucionales oficiales:
     1. `DOSIER_ADMIN`: Administración de plataforma y usuarios.
-    2. `DOSIER_DOCENTE`: Redacción y co-trabajo en el PEA de sus materias asignadas.
+    2. `DOSIER_DOCENTE`: Redacción y co-trabajo en el PEA de sus asignaturas asignadas.
     3. `DOSIER_COORD_CARRERA`: Revisión y emisión de observaciones curriculares de su carrera.
     4. `DOSIER_COORD_ACAD`: Revisión transversal pedagógica y validación institucional.
     5. `DOSIER_VICERRECTOR`: Aprobación definitiva y sellado institucional.

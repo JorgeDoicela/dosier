@@ -93,11 +93,11 @@ export const generatePeaGeneralHtml = (block: DocumentBlock): string => {
               <td style="${borderCss} border-left: none; border-top: none; border-right: none; padding: 4px 6px; font-weight: bold;">{{default horas_contacto_docente 0}}</td>
             </tr>
             <tr>
-              <td style="${borderCss} border-left: none; border-top: none; padding: 4px 6px;">Total horas de aprendizaje experimental:</td>
+              <td style="${borderCss} border-left: none; border-top: none; padding: 4px 6px;">Total horas de práctico experimental:</td>
               <td style="${borderCss} border-left: none; border-top: none; border-right: none; padding: 4px 6px; font-weight: bold;">{{default horas_practico_experimental 0}}</td>
             </tr>
             <tr>
-              <td style="${borderCss} border-left: none; border-top: none; border-bottom: none; padding: 4px 6px;">Total horas de practico autónomo:</td>
+              <td style="${borderCss} border-left: none; border-top: none; border-bottom: none; padding: 4px 6px;">Total horas de aprendizaje autónomo:</td>
               <td style="border: none; padding: 4px 6px; font-weight: bold;">{{default horas_autonomo 0}}</td>
             </tr>
           </table>

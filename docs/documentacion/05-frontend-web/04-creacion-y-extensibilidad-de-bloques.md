@@ -23,7 +23,7 @@ El formato oficial del PEA institucional del ISTPET se compone de **11 bloques c
 | **b** | `pea_objective_section` | SECCIÓN B: OBJETIVO DE LA ASIGNATURA | `PeaObjectiveProperties.tsx` | Recuadro con barra azul y líneas continuas para objetivo formativo con verbo en infinitivo. | `{{ objetivo_asignatura }}` |
 | **c** | `pea_prerequisites_section` | SECCIÓN C: PRERREQUISITOS | `PeaPrerequisitesProperties.tsx` | Tabla comparativa oficial: Asignatura \| Observación. | `{{ prerrequisitos }}` |
 | **d** | `pea_career_outcomes_section` | SECCIÓN D: RESULTADOS DE CARRERA | `PeaCareerOutcomesProperties.tsx` | Contenedor rayado para aportes al perfil de egreso de la carrera. | `{{ resultados_carrera }}` |
-| **e** | `pea_subject_outcomes_section` | SECCIÓN E: RESULTADOS DE ASIGNATURA | `PeaSubjectOutcomesProperties.tsx` | Contenedor rayado para resultados de aprendizaje específicos de la cátedra. | `{{ resultados_asignatura }}` |
+| **e** | `pea_subject_outcomes_section` | SECCIÓN E: RESULTADOS DE ASIGNATURA | `PeaSubjectOutcomesProperties.tsx` | Contenedor rayado para resultados de aprendizaje específicos de la asignatura. | `{{ resultados_asignatura }}` |
 | **f** | `pea_contents_section` | SECCIÓN F: CONTENIDOS DE ENSEÑANZA | `PeaContentsProperties.tsx` | Tabla No \| UNIDADES DE ESTUDIO con subcabeceras celestes (`#bdd7ee`) y desglose de horas por unidad. | `{{ unidades }}` con horas CD, APE, TA |
 | **g** | `pea_methodology_section` | SECCIÓN G: METODOLOGÍA DE ENSEÑANZA | `PeaMethodologyProperties.tsx` | Bloque dual: Estrategias metodológicas y Recursos didácticos / informatización. | `{{ metodologia.estrategias }}`, `{{ metodologia.recursos }}` |
 | **h** | `pea_resources_section` | SECCIÓN H: ACTIVIDADES PRÁCTICAS | `PeaResourcesProperties.tsx` | Tabla institucional: Unidad \| Nombre de la práctica y caracterización de la actividad. | `{{ actividades_practicas }}` |
@@ -136,7 +136,7 @@ case 'cur_rubrica_evaluacion_practica':
 ### 3.4. Fase 4: Componente de Formulario con Co-Redacción Concurrente
 Ubicación: `dosier_web/src/components/DOSIER/sections/RubricaPracticaSection.tsx`
 
-Se construye la interfaz interactiva donde los docentes de cátedra definen los criterios. Para campos de texto colaborativo, se integra el componente `<CoWorkField>`:
+Se construye la interfaz interactiva donde los docentes de la asignatura definen los criterios. Para campos de texto colaborativo, se integra el componente `<CoWorkField>`:
 
 ```tsx
 import React from 'react';

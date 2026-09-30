@@ -45,8 +45,8 @@ sequenceDiagram
 ## 3. Responsabilidades Diferenciadas por Rol Revisor
 
 ### 3.1. Coordinación de Carrera (`DOSIER_COORD_CARRERA`)
-* **Alineación con el Perfil de Egreso:** Verifica que cada Resultado de Aprendizaje (RDA) formulado en la materia tribute efectivamente a las competencias profesionales de la carrera.
-* **Prerrequisitos y Contenidos Mínimos:** Comprueba que los temas no se solapen con materias correlacionadas ni omitan los contenidos mínimos del proyecto curricular aprobado por el CES.
+* **Alineación con el Perfil de Egreso:** Verifica que cada Resultado de Aprendizaje (RDA) formulado en la asignatura tribute efectivamente a las competencias profesionales de la carrera.
+* **Prerrequisitos y Contenidos Mínimos:** Comprueba que los temas no se solapen con asignaturas correlacionadas ni omitan los contenidos mínimos del proyecto curricular aprobado por el CES.
 * **Emisión de Aval:** Su firma digital certifica la coherencia técnica del PEA y habilita la transición a `RevisadoCoord`.
 
 ### 3.2. Coordinación Académica (`DOSIER_COORD_ACAD`)

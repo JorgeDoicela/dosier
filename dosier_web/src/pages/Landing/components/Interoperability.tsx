@@ -12,7 +12,7 @@ const Interoperability: React.FC = () => {
                 Conectado con su <br className="hidden md:inline" /> Gestión Académica
             </h3>
             <p className="text-xs text-text-dim max-w-lg mx-auto leading-relaxed">
-                DOSIER se acopla a la base de datos institucional SIGAFI para sincronizar en tiempo real las materias asignadas, mallas curriculares, prerrequisitos y horas de cada docente del Tecnológico Traversari.
+                DOSIER se acopla a la base de datos institucional SIGAFI para sincronizar en tiempo real las asignaturas asignadas, mallas curriculares, prerrequisitos y horas de cada docente del Tecnológico Traversari.
             </p>
 
             {/* Mock API Terminal Box */}
@@ -30,7 +30,7 @@ const Interoperability: React.FC = () => {
                     </p>
                     <p className="text-text-main mt-3">// RESPONSE OK (200)</p>
                     <p className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {`{ "status": "synchronized", "periodo": "2026-A", "materias": 4, "malla_horas_valid": true }`}
+                        {`{ "status": "synchronized", "periodo": "2026-A", "asignaturas": 4, "malla_horas_valid": true }`}
                     </p>
                 </div>
             </div>

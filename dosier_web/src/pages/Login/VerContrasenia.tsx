@@ -124,7 +124,7 @@ const VerContrasenia = ({ currentTheme = 'dark', toggleTheme }: VerContraseniaPr
                         className="h-16 w-auto object-contain"
                     />
                     <div className="text-center space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tighter text-text-main">
+                        <h1 className="text-2xl font-semibold tracking-tight text-slate-800 dark:text-zinc-100">
                             Recuperación de contraseña
                         </h1>
                         <p className="text-[11px] text-text-dim font-medium tracking-tight">

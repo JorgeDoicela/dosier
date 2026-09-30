@@ -213,7 +213,7 @@ const Login = ({ currentTheme = 'dark', toggleTheme }: LoginProps) => {
                         />
                     </Link>
                     <div className="text-center space-y-0.5 sm:space-y-1">
-                        <h1 className="text-xl sm:text-2xl font-semibold tracking-tighter text-text-main">Entrar a DOSIER</h1>
+                        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-800 dark:text-zinc-100">Entrar a DOSIER</h1>
                         <p className="text-[10px] sm:text-[11px] text-text-dim font-medium tracking-tight">Sistema de Gestión Documental Docente ISTPET</p>
                     </div>
                 </div>

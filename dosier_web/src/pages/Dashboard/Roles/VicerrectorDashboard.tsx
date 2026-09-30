@@ -335,7 +335,7 @@ export const VicerrectorDashboard: React.FC = () => {
                                                     {p.nombre_asignatura}
                                                 </p>
                                                 <p className="text-[11px] text-zinc-500 font-mono">
-                                                    {p.codigo_asignatura ? `${p.codigo_asignatura} • ` : ''}{p.nombre_docente_elaborador || 'Docente de Cátedra'}
+                                                    {p.codigo_asignatura ? `${p.codigo_asignatura} • ` : ''}{p.nombre_docente_elaborador || 'Docente de Asignatura'}
                                                 </p>
                                             </td>
                                             <td className="py-2.5 px-3">

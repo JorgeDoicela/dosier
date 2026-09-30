@@ -125,7 +125,7 @@ export const ClonarPeaModal: React.FC<Props> = ({
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="radio"
-                                                name="materia_origen"
+                                                name="asignatura_origen"
                                                 checked={selectedMateriaUuid === m.uuid}
                                                 onChange={() => {}}
                                                 className="text-[#0070f3]"

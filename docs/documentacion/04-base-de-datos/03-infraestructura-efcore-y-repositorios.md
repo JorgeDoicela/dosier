@@ -75,7 +75,7 @@ Con más de 75 KB de lógica transaccional, `PeaService` es el servicio de persi
   1. Invoca `IAcademicContextResolver` para consultar la asignación docente en SIGAFI.
   2. Extrae las horas de docencia, prácticas (APE) y autónomo oficiales, calculando automáticamente los créditos correspondientes.
   3. Crea el registro en `doc_pea` con `Version = 1` y estado `Borrador`.
-  4. Crea o vincula el `DocExpedienteCurricular` correspondiente a la materia y período.
+  4. Crea o vincula el `DocExpedienteCurricular` correspondiente a la asignatura y período.
 * **Persistencia Integral de Secciones (`GuardarPeaAsync`):**
   1. Ejecuta transacciones atómicas (`using var transaction = await _context.Database.BeginTransactionAsync()`).
   2. Realiza validación matemática de balance: la suma de horas de las unidades didácticas debe cuadrar exactamente con el total de horas de la asignatura registrado en la malla.

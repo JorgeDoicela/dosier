@@ -338,7 +338,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                         <span>•</span>
                                         <span className="flex items-center gap-1">
                                             <UserCheck size={13} />
-                                            {pea.nombre_docente_elaborador || 'Docente de Cátedra'}
+                                            {pea.nombre_docente_elaborador || 'Docente de Asignatura'}
                                         </span>
                                         <span>•</span>
                                         <span className="flex items-center gap-1 font-mono">

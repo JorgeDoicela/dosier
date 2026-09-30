@@ -112,9 +112,9 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                                         Investigación: <span className="font-semibold text-violet-400">{u.horas_investigacion}h/sem</span>
                                                     </span>
                                                 )}
-                                                <span className="text-text-dim flex items-center gap-1.5" title="Materias / Paralelos Activos asignados en el Período">
+                                                <span className="text-text-dim flex items-center gap-1.5" title="Asignaturas / Paralelos Activos asignados en el Período">
                                                     <span className={`w-1.5 h-1.5 rounded-full ${((u.materias_asignadas ?? u.catedras_asignadas) || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
-                                                    Materias: <span className="font-semibold text-text-main">{u.materias_asignadas ?? u.catedras_asignadas ?? 0}</span>
+                                                    Asignaturas: <span className="font-semibold text-text-main">{u.materias_asignadas ?? u.catedras_asignadas ?? 0}</span>
                                                 </span>
                                             </div>
                                             <div className="text-[10px] text-text-dim font-medium tracking-wide">

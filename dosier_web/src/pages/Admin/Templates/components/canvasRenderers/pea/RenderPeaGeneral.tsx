@@ -65,7 +65,7 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
     };
 
     const renderEditableLabel = (key: string, defaultText: string) => {
-        const text = c[key] || defaultText;
+        const text: string = typeof c[key] === 'string' && c[key] ? (c[key] as string) : defaultText;
         if (editingLabelKey === key) {
             return (
                 <div className="flex items-center gap-1 select-text" onClick={e => e.stopPropagation()}>
@@ -294,7 +294,7 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
                     {c.showModalidad !== false && (
                         <tr className={rowBorderCss}>
                             <td className={`p-1.5 font-bold ${cellBorderCss} bg-white`}>
-                                {renderEditableLabel('customLabel_showModalidad', 'Modalidad:')}
+                                {renderEditableLabel('customLabel_showModalidad', 'Modalidad de estudio:')}
                             </td>
                             <td className="p-1.5 bg-white text-slate-700 font-semibold">
                                 Presencial / En línea / Híbrida
@@ -306,7 +306,7 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
                     {c.showUnidadOrganizacion !== false && (
                         <tr className={rowBorderCss}>
                             <td className={`p-1.5 font-bold ${cellBorderCss} bg-white`}>
-                                {renderEditableLabel('customLabel_showUnidadOrganizacion', 'Unidad de organización curricular:')}
+                                {renderEditableLabel('customLabel_showUnidadOrganizacion', 'Unidad de Organización Curricular:')}
                             </td>
                             <td className="p-1.5 bg-white text-slate-700 font-semibold">
                                 Unidad Profesional / Básica

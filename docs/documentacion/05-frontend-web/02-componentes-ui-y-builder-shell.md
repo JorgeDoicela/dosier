@@ -2,7 +2,7 @@
 
 ## 1. Visión General del Constructor Curricular
 
-La experiencia de usuario de DOSIER se centra en el **Constructor del Programa de Estudio de la Asignatura (PEA)**, una interfaz avanzada diseñada para simplificar la planificación pedagógica docente, validar restricciones matemáticas de carga horaria en tiempo real y permitir la co-redacción concurrente entre docentes de cátedra.
+La experiencia de usuario de DOSIER se centra en el **Constructor del Programa de Estudio de la Asignatura (PEA)**, una interfaz avanzada diseñada para simplificar la planificación pedagógica docente, validar restricciones matemáticas de carga horaria en tiempo real y permitir la co-redacción concurrente entre docentes de la asignatura.
 
 El sistema de componentes se rige por el estándar **Modern Enterprise Docs** (inspirado en Stripe Docs, Linear y Mintlify), asegurando alta densidad informativa, sobriedad académica, confort prolongado de lectura, navegación sobre riel plano continuo y cumplimiento estricto de la regla de **fondos 100% sólidos sin transparencias**.
 

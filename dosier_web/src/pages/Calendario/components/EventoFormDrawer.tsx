@@ -124,7 +124,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                             >
                                 <option value="Personal">Personal / Nota Rápida</option>
                                 <option value="Tarea">Tarea Curricular / PEA</option>
-                                <option value="Reunion">Reunión de Área / Cátedra</option>
+                                <option value="Reunion">Reunión de Área / Asignatura</option>
                                 <option value="Hito">Fecha Límite / Entrega</option>
                             </select>
                         </div>

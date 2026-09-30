@@ -31,7 +31,7 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 #### 2.1.1. Tableros Específicos por Rol (`src/pages/Dashboard/Roles/`)
 * **`DocentePeaDashboard.tsx` (`DOSIER_DOCENTE`):**
   * Presenta las asignaturas asignadas al docente para el período lectivo ordinario extraídas de SIGAFI (`detallemallas`).
-  * Semáforo de estado curricular por materia (`Borrador`, `EnRevision`, `Observado`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`).
+  * Semáforo de estado curricular por asignatura (`Borrador`, `EnRevision`, `Observado`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`).
   * Indicador de balance horario (horas docencia CD, prácticas APE y autónomas AA).
   * Acciones: Crear/Abrir PEA en Workspace, Clonar PEA de período previo (`ClonarPeaModal.tsx`) y Enviar a Revisión Técnica.
 * **`CoordCarreraDashboard.tsx` (`DOSIER_COORD_CARRERA`):**

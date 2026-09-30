@@ -171,7 +171,7 @@ export const useDocumentTemplatesPage = () => {
             setSelectedTemplate(fullData);
 
             if (fullData.htmlContent) {
-                const match = fullData.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON: (.*?) -->/);
+                const match = fullData.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON:\s*(.*?) -->/);
                 if (match && match[1]) {
                     try {
                         const decoded = decodeURIComponent(escape(atob(match[1])));
@@ -621,7 +621,7 @@ export const useDocumentTemplatesPage = () => {
             if (updated) {
                 let extractedBlocks = blocks;
                 if (updated.htmlContent) {
-                    const match = updated.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON: (.*?) -->/);
+                    const match = updated.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON:\s*(.*?) -->/);
                     if (match && match[1]) {
                         try {
                             const decoded = decodeURIComponent(escape(atob(match[1])));

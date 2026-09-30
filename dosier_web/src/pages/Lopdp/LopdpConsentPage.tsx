@@ -39,6 +39,7 @@ const LopdpConsentPage: React.FC = () => {
             addToast('Consentimientos Registrados', 'Ha aceptado la política de tratamiento de datos y los términos de uso de firma electrónica.', 'success');
             // Refresh user state so the guard lets the user proceed
             await refreshUser();
+            navigate('/dashboard', { replace: true });
         } catch (err) {
             console.error('Error submitting LOPDP consent:', err);
             addToast('Error', 'No se pudo registrar su consentimiento. Intente nuevamente.', 'error');

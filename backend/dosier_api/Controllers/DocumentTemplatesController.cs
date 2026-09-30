@@ -490,7 +490,7 @@ namespace dosier_api.Controllers
                         horas_practicas = 8,
                         horas_autonomas = 16,
                         contenidos = "Dockerización de aplicaciones, pipeline CI/CD básico, pruebas automatizadas y entrega del proyecto integrador.",
-                        mecanismos_evaluacion = "Defensa del proyecto final integrador de cátedra."
+                        mecanismos_evaluacion = "Defensa del proyecto final integrador de la asignatura."
                     }
                 },
 

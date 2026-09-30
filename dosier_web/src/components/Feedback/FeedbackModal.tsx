@@ -469,7 +469,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
     const getTitlePlaceholder = () => {
         switch (tipo) {
             case 'ERROR': return 'Ej: La sección de bibliografía no guarda / Error al legalizar PEA...';
-            case 'DUDA': return 'Ej: Falta materia en mi distributivo / Falta campo de co-docente...';
+            case 'DUDA': return 'Ej: Falta asignatura en mi distributivo / Falta campo de co-docente...';
             default: return 'Ej: Describe brevemente la incidencia...';
         }
     };

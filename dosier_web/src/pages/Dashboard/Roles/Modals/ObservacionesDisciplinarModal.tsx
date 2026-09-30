@@ -19,7 +19,7 @@ const SECCIONES_PEA = [
     'Sección F: Metodología y Ambientes de Aprendizaje',
     'Sección G: Vinculación con la Sociedad / Prácticas Preprofesionales',
     'Sección H: Políticas y Criterios de Evaluación (Matriz 30 pts)',
-    'Sección I: Perfil del Docente de Cátedra',
+    'Sección I: Perfil del Docente de la Asignatura',
     'Sección J: Bibliografía Básica y Complementaria (APA 7ma ed.)',
     'Sección K: Firmas de Legalización y Aprobación'
 ];

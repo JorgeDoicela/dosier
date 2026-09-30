@@ -85,7 +85,7 @@ export const PeaMethodologySection: React.FC<PeaMethodologySectionProps> = ({
                     <div className="flex gap-2.5 p-3 rounded-lg bg-bg-deep border border-border-thin text-[11px] text-text-dim items-start">
                         <Info size={15} className="text-brand shrink-0 mt-0.5" />
                         <p className="leading-relaxed">
-                            Indique las herramientas tecnológicas institucionales: Entorno Virtual de Aprendizaje (Moodle/Teams), simuladores, repositorios Git, software especializado y guías digitales de cátedra.
+                            Indique las herramientas tecnológicas institucionales: Entorno Virtual de Aprendizaje (Moodle/Teams), simuladores, repositorios Git, software especializado y guías digitales de la asignatura.
                         </p>
                     </div>
 

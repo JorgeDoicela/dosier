@@ -147,7 +147,7 @@ const Roles: React.FC = () => {
                         startPercent: '0%', 
                         widthPercent: '42%', 
                         permission: 'ASIGNATURAS:GESTIONAR',
-                        desc: 'Alineación de mallas activas y materias asignadas a docentes.',
+                        desc: 'Alineación de mallas activas y asignaturas asignadas a docentes.',
                         colorClass: 'bg-success/10 border-l-2 border-success text-success hover:bg-success/20 cursor-pointer' 
                     },
                     { 
