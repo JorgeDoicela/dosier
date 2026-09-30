@@ -245,14 +245,17 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
 
     if (!effectiveConfig) {
         return (
-            <div className="min-h-screen bg-bg-deep flex flex-col items-center justify-center p-8 text-center">
-                <div className="bg-surface border border-red-500/30 p-8 rounded-xl max-w-md shadow-sm">
-                    <h3 className="text-red-500 text-lg font-black uppercase tracking-wider mb-2">Error de Inicialización</h3>
-                    <p className="text-text-dim text-sm font-medium mb-6">
+            <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b0d11] flex flex-col items-center justify-center p-8 text-center">
+                <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 p-8 rounded-xl max-w-md shadow-xl">
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-2">Error de Inicialización</h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mb-6 leading-relaxed">
                         No se pudo resolver la estructura de la plantilla "{templateCode}".
                     </p>
-                    <button onClick={onClose} className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-all text-xs uppercase tracking-widest">
-                        Volver
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] active:bg-[#004ca3] text-white rounded-lg font-semibold transition-all text-xs cursor-pointer shadow-xs"
+                    >
+                        Volver al Panel
                     </button>
                 </div>
             </div>

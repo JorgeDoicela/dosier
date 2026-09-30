@@ -50,9 +50,9 @@ export const PeaMethodologySection: React.FC<PeaMethodologySectionProps> = ({
                 </div>
 
                 <div className="p-4 space-y-3">
-                    <blockquote className="text-xs text-text-dim bg-bg-deep p-3 rounded-lg border-l-2 border-brand italic leading-relaxed">
+                    <div className="text-xs text-text-dim bg-blue-50/40 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200/50 dark:border-blue-900/30 italic leading-relaxed">
                         «En la propuesta pedagógica establecida en el Modelo Educativo del ISTPET se tiene la metodología de aprendizaje activo, orientada a la resolución de problemas técnicos y proyectos formativos aplicados.»
-                    </blockquote>
+                    </div>
 
                     <div className="rounded-xl border border-border-thin overflow-hidden bg-bg-deep">
                         <CoWorkEditor

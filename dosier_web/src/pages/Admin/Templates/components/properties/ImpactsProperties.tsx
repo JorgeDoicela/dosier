@@ -8,8 +8,8 @@ interface ImpactsPropertiesProps {
     onUpdateConfig: (blockId: string, key: string, value: any) => void;
 }
 
-const inputCls = "w-full text-[11px] bg-surface-hover/60 hover:bg-surface-hover/90 border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition-all focus:outline-none";
-const selectCls = "w-full text-[11px] bg-surface-hover/60 hover:bg-surface-hover/90 border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition-all focus:outline-none";
+const inputCls = "w-full text-[11px] bg-surface-hover/60 hover:bg-surface-hover/90 border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-[#0070f3] dark:focus:border-blue-400 focus:ring-1 focus:ring-[#0070f3] transition-all focus:outline-none";
+const selectCls = "w-full text-[11px] bg-surface-hover/60 hover:bg-surface-hover/90 border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-[#0070f3] dark:focus:border-blue-400 focus:ring-1 focus:ring-[#0070f3] transition-all focus:outline-none";
 
 export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onUpdateConfig }) => {
     const config = block.config || {};
@@ -133,8 +133,8 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
         <div className="space-y-4 border-t border-border-thin/20 pt-4 text-left">
             {/* MODO DE PRESENTACIÓN VISUAL */}
             <div className="p-3 bg-surface-hover/30 border border-border-thin rounded-xl space-y-3">
-                <h5 className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
-                    <Layout size={13} className="text-brand" />
+                <h5 className="text-xs font-semibold text-text-main tracking-tight flex items-center gap-1.5">
+                    <Layout size={13} className="text-[#0070f3]" />
                     Diseño de Matriz de Impacto
                 </h5>
                 <div className="grid grid-cols-3 gap-2">
@@ -149,11 +149,11 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                             onClick={() => onUpdateConfig(block.id, 'impactLayoutMode', mode.id)}
                             className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
                                 layoutMode === mode.id
-                                    ? 'border-brand bg-brand/10 text-text-main font-bold shadow-xs'
+                                    ? 'border-[#0070f3] bg-blue-50/50 dark:bg-blue-950/20 text-[#0070f3] dark:text-blue-400 font-semibold shadow-xs'
                                     : 'border-border-thin bg-surface hover:bg-surface-hover text-text-dim'
                             }`}
                         >
-                            <span className="text-[10px] block font-bold">{mode.label}</span>
+                            <span className="text-[10px] block font-semibold">{mode.label}</span>
                             <span className="text-[8px] text-text-dim block opacity-80">{mode.desc}</span>
                         </button>
                     ))}
@@ -163,14 +163,14 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
             {/* GESTIÓN DE CATEGORÍAS DE IMPACTO */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <h5 className="text-[10px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
-                        <Layers size={13} className="text-brand" />
+                    <h5 className="text-xs font-semibold text-text-main tracking-tight flex items-center gap-1.5">
+                        <Layers size={13} className="text-[#0070f3]" />
                         Categorías de Impacto ({categories.length})
                     </h5>
                     <button
                         type="button"
                         onClick={handleResetToDefault}
-                        className="text-[9px] text-text-dim hover:text-brand flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-xs text-text-dim hover:text-[#0070f3] flex items-center gap-1 transition-colors cursor-pointer"
                         title="Restablecer categorías originales ISTPET"
                     >
                         <RotateCcw size={10} /> Restablecer
@@ -183,9 +183,9 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
 
                         if (isEditing) {
                             return (
-                                <div key={cat.id} className="p-3 bg-surface border border-brand rounded-xl space-y-2 animate-fade-in shadow-sm">
+                                <div key={cat.id} className="p-3 bg-surface border border-[#0070f3] rounded-xl space-y-2 animate-fade-in shadow-sm">
                                     <div className="flex justify-between items-center pb-1 border-b border-border-thin">
-                                        <span className="text-[10px] font-bold text-brand uppercase">Editando Categoría</span>
+                                        <span className="text-xs font-semibold text-[#0070f3] uppercase tracking-wider">Editando Categoría</span>
                                         <div className="flex items-center gap-1">
                                             <button
                                                 type="button"
@@ -207,7 +207,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                     </div>
                                     <div className="space-y-2">
                                         <div>
-                                            <label className="text-[9px] font-bold text-text-dim uppercase">Nombre / Título Visible</label>
+                                            <label className="text-[11px] font-mono text-text-dim uppercase">Nombre / Título Visible</label>
                                             <input
                                                 type="text"
                                                 className={inputCls}
@@ -218,7 +218,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <label className="text-[9px] font-bold text-text-dim uppercase">Clave Backend / Yjs</label>
+                                                <label className="text-[11px] font-mono text-text-dim uppercase">Clave Backend / Yjs</label>
                                                 <input
                                                     type="text"
                                                     className={inputCls}
@@ -228,7 +228,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-[9px] font-bold text-text-dim uppercase">Ancho Fila</label>
+                                                <label className="text-[11px] font-mono text-text-dim uppercase">Ancho Fila</label>
                                                 <select
                                                     className={selectCls}
                                                     value={editForm.colSpan || 2}
@@ -240,7 +240,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="text-[9px] font-bold text-text-dim uppercase">Guía de Redacción (Placeholder)</label>
+                                            <label className="text-[11px] font-mono text-text-dim uppercase">Guía de Redacción (Placeholder)</label>
                                             <input
                                                 type="text"
                                                 className={inputCls}
@@ -268,16 +268,16 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                         type="checkbox"
                                         checked={cat.enabled}
                                         onChange={e => handleToggleEnabled(cat.id, e.target.checked)}
-                                        className="w-3.5 h-3.5 text-text-main accent-text-main bg-surface border-border-thin rounded focus:ring-text-main cursor-pointer"
+                                        className="w-3.5 h-3.5 text-[#0070f3] accent-[#0070f3] bg-surface border-border-thin rounded focus:ring-[#0070f3] cursor-pointer"
                                         title={cat.enabled ? 'Desactivar apartado' : 'Activar apartado'}
                                     />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-[11px] font-bold text-text-main truncate">{cat.title}</span>
-                                            <span className="text-[8px] font-mono bg-surface-hover text-text-dim px-1 rounded border border-border-thin">{cat.key}</span>
+                                            <span className="text-xs font-medium text-text-main truncate">{cat.title}</span>
+                                            <span className="text-[10px] font-mono bg-surface-hover text-text-dim px-1 rounded border border-border-thin">{cat.key}</span>
                                         </div>
                                         {cat.placeholder && (
-                                            <span className="text-[8.5px] text-text-dim block truncate">{cat.placeholder}</span>
+                                            <span className="text-[11px] text-text-dim block truncate">{cat.placeholder}</span>
                                         )}
                                     </div>
                                 </div>
@@ -304,7 +304,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                     <button
                                         type="button"
                                         onClick={() => handleStartEdit(cat)}
-                                        className="p-1 text-text-dim hover:text-brand cursor-pointer"
+                                        className="p-1 text-text-dim hover:text-[#0070f3] cursor-pointer"
                                         title="Editar"
                                     >
                                         <Pencil size={12} />
@@ -325,9 +325,9 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
 
                 {/* BOTÓN PARA AÑADIR NUEVA CATEGORÍA */}
                 {isAddingNew ? (
-                    <div className="p-3 bg-surface border border-brand/50 rounded-xl space-y-2 animate-fade-in mt-2">
+                    <div className="p-3 bg-surface border border-[#0070f3]/50 rounded-xl space-y-2 animate-fade-in mt-2">
                         <div className="flex justify-between items-center pb-1 border-b border-border-thin">
-                            <span className="text-[10px] font-bold text-brand uppercase">Nueva Categoría de Impacto</span>
+                            <span className="text-xs font-semibold text-[#0070f3] uppercase tracking-wider">Nueva Categoría de Impacto</span>
                             <button
                                 type="button"
                                 onClick={() => setIsAddingNew(false)}
@@ -338,7 +338,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                         </div>
                         <div className="space-y-2">
                             <div>
-                                <label className="text-[9px] font-bold text-text-dim uppercase">Nombre / Título Visible *</label>
+                                <label className="text-[11px] font-mono text-text-dim uppercase">Nombre / Título Visible *</label>
                                 <input
                                     type="text"
                                     className={inputCls}
@@ -349,7 +349,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="text-[9px] font-bold text-text-dim uppercase">Clave Backend / Yjs</label>
+                                    <label className="text-[11px] font-mono text-text-dim uppercase">Clave Backend / Yjs</label>
                                     <input
                                         type="text"
                                         className={inputCls}
@@ -359,7 +359,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-bold text-text-dim uppercase">Ancho Fila</label>
+                                    <label className="text-[11px] font-mono text-text-dim uppercase">Ancho Fila</label>
                                     <select
                                         className={selectCls}
                                         value={newForm.colSpan || 2}
@@ -371,7 +371,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                                 </div>
                             </div>
                             <div>
-                                <label className="text-[9px] font-bold text-text-dim uppercase">Guía de Redacción (Placeholder)</label>
+                                <label className="text-[11px] font-mono text-text-dim uppercase">Guía de Redacción (Placeholder)</label>
                                 <input
                                     type="text"
                                     className={inputCls}
@@ -383,7 +383,7 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                             <button
                                 type="button"
                                 onClick={handleAddCategory}
-                                className="w-full py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                                className="w-full py-2 bg-[#0070f3] hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
                             >
                                 <Plus size={14} /> Añadir Categoría de Impacto
                             </button>
@@ -393,9 +393,9 @@ export const ImpactsProperties: React.FC<ImpactsPropertiesProps> = ({ block, onU
                     <button
                         type="button"
                         onClick={() => setIsAddingNew(true)}
-                        className="w-full py-2 bg-surface-hover/50 hover:bg-surface-hover border border-dashed border-border-thin rounded-xl text-text-main text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-2"
+                        className="w-full py-2 bg-surface-hover/50 hover:bg-surface-hover border border-dashed border-border-thin rounded-xl text-text-main text-xs font-medium hover:border-[#0070f3] flex items-center justify-center gap-1.5 transition-all cursor-pointer mt-2"
                     >
-                        <Plus size={14} className="text-brand" /> Agregar Categoría de Impacto Personalizada
+                        <Plus size={14} className="text-[#0070f3]" /> Agregar Categoría de Impacto Personalizada
                     </button>
                 )}
             </div>

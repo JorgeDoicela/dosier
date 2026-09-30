@@ -45,8 +45,8 @@ const LabeledField: React.FC<{ label: string; children: React.ReactNode }> = ({ 
     </div>
 );
 
-const inputCls = "w-full text-[11px] bg-surface-hover/60 hover:bg-surface-hover/90 border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition-all focus:outline-none";
-const selectCls = "w-full text-[11px] bg-surface-hover/60 hover:bg-surface-hover/90 border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black dark:focus:ring-white transition-all focus:outline-none";
+const inputCls = "w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-[#0070f3] focus:ring-2 focus:ring-[#0070f3]/15 transition-all focus:outline-none";
+const selectCls = "w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:bg-surface focus:border-[#0070f3] focus:ring-2 focus:ring-[#0070f3]/15 transition-all focus:outline-none";
 
 export const BlockProperties: React.FC<BlockPropertiesProps> = ({
     selectedTemplate,
@@ -190,7 +190,7 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                             {activeBlock.type === 'rich_text' && (
                                 <div className="space-y-4 border-t border-border-thin/20 pt-4">
                                     <div className="p-3 bg-surface-hover/30 border border-border-thin rounded-xl space-y-3">
-                                        <h5 className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
+                                        <h5 className="text-xs font-semibold text-text-main flex items-center gap-1.5">
                                             Comportamiento en Workspace
                                         </h5>
                                         <div className="flex items-center justify-between">
@@ -210,7 +210,7 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
 
                                         {activeBlock.config.isEditableWorkspace !== false && (
                                             <div className="border-t border-border-thin/15 pt-2.5 space-y-1.5">
-                                                <label className="text-[9.5px] font-black text-text-main uppercase tracking-wider block">
+                                                <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
                                                     Herramientas del Editor
                                                 </label>
                                                 <select
@@ -248,7 +248,7 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                             {activeBlock.type === 'advanced_table' && (
                                 <div className="space-y-4 border-t border-border-thin/20 pt-4">
                                     <div className="p-3 bg-surface-hover/30 border border-border-thin rounded-xl space-y-3">
-                                        <h5 className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
+                                        <h5 className="text-xs font-semibold text-text-main flex items-center gap-1.5">
                                             Comportamiento en Workspace
                                         </h5>
                                         <div className="flex items-center justify-between">
@@ -291,7 +291,7 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                                     {/* Encabezados de columna */}
                                     <div className="space-y-1.5">
                                         <div className="flex justify-between items-center">
-                                            <label className="text-[10px] font-black text-text-dim uppercase tracking-wider">
+                                            <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                                                 Encabezados ({activeBlock.config.headers?.length ?? 0} cols)
                                             </label>
                                             <button
@@ -350,7 +350,7 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                                     {/* Filas */}
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-[10px] font-black text-text-dim uppercase tracking-wider">
+                                            <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                                                 Filas ({activeBlock.config.rows?.length ?? 0})
                                             </span>
                                             <button

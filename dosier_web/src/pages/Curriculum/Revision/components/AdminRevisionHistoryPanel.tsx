@@ -226,7 +226,7 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                     )}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <h2 className={`text-sm font-black uppercase tracking-wider ${
+                            <h2 className={`text-sm font-semibold tracking-tight ${
                                 isAprobado ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                             }`}>
                                 Revisión Técnica {isAprobado ? 'Aprobada' : 'Devuelta para Correcciones'}
@@ -255,16 +255,16 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                 {isAdmin && totalSecciones > 0 && (
                     <div className="grid grid-cols-3 gap-3">
                         <div className="bg-surface border border-border-thin rounded-xl p-3 text-center">
-                            <p className="text-xl font-black text-text-main font-mono">{totalSecciones}</p>
-                            <p className="text-[9px] text-text-dim uppercase tracking-wider font-semibold mt-0.5">Secciones revisadas</p>
+                            <p className="text-xl font-bold text-text-main font-mono">{totalSecciones}</p>
+                            <p className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider mt-0.5">Secciones revisadas</p>
                         </div>
                         <div className="bg-surface border border-success/20 rounded-xl p-3 text-center">
-                            <p className="text-xl font-black text-success font-mono">{seccionesOk}</p>
-                            <p className="text-[9px] text-success/70 uppercase tracking-wider font-semibold mt-0.5">Aprobadas</p>
+                            <p className="text-xl font-bold text-success font-mono">{seccionesOk}</p>
+                            <p className="text-[11px] font-mono text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-wider mt-0.5">Aprobadas</p>
                         </div>
                         <div className="bg-surface border border-warning/20 rounded-xl p-3 text-center">
-                            <p className="text-xl font-black text-warning font-mono">{seccionesCorregir}</p>
-                            <p className="text-[9px] text-warning/70 uppercase tracking-wider font-semibold mt-0.5">Con observación</p>
+                            <p className="text-xl font-bold text-warning font-mono">{seccionesCorregir}</p>
+                            <p className="text-[11px] font-mono text-amber-600/70 dark:text-amber-400/70 uppercase tracking-wider mt-0.5">Con observación</p>
                         </div>
                     </div>
                 )}
@@ -272,18 +272,18 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                 {/* ── Feedback general del administrador ── */}
                 {revision.feedbackGeneral && (
                     <div className="bg-surface border border-border-thin rounded-xl overflow-hidden">
-                        <div className="flex items-center gap-2 px-4 py-3 border-b border-border-thin bg-surface-hover/30">
+                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-thin bg-surface-hover/30">
                             <MessageSquare size={13} className="text-text-dim" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-text-dim">
+                            <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                                 {isAdmin ? 'Dictamen General del Administrador' : 'Mensaje del Coordinador Curricular'}
                             </span>
                         </div>
                         <div className="p-4">
-                            <blockquote className={`text-xs leading-relaxed border-l-2 pl-3 text-text-main/80 italic ${
-                                isAprobado ? 'border-emerald-500/40' : 'border-amber-500/40'
+                            <div className={`p-3 rounded-lg border text-xs leading-relaxed text-text-main/90 italic ${
+                                isAprobado ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/60 dark:border-emerald-900/40' : 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-900/40'
                             }`}>
                                 {revision.feedbackGeneral}
-                            </blockquote>
+                            </div>
                         </div>
                     </div>
                 )}

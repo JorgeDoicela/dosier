@@ -76,19 +76,19 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
         <div className="space-y-4 border-t border-border-thin/20 pt-4">
             {/* ── Selector de Modo de Firmas ──────────────────────────────── */}
             <div className="space-y-1.5">
-                <label className="text-[9.5px] font-black text-text-main uppercase tracking-wider block">
+                <label className="text-xs font-semibold text-text-main tracking-tight block">
                     Modo de Generación de Firmas
                 </label>
                 <select
                     value={mode}
                     onChange={e => setMode(e.target.value as SignaturesMode)}
-                    className="w-full text-xs bg-surface border border-border-thin rounded-lg p-2 text-text-main focus:outline-none focus:border-border-hover cursor-pointer"
+                    className="w-full text-xs bg-surface border border-border-thin rounded-lg p-2 text-text-main focus:outline-none focus:border-[#0070f3] cursor-pointer"
                 >
                     <option value="team_dynamic">Automático por Equipo del Proyecto (Dinámico)</option>
                     <option value="institutional_chain">Cadena de Aprobación Institucional</option>
                     <option value="custom_manual">Personalizado / Manual</option>
                 </select>
-                <span className="text-[8px] text-text-dim block leading-tight">
+                <span className="text-[11px] text-text-dim block leading-tight">
                     {mode === 'team_dynamic'
                         ? 'Se adapta solo: genera casillas según los docentes y estudiantes reales del proyecto.'
                         : mode === 'institutional_chain'
@@ -100,7 +100,7 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
             {/* ── Configuración para Modo Dinámico / Institucional ────────── */}
             {mode !== 'custom_manual' && (
                 <div className="p-3 bg-surface-hover/30 border border-border-thin rounded-xl space-y-3">
-                    <h5 className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
+                    <h5 className="text-xs font-semibold text-text-main tracking-tight flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-text-dim" />
                         Firmantes a Incluir
                     </h5>
@@ -134,10 +134,10 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
                                     <div className="flex items-center gap-2.5 flex-1 min-w-0 pointer-events-none">
                                         <GripVertical className="w-3.5 h-3.5 text-text-dim/60 shrink-0" />
                                         <div className="min-w-0">
-                                            <label className="text-[10px] font-bold text-text-main block truncate">
+                                            <label className="text-xs font-medium text-text-main block truncate">
                                                 {item.label}
                                             </label>
-                                            <span className="text-[8.5px] text-text-dim block truncate leading-tight">
+                                            <span className="text-[11px] text-text-dim block truncate leading-tight">
                                                 {item.desc}
                                             </span>
                                         </div>
@@ -148,7 +148,7 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
                                         checked={isChecked}
                                         onChange={e => onUpdateConfig(block.id, item.configKey, e.target.checked)}
                                         onPointerDown={e => e.stopPropagation()}
-                                        className="w-4 h-4 text-text-main accent-text-main bg-surface border-border-thin rounded focus:ring-text-main cursor-pointer ml-1 shrink-0"
+                                        className="w-4 h-4 text-[#0070f3] accent-[#0070f3] bg-surface border-border-thin rounded focus:ring-[#0070f3] cursor-pointer ml-1 shrink-0"
                                     />
                                 </Reorder.Item>
                             );
@@ -160,7 +160,7 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
             {/* ── Lista Manual de Firmantes (Modo Custom) ────────────────── */}
             {mode === 'custom_manual' && (
                 <div className="space-y-3">
-                    <h5 className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
+                    <h5 className="text-xs font-semibold text-text-main tracking-tight flex items-center gap-1.5">
                         <PenTool className="w-3.5 h-3.5 text-text-dim" />
                         Firmantes Manuales
                     </h5>
@@ -187,7 +187,7 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
                                 className="p-3 border border-border-thin rounded-lg bg-surface space-y-2 relative cursor-grab active:cursor-grabbing hover:border-border-hover"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[9px] font-black text-text-dim uppercase tracking-wider flex items-center gap-1.5 pointer-events-none">
+                                    <span className="text-[11px] font-mono font-medium text-text-dim uppercase tracking-wider flex items-center gap-1.5 pointer-events-none">
                                         <GripVertical className="w-3.5 h-3.5 text-text-dim/60" />
                                         Firmante #{idx + 1}
                                     </span>
@@ -208,32 +208,32 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
                                 </div>
 
                                 <div className="space-y-1.5" onPointerDown={e => e.stopPropagation()}>
-                                    <label className="text-[9px] font-bold text-text-dim uppercase block">Etiqueta</label>
+                                    <label className="text-[11px] font-mono text-text-dim uppercase block">Etiqueta</label>
                                     <input
                                         value={sig.label}
                                         onChange={e => updateSignatory(idx, 'label', e.target.value)}
                                         placeholder="Elaborado por:"
-                                        className="w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:outline-none cursor-text"
+                                        className="w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:outline-none focus:border-[#0070f3] cursor-text"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5" onPointerDown={e => e.stopPropagation()}>
-                                    <label className="text-[9px] font-bold text-text-dim uppercase block">Nombre / Placeholder</label>
+                                    <label className="text-[11px] font-mono text-text-dim uppercase block">Nombre / Placeholder</label>
                                     <input
                                         value={sig.name}
                                         onChange={e => updateSignatory(idx, 'name', e.target.value)}
                                         placeholder="[Título, Nombre Completo]"
-                                        className="w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:outline-none cursor-text"
+                                        className="w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:outline-none focus:border-[#0070f3] cursor-text"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5" onPointerDown={e => e.stopPropagation()}>
-                                    <label className="text-[9px] font-bold text-text-dim uppercase block">Cargo</label>
+                                    <label className="text-[11px] font-mono text-text-dim uppercase block">Cargo</label>
                                     <input
                                         value={sig.role}
                                         onChange={e => updateSignatory(idx, 'role', e.target.value)}
                                         placeholder="Coordinador de Carrera"
-                                        className="w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:outline-none cursor-text"
+                                        className="w-full text-xs bg-surface border border-border-thin rounded-md p-2 text-text-main focus:outline-none focus:border-[#0070f3] cursor-text"
                                     />
                                 </div>
                             </Reorder.Item>
@@ -242,7 +242,7 @@ export const SignaturesProperties: React.FC<Props> = ({ block, onUpdateConfig })
 
                     <button
                         onClick={addSignatory}
-                        className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-dashed border-border-thin text-[10px] font-semibold text-text-dim hover:text-text-main hover:border-border-hover bg-surface hover:bg-surface-hover transition-all cursor-pointer"
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-dashed border-border-thin text-xs font-medium text-text-dim hover:text-text-main hover:border-[#0070f3] bg-surface hover:bg-surface-hover transition-all cursor-pointer"
                     >
                         <Plus className="w-3.5 h-3.5" />
                         Añadir Firmante

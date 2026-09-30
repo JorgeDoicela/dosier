@@ -169,7 +169,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                     rowsData.push(userRow || tplRow || {});
                 }
 
-                let thCls = "p-3 text-[9px] font-black uppercase tracking-wider ";
+                let thCls = "p-3 text-[11px] font-mono font-medium uppercase tracking-wider ";
                 let trHeaderCls = "border-b border-border-thin ";
 
                 if (tableHeaderStyle === 'blue') {
@@ -189,7 +189,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                 return (
                     <div key={name} className="p-5 bg-bg-deep border border-border-thin rounded-2xl space-y-4 shadow-sm">
                         <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] font-black text-text-dim uppercase tracking-widest flex items-center gap-1.5">
+                            <label className="text-xs font-semibold text-text-main tracking-tight flex items-center gap-1.5">
                                 {label} (Tabla Colaborativa)
                             </label>
                             {allowDynamicRows && !isDisabled && (
@@ -202,7 +202,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                                         });
                                         onAdd?.(name, tpl);
                                     }}
-                                    className="px-2.5 py-1 bg-surface border border-border-thin hover:border-text-main/25 text-text-main rounded-lg text-[9px] font-black uppercase flex items-center gap-1 transition-all shadow-sm cursor-pointer"
+                                    className="px-2.5 py-1 bg-surface border border-border-thin hover:border-[#0070f3] text-text-main rounded-md text-xs font-medium flex items-center gap-1 transition-all shadow-xs cursor-pointer"
                                 >
                                     + Añadir Fila
                                 </button>
@@ -276,7 +276,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                 const headerStyle = (field as any).headerStyle || 'none';
                 const hasHeader = headerStyle !== 'none';
 
-                let headerCls = "px-4 py-2 text-[10px] font-black uppercase tracking-wider block ";
+                let headerCls = "px-4 py-2 text-[11px] font-mono font-medium uppercase tracking-wider block ";
                 if (headerStyle === 'blue') headerCls += "bg-blue-600 dark:bg-blue-700 text-white border-b border-blue-800";
                 else if (headerStyle === 'gold') headerCls += "bg-amber-500 dark:bg-amber-600 text-white border-b border-amber-700";
                 else if (headerStyle === 'gray') headerCls += "bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-b border-border-thin";
@@ -286,7 +286,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                         {hasHeader ? (
                             <label className={headerCls}>{label}</label>
                         ) : (
-                            <label className="block text-[9px] font-black text-text-dim uppercase tracking-widest ml-1">
+                            <label className="block text-xs font-semibold text-text-dim uppercase tracking-wider ml-1">
                                 {label} (Colaborativo)
                             </label>
                         )}
@@ -372,11 +372,11 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
         return (
             <div key={name} className="p-5 bg-bg-deep/50 border border-border-thin rounded-2xl space-y-3 relative group hover:border-text-main/10 transition-all">
                 <div className="flex justify-between items-center px-1">
-                    <label htmlFor={name} className="text-[9px] font-black text-text-dim uppercase tracking-widest flex items-center gap-1.5">
+                    <label htmlFor={name} className="text-xs font-semibold text-text-dim uppercase tracking-wider flex items-center gap-1.5">
                         <Lock size={10} className="text-text-dim opacity-70" /> {label} (Privado)
                     </label>
                     {type === 'number' && (
-                        <span className="text-[10px] font-mono text-text-muted">
+                        <span className="text-[11px] font-mono text-text-muted">
                             {val} / {max} pts
                         </span>
                     )}
@@ -456,14 +456,14 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
             {showDualPane && (
                 <div className="flex justify-between items-center px-1">
                     <div className="flex items-center gap-2">
-                        <Activity size={14} className="text-text-main animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-wider text-text-main">
+                        <Activity size={14} className="text-[#0070f3] animate-pulse" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-text-main">
                             Documento de Referencia
                         </span>
                     </div>
                     <button
                         onClick={() => setCollapsed(!collapsed)}
-                        className="px-3 py-1.5 bg-bg-deep border border-border-thin hover:border-text-main/25 text-text-main rounded-lg text-[9px] font-black uppercase flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                        className="px-3 py-1.5 bg-bg-deep border border-border-thin hover:border-[#0070f3] text-text-main rounded-md text-xs font-medium flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                     >
                         {collapsed ? <Eye size={12} /> : <EyeOff size={12} />}
                         {collapsed ? "Mostrar Referencia" : "Ocultar Referencia"}
@@ -477,12 +477,12 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                 {showDualPane && !collapsed && (
                     <div className="bg-bg-deep border border-border-thin rounded-2xl p-6 space-y-6 overflow-y-auto max-h-[70vh] shadow-xl animate-slide-right">
                         <div className="flex items-center gap-2 border-b border-border-thin pb-4">
-                            <BookOpen size={18} className="text-text-main" />
+                            <BookOpen size={18} className="text-[#0070f3]" />
                             <div>
-                                <h5 className="text-[10px] font-black uppercase tracking-widest text-text-main">
+                                <h5 className="text-xs font-semibold uppercase tracking-wider text-text-main">
                                     Documento de referencia
                                 </h5>
-                                <p className="text-[8px] text-text-dim uppercase mt-0.5">
+                                <p className="text-[10px] text-text-dim uppercase mt-0.5">
                                     Protocolo de Investigación Original
                                 </p>
                             </div>
@@ -490,30 +490,30 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
 
                         {isLoadingRef ? (
                             <div className="py-20 text-center space-y-3">
-                                <div className="w-6 h-6 border-2 border-text-main border-t-transparent rounded-full animate-spin mx-auto" />
-                                <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Cargando propuesta del servidor...</p>
+                                <div className="w-6 h-6 border-2 border-[#0070f3] border-t-transparent rounded-full animate-spin mx-auto" />
+                                <p className="text-xs font-medium text-text-dim uppercase tracking-wider">Cargando propuesta del servidor...</p>
                             </div>
                         ) : referenceData ? (
                             <div className="space-y-6 text-xs text-text-main leading-relaxed">
                                 <div className="p-4 bg-bg-deep border border-border-thin rounded-xl">
-                                    <span className="text-[8px] font-black text-text-dim uppercase block mb-1">Título del Proyecto</span>
-                                    <p className="font-bold text-xs text-text-main">{referenceData.Titulo || "Sin Título"}</p>
+                                    <span className="text-[10px] font-mono font-medium text-text-dim uppercase block mb-1">Título del Proyecto</span>
+                                    <p className="font-semibold text-xs text-text-main">{referenceData.Titulo || "Sin Título"}</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="p-3 bg-bg-deep border border-border-thin rounded-xl">
-                                        <span className="text-[8px] font-black text-text-dim uppercase block">Presupuesto</span>
-                                        <p className="font-black text-text-main mt-0.5">${referenceData.CostoTotal ?? 0}</p>
+                                        <span className="text-[10px] font-mono font-medium text-text-dim uppercase block">Presupuesto</span>
+                                        <p className="font-semibold text-text-main mt-0.5">${referenceData.CostoTotal ?? 0}</p>
                                     </div>
                                     <div className="p-3 bg-bg-deep border border-border-thin rounded-xl">
-                                        <span className="text-[8px] font-black text-text-dim uppercase block">Periodo</span>
-                                        <p className="font-black text-text-main mt-0.5">{referenceData.Periodo || "N/A"}</p>
+                                        <span className="text-[10px] font-mono font-medium text-text-dim uppercase block">Periodo</span>
+                                        <p className="font-semibold text-text-main mt-0.5">{referenceData.Periodo || "N/A"}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase block mb-1">Antecedentes y Justificación</span>
+                                        <span className="text-[10px] font-mono font-medium text-text-dim uppercase block mb-1">Antecedentes y Justificación</span>
                                         <div
                                             className="p-4 bg-bg-deep/50 border border-border-thin rounded-xl prose prose-invert max-w-none text-[11px]"
                                             dangerouslySetInnerHTML={{ __html: sanitize(referenceData.Antecedentes || "<i>No se cargaron antecedentes.</i>") }}
@@ -521,7 +521,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                                     </div>
 
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase block mb-1">Objetivo General</span>
+                                        <span className="text-[10px] font-mono font-medium text-text-dim uppercase block mb-1">Objetivo General</span>
                                         <div
                                             className="p-4 bg-bg-deep/50 border border-border-thin rounded-xl prose prose-invert max-w-none text-[11px]"
                                             dangerouslySetInnerHTML={{ __html: sanitize(referenceData.ObjetivoGeneral || "<i>No se cargó objetivo general.</i>") }}
@@ -530,11 +530,11 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
 
                                     {referenceData.Impacto && (
                                         <div>
-                                            <span className="text-[8px] font-black text-text-dim uppercase block mb-2">Matriz de Impactos</span>
+                                            <span className="text-[10px] font-mono font-medium text-text-dim uppercase block mb-2">Matriz de Impactos</span>
                                             <div className="grid grid-cols-1 gap-2">
                                                 {Object.entries(referenceData.Impacto).map(([key, val]: any) => (
                                                     <div key={key} className="p-2.5 bg-bg-deep/40 rounded-lg flex justify-between gap-4 text-[10px]">
-                                                        <strong className="uppercase text-[8px] text-text-dim w-16">{key}</strong>
+                                                        <strong className="uppercase text-[9px] font-mono text-text-dim w-16">{key}</strong>
                                                         <span className="flex-1 text-right">{val || "Sin descripción"}</span>
                                                     </div>
                                                 ))}
@@ -546,8 +546,8 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                         ) : (
                             <div className="py-20 text-center space-y-2">
                                 <HelpCircle size={24} className="mx-auto text-text-dim opacity-40" />
-                                <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">No se encontró propuesta vinculada</p>
-                                <p className="text-[8px] text-text-dim/60">Verifique el EntityUuid en la instancia de base de datos.</p>
+                                <p className="text-xs font-medium text-text-dim uppercase tracking-wider">No se encontró propuesta vinculada</p>
+                                <p className="text-[11px] text-text-dim/60">Verifique el EntityUuid en la instancia de base de datos.</p>
                             </div>
                         )}
                     </div>
@@ -556,12 +556,12 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                 {/* B) PANEL DERECHO / ÚNICO: FORMULARIO DINÁMICO COLABORATIVO */}
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 px-1">
-                        <Sliders size={16} className="text-text-main" />
+                        <Sliders size={16} className="text-[#0070f3]" />
                         <div>
-                            <h5 className="text-[10px] font-black uppercase tracking-widest text-text-main">
+                            <h5 className="text-xs font-semibold uppercase tracking-wider text-text-main">
                                 {labelProp || sectionConfig?.label || activeTab}
                             </h5>
-                            <p className="text-[8px] text-text-dim uppercase mt-0.5">
+                            <p className="text-[10px] text-text-dim uppercase mt-0.5">
                                 Formulario de Carga Dinámica
                             </p>
                         </div>

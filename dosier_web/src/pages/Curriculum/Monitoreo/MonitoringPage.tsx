@@ -79,7 +79,7 @@ export const MonitoringPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={() => navigate(-1)} 
-                        className="p-2.5 rounded-xl bg-surface border border-border-thin hover:border-text-main text-text-dim hover:text-text-main transition-all cursor-pointer"
+                        className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-[#0070f3] text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-all cursor-pointer shadow-2xs"
                         title="Volver a la vista previa"
                     >
                         <ArrowLeft size={14} />
@@ -174,10 +174,10 @@ export const MonitoringPage: React.FC = () => {
                                             <td className="p-4 space-y-1.5">
                                                 <p className="text-sm font-semibold text-text-main">{u.nombre_unidad}</p>
                                                 {u.temas && u.temas.length > 0 && (
-                                                    <div className="pl-2 border-l-2 border-[#0070f3]/40 space-y-0.5">
+                                                    <div className="pl-2.5 space-y-1 mt-1.5 border-l border-slate-200 dark:border-zinc-800">
                                                         {u.temas.map((t, tIdx) => (
                                                             <div key={tIdx} className="text-xs text-text-dim">
-                                                                <span className="font-mono text-[10px] text-[#0070f3] mr-1">{u.numero_unidad}.{t.numero_tema || tIdx + 1}</span>
+                                                                <span className="font-mono text-[10px] text-[#0070f3] mr-1.5">{u.numero_unidad}.{t.numero_tema || tIdx + 1}</span>
                                                                 <span>{t.titulo_tema}</span>
                                                             </div>
                                                         ))}

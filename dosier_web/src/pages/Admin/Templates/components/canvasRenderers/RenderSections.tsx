@@ -1829,7 +1829,7 @@ export const RenderImpacts: React.FC<{
                         const id = cat.id || cat.key || `${idx}`;
                         const isEditing = editingCatId === id;
                         return (
-                            <div key={id} className="border-l-4 border-[#1e2a4a] pl-3 py-1 bg-slate-50/40 rounded-r-md group/cell relative">
+                            <div key={id} className="border border-slate-200 dark:border-zinc-800 p-3 bg-slate-50/50 dark:bg-zinc-900/50 rounded-lg group/cell relative">
                                 {isEditing ? (
                                     <div className="flex items-center gap-1 my-1" onClick={e => e.stopPropagation()}>
                                         <input

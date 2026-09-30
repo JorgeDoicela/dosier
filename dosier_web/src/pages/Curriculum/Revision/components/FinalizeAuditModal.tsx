@@ -55,12 +55,12 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-text-dim uppercase tracking-widest block font-mono ml-0.5">Observaciones Generales de la Auditoría</label>
+                    <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block ml-0.5">Observaciones Generales de la Auditoría</label>
                     <textarea
                         value={generalFeedback}
                         onChange={(e) => setGeneralFeedback(e.target.value)}
                         placeholder="Escriba la síntesis del informe o instrucciones generales de corrección para el docente..."
-                        className="w-full h-28 bg-bg-deep border border-border-thin rounded-xl p-3 text-xs text-text-main placeholder:text-text-dim/60 outline-none focus:border-brand/45 transition-all resize-none leading-relaxed custom-scrollbar"
+                        className="w-full h-28 bg-bg-deep border border-border-thin rounded-xl p-3 text-xs text-text-main placeholder:text-text-dim/60 outline-none focus:border-[#0070f3] focus:ring-2 focus:ring-[#0070f3]/15 transition-all resize-none leading-relaxed custom-scrollbar"
                         disabled={submitting}
                     />
                 </div>
@@ -68,10 +68,10 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                 {/* Selector de Plazo Límite para Devolución */}
                 <div className="p-3.5 bg-bg-deep border border-border-thin/80 rounded-xl space-y-2.5">
                     <div className="flex items-center justify-between">
-                        <label className="text-[9px] font-black text-text-dim uppercase tracking-widest flex items-center gap-1 font-mono">
-                            <Clock size={12} className="text-amber-500" /> Plazo Límite de Subsanación (Docente)
+                        <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <Clock size={13} className="text-amber-500" /> Plazo Límite de Subsanación (Docente)
                         </label>
-                        <span className="text-[10px] text-text-dim font-medium">Definido por Coordinación</span>
+                        <span className="text-xs text-text-dim font-medium">Definido por Coordinación</span>
                     </div>
                     
                     <div className="flex items-center gap-2">

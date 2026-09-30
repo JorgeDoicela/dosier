@@ -260,11 +260,11 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
 
                         {/* CACES COMPLIANCE ALERT */}
                         {!isHoursOk && (
-                            <div className="p-4 rounded-xl border border-error/15 bg-error/[0.015] flex gap-3 animate-pulse">
-                                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+                            <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 flex gap-3">
+                                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
                                 <div>
-                                    <p className="text-[10px] font-black text-error uppercase tracking-wider">Control de consistencia de carga horaria (CACES)</p>
-                                    <p className="text-[9px] text-text-main font-mono leading-relaxed mt-1">
+                                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">Control de consistencia de carga horaria (CACES)</p>
+                                    <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed mt-1">
                                         Se detectó sobre-compromiso de horas de investigación en los docentes: {teachersWithExceedingHours.map(t => t.nombres_completos || t.nombre).join(', ')}.
                                         Ajuste el distributivo académico de distributivos activos o corrija la dedicación.
                                     </p>
@@ -514,9 +514,9 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                     {impEntries.map(([tipo, valor]) => {
                                         const displayLabel = customCatMap[tipo.toLowerCase()] || `Impacto ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
                                         return (
-                                            <div key={tipo} className="border-l-2 border-brand/40 pl-2.5 py-0.5">
-                                                <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider block">{displayLabel}</span>
-                                                <div className="text-xs font-mono font-medium text-text-main mt-0.5" dangerouslySetInnerHTML={{ __html: String(valor) }} />
+                                            <div key={tipo} className="p-2.5 rounded-lg border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 space-y-1">
+                                                <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">{displayLabel}</span>
+                                                <div className="text-xs font-medium text-slate-900 dark:text-white" dangerouslySetInnerHTML={{ __html: String(valor) }} />
                                             </div>
                                         );
                                     })}

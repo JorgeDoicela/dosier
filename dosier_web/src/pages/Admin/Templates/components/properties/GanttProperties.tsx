@@ -110,8 +110,8 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
             <div className="space-y-2 p-3 border border-border-thin rounded-md bg-surface-hover/20">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-text-main" />
-                        <span className="text-[9px] font-black text-text-dim uppercase tracking-wider">
+                        <Calendar className="w-3.5 h-3.5 text-[#0070f3]" />
+                        <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                             Meses del Cronograma ({months.length})
                         </span>
                     </div>
@@ -149,7 +149,7 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
                         {/* Header objetivo */}
                         <div className="flex items-center gap-2 px-3 py-2 bg-surface-hover cursor-pointer select-none"
                             onClick={() => setExpandedObj(expandedObj === obj.id ? '' : obj.id)}>
-                            <span className="text-[9px] font-black text-text-main bg-surface-hover px-1.5 py-0.5 rounded border border-border-thin">
+                            <span className="text-[10px] font-mono font-medium text-slate-600 dark:text-zinc-400 bg-surface px-1.5 py-0.5 rounded border border-border-thin">
                                 OBJ {oIdx + 1}
                             </span>
                             <input
@@ -191,7 +191,7 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
 
                                         {/* Nombre */}
                                         <div className="space-y-1">
-                                            <label className="text-[8px] font-black text-text-dim uppercase">Actividad</label>
+                                            <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Actividad</label>
                                             <input
                                                 value={act.name}
                                                 onChange={e => updateActivity(obj.id, act.id, { name: e.target.value })}
@@ -202,7 +202,7 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
 
                                         {/* Recursos */}
                                         <div className="space-y-1">
-                                            <label className="text-[8px] font-black text-text-dim uppercase">Recursos Necesarios</label>
+                                            <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Recursos Necesarios</label>
                                             <input
                                                 value={act.resources}
                                                 onChange={e => updateActivity(obj.id, act.id, { resources: e.target.value })}
@@ -214,7 +214,7 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
                                         {/* Rango de tiempo */}
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
-                                                <label className="text-[8px] font-black text-text-dim uppercase">Inicio</label>
+                                                <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Inicio</label>
                                                 <select
                                                     value={act.startMonth}
                                                     onChange={e => updateActivity(obj.id, act.id, { startMonth: +e.target.value })}
@@ -229,9 +229,9 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
                                                         <button
                                                             key={w}
                                                             onClick={() => updateActivity(obj.id, act.id, { startWeek: w - 1 })}
-                                                            className={`flex-1 py-0.5 text-[8px] font-bold rounded-md border transition-all ${
+                                                            className={`flex-1 py-0.5 text-xs font-medium rounded-md border transition-all cursor-pointer ${
                                                                 act.startWeek === w - 1
-                                                                    ? 'bg-text-main text-bg-deep border-text-main'
+                                                                    ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
                                                                     : 'border-border-thin bg-surface text-text-dim hover:border-border-hover'
                                                             }`}
                                                         >
@@ -241,7 +241,7 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
                                                 </div>
                                             </div>
                                             <div className="space-y-1">
-                                                <label className="text-[8px] font-black text-text-dim uppercase">Fin</label>
+                                                <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Fin</label>
                                                 <select
                                                     value={act.endMonth}
                                                     onChange={e => updateActivity(obj.id, act.id, { endMonth: +e.target.value })}
@@ -256,9 +256,9 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
                                                         <button
                                                             key={w}
                                                             onClick={() => updateActivity(obj.id, act.id, { endWeek: w - 1 })}
-                                                            className={`flex-1 py-0.5 text-[8px] font-bold rounded-md border transition-all ${
+                                                            className={`flex-1 py-0.5 text-xs font-medium rounded-md border transition-all cursor-pointer ${
                                                                 act.endWeek === w - 1
-                                                                    ? 'bg-text-main text-bg-deep border-text-main'
+                                                                    ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold'
                                                                     : 'border-border-thin bg-surface text-text-dim hover:border-border-hover'
                                                             }`}
                                                         >
@@ -271,15 +271,15 @@ export const GanttProperties: React.FC<Props> = ({ block, onUpdateConfig }) => {
 
                                         {/* Color */}
                                         <div className="space-y-1">
-                                            <label className="text-[8px] font-black text-text-dim uppercase">Color de Barra</label>
+                                            <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Color de Barra</label>
                                             <div className="flex gap-1.5 flex-wrap">
                                                 {GANTT_COLORS.map(c => (
                                                     <button
                                                         key={c.hex}
                                                         onClick={() => updateActivity(obj.id, act.id, { color: c.hex })}
                                                         title={c.label}
-                                                        className={`w-5 h-5 rounded-full border-2 transition-all ${
-                                                            act.color === c.hex ? 'border-text-main scale-110' : 'border-border-thin/40 hover:scale-105'
+                                                        className={`w-5 h-5 rounded-full border-2 transition-all cursor-pointer ${
+                                                            act.color === c.hex ? 'border-[#0070f3] ring-2 ring-[#0070f3]/40 scale-110' : 'border-border-thin/40 hover:scale-105'
                                                         }`}
                                                         style={{ background: c.hex }}
                                                     />

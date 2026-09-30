@@ -37,16 +37,16 @@ export const FloatingSidebarButtons: React.FC<FloatingSidebarButtonsProps> = ({
                         top: `${seccionesButtonTop}px`,
                         left: seccionesButtonLeft !== null ? `${seccionesButtonLeft}px` : '0px',
                     }}
-                    className={`fixed z-[60] py-7 px-2.5 bg-surface hover:bg-bg-deep border border-border-thin text-text-dim hover:text-text-main shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
+                    className={`fixed z-[60] py-7 px-2.5 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
                         isDraggingSeccionesButton || (seccionesButtonLeft !== null && seccionesButtonLeft > 5)
-                            ? 'rounded-xl border-text-main text-text-main bg-bg-deep shadow-xl'
+                            ? 'rounded-xl border-[#0070f3] dark:border-blue-400 text-[#0070f3] dark:text-blue-400 bg-white dark:bg-zinc-950 shadow-xl'
                             : 'rounded-r-xl border-l-0'
                     }`}
                     title="Arrastra para mover / Clic para abrir navegación"
                 >
-                    <BookOpen size={14} className="text-text-main group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="[writing-mode:vertical-lr] rotate-180 text-[8px] font-black uppercase tracking-[0.2em] opacity-70 group-hover:opacity-100 transition-opacity font-mono">
-                        Nav
+                    <BookOpen size={14} className="text-[#0070f3] dark:text-blue-400 group-hover:scale-110 transition-transform shrink-0" />
+                    <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-semibold tracking-wider opacity-80 group-hover:opacity-100 transition-opacity font-mono">
+                        Navegación
                     </span>
                 </button>
             )}
@@ -61,15 +61,15 @@ export const FloatingSidebarButtons: React.FC<FloatingSidebarButtonsProps> = ({
                         left: auditoriaButtonLeft !== null ? `${auditoriaButtonLeft}px` : undefined,
                         right: auditoriaButtonLeft !== null ? 'auto' : '0px'
                     }}
-                    className={`fixed z-[60] py-7 px-2.5 bg-surface hover:bg-bg-deep border border-border-thin text-text-dim hover:text-text-main shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
+                    className={`fixed z-[60] py-7 px-2.5 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
                         isDraggingButton || (auditoriaButtonLeft !== null)
-                            ? 'rounded-xl border-text-main text-text-main bg-bg-deep shadow-xl'
+                            ? 'rounded-xl border-[#0070f3] dark:border-blue-400 text-[#0070f3] dark:text-blue-400 bg-white dark:bg-zinc-950 shadow-xl'
                             : 'rounded-l-xl border-r-0'
                     }`}
                     title="Arrastra para mover / Clic para abrir auditoría"
                 >
-                    <Activity size={14} className="text-text-main animate-pulse group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="[writing-mode:vertical-lr] text-[8px] font-black uppercase tracking-[0.2em] opacity-70 group-hover:opacity-100 transition-opacity font-mono">
+                    <Activity size={14} className="text-[#0070f3] dark:text-blue-400 animate-pulse group-hover:scale-110 transition-transform shrink-0" />
+                    <span className="[writing-mode:vertical-lr] text-[10px] font-semibold tracking-wider opacity-80 group-hover:opacity-100 transition-opacity font-mono">
                         Auditoría
                     </span>
                 </button>

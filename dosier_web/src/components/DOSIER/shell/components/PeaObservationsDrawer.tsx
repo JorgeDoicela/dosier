@@ -226,14 +226,14 @@ export const PeaObservationsDrawer: React.FC<PeaObservationsDrawerProps> = ({
 
                                         {/* Respuesta Docente ya registrada */}
                                         {obs.respuestaDocente && (
-                                            <div className="mt-2.5 pt-2 border-t border-border-thin text-xs space-y-1">
-                                                <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                                                    <CornerDownRight size={11} />
+                                            <div className="mt-2.5 pt-2 border-t border-border-thin text-xs space-y-1.5">
+                                                <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    <CornerDownRight size={12} />
                                                     <span>Subsanación Registrada por Docente:</span>
                                                 </div>
-                                                <p className="text-[11px] text-text-main/90 italic pl-3 border-l-2 border-emerald-500">
+                                                <div className="p-2.5 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 text-xs italic text-text-main/90 leading-relaxed">
                                                     "{obs.respuestaDocente}"
-                                                </p>
+                                                </div>
                                             </div>
                                         )}
 

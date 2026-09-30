@@ -268,19 +268,21 @@ export const CONFIGURACION_CONFIG: HelpConfig = {
     Mockup: ({ highlightBottomClass }: MockupProps) => (
         <>
             {/* Header / Tabs */}
-            <div className="flex gap-1 shrink-0 border-b border-border-thin">
-                {['Períodos Académicos', 'Hitos de Calendario'].map((tab, idx) => (
-                    <div 
-                        key={idx} 
-                        className={`px-2 py-0.5 rounded-t-md border-t border-x text-[5px] font-semibold cursor-pointer ${
-                            idx === 0 
-                                ? 'bg-surface border-border-thin text-brand border-b-transparent relative z-10 -mb-[1px]' 
-                                : 'bg-surface-hover/10 border-border-thin/40 text-text-dim hover:text-text-main border-b-border-thin'
-                        }`}
-                    >
-                        {tab}
-                    </div>
-                ))}
+            <div className="border-b border-border-thin">
+                <nav className="-mb-px flex items-center gap-2">
+                    {['Períodos Académicos', 'Hitos de Calendario'].map((tab, idx) => (
+                        <div 
+                            key={idx} 
+                            className={`pb-1 pt-0.5 px-1 text-[5px] font-semibold border-b-2 cursor-pointer transition-colors ${
+                                idx === 0 
+                                    ? 'border-[#0070f3] text-brand' 
+                                    : 'border-transparent text-text-dim hover:text-text-main'
+                            }`}
+                        >
+                            {tab}
+                        </div>
+                    ))}
+                </nav>
             </div>
 
             {/* Config Content / Catalog Table */}

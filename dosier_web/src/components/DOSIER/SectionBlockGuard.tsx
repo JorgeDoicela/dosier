@@ -70,7 +70,7 @@ export const SectionBlockGuard: React.FC<SectionBlockGuardProps> = ({
                                 {isDirectorOrAdmin && (
                                     <button
                                         onClick={handleToggleLock}
-                                        className="ml-1 px-2.5 py-0.5 bg-text-main hover:opacity-90 text-bg-deep transition-all rounded-full font-black text-[8px]"
+                                        className="ml-1.5 px-2 py-0.5 bg-[#0070f3] hover:bg-[#005bb5] text-white transition-all rounded-md font-medium text-xs cursor-pointer shadow-2xs"
                                     >
                                         Desbloquear
                                     </button>
@@ -79,13 +79,13 @@ export const SectionBlockGuard: React.FC<SectionBlockGuardProps> = ({
                         ) : (
                             <>
                                 <div className="flex items-center gap-1.5">
-                                    <Unlock size={11} className="text-text-dim" />
+                                    <Unlock size={12} className="text-text-dim" />
                                     <span className="text-text-dim">Abierto</span>
                                 </div>
                                 {isDirectorOrAdmin && (
                                     <button
                                         onClick={handleToggleLock}
-                                        className="ml-1 px-2.5 py-0.5 border border-border-thin hover:border-text-main hover:text-text-main text-text-dim transition-all rounded-full font-black text-[8px]"
+                                        className="ml-1.5 px-2 py-0.5 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-all rounded-md font-medium text-xs cursor-pointer"
                                     >
                                         Bloquear
                                     </button>

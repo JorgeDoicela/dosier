@@ -32,9 +32,9 @@ const ToolbarButton: React.FC<{
         type="button"
         title={title}
         onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-        className={`p-1.5 rounded transition-all text-xs ${
+        className={`p-1.5 rounded transition-all text-xs cursor-pointer ${
             active
-                ? 'bg-text-main text-bg-deep'
+                ? 'bg-[#0070f3] text-white shadow-xs'
                 : 'text-text-dim hover:bg-surface-hover hover:text-text-main'
         }`}
     >
@@ -163,7 +163,7 @@ export const RichTextEditor: React.FC<Props> = ({ block, fieldKey, placeholder, 
 
             {/* Variables dinámicas */}
             <div>
-                <p className="text-[9px] font-black text-text-dim uppercase tracking-wider mb-1.5">
+                <p className="text-[11px] font-mono font-medium text-text-dim uppercase tracking-wider mb-1.5">
                     Insertar Variable Dinámica
                 </p>
                 <div className="flex flex-wrap gap-1">
@@ -173,7 +173,7 @@ export const RichTextEditor: React.FC<Props> = ({ block, fieldKey, placeholder, 
                             type="button"
                             onClick={() => insertVariable(v.token)}
                             title={v.label}
-                            className="px-1.5 py-0.5 rounded-md bg-surface-hover hover:bg-surface border border-border-thin text-text-main text-[9px] font-mono transition-all cursor-pointer"
+                            className="px-1.5 py-0.5 rounded-md bg-surface-hover hover:bg-surface border border-border-thin hover:border-[#0070f3] text-text-main text-[10px] font-mono transition-all cursor-pointer"
                         >
                             {v.token}
                         </button>

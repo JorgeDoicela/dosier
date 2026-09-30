@@ -109,7 +109,7 @@ export const MultiSectionTableProperties: React.FC<Props> = ({ block, onUpdateCo
                         <input
                             value={section.title}
                             onChange={e => updateSection(sIdx, { title: e.target.value })}
-                            className="flex-1 bg-transparent text-xs font-bold text-text-main focus:outline-none placeholder:text-text-dim"
+                            className="flex-1 bg-transparent text-xs font-semibold text-text-main focus:outline-none placeholder:text-text-dim"
                             placeholder="Título de la sección"
                         />
                         <button
@@ -132,12 +132,12 @@ export const MultiSectionTableProperties: React.FC<Props> = ({ block, onUpdateCo
                         {/* Encabezados de columna */}
                         <div>
                             <div className="flex justify-between items-center mb-1.5">
-                                <label className="text-[9px] font-black text-text-dim uppercase tracking-wider">
+                                <label className="text-[11px] font-mono font-medium text-text-dim uppercase tracking-wider">
                                     Columnas ({section.headers?.length ?? 0})
                                 </label>
                                 <button
                                     onClick={() => addColumn(sIdx)}
-                                    className="flex items-center gap-1 px-2 py-0.5 border border-border-thin rounded-md text-[9px] font-semibold text-text-main bg-surface hover:bg-surface-hover transition-colors cursor-pointer"
+                                    className="flex items-center gap-1 px-2 py-0.5 border border-border-thin rounded-md text-xs font-medium text-text-main bg-surface hover:bg-surface-hover hover:border-[#0070f3] transition-colors cursor-pointer"
                                 >
                                     <Plus className="w-3 h-3" /> Col
                                 </button>
@@ -148,7 +148,7 @@ export const MultiSectionTableProperties: React.FC<Props> = ({ block, onUpdateCo
                                         <input
                                             value={h}
                                             onChange={e => updateHeader(sIdx, hIdx, e.target.value)}
-                                            className="flex-1 bg-transparent text-[10px] text-text-main focus:outline-none min-w-0"
+                                            className="flex-1 bg-transparent text-[11px] text-text-main focus:outline-none focus:border-[#0070f3] min-w-0"
                                             placeholder={`Col ${hIdx + 1}`}
                                         />
                                         {(section.headers?.length ?? 0) > 1 && (
@@ -164,12 +164,12 @@ export const MultiSectionTableProperties: React.FC<Props> = ({ block, onUpdateCo
                         {/* Filas de datos */}
                         <div>
                             <div className="flex justify-between items-center mb-1.5">
-                                <label className="text-[9px] font-black text-text-dim uppercase tracking-wider">
+                                <label className="text-[11px] font-mono font-medium text-text-dim uppercase tracking-wider">
                                     Filas ({section.rows?.length ?? 0})
                                 </label>
                                 <button
                                     onClick={() => addRow(sIdx)}
-                                    className="flex items-center gap-1 px-2 py-0.5 border border-border-thin rounded-md text-[9px] font-semibold text-text-main bg-surface hover:bg-surface-hover transition-colors cursor-pointer"
+                                    className="flex items-center gap-1 px-2 py-0.5 border border-border-thin rounded-md text-xs font-medium text-text-main bg-surface hover:bg-surface-hover hover:border-[#0070f3] transition-colors cursor-pointer"
                                 >
                                     <Plus className="w-3 h-3" /> Fila
                                 </button>
@@ -182,7 +182,7 @@ export const MultiSectionTableProperties: React.FC<Props> = ({ block, onUpdateCo
                                                 key={cIdx}
                                                 value={cell}
                                                 onChange={e => updateCell(sIdx, rIdx, cIdx, e.target.value)}
-                                                className="flex-1 min-w-0 text-[10px] bg-surface border border-border-thin rounded-md px-1.5 py-1 text-text-main focus:outline-none"
+                                                className="flex-1 min-w-0 text-[11px] bg-surface border border-border-thin rounded-md px-1.5 py-1 text-text-main focus:outline-none focus:border-[#0070f3]"
                                                 placeholder={`Celda ${cIdx + 1}`}
                                             />
                                         ))}
@@ -202,7 +202,7 @@ export const MultiSectionTableProperties: React.FC<Props> = ({ block, onUpdateCo
 
             <button
                 onClick={addSection}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-dashed border-border-thin text-[10px] font-semibold text-text-dim hover:text-text-main hover:border-border-hover bg-surface hover:bg-surface-hover transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-dashed border-border-thin text-xs font-medium text-text-dim hover:text-text-main hover:border-[#0070f3] bg-surface hover:bg-surface-hover transition-all cursor-pointer"
             >
                 <Plus className="w-3.5 h-3.5" />
                 Añadir Sub-tabla

@@ -78,8 +78,8 @@ export const ThemeEditorTab: React.FC<ThemeEditorTabProps> = ({
 
                 return (
                     <div key={cat} className="space-y-3 border-t border-border-thin/25 pt-4 first:border-t-0 first:pt-0">
-                        <h5 className="text-[10px] font-black text-text-main uppercase tracking-wider flex items-center gap-1.5">
-                            <CatIcon className="w-3.5 h-3.5 text-text-main" />
+                        <h5 className="text-xs font-semibold text-text-main flex items-center gap-1.5">
+                            <CatIcon className="w-3.5 h-3.5 text-[#0070f3]" />
                             {meta.label}
                         </h5>
 
@@ -104,7 +104,7 @@ export const ThemeEditorTab: React.FC<ThemeEditorTabProps> = ({
                                                         type="text"
                                                         value={currentVal}
                                                         onChange={e => handleThemeChange(cat, token.camelKey, e.target.value)}
-                                                        className="w-full text-[11px] font-mono uppercase tracking-wider border border-border-thin rounded-md p-1.5 bg-surface-hover/60 focus:bg-surface text-text-main focus:outline-none focus:border-black dark:focus:border-white transition-all"
+                                                        className="w-full text-xs font-mono uppercase tracking-wider border border-border-thin rounded-md p-1.5 bg-surface text-text-main focus:outline-none focus:border-[#0070f3] focus:ring-1 focus:ring-[#0070f3] transition-all"
                                                     />
                                                 </div>
                                             )}
@@ -168,7 +168,7 @@ export const ThemeEditorTab: React.FC<ThemeEditorTabProps> = ({
                                                             </button>
                                                         </div>
                                                     ) : (
-                                                        <label className="border border-dashed border-border-thin hover:border-text-main/50 rounded-lg p-3 text-center block cursor-pointer bg-surface-hover/20 hover:bg-surface-hover/40 transition-all duration-150 relative">
+                                                        <label className="border border-dashed border-border-thin hover:border-[#0070f3]/60 dark:hover:border-blue-500/60 rounded-lg p-3 text-center block cursor-pointer bg-surface-hover/20 hover:bg-surface-hover/40 transition-all duration-150 relative">
                                                             <input
                                                                 type="file"
                                                                 accept="image/png, image/jpeg, image/jpg"
