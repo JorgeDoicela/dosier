@@ -26,6 +26,7 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
 
 ## 2. Historial de Decisiones y Lecciones Aprendidas
 
+* **Reubicación y Formato de Identidad en el TopBar Superior:** Se reubicó la presentación del usuario y su rol institucional hacia el TopBar superior derecho en [DashboardLayout.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/DashboardLayout.tsx) junto al botón de cierre de sesión, aplicando la función `formatShortName` para mostrar de forma limpia y concisa únicamente el **primer nombre y primer apellido** (ej: `EDUARDO PATRICIO ACUÑA LOPEZ` -> `EDUARDO ACUÑA`) en todos los roles del sistema, manteniendo el selector interactivo para usuarios con múltiples perfiles institucionales.
 * **Depuración de Plantillas del Motor Documental:** Se eliminó la plantilla de marcador de posición `REPORTE_ANALITICAS` ("Reporte de Analíticas y Portafolio Documental v20") de `DocumentTemplateRegistry.cs`, `TemplateFileLoader.cs` y de la tabla `doc_document_templates` en MySQL, preservando el generador directo de analíticas institucionales en `ReportsController`/`ReportsService` y limpiando la visualización en el editor de plantillas.
 * **Adopción del Estándar de Bloques y Documentos Editables:** Se integraron formalmente en las directrices de DOSIER (`AGENTS.md`, `frontend-dosier` y `backend-dosier`) los principios de preservación innegociable de reactividad, expansión vertical holgada sin scroll asfixiante, evolución aditiva estricta e inmutabilidad por snapshot forense.
 * **Homologación Curricular del PEA Oficial ISTPET:** Se alinearon al 100% las 11 secciones (a - k) del PEA con el formato institucional oficial vigente:
@@ -215,6 +216,18 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
       - Pestaña Ajustes (Correcciones): Observación general de la coordinación con tarjeta de advertencia y medidor de plazo/vencimiento, más checklist de observaciones por sección con badges de estado.
       - Optimización de rendimiento: Memoizado con `React.memo` y referencias anti-flicker (`lastFetchedEntityUuidRef`, `lastFetchedPulseUuidRef`).
     * *Validación:* Build de Vite exitoso en 5.84s (0 errores), 100% de pruebas pasando (283/283 en Vitest).
+* **Control de Acceso y Modelo Dual: Editor de Plantillas vs Catálogo de Formatos Oficiales (`/plantillas` - Estándar DIITRA):**
+  - **Requerimiento:** El editor visual de plantillas (Canvas Template Builder con paleta y propiedades de bloques) solo debe ser accesible para Administrador (`DOSIER_ADMIN`), Coordinador Académico (`DOSIER_COORD_ACAD`) y Vicerrector (`DOSIER_VICERRECTOR`). Para los demás roles (Docentes y Coordinadores de Carrera), se debe mostrar una página limpia e institucional para consultar los formatos oficiales, previsualizarlos y descargarlos en PDF, tal como opera DIITRA.
+  - **Implementación Full-Stack:**
+    * *Componente UI Dual (`DocumentTemplatesPage.tsx`):* Se integró la verificación de permisos `canManageTemplates = isAdmin || isCoordAcad || isVicerrector`. Si el usuario no tiene permisos de edición, el componente renderiza automáticamente `OfficialTemplatesCatalogView` (Bento Grid con filtros de categoría *Curricular & PEA*, *Acreditación & Actas*, *Reportes*, buscador en tiempo real, badges normativos CACES/Firma, previsualización en modal de alta fidelidad `TemplatePreviewModal` y descarga directa en PDF), protegiendo el Canvas Builder de usuarios regulares.
+    * *Enrutamiento Frontend (`App.tsx`):* Ruta `/plantillas` abierta a todos los usuarios autenticados (`<RoleRoute allowedRoles={['ANY']}>`), agregando los alias institucionales `/formatos` y `/formatos-oficiales`.
+    * *Navegación Lateral Contextual (`useSidebar.ts`):* 
+      - Para roles de gobernanza (`isAdmin || isCoordAcad || isVicerrector`): se muestra `Plantillas` (`FileCode2`) en el Grupo 3 ("Administración y Control Total del Sistema").
+      - Para roles regulares (`DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`): se muestra `Formatos` (`FileText`) en el Grupo 1 ("Ciclo documental y gestión curricular").
+    * *Paleta de Comandos (`CommandPalette.tsx`):* Indexa dinámicamente "Editor de Plantillas" en categoría Administración para editores, o "Formatos Oficiales" en categoría Navegación para los demás roles.
+    * *Backend y Seguridad de API (`DocumentTemplatesController.cs`):* Controlador base con `[Authorize]` que permite la lectura y descarga de PDFs de muestra a todos los usuarios autenticados (filtrando automáticamente plantillas activas para no editores en `GetAll`). Todos los endpoints de modificación (`Update`, `ResetToDefault`, `UpdateSignatureConfig`, `UpdateGlobalTheme`, `UpdateOrder`) blindados estrictamente con `[Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]` (403 Forbidden para docentes o carreras).
+    * *Validación:* 100% de pruebas unitarias pasando (283/283 en Vitest), compilación de backend (.NET 8) exitosa con 0 errores y bundle de producción Vite generado limpiamente en 1.41s.
+
 
 
 

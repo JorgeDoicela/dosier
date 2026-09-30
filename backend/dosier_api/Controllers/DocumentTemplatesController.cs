@@ -8,16 +8,18 @@ using System.Threading.Tasks;
 using Dosier.Application.Common.Documents;
 using Dosier.Infrastructure.Common.Documents.Engine;
 using Dosier.Infrastructure.Common.Documents.Templates.Investigacion;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 
 namespace dosier_api.Controllers
 {
     /// <summary>
-    /// Endpoints de administración del Motor de Documentos DOSIER.
-    /// Permiten actualizar plantillas en base de datos sin recompilación.
-    /// IMPORTANTE: Proteger con autorización de rol "Admin" en producción.
+    /// Endpoints de administración y gobernanza del Motor de Documentos DOSIER.
+    /// Permiten consultar y previsualizar formatos oficiales a todos los usuarios autenticados,
+    /// y restringir la maquetación/modificación exclusivamente a Administrador, Coordinador Académico y Vicerrector.
     /// </summary>
+    [Authorize]
     [ApiController]
     [Route("api/admin/templates")]
     public class DocumentTemplatesController : ControllerBase
@@ -36,8 +38,17 @@ namespace dosier_api.Controllers
             _environment = environment;
         }
 
+        private bool CanManageTemplates()
+        {
+            return User.IsInRole("DOSIER_ADMIN") ||
+                   User.IsInRole("DOSIER_COORD_ACAD") ||
+                   User.IsInRole("DOSIER_VICERRECTOR") ||
+                   User.FindFirst("es_admin")?.Value == "true";
+        }
+
         /// <summary>
         /// Lista todas las plantillas activas registradas en el motor.
+        /// Los usuarios no administradores reciben únicamente las plantillas activas y publicadas.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken ct)
@@ -56,6 +67,11 @@ namespace dosier_api.Controllers
                     })
                     .ThenBy(t => t.Category)
                     .ToList();
+            }
+
+            if (!CanManageTemplates())
+            {
+                orderedTemplates = orderedTemplates.Where(t => t.IsActive).ToList();
             }
 
             return Ok(orderedTemplates.Select(t => new
@@ -126,6 +142,7 @@ namespace dosier_api.Controllers
         /// Actualiza el HTML de una plantilla existente en base de datos.
         /// El cambio aplica inmediatamente en el siguiente documento generado.
         /// </summary>
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         [HttpPut("{code}")]
         public async Task<IActionResult> Update(string code, [FromBody] UpdateTemplateRequest request, CancellationToken ct)
         {
@@ -167,6 +184,7 @@ namespace dosier_api.Controllers
         /// <summary>
         /// Restablece una plantilla en la BD a sus archivos físicos oficiales (HTML y CSS).
         /// </summary>
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         [HttpPost("{code}/reset-to-default")]
         public async Task<IActionResult> ResetToDefault(string code, CancellationToken ct)
         {
@@ -185,6 +203,7 @@ namespace dosier_api.Controllers
         /// <summary>
         /// Actualiza la configuración de firmas de una plantilla.
         /// </summary>
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         [HttpPut("{code}/signature-config")]
         public async Task<IActionResult> UpdateSignatureConfig(string code, [FromBody] UpdateSignatureConfigRequest request, CancellationToken ct)
         {
@@ -261,6 +280,7 @@ namespace dosier_api.Controllers
         /// <summary>
         /// Actualiza el tema visual global de la institución.
         /// </summary>
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         [HttpPut("global-theme")]
         public async Task<IActionResult> UpdateGlobalTheme([FromBody] UpdateGlobalThemeRequest request, CancellationToken ct)
         {
@@ -271,6 +291,7 @@ namespace dosier_api.Controllers
         /// <summary>
         /// Actualiza el orden de las plantillas en el catálogo.
         /// </summary>
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         [HttpPut("order")]
         public async Task<IActionResult> UpdateOrder([FromBody] UpdateTemplatesOrderRequest request, CancellationToken ct)
         {

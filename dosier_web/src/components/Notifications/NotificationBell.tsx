@@ -52,11 +52,11 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ size = 'sm' }) => {
         <div className="relative">
             <button 
                 onClick={() => setIsOpen(!isOpen)}
-                className={`${isSmall ? 'p-1.5' : 'p-2'} rounded-md text-text-main hover:bg-surface-hover transition-colors relative cursor-pointer flex items-center justify-center border-0 bg-transparent`}
+                className={`${isSmall ? 'w-8 h-8' : 'w-9 h-9'} rounded-lg text-text-main hover:bg-surface-hover transition-colors relative cursor-pointer flex items-center justify-center border-0 bg-transparent`}
                 title="Notificaciones"
                 aria-label="Abrir panel de notificaciones"
             >
-                <Bell size={isSmall ? 16 : 20} strokeWidth={1.5} className="text-text-main" />
+                <Bell size={isSmall ? 18 : 20} strokeWidth={1.75} className="text-text-main" />
                 {unreadCount > 0 && (
                     <span className={`absolute ${isSmall ? 'top-1 right-1 w-2 h-2' : 'top-1.5 right-1.5 w-2 h-2'} bg-[#0070f3] rounded-full ring-2 ring-white dark:ring-[#131720] shrink-0`} />
                 )}

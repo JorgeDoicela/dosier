@@ -36,6 +36,19 @@ interface SidebarFooterProps {
 
 const NAV_FADE_HEIGHT = '3.5rem';
 
+const formatShortName = (fullName?: string): string => {
+    if (!fullName || typeof fullName !== 'string') return '';
+    const clean = fullName.trim();
+    if (!clean) return '';
+    const parts = clean.split(/\s+/);
+    if (parts.length <= 1) return clean;
+    if (parts.length === 2) return `${parts[0]} ${parts[1]}`;
+    if (parts.length === 3) {
+        return `${parts[0]} ${parts[2] || parts[1]}`;
+    }
+    return `${parts[0]} ${parts[2]}`;
+};
+
 export const SidebarFooter: React.FC<SidebarFooterProps> = ({
     isUserMenuOpen,
     setIsUserMenuOpen,
@@ -89,23 +102,16 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = ({
 
             <div className="flex items-center justify-between gap-1 p-1 select-none">
                 <div
-                    className={`flex items-center gap-2.5 min-w-0 flex-1 group py-1 px-1 rounded-md transition-colors ${
+                    className={`flex items-center gap-2 min-w-0 flex-1 group py-1 px-1.5 rounded-md transition-colors ${
                         hasMultipleRoles ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-850/60' : ''
                     }`}
                     onClick={hasMultipleRoles ? () => setIsUserMenuOpen(!isUserMenuOpen) : undefined}
                     title={hasMultipleRoles ? 'Cambiar rol institucional' : undefined}
                 >
-                    {/* User Avatar with institutional styling */}
-                    <div className="relative shrink-0">
-                        <div className="w-7 h-7 rounded-md bg-slate-900 dark:bg-zinc-800 border border-slate-700/60 dark:border-zinc-700 flex items-center justify-center text-[10.5px] font-mono font-bold text-white uppercase shadow-2xs">
-                            {userInitials}
-                        </div>
-                        <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#131720]" />
-                    </div>
                     {/* Username & Role */}
                     <div className="flex-1 min-w-0 flex flex-col items-start leading-tight">
                         <span className="text-[12px] font-semibold text-slate-800 dark:text-zinc-200 truncate w-full tracking-tight group-hover:text-slate-950 dark:group-hover:text-white transition-colors">
-                            {user?.nombre_completo || username}
+                            {formatShortName(user?.nombre_completo) || username}
                         </span>
                         <span className="text-[9.5px] font-mono font-semibold text-slate-400 dark:text-zinc-500 truncate w-full uppercase tracking-wider mt-0.5">
                             {roleDisplayName}

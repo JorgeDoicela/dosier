@@ -98,7 +98,7 @@ graph TD
 | `/documentacion/revision-tecnica/:projectUuid` | Autenticado | Portal de revisión colegiada, formulación de observaciones técnicas y dictámenes. |
 | `/documentacion/monitoreo/:projectUuid` | Autenticado | Seguimiento del estado del flujo curricular y avances. |
 | `/documentacion` | `RoleRoute` (Admin, Coordinadores, Vicerrector) | Consola de supervisión y gestión integral de expedientes curriculares. |
-| `/plantillas` | `AdminRoute` | Maquetador visual de bloques de plantillas (Canvas Template Builder). |
+| `/plantillas`, `/formatos` | Autenticado | Vista dual según rol: Editor Canvas Builder para Admin, Coord. Académica y Vicerrector; Catálogo de Formatos Oficiales (Bento Grid) para Docentes y Coordinadores de Carrera. |
 | `/usuarios` | `PermissionRoute("USUARIOS", "VER")` | Administración de usuarios institucionales, sincronización SIGAFI y roles. |
 | `/auditoria` | `RoleRoute` (Admin, Coord. Académica, Vicerrector) | Bitácora forense de transacciones con filtros de fecha, usuario e IP. |
 | `/lopdp` | `AdminRoute` | Supervisión de consentimientos y gestión de solicitudes de derechos ARCO. |

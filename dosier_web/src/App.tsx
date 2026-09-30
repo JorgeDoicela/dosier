@@ -244,7 +244,9 @@ function App() {
                             <Route path="/parametros-normativos" element={<Navigate to="/configuracion?tab=parametros" replace />} />
                              <Route path="/emails" element={<AdminRoute><EmailEnginePage /></AdminRoute>} />
                              <Route path="/admin/documentos" element={<AdminRoute><DocumentMaintenancePage /></AdminRoute>} />
-                             <Route path="/plantillas" element={<AdminRoute><DocumentTemplatesPage /></AdminRoute>} />
+                             <Route path="/plantillas" element={<RoleRoute allowedRoles={['ANY']}><DocumentTemplatesPage /></RoleRoute>} />
+                             <Route path="/formatos" element={<RedirectPreserveSearch to="/plantillas" />} />
+                             <Route path="/formatos-oficiales" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/admin/plantillas" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/templates" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/solicitudes" element={<SolicitudesPage />} />

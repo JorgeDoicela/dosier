@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ClipboardList, BarChart3, ShieldCheck, Users, Activity, Mail, Bell, Calendar, FileCode2, BookOpen, MessageSquarePlus, Send } from 'lucide-react';
+import { Home, ClipboardList, BarChart3, ShieldCheck, Users, Activity, Mail, Bell, Calendar, FileCode2, BookOpen, MessageSquarePlus, Send, FileText } from 'lucide-react';
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { curriculumProjectService } from '../../../../services/curriculumProjectService';
@@ -279,6 +279,8 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         }
     };
 
+    const canEditTemplates = isAdmin || isCoordAcad || isVicerrector;
+
     const allMenuItems: MenuItem[] = [
         // ── Orientación y contexto personal ────────────────────────────────
         { name: 'Tablero', icon: Home, path: '/dashboard', roles: ['ANY'], group: 1 },
@@ -287,6 +289,9 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         // ── Ciclo documental y gestión curricular (inicio → formulación → revisión → aprobación) ──
         { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 1, hasChevron: true },
         { name: 'Mis Instrumentos PEA', icon: BookOpen, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ADMIN'], group: 1, hasChevron: true },
+        ...(!canEditTemplates ? [
+            { name: 'Formatos', icon: FileText, path: '/plantillas', roles: ['ANY'], group: 1 }
+        ] : []),
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
         { name: 'Solicitudes', icon: Send, path: '/solicitudes', roles: ['ANY'], group: 2, hasChevron: true },
@@ -294,7 +299,9 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Incidencias', icon: MessageSquarePlus, path: '/incidencias', roles: ['ANY'], group: 2 },
         // ── Administración y Control Total del Sistema ──────────────────────
         { name: 'Usuarios', icon: Users, path: '/usuarios', permission: 'USUARIOS:VER', roles: ['DOSIER_ADMIN'], group: 3, hasChevron: true },
-        { name: 'Plantillas', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN'], group: 3 },
+        ...(canEditTemplates ? [
+            { name: 'Plantillas', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 }
+        ] : []),
         { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], group: 3 },
         { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
     ];

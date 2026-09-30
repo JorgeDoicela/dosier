@@ -183,14 +183,14 @@ Administración y diseño de plantillas HTML institucionales en base de datos.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Autenticado | Lista todas las plantillas institucionales activas. |
-| `GET` | `/{code}` | Autenticado | Detalle y código HTML/Scriban de una plantilla por código. |
-| `PUT` | `/{code}` | `DOSIER_ADMIN` | Actualiza el marcado HTML, CSS y campos colaborativos de una plantilla. |
-| `POST`| `/{code}/reset` | `DOSIER_ADMIN` | Restablece la plantilla a sus archivos oficiales de fábrica. |
-| `PUT` | `/{code}/signature-config` | `DOSIER_ADMIN` | Modifica los requisitos de firma (DOSIER, ECUADOR_P12, HIBRIDO). |
-| `PUT` | `/{code}/theme-config` | `DOSIER_ADMIN` | Configuración Schema-Driven de tematización sin alterar HTML. |
-| `POST`| `/order` | `DOSIER_ADMIN` | Guarda el orden visual de presentación de plantillas en la UI. |
-| `GET` | `/categories` | Autenticado | Catálogo de categorías documentales CACES/Institucionales. |
+| `GET` | `/` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Lista todas las plantillas institucionales activas. |
+| `GET` | `/{code}` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Detalle y código HTML/Scriban de una plantilla por código. |
+| `PUT` | `/{code}` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Actualiza el marcado HTML, CSS y campos colaborativos de una plantilla. |
+| `POST`| `/{code}/reset-to-default` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Restablece la plantilla a sus archivos oficiales de fábrica. |
+| `PUT` | `/{code}/signature-config` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Modifica los requisitos de firma (DOSIER, ECUADOR_P12, HIBRIDO). |
+| `PUT` | `/order` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Guarda el orden visual de presentación de plantillas en la UI. |
+| `POST`| `/{code}/preview` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Previsualiza en HTML la plantilla con datos de muestra. |
+| `POST`| `/{code}/render-pdf` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Compila y renderiza en PDF la plantilla con sus bloques actuales. |
 
 ---
 

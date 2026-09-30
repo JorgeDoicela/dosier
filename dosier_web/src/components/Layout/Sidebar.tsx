@@ -4,7 +4,6 @@ import { useSidebar } from './Sidebar/hooks/useSidebar';
 import { SidebarBrand } from './Sidebar/components/SidebarBrand';
 import { SidebarSearch } from './Sidebar/components/SidebarSearch';
 import { SidebarNav } from './Sidebar/components/SidebarNav';
-import { SidebarFooter } from './Sidebar/components/SidebarFooter';
 
 const SIDEBAR_TRANSITION_MS = 280;
 const SIDEBAR_COLLAPSE_MS = 420;
@@ -134,19 +133,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                         setShowAllProjects={setShowAllProjects}
                         location={location}
                         onClose={onClose}
-                    />
-
-                    <SidebarFooter
-                        isUserMenuOpen={isUserMenuOpen}
-                        setIsUserMenuOpen={setIsUserMenuOpen}
-                        isAdmin={isAdmin}
-                        user={user}
-                        userInitials={userInitials}
-                        username={username}
-                        roleDisplayName={roleDisplayName}
-                        availableRoles={availableRoles}
-                        activeRole={activeRole}
-                        setActiveRole={setActiveRole}
                     />
                 </div>
 

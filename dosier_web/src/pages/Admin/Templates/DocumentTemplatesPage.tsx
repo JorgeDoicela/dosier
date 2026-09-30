@@ -23,10 +23,12 @@ import {
 } from 'lucide-react';
 import { DndContext, rectIntersection } from '@dnd-kit/core';
 import type { BlockType } from './types';
+import { useAuth } from '../../../api/AuthContext';
 import { TemplateCatalog } from './components/TemplateCatalog';
 import { BlockCanvas } from './components/BlockCanvas';
 import { BlockProperties } from './components/BlockProperties';
 import { BlockPalette } from './components/BlockPalette';
+import { OfficialTemplatesCatalogView } from './components/OfficialTemplatesCatalogView';
 import { TemplatePreviewModal } from './components/TemplatePreviewModal';
 import { useDocumentTemplatesPage } from './hooks/useDocumentTemplatesPage';
 import { generateHtmlFromBlocks } from './utils/HtmlGenerator';
@@ -57,6 +59,9 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
 ];
 
 export const DocumentTemplatesPage: React.FC = () => {
+    const { isAdmin, isCoordAcad, isVicerrector } = useAuth();
+    const canManageTemplates = isAdmin || isCoordAcad || isVicerrector;
+
     const {
         templates,
         selectedTemplate,
@@ -98,6 +103,26 @@ export const DocumentTemplatesPage: React.FC = () => {
         handleDragEnd,
         handleReorderTemplates,
     } = useDocumentTemplatesPage();
+
+    // Para docentes, coordinadores de carrera y demás roles: catálogo institucional de formatos oficiales
+    if (!canManageTemplates) {
+        return (
+            <>
+                <OfficialTemplatesCatalogView
+                    templates={templates}
+                    loading={loading}
+                    onOpenPreview={handleOpenPreview}
+                    onDownloadPdf={handleQuickDownloadPdf}
+                />
+                <TemplatePreviewModal
+                    isOpen={previewModalOpen}
+                    onClose={handleClosePreview}
+                    template={previewingTemplate || selectedTemplate}
+                    mergedTheme={selectedTemplate?.themeConfigJson ? mergeWithDefaults(selectedTemplate.themeConfigJson) : undefined}
+                />
+            </>
+        );
+    }
 
     return (
         <main className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] px-4 sm:px-6 lg:px-8 py-3 overflow-hidden bg-bg-deep select-none">

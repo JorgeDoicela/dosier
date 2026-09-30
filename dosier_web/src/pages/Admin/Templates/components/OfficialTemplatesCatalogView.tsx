@@ -22,8 +22,7 @@ import {
     Search,
     X,
     Copy,
-    Check,
-    ShieldCheck
+    Check
 } from 'lucide-react';
 import { PageHeader } from '../../../../components/Common/PageHeader';
 import type { DocumentTemplateDto } from '../types';
@@ -143,16 +142,18 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
     }, [templates]);
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 flex flex-col">
-            <PageHeader
-                title="Catálogo de Formatos y Plantillas Oficiales"
-                description="Repositorio normado de estructuras curriculares, programas de estudio (PEA) e informes acreditados del Instituto Superior Tecnológico 'Mayor Pedro Traversari'."
-            />
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 flex flex-col min-h-screen font-sans gap-6">
+            <div className="max-w-[1600px] w-full mx-auto space-y-6">
+                <PageHeader
+                    kicker="Instrumentos Curriculares Oficiales"
+                    icon={FileText}
+                    title="Catálogo de Formatos y Plantillas Oficiales"
+                    description="Repositorio normado de estructuras curriculares, programas de estudio (PEA) e informes acreditados del Instituto Superior Tecnológico 'Mayor Pedro Traversari'."
+                    className="mb-0"
+                />
 
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-                
                 {/* BARRA DE FILTROS Y BÚSQUEDA */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-lg bg-white dark:bg-zinc-950 border border-slate-200/50 dark:border-zinc-800">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-zinc-950 border border-slate-200/50 dark:border-zinc-800">
                     {/* Filtros de categoría */}
                     <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0">
                         <button
@@ -281,20 +282,8 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                                         </p>
                                     </div>
 
-                                    {/* Pie con Metadatos Normativos y Botones de Acción */}
-                                    <div className="pt-6 border-t border-zinc-100 dark:border-zinc-900 mt-6 space-y-4">
-                                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400">
-                                            {tmpl.requiresElectronicSignature && (
-                                                <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                                    <ShieldCheck className="w-3 h-3" />
-                                                    Firma Electrónica
-                                                </span>
-                                            )}
-                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                                Acreditado CACES
-                                            </span>
-                                        </div>
-
+                                    {/* Pie con Botones de Acción */}
+                                    <div className="pt-5 border-t border-zinc-100 dark:border-zinc-900 mt-6">
                                         <div className="flex items-center gap-2">
                                             <button
                                                 type="button"
@@ -333,7 +322,7 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                         })}
                     </div>
                 )}
-            </main>
-        </div>
+            </div>
+        </main>
     );
 };

@@ -20,6 +20,7 @@ import {
     Mail,
     Calendar,
     FileCode2,
+    FileText,
     ArrowRight,
     Hash,
     Zap,
@@ -191,7 +192,8 @@ function useRoleFilter() {
 
 // ─── Static catalog ───────────────────────────────────────────────────────────
 
-function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boolean, isDocente: boolean): SearchItem[] {
+function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boolean, isDocente: boolean, isCoordAcad: boolean = false, isVicerrector: boolean = false): SearchItem[] {
+    const canEditTemplates = isAdmin || isCoordAcad || isVicerrector;
     return [
         // ── Navegación ──────────────────────────────────────────────────
         { id: 'dashboard', label: 'Tablero Principal', description: 'Vista general con métricas y actividad reciente', category: 'Navegación', icon: LayoutDashboard, path: '/dashboard', shortcut: 'D', roles: ['ANY'], keywords: ['inicio', 'home', 'panel', 'resumen'], boost: 8 },
@@ -205,7 +207,17 @@ function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boo
         { id: 'usuarios', label: 'Gestión de Usuarios', description: 'Administrar cuentas de docentes y autoridades institucionales', category: 'Administración', icon: Users, path: '/usuarios', shortcut: 'U', permission: 'USUARIOS:VER', keywords: ['usuarios', 'cuentas', 'personas', 'perfiles', 'docentes'], boost: isAdmin ? 8 : 0 },
         { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro forense de firmas y cambios de estado en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
         { id: 'lopdp-admin', label: 'Panel LOPDP', description: 'Gestión de consentimientos y cumplimiento de protección de datos', category: 'Administración', icon: ShieldCheck, path: '/lopdp', roles: ['DOSIER_ADMIN'], keywords: ['lopdp', 'proteccion datos', 'consentimiento', 'rgpd'], boost: 4 },
-        { id: 'plantillas', label: 'Plantillas Institucionales', description: 'Formatos curriculares y documentos normalizados del ISTPET', category: 'Administración', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN'], keywords: ['plantillas', 'templates', 'formatos', 'pea'], boost: isAdmin ? 6 : 0 },
+        {
+            id: 'plantillas',
+            label: canEditTemplates ? 'Editor de Plantillas' : 'Formatos Oficiales',
+            description: canEditTemplates ? 'Diseñar y maquetar plantillas de documentos oficiales' : 'Catálogo institucional de formatos y plantillas descargables',
+            category: canEditTemplates ? 'Administración' : 'Navegación',
+            icon: canEditTemplates ? FileCode2 : FileText,
+            path: '/plantillas',
+            roles: ['ANY'],
+            keywords: ['plantillas', 'templates', 'formatos', 'editor', 'documentos', 'formatos oficiales', 'oficiales', 'descargar', 'pea'],
+            boost: canEditTemplates ? 6 : 4
+        },
         { id: 'correos', label: 'Correos Institucionales', description: 'Plantillas y notificaciones por correo del sistema', category: 'Administración', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], keywords: ['correos', 'emails', 'plantillas', 'smtp'], boost: 4 },
         // ── Parámetros Normativos ───────────────────────────────────────
         { id: 'parametros-normativos', label: 'Parámetros Normativos', description: 'Períodos académicos e hitos curriculares institucionales', category: 'Parámetros Normativos', icon: Settings, path: '/parametros-normativos', roles: ['DOSIER_ADMIN'], keywords: ['parametros', 'periodos', 'calendario', 'fechas', 'catalogos'], boost: isAdmin ? 6 : 0 },
@@ -368,12 +380,12 @@ export const CommandPalette = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<AbortController | null>(null);
-    const { isAdmin, isDocente, roleDisplayName, hasPermission } = useAuth();
+    const { isAdmin, isDocente, isCoordAcad, isVicerrector, roleDisplayName, hasPermission } = useAuth();
     const passesRoleFilter = useRoleFilter();
 
     const staticItems = React.useMemo(
-        () => buildStaticItems(navigate, isAdmin, isDocente),
-        [navigate, isAdmin, isDocente]
+        () => buildStaticItems(navigate, isAdmin, isDocente, isCoordAcad, isVicerrector),
+        [navigate, isAdmin, isDocente, isCoordAcad, isVicerrector]
     );
 
     // Ref keeps the current flatItems list accessible inside useEffect without

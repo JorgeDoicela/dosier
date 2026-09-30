@@ -3,7 +3,7 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
 import Sidebar from './Sidebar';
 import { CommandPalette } from '../Common/CommandPalette';
-import { Menu, HelpCircle, MessageSquarePlus, Sun, Moon, Settings, Trash2, LogOut } from 'lucide-react';
+import { Menu, HelpCircle, MessageSquarePlus, Sun, Moon, Settings, Trash2, LogOut, ChevronDown, Shield, Check } from 'lucide-react';
 import NotificationBell from '../Notifications/NotificationBell';
 import { HelpModal } from './Help/HelpModal';
 import { WelcomeModal } from './WelcomeModal/WelcomeModal';
@@ -42,17 +42,33 @@ const getPageTitle = (pathname: string): string => {
     return '';
 };
 
+const formatShortName = (fullName?: string): string => {
+    if (!fullName || typeof fullName !== 'string') return '';
+    const clean = fullName.trim();
+    if (!clean) return '';
+    const parts = clean.split(/\s+/);
+    if (parts.length <= 1) return clean;
+    if (parts.length === 2) return `${parts[0]} ${parts[1]}`;
+    if (parts.length === 3) {
+        return `${parts[0]} ${parts[2] || parts[1]}`;
+    }
+    // 4 o más palabras (ej: EDUARDO PATRICIO ACUÑA LOPEZ -> EDUARDO ACUÑA)
+    return `${parts[0]} ${parts[2]}`;
+};
+
 const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }) => {
-    const { isAuthenticated, isLoading, user, logout, isAdmin } = useAuth();
+    const { isAuthenticated, isLoading, user, logout, isAdmin, isCoordAcad, isVicerrector, availableRoles, activeRole, setActiveRole, roleDisplayName } = useAuth();
     const { addToast, fetchNotifications, isConnected } = useNotifications();
     const location = useLocation();
     const navigate = useNavigate();
     const isWorkspace = location.pathname.includes('/workspace/');
-    const isFullHeightPage = isWorkspace || location.pathname === '/plantillas' || location.pathname === '/admin/plantillas';
+    const isTemplateEditor = (location.pathname === '/plantillas' || location.pathname === '/admin/plantillas') && (isAdmin || isCoordAcad || isVicerrector);
+    const isFullHeightPage = isWorkspace || isTemplateEditor;
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [showHeader, setShowHeader] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
@@ -60,6 +76,8 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
         return saved === 'true';
     });
     const [topBarCollapsed, setTopBarCollapsed] = useState(false);
+    const hasMultipleRoles = Boolean(isAdmin && availableRoles && availableRoles.length > 1);
+    const username = user?.usuario?.split('@')[0] || user?.nombre_completo || 'Usuario';
 
     // ── Cierre de Bienvenida y Activación Única de Notificación de Bienvenida ──
     const handleWelcomeClose = useCallback(async () => {
@@ -321,66 +339,130 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setIsFeedbackOpen(true)}
-                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
                                     title="Reportar problema o sugerencia"
                                     aria-label="Abrir formulario de feedback e incidencias"
                                 >
-                                    <MessageSquarePlus size={16} className="text-text-main" />
+                                    <MessageSquarePlus size={18} strokeWidth={1.75} className="text-text-main" />
                                 </button>
                                 <button
                                     onClick={() => setIsHelpOpen(true)}
-                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
                                     title="Guía Interactiva"
                                     aria-label="Abrir guía interactiva"
                                 >
-                                    <HelpCircle size={16} className="text-text-main" />
+                                    <HelpCircle size={18} strokeWidth={1.75} className="text-text-main" />
                                 </button>
                                 <NotificationBell size="sm" />
 
-                                <div className="h-4 w-[1px] bg-border-thin mx-1" />
+                                <div className="h-5 w-[1px] bg-border-thin mx-1 shrink-0" />
 
                                 <button
                                     onClick={toggleTheme}
-                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
                                     title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
                                     aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
                                 >
-                                    {theme === 'dark' ? <Sun size={16} className="text-text-main" /> : <Moon size={16} className="text-text-main" />}
+                                    {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} className="text-text-main" /> : <Moon size={18} strokeWidth={1.75} className="text-text-main" />}
                                 </button>
 
                                 <Link
                                     to="/configuracion"
-                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
                                     title="Configuración"
                                     aria-label="Ir a Configuración"
                                 >
-                                    <Settings size={16} className="text-text-main" />
+                                    <Settings size={18} strokeWidth={1.75} className="text-text-main" />
                                 </Link>
 
                                 {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
                                     <Link
                                         to="/papelera"
-                                        className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                        className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
                                         title="Papelera"
                                         aria-label="Ir a Papelera"
                                     >
-                                        <Trash2 size={16} className="text-text-main" />
+                                        <Trash2 size={18} strokeWidth={1.75} className="text-text-main" />
                                     </Link>
                                 )}
+
+                                <div className="h-5 w-[1px] bg-border-thin mx-1 shrink-0" />
+
+                                {/* User Identity & Institutional Role */}
+                                <div className="relative">
+                                    <div
+                                        className={`flex items-center gap-2 px-2.5 py-1 rounded-md transition-colors ${
+                                            hasMultipleRoles
+                                                ? 'cursor-pointer hover:bg-surface-hover'
+                                                : ''
+                                        }`}
+                                        onClick={hasMultipleRoles ? () => setIsUserMenuOpen(!isUserMenuOpen) : undefined}
+                                        title={hasMultipleRoles ? 'Cambiar rol institucional' : undefined}
+                                    >
+                                        <div className="flex flex-col items-end text-right select-none leading-tight">
+                                            <span className="text-[12px] font-semibold text-text-main truncate max-w-[240px]">
+                                                {formatShortName(user?.nombre_completo) || username}
+                                            </span>
+                                            <span className="text-[9.5px] font-mono font-medium text-text-dim uppercase tracking-wider">
+                                                {roleDisplayName}
+                                            </span>
+                                        </div>
+                                        {hasMultipleRoles && (
+                                            <ChevronDown size={13} className="text-text-dim shrink-0 transition-transform duration-150" />
+                                        )}
+                                    </div>
+
+                                    {hasMultipleRoles && isUserMenuOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
+                                            <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in duration-150 slide-in-from-top-2">
+                                                <div className="px-2 py-1.5 border-b border-slate-100 dark:border-zinc-800 mb-1">
+                                                    <span className="text-[9.5px] font-mono font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">
+                                                        Rol Institucional
+                                                    </span>
+                                                    <div className="space-y-0.5">
+                                                        {availableRoles.map(r => (
+                                                            <div
+                                                                key={r.code}
+                                                                onClick={() => {
+                                                                    if (setActiveRole) setActiveRole(r.code);
+                                                                    setIsUserMenuOpen(false);
+                                                                }}
+                                                                className={`flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md cursor-pointer transition-colors ${
+                                                                    activeRole === r.code
+                                                                        ? 'bg-blue-50/80 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 font-semibold border border-blue-200/60 dark:border-blue-900/50'
+                                                                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-50 dark:hover:bg-zinc-900'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <Shield size={13} className={activeRole === r.code ? 'text-[#0070f3] dark:text-blue-400 shrink-0' : 'text-slate-400 dark:text-zinc-500 shrink-0'} />
+                                                                    <span className="truncate">{r.name}</span>
+                                                                </div>
+                                                                {activeRole === r.code && <Check size={13} className="text-[#0070f3] dark:text-blue-400 shrink-0 ml-1.5" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="h-5 w-[1px] bg-border-thin mx-0.5 shrink-0" />
 
                                 <button
                                     onClick={async () => {
                                         await logout();
                                         navigate('/');
                                     }}
-                                    className="p-1.5 rounded-md text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center justify-center"
+                                    className="w-8 h-8 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center justify-center shrink-0"
                                     title="Cerrar Sesión"
                                     aria-label="Cerrar Sesión"
                                 >
-                                    <LogOut size={16} />
+                                    <LogOut size={18} strokeWidth={1.75} />
                                 </button>
                             </div>
                         </div>
