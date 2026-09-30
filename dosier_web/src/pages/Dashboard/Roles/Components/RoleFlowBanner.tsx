@@ -5,15 +5,11 @@ export type RolSimulado = 'DOCENTE' | 'COORD_CARRERA' | 'COORD_ACAD' | 'VICERREC
 interface Props {
     rolActivo: RolSimulado;
     onCambiarRol: (rol: RolSimulado) => void;
-    nombreUsuarioReal?: string;
-    rolReal?: string;
 }
 
 export const RoleFlowBanner: React.FC<Props> = ({
     rolActivo,
-    onCambiarRol,
-    nombreUsuarioReal,
-    rolReal
+    onCambiarRol
 }) => {
     const ROLES: Array<{
         id: RolSimulado;
@@ -27,37 +23,26 @@ export const RoleFlowBanner: React.FC<Props> = ({
     ];
 
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
-            <div className="segmented-container">
+        <div className="border-b border-slate-200 dark:border-zinc-800">
+            <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Vista de Rol">
                 {ROLES.map(r => {
                     const isSelected = rolActivo === r.id;
                     return (
                         <button
                             key={r.id}
+                            type="button"
                             onClick={() => onCambiarRol(r.id)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                            className={`pb-2.5 pt-1 px-0.5 text-xs transition-colors cursor-pointer border-b-2 whitespace-nowrap ${
                                 isSelected
-                                    ? 'segmented-item-active text-zinc-900 dark:text-zinc-100'
-                                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 border border-transparent'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:border-slate-300 dark:hover:border-zinc-700 font-medium'
                             }`}
                         >
                             {r.nombre}
                         </button>
                     );
                 })}
-            </div>
-
-            {nombreUsuarioReal && (
-                <div className="flex items-center gap-2.5 text-xs text-zinc-500 dark:text-zinc-400">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-zinc-400 dark:text-zinc-500">Sesión activa:</span>
-                    <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{nombreUsuarioReal}</strong>
-                    <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                    <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                        {rolReal}
-                    </span>
-                </div>
-            )}
+            </nav>
         </div>
     );
 };

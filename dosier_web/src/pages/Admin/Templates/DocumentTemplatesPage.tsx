@@ -110,7 +110,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                     kicker="Administración de Plantillas"
                     icon={FileCode2}
                     title="Editor de Plantillas"
-                    description="Diseñador visual de documentos y PEA oficial. Arrastra bloques, añade tablas y define la maquetación del PDF oficial del ISTPET."
+                    description="Gobernanza y maquetación visual de esquemas documentales y PEA oficial del ISTPET."
                     className="relative z-30"
                 />
 
@@ -208,7 +208,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                         onClick={handleSaveTemplate}
                         disabled={saving || !isDirty}
                         title={`Guardar y Publicar v${selectedTemplate.version}`}
-                        className="w-9 h-9 rounded-full bg-text-main text-bg-deep flex items-center justify-center hover:opacity-90 transition-all shadow-md disabled:opacity-40 cursor-pointer shrink-0"
+                        className="w-9 h-9 rounded-full bg-[#0070f3] text-white flex items-center justify-center hover:bg-blue-600 transition-all shadow-md disabled:opacity-40 cursor-pointer shrink-0"
                     >
                         {saving ? (
                             <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
@@ -225,21 +225,21 @@ export const DocumentTemplatesPage: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => setActiveMobileTab('catalog')}
-                        className={`flex-1 py-2 text-center text-xs font-bold transition-colors cursor-pointer ${activeMobileTab === 'catalog' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-text-dim'}`}
+                        className={`flex-1 py-2 text-center text-xs font-medium transition-colors cursor-pointer ${activeMobileTab === 'catalog' ? 'bg-[#0070f3] text-white font-semibold' : 'text-slate-500 hover:text-slate-900'}`}
                     >
                         Catálogo
                     </button>
                     <button
                         type="button"
                         onClick={() => setActiveMobileTab('canvas')}
-                        className={`flex-1 py-2 text-center text-xs font-bold transition-colors cursor-pointer ${activeMobileTab === 'canvas' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-text-dim'}`}
+                        className={`flex-1 py-2 text-center text-xs font-medium transition-colors cursor-pointer ${activeMobileTab === 'canvas' ? 'bg-[#0070f3] text-white font-semibold' : 'text-slate-500 hover:text-slate-900'}`}
                     >
                         Lienzo ({blocks.length})
                     </button>
                     <button
                         type="button"
                         onClick={() => setActiveMobileTab('properties')}
-                        className={`flex-1 py-2 text-center text-xs font-bold transition-colors cursor-pointer ${activeMobileTab === 'properties' ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-text-dim'}`}
+                        className={`flex-1 py-2 text-center text-xs font-medium transition-colors cursor-pointer ${activeMobileTab === 'properties' ? 'bg-[#0070f3] text-white font-semibold' : 'text-slate-500 hover:text-slate-900'}`}
                     >
                         Ajustes
                     </button>

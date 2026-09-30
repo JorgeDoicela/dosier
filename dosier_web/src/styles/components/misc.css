@@ -29,7 +29,8 @@
 }
 
 .tab-vercel-item.active {
-    color: var(--fg);
+    color: #0070f3;
+    font-weight: 600;
 }
 
 .tab-vercel-item.active::after {
@@ -39,7 +40,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background-color: var(--fg);
+    background-color: #0070f3;
     border-radius: 9999px;
 }
 

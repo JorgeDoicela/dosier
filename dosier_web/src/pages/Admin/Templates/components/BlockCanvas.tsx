@@ -174,18 +174,18 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({
                             <button
                                 type="button"
                                 onClick={toggleHeaderFn}
-                                className="px-2 py-1 rounded hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-medium"
+                                className="px-2 py-1 rounded hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
                                 title={headerCollapsed ? "Mostrar cabecera de la página" : "Ocultar cabecera (Modo Enfoque)"}
                             >
                                 {headerCollapsed ? (
                                     <>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><path d="m18 15-6-6-6 6" /></svg>
-                                        <span className="text-[9px] uppercase tracking-wider font-bold">Mostrar Cabecera</span>
+                                        <span>Mostrar cabecera</span>
                                     </>
                                 ) : (
                                     <>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><path d="m6 9 6 6 6-6" /></svg>
-                                        <span className="text-[9px] uppercase tracking-wider font-bold text-text-dim/60">Ocultar Cabecera</span>
+                                        <span className="text-text-dim">Ocultar cabecera</span>
                                     </>
                                 )}
                             </button>
@@ -196,12 +196,12 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({
                         <>
                             <div className="w-px h-3.5 bg-border-thin" />
                             {isDirty ? (
-                                <span className="flex items-center gap-1.5 text-[10px] text-text-dim">
+                                <span className="flex items-center gap-1.5 text-xs text-text-dim">
                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                     Cambios sin guardar
                                 </span>
                             ) : (
-                                <span className="flex items-center gap-1.5 text-[10px] text-text-dim">
+                                <span className="flex items-center gap-1.5 text-xs text-text-dim">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                     Todo guardado
                                 </span>
@@ -219,18 +219,18 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({
             >
                 {!selectedTemplate ? (
                     <div className="force-light-theme max-w-[794px] mx-auto bg-white text-slate-950 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-zinc-200 min-h-[1123px] rounded-sm relative flex flex-col justify-start pt-48 items-center text-center">
-                        <FileText className="w-12 h-12 text-slate-300 mb-3 animate-pulse" />
-                        <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">Sin plantilla seleccionada</h3>
-                        <p className="text-[10px] text-slate-400 max-w-[230px] mt-1.5 leading-normal">
-                            Selecciona una plantilla o el "Diseño Global Institucional" del Catálogo (izquierda) para comenzar a trabajar.
+                        <FileText className="w-12 h-12 text-slate-300 mb-3" />
+                        <h3 className="text-sm font-semibold text-slate-800">Sin plantilla seleccionada</h3>
+                        <p className="text-xs text-slate-500 max-w-xs mt-1.5 leading-relaxed">
+                            Selecciona una plantilla del catálogo lateral para comenzar la maquetación.
                         </p>
                     </div>
                 ) : blocks.length === 0 ? (
                     <div className="force-light-theme max-w-[794px] mx-auto bg-white text-slate-950 p-12 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-zinc-200 min-h-[1123px] rounded-sm relative flex flex-col justify-start pt-48 items-center text-center">
-                        <Layers className="w-12 h-12 text-slate-300 mb-3 animate-pulse" />
-                        <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">El documento está vacío</h3>
-                        <p className="text-[10px] text-slate-400 max-w-[200px] mt-1 leading-normal">
-                            Usa el menú superior "+ Agregar Bloque" para inyectar componentes en esta hoja A4.
+                        <Layers className="w-12 h-12 text-slate-300 mb-3" />
+                        <h3 className="text-sm font-semibold text-slate-800">El documento está vacío</h3>
+                        <p className="text-xs text-slate-500 max-w-xs mt-1.5 leading-relaxed">
+                            Utiliza el menú superior "Agregar Bloque" para incorporar secciones en esta hoja A4.
                         </p>
                     </div>
                 ) : (

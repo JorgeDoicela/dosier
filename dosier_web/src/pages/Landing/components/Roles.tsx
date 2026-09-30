@@ -413,7 +413,7 @@ const Roles: React.FC = () => {
                     <div className="border border-border-thin rounded-lg bg-surface/50 p-3 space-y-2.5">
                         <div className="flex items-center gap-1 text-[9px] md:text-[10px] font-mono text-text-dim uppercase tracking-wider">
                             <Terminal size={11} className="text-brand" />
-                            <span>Simulador de Acciones de Rol</span>
+                            <span>Acciones de Rol</span>
                         </div>
 
                         <div className="min-h-[70px] flex flex-col justify-center">

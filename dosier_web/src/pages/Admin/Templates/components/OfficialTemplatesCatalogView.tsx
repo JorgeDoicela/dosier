@@ -3,7 +3,7 @@
  * @description Vista institucional del Catálogo de Formatos Oficiales y Plantillas para Docentes y Autoridades ISTPET.
  * 
  * @architecture
- * Diseñado bajo el estándar Geist Editorial:
+ * Diseñado bajo el estándar Modern Enterprise Docs:
  * - Bento Grid responsivo con micro-interacciones pulidas.
  * - Filtro dinámico por categorías normativas e input de búsqueda en tiempo real.
  * - Acceso directo a previsualización en alta fidelidad (Web/PDF) y descarga oficial directa.

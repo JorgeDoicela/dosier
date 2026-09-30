@@ -65,14 +65,14 @@ const TechFirma: React.FC = () => {
                     <div className="md:col-span-7 space-y-4">
                         <div className="flex items-center gap-3">
                             <FileSignature size={20} strokeWidth={1.5} className="text-[#0070f3]" />
-                            <div className="flex items-center gap-1.5 font-mono text-[10px] text-text-dim uppercase tracking-wider">
+                            <div className="flex items-center gap-1.5 font-sans font-medium text-[10px] text-text-dim uppercase tracking-wider">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3]" />
-                                <span>Firma_Digital</span>
+                                <span>Firma Digital</span>
                             </div>
                         </div>
                         
                         <div className="space-y-2">
-                            <h3 className="text-lg font-bold tracking-tight text-text-main font-mono uppercase">
+                            <h3 className="text-lg font-bold tracking-tight text-text-main font-sans uppercase">
                                 Firma Electrónica ISTPET
                             </h3>
                             <p className="text-xs text-text-dim leading-relaxed max-w-xl">
@@ -80,19 +80,19 @@ const TechFirma: React.FC = () => {
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-[9px] font-mono text-text-main uppercase font-semibold pt-2">
+                        <div className="flex items-center gap-2 text-[10px] font-sans text-text-main uppercase font-semibold pt-2">
                             <Key size={12} className="text-[#0070f3]" strokeWidth={1.5} />
                             <span>Integración Segura FirmaEC (Banco Central)</span>
                         </div>
                     </div>
 
                     {/* Right panel: Interactive Signature Area */}
-                    <div className="md:col-span-5 bg-surface border border-border-thin rounded-lg p-4 font-mono text-[9px]">
+                    <div className="md:col-span-5 bg-surface border border-border-thin rounded-lg p-4 font-sans text-[10px]">
                         {signState === 'idle' && (
                             <div className="space-y-3">
-                                <p className="text-[8px] text-text-dim uppercase tracking-wider font-mono">// DISPOSITIVO DE FIRMA LISTO</p>
+                                <p className="text-[9px] text-text-dim uppercase tracking-wider font-sans font-semibold">Dispositivo de Firma Listo</p>
                                 <div className="p-3 border border-dashed border-border-thin rounded flex items-center justify-center bg-bg-deep/30">
-                                    <span className="text-[8.5px] text-text-dim/80">Certificado digital p12 cargado.</span>
+                                    <span className="text-[10px] text-text-dim/80 font-sans">Certificado digital p12 cargado.</span>
                                 </div>
                                 <button
                                     onClick={startSigning}

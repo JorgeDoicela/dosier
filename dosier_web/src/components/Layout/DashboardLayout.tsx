@@ -391,9 +391,11 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                 }}
             />
 
-            <StickyNotesFloatingButton
-                pendingCount={pendingNotesCount}
-            />
+            {!isFullHeightPage && (
+                <StickyNotesFloatingButton
+                    pendingCount={pendingNotesCount}
+                />
+            )}
 
             <FeedbackModal
                 isOpen={isFeedbackOpen}

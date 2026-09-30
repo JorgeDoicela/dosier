@@ -33,7 +33,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             rolEquivalente: 'COORD_ACAD' as RolSimulado,
             autoridad: 'Coordinación Académica Institucional',
             baseLegal: 'Reglamento de Régimen Académico CES — Convocatoria Institucional',
-            dependencia: 'Base de datos institucional SIGAFI (Solo Lectura): asignaturas, mallas y docentes',
+            dependencia: 'Distributivo institucional, mallas curriculares y nómina docente',
             descripcion: 'Coordinación Académica activa el período lectivo, sincroniza el distributivo institucional de cátedras y habilita los tableros de formulación del PEA para los docentes asignados.',
             entregable: 'Tableros de formulación habilitados y calendario curricular oficial vigente.',
             icon: Calendar
@@ -47,7 +47,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             rolEquivalente: 'DOCENTE' as RolSimulado,
             autoridad: 'Docente Titular de Cátedra',
             baseLegal: 'Art. 21 CES — Distribución Horaria Obligatoria (CD + APE + TA = Total de Malla)',
-            dependencia: 'Plantilla PEA oficial en sus 11 secciones normativas con concurrencia Yjs',
+            dependencia: 'Plantilla PEA oficial en sus 11 secciones normativas',
             descripcion: 'El docente de cátedra diligencia colaborativamente las 11 secciones normativas en tiempo real. Valida que el balance horario coincida con la malla de SIGAFI y emite la firma de elaboración para enviar a revisión.',
             entregable: 'PEA completo con balance de horas normado y firma digital de elaboración.',
             icon: Edit3
@@ -103,17 +103,10 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             
             {/* Encabezado Editorial Formal */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-zinc-800">
-                <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-[#0070f3] dark:text-blue-400">
-                            <Layers size={14} />
-                            <span>Gobernanza Curricular Oficial</span>
-                        </div>
-                        <span className="text-slate-300 dark:text-zinc-700">•</span>
-                        <span className="text-xs font-mono text-slate-500 dark:text-zinc-400">
-                            Paso {selectedFase + 1} de 5
-                        </span>
-                    </div>
+                <div className="space-y-1">
+                    <span className="text-xs font-mono text-slate-500 dark:text-zinc-400 block">
+                        Paso {selectedFase + 1} de 5
+                    </span>
                     <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                         Circuito Normativo y Fases del PEA
                     </h2>
@@ -197,7 +190,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                     {/* Cabecera del Folio */}
                     <div className="pb-4 border-b border-slate-100 dark:border-zinc-800">
                         <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#0070f3] dark:text-blue-400 block">
-                            Especificación Técnica • {currentFase.etapa}
+                            {currentFase.etapa}
                         </span>
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-1">
                             {currentFase.titulo}

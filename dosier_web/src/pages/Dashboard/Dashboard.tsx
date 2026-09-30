@@ -60,8 +60,6 @@ const Dashboard: React.FC = () => {
                 <RoleFlowBanner
                     rolActivo={rolSimulado}
                     onCambiarRol={setRolSimulado}
-                    nombreUsuarioReal={user?.nombre_completo}
-                    rolReal={roleDisplayName}
                 />
 
                 {/* Vistas Limpias de Gestión por Rol Simulado */}

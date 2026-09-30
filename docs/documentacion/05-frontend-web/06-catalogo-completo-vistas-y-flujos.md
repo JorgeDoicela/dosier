@@ -26,7 +26,7 @@ dosier_web/src/pages/
 ## 2. Detalle Exhaustivo por Módulo y Vista
 
 ### 2.1. Módulo Dashboard (`src/pages/Dashboard/`)
-Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado dinámicamente según el rol institucional mediante el conmutador segmentado `RoleFlowBanner`.
+Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado dinámicamente según el rol institucional mediante el riel plano de navegación por rol `RoleFlowBanner` (estándar Modern Enterprise Docs con acento `#0070f3` y sin sliders verticales).
 
 #### 2.1.1. Tableros Específicos por Rol (`src/pages/Dashboard/Roles/`)
 * **`DocentePeaDashboard.tsx` (`DOSIER_DOCENTE`):**

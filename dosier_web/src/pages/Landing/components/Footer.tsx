@@ -80,7 +80,7 @@ const Footer: React.FC<FooterProps> = ({ currentTheme }) => {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
                         {footerColumns.map((col, idx) => (
                             <div key={idx} className="space-y-4 flex flex-col">
-                                <span className="text-text-main font-bold font-mono text-[10px] uppercase tracking-[0.2em]">
+                                <span className="text-text-main font-semibold font-sans text-[11px] uppercase tracking-wider">
                                     {col.title}
                                 </span>
                                 <div className="flex flex-col gap-2.5 text-[11px] font-medium font-sans">
@@ -95,7 +95,7 @@ const Footer: React.FC<FooterProps> = ({ currentTheme }) => {
                     </div>
 
                     {/* Copyright y Logotipos abajo */}
-                    <div className="mt-20 pt-10 border-t border-border-thin flex flex-col sm:flex-row justify-between items-center gap-6 text-[9px] font-mono select-none">
+                    <div className="mt-20 pt-10 border-t border-border-thin flex flex-col sm:flex-row justify-between items-center gap-6 text-[10px] font-sans text-text-dim select-none">
                         <div className="flex items-center gap-4">
                             <Link to={isAuthenticated ? "/dashboard" : "/"} onClick={handleLogoClick}>
                                 <img
@@ -104,9 +104,9 @@ const Footer: React.FC<FooterProps> = ({ currentTheme }) => {
                                     className="h-8 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
                                 />
                             </Link>
-                            <span className="opacity-80">© {new Date().getFullYear()} DOSIER. TODOS LOS DERECHOS RESERVADOS.</span>
+                            <span className="opacity-90 font-medium">© {new Date().getFullYear()} DOSIER. TODOS LOS DERECHOS RESERVADOS.</span>
                         </div>
-                        <span className="text-text-dim opacity-80">TECNOLÓGICO TRAVERSARI - ISTPET</span>
+                        <span className="text-text-dim opacity-90 font-medium tracking-wide">TECNOLÓGICO TRAVERSARI - ISTPET</span>
                     </div>
                 </div>
             </div>

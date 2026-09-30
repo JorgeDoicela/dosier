@@ -71,34 +71,35 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
     return (
         <div className="w-96 border border-border-thin rounded-md bg-surface flex flex-col overflow-hidden shrink-0 h-full">
             {/* Cabecera con Pestañas */}
-            <div className="flex border-b border-border-thin bg-surface shrink-0 select-none items-stretch h-11">
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('properties')}
-                    className={`py-2 text-center text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-6' : 'flex-1'
-                        } ${activeTab === 'properties'
-                            ? 'border-text-main text-text-main bg-surface'
-                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/10'
+            <div className="border-b border-border-thin bg-surface shrink-0 select-none">
+                <nav className="-mb-px flex items-center h-11" aria-label="Ajustes de bloque">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('properties')}
+                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-6' : 'flex-1'} ${
+                            activeTab === 'properties'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                         }`}
-                >
-                    <Settings className="w-3.5 h-3.5" />
-                    <span>Propiedades</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('theme')}
-                    className={`py-2 text-center text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-6' : 'flex-1'
-                        } ${activeTab === 'theme'
-                            ? 'border-text-main text-text-main bg-surface'
-                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/10'
+                    >
+                        <Settings className="w-3.5 h-3.5" />
+                        <span>Propiedades</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('theme')}
+                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-6' : 'flex-1'} ${
+                            activeTab === 'theme'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                         }`}
-                >
-                    <Palette className="w-3.5 h-3.5" />
-                    <span>Estilos</span>
-                </button>
+                    >
+                        <Palette className="w-3.5 h-3.5" />
+                        <span>Estilos</span>
+                    </button>
 
-                {/* Espacio derecho vacío cuando el header está colapsado para no tapar los textos */}
-                {headerCollapsed && <div className="w-24 border-b-2 border-transparent" />}
+                    {headerCollapsed && <div className="w-24 border-b-2 border-transparent" />}
+                </nav>
             </div>
 
             {/* CUERPO DEL PANEL: PESTAÑA ESTILOS */}
@@ -117,18 +118,18 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                 <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
                     {!selectedTemplate ? (
                         <div className="flex flex-col items-center justify-start pt-[220px] flex-1 p-6 text-center select-none bg-surface-hover/5">
-                            <Settings className="w-10 h-10 text-text-dim/30 mb-3 animate-pulse" />
-                            <h4 className="text-xs font-bold text-text-main uppercase tracking-wider">Sin formato seleccionado</h4>
-                            <p className="text-[10px] text-text-dim/80 max-w-xs mt-1 leading-normal">
-                                Selecciona un documento del <strong>Catálogo (izquierda)</strong> para cargar sus bloques y propiedades, o cambia a la pestaña de <strong>Estilos</strong> para editar el diseño visual general.
+                            <Settings className="w-10 h-10 text-text-dim/30 mb-3" />
+                            <h4 className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Sin formato seleccionado</h4>
+                            <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mt-1.5 leading-relaxed">
+                                Selecciona un documento del catálogo lateral para editar sus bloques y propiedades.
                             </p>
                         </div>
                     ) : !activeBlock ? (
                         <div className="flex flex-col items-center justify-start pt-[220px] flex-1 p-6 text-center select-none bg-surface-hover/5">
-                            <Settings className="w-10 h-10 text-text-dim/30 mb-3 animate-pulse" />
-                            <h4 className="text-xs font-bold text-text-main uppercase tracking-wider">Ningún bloque seleccionado</h4>
-                            <p className="text-[10px] text-text-dim/80 max-w-xs mt-1 leading-normal">
-                                Haz clic sobre cualquier bloque en el lienzo A4 para configurar sus propiedades específicas, o cambia a la pestaña de <strong>Estilos</strong> para editar el diseño general de la hoja.
+                            <Settings className="w-10 h-10 text-text-dim/30 mb-3" />
+                            <h4 className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Ningún bloque seleccionado</h4>
+                            <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mt-1.5 leading-relaxed">
+                                Haz clic sobre cualquier bloque en el lienzo para configurar sus propiedades específicas.
                             </p>
                         </div>
                     ) : (

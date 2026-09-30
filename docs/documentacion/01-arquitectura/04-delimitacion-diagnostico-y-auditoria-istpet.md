@@ -63,7 +63,7 @@ En la auditoría técnica exhaustiva del sistema se identificaron y subsanaron l
 | **TypeScript estricto** | Chequeo estático de tipos (`tsc --noEmit`) | 0 errores de tipado en 100% de vistas y modales | Certificado |
 | **Controladores API (`dosier_api`)** | Auditoría integral de los 23 controladores | Endpoints mapeados, autorización RBAC y claims | Certificado |
 | **Frontera de Datos (`sigafi_es`)** | Acceso a tablas nativas (`esInstituto = 1`) | Modo solo lectura (`AsNoTracking()`), 0 mutaciones | Certificado |
-| **Regla de Fondos Sólidos** | Sistema Geist Editorial / Enterprise Docs | Fondos 100% sólidos, cero transparencias ni sangrado | Certificado |
+| **Regla de Fondos Sólidos** | Modern Enterprise Docs System | Fondos 100% sólidos, cero transparencias ni sangrado | Certificado |
 | **Estándar Iconográfico** | Prohibición absoluta de emojis | Empleo exclusivo de vectores técnicos Lucide React | Certificado |
 
 ---
@@ -78,7 +78,7 @@ Para garantizar un producto de software robusto, auditable y de calidad de produ
    * Circuito colegiado de 4 revisiones y firmas con control de observaciones y subsanaciones por sección.
    * Compilación documental en PDF vectorial oficial con membrete del ISTPET, hash SHA-256 canónico y código QR público sin login.
 2. **Plataforma Web Institucional:**
-   * Aplicación Web SPA (`dosier_web`) en React 18, Vite, TypeScript y Geist Editorial System con regla cardinal de **fondos 100% sólidos sin transparencias**.
+   * Aplicación Web SPA (`dosier_web`) en React 18, Vite, TypeScript y Modern Enterprise Docs System con regla cardinal de **fondos 100% sólidos sin transparencias**.
    * Web API REST (`dosier_api`) en ASP.NET Core 8 con Clean Architecture y MySQL (`sigafi_es`).
 3. **Reserva para Extensiones Futuras:**
    * Los módulos de Sílabos Analíticos de 19 semanas y Guías de Prácticas APE quedan respaldados por el script DDL de extensión `05_extension_futura_curriculum_silabo_guias.sql` como segunda etapa post-titulación.

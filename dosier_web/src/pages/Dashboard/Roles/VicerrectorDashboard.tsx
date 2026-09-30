@@ -154,21 +154,10 @@ export const VicerrectorDashboard: React.FC = () => {
         <div className="space-y-6">
             {/* Encabezado Modern Enterprise Docs */}
             <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-3 border-b border-slate-200 dark:border-zinc-800">
-                <div className="space-y-1">
-                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#0070f3] dark:text-blue-400 block">
-                        Legalización Curricular • Vicerrectorado Académico
-                    </span>
-                    <div className="flex items-baseline gap-2.5">
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Despacho de Vicerrectorado Académico
-                        </h1>
-                        <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono font-medium">
-                            {user?.nombre_completo || 'Vicerrectorado Académico'}
-                        </span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400">
-                        Legalización curricular en firme, firma criptográfica institucional y certificación pública para acreditación CACES.
-                    </p>
+                <div>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        Vicerrectorado Académico
+                    </h1>
                 </div>
 
                 <div className="flex items-center gap-2">

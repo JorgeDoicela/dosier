@@ -185,11 +185,11 @@ const Workspace: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 items-start relative">
                 {/* Izquierda (col-span-8): Mockup Interactivo */}
-                <div className="lg:col-span-8 lg:sticky lg:top-[32vh] border border-border-thin rounded-xl bg-surface shadow-md p-7 font-mono text-xs tracking-tight relative overflow-hidden">
+                <div className="lg:col-span-8 lg:sticky lg:top-[32vh] border border-border-thin rounded-xl bg-surface shadow-md p-7 font-sans text-xs tracking-normal relative overflow-hidden">
                     {/* Decoraciones del editor */}
                     <div className="flex items-center justify-between border-b border-border-thin pb-3.5 mb-5.5">
-                        <span className="text-xs font-mono font-medium text-text-main tracking-tight">pea-desarrollo-software-istpet.doc</span>
-                        <div className="flex items-center gap-2 font-mono text-[11px]">
+                        <span className="text-xs font-sans font-medium text-text-main tracking-tight">pea-desarrollo-software-istpet.doc</span>
+                        <div className="flex items-center gap-2 font-sans text-[11px]">
                             <span className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
                             <span className={isSaving ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                                 {isSaving ? 'GUARDANDO...' : 'SINCRONIZADO'}
@@ -201,7 +201,7 @@ const Workspace: React.FC = () => {
                     <div className="flex flex-col md:grid md:grid-cols-12 gap-7">
                         {/* Panel Izquierdo (Estructura de la Planificación / Pestañas) */}
                         <div className="w-full md:col-span-4 border-b md:border-b-0 md:border-r border-border-thin pb-4 md:pb-0 md:pr-3.5 space-y-2 text-xs text-text-dim">
-                            <p className="text-text-main font-semibold mb-3 font-mono text-[11px] tracking-wider uppercase">// ESTRUCTURA</p>
+                            <p className="text-text-main font-semibold mb-3 font-sans text-[11px] tracking-wider uppercase">Estructura</p>
 
                             <button
                                 onClick={() => handleCardClick(0)}
@@ -524,11 +524,11 @@ const Workspace: React.FC = () => {
                                                 {getHeadingText(item.tabId)}
                                             </h3>
 
-                                            {/* Monospace features list style matching Vercel's reference with correct system data and thinner weight */}
+                                            {/* Inter features list style */}
                                             <div className="space-y-4 pt-6 border-t border-border-thin">
-                                                <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500 tracking-wider block">Características</span>
+                                                <span className="font-sans text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-wider uppercase block">Características</span>
 
-                                                <div className="flex flex-col gap-2 font-mono text-[13px] font-medium text-text-main tracking-tight uppercase">
+                                                <div className="flex flex-col gap-2 font-sans text-[13px] font-medium text-text-main tracking-normal">
                                                     {item.items.map((subItem, sIdx) => (
                                                         <span
                                                             key={sIdx}
@@ -551,7 +551,7 @@ const Workspace: React.FC = () => {
                             </p>
 
                             <div className="space-y-4">
-                                <span className="font-mono text-[10px] text-text-dim/80 uppercase tracking-[0.2em] font-semibold block">// Características</span>
+                                <span className="font-sans text-[11px] text-text-dim uppercase tracking-wider font-semibold block">Características</span>
                                 <div className="flex flex-col border-t border-border-thin divide-y divide-border-thin">
                                     {features.map((item, idx) => (
                                         <button
@@ -563,12 +563,12 @@ const Workspace: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 {activeTab === item.tabId && <span className="w-1.5 h-1.5 rounded-full bg-brand animate-ping shrink-0" />}
                                                 <div className="space-y-1">
-                                                    <span className={`font-mono text-[11px] font-bold tracking-wider uppercase block transition-colors ${activeTab === item.tabId ? 'text-brand' : 'text-text-main'
+                                                    <span className={`font-sans text-[12px] font-semibold tracking-normal block transition-colors ${activeTab === item.tabId ? 'text-brand' : 'text-text-main'
                                                         }`}>{item.title}</span>
                                                     <span className="text-[10px] text-text-dim block leading-none">{item.desc}</span>
                                                 </div>
                                             </div>
-                                            <span className={`text-[10px] font-mono uppercase tracking-wider transition-colors ${activeTab === item.tabId ? 'text-brand font-bold' : 'text-text-dim'
+                                            <span className={`text-[11px] font-sans font-medium tabular-nums transition-colors ${activeTab === item.tabId ? 'text-brand font-bold' : 'text-text-dim'
                                                 }`}>0{idx + 1}</span>
                                         </button>
                                     ))}

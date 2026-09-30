@@ -87,23 +87,18 @@ const TemplateItem: React.FC<TemplateItemProps> = ({
 }) => {
     return (
         <div
-            className={`group w-full flex items-center relative border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 transition-opacity duration-150 ${
+            className={`group w-full flex items-center relative border-b border-zinc-200/60 dark:border-zinc-800/60 last:border-b-0 transition-colors ${
                 isSelected 
-                    ? 'bg-zinc-100 dark:bg-zinc-800/60 text-zinc-900 dark:text-zinc-100 font-bold' 
-                    : 'bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                    ? 'bg-blue-50/70 dark:bg-blue-950/30 text-slate-900 dark:text-zinc-100 font-semibold' 
+                    : 'bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900/50 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100'
             } ${isDragging ? 'opacity-25 bg-zinc-100/30' : 'opacity-100'} ${
                 isOverlay ? 'shadow-xl border rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 z-[9999]' : ''
             }`}
         >
-            {/* Indicador de selección activa */}
-            {isSelected && !isDragging && (
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-blue-600 dark:bg-blue-400" />
-            )}
-
             {/* Handle para arrastre */}
             <div
                 {...dragHandleProps}
-                className="p-3 pr-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-grab active:cursor-grabbing shrink-0 flex items-center justify-center self-stretch touch-none transition-colors"
+                className="p-3 pr-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 cursor-grab active:cursor-grabbing shrink-0 flex items-center justify-center self-stretch touch-none transition-colors"
                 title="Arrastrar para ordenar"
             >
                 <GripVertical className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -113,18 +108,18 @@ const TemplateItem: React.FC<TemplateItemProps> = ({
                 type="button"
                 onClick={onSelect}
                 disabled={isOverlay}
-                className="flex-1 text-left p-3 pl-1.5 flex items-start gap-3 transition-all min-w-0 cursor-pointer"
+                className="flex-1 text-left p-3 pl-1.5 flex items-start gap-2.5 transition-all min-w-0 cursor-pointer"
             >
-                <div className="p-1.5 rounded bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0 text-zinc-700 dark:text-zinc-200 shadow-none">
+                <div className="shrink-0 text-slate-500 dark:text-zinc-400 pt-0.5">
                     {getTemplateIcon(template.code)}
                 </div>
                 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                        <span className={`text-[11px] leading-snug transition-colors break-words ${isSelected ? 'font-bold text-zinc-900 dark:text-zinc-100' : 'font-medium text-zinc-800 dark:text-zinc-200'}`}>
+                        <span className={`text-xs leading-snug transition-colors break-words ${isSelected ? 'font-semibold text-slate-900 dark:text-zinc-100' : 'font-medium text-slate-700 dark:text-zinc-300'}`}>
                             {template.name}
                         </span>
-                        <span className="text-[8px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono border border-zinc-200 dark:border-zinc-700 shrink-0 text-zinc-500 dark:text-zinc-400">
+                        <span className="text-[9px] bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-slate-500 dark:text-zinc-400 shrink-0">
                             v{template.version}
                         </span>
                     </div>
@@ -296,11 +291,11 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                             {curricularTemplates.length > 0 && (
                                 <div className="border-b border-zinc-200/60 dark:border-zinc-800/60">
                                     <div className="px-3 py-2 bg-zinc-50/80 dark:bg-zinc-900/80 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-                                        <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-500 dark:text-zinc-400 uppercase flex items-center gap-1.5">
-                                            <GraduationCap size={11} className="text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
-                                            Currículo & Asignaturas (PEA)
+                                        <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1.5">
+                                            <GraduationCap size={13} className="text-slate-500 dark:text-zinc-400" strokeWidth={1.5} />
+                                            Currículo y asignaturas (PEA)
                                         </span>
-                                        <span className="text-[9px] font-mono text-zinc-400 dark:text-zinc-500">
+                                        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
                                             {curricularTemplates.length}
                                         </span>
                                     </div>
@@ -323,11 +318,11 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                             {acreditacionTemplates.length > 0 && (
                                 <div className="border-b border-zinc-200/60 dark:border-zinc-800/60">
                                     <div className="px-3 py-2 bg-zinc-50/80 dark:bg-zinc-900/80 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-                                        <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-500 dark:text-zinc-400 uppercase flex items-center gap-1.5">
-                                            <Award size={11} className="text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
-                                            Acreditación & CACES
+                                        <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1.5">
+                                            <Award size={13} className="text-slate-500 dark:text-zinc-400" strokeWidth={1.5} />
+                                            Acreditación y CACES
                                         </span>
-                                        <span className="text-[9px] font-mono text-zinc-400 dark:text-zinc-500">
+                                        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
                                             {acreditacionTemplates.length}
                                         </span>
                                     </div>
@@ -350,11 +345,11 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                             {reportesTemplates.length > 0 && (
                                 <div className="border-b border-zinc-200/60 dark:border-zinc-800/60">
                                     <div className="px-3 py-2 bg-zinc-50/80 dark:bg-zinc-900/80 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-                                        <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-500 dark:text-zinc-400 uppercase flex items-center gap-1.5">
-                                            <BarChart3 size={11} className="text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
-                                            Reportes & Analíticas
+                                        <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1.5">
+                                            <BarChart3 size={13} className="text-slate-500 dark:text-zinc-400" strokeWidth={1.5} />
+                                            Reportes y analíticas
                                         </span>
-                                        <span className="text-[9px] font-mono text-zinc-400 dark:text-zinc-500">
+                                        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
                                             {reportesTemplates.length}
                                         </span>
                                     </div>
@@ -377,11 +372,11 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                             {institucionalTemplates.length > 0 && (
                                 <div>
                                     <div className="px-3 py-2 bg-zinc-50/80 dark:bg-zinc-900/80 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-                                        <span className="text-[9px] font-mono font-bold tracking-wider text-zinc-500 dark:text-zinc-400 uppercase flex items-center gap-1.5">
-                                            <FileText size={11} className="text-zinc-500 dark:text-zinc-400" strokeWidth={1.5} />
-                                            Otras Plantillas Institucionales
+                                        <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1.5">
+                                            <FileText size={13} className="text-slate-500 dark:text-zinc-400" strokeWidth={1.5} />
+                                            Otras plantillas institucionales
                                         </span>
-                                        <span className="text-[9px] font-mono text-zinc-400 dark:text-zinc-500">
+                                        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
                                             {institucionalTemplates.length}
                                         </span>
                                     </div>

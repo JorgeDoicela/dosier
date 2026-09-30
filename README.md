@@ -66,7 +66,7 @@ dosier/
 |   |-- dosier_domain/           # Entidades del PEA, Constantes de Permisos y Reglas Puras
 |   |-- dosier_infrastructure/   # EF Core 9, Pomelo MySQL, SignalR Hub, Motor PDF y Firmas
 |   `-- dosier_tests/            # Pruebas unitarias de integridad curricular y firmas
-|-- dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Geist Editorial / Enterprise Docs)
+|-- dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Modern Enterprise Docs)
 |   |-- public/                  # Recursos estáticos, marcas y certificados
 |   `-- src/                     # Componentes modulares, Editor PEA, Contextos y API Client
 |-- docs/
@@ -82,7 +82,7 @@ dosier/
 
 ### 3.1. Tecnologías Principales
 * **Backend:** C# con .NET 8.0, ASP.NET Core Web API, Entity Framework Core 9.0, Pomelo MySQL Provider.
-* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Feature-Based Modular SPA con Service Layer (22 servicios), Geist Editorial / Enterprise Docs System (Inter Puro), Lucide Icons.
+* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Feature-Based Modular SPA con Service Layer (22 servicios), Modern Enterprise Docs System (Inter Puro, acento #0070f3, fondos 100% sólidos), Lucide Icons.
 * **Colaboración en Tiempo Real:** SignalR WebSockets con protocolo binario y sincronización Yjs CRDT.
 * **Generación Documental y Criptografía:** iText 9, Handlebars.Net, QRCoder, SHA-256 y soporte PKCS#12 (.p12).
 * **Base de Datos Institucional:** MySQL 8.0+ / MariaDB en base `sigafi_es`, modo de solo lectura para tablas académicas (`AsNoTracking()`).

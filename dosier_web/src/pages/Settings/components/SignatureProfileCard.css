@@ -267,9 +267,10 @@
         }
 
         &.active {
-            background: var(--fg);
-            color: var(--bg);
-            border-color: var(--fg);
+            background: #0070f3;
+            color: #ffffff;
+            border-color: #0070f3;
+            font-weight: 600;
         }
     }
 

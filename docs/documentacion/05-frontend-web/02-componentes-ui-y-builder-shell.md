@@ -1,10 +1,10 @@
-# Componentes UI Especializados, Sistema Geist Editorial y Shell del PEA
+# Componentes UI Especializados, Sistema Modern Enterprise Docs y Shell del PEA
 
 ## 1. Visión General del Constructor Curricular
 
 La experiencia de usuario de DOSIER se centra en el **Constructor del Programa de Estudio de la Asignatura (PEA)**, una interfaz avanzada diseñada para simplificar la planificación pedagógica docente, validar restricciones matemáticas de carga horaria en tiempo real y permitir la co-redacción concurrente entre docentes de cátedra.
 
-El sistema de componentes se rige por el estándar **Geist Editorial / Enterprise Docs** (inspirado en Mintlify y GitBook Enterprise), asegurando alta densidad informativa, sobriedad académica, confort prolongado de lectura y cumplimiento estricto de la regla de **fondos 100% sólidos sin transparencias**.
+El sistema de componentes se rige por el estándar **Modern Enterprise Docs** (inspirado en Stripe Docs, Linear y Mintlify), asegurando alta densidad informativa, sobriedad académica, confort prolongado de lectura, navegación sobre riel plano continuo y cumplimiento estricto de la regla de **fondos 100% sólidos sin transparencias**.
 
 ---
 
@@ -106,21 +106,22 @@ graph TD
 
 ### 4.8. Dashboard de Gobernanza Curricular y Paneles de Roles (`/dashboard`)
 * **Ubicación:** `src/pages/Dashboard/` (`Dashboard.tsx`, `Roles/` `VicerrectorDashboard.tsx`, `CoordAcadDashboard.tsx`, `CoordCarreraDashboard.tsx`, `DocentePeaDashboard.tsx`, `AdminPeaDashboard.tsx`, `Components/RoleFlowBanner.tsx`).
-* **Principios de Diseño e Implementación Vercel Geist:**
-  * **Control Segmentado Discreto (`RoleFlowBanner`):** Selector horizontal compacto con fondo sólido `bg-zinc-100 dark:bg-zinc-900` para alternar fluidamente la perspectiva entre los 5 roles curriculares institucionales.
+* **Principios de Diseño e Implementación Modern Enterprise Docs:**
+  * **Riel Plano de Gobernanza (`RoleFlowBanner`):** Navegación sobre riel plano continuo (`border-b border-slate-200 dark:border-zinc-800`), `<nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar">` y acento `#0070f3`, eliminando cajas encapsuladas o segmented controls y previniendo sliders verticales.
   * **Eliminación Total de KPIs Artificiales:** Erradicación del anti-patrón de tarjetas métricas gigantes con cifras aisladas que sobrecargan la vista inicial sin aportar valor operativo.
-  * **Cero Iconos SVG Decorativos:** Supresión de iconos vectoriales superfluos en botones, tablas y encabezados para priorizar la legibilidad del texto, nombres de asignaturas, docentes y códigos institucionales.
+  * **Cero Iconos SVG Decorativos con Wrappers:** Supresión de cajas y envoltorios de fondo en iconos; empleo exclusivo de iconografía técnica vectorial Lucide desnuda (`strokeWidth={1.5}` o `1.75`).
   * **Acciones Directas y Textuales:** Botones de alta nitidez y contraste (`Ver`, `Firmar PEA`, `QR CACES`, `Emitir Aval`, `Auditar`) enmarcados en tablas con tipografía monoespaciada para códigos y plazos.
   * **Superficies Sólidas de 1 Capa:** Fondos monocromáticos `bg-white dark:bg-black`, bordes ultrafinos y eliminación total de cajas anidadas innecesarias.
 
-### 4.9. Sistema de Superficies y Badges Sutiles (`--subtle` / Geist Muted)
+### 4.9. Sistema de Superficies y Badges Sutiles (`--subtle` / Modern Enterprise Docs Muted)
 * **Tokens de Color Globales:**
   * Modo Claro: `--subtle: #f2f4f7;`, `--subtle-border: rgba(0, 0, 0, 0.05);`, `--subtle-hover: #e4e7ec;`
   * Modo Oscuro: `--subtle: #181d27;`, `--subtle-border: rgba(255, 255, 255, 0.07);`, `--subtle-hover: #222938;`
-* **Clases Semánticas Oficiales en `base.css`:**
+* **Clases y Patrones Semánticos en `base.css`:**
   * `.surface-subtle`: Contenedores secundarios y bloques de detalle con fondo sutil y borde tenue.
+  * `Puntos Indicadores Discretos`: Círculos sólidos de 6px (`w-1.5 h-1.5 rounded-full`) para estados curriculares, sin recuadros ni cápsulas envolventes.
   * `.badge-subtle`: Píldora con tipografía monoespaciada para códigos de asignatura (`#f2f4f7`), roles institucionales RBAC y parámetros normativos.
-  * `.segmented-container` y `.segmented-item-active`: Estructura institucional para selectores de pestañas, barra de roles de gobernanza y filtros.
+  * `Riel Plano Continuo`: Estructura para selectores de pestañas, barra de roles de gobernanza y filtros con borde inferior activo `#0070f3`.
 
 ### 4.10. Modales de Gestión Curricular y Regla de Opacidad 100% Sólida
 * **Ubicación:** `src/pages/Dashboard/Roles/Modals/`
@@ -157,7 +158,7 @@ graph TD
   2. **Mis Instrumentos PEA:** Lista desplegable de asignaturas e instrumentos asignados directamente al usuario docente/administrador.
   3. **Analíticas:** Despliegue de accesos a Métricas Curriculares (`?tab=general`), Cumplimiento CACES (`?tab=caces`) y Portafolio de Instrumentos (`?tab=proyectos`).
   4. **Usuarios:** Submenú desplegable filtrado por tipo de cuenta (Docentes institucionales y Personal administrativo).
-* **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-[#131720]`), selectores de hover sobrios sin difuminados translúcidos, tipografía Geist Editorial e iconografía técnica de Lucide React sin emojis.
+* **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-[#131720]`), selectores de hover sobrios sin difuminados translúcidos, tipografía Inter Puro bajo el estándar Modern Enterprise Docs e iconografía técnica de Lucide React sin emojis.
 
 
 

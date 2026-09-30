@@ -278,7 +278,7 @@ const NotificationsPage = () => {
                                     key={f.key}
                                     onClick={() => setFilter(f.key)}
                                     className={`text-xs font-medium px-3 py-1.5 rounded-md whitespace-nowrap transition-colors cursor-pointer ${filter === f.key
-                                            ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950'
+                                            ? 'bg-[#0070f3] text-white border border-[#0070f3]'
                                             : 'bg-surface border border-slate-200/90 dark:border-zinc-800 text-text-dim hover:text-text-main'
                                         }`}
                                 >
@@ -339,7 +339,7 @@ const NotificationsPage = () => {
                                         <span className="text-xs font-mono text-text-dim">{items.length}</span>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-950 divide-y divide-slate-100 dark:divide-zinc-800/80 overflow-hidden shadow-2xs">
                                         {items.map(n => {
                                             const config = getCategoryConfig(n.categoria);
                                             const IconComp = config.icon;
@@ -348,58 +348,65 @@ const NotificationsPage = () => {
                                                 <div
                                                     key={n.uuid}
                                                     onClick={() => handleNotificationClick(n)}
-                                                    className={`p-4 rounded-lg border border-slate-200/90 dark:border-zinc-800 bg-surface cursor-pointer group transition-colors hover:bg-slate-50 dark:hover:bg-zinc-850/50 ${!n.leido ? 'border-l-2 !border-l-[#0070f3]' : 'opacity-70'
-                                                        }`}
+                                                    className={`p-4 cursor-pointer group transition-colors hover:bg-slate-50/80 dark:hover:bg-zinc-900/60 ${
+                                                        !n.leido ? 'bg-blue-50/20 dark:bg-blue-950/10' : ''
+                                                    }`}
                                                 >
-                                                    <div className="flex items-start gap-3">
-                                                        <span className="shrink-0 mt-0.5 text-text-dim">
-                                                            <IconComp size={16} />
-                                                        </span>
+                                                    <div className="flex items-start gap-3.5">
+                                                        {/* Punto indicador de no leído + Icono desnudo */}
+                                                        <div className="flex items-center gap-2 shrink-0 mt-0.5">
+                                                            <span className={`w-2 h-2 rounded-full shrink-0 transition-opacity ${
+                                                                !n.leido ? 'bg-[#0070f3]' : 'opacity-0'
+                                                            }`} />
+                                                            <span className={!n.leido ? 'text-[#0070f3]' : 'text-slate-400 dark:text-zinc-500'}>
+                                                                <IconComp size={16} />
+                                                            </span>
+                                                        </div>
+
                                                         <div className="flex-1 min-w-0 space-y-1">
-                                                            <div className="flex justify-between items-start gap-2">
-                                                                <h5 className={`text-xs font-semibold text-text-main leading-tight truncate ${!n.leido ? '' : 'font-medium'}`}>
+                                                            <div className="flex justify-between items-start gap-3">
+                                                                <h5 className={`text-xs text-slate-900 dark:text-white leading-tight truncate ${
+                                                                    !n.leido ? 'font-semibold' : 'font-medium text-slate-700 dark:text-zinc-300'
+                                                                }`}>
                                                                     {stripHtmlToText(n.titulo)}
                                                                 </h5>
-                                                                <div className="flex items-center gap-2 shrink-0">
-                                                                    <span className="text-[10px] font-mono text-text-dim">
+                                                                <div className="flex items-center gap-2.5 shrink-0">
+                                                                    <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 whitespace-nowrap">
                                                                         {formatDate(n.fecha_envio)}
                                                                     </span>
                                                                     <button
                                                                         onClick={(e) => handleDelete(e, n)}
-                                                                        className="notification-delete-btn text-text-dim hover:text-rose-500 p-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                                                                        className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
                                                                         title="Eliminar notificación"
                                                                     >
-                                                                        <Trash2 size={12} />
+                                                                        <Trash2 size={13} />
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                            <p className="text-xs text-text-dim leading-relaxed line-clamp-2 break-words">
+
+                                                            <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed line-clamp-2 break-words">
                                                                 {stripHtmlToText(n.mensaje)}
                                                             </p>
-                                                            <div className="flex items-center gap-3 mt-1.5">
+
+                                                            <div className="flex items-center gap-3 pt-0.5">
                                                                 <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-medium ${
                                                                     n.categoria === 'URGENTE' ? 'text-rose-600 dark:text-rose-400' :
-                                                                    n.categoria === 'INVESTIGACION' ? 'text-[#0070f3] dark:text-blue-400' : 'text-zinc-500'
+                                                                    n.categoria === 'INVESTIGACION' ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-500 dark:text-zinc-400'
                                                                 }`}>
                                                                     <span className={`w-1.5 h-1.5 rounded-full ${
                                                                         n.categoria === 'URGENTE' ? 'bg-rose-500' :
-                                                                        n.categoria === 'INVESTIGACION' ? 'bg-[#0070f3]' : 'bg-zinc-400'
+                                                                        n.categoria === 'INVESTIGACION' ? 'bg-[#0070f3]' : 'bg-slate-400 dark:bg-zinc-500'
                                                                     }`} />
                                                                     {config.label}
                                                                 </span>
+
                                                                 {n.url_accion && (
-                                                                    <span className="text-[11px] font-medium text-[#0070f3] hover:underline flex items-center gap-1">
-                                                                        Ir al detalle <ExternalLink size={10} />
+                                                                    <span className="text-xs font-medium text-[#0070f3] hover:underline flex items-center gap-1">
+                                                                        Ir al detalle <ExternalLink size={11} />
                                                                     </span>
                                                                 )}
-                                                                <span className="text-[10px] font-mono text-text-dim ml-auto hidden md:inline">
-                                                                    {formatFullDate(n.fecha_envio)}
-                                                                </span>
                                                             </div>
                                                         </div>
-                                                        {!n.leido && (
-                                                            <div className="w-1.5 h-1.5 bg-[#0070f3] rounded-full mt-2 shrink-0" />
-                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -413,7 +420,7 @@ const NotificationsPage = () => {
 
                 {/* Sidebar: Right Column */}
                 <div className="space-y-6">
-                    <VercelUsageCard
+                    <NotificationSummaryCard
                         title="Resumen de notificaciones"
                         items={[
                             {
@@ -421,14 +428,14 @@ const NotificationsPage = () => {
                                 value: allNotifications.length,
                                 displayValue: `${allNotifications.length} registradas`,
                                 max: 100,
-                                color: 'var(--brand)'
+                                color: '#0070f3'
                             },
                             {
                                 label: 'Por Leer',
                                 value: unreadCount,
                                 displayValue: `${unreadCount} pendientes`,
                                 max: allNotifications.length || 1,
-                                color: unreadCount > 0 ? 'var(--brand)' : 'var(--text-dim)'
+                                color: unreadCount > 0 ? '#0070f3' : 'var(--text-dim)'
                             }
                         ]}
                     />
@@ -438,14 +445,14 @@ const NotificationsPage = () => {
     );
 };
 
-const VercelUsageCard = ({ title, buttonLabel, onButtonClick, items }: any) => (
-    <div className="bento-card static p-5 flex flex-col relative overflow-hidden bg-surface border border-border-thin shadow-sm rounded-xl">
-        <div className="flex items-center justify-between mb-5">
-            <span className="text-[14px] font-semibold text-text-main tracking-tight">{title}</span>
+const NotificationSummaryCard = ({ title, buttonLabel, onButtonClick, items }: any) => (
+    <div className="p-5 flex flex-col bg-white dark:bg-zinc-950 border border-slate-200/90 dark:border-zinc-800 shadow-2xs rounded-xl">
+        <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">{title}</span>
             {buttonLabel && (
                 <button
                     onClick={onButtonClick}
-                    className="px-3 py-1 bg-black text-white hover:bg-[#1a1a1a] dark:bg-white dark:text-black dark:hover:bg-[#eaeaea] rounded-md text-[11px] font-medium transition-all cursor-pointer shadow-sm active:scale-98"
+                    className="px-3 py-1 bg-[#0070f3] text-white hover:bg-[#005bb5] rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs"
                 >
                     {buttonLabel}
                 </button>

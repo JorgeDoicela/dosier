@@ -151,24 +151,11 @@ export const DocentePeaDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Encabezado Modern Enterprise Docs */}
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 pb-3 border-b border-slate-200 dark:border-zinc-800">
-                <div className="space-y-1">
-                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#0070f3] dark:text-blue-400 block">
-                        Docencia Curricular • Planificación Microcurricular
-                    </span>
-                    <div className="flex items-baseline gap-2.5">
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Mis Asignaturas y Elaboración de PEA
-                        </h1>
-                        <span className="text-xs text-slate-500 dark:text-zinc-400 font-mono font-medium">
-                            {user?.nombre_completo || 'Docente Institucional'}
-                        </span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400">
-                        Formulación colaborativa de las 11 secciones normativas del PEA y balance matemático de horas pedagógicas.
-                    </p>
-                </div>
+            {/* Encabezado */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-zinc-800">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    Mis Asignaturas
+                </h1>
 
                 <div className="flex items-center gap-2">
                     <button

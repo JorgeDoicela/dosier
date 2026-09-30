@@ -89,41 +89,46 @@ const EmailEnginePage: React.FC = () => {
                     icon={Mail}
                     title="Correos DOSIER"
                     description="Comunicaciones guiadas por plantillas del sistema: el contenido se arma automáticamente según el contexto que seleccione."
-                >
-                    {/* Tabs Control */}
-                    <div className="flex border border-border-thin bg-surface rounded-lg p-1 select-none">
+                />
+
+                {/* Pestañas sobre Riel Plano Modern Enterprise Docs */}
+                <div className="border-b border-slate-200 dark:border-zinc-800 mb-6">
+                    <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Secciones de correos">
                         <button
+                            type="button"
                             onClick={() => handleTabChange('send')}
-                            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all cursor-pointer ${activeTab === 'send'
-                                ? 'bg-bg-deep border border-border-thin text-text-main'
-                                : 'text-text-dim hover:text-text-main'
+                            className={`pb-2.5 pt-1 px-0.5 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'send'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                                 }`}
                         >
-                            <Send size={12} />
-                            Redactar
+                            <Send size={13} />
+                            <span>Redactar</span>
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleTabChange('templates')}
-                            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all cursor-pointer ${activeTab === 'templates'
-                                ? 'bg-bg-deep border border-border-thin text-text-main'
-                                : 'text-text-dim hover:text-text-main'
+                            className={`pb-2.5 pt-1 px-0.5 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'templates'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                                 }`}
                         >
-                            <Layers size={12} />
-                            Plantillas
+                            <Layers size={13} />
+                            <span>Plantillas</span>
                         </button>
                         <button
+                            type="button"
                             onClick={() => handleTabChange('history')}
-                            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all cursor-pointer ${activeTab === 'history'
-                                ? 'bg-bg-deep border border-border-thin text-text-main'
-                                : 'text-text-dim hover:text-text-main'
+                            className={`pb-2.5 pt-1 px-0.5 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-2 whitespace-nowrap ${activeTab === 'history'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                                 }`}
                         >
-                            <History size={12} />
-                            Historial
+                            <History size={13} />
+                            <span>Historial</span>
                         </button>
-                    </div>
-                </PageHeader>
+                    </nav>
+                </div>
 
                 {/* Loading state indicator */}
                 {loading && (

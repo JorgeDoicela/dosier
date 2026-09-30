@@ -8,9 +8,13 @@ El stack técnico es:
 * **React 18** y **TypeScript 5.x**.
 * **Vite** como empaquetador ultrarrápido y servidor de desarrollo local.
 * **Tailwind CSS v4** integrado nativamente con variables semánticas en `src/styles/base.css`.
-* **Geist Editorial / Enterprise Docs System**: Lenguaje visual sobrio y de alta legibilidad inspirado en Mintlify y GitBook Enterprise, enfocado en tipografía documental **Inter Puro** con variantes tipográficas avanzadas (`cv02`, `cv03`, `cv04`, `cv11`), arquitectura de capas con contraste equilibrado y delimitación estricta de folios curriculares.
+* **Modern Enterprise Docs System**: Lenguaje visual sobrio y de alta legibilidad inspirado en Stripe Docs, Linear y Mintlify, enfocado en tipografía documental **Inter Puro** con variantes tipográficas avanzadas (`cv02`, `cv03`, `cv04`, `cv11`), acento técnico azul corporativo `#0070f3`, navegación sobre riel plano continuo y delimitación estricta de folios curriculares.
 
 La plataforma proporciona a la comunidad académica del Instituto Superior Tecnológico Mayor Pedro Traversari una herramienta profesional para la planificación del Programa de Estudio de la Asignatura (PEA), co-redacción en tiempo real, revisión colegiada por comisiones de carrera, firma electrónica y verificación pública de acreditación.
+
+> [!IMPORTANT]
+> **Mandato Universal de Modern Enterprise Docs (100% del Sistema):**
+> Este estándar visual aplica de forma rigurosa y sin excepciones en todas las pantallas (Dashboards de los 5 roles, Workspace PEA, Editor de Plantillas, Calendario, Usuarios, Auditoría, Correos, Analíticas, Notificaciones y Configuración), barras (Sidebar, Topbar, Headers), componentes interactivos (pestañas al ras sobre riel plano, steppers verticales, tablas semánticas, modales opacos), tokens de color y tipografía con capitalización natural.
 
 > [!IMPORTANT]
 > **El Motor Documental (`core/documents/`) NO es el centro de la arquitectura.** Es un motor de infraestructura auxiliar — equivalente al motor de colaboración (`core/cowork/`). El centro del negocio es el dominio curricular: el flujo PEA con su ciclo de vida de 4 estados (Borrador → EnRevision → RevisadoCoord → Aprobado). Los motores de `core/` sirven a ese dominio; no lo gobiernan.

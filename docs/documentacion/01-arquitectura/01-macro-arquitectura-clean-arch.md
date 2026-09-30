@@ -21,7 +21,7 @@ La solución adopta un modelo desacoplado compuesto por una aplicación de pági
 ```mermaid
 graph TD
     subgraph CapaPresentacion [Capa de Presentacion / Exposicion]
-        WebClient["React 18 SPA (dosier_web)\nVite + TypeScript + Geist Editorial"]
+        WebClient["React 18 SPA (dosier_web)\nVite + TypeScript + Modern Enterprise Docs"]
     end
 
     subgraph CapaBackend [Backend API Gateway .NET 8.0]
@@ -91,7 +91,7 @@ El diagrama de contenedores detalla los bloques tecnológicos principales y sus 
 ```mermaid
 graph TB
     subgraph Clients [Contenedor de Cliente]
-        WebClient["dosier_web\nReact 18 + Vite + TypeScript (Geist UI)"]
+        WebClient["dosier_web\nReact 18 + Vite + TypeScript (Modern Enterprise Docs)"]
     end
 
     subgraph BackendServices [Contenedores de Aplicacion .NET 8.0]
@@ -168,7 +168,7 @@ La solución backend `dosier.slnx` implementa Clean Architecture segregada en ci
 | **Documentación API** | Swashbuckle (Swagger) | `6.6.2` | Especificación interactiva OpenAPI. |
 | **Frontend Web** | React + TypeScript | `18.3.1` | Interfaz SPA modular. |
 | **Bundler Frontend** | Vite | `5.4.2` | Servidor de desarrollo y compilador de producción. |
-| **Sistema de Diseño** | Tailwind CSS v4 + Geist UI | `4.0.0` | Sistema visual Vercel Geist con fondos 100% sólidos. |
+| **Sistema de Diseño** | Tailwind CSS v4 + Modern Enterprise Docs | `4.0.0` | Sistema visual Modern Enterprise Docs con Inter Puro, acento #0070f3 y fondos 100% sólidos. |
 | **Motor Colaborativo** | SignalR + Yjs CRDT | `latest` | Sincronización multi-docente concurrente sin colisiones. |
 
 ---

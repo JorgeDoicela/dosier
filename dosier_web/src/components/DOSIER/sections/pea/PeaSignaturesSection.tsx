@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, CheckCircle2, Clock, UserCheck, Shield } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, UserCheck, Shield } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 import { resolveHeaderColor, getContrastFg } from '../../../../pages/Admin/Templates/components/properties/SharedColorPicker';
@@ -99,7 +99,6 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
             {/* MATRIZ DE 4 FIRMAS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {rolesCircuito.map((rol) => {
-                    const currentNombre = firmas[rol.nombreField] || '';
                     const fechaFirma = firmas[rol.fechaField] || '';
 
                     return (

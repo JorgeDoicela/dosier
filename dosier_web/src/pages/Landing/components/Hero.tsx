@@ -116,7 +116,7 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                     <polyline points="22 4 12 14 9 11" />
                 </svg>
             ),
-            text: <span className="font-mono font-bold tracking-tighter text-[13px]">CACES</span>
+            text: <span className="font-sans font-bold tracking-tight text-[13px]">CACES</span>
         },
         {
             name: 'FIRMA.EC',
@@ -152,7 +152,7 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
 
                 {/* Columna Izquierda: Mensaje y Call To Actions */}
                 <div className="lg:col-span-4 space-y-7 z-10 animate-fade-up lg:-ml-24 text-center lg:text-left">
-                    <div className="text-[10px] font-mono text-text-dim uppercase tracking-widest">
+                    <div className="text-[10px] font-sans font-medium text-text-dim uppercase tracking-widest">
                         <span>Tecnológico Traversari — ISTPET</span>
                     </div>
                     <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-normal text-text-main tracking-tighter leading-[0.85] lg:whitespace-nowrap">
@@ -465,11 +465,11 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                                 onMouseLeave={() => setHoveredIndex(null)}
                                 onClick={() => setClickedIndex(clickedIndex === idx ? null : idx)}
                             >
-                                <p className="font-mono text-xs tracking-wider transition-colors duration-300 font-bold text-text-main">
+                                <p className="font-sans text-xs tracking-wider transition-colors duration-300 font-bold text-text-main">
                                     {row.title}
                                 </p>
                                 <div className={`grid-wrapper ${isExpanded ? 'expanded mt-1.5' : 'opacity-0'}`}>
-                                    <div className="overflow-hidden font-mono text-[10px] tracking-wider leading-relaxed text-text-main/80">
+                                    <div className="overflow-hidden font-sans text-[11px] tracking-wide leading-relaxed text-text-main/80">
                                         {row.expanded}
                                     </div>
                                 </div>
