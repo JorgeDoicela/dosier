@@ -31,19 +31,12 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             etapa: 'Fase 0',
             rol: 'Coordinación Académica',
             rolEquivalente: 'COORD_ACAD' as RolSimulado,
-            actor: 'Msc. Cristian Cobos',
-            meta: 'Sincronizar y Notificar Distributivo',
+            autoridad: 'Coordinación Académica Institucional',
             baseLegal: 'Reglamento de Régimen Académico CES — Convocatoria Institucional',
-            entradas: 'Base de datos SIGAFI (MySQL 3306): 42 cátedras y 28 docentes activos',
-            descripcion: 'Coordinación Académica sincroniza el distributivo institucional de cátedras, establece el calendario con fechas límites oficiales y emite la notificación masiva a todo el cuerpo docente.',
-            botonesClave: ['Aperturar Convocatoria 2025-A', 'Notificar Rezagados', 'Conceder Prórroga'],
-            entregable: 'Tableros de trabajo y materias habilitadas en SIGAFI para los docentes.',
-            icon: Calendar,
-            previewRows: [
-                { codigo: 'DS-201', nombre: 'Programación Orientada a Objetos', docente: 'Ing. Edison Pérez', estado: 'Borrador Docente', tipo: 'neutral' },
-                { codigo: 'DS-301', nombre: 'Estructura de Datos y Algoritmos', docente: 'Ing. Edison Pérez', estado: 'Revisión de Carrera', tipo: 'neutral' },
-                { codigo: 'DS-302', nombre: 'Bases de Datos Relacionales y NoSQL', docente: 'Ing. Wilfrido Trujillo', estado: 'Observaciones Pendientes', tipo: 'warning' }
-            ]
+            dependencia: 'Base de datos institucional SIGAFI (Solo Lectura): asignaturas, mallas y docentes',
+            descripcion: 'Coordinación Académica activa el período lectivo, sincroniza el distributivo institucional de cátedras y habilita los tableros de formulación del PEA para los docentes asignados.',
+            entregable: 'Tableros de formulación habilitados y calendario curricular oficial vigente.',
+            icon: Calendar
         },
         {
             num: 1,
@@ -52,40 +45,26 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             etapa: 'Fase 1',
             rol: 'Docente de Cátedra',
             rolEquivalente: 'DOCENTE' as RolSimulado,
-            actor: 'Ing. Edison Pérez',
-            meta: 'Validar Horas Art. 21 y Enviar',
-            baseLegal: 'Art. 21 CES — Distribución Horaria Obligatoria (CD + APE + TA = Total)',
-            entradas: 'Plantilla PEA institucional con 11 secciones normativas en Yjs',
-            descripcion: 'El colectivo docente redacta colaborativamente las 11 secciones normativas con concurrencia Yjs en tiempo real. Valida que la carga horaria cuadre exactamente con la malla y envía a revisión.',
-            botonesClave: ['Editar PEA (11 Secc.)', 'Clonar de Semestre Anterior', 'Validador Horas CES', 'Enviar a Carrera'],
-            entregable: 'PEA completo con cálculo de horas auditado por motor CACES.',
-            icon: Edit3,
-            previewRows: [
-                { codigo: 'DS-201', nombre: 'Programación Orientada a Objetos', docente: 'Ing. Edison Pérez', estado: 'Borrador', tipo: 'neutral' },
-                { codigo: 'DS-301', nombre: 'Estructura de Datos y Algoritmos', docente: 'Ing. Edison Pérez', estado: 'En Revisión Carrera', tipo: 'brand' },
-                { codigo: 'DS-501', nombre: 'Desarrollo Web Fullstack y Cloud', docente: 'Ing. Edison Pérez', estado: 'Aval Académico Listo', tipo: 'success' }
-            ]
+            autoridad: 'Docente Titular de Cátedra',
+            baseLegal: 'Art. 21 CES — Distribución Horaria Obligatoria (CD + APE + TA = Total de Malla)',
+            dependencia: 'Plantilla PEA oficial en sus 11 secciones normativas con concurrencia Yjs',
+            descripcion: 'El docente de cátedra diligencia colaborativamente las 11 secciones normativas en tiempo real. Valida que el balance horario coincida con la malla de SIGAFI y emite la firma de elaboración para enviar a revisión.',
+            entregable: 'PEA completo con balance de horas normado y firma digital de elaboración.',
+            icon: Edit3
         },
         {
             num: 2,
             paso: '03',
             titulo: 'Revisión Disciplinar',
             etapa: 'Fase 2',
-            rol: 'Coordinador de Carrera',
+            rol: 'Coordinación de Carrera',
             rolEquivalente: 'COORD_CARRERA' as RolSimulado,
-            actor: 'Ing. Wilfrido Trujillo',
-            meta: 'Emitir Aval de Carrera',
-            baseLegal: 'Estatuto Orgánico ISTPET — Control Disciplinar de Contenidos Mínimos',
-            entradas: 'PEAs de la carrera en estado "En Revisión de Carrera"',
-            descripcion: 'El Coordinador de Carrera audita la pertinencia metodológica y bibliográfica. Si detecta desvíos, formula observaciones específicas por sección; si cumple, emite el Aval de Carrera.',
-            botonesClave: ['Revisar Instrumento', 'Observar (Sección Específica)', 'Emitir Aval de Carrera', 'Notificar Docentes'],
-            entregable: 'Aval disciplinar de carrera con trazabilidad en bitácora inmutable.',
-            icon: FileSearch,
-            previewRows: [
-                { codigo: 'DS-301', nombre: 'Estructura de Datos y Algoritmos', docente: 'Ing. Edison Pérez', estado: 'Listo para Revisión', tipo: 'brand' },
-                { codigo: 'DS-302', nombre: 'Bases de Datos Relacionales y NoSQL', docente: 'Ing. Wilfrido Trujillo', estado: 'Con Observaciones', tipo: 'warning' },
-                { codigo: 'DS-401', nombre: 'Ingeniería de Software y Calidad', docente: 'Ing. Marco Proaño', estado: 'Aval de Carrera Emitido', tipo: 'success' }
-            ]
+            autoridad: 'Coordinador de Carrera',
+            baseLegal: 'Estatuto Orgánico ISTPET — Control Disciplinar de Contenidos Mínimos y Pertinencia',
+            dependencia: 'PEAs de la carrera en estado "En Revisión de Carrera"',
+            descripcion: 'El Coordinador de Carrera audita la pertinencia metodológica, bibliográfica y técnica de las unidades temáticas. Si requiere correcciones, registra observaciones por sección; si cumple, emite el Aval de Carrera.',
+            entregable: 'Aval disciplinar de carrera registrado formalmente en la bitácora del PEA.',
+            icon: FileSearch
         },
         {
             num: 3,
@@ -94,19 +73,12 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             etapa: 'Fase 3',
             rol: 'Coordinación Académica',
             rolEquivalente: 'COORD_ACAD' as RolSimulado,
-            actor: 'Msc. Cristian Cobos',
-            meta: 'Conceder Aval Académico',
+            autoridad: 'Coordinación Académica Institucional',
             baseLegal: 'Modelo de Evaluación Institucional CACES — Criterio Docencia y Currículo',
-            entradas: 'PEAs con Aval de Carrera emitido en espera de validación institucional',
-            descripcion: 'Supervisión global de coherencia entre carreras, cumplimiento normativo de matriz horaria y resultados de aprendizaje (RDA). Otorga el Aval Académico necesario para la firma del Vicerrector.',
-            botonesClave: ['Auditar PEA Institucional', 'Emitir Aval Académico', 'Conceder Prórroga', 'Ver Historial CACES'],
-            entregable: 'Aval institucional que habilita la fase de legalización y firma digital.',
-            icon: ShieldCheck,
-            previewRows: [
-                { codigo: 'DS-401', nombre: 'Ingeniería de Software y Calidad', docente: 'Ing. Marco Proaño', estado: 'Aval de Carrera Emitido', tipo: 'success' },
-                { codigo: 'DS-501', nombre: 'Desarrollo Web Fullstack y Cloud', docente: 'Ing. Edison Pérez', estado: 'Aval Académico Concedido', tipo: 'success' },
-                { codigo: 'MI-201', nombre: 'Mecanizado por Arranque de Viruta', docente: 'Ing. Christian Castro', estado: 'Revisión de Carrera', tipo: 'neutral' }
-            ]
+            dependencia: 'PEAs con Aval de Carrera emitido en espera de validación institucional',
+            descripcion: 'Supervisión transversal del cumplimiento normativo de carga horaria, coherencia de resultados de aprendizaje (RDA) y bibliografía. Otorga el Aval Académico necesario para la firma de legalización.',
+            entregable: 'Aval institucional que habilita la fase de firma legal del Vicerrectorado.',
+            icon: ShieldCheck
         },
         {
             num: 4,
@@ -115,19 +87,12 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             etapa: 'Fase 4',
             rol: 'Vicerrectorado Académico',
             rolEquivalente: 'VICERRECTOR' as RolSimulado,
-            actor: 'Msc. Freddy Baño',
-            meta: 'Sello Digital SHA-256 y QR',
-            baseLegal: 'Ley de Comercio Electrónico y Firmas Digitales del Ecuador — Acreditación CACES',
-            entradas: 'PEAs con doble aval normativo (Carrera + Académico) en cola de despacho',
-            descripcion: 'Máxima autoridad curricular. Firma electrónica masiva o individual con certificado digital DFRM/P12, sellado de hash inmutable SHA-256 y publicación automática en catálogo público QR.',
-            botonesClave: ['Legalización y Firma Digital Masiva', 'Firmar PEA Individual', 'Descargar Dossier (PDF)', 'QR CACES'],
-            entregable: 'PEA oficializado en firme, jurídicamente inmutable y disponible en portal institucional.',
-            icon: Award,
-            previewRows: [
-                { codigo: 'DS-501', nombre: 'Desarrollo Web Fullstack y Cloud', docente: 'Ing. Edison Pérez', estado: 'Listo para Firma Legal', tipo: 'brand' },
-                { codigo: 'DS-502', nombre: 'Ciberseguridad y Auditoría de Sistemas', docente: 'Ing. Wilfrido Trujillo', estado: 'Legalizado en Firme', tipo: 'success' },
-                { codigo: 'ED-301', nombre: 'Fisiología y Biomecánica del Deporte', docente: 'Lcdo. Wilmer Toapanta', estado: 'En Proceso de Avales', tipo: 'warning' }
-            ]
+            autoridad: 'Vicerrectorado Académico',
+            baseLegal: 'Ley 67 de Comercio Electrónico y Firmas Digitales del Ecuador',
+            dependencia: 'PEAs con doble aval normativo (Carrera + Académica) en bandeja de legalización',
+            descripcion: 'Máxima autoridad curricular. Ejecuta la firma digital oficial individual o masiva con certificado DFRM o token PKCS#12, generando el sellado criptográfico SHA-256 y legalización en firme del PEA.',
+            entregable: 'PEA oficializado en firme, jurídicamente inmutable y disponible con código QR.',
+            icon: Award
         }
     ];
 
@@ -136,7 +101,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
     return (
         <div className="p-6 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 space-y-6">
             
-            {/* Encabezado Editorial Formal con Identidad de Marca */}
+            {/* Encabezado Editorial Formal */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-zinc-800">
                 <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
@@ -150,12 +115,12 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                         </span>
                     </div>
                     <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        Pipeline de Gestión y Circuito Normativo del PEA
+                        Circuito Normativo y Fases del PEA
                     </h2>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 dark:text-zinc-400">Responsable:</span>
+                    <span className="text-xs text-slate-500 dark:text-zinc-400">Autoridad:</span>
                     <strong className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {currentFase.rol}
                     </strong>
@@ -165,7 +130,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             {/* Layout Split: Timeline Conector (Izquierda) + Folio Documental (Derecha) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
-                {/* ─── Timeline Conector Vertical (Stripe / Mintlify Docs Stepper) ─── */}
+                {/* Timeline Conector Vertical */}
                 <div className="lg:col-span-4 relative">
                     <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block mb-3 px-2 font-semibold">
                         Fases del Circuito Institucional
@@ -190,7 +155,6 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                                             : 'bg-transparent hover:bg-slate-50 dark:hover:bg-zinc-800 border border-transparent'
                                     }`}
                                 >
-                                    {/* Indicador Numérico / Icono con Estado de Conexión */}
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-mono font-bold transition-all ${
                                         isSelected
                                             ? 'bg-[#0070f3] text-white ring-4 ring-blue-100 dark:ring-blue-950 shadow-xs'
@@ -227,7 +191,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                     </div>
                 </div>
 
-                {/* ─── Folio Unificado de Especificación Técnica (Derecha) ─── */}
+                {/* Folio Unificado de Especificación Técnica (Derecha) */}
                 <div className="lg:col-span-8 p-6 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-6">
                     
                     {/* Cabecera del Folio */}
@@ -239,7 +203,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                             {currentFase.titulo}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                            Autoridad Responsable: <strong className="text-slate-800 dark:text-slate-200">{currentFase.actor}</strong> ({currentFase.rol})
+                            Autoridad Responsable: <strong className="text-slate-800 dark:text-slate-200">{currentFase.autoridad}</strong>
                         </p>
                     </div>
 
@@ -248,7 +212,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                         {currentFase.descripcion}
                     </p>
 
-                    {/* Especificación de Parámetros (Estilo Mintlify / Stripe Docs) */}
+                    {/* Especificación de Parámetros */}
                     <div className="border-t border-b border-slate-100 dark:border-zinc-800 py-3 space-y-2.5 text-xs">
                         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
                             <span className="font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider text-[11px] shrink-0 w-36">
@@ -264,7 +228,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                                 Dependencia
                             </span>
                             <span className="text-slate-700 dark:text-zinc-300 flex-1">
-                                {currentFase.entradas}
+                                {currentFase.dependencia}
                             </span>
                         </div>
 
@@ -279,7 +243,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                         </div>
                     </div>
 
-                    {/* Pie de Acción: Botón Directo para Simular Pantalla */}
+                    {/* Pie de Acción */}
                     <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <span className="text-xs text-slate-500 dark:text-zinc-400">
                             Paso {selectedFase + 1} de 5 en el circuito oficial
@@ -288,9 +252,9 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
                         {onSimularRol && (
                             <button
                                 onClick={() => onSimularRol(currentFase.rolEquivalente)}
-                                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer shrink-0"
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer shrink-0"
                             >
-                                <span>Simular pantalla de {currentFase.rol}</span>
+                                <span>Acceder a vista de {currentFase.rol}</span>
                                 <ArrowRight size={13} className="stroke-[2.5]" />
                             </button>
                         )}

@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    BookOpen,
     Clock,
     Award,
     CheckCircle2,
     AlertCircle,
     ArrowRight,
     Search,
-    RefreshCw,
     FileText,
     Shield,
     Loader2,
@@ -49,6 +47,23 @@ export const MisAsignaturasPage: React.FC = () => {
     // Estado transaccional por asignación
     const [creatingPeaId, setCreatingPeaId] = useState<number | null>(null);
 
+    const recargarMaterias = useCallback(async (periodoId: string, silent = false) => {
+        if (!periodoId) return;
+        if (!silent) setRefreshing(true);
+        try {
+            const misMaterias = await getMisMaterias(periodoId);
+            setMaterias(misMaterias);
+            setError(null);
+        } catch (err: unknown) {
+            console.error('[DOSIER] Error al actualizar materias:', err);
+            if (!silent) {
+                setError('Error al actualizar las asignaturas del período seleccionado.');
+            }
+        } finally {
+            if (!silent) setRefreshing(false);
+        }
+    }, []);
+
     const cargarPeriodosYDatos = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -67,7 +82,7 @@ export const MisAsignaturasPage: React.FC = () => {
                 const misMaterias = await getMisMaterias(initialPeriod);
                 setMaterias(misMaterias);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('[DOSIER] Error al cargar períodos y materias:', err);
             setError('No se pudo cargar la información curricular institucional. Verifique la conexión con el servidor.');
         } finally {
@@ -79,20 +94,53 @@ export const MisAsignaturasPage: React.FC = () => {
         cargarPeriodosYDatos();
     }, [cargarPeriodosYDatos]);
 
+    // 1. Sincronización en tiempo real vía eventos de dominio (SignalR WebSockets y workflow transitions)
+    useEffect(() => {
+        const handleProjectsChanged = () => {
+            if (selectedPeriodo) {
+                recargarMaterias(selectedPeriodo, true);
+            }
+        };
+
+        window.addEventListener('dosier-projects-changed', handleProjectsChanged);
+        return () => {
+            window.removeEventListener('dosier-projects-changed', handleProjectsChanged);
+        };
+    }, [selectedPeriodo, recargarMaterias]);
+
+    // 2. Revalidación automática al recuperar foco o visibilidad de pestaña (revalidateOnFocus)
+    useEffect(() => {
+        const handleVisibilityAndFocus = () => {
+            if (document.visibilityState === 'visible' && selectedPeriodo) {
+                recargarMaterias(selectedPeriodo, true);
+            }
+        };
+
+        window.addEventListener('focus', handleVisibilityAndFocus);
+        document.addEventListener('visibilitychange', handleVisibilityAndFocus);
+        return () => {
+            window.removeEventListener('focus', handleVisibilityAndFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityAndFocus);
+        };
+    }, [selectedPeriodo, recargarMaterias]);
+
+    // 3. Heartbeat pasivo (revalidación periódica cada 30 segundos mientras la pestaña esté activa)
+    useEffect(() => {
+        if (!selectedPeriodo) return;
+
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                recargarMaterias(selectedPeriodo, true);
+            }
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [selectedPeriodo, recargarMaterias]);
+
     const handlePeriodoChange = async (newPeriodoId: string | number) => {
         const idStr = String(newPeriodoId);
         setSelectedPeriodo(idStr);
-        setRefreshing(true);
-        setError(null);
-        try {
-            const misMaterias = await getMisMaterias(idStr);
-            setMaterias(misMaterias);
-        } catch (err) {
-            console.error('[DOSIER] Error al cambiar período:', err);
-            setError('Error al actualizar las asignaturas del período seleccionado.');
-        } finally {
-            setRefreshing(false);
-        }
+        await recargarMaterias(idStr, false);
     };
 
     const handleCrearPea = async (asignacion: DocenteAsignaturaDto) => {
@@ -105,14 +153,20 @@ export const MisAsignaturasPage: React.FC = () => {
                 'success'
             );
 
+            // Notificar a todos los escuchas que el estado de los proyectos curriculares ha cambiado
+            window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
+
             // Redirigir al workspace con el UUID o ID del PEA oficial
-            const targetUuid = nuevoPea.uuid || String(nuevoPea.idPea || (nuevoPea as any).id_pea);
+            const targetUuid = nuevoPea.uuid || String(nuevoPea.idPea || (nuevoPea as { id_pea?: number | string }).id_pea);
             navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('[DOSIER] Error al inicializar PEA:', err);
+            const message = err && typeof err === 'object' && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+                : undefined;
             addToast(
                 'Error al Iniciar PEA',
-                err.response?.data?.message || 'No se pudo inicializar el PEA desde la asignación institucional.',
+                message || 'No se pudo inicializar el PEA desde la asignación institucional.',
                 'error'
             );
         } finally {
@@ -132,18 +186,6 @@ export const MisAsignaturasPage: React.FC = () => {
             if (m.nombre_carrera) unique.add(m.nombre_carrera);
         });
         return Array.from(unique).sort();
-    }, [materias]);
-
-    // Métricas del Bento Grid
-    const metricas = useMemo(() => {
-        const total = materias.length;
-        const totalHoras = materias.reduce((acc, m) => acc + (m.horas_totales || 0), 0);
-        const aprobados = materias.filter(m => m.estado_pea === 'Aprobado').length;
-        const enRevision = materias.filter(m => ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(m.estado_pea)).length;
-        const conObservaciones = materias.filter(m => m.estado_pea === 'Observado').length;
-        const pendientes = materias.filter(m => ['NoIniciado', 'Borrador', 'Corregido'].includes(m.estado_pea)).length;
-
-        return { total, totalHoras, aprobados, enRevision, conObservaciones, pendientes };
     }, [materias]);
 
     // Filtrado en vivo
@@ -257,14 +299,6 @@ export const MisAsignaturasPage: React.FC = () => {
                             ))}
                         </GeistSelect>
                     </div>
-                    <button
-                        onClick={() => handlePeriodoChange(selectedPeriodo)}
-                        disabled={refreshing || loading}
-                        className="btn-vercel-secondary inline-flex items-center justify-center p-2 rounded-md transition-colors"
-                        title="Actualizar distributivo"
-                    >
-                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                    </button>
                 </div>
             </PageHeader>
 
@@ -276,60 +310,6 @@ export const MisAsignaturasPage: React.FC = () => {
                 </div>
             )}
 
-            {/* Tablero de Métricas Curriculares (Bento Grid) */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
-                    <div className="flex items-center justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        <span>Asignaturas Asignadas</span>
-                        <BookOpen className="w-4 h-4 text-zinc-400" />
-                    </div>
-                    <p className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                        {metricas.total}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                        {metricas.totalHoras} horas académicas en total
-                    </p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
-                    <div className="flex items-center justify-between text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                        <span>PEAs Aprobados</span>
-                        <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                    <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
-                        {metricas.aprobados}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                        Legalizados por Vicerrectorado
-                    </p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
-                    <div className="flex items-center justify-between text-xs font-medium text-amber-600 dark:text-amber-400">
-                        <span>En Revisión Colegiada</span>
-                        <Clock className="w-4 h-4" />
-                    </div>
-                    <p className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
-                        {metricas.enRevision}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                        En comisión o coordinación
-                    </p>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-1">
-                    <div className="flex items-center justify-between text-xs font-medium text-blue-600 dark:text-blue-400">
-                        <span>Pendientes / Borrador</span>
-                        <FileText className="w-4 h-4" />
-                    </div>
-                    <p className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
-                        {metricas.pendientes}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                        {metricas.conObservaciones > 0 ? `${metricas.conObservaciones} con observaciones` : 'En fase docente'}
-                    </p>
-                </div>
-            </div>
 
             {/* Barra de Búsqueda y Filtros de Estado */}
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
@@ -411,10 +391,28 @@ export const MisAsignaturasPage: React.FC = () => {
                         const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
                         const isCreating = creatingPeaId === materia.id_asignacion;
 
+                        const handleCardClick = () => {
+                            if (isCreating) return;
+                            if (tienePea) {
+                                handleContinuarPea(materia);
+                            } else {
+                                handleCrearPea(materia);
+                            }
+                        };
+
                         return (
                             <div
                                 key={materia.id_asignacion}
-                                className="rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 transition-colors flex flex-col justify-between space-y-4"
+                                role="button"
+                                tabIndex={0}
+                                onClick={handleCardClick}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleCardClick();
+                                    }
+                                }}
+                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
                             >
                                 {/* Top: Carrera y Estado */}
                                 <div className="space-y-2">
@@ -427,7 +425,7 @@ export const MisAsignaturasPage: React.FC = () => {
                                     </div>
 
                                     {/* Título de la Asignatura */}
-                                    <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                                    <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug">
                                         {materia.nombre_asignatura}
                                     </h2>
 
@@ -478,17 +476,25 @@ export const MisAsignaturasPage: React.FC = () => {
 
                                     {tienePea ? (
                                         <button
-                                            onClick={() => handleContinuarPea(materia)}
-                                            className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleContinuarPea(materia);
+                                            }}
+                                            className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                                         >
                                             <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
-                                            <ArrowRight className="w-3.5 h-3.5" />
+                                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                                         </button>
                                     ) : (
                                         <button
-                                            onClick={() => handleCrearPea(materia)}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCrearPea(materia);
+                                            }}
                                             disabled={isCreating}
-                                            className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                                            className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-sm inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                         >
                                             {isCreating ? (
                                                 <>

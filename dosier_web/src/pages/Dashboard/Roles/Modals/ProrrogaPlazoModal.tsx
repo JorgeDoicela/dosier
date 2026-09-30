@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Clock, Calendar, CheckCircle2, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, CheckCircle2, X } from 'lucide-react';
 import { useNotifications } from '../../../../api/NotificationsContext';
+import { curriculumProjectService, type DocenteCarreraDto } from '../../../../services/curriculumProjectService';
 
 interface Props {
     isOpen: boolean;
@@ -10,10 +11,18 @@ interface Props {
 
 export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrogaConcedida }) => {
     const { addToast } = useNotifications();
+    const [carreras, setCarreras] = useState<DocenteCarreraDto[]>([]);
     const [carrera, setCarrera] = useState('Todas las Carreras');
     const [diasProrroga, setDiasProrroga] = useState('5');
-    const [justificativo, setJustificativo] = useState('Resolución de Coordinación Académica por ajuste de cronograma de matriculación extraordinaria.');
+    const [justificativo, setJustificativo] = useState('Resolución de Coordinación Académica por ajuste del cronograma oficial.');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        curriculumProjectService.getCarrerasInstitucionales().then(list => {
+            setCarreras(list);
+        }).catch(() => {});
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -29,7 +38,7 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
             );
             onProrrogaConcedida();
             onClose();
-        }, 700);
+        }, 600);
     };
 
     return (
@@ -40,9 +49,9 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
             >
                 <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
-                        <Clock className="w-6 h-6 text-[#0070f3] dark:text-blue-400 shrink-0" />
+                        <Clock className="w-5 h-5 text-[#0070f3] dark:text-blue-400 shrink-0" />
                         <div>
-                            <h2 className="text-base font-semibold text-zinc-900 dark:text-white">
+                            <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
                                 Conceder Prórroga / Extensión de Plazo
                             </h2>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -52,9 +61,9 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                        className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
@@ -66,12 +75,17 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                         <select
                             value={carrera}
                             onChange={e => setCarrera(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
+                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
                         >
                             <option value="Todas las Carreras">Todas las Carreras (Institucional)</option>
-                            <option value="Desarrollo de Software">Desarrollo de Software</option>
-                            <option value="Mecánica Industrial">Mecánica Industrial</option>
-                            <option value="Entrenamiento Deportivo">Entrenamiento Deportivo</option>
+                            {carreras.map(c => {
+                                const nombre = c.carrera1 || c.nombre_carrera || c.carrera || '';
+                                return (
+                                    <option key={c.id_carrera ?? c.idCarrera ?? nombre} value={nombre}>
+                                        {nombre}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </div>
 
@@ -82,7 +96,7 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                         <select
                             value={diasProrroga}
                             onChange={e => setDiasProrroga(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
+                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
                         >
                             <option value="3">3 Días adicionales</option>
                             <option value="5">5 Días adicionales</option>
@@ -99,7 +113,7 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                             rows={3}
                             value={justificativo}
                             onChange={e => setJustificativo(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white resize-none"
+                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3] resize-none"
                             required
                         />
                     </div>
@@ -108,7 +122,7 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                            className="px-3.5 py-2 text-xs font-medium rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                         >
                             Cancelar
                         </button>
@@ -119,12 +133,12 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                         >
                             {isSubmitting ? (
                                 <>
-                                    <Clock className="w-4 h-4 animate-spin" />
+                                    <Clock className="w-3.5 h-3.5 animate-spin" />
                                     Aplicando...
                                 </>
                             ) : (
                                 <>
-                                    <CheckCircle2 className="w-4 h-4" />
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
                                     Aplicar Extensión
                                 </>
                             )}

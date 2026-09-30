@@ -31,6 +31,22 @@ El formato oficial del PEA institucional del ISTPET se compone de **11 bloques c
 | **j** | `pea_bibliography_section` | SECCIÓN J: BIBLIOGRAFÍA | `PeaBibliographyProperties.tsx` | Esquema estructurado para Bibliografía Básica y Bibliografía de Consulta (Norma APA 7ma). | `{{ bibliografia.basica }}`, `{{ bibliografia.consulta }}` |
 | **k** | `pea_signatures_section` | SECCIÓN K: FIRMAS DE RESPONSABILIDAD | `PeaSignaturesProperties.tsx` | Matriz formal de 4 columnas: Docente, Coordinador de Carrera, Coordinador Académico, Vicerrectorado. | `{{ firmas }}` con sellado DFRM / P12 |
 
+### 2.1. Arquitectura de Renderizadores en Lienzo (`canvasRenderers/pea/`)
+
+Para dar cumplimiento estricto a las directrices de modularización (< 700 líneas por archivo) y a la regla innegociable de interactividad en el lienzo, la suite de renderizadores visuales del PEA se estructura en módulos desacoplados bajo `canvasRenderers/pea/`, orquestados mediante el barrel `RenderPeaSections.tsx`:
+
+* **Tipado Estricto (`types.ts`):** Interfaz tipada `PeaBlockConfig` y contrato `PeaBlockProps` sin recurrencia a tipos `any`.
+* **Datos Generales (`RenderPeaGeneral.tsx`):** Edición in-situ de textos de cabecera institucional y personalización de las 11 etiquetas de campo.
+* **Objetivos y RDAs (`RenderPeaObjectives.tsx`):** Secciones b, d y e con textareas auto-expandibles de redacción directa.
+* **Prerrequisitos (`RenderPeaPrerequisites.tsx`):** Celdas interactivas celda a celda con botón `+ Agregar Prerrequisito` y eliminación por fila.
+* **Contenidos de Enseñanza (`RenderPeaContents.tsx`):** Matriz de unidades con títulos editables, distribución horaria CD/APE/TA reactiva y textarea de temas.
+* **Metodología (`RenderPeaMethodology.tsx`):** Desglose dual para estrategias metodológicas y recursos didácticos.
+* **Actividades Prácticas (`RenderPeaResources.tsx`):** Tabla interactiva con inputs por práctica y botón `+ Agregar Actividad Práctica`.
+* **Evaluación del Aprendizaje (`RenderPeaEvaluation.tsx`):** Matriz oficial con notas parametrizables, ponderaciones y botón `+ Agregar Componente`.
+* **Bibliografía (`RenderPeaBibliography.tsx`):** Entradas auto-expandibles para referencias básicas (APA 7ma) y complementarias.
+* **Firmas de Responsabilidad (`RenderPeaSignatures.tsx`):** Edición directa de nombres, cargos y fechas institucionales.
+* **Compatibilidad Heredada (`RenderPeaLegacy.tsx`):** Soporte retrocompatible para bloques compuestos anteriores.
+
 ---
 
 ## 3. Diagrama de Flujo de Extensibilidad de Bloques

@@ -134,6 +134,12 @@ export const curriculumProjectService = {
         api.get<DocenteCarreraDto[]>('/catalogs/mi-carrera').then(r => r.data || []),
 
     /**
+     * Obtiene todas las carreras autorizadas del instituto desde SIGAFI.
+     */
+    getCarrerasInstitucionales: (): Promise<DocenteCarreraDto[]> =>
+        api.get<DocenteCarreraDto[]>('/catalogs/carreras').then(r => r.data || []),
+
+    /**
      * Obtiene la nómina general de proyectos curriculares (PEAs institucionales).
      */
     getAllProjects: (): Promise<any[]> =>

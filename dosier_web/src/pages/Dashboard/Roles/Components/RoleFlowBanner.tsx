@@ -18,33 +18,12 @@ export const RoleFlowBanner: React.FC<Props> = ({
     const ROLES: Array<{
         id: RolSimulado;
         nombre: string;
-        representante: string;
     }> = [
-        {
-            id: 'DOCENTE',
-            nombre: 'Docente',
-            representante: 'Ing. Edison Pérez'
-        },
-        {
-            id: 'COORD_CARRERA',
-            nombre: 'Coord. Carrera',
-            representante: 'Ing. Wilfrido Trujillo'
-        },
-        {
-            id: 'COORD_ACAD',
-            nombre: 'Coord. Académica',
-            representante: 'Msc. Cristian Cobos'
-        },
-        {
-            id: 'VICERRECTOR',
-            nombre: 'Vicerrectorado',
-            representante: 'Msc. Freddy Baño'
-        },
-        {
-            id: 'ADMIN',
-            nombre: 'Administrador',
-            representante: 'Gestión Global'
-        }
+        { id: 'DOCENTE', nombre: 'Docente' },
+        { id: 'COORD_CARRERA', nombre: 'Coord. Carrera' },
+        { id: 'COORD_ACAD', nombre: 'Coord. Académica' },
+        { id: 'VICERRECTOR', nombre: 'Vicerrectorado' },
+        { id: 'ADMIN', nombre: 'Administrador' }
     ];
 
     return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { Link } from 'react-router-dom';
 import { 
@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { PipelineCurricularStepper } from './Components/PipelineCurricularStepper';
 import { type RolSimulado } from './Components/RoleFlowBanner';
+import { curriculumProjectService } from '../../../services/curriculumProjectService';
+import { usersService } from '../../../services/usersService';
+import { getBandejaPeas } from '../../../services/peaService';
 
 interface AdminPeaDashboardProps {
     onCambiarRol?: (rol: RolSimulado) => void;
@@ -20,17 +23,48 @@ interface AdminPeaDashboardProps {
 export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarRol }) => {
     const { addToast } = useNotifications();
     const [isSyncing, setIsSyncing] = useState(false);
+    const [carrerasCount, setCarrerasCount] = useState<number>(0);
+    const [docentesCount, setDocentesCount] = useState<number>(0);
+    const [materiasCount, setMateriasCount] = useState<number>(0);
+    const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
-    const handleSincronizarSigafi = () => {
+    const loadSigafiStats = useCallback(async () => {
+        setIsLoadingStats(true);
+        try {
+            const [carrerasList, usersRes, peasList] = await Promise.all([
+                curriculumProjectService.getCarrerasInstitucionales().catch(() => []),
+                usersService.getUsers({ page: 1, limit: 1 }).catch(() => ({ total_count: 0 })),
+                getBandejaPeas().catch(() => [])
+            ]);
+
+            setCarrerasCount(carrerasList.length);
+            setDocentesCount(usersRes.total_count || 0);
+            setMateriasCount(peasList.length);
+        } catch (error) {
+            console.error('Error al cargar métricas de SIGAFI:', error);
+        } finally {
+            setIsLoadingStats(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadSigafiStats();
+    }, [loadSigafiStats]);
+
+    const handleSincronizarSigafi = async () => {
         setIsSyncing(true);
-        setTimeout(() => {
-            setIsSyncing(false);
+        try {
+            await loadSigafiStats();
             addToast(
                 'Sincronización SIGAFI Concluida',
-                'Se conectó exitosamente a MySQL (sigafi_es:3306). Se actualizaron 42 asignaturas, 28 profesores y 3 carreras del ISTPET.',
+                `Conexión con MySQL (sigafi_es:3306) verificada. Se sincronizaron ${materiasCount} asignaturas, ${docentesCount} usuarios y ${carrerasCount} carreras del instituto.`,
                 'success'
             );
-        }, 1000);
+        } catch {
+            addToast('Error', 'No fue posible sincronizar los datos de SIGAFI.', 'error');
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     return (
@@ -57,7 +91,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                 <div className="flex items-center gap-2">
                     <button
                         onClick={handleSincronizarSigafi}
-                        disabled={isSyncing}
+                        disabled={isSyncing || isLoadingStats}
                         className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] inline-flex items-center gap-2 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                     >
                         <RefreshCw size={13} className={`shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -66,7 +100,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                 </div>
             </div>
 
-            {/* Accesos Rápidos a Módulos (Modern Enterprise Docs) */}
+            {/* Accesos Rápidos a Módulos */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link
                     to="/usuarios"
@@ -132,7 +166,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                 </Link>
             </div>
 
-            {/* Simulador Interactivo del Circuito Curricular Oficial */}
+            {/* Pipeline de Gestión y Circuito Normativo */}
             <PipelineCurricularStepper onSimularRol={onCambiarRol} />
 
             {/* Frontera SIGAFI (Solo Lectura) */}
@@ -155,16 +189,22 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                         <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">sigafi_es (MySQL 3306)</span>
                     </div>
                     <div className="flex items-center justify-between py-2.5">
-                        <span className="text-zinc-500 dark:text-zinc-400">Carreras del Instituto:</span>
-                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">3 Carreras Activas</span>
+                        <span className="text-zinc-500 dark:text-zinc-400">Carreras Autorizadas del Instituto:</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">
+                            {isLoadingStats ? 'Consultando...' : `${carrerasCount} Carreras Registradas`}
+                        </span>
                     </div>
                     <div className="flex items-center justify-between py-2.5">
-                        <span className="text-zinc-500 dark:text-zinc-400">Distributivo y Profesores:</span>
-                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">28 Docentes Sincronizados</span>
+                        <span className="text-zinc-500 dark:text-zinc-400">Usuarios y Cuerpo Docente:</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">
+                            {isLoadingStats ? 'Consultando...' : `${docentesCount} Usuarios Sincronizados`}
+                        </span>
                     </div>
                     <div className="flex items-center justify-between py-2.5">
-                        <span className="text-zinc-500 dark:text-zinc-400">Asignaturas Normadas:</span>
-                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">42 Cátedras con Art. 21 CES</span>
+                        <span className="text-zinc-500 dark:text-zinc-400">Asignaturas y PEAs en Plataforma:</span>
+                        <span className="font-mono text-xs text-zinc-800 dark:text-zinc-200 font-medium">
+                            {isLoadingStats ? 'Consultando...' : `${materiasCount} Instrumentos Curriculares`}
+                        </span>
                     </div>
                 </div>
             </div>

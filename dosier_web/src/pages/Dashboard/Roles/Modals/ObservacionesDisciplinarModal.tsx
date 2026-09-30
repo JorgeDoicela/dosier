@@ -43,17 +43,8 @@ export const ObservacionesDisciplinarModal: React.FC<Props> = ({
 
     const handleEnviar = (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
-            addToast(
-                'Observación Registrada y PEA Devuelto',
-                `Se notificó a ${docente} para que subsane las observaciones en un plazo de ${plazoHoras} horas.`,
-                'warning'
-            );
-            onObservacionGuardada(observacion, seccion);
-            onClose();
-        }, 700);
+        onObservacionGuardada(observacion, seccion);
+        onClose();
     };
 
     return (

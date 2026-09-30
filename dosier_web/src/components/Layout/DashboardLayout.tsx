@@ -133,8 +133,13 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                     return;
                 }
 
-                // 4. Suscribirse al servidor de Push con la llave VAPID pública generada
-                const VAPID_PUBLIC_KEY = 'BD70Tf6OvtNDv7woB_utltQMF-NeJnLXqKyQ9UuEOC5YlDVfZgEKrsE1Fgkut8dPzQrPWhRGZXZeWZeTHahIhRc';
+                if (sessionStorage.getItem('web_push_attempted') === 'true') {
+                    return;
+                }
+                sessionStorage.setItem('web_push_attempted', 'true');
+
+                // 4. Suscribirse al servidor de Push con la llave VAPID pública oficial configurada en el backend
+                const VAPID_PUBLIC_KEY = 'BEEx5SX2kXyqhLIAD1oMlYVMEM9ZACpRCA8z12C1x_FUobijWo-LlV0O9R3Ql0jgAvYAnTg1ktBlLyDIRcJnOO8';
 
                 const urlBase64ToUint8Array = (base64String: string) => {
                     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -171,14 +176,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                 });
                 if (import.meta.env.DEV) console.log('Suscripción Web Push sincronizada.');
                 localStorage.setItem('web_push_active', 'true');
-            } catch (error) {
-                if (import.meta.env.DEV) {
-                    console.log(
-                        'Aviso: No se pudieron activar las notificaciones del navegador en segundo plano (esto es común en Brave, Safari o navegación privada). ' +
-                        'Las notificaciones dentro de la aplicación seguirán funcionando con normalidad.',
-                        error
-                    );
-                }
+            } catch {
                 localStorage.setItem('web_push_active', 'false');
             }
         };
