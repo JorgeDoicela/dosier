@@ -98,14 +98,7 @@ export const CoordAcadDashboard: React.FC = () => {
         });
     }, [peas, selectedEstado, search]);
 
-    // Métricas globales
-    const stats = useMemo(() => {
-        const total = peas.length;
-        const pendientesAcad = peas.filter(p => p.firma_coord && !p.firma_acad).length;
-        const avaladosAcad = peas.filter(p => p.firma_acad || p.estado === 'RevisadoAcad' || p.estado === 'Aprobado').length;
-        const legalizados = peas.filter(p => p.firma_vicerrector || p.estado === 'Aprobado').length;
-        return { total, pendientesAcad, avaladosAcad, legalizados };
-    }, [peas]);
+
 
     // Emisión formal de Aval Académico Institucional
     const handleEmitirAvalAcademico = async (peaItem: PeaBandejaItemDto) => {
@@ -185,41 +178,7 @@ export const CoordAcadDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Fichas Clave-Valor */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 block uppercase">
-                        Total en Período
-                    </span>
-                    <span className="text-xl font-bold font-mono text-slate-900 dark:text-white mt-1 block">
-                        {stats.total}
-                    </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400 block uppercase">
-                        Pendientes Aval Académico
-                    </span>
-                    <span className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 mt-1 block">
-                        {stats.pendientesAcad}
-                    </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-purple-600 dark:text-purple-400 block uppercase">
-                        Con Aval Académico
-                    </span>
-                    <span className="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-1 block">
-                        {stats.avaladosAcad}
-                    </span>
-                </div>
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800">
-                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 block uppercase">
-                        Legalizados en Firme
-                    </span>
-                    <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1 block">
-                        {stats.legalizados}
-                    </span>
-                </div>
-            </div>
+
 
             {/* Matriz de Gestión de PEAs Institucionales */}
             <div className="bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl overflow-hidden">

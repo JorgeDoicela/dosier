@@ -27,6 +27,7 @@ public class CalendarioService : ICalendarioService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     // EVENTOS — Agregación Fuertemente Tipada con EF Core (PEA y Normativos)
     // ─────────────────────────────────────────────────────────────────────────
     public async Task<IEnumerable<CalendarioEventoDto>> GetEventosAsync(
@@ -34,46 +35,330 @@ public class CalendarioService : ICalendarioService
     {
         var resultado = new List<CalendarioEventoDto>();
 
-        // 1. INSTRUMENTOS CURRICULARES (PEA) Y SUS HITOS DE CICLO DE VIDA
-        var peasQuery = _context.Set<DocPea>()
-            .AsNoTracking()
-            .Where(p => p.Activo);
+        // 0. RESOLUCIÓN DE IDENTIDAD Y ROLES ACTIVOS
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario);
+        var userRoles = await _context.UserRoles.AsNoTracking()
+            .Where(ur => ur.IdUsuario == idUsuario && (ur.EsActivo ?? true) && ur.Role != null)
+            .Select(ur => ur.Role.CodigoRol)
+            .ToListAsync();
 
-        var peas = await peasQuery
+        if (!string.IsNullOrEmpty(rolUsuario) && !userRoles.Contains(rolUsuario))
+        {
+            userRoles.Add(rolUsuario);
+        }
+
+        bool isAdmin = (user != null && user.Administrador) || userRoles.Contains("DOSIER_ADMIN");
+        bool isVicerrector = userRoles.Contains("DOSIER_VICERRECTOR");
+        bool isCoordAcad = userRoles.Contains("DOSIER_COORD_ACAD");
+        bool isCoordCarrera = userRoles.Contains("DOSIER_COORD_CARRERA");
+
+        // 1. INSTRUMENTOS CURRICULARES (PEA) Y SUS HITOS DE CICLO DE VIDA
+        var peasQuery = _context.DocPeas.AsNoTracking().Where(p => p.Activo);
+
+        if (!isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera)
+        {
+            // Docente exclusivo: solo ve los PEAs que elabora
+            if (user != null && !string.IsNullOrEmpty(user.IdSigafi))
+            {
+                peasQuery = peasQuery.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+            }
+        }
+        else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad && user != null && !string.IsNullOrEmpty(user.IdSigafi))
+        {
+            // Coordinador de carrera: supervisa las carreras que coordina o sus materias formuladas
+            var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                .Select(a => a.IdCarrera!.Value)
+                .ToListAsync();
+
+            if (carrerasCoordinadas.Any())
+            {
+                peasQuery = peasQuery.Where(p => carrerasCoordinadas.Contains(p.IdCarrera) || p.IdDocenteElaborador == user.IdSigafi);
+            }
+            else
+            {
+                peasQuery = peasQuery.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+            }
+        }
+        // Admin, Vicerrector y CoordAcad supervisan todos los PEAs institucionales
+
+        var rawPeas = await peasQuery
             .Select(p => new
             {
                 p.IdPea,
                 p.Uuid,
                 p.IdAsignatura,
+                p.IdCarrera,
+                p.IdPeriodo,
+                p.IdDocenteElaborador,
+                p.Paralelo,
+                p.SemestreNivel,
                 p.Estado,
-                p.FechaModificacion
+                p.FechaCreacion,
+                p.FechaModificacion,
+                p.FechaElaborado,
+                p.FechaRevisadoCoord,
+                p.FechaRevisadoAcad,
+                p.FechaAprobado
             })
             .ToListAsync();
 
-        foreach (var p in peas)
+        if (rawPeas.Any())
         {
-            var fecha = DateOnly.FromDateTime(p.FechaModificacion);
-            if (fecha >= desde && fecha <= hasta)
+            var carreraIds = rawPeas.Select(p => p.IdCarrera).Distinct().ToList();
+            var asignaturaIds = rawPeas.Select(p => p.IdAsignatura).Distinct().ToList();
+            var docenteIds = rawPeas.Where(p => !string.IsNullOrEmpty(p.IdDocenteElaborador))
+                                    .Select(p => p.IdDocenteElaborador!)
+                                    .Distinct().ToList();
+
+            var carrerasList = await _context.Carreras.AsNoTracking()
+                .Where(c => carreraIds.Contains(c.IdCarrera))
+                .Select(c => new { c.IdCarrera, c.Carrera1 })
+                .ToListAsync();
+            var carrerasMap = carrerasList
+                .GroupBy(c => c.IdCarrera)
+                .ToDictionary(g => g.Key, g => g.First().Carrera1);
+
+            var asignaturasList = await _context.Asignaturas.AsNoTracking()
+                .Where(a => asignaturaIds.Contains(a.IdAsignatura))
+                .Select(a => new { a.IdAsignatura, a.Asignatura1, a.Codigo })
+                .ToListAsync();
+            var asignaturasMap = asignaturasList
+                .GroupBy(a => a.IdAsignatura)
+                .ToDictionary(g => g.Key, g => new { Nombre = g.First().Asignatura1, Codigo = g.First().Codigo });
+
+            var profesoresList = await _context.Profesores.AsNoTracking()
+                .Where(pr => docenteIds.Contains(pr.IdProfesor))
+                .Select(pr => new { pr.IdProfesor, pr.Nombres, pr.Apellidos })
+                .ToListAsync();
+            var profesoresMap = profesoresList
+                .GroupBy(pr => pr.IdProfesor)
+                .ToDictionary(g => g.Key, g => $"{g.First().Nombres} {g.First().Apellidos}".Trim());
+
+            foreach (var p in rawPeas)
+            {
+                var nombreAsignatura = asignaturasMap.TryGetValue(p.IdAsignatura, out var asig) && !string.IsNullOrWhiteSpace(asig.Nombre)
+                    ? asig.Nombre
+                    : $"Asignatura #{p.IdAsignatura}";
+                var codigoAsignatura = asig?.Codigo ?? "";
+                var nombreCarrera = carrerasMap.TryGetValue(p.IdCarrera, out var carr) && !string.IsNullOrWhiteSpace(carr)
+                    ? carr
+                    : "Carrera Institucional";
+                var nombreDocente = (!string.IsNullOrEmpty(p.IdDocenteElaborador) && profesoresMap.TryGetValue(p.IdDocenteElaborador, out var prof))
+                    ? prof
+                    : "Docente de Asignatura";
+
+                DateOnly fechaEvento;
+                string titulo;
+                string descripcion;
+                string categoriaGlobal;
+                string subcategoria;
+                string colorHex;
+                string prioridad;
+                string estadoKanban;
+                string urlAccion;
+
+                switch (p.Estado)
+                {
+                    case "Observado":
+                        fechaEvento = DateOnly.FromDateTime(p.FechaModificacion);
+                        titulo = $"Observaciones PEA: {nombreAsignatura}";
+                        descripcion = $"Corrección disciplinar requerida para {nombreAsignatura} ({nombreCarrera}). Docente: {nombreDocente}.";
+                        categoriaGlobal = "Revision";
+                        subcategoria = "Revision";
+                        colorHex = "#EF4444";
+                        prioridad = "Alta";
+                        estadoKanban = "Pendiente";
+                        urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        break;
+
+                    case "EnRevision":
+                        fechaEvento = p.FechaElaborado.HasValue ? DateOnly.FromDateTime(p.FechaElaborado.Value) : DateOnly.FromDateTime(p.FechaModificacion);
+                        if (isCoordCarrera)
+                        {
+                            titulo = $"Revisión Disciplinar: {nombreAsignatura}";
+                            descripcion = $"Pendiente de validación de contenidos mínimos de {nombreCarrera}. Formulado por {nombreDocente}.";
+                            categoriaGlobal = "Revision";
+                            subcategoria = "Revision";
+                            colorHex = "#8B5CF6";
+                            prioridad = "Alta";
+                            estadoKanban = "Pendiente";
+                            urlAccion = "/coordinacion-carrera";
+                        }
+                        else
+                        {
+                            titulo = $"PEA en Revisión: {nombreAsignatura}";
+                            descripcion = $"Instrumento curricular remitido a Coordinación de Carrera para aval disciplinar.";
+                            categoriaGlobal = "Curricular";
+                            subcategoria = "EntregaPea";
+                            colorHex = "#8B5CF6";
+                            prioridad = "Media";
+                            estadoKanban = "Pendiente";
+                            urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        }
+                        break;
+
+                    case "RevisadoCoord":
+                        fechaEvento = p.FechaRevisadoCoord.HasValue ? DateOnly.FromDateTime(p.FechaRevisadoCoord.Value) : DateOnly.FromDateTime(p.FechaModificacion);
+                        if (isCoordAcad)
+                        {
+                            titulo = $"Validación Académica: {nombreAsignatura}";
+                            descripcion = $"Aval de carrera emitido. Pendiente de control de coherencia institucional por Coordinación Académica.";
+                            categoriaGlobal = "Revision";
+                            subcategoria = "Revision";
+                            colorHex = "#3B82F6";
+                            prioridad = "Alta";
+                            estadoKanban = "Pendiente";
+                            urlAccion = "/coordinacion-academica";
+                        }
+                        else
+                        {
+                            titulo = $"Aval de Carrera Concedido: {nombreAsignatura}";
+                            descripcion = $"Avalado por coordinación de carrera, en trámite de validación institucional.";
+                            categoriaGlobal = "Curricular";
+                            subcategoria = "Revision";
+                            colorHex = "#3B82F6";
+                            prioridad = "Media";
+                            estadoKanban = "EnProgreso";
+                            urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        }
+                        break;
+
+                    case "RevisadoAcad":
+                        fechaEvento = p.FechaRevisadoAcad.HasValue ? DateOnly.FromDateTime(p.FechaRevisadoAcad.Value) : DateOnly.FromDateTime(p.FechaModificacion);
+                        if (isVicerrector)
+                        {
+                            titulo = $"Firma Vicerrectoral: {nombreAsignatura}";
+                            descripcion = $"Validación curricular completa. Pendiente de firma y legalización final (DFRM / FirmaEC).";
+                            categoriaGlobal = "Firmas";
+                            subcategoria = "Firmas";
+                            colorHex = "#10B981";
+                            prioridad = "Alta";
+                            estadoKanban = "Pendiente";
+                            urlAccion = "/vicerrectoria";
+                        }
+                        else
+                        {
+                            titulo = $"Validación Académica Completada: {nombreAsignatura}";
+                            descripcion = $"Validado por Coordinación Académica, en proceso de firma vicerrectoral.";
+                            categoriaGlobal = "Curricular";
+                            subcategoria = "Firmas";
+                            colorHex = "#3B82F6";
+                            prioridad = "Baja";
+                            estadoKanban = "EnProgreso";
+                            urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        }
+                        break;
+
+                    case "Aprobado":
+                        fechaEvento = p.FechaAprobado.HasValue ? DateOnly.FromDateTime(p.FechaAprobado.Value) : DateOnly.FromDateTime(p.FechaModificacion);
+                        titulo = $"PEA Aprobado: {nombreAsignatura}";
+                        descripcion = $"Instrumento curricular legalizado y oficializado para el período. Docente: {nombreDocente}.";
+                        categoriaGlobal = "Curricular";
+                        subcategoria = "Firmas";
+                        colorHex = "#10B981";
+                        prioridad = "Baja";
+                        estadoKanban = "Completado";
+                        urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        break;
+
+                    default: // Borrador
+                        fechaEvento = DateOnly.FromDateTime(p.FechaModificacion);
+                        titulo = $"Elaboración PEA: {nombreAsignatura}";
+                        descripcion = $"Instrumento curricular de {nombreAsignatura} ({nombreCarrera}) en formulación.";
+                        categoriaGlobal = "Curricular";
+                        subcategoria = "EntregaPea";
+                        colorHex = "#F59E0B";
+                        prioridad = "Media";
+                        estadoKanban = "EnProgreso";
+                        urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        break;
+                }
+
+                if (fechaEvento >= desde && fechaEvento <= hasta)
+                {
+                    resultado.Add(new CalendarioEventoDto(
+                        $"PEA-{p.IdPea}",
+                        p.Uuid,
+                        titulo,
+                        descripcion,
+                        categoriaGlobal,
+                        subcategoria,
+                        fechaEvento,
+                        null,
+                        true,
+                        colorHex,
+                        p.IdPea,
+                        p.Uuid,
+                        "PEA",
+                        urlAccion,
+                        "DOSIER_DOCENTE,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR,DOSIER_ADMIN",
+                        false,
+                        prioridad,
+                        estadoKanban,
+                        null,
+                        null,
+                        false
+                    ));
+                }
+            }
+        }
+
+        // 2. HITOS DE PERÍODOS ACADÉMICOS INSTITUCIONALES
+        var periodos = await _context.Periodos.AsNoTracking()
+            .Where(pr => pr.Activo == true || pr.Periodoactivoinstituto == 1)
+            .ToListAsync();
+
+        foreach (var per in periodos)
+        {
+            if (per.FechaInicial.HasValue && per.FechaInicial.Value >= desde && per.FechaInicial.Value <= hasta)
             {
                 resultado.Add(new CalendarioEventoDto(
-                    $"PEA-{p.IdPea}",
-                    p.Uuid,
-                    $"PEA: Asignatura #{p.IdAsignatura}",
-                    $"Instrumento Curricular PEA en estado {p.Estado}.",
-                    "Curricular",
-                    "PEA",
-                    fecha,
+                    $"PER-INI-{per.IdPeriodo}",
+                    Guid.NewGuid().ToString(),
+                    $"Inicio Período Académico: {per.Detalle}",
+                    $"Apertura del período lectivo institucional {per.Detalle}.",
+                    "Normativo",
+                    "PeriodoAcademico",
+                    per.FechaInicial.Value,
                     null,
                     true,
-                    p.Estado == "Aprobado" ? "#10B981" : (p.Estado == "Observado" ? "#F59E0B" : "#3B82F6"),
-                    p.IdPea,
-                    p.Uuid,
-                    "PEA_OFICIAL",
-                    $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}",
-                    "DOSIER_DOCENTE,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR",
+                    "#1E3A8A",
+                    null,
+                    null,
+                    "PERIODO",
+                    null,
+                    null,
                     false,
                     "Alta",
-                    p.Estado,
+                    "Pendiente",
+                    null,
+                    null,
+                    false
+                ));
+            }
+
+            if (per.FechaFinal.HasValue && per.FechaFinal.Value >= desde && per.FechaFinal.Value <= hasta)
+            {
+                resultado.Add(new CalendarioEventoDto(
+                    $"PER-FIN-{per.IdPeriodo}",
+                    Guid.NewGuid().ToString(),
+                    $"Cierre Período Académico: {per.Detalle}",
+                    $"Finalización del ciclo lectivo y cierre de actas institucionales.",
+                    "Normativo",
+                    "PeriodoAcademico",
+                    per.FechaFinal.Value,
+                    null,
+                    true,
+                    "#1E3A8A",
+                    null,
+                    null,
+                    "PERIODO",
+                    null,
+                    null,
+                    false,
+                    "Alta",
+                    "Pendiente",
                     null,
                     null,
                     false
@@ -81,7 +366,7 @@ public class CalendarioService : ICalendarioService
             }
         }
 
-        // 2. HITOS NORMATIVOS Y PERSONALES (doc_calendario_eventos_normativos)
+        // 3. HITOS NORMATIVOS Y PERSONALES (doc_calendario_eventos_normativos)
         var normativos = await _context.Set<DocCalendarioEventoNormativo>()
             .AsNoTracking()
             .Where(e => e.Activo)
@@ -92,8 +377,18 @@ public class CalendarioService : ICalendarioService
             if (!norm.FechaInicio.HasValue) continue;
 
             // Filtro de roles visibles
-            if (!string.IsNullOrEmpty(norm.RolesVisibles) &&
-                !norm.RolesVisibles.Split(',').Select(r => r.Trim()).Contains(rolUsuario)) continue;
+            if (!string.IsNullOrEmpty(norm.RolesVisibles))
+            {
+                var targetRoles = norm.RolesVisibles
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(r => r.Trim())
+                    .ToList();
+
+                if (!userRoles.Any(ur => targetRoles.Contains(ur)))
+                {
+                    continue;
+                }
+            }
 
             // Filtro de privacidad
             if (norm.EsPrivado && norm.CreadoPor != idUsuario) continue;

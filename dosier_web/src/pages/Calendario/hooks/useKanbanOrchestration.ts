@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { format } from 'date-fns';
 import {
     devolverAInbox,
     updateEvento,
@@ -21,6 +22,7 @@ interface UseKanbanOrchestrationOptions {
 export const useKanbanOrchestration = ({
     eventos,
     setEventos,
+    stickyNotes,
     setStickyNotes,
     fetchStickyNotes,
     fetchEventos,
@@ -40,36 +42,143 @@ export const useKanbanOrchestration = ({
     };
 
     const [draggingUuid, setDraggingUuid] = useState<string | null>(null);
+    const [draggingType, setDraggingType] = useState<'note' | 'kanban' | null>(null);
+    const draggingNoteRef = useRef<Evento | null>(null);
     const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
     const [planificando, setPlanificando] = useState<PlanificandoState | null>(null);
 
+    const createDragGhost = (e: React.DragEvent) => {
+        try {
+            const target = e.currentTarget as HTMLElement;
+            const rect = target.getBoundingClientRect();
+            const clone = target.cloneNode(true) as HTMLElement;
+
+            clone.classList.remove('dragging');
+            clone.style.position = 'fixed';
+            clone.style.top = `${rect.top}px`;
+            clone.style.left = `${rect.left}px`;
+            clone.style.width = `${rect.width}px`;
+            clone.style.boxSizing = 'border-box';
+            clone.style.transform = 'rotate(2deg) scale(1.02)';
+            clone.style.transformOrigin = 'center center';
+            clone.style.boxShadow = '0 30px 60px rgba(0, 0, 0, 0.18), 0 15px 30px rgba(0, 0, 0, 0.12)';
+            clone.style.opacity = '1';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '999999';
+
+            document.body.appendChild(clone);
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+            e.dataTransfer.setDragImage(clone, offsetX, offsetY);
+
+            setTimeout(() => {
+                if (document.body.contains(clone)) {
+                    document.body.removeChild(clone);
+                }
+            }, 0);
+        } catch (err) {
+            console.error('Error creating drag ghost:', err);
+        }
+    };
+
     const handleNoteDragStart = (e: React.DragEvent, note: Evento) => {
         document.body.classList.add('body-dragging-active');
         e.dataTransfer.setData('dosier/note', JSON.stringify(note));
+        e.dataTransfer.setData('text/plain', note.uuid);
         e.dataTransfer.effectAllowed = 'copyMove';
+        createDragGhost(e);
+        draggingNoteRef.current = note;
         setTimeout(() => {
             setDraggingUuid(note.uuid);
+            setDraggingType('note');
         }, 0);
     };
 
     const handleDragStart = (e: React.DragEvent, uuid: string) => {
         document.body.classList.add('body-dragging-active');
+        e.dataTransfer.setData('dosier/kanban-event', uuid);
         e.dataTransfer.setData('text/plain', uuid);
         e.dataTransfer.effectAllowed = 'move';
+        createDragGhost(e);
         setTimeout(() => {
             setDraggingUuid(uuid);
+            setDraggingType('kanban');
         }, 0);
     };
 
-    const handleGlobalDragEnd = async () => {
+    const handleGlobalDragEnd = useCallback(async () => {
         setDraggingUuid(null);
+        setDraggingType(null);
         setDragOverColumn(null);
         document.body.classList.remove('body-dragging-active');
+        setTimeout(() => {
+            draggingNoteRef.current = null;
+        }, 150);
         if (handleGlobalDragEndFromNotes) {
             handleGlobalDragEndFromNotes();
         }
-    };
+    }, [handleGlobalDragEndFromNotes]);
+
+    React.useEffect(() => {
+        const handleWindowDragEnd = () => {
+            handleGlobalDragEnd();
+        };
+        window.addEventListener('dragend', handleWindowDragEnd);
+        return () => window.removeEventListener('dragend', handleWindowDragEnd);
+    }, [handleGlobalDragEnd]);
+
+    const handleDropNoteOnCalendar = useCallback(async (args: { start: any }) => {
+        const note = draggingNoteRef.current;
+        if (!note) return;
+
+        const dateObj = args.start instanceof Date ? args.start : new Date(args.start);
+        const fechaElegida = format(dateObj, 'yyyy-MM-dd');
+
+        handleGlobalDragEnd();
+
+        // Actualización optimista
+        setStickyNotes(prev => prev.filter(n => n.uuid !== note.uuid));
+        const newEv: Evento = {
+            ...note,
+            fecha_inicio: fechaElegida,
+            fecha_fin: fechaElegida,
+            estado: 'Pendiente',
+        };
+        setEventos(prev => [...prev, { title: note.titulo, start: dateObj, end: dateObj, allDay: true, resource: newEv }]);
+
+        const payload = buildPayload({
+            titulo: note.titulo,
+            descripcion: note.descripcion || '',
+            tipo: note.subcategoria || 'Personal',
+            fechaInicio: fechaElegida,
+            fechaFin: fechaElegida,
+            esTodoElDia: note.es_todo_el_dia,
+            colorHex: note.color_hex || '#F59E0B',
+            esPrivado: note.es_privado,
+            prioridad: note.prioridad,
+            estado: 'Pendiente',
+            alertaDias: note.alerta_dias ?? '',
+            recurrenciaAnual: note.recurrencia_anual ?? false,
+            urlAccion: note.url_accion,
+            notaDetalle: note.nota_detalle,
+        });
+
+        try {
+            await updateEvento(note.uuid, payload);
+            fetchStickyNotes();
+            fetchEventos(currentDate);
+            window.dispatchEvent(new CustomEvent('dosier:note-created'));
+        } catch (err) {
+            console.error('Error al planificar nota en calendario:', err);
+            fetchStickyNotes();
+            fetchEventos(currentDate);
+        }
+    }, [fetchStickyNotes, fetchEventos, currentDate, setStickyNotes, setEventos, handleGlobalDragEnd]);
+
+    const dragFromOutsideItem = useCallback(() => {
+        return draggingNoteRef.current;
+    }, []);
 
     const handleDragOver = (e: React.DragEvent, columnId: string) => {
         e.preventDefault();
@@ -99,7 +208,7 @@ export const useKanbanOrchestration = ({
             return;
         }
 
-        const uuid = e.dataTransfer.getData('text/plain') || draggingUuid;
+        const uuid = e.dataTransfer.getData('dosier/kanban-event') || e.dataTransfer.getData('text/plain') || draggingUuid;
         setDraggingUuid(null);
         if (!uuid) return;
 
@@ -154,17 +263,19 @@ export const useKanbanOrchestration = ({
         });
     };
 
-    const handleConfirmPlanificacion = async (fechaElegida: string) => {
+    const handleConfirmPlanificacion = async (fechaElegida: string | null, tituloEditado?: string) => {
         if (!planificando) return;
         const { note, targetEstado } = planificando;
         setPlanificando(null);
 
+        const finalTitulo = (tituloEditado && tituloEditado.trim()) ? tituloEditado.trim() : note.titulo;
+
         const payload = buildPayload({
-            titulo: note.titulo,
+            titulo: finalTitulo,
             descripcion: note.descripcion || '',
             tipo: note.subcategoria || 'Personal',
-            fechaInicio: fechaElegida,
-            fechaFin: fechaElegida,
+            fechaInicio: fechaElegida || null,
+            fechaFin: fechaElegida || null,
             esTodoElDia: note.es_todo_el_dia,
             colorHex: note.color_hex || '#F59E0B',
             esPrivado: note.es_privado,
@@ -177,16 +288,16 @@ export const useKanbanOrchestration = ({
         });
 
         setStickyNotes(prev => prev.filter(n => n.uuid !== note.uuid));
-        const fechaDate = new Date(fechaElegida + 'T12:00:00');
+        const fechaDate = fechaElegida ? new Date(fechaElegida + 'T12:00:00') : new Date(0);
         const newEv: Evento = {
             id_evento_calendario: '0',
             uuid: note.uuid,
-            titulo: note.titulo,
+            titulo: finalTitulo,
             descripcion: note.descripcion || '',
             categoria_global: 'Personal',
             subcategoria: note.subcategoria || 'Personal',
-            fecha_inicio: fechaElegida,
-            fecha_fin: fechaElegida,
+            fecha_inicio: fechaElegida || undefined,
+            fecha_fin: fechaElegida || undefined,
             es_todo_el_dia: note.es_todo_el_dia,
             color_hex: note.color_hex || '#F59E0B',
             es_privado: note.es_privado,
@@ -197,7 +308,7 @@ export const useKanbanOrchestration = ({
             alerta_dias: note.alerta_dias,
             recurrencia_anual: note.recurrencia_anual,
         };
-        setEventos(prev => [...prev, { title: note.titulo, start: fechaDate, end: fechaDate, allDay: true, resource: newEv }]);
+        setEventos(prev => [...prev, { title: finalTitulo, start: fechaDate, end: fechaDate, allDay: true, resource: newEv }]);
 
         updateEvento(note.uuid, payload).then(() => {
             fetchStickyNotes();
@@ -210,9 +321,29 @@ export const useKanbanOrchestration = ({
         });
     };
 
-    const handleDevolverAInbox = async (uuid: string) => {
+    const handleDevolverAInbox = useCallback(async (uuid: string) => {
+        setDraggingUuid(null);
+        setDraggingType(null);
+        document.body.classList.remove('body-dragging-active');
+        const sidebarZone = document.querySelector('.sticky-notes-section');
+        if (sidebarZone) sidebarZone.classList.remove('drop-target-active');
+
         try {
+            const eventFound = eventos.find(ev => ev.resource.uuid === uuid);
+            // Actualización optimista: quitar de eventos
             setEventos(prev => prev.filter(ev => ev.resource.uuid !== uuid));
+
+            // Actualización optimista: reincorporar a notas rápidas inmediatamente
+            if (eventFound) {
+                const noteRestored: Evento = {
+                    ...eventFound.resource,
+                    estado: 'inbox',
+                    fecha_inicio: '',
+                    fecha_fin: '',
+                };
+                setStickyNotes(prev => [noteRestored, ...prev.filter(n => n.uuid !== uuid)]);
+            }
+
             await devolverAInbox(uuid);
             fetchStickyNotes();
             fetchEventos(currentDate);
@@ -222,13 +353,55 @@ export const useKanbanOrchestration = ({
             fetchStickyNotes();
             fetchEventos(currentDate);
         }
-    };
+    }, [eventos, setEventos, setStickyNotes, fetchStickyNotes, fetchEventos, currentDate]);
+
+    // Soporte para devolver al soltar arrastrando con mouse desde Kanban o Calendario
+    React.useEffect(() => {
+        if (!draggingUuid || draggingType !== 'kanban') return;
+
+        const handleWindowMouseMove = (e: MouseEvent) => {
+            const targetEl = document.elementFromPoint(e.clientX, e.clientY);
+            const isOver = !!targetEl?.closest('.sticky-notes-section');
+            const sidebarZone = document.querySelector('.sticky-notes-section');
+            if (sidebarZone) {
+                if (isOver) {
+                    sidebarZone.classList.add('drop-target-active');
+                } else {
+                    sidebarZone.classList.remove('drop-target-active');
+                }
+            }
+        };
+
+        const handleWindowMouseUp = (e: MouseEvent) => {
+            const targetEl = document.elementFromPoint(e.clientX, e.clientY);
+            const dropZone = targetEl?.closest('.sticky-notes-section');
+            const sidebarZone = document.querySelector('.sticky-notes-section');
+            if (sidebarZone) sidebarZone.classList.remove('drop-target-active');
+
+            if (dropZone && draggingUuid) {
+                const uuidToRestore = draggingUuid;
+                handleGlobalDragEnd();
+                handleDevolverAInbox(uuidToRestore);
+            }
+        };
+
+        window.addEventListener('mousemove', handleWindowMouseMove);
+        window.addEventListener('mouseup', handleWindowMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleWindowMouseMove);
+            window.removeEventListener('mouseup', handleWindowMouseUp);
+            const sidebarZone = document.querySelector('.sticky-notes-section');
+            if (sidebarZone) sidebarZone.classList.remove('drop-target-active');
+        };
+    }, [draggingUuid, draggingType, handleGlobalDragEnd, handleDevolverAInbox]);
 
     return {
         viewMode,
         setViewMode,
         draggingUuid,
         setDraggingUuid,
+        draggingType,
+        setDraggingType,
         dragOverColumn,
         setDragOverColumn,
         planificando,
@@ -240,5 +413,7 @@ export const useKanbanOrchestration = ({
         handleDrop,
         handleConfirmPlanificacion,
         handleDevolverAInbox,
+        handleDropNoteOnCalendar,
+        dragFromOutsideItem,
     };
 };

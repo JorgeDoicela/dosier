@@ -25,6 +25,7 @@ export interface EventoCalendario {
     id_entidad_origen?: number | null;
     uuid_entidad_origen?: string | null;
     tipo_entidad_origen?: string | null;
+    roles_visibles?: string | null;
     // Notas Rápidas — campos extendidos
     nota_detalle?: string | null;
     orden_bandeja?: number | null;
@@ -39,7 +40,7 @@ export interface EventoPayload {
     es_todo_el_dia: boolean;
     recurrencia_anual: boolean;
     recurrencia_hasta: null;
-    roles_visibles: null;
+    roles_visibles: string | null;
     modulo_origen: string;
     url_accion: string | null;
     color_hex: string | null;
@@ -89,6 +90,39 @@ export const updateEvento = (uuid: string, payload: EventoPayload): Promise<Even
 export const deleteEvento = (uuid: string): Promise<void> =>
     api.delete(`/calendario/usuario/eventos/${uuid}`).then(() => undefined);
 
+export const createNormativo = (payload: {
+    titulo: string;
+    descripcion?: string | null;
+    tipo_evento: string;
+    fecha_inicio: string | null;
+    fecha_fin: string | null;
+    es_todo_el_dia?: boolean;
+    color_hex?: string | null;
+    alerta_dias?: number | null;
+    roles_visibles?: string | null;
+    es_privado?: boolean;
+    url_accion?: string | null;
+}): Promise<EventoCalendario> =>
+    api.post('/calendario/normativos', payload).then(r => r.data);
+
+export const updateNormativo = (uuid: string, payload: {
+    titulo: string;
+    descripcion?: string | null;
+    tipo_evento: string;
+    fecha_inicio: string | null;
+    fecha_fin: string | null;
+    es_todo_el_dia?: boolean;
+    color_hex?: string | null;
+    alerta_dias?: number | null;
+    roles_visibles?: string | null;
+    es_privado?: boolean;
+    url_accion?: string | null;
+}): Promise<EventoCalendario> =>
+    api.put(`/calendario/normativos/${uuid}`, payload).then(r => r.data);
+
+export const deleteNormativo = (uuid: string): Promise<void> =>
+    api.delete(`/calendario/normativos/${uuid}`).then(() => undefined);
+
 export const devolverAInbox = (uuid: string): Promise<void> =>
     api.patch(`/calendario/usuario/eventos/${uuid}/inbox`).then(() => undefined);
 
@@ -103,17 +137,13 @@ export const getIcalToken = (): Promise<{ feed_url: string }> =>
 // ─────────────────────────────────────────────────────────────
 
 export const CATEGORIAS_CONFIG: Record<string, { label: string; color: string }> = {
-    Normativo:   { label: 'CACES / Normativa',        color: '#1E3A8A' },
-    EntregaPea:  { label: 'Entrega PEA Docente',      color: '#3B82F6' },
-    Revision:    { label: 'Revisión Coordinación',    color: '#8B5CF6' },
-    Firmas:      { label: 'Legalización y Firmas',    color: '#10B981' },
+    Normativo:   { label: 'CACES / Normativa',            color: '#1E3A8A' },
+    Curricular:  { label: 'Instrumento Curricular (PEA)', color: '#3B82F6' },
+    EntregaPea:  { label: 'Entrega PEA Docente',          color: '#2563EB' },
+    Revision:    { label: 'Revisión Coordinación',        color: '#8B5CF6' },
+    Firmas:      { label: 'Legalización y Firmas',        color: '#10B981' },
     Reunion:     { label: 'Reunión de Área / Asignatura', color: '#EC4899' },
-    Personal:    { label: 'Mis Tareas / Agenda',       color: '#F59E0B' },
-    // Compatibilidad retroactiva con eventos preexistentes
-    Convocatoria:{ label: 'Entrega PEA Docente',      color: '#3B82F6' },
-    Proyecto:    { label: 'Instrumento Curricular',   color: '#10B981' },
-    Monitoreo:   { label: 'Supervisión Curricular',   color: '#8B5CF6' },
-    PeerReview:  { label: 'Revisión Coordinación',    color: '#EC4899' },
+    Personal:    { label: 'Mis Tareas / Agenda',          color: '#F59E0B' },
 };
 
 export const PRIORIDAD_COLORS: Record<string, { bg: string; text: string }> = {
@@ -155,6 +185,7 @@ export const buildPayload = (fields: {
     urlAccion?: string | null;
     notaDetalle?: string | null;
     ordenBandeja?: number | null;
+    rolesVisibles?: string | null;
 }): EventoPayload => ({
     titulo: fields.titulo,
     descripcion: fields.descripcion,
@@ -164,7 +195,7 @@ export const buildPayload = (fields: {
     es_todo_el_dia: fields.esTodoElDia,
     recurrencia_anual: fields.recurrenciaAnual,
     recurrencia_hasta: null,
-    roles_visibles: null,
+    roles_visibles: fields.rolesVisibles ?? null,
     modulo_origen: 'PERSONAL',
     url_accion: fields.urlAccion ?? null,
     color_hex: fields.colorHex,

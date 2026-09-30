@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DOSIER — Tests: useCalendarioEvents.ts
  *
  * Valida el hook principal de gestión de eventos del Calendario:
@@ -27,15 +27,18 @@ const FORM_DEFAULTS = {
     alertaDias: "" as number | "",
     recurrenciaAnual: false,
     esTodoElDia: true,
+    esNormativo: false,
+    rolesVisibles: "TODOS",
 };
 
-/** Categorías que deben estar visibles por defecto al montar el hook. */
+/** Categorías que deben estar visibles por defecto al montar el hook en DOSIER. */
 const DEFAULT_CATEGORIAS_VISIBLES = [
     "Normativo",
-    "Convocatoria",
-    "Proyecto",
-    "Monitoreo",
-    "PeerReview",
+    "Curricular",
+    "EntregaPea",
+    "Revision",
+    "Firmas",
+    "Reunion",
     "Personal",
 ];
 
@@ -107,15 +110,26 @@ describe("Valores por defecto del formulario de evento", () => {
     it("formEsTodoElDia es true por defecto", () => {
         expect(FORM_DEFAULTS.esTodoElDia).toBe(true);
     });
+
+    it("formEsNormativo es false por defecto", () => {
+        expect(FORM_DEFAULTS.esNormativo).toBe(false);
+    });
+
+    it("formRolesVisibles es 'TODOS' por defecto", () => {
+        expect(FORM_DEFAULTS.rolesVisibles).toBe("TODOS");
+    });
 });
 
 describe("Categorías visibles por defecto", () => {
-    it("todas las 6 categorías están activadas por defecto", () => {
-        expect(DEFAULT_CATEGORIAS_VISIBLES).toHaveLength(6);
+    it("todas las 7 categorías curriculares están activadas por defecto", () => {
+        expect(DEFAULT_CATEGORIAS_VISIBLES).toHaveLength(7);
         expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Normativo");
+        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Curricular");
+        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("EntregaPea");
+        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Revision");
+        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Firmas");
+        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Reunion");
         expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Personal");
-        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("Proyecto");
-        expect(DEFAULT_CATEGORIAS_VISIBLES).toContain("PeerReview");
     });
 });
 

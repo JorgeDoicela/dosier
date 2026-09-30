@@ -16,6 +16,7 @@ interface EventoDetailDrawerProps {
     handleEditEventClick: (ev: Evento) => void;
     handleDeleteEvent: (uuid: string) => void;
     handleGoToEventAction: (ev: Evento) => void;
+    handleDevolverAInbox?: (uuid: string) => void;
 }
 
 export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
@@ -25,10 +26,13 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
     handleEditEventClick,
     handleDeleteEvent,
     handleGoToEventAction,
+    handleDevolverAInbox,
 }) => {
     const { isAdmin } = useAuth();
     if (!selectedEvent) return null;
     const hasAction = !!resolveEventUrl(selectedEvent, isAdmin);
+    const isNormativo = selectedEvent.tipo_entidad_origen === 'CALENDARIO_NORMATIVO';
+    const canManageNormativo = isAdmin && isNormativo;
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end">
@@ -137,7 +141,7 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
                             return (
                                 <div className="bento-card static p-5 space-y-2 col-span-2 bg-brand-subtle/10 border border-brand/10">
                                     <div className="text-[10px] font-bold text-brand uppercase tracking-widest flex items-center gap-1.5">
-                                        <Info size={12} /> Detalle de Contexto
+                                        <Info size={12} /> Detalle Curricular y Rol
                                     </div>
                                     <p className="text-xs text-text-dim leading-relaxed font-sans font-medium">
                                         {desc}
@@ -179,6 +183,18 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
                             >
                                 <Edit2 size={15} /> Editar
                             </button>
+                            {handleDevolverAInbox && selectedEvent.estado !== 'Inbox' && (
+                                <button
+                                    onClick={() => {
+                                        handleDevolverAInbox(selectedEvent.uuid);
+                                        onClose();
+                                    }}
+                                    className="py-3 px-3 bg-surface text-text-dim hover:text-text-main border border-border hover:bg-surface-hover rounded-lg text-sm font-semibold transition-all flex items-center justify-center"
+                                    title="Devolver a Notas (Inbox)"
+                                >
+                                    <RotateCcw size={15} />
+                                </button>
+                            )}
                             <button
                                 onClick={() => handleDeleteEvent(selectedEvent.uuid)}
                                 className="py-3 px-4 bg-error-subtle text-error hover:bg-error hover:text-white rounded-lg text-sm font-bold transition-all flex items-center justify-center"
@@ -188,15 +204,33 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
                             </button>
                         </div>
                     ) : (
-                        <>
-                            {hasAction ? (
+                        <div className="flex flex-col gap-2 w-full">
+                            {hasAction && (
                                 <button
                                     onClick={() => handleGoToEventAction(selectedEvent)}
-                                    className="w-full py-3.5 bg-fg text-bg border border-fg hover:bg-accents-7 hover:border-accents-7 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 bg-[#0070f3] text-white hover:bg-[#0060df] rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
                                 >
-                                    Ver Detalle / Acción <ArrowRight size={14} />
+                                    Ver Detalle / Acción Curricular <ArrowRight size={14} />
                                 </button>
-                            ) : (
+                            )}
+                            {canManageNormativo && (
+                                <div className="flex gap-2 w-full mt-1">
+                                    <button
+                                        onClick={() => handleEditEventClick(selectedEvent)}
+                                        className="flex-1 py-2.5 bg-surface text-fg border border-border hover:bg-surface-hover rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                                    >
+                                        <Edit2 size={13} /> Editar Directiva
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteEvent(selectedEvent.uuid)}
+                                        className="py-2.5 px-3 bg-error-subtle text-error hover:bg-error hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center justify-center"
+                                        title="Eliminar directiva institucional"
+                                    >
+                                        <Trash2 size={13} />
+                                    </button>
+                                </div>
+                            )}
+                            {!hasAction && !canManageNormativo && (
                                 <button
                                     onClick={onClose}
                                     className="w-full py-3.5 bg-surface text-fg border border-border hover:bg-surface-hover rounded-lg text-sm font-bold transition-all"
@@ -204,7 +238,7 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
                                     Cerrar Panel
                                 </button>
                             )}
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

@@ -49,6 +49,190 @@
     opacity: 0.8;
 }
 
+/* Zona de recepción y devolución de notas desde Kanban o Calendario */
+.sticky-notes-section {
+    position: relative;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sticky-notes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.sticky-notes-grid::-webkit-scrollbar {
+    width: 3px;
+}
+
+.sticky-notes-grid::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.sticky-note-card {
+    background: color-mix(in srgb, var(--note-color, var(--border)) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--note-color, var(--border)) 38%, var(--border));
+    border-radius: 6px;
+    padding: 8px 10px;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    transition: border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sticky-note-card:hover {
+    border-color: color-mix(in srgb, var(--note-color, var(--border)) 60%, var(--border-hover));
+    background: color-mix(in srgb, var(--note-color, var(--border)) 18%, var(--surface));
+}
+
+.sticky-note-card:active {
+    cursor: grabbing;
+}
+
+.sticky-note-card.dragging {
+    opacity: 0.15 !important;
+    border: 1.5px dashed var(--border-hover) !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    transform: none !important;
+}
+
+.sticky-note-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.sticky-note-text {
+    font-size: 11px;
+    line-height: 1.35;
+    margin: 0;
+    color: var(--fg);
+    word-break: break-word;
+    flex: 1;
+}
+
+.sticky-note-detalle {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    line-height: 1.45;
+    margin: 2px 0 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+.sticky-note-ctx-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--note-color, var(--border)) 10%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--note-color, var(--border)) 25%, var(--border));
+    font-size: 9.5px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-top: 4px;
+    width: fit-content;
+}
+
+.sticky-note-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.sticky-note-card:hover .sticky-note-actions {
+    opacity: 1;
+}
+
+.sticky-note-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.sticky-note-action-btn:hover {
+    background: var(--surface-hover);
+    color: var(--fg);
+}
+
+.sticky-note-action-btn.delete:hover {
+    background: var(--error-subtle);
+    color: var(--error);
+}
+
+.sticky-notes-section.drop-target-active {
+    border-style: dashed !important;
+    border-color: #0070f3 !important;
+}
+
+.sticky-notes-drop-overlay {
+    position: absolute;
+    inset: 0;
+    background: #f0f7ff;
+    border: 2px dashed #0070f3;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 25;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    animation: fadeInDropOverlay 0.15s ease-out;
+}
+
+:is(.dark) .sticky-notes-drop-overlay {
+    background: #0d1e38;
+    border-color: #3b82f6;
+}
+
+@keyframes fadeInDropOverlay {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.drop-overlay-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0070f3;
+    text-align: center;
+    font-family: var(--font-sans);
+}
+
+:is(.dark) .drop-overlay-title {
+    color: #60a5fa;
+}
+
 /* Filtros de Agenda */
 .filtros-lista {
     display: flex;
@@ -266,9 +450,17 @@
     color: var(--text-dim);
     flex-shrink: 0;
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .proximo-item:hover .proximo-arrow {
     opacity: 1;
+    transform: translateX(2px);
 }
+
+body.body-dragging-active .sticky-note-actions,
+body.body-dragging-active .kanban-card-actions {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+

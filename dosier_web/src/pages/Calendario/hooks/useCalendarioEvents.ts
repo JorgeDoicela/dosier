@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { View, SlotInfo } from 'react-big-calendar';
 import { format, startOfWeek, addDays, isAfter, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -8,8 +8,11 @@ import { useConfirm } from '../../../api/ConfirmContext';
 import {
     getEventos,
     createEvento,
+    createNormativo,
     updateEvento,
+    updateNormativo,
     deleteEvento,
+    deleteNormativo,
     buildPayload,
     resolveEventUrl,
     CATEGORIAS_CONFIG,
@@ -26,11 +29,17 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     // Filtros de Categorías
     const [categoriasVisibles, setCategoriasVisibles] = useState<Record<string, boolean>>({
         'Normativo': true,
+        'Curricular': true,
+        'EntregaPea': true,
+        'Revision': true,
+        'Firmas': true,
+        'Reunion': true,
+        'Personal': true,
+        // Compatibilidad retroactiva
         'Convocatoria': true,
         'Proyecto': true,
         'Monitoreo': true,
         'PeerReview': true,
-        'Personal': true,
     });
 
     const [selectedEvent, setSelectedEvent] = useState<Evento | null>(null);
@@ -54,6 +63,8 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     const [formEstado, setFormEstado] = useState('Pendiente');
     const [formAlertaDias, setFormAlertaDias] = useState<number | ''>('');
     const [formRecurrenciaAnual, setFormRecurrenciaAnual] = useState(false);
+    const [formEsNormativo, setFormEsNormativo] = useState(false);
+    const [formRolesVisibles, setFormRolesVisibles] = useState<string>('');
 
     const resetForm = () => {
         setFormTitulo('');
@@ -68,6 +79,8 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         setFormEstado('Pendiente');
         setFormAlertaDias('');
         setFormRecurrenciaAnual(false);
+        setFormEsNormativo(false);
+        setFormRolesVisibles('');
         setIsEditing(false);
         setEditingUuid(null);
     };
@@ -87,18 +100,21 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     }, []);
 
     const handleEditEventClick = (ev: Evento) => {
+        const isNorm = ev.categoria_global === 'Normativo' || ev.tipo_entidad_origen === 'CALENDARIO_NORMATIVO';
         setFormTitulo(ev.titulo);
         setFormDescripcion(ev.descripcion || '');
-        setFormTipo(ev.subcategoria || 'Personal');
+        setFormTipo(ev.subcategoria || (isNorm ? 'Normativo' : 'Personal'));
         setFormFechaInicio(ev.fecha_inicio || '');
         setFormFechaFin(ev.fecha_fin || ev.fecha_inicio || '');
         setFormEsTodoElDia(ev.es_todo_el_dia);
-        setFormColorHex(ev.color_hex || '#F59E0B');
-        setFormEsPrivado(ev.es_privado);
+        setFormColorHex(ev.color_hex || (isNorm ? '#1E3A8A' : '#F59E0B'));
+        setFormEsPrivado(isNorm ? false : ev.es_privado);
         setFormPrioridad(ev.prioridad || 'Media');
         setFormEstado(ev.estado || 'Pendiente');
         setFormAlertaDias(ev.alerta_dias ?? '');
         setFormRecurrenciaAnual(ev.recurrencia_anual ?? false);
+        setFormEsNormativo(isNorm);
+        setFormRolesVisibles(ev.roles_visibles || '');
         setEditingUuid(ev.uuid);
         setIsEditing(true);
         setIsFormOpen(true);
@@ -113,11 +129,12 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         fechaFin: formFechaFin,
         esTodoElDia: formEsTodoElDia,
         colorHex: formColorHex,
-        esPrivado: formEsPrivado,
+        esPrivado: formEsNormativo ? false : formEsPrivado,
         prioridad: formPrioridad,
         estado: formEstado,
         alertaDias: formAlertaDias,
         recurrenciaAnual: formRecurrenciaAnual,
+        rolesVisibles: formRolesVisibles,
     });
 
     const handleSaveEvent = async (e: React.FormEvent) => {
@@ -125,24 +142,35 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         if (!formTitulo.trim()) return;
         try {
             setLoading(true);
-            if (isEditing && editingUuid) {
-                await updateEvento(editingUuid, getFormPayload());
+            if (isAdmin && formEsNormativo) {
+                if (isEditing && editingUuid) {
+                    await updateNormativo(editingUuid, getFormPayload());
+                } else {
+                    await createNormativo(getFormPayload());
+                }
             } else {
-                await createEvento(getFormPayload());
+                if (isEditing && editingUuid) {
+                    await updateEvento(editingUuid, getFormPayload());
+                } else {
+                    await createEvento(getFormPayload());
+                }
             }
             setIsFormOpen(false);
             fetchEventos(currentDate);
         } catch (error) {
-            console.error('Error al guardar evento de usuario:', error);
+            console.error('Error al guardar evento:', error);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteEvent = async (uuid: string) => {
+        const isNorm = selectedEvent?.categoria_global === 'Normativo' || selectedEvent?.tipo_entidad_origen === 'CALENDARIO_NORMATIVO';
         const ok = await confirm({
-            title: 'Eliminar Evento',
-            message: '¿Está seguro de que desea eliminar este evento/tarea?',
+            title: isNorm ? 'Eliminar Hito Institucional' : 'Eliminar Evento',
+            message: isNorm
+                ? '¿Está seguro de que desea eliminar este hito normativo institucional?'
+                : '¿Está seguro de que desea eliminar este evento/tarea?',
             confirmText: 'Eliminar',
             cancelText: 'Cancelar',
             variant: 'destructive'
@@ -151,12 +179,16 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
 
         try {
             setLoading(true);
-            await deleteEvento(uuid);
+            if (isAdmin && isNorm) {
+                await deleteNormativo(uuid);
+            } else {
+                await deleteEvento(uuid);
+            }
             setSelectedEvent(null);
             fetchEventos(currentDate);
             if (fetchStickyNotesRefetch) fetchStickyNotesRefetch();
         } catch (error) {
-            console.error('Error al eliminar evento de usuario:', error);
+            console.error('Error al eliminar evento:', error);
         } finally {
             setLoading(false);
         }
@@ -312,23 +344,41 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         }
     };
 
+    const eventCountsByDate = useMemo(() => {
+        const counts: Record<string, number> = {};
+        for (const ev of eventos) {
+            const dateStr = ev.resource?.fecha_inicio;
+            if (dateStr) {
+                counts[dateStr] = (counts[dateStr] || 0) + 1;
+            }
+        }
+        return counts;
+    }, [eventos]);
+
     const eventStyleGetter = (event: CalendarEventExtended) => {
         const ev = event.resource;
         const isCompleted = ev.estado === 'Completado';
         const color = ev.color_hex || CATEGORIAS_CONFIG[ev.categoria_global]?.color || '#6B7280';
+        const dateStr = ev.fecha_inicio;
+        const countOnDay = (dateStr && eventCountsByDate[dateStr]) || 1;
+        const isSpacious = countOnDay <= 2;
+
         return {
+            className: isSpacious ? 'rbc-event-spacious' : 'rbc-event-compact',
             style: {
                 backgroundColor: isCompleted ? 'transparent' : color,
-                borderRadius: '6px',
+                borderRadius: isSpacious ? '8px' : '6px',
                 opacity: categoriasVisibles[ev.categoria_global] !== false ? 1 : 0.15,
                 color: isCompleted ? color : '#ffffff',
                 border: isCompleted ? `1.5px solid ${color}` : '0px',
                 display: 'block',
-                fontSize: '11.5px',
-                padding: '2px 6px',
-                fontWeight: '500',
-                transition: 'opacity 0.2s',
+                fontSize: isSpacious ? '12.5px' : '11.5px',
+                padding: isSpacious ? '6px 10px' : '2.5px 7px',
+                minHeight: isSpacious ? '32px' : '22px',
+                fontWeight: isSpacious ? '600' : '500',
+                transition: 'all 0.15s ease',
                 textDecoration: isCompleted ? 'line-through' : 'none',
+                boxShadow: isSpacious ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 1px 2px rgba(0, 0, 0, 0.05)',
             }
         };
     };
@@ -428,6 +478,10 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         setFormAlertaDias,
         formRecurrenciaAnual,
         setFormRecurrenciaAnual,
+        formEsNormativo,
+        setFormEsNormativo,
+        formRolesVisibles,
+        setFormRolesVisibles,
         resetForm,
         handleNewEventClick,
         handleSelectSlot,

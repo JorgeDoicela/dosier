@@ -10,6 +10,7 @@ using dosier_application.Common.Notifications;
 using dosier_infrastructure.Calendario;
 using dosier_infrastructure.data.models;
 using dosier_domain.Identity.Entities;
+using dosier_domain.Curriculum.Entities;
 
 namespace dosier_tests.Calendario;
 
@@ -454,6 +455,155 @@ public class CalendarioServiceTests
 
         // Assert
         Assert.False(result);
+    }
+
+    // ─── GetEventosAsync — Filtrado por Rol y Privacidad ──────────────────────
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task GetEventosAsync_DocenteExclusivo_SoloRetornaSusMateriasAsignadas()
+    {
+        // Arrange
+        var dbName = nameof(GetEventosAsync_DocenteExclusivo_SoloRetornaSusMateriasAsignadas);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Users.Add(new User
+        {
+            IdUsuario = 10,
+            IdSigafi = "PROF-001",
+            Administrador = false,
+            Nombre = "Docente Uno"
+        });
+
+        // PEA del docente
+        context.DocPeas.Add(new DocPea
+        {
+            IdPea = 101,
+            Uuid = "pea-docente-001",
+            IdAsignatura = 1,
+            IdCarrera = 1,
+            IdDocenteElaborador = "PROF-001",
+            Estado = "Borrador",
+            Activo = true,
+            FechaModificacion = DateTime.UtcNow
+        });
+
+        // PEA de otro docente
+        context.DocPeas.Add(new DocPea
+        {
+            IdPea = 102,
+            Uuid = "pea-docente-002",
+            IdAsignatura = 2,
+            IdCarrera = 1,
+            IdDocenteElaborador = "PROF-999",
+            Estado = "Borrador",
+            Activo = true,
+            FechaModificacion = DateTime.UtcNow
+        });
+
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Act
+        var eventos = (await sut.GetEventosAsync(hoy.AddDays(-5), hoy.AddDays(5), "DOSIER_DOCENTE", idUsuario: 10)).ToList();
+
+        // Assert: solo debe ver su PEA
+        var peaEvento = Assert.Single(eventos, e => e.TipoEntidadOrigen == "PEA");
+        Assert.Equal("pea-docente-001", peaEvento.Uuid);
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task GetEventosAsync_NormativosConRolesVisibles_FiltraSegunRolUsuario()
+    {
+        // Arrange
+        var dbName = nameof(GetEventosAsync_NormativosConRolesVisibles_FiltraSegunRolUsuario);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Users.Add(new User
+        {
+            IdUsuario = 20,
+            IdSigafi = "DOC-020",
+            Administrador = false,
+            Nombre = "Docente Veinte"
+        });
+
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Evento normativo solo para coordinadores
+        context.DocCalendarioEventosNormativos.Add(new DocCalendarioEventoNormativo
+        {
+            Uuid = "norm-coord-only",
+            Titulo = "Reunión de Coordinadores",
+            TipoEvento = "Normativo",
+            RolesVisibles = "DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD",
+            FechaInicio = hoy,
+            Activo = true,
+            EsPrivado = false
+        });
+
+        // Evento normativo para docentes
+        context.DocCalendarioEventosNormativos.Add(new DocCalendarioEventoNormativo
+        {
+            Uuid = "norm-docente-ok",
+            Titulo = "Entrega de Planificaciones",
+            TipoEvento = "Normativo",
+            RolesVisibles = "DOSIER_DOCENTE",
+            FechaInicio = hoy,
+            Activo = true,
+            EsPrivado = false
+        });
+
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        // Act — consulta como docente
+        var eventos = (await sut.GetEventosAsync(hoy.AddDays(-1), hoy.AddDays(1), "DOSIER_DOCENTE", idUsuario: 20)).ToList();
+
+        // Assert: solo debe contener el evento para docentes
+        Assert.Contains(eventos, e => e.Uuid == "norm-docente-ok");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "norm-coord-only");
+    }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task GetEventosAsync_EventoPrivado_SoloVisibleParaCreador()
+    {
+        // Arrange
+        var dbName = nameof(GetEventosAsync_EventoPrivado_SoloVisibleParaCreador);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Users.Add(new User { IdUsuario = 1, IdSigafi = "U1", Administrador = false, Nombre = "User 1" });
+        context.Users.Add(new User { IdUsuario = 2, IdSigafi = "U2", Administrador = false, Nombre = "User 2" });
+
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        context.DocCalendarioEventosNormativos.Add(new DocCalendarioEventoNormativo
+        {
+            Uuid = "privado-u1",
+            Titulo = "Mi Tarea Privada",
+            TipoEvento = "Personal",
+            FechaInicio = hoy,
+            Activo = true,
+            EsPrivado = true,
+            CreadoPor = 1
+        });
+
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        // Act
+        var eventosU1 = (await sut.GetEventosAsync(hoy.AddDays(-1), hoy.AddDays(1), "DOSIER_DOCENTE", idUsuario: 1)).ToList();
+        var eventosU2 = (await sut.GetEventosAsync(hoy.AddDays(-1), hoy.AddDays(1), "DOSIER_DOCENTE", idUsuario: 2)).ToList();
+
+        // Assert
+        Assert.Contains(eventosU1, e => e.Uuid == "privado-u1");
+        Assert.DoesNotContain(eventosU2, e => e.Uuid == "privado-u1");
     }
 }
 

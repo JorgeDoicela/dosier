@@ -141,7 +141,16 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 ### 2.6. Módulos Complementarios
 
-* **`src/pages/Calendario/`:** Cronograma de fechas límite para entrega y aprobación de PEAs con exportador de eventos iCalendar (`.ics`).
+* **`src/pages/Calendario/` (`/calendario`):** Sistema integral de planificación y seguimiento curricular con triple modalidad de visualización:
+  * **Vista Calendario Mensual / Semanal / Diario:** Rejilla interactiva (`react-big-calendar`) con arrastre de fechas, visualización de hitos CACES, plazos de elaboración del PEA y eventos normativos institucionales.
+  * **Vista Kanban Curricular:** Tablero de flujo de trabajo segmentado en columnas (`Pendiente`, `En Progreso`, `Completado`) con reubicación fluida por *drag and drop* y transición instantánea de estados.
+  * **Vista Notas Adhesivas (Inbox):** Bandeja ágil de captura de notas rápidas y tareas pendientes con filtro por módulos (`Curricular / PEA`, `Coordinación`, `Vicerrectoría`, `Agenda`), código de colores HSL y planificador con anclaje temporal directo a la agenda.
+  * **Gobernanza RBAC por Rol:**
+    * *Docentes (`DOSIER_DOCENTE`):* Visualización exclusiva de asignaturas y PEAs a su cargo, fechas de entrega y directivas CACES visibles para docentes.
+    * *Coordinadores de Carrera (`DOSIER_COORD_CARRERA`):* Vista agregada de todas las asignaturas de su carrera, plazos de revisión y PEAs asignados a sus docentes.
+    * *Coordinación Académica y Vicerrectoría (`DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`):* Visión institucional global de todas las carreras, hitos lectivos y avance macro del distributivo.
+    * *Administradores y Autoridades:* Capacidad de publicar directivas institucionales con segmentación por roles destino (`roles_visibles`) y privacidad controlada.
+  * **Sincronización Externa iCalendar:** Generación y revocación de tokens privados iCal (`/api/calendario/feed?token=...`) para suscripción en Outlook, Apple Calendar y Google Calendar.
 * **`src/pages/Notificaciones/`:** Bandeja centralizada de alertas transaccionales recibidas por WebSocket SignalR.
 * **`src/pages/RecycleBin/`:** Papelera de reciclaje lógica para recuperación controlada de registros curriculares dados de baja.
 * **`src/pages/Settings/`:** Gestión del perfil docente, actualización de correo, cambio de clave y selector de tema visual (Claro / Oscuro).

@@ -92,6 +92,10 @@ export const CalendarioPage: React.FC = () => {
         setFormRecurrenciaAnual,
         formEsPrivado,
         setFormEsPrivado,
+        formEsNormativo,
+        setFormEsNormativo,
+        formRolesVisibles,
+        setFormRolesVisibles,
         handleNewEventClick,
         handleSelectSlot,
         handleEditEventClick,
@@ -119,6 +123,9 @@ export const CalendarioPage: React.FC = () => {
         setDragOverColumn,
         planificando,
         setPlanificando,
+        draggingType,
+        setDraggingUuid,
+        setDraggingType,
         handleNoteDragStart,
         handleDragStart,
         handleGlobalDragEnd,
@@ -126,6 +133,8 @@ export const CalendarioPage: React.FC = () => {
         handleDrop,
         handleConfirmPlanificacion,
         handleDevolverAInbox,
+        handleDropNoteOnCalendar,
+        dragFromOutsideItem,
     } = useKanbanOrchestration({
         eventos,
         setEventos,
@@ -140,20 +149,23 @@ export const CalendarioPage: React.FC = () => {
     return (
         <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 flex flex-col h-[calc(100vh-56px)] overflow-hidden font-sans gap-6">
             <PageHeader
-                kicker="Planificación y Seguimiento"
+                kicker="Planificación y Seguimiento Curricular"
                 icon={Calendar}
-                title="Calendario de Actividades"
-                description="Gestiona hitos científicos, plazos de acreditación y tareas colaborativas en tiempo real."
+                title="Calendario de Actividades e Hitos PEA"
+                description="Planificación docente, plazos normativos CACES y seguimiento del ciclo de vida curricular del PEA por rol."
                 className="mb-0"
             />
 
-            {/* Contenedor de dos columnas por debajo del título */}
+            {/* Contenedor principal */}
             <div className="flex flex-1 gap-6 min-h-0 overflow-hidden">
                 <CalendarioSidebar
+                    viewMode={viewMode}
                     categoriasVisibles={categoriasVisibles}
                     toggleCategoria={toggleCategoria}
                     stickyNotes={stickyNotes}
                     draggingUuid={draggingUuid}
+                    draggingType={draggingType}
+                    onDropEventToInbox={handleDevolverAInbox}
                     handleNoteDragStart={handleNoteDragStart}
                     handleGlobalDragEnd={handleGlobalDragEnd}
                     handleEditEventClick={handleEditEventClick}
@@ -165,6 +177,7 @@ export const CalendarioPage: React.FC = () => {
                     generatingToken={generatingToken}
                     handleCopyIcal={handleCopyIcal}
                     handleGenerarToken={handleGenerarToken}
+                    handleDevolverAInbox={handleDevolverAInbox}
                 />
 
                 <div className={`calendario-main ${loading ? 'calendario-loading' : ''}`}>
@@ -191,6 +204,13 @@ export const CalendarioPage: React.FC = () => {
                             handleEventDrop={handleEventDrop}
                             handleEventResize={handleEventResize}
                             isDraggable={isDraggable}
+                            onDropFromOutside={handleDropNoteOnCalendar}
+                            dragFromOutsideItem={dragFromOutsideItem}
+                            onCalendarEventDragStart={(uuid) => {
+                                setDraggingUuid(uuid);
+                                setDraggingType('kanban');
+                                document.body.classList.add('body-dragging-active');
+                            }}
                         />
                     ) : viewMode === 'kanban' ? (
                         <KanbanView
@@ -243,6 +263,7 @@ export const CalendarioPage: React.FC = () => {
                 handleEditEventClick={handleEditEventClick}
                 handleDeleteEvent={handleDeleteEvent}
                 handleGoToEventAction={handleGoToEventAction}
+                handleDevolverAInbox={handleDevolverAInbox}
             />
 
             {/* Event Form Drawer */}
@@ -273,6 +294,10 @@ export const CalendarioPage: React.FC = () => {
                 setFormRecurrenciaAnual={setFormRecurrenciaAnual}
                 formEsPrivado={formEsPrivado}
                 setFormEsPrivado={setFormEsPrivado}
+                formEsNormativo={formEsNormativo}
+                setFormEsNormativo={setFormEsNormativo}
+                formRolesVisibles={formRolesVisibles}
+                setFormRolesVisibles={setFormRolesVisibles}
             />
 
             {/* Popover de Planificación */}

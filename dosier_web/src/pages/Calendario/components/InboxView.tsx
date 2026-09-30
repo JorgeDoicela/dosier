@@ -2,8 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
-    Search, X, Folder, Bell, BarChart3, BookOpen, Calendar as CalendarIcon,
-    RotateCcw, FileText, Clock, Edit2, Trash2, TrendingUp
+    Search, X, Folder, BarChart3, BookOpen, Calendar as CalendarIcon,
+    RotateCcw, FileText, Clock, Edit2, Trash2
 } from 'lucide-react';
 import { COLORES_OPCIONES } from '../../../services/calendarioService';
 import type { Evento, PlanificandoState } from '../types/calendarioTypes';
@@ -87,10 +87,10 @@ export const InboxView: React.FC<InboxViewProps> = ({
                             Todos
                         </button>
                         {[
-                            { key: 'Proyectos', label: 'Proyectos', icon: Folder },
-                            { key: 'Monitoreo', label: 'Monitoreo', icon: BarChart3 },
-                            { key: 'PEA', label: 'Curricular / PEA', icon: BookOpen },
-                            { key: 'Agenda', label: 'Agenda', icon: CalendarIcon },
+                            { key: 'Curricular', label: 'Curricular / PEA', icon: BookOpen },
+                            { key: 'Coordinacion', label: 'Coordinación', icon: Folder },
+                            { key: 'Vicerrectoria', label: 'Vicerrectoría', icon: BarChart3 },
+                            { key: 'Agenda', label: 'Agenda / Tareas', icon: CalendarIcon },
                         ].map(ctx => (
                             <button
                                 key={ctx.key}
@@ -139,10 +139,10 @@ export const InboxView: React.FC<InboxViewProps> = ({
 
                         const matchesContext = !selectedFilterContext ? true : (() => {
                             const url = note.url_accion || '';
-                            if (selectedFilterContext === 'Proyectos') return url.startsWith('/documentacion/proyectos');
-                            if (selectedFilterContext === 'Monitoreo') return url.startsWith('/documentacion/monitoreo');
-                            if (selectedFilterContext === 'Documentacion') return url.startsWith('/documentacion') && !url.includes('/proyectos');
-                            if (selectedFilterContext === 'Agenda') return url.startsWith('/agenda');
+                            if (selectedFilterContext === 'Curricular') return url.startsWith('/curriculum') || note.categoria_global === 'Curricular' || note.categoria_global === 'EntregaPea';
+                            if (selectedFilterContext === 'Coordinacion') return url.startsWith('/coordinacion');
+                            if (selectedFilterContext === 'Vicerrectoria') return url.startsWith('/vicerrectoria');
+                            if (selectedFilterContext === 'Agenda') return url.startsWith('/agenda') || note.categoria_global === 'Personal';
                             return false;
                         })();
 
@@ -186,11 +186,11 @@ export const InboxView: React.FC<InboxViewProps> = ({
 
                         const contextoChip = (() => {
                             const url = note.url_accion || '';
-                            if (url.startsWith('/documentacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                            if (url.startsWith('/documentacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                            if (url.startsWith('/documentacion')) return { label: 'Documentación', icon: BookOpen };
+                            if (url.startsWith('/curriculum')) return { label: 'Curricular / PEA', icon: BookOpen };
+                            if (url.startsWith('/coordinacion')) return { label: 'Coordinación', icon: Folder };
+                            if (url.startsWith('/vicerrectoria')) return { label: 'Vicerrectoría', icon: BarChart3 };
                             if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
-                            if (url.startsWith('/analiticas')) return { label: 'Analíticas', icon: TrendingUp };
+                            if (url.startsWith('/admin')) return { label: 'Directiva / Admin', icon: Folder };
                             return null;
                         })();
 
@@ -298,11 +298,11 @@ export const InboxView: React.FC<InboxViewProps> = ({
             {draggedNote && (() => {
                 const draggedContextoChip = (() => {
                     const url = draggedNote.url_accion || '';
-                    if (url.startsWith('/documentacion/proyectos')) return { label: 'Proyectos', icon: Folder };
-                    if (url.startsWith('/documentacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                    if (url.startsWith('/documentacion')) return { label: 'Documentación', icon: BookOpen };
+                    if (url.startsWith('/curriculum')) return { label: 'Curricular / PEA', icon: BookOpen };
+                    if (url.startsWith('/coordinacion')) return { label: 'Coordinación', icon: Folder };
+                    if (url.startsWith('/vicerrectoria')) return { label: 'Vicerrectoría', icon: BarChart3 };
                     if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
-                    if (url.startsWith('/analiticas')) return { label: 'Analíticas', icon: TrendingUp };
+                    if (url.startsWith('/admin')) return { label: 'Directiva / Admin', icon: Folder };
                     return null;
                 })();
 

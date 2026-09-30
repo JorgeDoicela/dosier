@@ -31,7 +31,16 @@ public class CalendarioController : ControllerBase
         var idUsuario = await GetCurrentUserIdAsync();
         if (idUsuario == null) return Unauthorized();
 
-        var rol = User.IsInRole("DOSIER_ADMIN") ? "DOSIER_ADMIN" : (User.FindFirst(ClaimTypes.Role)?.Value ?? "DOSIER_DOCENTE");
+        var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value)
+            .Union(User.FindAll("roles").Select(c => c.Value))
+            .Distinct().ToList();
+
+        var rol = roles.Contains("DOSIER_ADMIN") ? "DOSIER_ADMIN"
+                : roles.Contains("DOSIER_VICERRECTOR") ? "DOSIER_VICERRECTOR"
+                : roles.Contains("DOSIER_COORD_ACAD") ? "DOSIER_COORD_ACAD"
+                : roles.Contains("DOSIER_COORD_CARRERA") ? "DOSIER_COORD_CARRERA"
+                : "DOSIER_DOCENTE";
+
         var eventos = await _calendarioService.GetEventosAsync(desde, hasta, rol, idUsuario.Value);
         return Ok(eventos);
     }
@@ -139,9 +148,9 @@ public class CalendarioController : ControllerBase
         return Ok(new { message = "Bandeja reordenada." });
     }
 
-    // ── CRUD Normativos (Solo Administradores) ──────────────────────────────
+    // ── CRUD Normativos (Administradores y Autoridades Institucionales) ──────
     [HttpGet("normativos")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> GetNormativos()
     {
         var result = await _calendarioService.GetNormativosAsync();
@@ -150,7 +159,7 @@ public class CalendarioController : ControllerBase
 
     // ── POST /api/calendario/normativos ──────────────────────────────────────
     [HttpPost("normativos")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> CreateNormativo([FromBody] EventoNormativoDto dto)
     {
         var idUsuario = await GetCurrentUserIdAsync();
@@ -162,7 +171,7 @@ public class CalendarioController : ControllerBase
 
     // ── PUT /api/calendario/normativos/{uuid} ────────────────────────────────
     [HttpPut("normativos/{uuid}")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> UpdateNormativo(string uuid, [FromBody] EventoNormativoDto dto)
     {
         var result = await _calendarioService.UpdateNormativoAsync(uuid, dto);
@@ -172,7 +181,7 @@ public class CalendarioController : ControllerBase
 
     // ── DELETE /api/calendario/normativos/{uuid} ─────────────────────────────
     [HttpDelete("normativos/{uuid}")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> DeleteNormativo(string uuid)
     {
         var result = await _calendarioService.DeleteNormativoAsync(uuid);

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Folder, Bell, BarChart3, BookOpen, Calendar as CalendarIcon,
-    TrendingUp, Edit2, Trash2, ChevronRight, FileText
+    TrendingUp, Edit2, Trash2, ChevronRight, FileText, RotateCcw
 } from 'lucide-react';
 import { format, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -12,15 +12,19 @@ import {
 import type { Event as BigCalendarEvent } from 'react-big-calendar';
 import './CalendarioSidebar.css';
 
+import type { CalendarViewMode } from '../types/calendarioTypes';
+
 export interface CalendarEventExtended extends BigCalendarEvent {
     resource: EventoCalendario;
 }
 
 interface CalendarioSidebarProps {
+    viewMode?: CalendarViewMode;
     categoriasVisibles: Record<string, boolean>;
     toggleCategoria: (key: string) => void;
     stickyNotes: EventoCalendario[];
     draggingUuid: string | null;
+    draggingType?: 'note' | 'kanban' | null;
     handleNoteDragStart: (e: React.DragEvent, note: EventoCalendario) => void;
     handleGlobalDragEnd: () => void;
     handleEditEventClick: (note: EventoCalendario) => void;
@@ -32,13 +36,17 @@ interface CalendarioSidebarProps {
     generatingToken: boolean;
     handleCopyIcal: () => void;
     handleGenerarToken: () => void;
+    handleDevolverAInbox?: (uuid: string) => void;
+    onDropEventToInbox?: (uuid: string) => void;
 }
 
 export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
+    viewMode = 'calendar',
     categoriasVisibles,
     toggleCategoria,
     stickyNotes,
     draggingUuid,
+    draggingType,
     handleNoteDragStart,
     handleGlobalDragEnd,
     handleEditEventClick,
@@ -49,13 +57,16 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
     copied,
     generatingToken,
     handleCopyIcal,
-    handleGenerarToken
+    handleGenerarToken,
+    handleDevolverAInbox,
+    onDropEventToInbox,
 }) => {
     const hoy = startOfDay(new Date());
+    const [isOverInboxDropZone, setIsOverInboxDropZone] = React.useState(false);
 
     return (
-        <div className="calendario-sidebar">
-            {/* Próximos Eventos */}
+        <aside className="calendario-sidebar" aria-label="Panel lateral de calendario">
+            {/* Próximos Eventos: Siempre visible en las 3 vistas para seguimiento inmediato */}
             <div className="sidebar-section proximos-section">
                 <h3>Próximos Eventos</h3>
                 {proximosEventos.length === 0 ? (
@@ -87,120 +98,160 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                 )}
             </div>
 
-            {/* Notas Rápidas (Inbox) */}
-            <div className="sidebar-section sticky-notes-section">
-                <h3>Notas Rápidas</h3>
-                <p className="ical-help-text mb-3">Arrastra las notas al tablero <strong>Kanban</strong> para planificarlas.</p>
+            {/* Notas Rápidas: Con soporte de drop para devolver desde Kanban o Calendario (Oculto en vista Inbox) */}
+            {viewMode !== 'inbox' && (
+                <div
+                    className={`sidebar-section sticky-notes-section ${isOverInboxDropZone ? 'drop-target-active' : ''}`}
+                    onDragOver={(e) => {
+                        const hasType = draggingType === 'kanban' ||
+                            Array.from(e.dataTransfer.types || []).includes('dosier/kanban-event') ||
+                            Array.from(e.dataTransfer.types || []).includes('text/plain');
+                        if (hasType) {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                            if (!isOverInboxDropZone) setIsOverInboxDropZone(true);
+                        }
+                    }}
+                    onDragLeave={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                            setIsOverInboxDropZone(false);
+                        }
+                    }}
+                    onDrop={(e) => {
+                        e.preventDefault();
+                        setIsOverInboxDropZone(false);
+                        const uuid = e.dataTransfer.getData('dosier/kanban-event') || e.dataTransfer.getData('text/plain') || draggingUuid;
+                        handleGlobalDragEnd();
+                        const returnFn = onDropEventToInbox || handleDevolverAInbox;
+                        if (uuid && returnFn) {
+                            returnFn(uuid);
+                        }
+                    }}
+                >
+                    <h3>Notas Rápidas</h3>
+                    <p className="ical-help-text mb-3">
+                        Arrastra las notas al <strong>Calendario</strong> o <strong>Kanban</strong> para planificarlas.
+                    </p>
 
-                <div className="sticky-notes-grid">
-                    {stickyNotes.length === 0 ? (
-                        <p className="proximos-empty">Bandeja vacía</p>
+                    {isOverInboxDropZone && (
+                        <div className="sticky-notes-drop-overlay">
+                            <RotateCcw size={20} className="text-[#0070f3]" />
+                            <span className="drop-overlay-title">Soltar para devolver</span>
+                        </div>
+                    )}
+
+                    <div className="sticky-notes-grid">
+                        {stickyNotes.length === 0 ? (
+                            <p className="proximos-empty">Bandeja vacía</p>
+                        ) : (
+                            stickyNotes.map(note => {
+                                const contextoChip = (() => {
+                                    const url = note.url_accion || '';
+                                    if (url.startsWith('/curriculum')) return { label: 'Curricular / PEA', icon: BookOpen };
+                                    if (url.startsWith('/coordinacion')) return { label: 'Coordinación', icon: Folder };
+                                    if (url.startsWith('/vicerrectoria')) return { label: 'Vicerrectoría', icon: BarChart3 };
+                                    if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
+                                    if (url.startsWith('/admin')) return { label: 'Directiva / Admin', icon: Folder };
+                                    return null;
+                                })();
+
+                                return (
+                                    <div
+                                        key={note.uuid}
+                                        draggable
+                                        onDragStart={(e) => handleNoteDragStart(e, note)}
+                                        onDragEnd={handleGlobalDragEnd}
+                                        className={`sticky-note-card ${draggingUuid === note.uuid ? 'dragging' : ''}`}
+                                        style={{ '--note-color': note.color_hex || '#F59E0B' } as React.CSSProperties}
+                                    >
+                                        <div className="sticky-note-content">
+                                            <p className="sticky-note-text">{note.titulo}</p>
+                                            {note.nota_detalle && (
+                                                <p className="sticky-note-detalle">{note.nota_detalle}</p>
+                                            )}
+                                            {contextoChip && (
+                                                <div className="sticky-note-ctx-chip">
+                                                    <contextoChip.icon size={10} className="opacity-70" />
+                                                    <span>{contextoChip.label}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="sticky-note-actions" onClick={(e) => e.stopPropagation()}>
+                                            <button
+                                                type="button"
+                                                className="sticky-note-action-btn"
+                                                onClick={() => handleEditEventClick(note)}
+                                                title="Editar nota"
+                                            >
+                                                <Edit2 size={11} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="sticky-note-action-btn delete"
+                                                onClick={() => handleDeleteStickyNote(note.uuid)}
+                                                title="Eliminar nota"
+                                            >
+                                                <Trash2 size={11} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Filtros de Agenda: Solo en vista Calendario */}
+            {viewMode === 'calendar' && (
+                <div className="sidebar-section">
+                    <h3>Filtros de Agenda</h3>
+                    <div className="filtros-lista">
+                        {Object.entries(CATEGORIAS_CONFIG).map(([key, { label, color }]) => (
+                            <label key={key} className="filtro-item" style={{ '--color': color } as React.CSSProperties}>
+                                <input
+                                    type="checkbox"
+                                    checked={categoriasVisibles[key]}
+                                    onChange={() => toggleCategoria(key)}
+                                />
+                                <span className="color-dot" />
+                                <span>{label}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* iCal: Solo en vista Calendario */}
+            {viewMode === 'calendar' && (
+                <div className="sidebar-section ical-section">
+                    <h3>Sincronización de Agenda</h3>
+                    <p className="ical-help-text">Integra tus hitos en Google Calendar, Outlook o Apple Calendar.</p>
+                    {icalUrl ? (
+                        <div className="ical-container">
+                            <input
+                                type="text"
+                                readOnly
+                                value={icalUrl}
+                                className="ical-input"
+                                onClick={(e) => (e.target as HTMLInputElement).select()}
+                            />
+                            <div className="ical-buttons">
+                                <button onClick={handleCopyIcal} className="ical-btn primary">
+                                    {copied ? '¡Copiado!' : 'Copiar'}
+                                </button>
+                                <button onClick={handleGenerarToken} className="ical-btn secondary" disabled={generatingToken}>
+                                    {generatingToken ? '...' : 'Regenerar'}
+                                </button>
+                            </div>
+                        </div>
                     ) : (
-                        stickyNotes.map(note => {
-                            // Derivar chip de contexto desde url_accion
-                            const contextoChip = (() => {
-                                const url = note.url_accion || '';
-                                if (url.startsWith('/documentacion/mis-proyectos')) return { label: 'Mis Asignaturas', icon: BookOpen };
-                                if (url.startsWith('/documentacion/revision-tecnica')) return { label: 'Revisión PEA', icon: FileText };
-                                if (url.startsWith('/documentacion/monitoreo')) return { label: 'Monitoreo', icon: BarChart3 };
-                                if (url.startsWith('/documentacion')) return { label: 'Gestión PEA', icon: Folder };
-                                if (url.startsWith('/calendario')) return { label: 'Agenda', icon: CalendarIcon };
-                                if (url.startsWith('/analiticas')) return { label: 'Analíticas CACES', icon: TrendingUp };
-                                return null;
-                            })();
-
-                            return (
-                                <div
-                                    key={note.uuid}
-                                    draggable
-                                    onDragStart={(e) => handleNoteDragStart(e, note)}
-                                    onDragEnd={handleGlobalDragEnd}
-                                    className={`sticky-note-card ${draggingUuid === note.uuid ? 'dragging' : ''}`}
-                                    style={{ '--note-color': note.color_hex || '#F59E0B' } as React.CSSProperties}
-                                >
-                                    <div className="sticky-note-content">
-                                        <p className="sticky-note-text">{note.titulo}</p>
-                                        {note.nota_detalle && (
-                                            <p className="sticky-note-detalle">{note.nota_detalle}</p>
-                                        )}
-                                        {contextoChip && (
-                                            <div className="sticky-note-ctx-chip">
-                                                <contextoChip.icon size={10} className="opacity-70" />
-                                                <span>{contextoChip.label}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="sticky-note-actions" onClick={(e) => e.stopPropagation()}>
-                                        <button
-                                            type="button"
-                                            className="sticky-note-action-btn"
-                                            onClick={() => handleEditEventClick(note)}
-                                            title="Editar nota"
-                                        >
-                                            <Edit2 size={11} />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="sticky-note-action-btn delete"
-                                            onClick={() => handleDeleteStickyNote(note.uuid)}
-                                            title="Eliminar nota"
-                                        >
-                                            <Trash2 size={11} />
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })
+                        <button onClick={handleGenerarToken} className="ical-btn generate" disabled={generatingToken}>
+                            {generatingToken ? 'Obtener Enlace iCal' : 'Obtener Enlace iCal'}
+                        </button>
                     )}
                 </div>
-            </div>
-
-            {/* Filtros */}
-            <div className="sidebar-section">
-                <h3>Filtros de Agenda</h3>
-                <div className="filtros-lista">
-                    {Object.entries(CATEGORIAS_CONFIG).map(([key, { label, color }]) => (
-                        <label key={key} className="filtro-item" style={{ '--color': color } as React.CSSProperties}>
-                            <input
-                                type="checkbox"
-                                checked={categoriasVisibles[key]}
-                                onChange={() => toggleCategoria(key)}
-                            />
-                            <span className="color-dot" />
-                            <span>{label}</span>
-                        </label>
-                    ))}
-                </div>
-            </div>
-
-            {/* iCal */}
-            <div className="sidebar-section ical-section">
-                <h3>Sincronización de Agenda</h3>
-                <p className="ical-help-text">Integra tus hitos en Google Calendar, Outlook o Apple Calendar.</p>
-                {icalUrl ? (
-                    <div className="ical-container">
-                        <input
-                            type="text"
-                            readOnly
-                            value={icalUrl}
-                            className="ical-input"
-                            onClick={(e) => (e.target as HTMLInputElement).select()}
-                        />
-                        <div className="ical-buttons">
-                            <button onClick={handleCopyIcal} className="ical-btn primary">
-                                {copied ? '¡Copiado!' : 'Copiar'}
-                            </button>
-                            <button onClick={handleGenerarToken} className="ical-btn secondary" disabled={generatingToken}>
-                                {generatingToken ? '...' : 'Regenerar'}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <button onClick={handleGenerarToken} className="ical-btn generate" disabled={generatingToken}>
-                        {generatingToken ? 'Obtener Enlace iCal' : 'Obtener Enlace iCal'}
-                    </button>
-                )}
-            </div>
-        </div>
+            )}
+        </aside>
     );
 };

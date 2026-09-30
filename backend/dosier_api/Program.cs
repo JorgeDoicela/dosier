@@ -381,7 +381,6 @@ using (var scope = app.Services.CreateScope())
             if (await dbContext.Database.CanConnectAsync())
             {
                 await DocumentTemplateSeeder.SeedTemplatesAsync(dbContext, env, logger);
-                await CalendarioViewSeeder.EnsureCalendarioViewCreatedAsync(dbContext, logger);
                 break;
             }
         }

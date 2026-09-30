@@ -25,24 +25,44 @@ const withDragAndDrop = (typeof _withDragAndDrop === 'function'
 
 const DnDCalendar = withDragAndDrop(Calendar as any);
 
-const EventoEnCelda: React.FC<{ event: CalendarEventExtended }> = ({ event }) => {
+const isPersonalTask = (ev?: any): boolean => {
+    if (!ev) return false;
+    return Boolean(
+        ev.categoria_global === 'Personal' ||
+        ev.subcategoria === 'Personal' ||
+        ev.estado === 'Inbox' ||
+        ev.estado === 'inbox' ||
+        (!ev.id_entidad_origen && !ev.tipo_entidad_origen)
+    );
+};
+
+const isResizable = (event: object): boolean => {
+    const ev = (event as CalendarEventExtended)?.resource;
+    return isPersonalTask(ev);
+};
+
+const EventoEnCelda: React.FC<{
+    event: CalendarEventExtended;
+    isSpacious?: boolean;
+}> = ({ event, isSpacious = false }) => {
     const ev = event.resource;
     const isCompleted = ev.estado === 'Completado';
     const isInProgress = ev.estado === 'EnProgreso';
-    const isPersonal = ev.categoria_global === 'Personal';
+    const isPersonal = isPersonalTask(ev);
+    const iconSize = isSpacious ? 12 : 9;
 
     return (
-        <span className="evento-celda-inner">
+        <span className={`evento-celda-inner ${isSpacious ? 'py-0.5' : ''}`}>
             {isPersonal && isCompleted && (
-                <CheckCircle size={9} className="evento-estado-icon completado" />
+                <CheckCircle size={iconSize} className="evento-estado-icon completado shrink-0" />
             )}
             {isPersonal && isInProgress && (
-                <Clock size={9} className="evento-estado-icon en-progreso" />
+                <Clock size={iconSize} className="evento-estado-icon en-progreso shrink-0" />
             )}
             {ev.alerta_dias != null && ev.alerta_dias > 0 && (
-                <Bell size={9} className="evento-estado-icon alerta" />
+                <Bell size={iconSize} className="evento-estado-icon alerta shrink-0" />
             )}
-            <span className={`evento-titulo-text ${isCompleted ? 'completado' : ''}`}>
+            <span className={`evento-titulo-text ${isSpacious ? 'font-semibold tracking-tight' : ''} ${isCompleted ? 'completado' : ''}`}>
                 {event.title as string}
             </span>
         </span>
@@ -101,6 +121,9 @@ interface CalendarViewProps {
     handleEventDrop: (data: any) => void;
     handleEventResize: (data: any) => void;
     isDraggable: (event: object) => boolean;
+    onDropFromOutside?: (args: any) => void;
+    dragFromOutsideItem?: () => any;
+    onCalendarEventDragStart?: (uuid: string) => void;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -115,9 +138,40 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     handleEventDrop,
     handleEventResize,
     isDraggable,
+    onDropFromOutside,
+    dragFromOutsideItem,
+    onCalendarEventDragStart,
 }) => {
+    const calendarEventos = React.useMemo(() => {
+        return filteredEventos.filter(ev => Boolean(ev.resource.fecha_inicio));
+    }, [filteredEventos]);
+
+    const eventsCountByDate = React.useMemo(() => {
+        const counts: Record<string, number> = {};
+        calendarEventos.forEach(e => {
+            const dateStr = e.resource?.fecha_inicio;
+            if (dateStr) {
+                counts[dateStr] = (counts[dateStr] || 0) + 1;
+            }
+        });
+        return counts;
+    }, [calendarEventos]);
+
+    const EventComponent = React.useMemo(() => {
+        return (props: any) => {
+            const dateStr = props.event?.resource?.fecha_inicio;
+            const isSpacious = (dateStr ? eventsCountByDate[dateStr] : 1) <= 2;
+            return (
+                <EventoEnCelda
+                    {...props}
+                    isSpacious={isSpacious}
+                />
+            );
+        };
+    }, [eventsCountByDate]);
+
     if (view === 'agenda') {
-        const sortedEvents = [...filteredEventos].sort(
+        const sortedEvents = [...calendarEventos].sort(
             (a, b) => (a.start as Date).getTime() - (b.start as Date).getTime()
         );
         let lastDateStr = '';
@@ -130,7 +184,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     <div className="custom-agenda-th th-evento">Evento</div>
                 </div>
                 <div className="custom-agenda-body">
-                    {filteredEventos.length === 0 ? (
+                    {calendarEventos.length === 0 ? (
                         <div className="custom-agenda-empty">No hay eventos en este rango de fechas.</div>
                     ) : (
                         sortedEvents.map(event => {
@@ -188,7 +242,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return (
         <DnDCalendar
             localizer={localizer}
-            events={filteredEventos}
+            events={calendarEventos}
             startAccessor="start"
             endAccessor="end"
             style={{ height: '100%' }}
@@ -204,9 +258,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}
             resizable
+            resizableAccessor={isResizable}
             draggableAccessor={isDraggable}
+            onDragStart={({ event, action }: any) => {
+                if (action === 'move' && event?.resource && isPersonalTask(event.resource)) {
+                    onCalendarEventDragStart?.(event.resource.uuid);
+                }
+            }}
+            onDropFromOutside={onDropFromOutside}
+            dragFromOutsideItem={dragFromOutsideItem}
             components={{
-                event: EventoEnCelda as any,
+                event: EventComponent as any,
                 agenda: {
                     event: EventoEnAgenda as any
                 }

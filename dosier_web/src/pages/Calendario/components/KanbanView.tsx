@@ -2,7 +2,8 @@ import React from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon, CheckCircle, RotateCcw, Edit2, Trash2, ArrowRight } from 'lucide-react';
-import { PRIORIDAD_COLORS } from '../../../services/calendarioService';
+import { PRIORIDAD_COLORS, resolveEventUrl } from '../../../services/calendarioService';
+import { useAuth } from '../../../api/AuthContext';
 import { KANBAN_COLUMNAS, type CalendarEventExtended, type Evento } from '../types/calendarioTypes';
 import './KanbanView.css';
 
@@ -39,6 +40,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
     handleDeleteEvent,
     handleGoToEventAction,
 }) => {
+    const { isAdmin } = useAuth();
+
     return (
         <div className="kanban-board-container">
             {KANBAN_COLUMNAS.map(col => {
@@ -79,9 +82,13 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                     const r = ev.resource;
                                     const isCompleted = r.estado === 'Completado';
                                     const isPersonal = r.categoria_global === 'Personal';
-                                    const formattedDate = r.fecha_fin && r.fecha_fin !== r.fecha_inicio
-                                        ? `${format(ev.start as Date, 'd MMM', { locale: es })} - ${format(ev.end as Date, 'd MMM', { locale: es })}`
-                                        : format(ev.start as Date, 'd MMM', { locale: es });
+                                    const hasAction = !isPersonal && !!resolveEventUrl(r, isAdmin);
+                                    const hasDate = Boolean(r.fecha_inicio && ev.start && (ev.start as Date).getTime() > 0);
+                                    const formattedDate = hasDate
+                                        ? (r.fecha_fin && r.fecha_fin !== r.fecha_inicio
+                                            ? `${format(ev.start as Date, 'd MMM', { locale: es })} - ${format(ev.end as Date, 'd MMM', { locale: es })}`
+                                            : format(ev.start as Date, 'd MMM', { locale: es }))
+                                        : 'Sin fecha';
 
                                     return (
                                         <div
@@ -121,7 +128,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                                 )}
                                             </div>
                                             <div className="kanban-card-footer">
-                                                <span className="kanban-card-date">
+                                                <span className={`kanban-card-date ${!hasDate ? 'kanban-card-sin-fecha' : ''}`}>
                                                     <CalendarIcon size={10} />
                                                     {formattedDate}
                                                 </span>
@@ -164,7 +171,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({
                                                             </button>
                                                         </>
                                                     )}
-                                                    {(r.url_accion || (!isPersonal && r.categoria_global === 'Proyecto' && r.uuid)) && (
+                                                    {(r.url_accion || hasAction) && (
                                                         <button
                                                             type="button"
                                                             className="kanban-action-btn"
