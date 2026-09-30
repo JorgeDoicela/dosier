@@ -153,10 +153,27 @@ export function useProjectCore() {
 
             if (isPeaTemplate) {
                 const pea = res.data;
-                const userCedula = user?.idSigafi || user?.id_sigafi || (user as any)?.cedula || '';
+                const isDocenteRole = user?.roles?.includes('DOSIER_DOCENTE') || user?.role === 'DOSIER_DOCENTE' || user?.role === 'Docente';
+                const userIdentifiers = [
+                    user?.id_referencia,
+                    user?.idSigafi,
+                    user?.id_sigafi,
+                    (user as any)?.cedula,
+                    user?.id?.toString(),
+                    user?.id_usuario?.toString(),
+                    user?.usuario
+                ].filter(Boolean) as string[];
+
                 const docenteNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || user?.nombre_completo || 'Docente Responsable';
-                const isDocenteAutor = (pea.id_docente_elaborador && pea.id_docente_elaborador === userCedula) || isAdmin;
-                const canEditPea = isDocenteAutor && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección');
+                const isDocenteAutor = Boolean(
+                    isAdmin ||
+                    isDocenteRole ||
+                    (pea.id_docente_elaborador && userIdentifiers.includes(pea.id_docente_elaborador))
+                );
+                const canEditPea = Boolean(
+                    isAdmin ||
+                    (isDocenteAutor && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección' || pea.estado === 'NoIniciado' || !pea.estado))
+                );
 
                 projectData = {
                     id: pea.codigo_asignatura || pea.codigoAsignatura || `PEA-${pea.id_pea || pea.idPea || '001'}`,
@@ -304,25 +321,25 @@ export function useProjectCore() {
         const uuid = resolvedProjectUuid || currentProject?.uuid;
         if (!uuid) return;
         if (!await confirm({
-            title: "Iniciar Ejecución",
-            message: "¿Iniciar la fase de ejecución? Se habilitarán los informes de avance periódicos.",
-            confirmText: "Iniciar",
+            title: "Enviar a Revisión",
+            message: "¿Desea enviar este instrumento curricular a revisión de Coordinación de Carrera?",
+            confirmText: "Enviar",
             cancelText: "Cancelar",
             variant: "warning"
         })) return;
         setIniciandoEjecucion(true);
         try {
-            await curriculumProjectService.iniciarEjecucion(uuid);
+            await curriculumProjectService.transitionState(uuid, 'EnRevision');
             const detail = await curriculumProjectService.getProjectDetail(uuid);
             setCurrentProject((prev: any) => ({
                 ...prev,
-                status: detail.estado || 'En Ejecución',
+                status: detail.estado || 'EnRevision',
                 codigoInstitucional: detail.codigo_institucional || detail.codigoInstitucional,
             }));
-            addToast("Inicio de Ejecución", "Se ha iniciado la fase de ejecución exitosamente.", "success");
+            addToast("Envío a Revisión", "El instrumento ha sido enviado a revisión curricular exitosamente.", "success");
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
         } catch (e: any) {
-            addToast("Error al Iniciar Ejecución", e?.response?.data?.message ?? 'No se pudo iniciar la ejecución.', "error");
+            addToast("Error al Enviar a Revisión", e?.response?.data?.message ?? 'No se pudo enviar a revisión.', "error");
         } finally {
             setIniciandoEjecucion(false);
         }

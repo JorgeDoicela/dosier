@@ -249,10 +249,10 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                 }
             },
             {
-                id: 'pea_characterization_section',
-                label: 'b) Objetivo y c) Prerrequisitos',
+                id: 'pea_objectives_section',
+                label: 'b) Objetivo de la Asignatura',
                 iconName: 'Target',
-                componentName: 'PeaCharacterizationSection',
+                componentName: 'PeaObjectivesSection',
                 config: {
                     fields: [
                         {
@@ -262,7 +262,17 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                             collaborative: true,
                             headerStyle: 'blue',
                             placeholder: 'Defina el objetivo formativo general de la asignatura...'
-                        },
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'pea_prerequisites_section',
+                label: 'c) Prerrequisitos Curriculares',
+                iconName: 'CheckSquare',
+                componentName: 'PeaPrerequisitesSection',
+                config: {
+                    fields: [
                         {
                             name: 'Prerrequisitos',
                             label: 'c) Prerrequisitos Curriculares',

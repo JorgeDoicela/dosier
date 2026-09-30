@@ -8,7 +8,6 @@ import { BuilderHeader } from './shell/components/BuilderHeader';
 import { BuilderNavigationSidebar } from './shell/components/BuilderNavigationSidebar';
 import { BuilderFloatingTab } from './shell/components/BuilderFloatingTab';
 import { OutputSection } from './shell/components/OutputSection';
-import { PeaWorkflowBar } from './shell/components/PeaWorkflowBar';
 import type { BuilderSection } from './shell/hooks/useBuilderLayout';
 
 import { useAuth } from '../../api/AuthContext';
@@ -71,10 +70,6 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     const { layout, autoSave, pdfAndSign, network } = useDOSIERBuilderShell(props);
     const [showUpdateModal, setShowUpdateModal] = useState<boolean>(hasTemplateUpdate);
 
-    const isPea = templateCode === 'PEA_OFICIAL';
-    const peaId = Number(formData?.IdPea || formData?.id_pea || formData?.peaData?.id_pea || formData?.peaData?.IdPea || 0);
-    const peaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.entityUuid || formData?.Uuid || formData?.uuid || '';
-
     const showRightSidebar = true;
 
 
@@ -129,21 +124,6 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 onSave={autoSave.handleSave}
                                 toggleTheme={layout.toggleTheme}
                             />
-
-                            {/* ── Barra Colegiada de Workflow PEA ── */}
-                            {isPea && (
-                                <PeaWorkflowBar
-                                    peaId={peaId}
-                                    peaUuid={peaUuid}
-                                    formData={formData}
-                                    onOpenSignModal={() => layout.setActiveTab('output')}
-                                    onRefreshPea={() => {
-                                        autoSave.handleSave();
-                                    }}
-                                    activeSectionKey={layout.activeTab}
-                                    readOnly={readOnly}
-                                />
-                            )}
 
                             <div className="flex flex-1 overflow-hidden relative" ref={layout.bodyContainerRef}>
                                 {/* Pestaña de reabrir Navegación (Izquierda) */}

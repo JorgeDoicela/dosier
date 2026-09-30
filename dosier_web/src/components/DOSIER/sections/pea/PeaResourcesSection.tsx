@@ -1,7 +1,6 @@
 import React from 'react';
 import { CheckSquare, Plus, Trash2, Info, FlaskConical } from 'lucide-react';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
-import { resolveHeaderColor, getContrastFg } from '../../../../pages/Admin/Templates/components/properties/SharedColorPicker';
 
 interface PracticaItem {
     unidad: string;
@@ -33,7 +32,6 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
 }) => {
     const c = config || {};
     const displayTitle = c.title || 'h) ACTIVIDADES PRÁCTICAS Y EXPERIMENTALES';
-    const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
 
     const rawPracticas: any[] = Array.isArray(formData?.ActividadesPracticas) ? formData.ActividadesPracticas : [];
 
@@ -92,62 +90,45 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
     };
 
     return (
-        <div className="w-full space-y-6 animate-fade-in font-sans">
-            {/* ENCABEZADO DE SECCIÓN */}
-            <div
-                className="w-full py-2.5 px-4 rounded-xl flex items-center justify-between shadow-xs"
-                style={{ backgroundColor: headerBg, color: getContrastFg(headerBg) }}
-            >
-                <div className="flex items-center gap-2.5">
-                    <CheckSquare className="w-5 h-5 shrink-0" />
-                    <span className="font-bold text-xs uppercase tracking-wider">{displayTitle}</span>
-                </div>
-                <span className="text-[10px] font-mono opacity-80 uppercase tracking-widest">
-                    Componente Práctico-Experimental (APE)
-                </span>
+        <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
+            {/* Aviso APE */}
+            <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
+                <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                    Las actividades prácticas deben tributar al total de <strong className="text-text-main font-semibold">Horas de Aprendizaje Práctico-Experimental (APE)</strong> asignadas a la asignatura en la Sección A.
+                </p>
             </div>
 
             {/* TABLA DE ACTIVIDADES PRÁCTICAS */}
-            <div className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden">
-                <div className="p-4 border-b border-border-thin bg-bg-deep/60 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <FlaskConical className="w-4 h-4 text-brand" />
-                        <span className="font-bold text-xs uppercase tracking-wide text-text-main">
-                            Registro de Prácticas, Talleres y Laboratorios ({practicas.length})
-                        </span>
-                    </div>
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wide text-text-main">
+                        Registro de Prácticas y Talleres ({practicas.length})
+                    </span>
                     {!readOnly && (
                         <button
                             type="button"
                             onClick={handleAddPractica}
-                            className="btn-vercel-secondary text-xs px-3 py-1 flex items-center gap-1.5"
+                            className="px-3 py-1.5 bg-surface hover:bg-bg-deep border border-border-thin rounded-lg text-xs font-semibold text-text-main transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                         >
-                            <Plus size={13} />
+                            <Plus size={14} className="text-[#0070f3]" />
                             <span>Añadir Práctica</span>
                         </button>
                     )}
                 </div>
 
-                <div className="p-4 space-y-3">
-                    <div className="flex gap-2.5 p-3 rounded-lg bg-bg-deep border border-border-thin text-[11px] text-text-dim items-start">
-                        <Info size={15} className="text-brand shrink-0 mt-0.5" />
-                        <p className="leading-relaxed">
-                            Las actividades prácticas deben tributar al total de <strong>Horas de Aprendizaje Práctico-Experimental (APE)</strong> asignadas a la asignatura en la Sección A.
-                        </p>
-                    </div>
-
-                    <div className="overflow-x-auto rounded-xl border border-border-thin">
-                        <table className="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
-                                    <th className="p-3 w-[15%] border-r border-border-thin">Unidad</th>
-                                    <th className="p-3 w-[35%] border-r border-border-thin">Nombre y Caracterización de la Actividad</th>
-                                    <th className="p-3 w-[10%] text-center border-r border-border-thin">Horas</th>
-                                    <th className="p-3 w-[20%] border-r border-border-thin">Escenario / Entorno</th>
-                                    <th className="p-3 w-[15%] border-r border-border-thin">Producto / Entregable</th>
-                                    {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
-                                </tr>
-                            </thead>
+                <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
+                                <th className="p-3 w-[15%] border-r border-border-thin">Unidad</th>
+                                <th className="p-3 w-[35%] border-r border-border-thin">Nombre y Caracterización de la Actividad</th>
+                                <th className="p-3 w-[10%] text-center border-r border-border-thin">Horas</th>
+                                <th className="p-3 w-[20%] border-r border-border-thin">Escenario / Entorno</th>
+                                <th className="p-3 w-[15%] border-r border-border-thin">Producto / Entregable</th>
+                                {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
+                            </tr>
+                        </thead>
                             <tbody className="divide-y divide-border-thin bg-surface">
                                 {practicas.map((item, idx) => (
                                     <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
@@ -219,7 +200,6 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
                         </table>
                     </div>
                 </div>
-            </div>
         </div>
     );
 };

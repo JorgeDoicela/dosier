@@ -253,7 +253,7 @@ export const DocumentWorkspace: React.FC = () => {
 
         if (activeDocument === 'PEA_OFICIAL' || activeDocument === 'GUIA_PRACTICA_LAB') {
             isReadOnly = !currentProject.puedeEditar;
-            readOnlyReason = (currentProject.status !== 'Borrador' && currentProject.status !== 'En Corrección' && currentProject.status !== 'NoIniciado') ? 'state' : 'membership';
+            readOnlyReason = (currentProject.status !== 'Borrador' && currentProject.status !== 'Observado' && currentProject.status !== 'En Corrección' && currentProject.status !== 'NoIniciado') ? 'state' : 'membership';
         } else if (activeDocument === 'RUBRICA_EVALUACION') {
             isReadOnly = true;
             readOnlyReason = 'review';

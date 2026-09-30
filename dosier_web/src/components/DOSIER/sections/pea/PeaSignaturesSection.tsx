@@ -2,7 +2,6 @@ import React from 'react';
 import { ShieldCheck, CheckCircle2, UserCheck, Shield } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
-import { resolveHeaderColor, getContrastFg } from '../../../../pages/Admin/Templates/components/properties/SharedColorPicker';
 
 interface PeaSignaturesSectionProps {
     formData: any;
@@ -22,7 +21,6 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 }) => {
     const c = config || {};
     const displayTitle = c.title || 'k) FIRMAS DE RESPONSABILIDAD';
-    const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
 
     const firmas = formData?.FirmasResponsabilidad || {};
 
@@ -73,24 +71,10 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
     ];
 
     return (
-        <div className="w-full space-y-6 animate-fade-in font-sans">
-            {/* ENCABEZADO DE SECCIÓN */}
-            <div
-                className="w-full py-2.5 px-4 rounded-xl flex items-center justify-between shadow-xs"
-                style={{ backgroundColor: headerBg, color: getContrastFg(headerBg) }}
-            >
-                <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-5 h-5 shrink-0" />
-                    <span className="font-bold text-xs uppercase tracking-wider">{displayTitle}</span>
-                </div>
-                <span className="text-[10px] font-mono opacity-80 uppercase tracking-widest">
-                    Circuito Institucional de Validación
-                </span>
-            </div>
-
+        <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
             {/* AVISO NORMATIVO */}
-            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-surface border border-border-thin shadow-xs text-xs text-text-dim">
-                <Shield size={16} className="text-brand shrink-0" />
+            <div className="flex items-start gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim">
+                <Shield size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
                     Las firmas consignadas en este instrumento curricular certifican la conformidad con los lineamientos del Consejo de Aseguramiento de la Calidad de la Educación Superior (CACES) y el Reglamento de Régimen Académico del ISTPET.
                 </p>

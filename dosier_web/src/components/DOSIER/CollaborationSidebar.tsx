@@ -622,13 +622,13 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     };
 
     return (
-        <aside className="w-full h-full flex flex-col bg-surface border-l border-border-thin z-30 transition-all duration-300">
+        <aside className="w-full h-full flex flex-col bg-bg-deep border-l border-border-thin z-30 transition-all duration-300">
             {/* Header Tabs */}
-            <div className="flex items-center justify-between border-b border-border-thin bg-surface shrink-0 select-none">
+            <div className="flex items-center justify-between border-b border-border-thin bg-bg-deep shrink-0 select-none">
                 {isProtocolDocument && projectStatus === 'En Corrección' && (
                     <button
                         onClick={() => setActiveTab('correcciones')}
-                        className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-error text-error bg-error/5' : 'border-transparent text-text-dim hover:text-text-main'
+                        className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-error text-error bg-error/5' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                             }`}
                     >
                         <Shield size={14} className="text-error" />
@@ -637,7 +637,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 )}
                 <button
                     onClick={() => setActiveTab('comments')}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'comments' ? 'border-text-main text-text-main bg-text-main/5' : 'border-transparent text-text-dim hover:text-text-main'
+                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'comments' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
                 >
                     <MessageSquare size={14} />
@@ -645,7 +645,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 </button>
                 <button
                     onClick={() => setActiveTab('status')}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'status' ? 'border-text-main text-text-main bg-text-main/5' : 'border-transparent text-text-dim hover:text-text-main'
+                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'status' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
                 >
                     <CheckCircle size={14} />
@@ -653,7 +653,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 </button>
                 <button
                     onClick={() => setActiveTab('activity')}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'activity' ? 'border-text-main text-text-main bg-text-main/5' : 'border-transparent text-text-dim hover:text-text-main'
+                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'activity' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
                 >
                     <Clock size={14} />
@@ -661,7 +661,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 </button>
                 <button
                     onClick={onClose}
-                    className="p-3 hover:bg-bg-deep rounded-lg text-text-dim hover:text-text-main transition-colors mr-1 cursor-pointer"
+                    className="p-3 hover:bg-surface rounded-lg text-text-dim hover:text-text-main transition-colors mr-1 cursor-pointer"
                     title="Cerrar panel"
                     aria-label="Cerrar panel"
                 >
@@ -670,7 +670,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             </div>
 
             {/* Content Container */}
-            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep/10 flex flex-col`}>
+            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col`}>
                 {isLoadingPulse ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 py-10 opacity-70">
                         <Loader size={24} className="animate-spin text-text-main" />

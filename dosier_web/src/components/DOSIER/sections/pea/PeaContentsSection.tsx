@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Layers, Plus, Trash2, CheckCircle2, AlertTriangle, Calculator, Clock, HelpCircle } from 'lucide-react';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
-import { resolveHeaderColor, getContrastFg } from '../../../../pages/Admin/Templates/components/properties/SharedColorPicker';
 
 interface UnidadTematica {
     num?: number;
@@ -35,7 +34,6 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
 }) => {
     const c = config || {};
     const displayTitle = c.title || 'f) CONTENIDOS DE ENSEÑANZA';
-    const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
 
     // Horas normadas oficiales de la asignatura en SIGAFI / Malla
     const totalHorasOficial = Number(
@@ -158,20 +156,6 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
 
     return (
         <div className="w-full space-y-6 animate-fade-in font-sans">
-            {/* ENCABEZADO DE SECCIÓN */}
-            <div
-                className="w-full py-2.5 px-4 rounded-xl flex items-center justify-between shadow-xs"
-                style={{ backgroundColor: headerBg, color: getContrastFg(headerBg) }}
-            >
-                <div className="flex items-center gap-2.5">
-                    <Layers className="w-5 h-5 shrink-0" />
-                    <span className="font-bold text-xs uppercase tracking-wider">{displayTitle}</span>
-                </div>
-                <span className="text-[10px] font-mono opacity-80 uppercase tracking-widest">
-                    Unidades Temáticas y Carga Horaria
-                </span>
-            </div>
-
             {/* VALIDADOR MATEMÁTICO EN TIEMPO REAL */}
             <div className="rounded-xl border border-border-thin bg-surface p-4 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">

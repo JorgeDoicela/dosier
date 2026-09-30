@@ -27,6 +27,8 @@ import { AgnosticSection }        from '../../../components/DOSIER/sections/Agno
 import { MultiSectionTableSection } from '../../../components/DOSIER/sections/MultiSectionTableSection';
 import {
     PeaGeneralSection,
+    PeaObjectivesSection,
+    PeaPrerequisitesSection,
     PeaCharacterizationSection,
     PeaCompetenciesSection,
     PeaContentsSection,
@@ -47,6 +49,8 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
 
     // ── PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA) ────────────────
     'PeaGeneralSection': PeaGeneralSection,
+    'PeaObjectivesSection': PeaObjectivesSection,
+    'PeaPrerequisitesSection': PeaPrerequisitesSection,
     'PeaCharacterizationSection': PeaCharacterizationSection,
     'PeaCompetenciesSection': PeaCompetenciesSection,
     'PeaContentsSection': PeaContentsSection,
@@ -65,6 +69,8 @@ export const COMPONENT_MAP: Record<string, React.ComponentType<any>> = {
 export const DocumentComponentRegistry: Record<string, React.ComponentType<any>> = {
     // ── PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA) ────────────────
     'pea_general_section':          PeaGeneralSection,
+    'pea_objectives_section':       PeaObjectivesSection,
+    'pea_prerequisites_section':    PeaPrerequisitesSection,
     'pea_characterization_section': PeaCharacterizationSection,
     'pea_competencies_rda_section': PeaCompetenciesSection,
     'pea_contents_section':         PeaContentsSection,

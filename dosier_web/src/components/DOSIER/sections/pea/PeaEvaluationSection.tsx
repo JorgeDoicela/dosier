@@ -2,7 +2,6 @@ import React from 'react';
 import { BarChart3, Info, Plus, Trash2, Award } from 'lucide-react';
 import { CoWorkEditor } from '../../../../core/cowork/components/CoWorkEditor';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
-import { resolveHeaderColor, getContrastFg } from '../../../../pages/Admin/Templates/components/properties/SharedColorPicker';
 
 interface EvaluacionItem {
     nota: string;
@@ -33,7 +32,6 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
 }) => {
     const c = config || {};
     const displayTitle = c.title || 'i) EVALUACIÓN DEL APRENDIZAJE';
-    const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
 
     const rawEvaluaciones: any[] = Array.isArray(formData?.Evaluaciones) ? formData.Evaluaciones : [];
 
@@ -99,135 +97,109 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
 
     return (
         <div className="w-full space-y-6 animate-fade-in font-sans">
-            {/* ENCABEZADO DE SECCIÓN */}
-            <div
-                className="w-full py-2.5 px-4 rounded-xl flex items-center justify-between shadow-xs"
-                style={{ backgroundColor: headerBg, color: getContrastFg(headerBg) }}
-            >
-                <div className="flex items-center gap-2.5">
-                    <BarChart3 className="w-5 h-5 shrink-0" />
-                    <span className="font-bold text-xs uppercase tracking-wider">{displayTitle}</span>
-                </div>
-                <span className="text-[10px] font-mono opacity-80 uppercase tracking-widest">
-                    RRA Art. 21 / ISTPET
-                </span>
-            </div>
-
             {/* POLÍTICAS Y CRITERIOS DE EVALUACIÓN */}
-            <div className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden">
-                <div className="p-4 border-b border-border-thin bg-bg-deep/60 flex items-center justify-between">
-                    <span className="font-bold text-xs uppercase tracking-wide text-text-main">
-                        Criterios y Políticas de Evaluación Continua
-                    </span>
-                    <span className="text-[10px] text-text-dim font-medium">
-                        Régimen Académico Institucional
-                    </span>
+            <div className="space-y-3">
+                <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+                    Criterios y Políticas de Evaluación Continua
+                </h4>
+
+                <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
+                    <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+                    <p className="leading-relaxed">
+                        Describa las políticas pedagógicas: <strong className="text-text-main font-semibold">evaluación diagnóstica, formativa continua y sumativa, puntualidad, deshonestidad académica y mecanismos de retroalimentación oportuna</strong>.
+                    </p>
                 </div>
 
-                <div className="p-4 space-y-3">
-                    <div className="flex gap-2.5 p-3 rounded-lg bg-bg-deep border border-border-thin text-[11px] text-text-dim items-start">
-                        <Info size={15} className="text-brand shrink-0 mt-0.5" />
-                        <p className="leading-relaxed">
-                            Describa las políticas pedagógicas: evaluación diagnóstica, formativa continua y sumativa, puntualidad, deshonestidad académica y mecanismos de retroalimentación oportuna.
-                        </p>
-                    </div>
-
-                    <div className="rounded-xl border border-border-thin overflow-hidden bg-bg-deep">
-                        <CoWorkEditor
-                            field="EvaluacionAprendizaje"
-                            cowork={cowork}
-                            readonly={readOnly}
-                            placeholder="Describa los criterios de evaluación:&#10;• La evaluación es sistemática y orientada al logro de los resultados de aprendizaje...&#10;• Todo trabajo entregado fuera de plazo tendrá penalización acordada...&#10;• Se garantiza el derecho a la recalificación según el RRA institucional..."
-                            className="min-h-[140px] p-3 text-xs"
-                            onChange={(html, meta) => onUpdate('EvaluacionAprendizaje', html, meta)}
-                        />
-                    </div>
+                <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
+                    <CoWorkEditor
+                        field="EvaluacionAprendizaje"
+                        cowork={cowork}
+                        readOnly={readOnly}
+                        toolbarMode="apa_full"
+                        placeholder="Describa los criterios de evaluación:&#10;• La evaluación es sistemática y orientada al logro de los resultados de aprendizaje...&#10;• Todo trabajo entregado fuera de plazo tendrá penalización acordada...&#10;• Se garantiza el derecho a la recalificación según el RRA institucional..."
+                        onChange={(html, meta) => onUpdate('EvaluacionAprendizaje', html, meta)}
+                    />
                 </div>
             </div>
 
             {/* MATRIZ OFICIAL DE CALIFICACIONES */}
-            <div className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden">
-                <div className="p-4 border-b border-border-thin bg-bg-deep/60 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4 text-brand" />
-                        <span className="font-bold text-xs uppercase tracking-wide text-text-main">
-                            Matriz Oficial de Calificaciones (Escala vigesimal o sobre 10 pts)
-                        </span>
-                    </div>
+            <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                    <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+                        Matriz Oficial de Calificaciones ({evaluaciones.length})
+                    </h4>
                     {!readOnly && (
                         <button
                             type="button"
                             onClick={handleAddEvaluacion}
-                            className="btn-vercel-secondary text-xs px-3 py-1 flex items-center gap-1.5"
+                            className="px-3 py-1.5 bg-surface hover:bg-bg-deep border border-border-thin rounded-lg text-xs font-semibold text-text-main transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                         >
-                            <Plus size={13} />
+                            <Plus size={14} className="text-[#0070f3]" />
                             <span>Añadir Componente</span>
                         </button>
                     )}
                 </div>
 
-                <div className="p-4">
-                    <div className="overflow-x-auto rounded-xl border border-border-thin">
-                        <table className="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
-                                    <th className="p-3 w-[25%] border-r border-border-thin">Notas</th>
-                                    <th className="p-3 w-[55%] border-r border-border-thin">TIPO DE EVALUACIÓN</th>
-                                    <th className="p-3 w-[15%] text-center border-r border-border-thin">CALIFICACION</th>
-                                    {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
+                <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
+                                <th className="p-3 w-[25%] border-r border-border-thin">Notas</th>
+                                <th className="p-3 w-[55%] border-r border-border-thin">TIPO DE EVALUACIÓN</th>
+                                <th className="p-3 w-[15%] text-center border-r border-border-thin">CALIFICACION</th>
+                                {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-thin bg-surface">
+                            {evaluaciones.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
+                                    <td className="p-2.5 border-r border-border-thin font-semibold text-text-main">
+                                        <input
+                                            type="text"
+                                            value={item.nota}
+                                            onChange={(e) => handleUpdateEvaluacion(idx, 'nota', e.target.value)}
+                                            disabled={readOnly}
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs font-bold text-text-main outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    <td className="p-2.5 border-r border-border-thin">
+                                        <input
+                                            type="text"
+                                            value={item.tipo}
+                                            onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
+                                            disabled={readOnly}
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    <td className="p-2.5 border-r border-border-thin text-center font-bold text-[#0070f3]">
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={100}
+                                            value={item.calificacion}
+                                            onChange={(e) => handleUpdateEvaluacion(idx, 'calificacion', Number(e.target.value) || 0)}
+                                            disabled={readOnly}
+                                            className="w-20 mx-auto text-center font-black text-[#0070f3] bg-bg-deep border border-border-thin rounded-lg py-1.5 text-xs outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    {!readOnly && (
+                                        <td className="p-2.5 text-center">
+                                            {evaluaciones.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveEvaluacion(idx)}
+                                                    className="p-1.5 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors"
+                                                    title="Eliminar fila"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border-thin bg-surface">
-                                {evaluaciones.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                        <td className="p-2.5 border-r border-border-thin font-semibold text-text-main">
-                                            <input
-                                                type="text"
-                                                value={item.nota}
-                                                onChange={(e) => handleUpdateEvaluacion(idx, 'nota', e.target.value)}
-                                                disabled={readOnly}
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs font-bold text-text-main outline-none focus:border-brand"
-                                            />
-                                        </td>
-                                        <td className="p-2.5 border-r border-border-thin">
-                                            <input
-                                                type="text"
-                                                value={item.tipo}
-                                                onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
-                                                disabled={readOnly}
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main outline-none focus:border-brand"
-                                            />
-                                        </td>
-                                        <td className="p-2.5 border-r border-border-thin text-center font-bold text-brand">
-                                            <input
-                                                type="number"
-                                                min={1}
-                                                max={100}
-                                                value={item.calificacion}
-                                                onChange={(e) => handleUpdateEvaluacion(idx, 'calificacion', Number(e.target.value) || 0)}
-                                                disabled={readOnly}
-                                                className="w-20 mx-auto text-center font-black text-brand bg-bg-deep border border-border-thin rounded-lg py-1.5 text-xs outline-none focus:border-brand"
-                                            />
-                                        </td>
-                                        {!readOnly && (
-                                            <td className="p-2.5 text-center">
-                                                {evaluaciones.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveEvaluacion(idx)}
-                                                        className="p-1.5 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors"
-                                                        title="Eliminar fila"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                )}
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

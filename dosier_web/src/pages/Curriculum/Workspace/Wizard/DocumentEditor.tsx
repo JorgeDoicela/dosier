@@ -177,18 +177,21 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             // Aplicar datos de instancia
             const instanceData: any = instanceResult?.data || instanceResult;
             if (instanceData && (instanceData.uuid || instanceData.Uuid || instanceData.data_snapshot_json || instanceData.dataSnapshotJson)) {
-                const hasSignedPdf = !!(
-                    instanceData.final_pdf_path ||
-                    instanceData.finalPdfPath ||
-                    instanceData.FinalPdfPath ||
-                    instanceData.is_signed ||
-                    instanceData.isSigned ||
-                    instanceData.IsSigned ||
-                    instanceData.signed_at ||
-                    instanceData.signedAt ||
-                    instanceData.estado === 'Firmado' ||
-                    instanceData.estado === 'Finalizado'
-                );
+                const isPeaDoc = templateCode === 'PEA_OFICIAL' || templateCode?.startsWith('PEA');
+                const hasSignedPdf = isPeaDoc
+                    ? (projectStatus === 'Aprobado' || projectStatus === 'Publicado')
+                    : !!(
+                        instanceData.final_pdf_path ||
+                        instanceData.finalPdfPath ||
+                        instanceData.FinalPdfPath ||
+                        instanceData.is_signed ||
+                        instanceData.isSigned ||
+                        instanceData.IsSigned ||
+                        instanceData.signed_at ||
+                        instanceData.signedAt ||
+                        instanceData.estado === 'Firmado' ||
+                        instanceData.estado === 'Finalizado'
+                    );
                 setIsInstanceSigned(hasSignedPdf);
 
                 const realUuid = instanceData.uuid || instanceData.Uuid;

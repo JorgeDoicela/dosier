@@ -131,6 +131,7 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
             case 'pea_general_section':
                 return <RenderPeaGeneralSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'pea_objective_section':
+            case 'pea_objectives_section':
                 return <RenderPeaObjectiveSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'pea_prerequisites_section':
                 return <RenderPeaPrerequisitesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;

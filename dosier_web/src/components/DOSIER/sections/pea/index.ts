@@ -1,4 +1,6 @@
 export { PeaGeneralSection } from './PeaGeneralSection';
+export { PeaObjectivesSection } from './PeaObjectivesSection';
+export { PeaPrerequisitesSection } from './PeaPrerequisitesSection';
 export { PeaCharacterizationSection } from './PeaCharacterizationSection';
 export { PeaCompetenciesSection } from './PeaCompetenciesSection';
 export { PeaContentsSection } from './PeaContentsSection';
@@ -7,3 +9,4 @@ export { PeaResourcesSection } from './PeaResourcesSection';
 export { PeaEvaluationSection } from './PeaEvaluationSection';
 export { PeaBibliographySection } from './PeaBibliographySection';
 export { PeaSignaturesSection } from './PeaSignaturesSection';
+
