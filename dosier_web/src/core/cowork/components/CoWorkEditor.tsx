@@ -24,6 +24,7 @@ interface CoWorkEditorProps {
     onChange?: (html: string, meta?: { source?: 'local' | 'remote' }) => void;
     placeholder?: string;
     readonly?: boolean;
+    readOnly?: boolean;
     className?: string;
     toolbarMode?: ToolbarMode;
 }
@@ -49,7 +50,7 @@ export const CoWorkEditor: React.FC<CoWorkEditorProps> = (props) => {
         );
     }
 
-    const isReadOnlyMode = props.readonly || guardContext.readOnly || props.cowork.session.readOnly;
+    const isReadOnlyMode = Boolean(props.readonly ?? props.readOnly ?? guardContext.readOnly ?? props.cowork.session.readOnly);
     
     // Evitar conflicto de constructor en Yjs si la clave ya fue registrada con un tipo diferente (ej. Y.Text)
     const ydoc = props.cowork.ydoc;

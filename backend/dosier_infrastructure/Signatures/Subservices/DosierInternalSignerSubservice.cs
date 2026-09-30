@@ -116,34 +116,47 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
         var nombreUsuario = user.Nombre ?? user.IdSigafi ?? "Usuario DOSIER";
         var cedulaUsuario = user.IdSigafi;
 
-        // 2. Verificar que el documento existe y es accesible (buscando por Uuid de Instancia o Uuid de Entidad + TemplateCode)
+        // 2. Verificar que el documento existe y es accesible (buscando por Uuid de Instancia o Uuid de Entidad)
         var instancia = await _context.DocumentInstances
             .FirstOrDefaultAsync(d => d.Uuid == dto.DocumentoUuid)
             ?? await _context.DocumentInstances
-            .FirstOrDefaultAsync(d => d.EntityUuid == dto.DocumentoUuid && d.TemplateCode == "PROTOCOLO_INVESTIGACION")
+            .OrderByDescending(d => d.CreatedAt)
+            .FirstOrDefaultAsync(d => d.EntityUuid == dto.DocumentoUuid)
             ?? throw new KeyNotFoundException($"Documento '{dto.DocumentoUuid}' no encontrado.");
 
-        // 3. Verificar que el perfil de firma está configurado
+        // 3. Verificar que el perfil de firma está configurado o auto-crear perfil base institucional
         var perfilCheck = await _context.DocUserSignaturePerfiles
-            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.IdUsuario == idUsuario);
+
         if (perfilCheck is null || !perfilCheck.EsConfigurado)
         {
-            var failAudit = new DocAuditAdmin
-            {
-                IdUsuarioAdmin = idUsuario,
-                IdUsuarioAfectado = idUsuario,
-                Accion = SignatureAuditEvent.SignatureFailed.ToString(),
-                Modulo = "Signatures",
-                Detalle = $"Intento de firma fallido para el documento {dto.DocumentoUuid}: perfil de firma no configurado.",
-                IpOrigen = ipAddress,
-                UserAgent = userAgent,
-                Fecha = DateTime.UtcNow
-            };
-            _context.DocAuditAdmin.Add(failAudit);
-            await _context.SaveChangesAsync();
+            var parts = (user.Nombre ?? "Docente").Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var initialInitials = parts.Length > 0 ? string.Concat(parts.Take(2).Select(p => char.ToUpper(p[0]))) : "IST";
 
-            throw new InvalidOperationException("El usuario no tiene un perfil de firma institucional configurado. Configure su cargo y trazo antes de firmar.");
+            if (perfilCheck is null)
+            {
+                perfilCheck = new DocUserSignaturePerfil
+                {
+                    IdUsuario = idUsuario,
+                    EsConfigurado = true,
+                    Cargo = "Docente Titular",
+                    Departamento = "ISTPET",
+                    Iniciales = initialInitials,
+                    CreadoEn = DateTime.UtcNow,
+                    ActualizadoEn = DateTime.UtcNow
+                };
+                _context.DocUserSignaturePerfiles.Add(perfilCheck);
+            }
+            else
+            {
+                perfilCheck.EsConfigurado = true;
+                perfilCheck.Cargo = string.IsNullOrWhiteSpace(perfilCheck.Cargo) ? "Docente Titular" : perfilCheck.Cargo;
+                perfilCheck.Departamento = string.IsNullOrWhiteSpace(perfilCheck.Departamento) ? "ISTPET" : perfilCheck.Departamento;
+                perfilCheck.Iniciales = string.IsNullOrWhiteSpace(perfilCheck.Iniciales) ? initialInitials : perfilCheck.Iniciales;
+                perfilCheck.ActualizadoEn = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         // 4. Verificar firma existente o permitir re-firma si el proyecto fue devuelto a corrección

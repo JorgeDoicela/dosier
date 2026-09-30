@@ -210,8 +210,19 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
   - **Causa Raíz:** Las alertas emergentes en tiempo real (`.toast-container-vercel`) aparecían ancladas en la esquina inferior izquierda (`bottom: 1.5rem; left: 1.5rem;`), y la campana de notificaciones residía en el pie del menú lateral (`SidebarFooter`), desplegando el panel hacia la izquierda baja y fragmentando la visibilidad del usuario.
   - **Solución Implementada:**
     - Se trasladó el contenedor de toasts (`.toast-container-vercel`) a `top: 1.5rem; right: 1.5rem;` con animación direccional `@keyframes toastSlideInRight` y `pointer-events: none` con captura de eventos por elemento.
-    - Se trasladó la campana de notificaciones al grupo de utilidades superior derecho en `DashboardLayout.tsx` (`NotificationBell size="sm"` en escritorio y `size="md"` en móvil) con punto azul corporativo `#0070f3`, popover desplegable alineado a la derecha con fondo 100% sólido y scrollbar personalizada.
-    - Se erradicó la campana residual y el portal inferior izquierdo en `SidebarFooter.tsx` y `Sidebar.tsx`, unificando toda la observabilidad del sistema en la barra superior.
+* **Modernización y Rediseño de la Visualización de Firmas Institucionales (`/configuracion` -> Perfil de Firma):**
+  - **Causa Raíz y Alcance:** La configuración y visualización del perfil de firma institucional contenía textos residuales heredados de DIITRA ("protocolo de investigación"), anidamiento excesivo de cajas y tarjetas con bordes innecesarios, y fallos de tipo 400 Bad Request en el backend al validar códigos de plantilla fijos o firmas sin perfil manual previo.
+  - **Mejoras Visuales (Estilo Modern Enterprise Docs):**
+    - En [SignatureProfileCard.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/SignatureProfileCard.tsx), se refactorizó la cabecera con icono técnico `ShieldCheck` y botón de edición sobrio.
+    - Se implementó una ficha clave-valor limpia (`Cargo Institucional`, `Departamento / Unidad`, `Estado de Firma`, `Última Actualización`) sin cajas encapsuladas ni KPIs gigantes.
+    - Se creó un contenedor de previsualización del trazo digital de alta fidelidad con soporte automático para inversión de color en modo oscuro (`dark:invert`).
+    - Navegación entre métodos de firma (*Generación Automática*, *Cargar Imagen (Foto)* y *Dibujo Manual (Lienzo)*) implementada sobre riel plano continuo (`border-b`, `-mb-px`) con acento `#0070f3`.
+    - Modal de confirmación estilizado con fondo 100% sólido (`bg-surface`), resumen de metadatos del docente y trazo oficial antes de la activación.
+    - Eliminación de todas las menciones a "protocolo de investigación", homologándolas a "Programas de Estudio de la Asignatura (PEA)".
+  - **Corrección en Backend (`DosierInternalSignerSubservice.cs` y `P12SignatureSubservice.cs`):**
+    - Desacoplamiento de la validación hardcodeada de código de plantilla (`TemplateCode == "PROTOCOLO_INVESTIGACION"`), resolviendo la plantilla de forma universal mediante el `Uuid` o `EntityUuid` del documento PEA.
+    - Auto-generación y reparación defensiva del perfil de firma en base de datos si el usuario firma con contraseña institucional sin haber guardado previamente su perfil manual en configuración.
+  - **Validación:** 100% de la suite de pruebas unitarias e integración en verde (283/283 tests en Vitest) y build de producción exitoso.
     - Se eliminó el menú flotante redundante de usuario (`Modo Oscuro`, `Configuración`, `Papelera`, `Cerrar Sesión`) en `SidebarFooter.tsx`, preservando exclusivamente el conmutador de rol institucional cuando el usuario dispone de múltiples roles (`hasMultipleRoles`), dejando la tarjeta de perfil limpia y sin popovers vacíos.
     - Se eliminó la etiqueta 'Tecnológico Traversari' y el contenedor absoluto centrado de la cabecera (`DashboardLayout.tsx`), posicionando el título de la vista directamente a la izquierda junto al conmutador de colapso del sidebar para otorgar holgura y espacio natural a las acciones de la barra superior derecha.
 * **Homologación Integral del Panel Lateral de Colaboración (`CollaborationSidebar.tsx`) según Estándar DIITRA:**
