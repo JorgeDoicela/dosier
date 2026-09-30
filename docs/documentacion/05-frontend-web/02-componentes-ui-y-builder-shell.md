@@ -160,5 +160,34 @@ graph TD
   4. **Usuarios:** Submenú desplegable filtrado por tipo de cuenta (Docentes institucionales y Personal administrativo).
 * **Estándar Visual:** Fondos 100% sólidos (`bg-surface dark:bg-[#131720]`), selectores de hover sobrios sin difuminados translúcidos, tipografía Inter Puro bajo el estándar Modern Enterprise Docs e iconografía técnica de Lucide React sin emojis.
 
+### 4.13. Barra Superior de Navegación y Acciones Globales (Dashboard TopBar)
+* **Ubicación:** `src/components/Layout/DashboardLayout.tsx`.
+* **Disposición y Distribución Espacial:**
+  * Cabecera persistente de 56px de altura (`h-14`) sobre la superficie de la aplicación (`bg-surface border-b border-border`) que aprovecha el margen superior derecho para concentrar las utilidades del sistema.
+  * **Panel Izquierdo:** Disparador de reapertura de barra lateral colapsada e identificador institucional (*Tecnológico Traversari*).
+  * **Centro:** Título contextual de la vista en curso en tipografía monoespaciada compacta y mayúsculas (`text-[10px] font-semibold uppercase tracking-widest`).
+  * **Extremo Superior Derecho:** Acceso directo a utilidades operativas y controles de usuario mediante botones vectoriales de alta fidelidad:
+    * *Reporte de Incidencias (`MessageSquarePlus`):* Disparador del modal interactivo de feedback.
+    * *Guía Interactiva (`HelpCircle`):* Acceso directo al tour de inducción del sistema.
+    * *Campana de Notificaciones (`NotificationBell`):* Acceso directo a notificaciones institucionales con punto indicador azul (`#0070f3`) y popover alineado a la derecha con fondo 100% sólido.
+    * *Separador fino vertical (`bg-border-thin`):* Delimitador sutil entre utilidades de ayuda y acciones de sesión.
+    * *Alternador de Modo Oscuro / Modo Claro (`Sun` / `Moon`):* Conmutación instantánea de tema visual.
+    * *Configuración (`Settings`):* Enlace directo a `/configuracion`.
+    * *Papelera Institucional (`Trash2`):* Acceso rápido a elementos eliminados para perfiles autorizados (`DOSIER_ADMIN` y `DOSIER_DOCENTE`).
+    * *Cerrar Sesión (`LogOut`):* Acción de desconexión segura con terminación de token y redirección a la raíz `/`.
+* **Alertas Emergentes (Toasts) y Consistencia:** Las alertas en tiempo real (`.toast-container-vercel`) se despliegan en la esquina superior derecha (`top: 1.5rem; right: 1.5rem;`), erradicando la posición anterior inferior izquierda. En dispositivos móviles (`lg:hidden`), se adaptan los controles con tamaño optimizado (`size="md"`).
+
+### 4.14. `<CollaborationSidebar>`: Panel Lateral de Colaboración Colegiada y Pulso en Tiempo Real
+* **Ubicación:** `src/components/DOSIER/CollaborationSidebar.tsx`.
+* **Integración en Shell:** Montado en `DOSIERBuilderShell.tsx` y conectado directamente al handle de SignalR `cowork` (`CoWorkHandle`).
+* **Pestañas y Navegación:**
+  1. **Chat:** Hilos de discusión colegiada con estado vacío optimizado (`MessageSquare`), envío con `Enter` (salto de línea con `Shift+Enter`), soporte completo de notas de voz interactivas con `MediaRecorder` y reproductor con ecualizador animado (`AudioBubblePlayer`), respuestas anidadas con cita previa del mensaje padre (`Reply`), edición inline de mensajes propios, eliminación con modal de confirmación destructiva (`useConfirm`) y confirmaciones de lectura en vivo ("visto" con doble check azul `CheckCheck`, tooltip de lectores y fecha/hora exacta).
+  2. **Estado:** Selector accesible de estado de sección (*En redacción*, *Por revisar*, *Completado*) con iconos vectoriales y checkmark activo; tarjeta de progreso global de alta densidad con barra de gradiente tricolor dinámico (<35% rojo, 35-74% ámbar, >=75% verde esmeralda); desglose completo de secciones normativas del PEA con normalización semántica `toSentenceCase` preservando siglas institucionales (PEA, CACES, CES, ISTPET, SIGAFI).
+  3. **Actividad:** Feed de auditoría en vivo con deduplicación por ventana de 2 minutos para evitar eventos redundantes de concurrencia.
+  4. **Ajustes (Correcciones):** Pestaña contextual que se activa automáticamente cuando el PEA se encuentra en estado *En Corrección*, mostrando la observación general de la coordinación académica, medidor de vencimiento de plazo con cálculo de días restantes y checklist de observaciones por sección con badges de estado.
+* **Optimización de Rendimiento:** Componente memoizado con `React.memo` y referencias anti-flicker (`lastFetchedEntityUuidRef`, `lastFetchedPulseUuidRef`) para prevenir peticiones redundantes a la API al conmutar entre secciones.
+
+
+
 
 

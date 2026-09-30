@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 import { useAuth } from '../../../../api/AuthContext';
+import api from '../../../../api/axios_config';
 
 export interface BuilderSection {
     id: string;
@@ -69,6 +70,53 @@ export const useBuilderLayout = ({
             }
         }
     }, [cowork, activeTab, readOnly]);
+
+    // ── Estados de Secciones en Tiempo Real (Status Dots) ──
+    const [sectionStatuses, setSectionStatuses] = useState<Record<string, string>>({});
+    const lastFetchedPulseDocIdRef = useRef<string | null>(null);
+
+    const docId = cowork?.session?.documentId;
+    const onSectionStatusUpdated = cowork?.onSectionStatusUpdated;
+
+    useEffect(() => {
+        if (!docId) return;
+
+        const normalizedUuid = docId.toLowerCase().trim();
+
+        // Ejecutar pulse inicial únicamente una sola vez por documento para no saturar la red
+        if (lastFetchedPulseDocIdRef.current !== normalizedUuid) {
+            lastFetchedPulseDocIdRef.current = normalizedUuid;
+            api.get(`/collaboration/${normalizedUuid}/pulse`)
+                .then(res => {
+                    if (res.data?.statuses) {
+                        const mapped: Record<string, string> = {};
+                        Object.entries(res.data.statuses).forEach(([key, val]: [string, any]) => {
+                            mapped[key] = typeof val === 'string' ? val : (val?.estado || 'Borrador');
+                        });
+                        setSectionStatuses(mapped);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        if (onSectionStatusUpdated) {
+            onSectionStatusUpdated((data: any) => {
+                if (data?.sectionName && data?.status) {
+                    setSectionStatuses(prev => ({
+                        ...prev,
+                        [data.sectionName]: data.status
+                    }));
+                }
+            });
+        }
+    }, [docId, onSectionStatusUpdated]);
+
+    const setSectionStatus = useCallback((sectionName: string, status: string) => {
+        setSectionStatuses(prev => ({
+            ...prev,
+            [sectionName]: status
+        }));
+    }, []);
 
     // ── Dimensiones y Estado de Sidebars ──
     const [leftSidebarWidth, setLeftSidebarWidth] = useState<number>(() => {
@@ -396,6 +444,8 @@ export const useBuilderLayout = ({
         isSectionBlocked,
         isDirectorOrAdmin,
         setActiveTab,
+        sectionStatuses,
+        setSectionStatus,
         leftSidebarWidth,
         rightSidebarWidth,
         isLeftSidebarOpen,

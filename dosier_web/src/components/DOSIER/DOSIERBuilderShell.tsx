@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Lock, Unlock, Shield, Award, Loader2, RefreshCw, X } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
 import CollaborationSidebar from './CollaborationSidebar';
@@ -97,6 +97,10 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
             setShowUpdateModal(true);
         }
     }, [hasTemplateUpdate]);
+
+    const allSectionIds = useMemo(() => sections.map(s => s.id), [sections]);
+    const sectionItemPairs = useMemo(() => sections.map(s => ({ id: s.id, label: s.label })), [sections]);
+    const handleCloseSidebar = useCallback(() => layout.setIsSidebarOpen(false), [layout.setIsSidebarOpen]);
 
     return (
         <DocumentDataContext.Provider value={formData}>
@@ -363,11 +367,14 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 instanceUuid={cowork.session.documentId}
                                                 sectionName={layout.activeTab}
                                                 cowork={cowork}
-                                                allSections={sections.map(s => s.id)}
+                                                allSections={allSectionIds}
+                                                sectionItems={sectionItemPairs}
                                                 entityUuid={entityUuid}
                                                 projectStatus={projectStatus}
                                                 templateCode={templateCode}
-                                                onClose={() => layout.setIsSidebarOpen(false)}
+                                                onClose={handleCloseSidebar}
+                                                sectionStatuses={layout.sectionStatuses}
+                                                onSectionStatusChange={layout.setSectionStatus}
                                             />
                                         </div>
                                     </div>

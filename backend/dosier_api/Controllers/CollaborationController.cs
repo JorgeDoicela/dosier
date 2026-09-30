@@ -176,5 +176,20 @@ namespace dosier_api.Controllers
                 return StatusCode(500, new { message = "Error interno al eliminar la imagen", detail = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Registra la confirmación de lectura ("visto") de uno o más comentarios para el usuario autenticado.
+        /// </summary>
+        [HttpPost("comments/{instanceUuid}/read")]
+        public async Task<IActionResult> MarkCommentsAsRead(string instanceUuid, [FromBody] MarkCommentsReadRequest request)
+        {
+            var userUuid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                           ?? User.FindFirst("id")?.Value ?? "0";
+            var userName = User.FindFirst("nombre")?.Value 
+                           ?? User.FindFirst(ClaimTypes.Name)?.Value ?? "Usuario";
+
+            var markedCount = await _collaborationService.MarkCommentsAsReadAsync(instanceUuid, request.CommentIds, userUuid, userName);
+            return Ok(new { markedCount });
+        }
     }
 }

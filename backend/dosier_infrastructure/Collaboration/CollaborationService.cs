@@ -30,22 +30,29 @@ namespace dosier_infrastructure.Collaboration
 
         public async Task<PulseResponseDto> GetPulseAsync(string instanceUuid)
         {
-            var comments = await _db.DocCollaborationComments
+            var rawComments = await _db.DocCollaborationComments
                 .AsNoTracking()
                 .Where(c => c.DocumentoUuid == instanceUuid)
                 .OrderByDescending(c => c.CreadoEn)
                 .Take(50)
-                .Select(c => new CommentDto
-                {
-                    IdComentario = c.IdComentario,
-                    DocumentoUuid = c.DocumentoUuid,
-                    UsuarioUuid = c.UsuarioUuid,
-                    NombreUsuario = c.NombreUsuario,
-                    Contenido = c.Contenido,
-                    IdPadre = c.IdPadre,
-                    CreadoEn = c.CreadoEn
-                })
                 .ToListAsync();
+
+            var comments = rawComments.Select(c => new CommentDto
+            {
+                IdComentario = c.IdComentario,
+                DocumentoUuid = c.DocumentoUuid,
+                UsuarioUuid = c.UsuarioUuid,
+                NombreUsuario = c.NombreUsuario,
+                Contenido = c.Contenido,
+                IdPadre = c.IdPadre,
+                CreadoEn = c.CreadoEn,
+                Lecturas = c.Lecturas.Select(l => new CollaborationCommentReadItemDto
+                {
+                    UsuarioUuid = l.UsuarioUuid,
+                    NombreUsuario = l.NombreUsuario,
+                    LeidoEn = l.LeidoEn
+                }).ToList()
+            }).ToList();
 
             var statuses = await _db.DocDocumentosSeccionesMetadata
                 .AsNoTracking()
@@ -277,6 +284,58 @@ namespace dosier_infrastructure.Collaboration
                 Status = CommentOpStatus.Success,
                 Message = "Comentario eliminado correctamente."
             };
+        }
+
+        public async Task<int> MarkCommentsAsReadAsync(string instanceUuid, List<int> commentIds, string userUuid, string userName)
+        {
+            if (commentIds == null || !commentIds.Any())
+                return 0;
+
+            var targetComments = await _db.DocCollaborationComments
+                .Where(c => c.DocumentoUuid == instanceUuid
+                         && commentIds.Contains(c.IdComentario)
+                         && c.UsuarioUuid != userUuid)
+                .ToListAsync();
+
+            if (!targetComments.Any())
+                return 0;
+
+            var now = DateTime.UtcNow;
+            var updatedCommentIds = new List<int>();
+
+            foreach (var comment in targetComments)
+            {
+                var lecturasList = comment.Lecturas;
+                if (!lecturasList.Any(l => l.UsuarioUuid == userUuid))
+                {
+                    lecturasList.Add(new CollaborationCommentReadItem
+                    {
+                        UsuarioUuid = userUuid,
+                        NombreUsuario = userName,
+                        LeidoEn = now
+                    });
+                    comment.Lecturas = lecturasList;
+                    updatedCommentIds.Add(comment.IdComentario);
+                }
+            }
+
+            if (updatedCommentIds.Any())
+            {
+                await _db.SaveChangesAsync();
+
+                await _hubContext.Clients.Group(instanceUuid.ToLower().Trim()).SendAsync("CommentsReadUpdated", new
+                {
+                    commentIds = updatedCommentIds,
+                    reader = new
+                    {
+                        usuarioUuid = userUuid,
+                        nombreUsuario = userName,
+                        leidoEn = now
+                    }
+                });
+            }
+
+            return updatedCommentIds.Count;
         }
     }
 }

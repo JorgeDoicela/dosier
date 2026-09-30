@@ -12,6 +12,14 @@ namespace dosier_application.Collaboration.Dtos
         public string Contenido { get; set; } = string.Empty;
         public int? IdPadre { get; set; }
         public DateTime CreadoEn { get; set; }
+        public List<CollaborationCommentReadItemDto> Lecturas { get; set; } = new();
+    }
+
+    public class CollaborationCommentReadItemDto
+    {
+        public string UsuarioUuid { get; set; } = string.Empty;
+        public string NombreUsuario { get; set; } = string.Empty;
+        public DateTime LeidoEn { get; set; } = DateTime.UtcNow;
     }
 
     public class SectionStatusDto
@@ -47,6 +55,11 @@ namespace dosier_application.Collaboration.Dtos
     public class UpdateCommentRequest
     {
         public string Contenido { get; set; } = null!;
+    }
+
+    public class MarkCommentsReadRequest
+    {
+        public List<int> CommentIds { get; set; } = new();
     }
 
     public enum CommentOpStatus

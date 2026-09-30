@@ -1,3 +1,12 @@
+// ═══════════════════════════════════════════════════════════════════
+// DOSIER — CollaborationSidebar (Modern Enterprise Docs)
+//
+// Panel lateral de colaboración, retroalimentación colegiada y pulso
+// en tiempo real para el Programa de Estudio de la Asignatura (PEA).
+// Conectado con SignalR WebSockets, comentarios jerárquicos, notas
+// de voz con reproductor ecualizado y confirmación de lectura en vivo.
+// ═══════════════════════════════════════════════════════════════════
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
     MessageSquare,
@@ -13,9 +22,14 @@ import {
     XCircle,
     Edit3,
     Eye,
-    Shield
+    Shield,
+    Check,
+    CheckCheck,
+    Reply,
+    X
 } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
+import api from '../../api/axios_config';
 import { collaborationService } from '../../services/collaborationService';
 import { getPeaByUuid } from '../../services/peaService';
 import { curriculumProjectService } from '../../services/curriculumProjectService';
@@ -24,16 +38,52 @@ import { useConfirm } from '../../api/ConfirmContext';
 import { coworkLog } from '../../core/cowork/utils/log';
 import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlayer';
 
+const toSentenceCase = (text: string, fallbackIdx?: number): string => {
+    if (!text) return '';
+    const match = text.match(/^(\d+[\.\-\)\s]*\s*)(.*)$/);
+    const prefix = match ? match[1] : (typeof fallbackIdx === 'number' ? `${fallbackIdx + 1}. ` : '');
+    const rawContent = match ? match[2].trim() : text.trim();
 
-interface CollaborationSidebarProps {
+    const rest = rawContent.toLowerCase();
+    let result = rest.charAt(0).toUpperCase() + rest.slice(1);
+
+    result = result
+        .replace(/\bpea\b/gi, 'PEA')
+        .replace(/\bcaces\b/gi, 'CACES')
+        .replace(/\bces\b/gi, 'CES')
+        .replace(/\bistpet\b/gi, 'ISTPET')
+        .replace(/\bgantt\b/gi, 'Gantt')
+        .replace(/\bi\+d\b/gi, 'I+D')
+        .replace(/\bape\b/gi, 'APE')
+        .replace(/\btic\b/gi, 'TIC')
+        .replace(/\btics\b/gi, 'TICs')
+        .replace(/\bsigafi\b/gi, 'SIGAFI');
+
+    return `${prefix}${result}`;
+};
+
+const formatTime = (isoString?: string) => {
+    if (!isoString) return '';
+    try {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch {
+        return '';
+    }
+};
+
+export interface CollaborationSidebarProps {
     instanceUuid: string;
     sectionName: string;
     cowork: CoWorkHandle;
     allSections: string[];
+    sectionItems?: { id: string; label: string }[];
     entityUuid?: string;
     projectStatus?: string;
     templateCode?: string;
     onClose: () => void;
+    sectionStatuses?: Record<string, string>;
+    onSectionStatusChange?: (sectionName: string, status: string) => void;
 }
 
 const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
@@ -41,13 +91,33 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     sectionName,
     cowork,
     allSections,
+    sectionItems,
     entityUuid,
     projectStatus,
     templateCode,
-    onClose
+    onClose,
+    sectionStatuses: sectionStatusesProp,
+    onSectionStatusChange
 }) => {
     const { user } = useAuth();
     const confirm = useConfirm();
+
+    const currentSectionLabel = useMemo(() => {
+        const found = sectionItems?.find(s => s.id === sectionName);
+        if (found?.label) return toSentenceCase(found.label);
+        const FALLBACK_NAMES: Record<string, string> = {
+            caracterizacion: 'Caracterización de la asignatura',
+            competencias: 'Competencias y resultados de aprendizaje',
+            contenidos: 'Contenidos y programación docente',
+            metodologia: 'Metodología de enseñanza-aprendizaje',
+            recursos: 'Recursos didácticos y tecnológicos',
+            evaluacion: 'Criterios de evaluación',
+            bibliografia: 'Bibliografía básica y complementaria',
+            firmas: 'Legalización y firmas de responsabilidad'
+        };
+        const raw = FALLBACK_NAMES[sectionName] || (sectionName || '').replace(/_/g, ' ');
+        return toSentenceCase(raw);
+    }, [sectionItems, sectionName]);
 
     const parseAuditComment = (contenido: string) => {
         const match = contenido.match(/^\[(.*?)\]\s*\((.*?)\):\s*(.*)$/);
@@ -76,14 +146,19 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         localStorage.setItem('document_sidebar_tab', tab);
         setActiveTabState(tab);
     }, []);
+
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
-    const [sectionStatuses, setSectionStatuses] = useState<Record<string, string>>({});
+    const [localSectionStatuses, setLocalSectionStatuses] = useState<Record<string, string>>({});
+    // Single Source of Truth: si el shell provee sectionStatuses, actúa como controlado
+    const sectionStatuses = sectionStatusesProp || localSectionStatuses;
     const [isLoadingPulse, setIsLoadingPulse] = useState(true);
 
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
     const [editingCommentText, setEditingCommentText] = useState('');
+    const [replyingToComment, setReplyingToComment] = useState<any | null>(null);
+    const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
     // Audio recording state & refs
     const [isRecording, setIsRecording] = useState(false);
@@ -99,10 +174,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     const [trazabilidad, setTrazabilidad] = useState<any[]>([]);
     const [isLoadingTrazabilidad, setIsLoadingTrazabilidad] = useState(false);
     const [projectDeadline, setProjectDeadline] = useState<string | null>(null);
+    const lastFetchedEntityUuidRef = useRef<string | null>(null);
 
     useEffect(() => {
+        if (!entityUuid) return;
+        if (lastFetchedEntityUuidRef.current === entityUuid) return;
+        lastFetchedEntityUuidRef.current = entityUuid;
+
         const fetchProjectDetails = async () => {
-            if (!entityUuid) return;
             setIsLoadingTrazabilidad(true);
             try {
                 if (templateCode === 'PEA_OFICIAL') {
@@ -114,10 +193,13 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             estadoAnterior: t.estado_anterior ?? t.estadoAnterior,
                             estadoNuevo: t.estado_nuevo ?? t.estadoNuevo,
                             motivo: t.motivo ?? t.Motivo,
+                            observacion: t.motivo ?? t.Motivo,
                             usuario: t.nombre_usuario ?? t.nombreUsuario ?? 'Sistema Curricular',
                             fecha: t.fecha_transicion ?? t.fechaTransicion
                         }));
                         setTrazabilidad(traceList);
+                        const deadline = peaData.fecha_limite_subsanacion || peaData.fechaLimiteSubsanacion;
+                        setProjectDeadline(deadline || null);
                     }
                     return;
                 }
@@ -187,7 +269,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         const lastCorrection = [...trazabilidad]
             .reverse()
             .find((t: any) => (t.estadoNuevo || t.EstadoNuevo) === 'En Corrección');
-        return lastCorrection ? (lastCorrection.observacion || lastCorrection.Observacion) : null;
+        return lastCorrection ? (lastCorrection.observacion || lastCorrection.Observacion || lastCorrection.motivo || lastCorrection.Motivo) : null;
     }, [trazabilidad, isLoadingTrazabilidad]);
 
     const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -207,35 +289,41 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     }, [comments.length, activeTab, scrollToBottom]);
 
     // Cargar Pulso Inicial (Historial de comentarios y estados)
+    const lastFetchedPulseUuidRef = useRef<string | null>(null);
+
     useEffect(() => {
+        if (!instanceUuid) return;
+        const normalizedUuid = instanceUuid.toLowerCase().trim();
+        if (lastFetchedPulseUuidRef.current === normalizedUuid) return;
+        lastFetchedPulseUuidRef.current = normalizedUuid;
+
         const fetchInitialPulse = async () => {
             setIsLoadingPulse(true);
             try {
-                const normalizedUuid = instanceUuid?.toLowerCase().trim();
                 coworkLog('[TeamPulse] Fetching pulse for:', normalizedUuid);
-                const res: any = await collaborationService.getPulse(normalizedUuid);
-                const pulseData = res?.data || res;
-                coworkLog('[TeamPulse] Response activities:', pulseData.activities?.length, pulseData.activities);
-                if (pulseData.comments) {
-                    const mappedComments = pulseData.comments.map((c: any) => ({
-                        idComentario: c.idComentario ?? c.id_comentario ?? c.idComentario,
+                const res = await api.get(`/collaboration/${normalizedUuid}/pulse`);
+                coworkLog('[TeamPulse] Response activities:', res.data.activities?.length, res.data.activities);
+                if (res.data.comments) {
+                    const mappedComments = res.data.comments.map((c: any) => ({
+                        idComentario: c.idComentario ?? c.id_comentario ?? c.idComment,
                         usuarioUuid: c.usuarioUuid ?? c.usuario_uuid ?? '',
                         nombreUsuario: c.nombreUsuario ?? c.nombre_usuario ?? 'Usuario',
                         contenido: c.contenido ?? '',
                         idPadre: c.idPadre ?? c.id_padre ?? null,
-                        creadoEn: c.creadoEn ?? c.creado_en ?? new Date().toISOString()
+                        creadoEn: c.creadoEn ?? c.creado_en ?? new Date().toISOString(),
+                        lecturas: c.lecturas ?? c.Lecturas ?? []
                     }));
                     setComments(mappedComments.reverse());
                 }
-                if (pulseData.statuses) {
+                if (res.data.statuses && !sectionStatusesProp) {
                     const mappedStatuses: Record<string, string> = {};
-                    Object.entries(pulseData.statuses).forEach(([key, val]: [string, any]) => {
+                    Object.entries(res.data.statuses).forEach(([key, val]: [string, any]) => {
                         mappedStatuses[key] = typeof val === 'string' ? val : (val?.estado || 'Borrador');
                     });
-                    setSectionStatuses(mappedStatuses);
+                    setLocalSectionStatuses(mappedStatuses);
                 }
-                if (pulseData.activities) {
-                    const mappedActivities = pulseData.activities.map((a: any) => ({
+                if (res.data.activities) {
+                    const mappedActivities = res.data.activities.map((a: any) => ({
                         userName: a.userName ?? a.user_name ?? 'Usuario',
                         action: a.action ?? '',
                         sectionName: a.sectionName ?? a.section_name ?? '',
@@ -253,7 +341,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         if (instanceUuid) {
             fetchInitialPulse();
         }
-    }, [instanceUuid]);
+    }, [instanceUuid, sectionStatusesProp]);
 
     // Suscribirse a eventos de tiempo real del Hub CoWork
     useEffect(() => {
@@ -261,12 +349,13 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
         cowork.onNewCommentReceived((data) => {
             const normalized = {
-                idComentario: data.idComentario ?? data.id_comentario ?? data.idComentario,
+                idComentario: data.idComentario ?? data.id_comentario ?? data.idComment,
                 usuarioUuid: data.usuarioUuid ?? data.usuario_uuid ?? '',
                 nombreUsuario: data.nombreUsuario ?? data.nombre_usuario ?? 'Usuario',
                 contenido: data.contenido ?? '',
                 idPadre: data.idPadre ?? data.id_padre ?? null,
-                creadoEn: data.creadoEn ?? data.creado_en ?? new Date().toISOString()
+                creadoEn: data.creadoEn ?? data.creado_en ?? new Date().toISOString(),
+                lecturas: data.lecturas ?? data.Lecturas ?? []
             };
             setComments(prev => {
                 const commentId = normalized.idComentario;
@@ -275,8 +364,26 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             });
         });
 
+        cowork.onCommentsReadUpdated?.((data: any) => {
+            const commentIds: number[] = data.commentIds || [];
+            const reader = data.reader;
+            if (!commentIds.length || !reader) return;
+
+            setComments(prev => prev.map(c => {
+                if (commentIds.includes(c.idComentario)) {
+                    const currentLecturas = c.lecturas || [];
+                    const alreadyRead = currentLecturas.some((l: any) => (l.usuarioUuid || l.usuario_uuid) === reader.usuarioUuid);
+                    return {
+                        ...c,
+                        lecturas: alreadyRead ? currentLecturas : [...currentLecturas, reader]
+                    };
+                }
+                return c;
+            }));
+        });
+
         cowork.onCommentUpdated?.((data) => {
-            const updatedId = data.idComentario ?? data.id_comentario ?? data.idComentario;
+            const updatedId = data.idComentario ?? data.id_comentario ?? data.idComment;
             setComments(prev => prev.map(c => {
                 if (c.idComentario === updatedId) {
                     return { ...c, contenido: data.contenido ?? data.Contenido ?? c.contenido };
@@ -286,14 +393,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         });
 
         cowork.onCommentDeleted?.((data) => {
-            const deletedId = data.idComentario ?? data.id_comentario ?? data.idComentario;
+            const deletedId = data.idComentario ?? data.id_comentario ?? data.idComment;
             setComments(prev => prev.filter(c => c.idComentario !== deletedId));
         });
 
         cowork.onSectionActivity((data) => {
             const userName = data.userName ?? data.user_name ?? 'Usuario';
             const action = data.action ?? '';
-            const sectionName = data.sectionName ?? data.section_name ?? '';
+            const secName = data.sectionName ?? data.section_name ?? '';
             const timestamp = data.timestamp ?? '';
 
             setActivities(prev => {
@@ -302,15 +409,15 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 const isDuplicate = prev.some((a: any) =>
                     a.userName === userName &&
                     a.action === action &&
-                    a.sectionName === sectionName &&
+                    a.sectionName === secName &&
                     new Date(a.timestamp).getTime() > twoMinutesAgo
                 );
                 if (isDuplicate) return prev;
-                
+
                 const normalized = {
                     userName,
                     action,
-                    sectionName,
+                    sectionName: secName,
                     timestamp
                 };
                 return [normalized, ...prev].slice(0, 20);
@@ -318,12 +425,36 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         });
 
         cowork.onSectionStatusUpdated((data) => {
-            setSectionStatuses(prev => ({
-                ...prev,
-                [data.sectionName]: data.status
-            }));
+            if (!sectionStatusesProp) {
+                setLocalSectionStatuses(prev => ({
+                    ...prev,
+                    [data.sectionName]: data.status
+                }));
+            }
         });
-    }, [cowork]);
+    }, [cowork, sectionStatusesProp]);
+
+    // Marcar automáticamente como leídos los comentarios ajenos cuando el usuario ve el chat
+    useEffect(() => {
+        if (activeTab !== 'comments' || !instanceUuid) return;
+        const currentUserId = user?.id_referencia || (user as any)?.id || '';
+        if (!currentUserId) return;
+
+        const unreadIds = comments
+            .filter(c => {
+                const isMe = c.usuarioUuid === currentUserId;
+                if (isMe) return false;
+                const lecturas = c.lecturas || [];
+                return !lecturas.some((l: any) => (l.usuarioUuid || l.usuario_uuid) === currentUserId);
+            })
+            .map(c => c.idComentario)
+            .filter(Boolean);
+
+        if (unreadIds.length === 0) return;
+
+        collaborationService.markCommentsAsRead(instanceUuid, unreadIds)
+            .catch(err => console.error("[Collaboration] Error al marcar comentarios como leídos:", err));
+    }, [activeTab, comments, instanceUuid, user?.id_referencia, (user as any)?.id]);
 
     // Voice recording helpers
     const startRecording = async () => {
@@ -386,7 +517,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     const handleUpdateComment = async (id: number, nuevoContenido: string) => {
         try {
-            await collaborationService.updateComment(id, { contenido: nuevoContenido });
+            await api.put(`/collaboration/comments/${id}`, { contenido: nuevoContenido });
             setEditingCommentId(null);
             setEditingCommentText('');
         } catch (err: any) {
@@ -397,16 +528,17 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     const handleDeleteComment = async (id: number) => {
         const hasConfirmed = await confirm({
-            title: 'Eliminar Comentario',
-            message: '¿Está seguro de que desea eliminar este comentario? Esta acción eliminará también sus respuestas.',
+            title: 'Eliminar mensaje',
+            message: '¿Estás seguro de que deseas eliminar este mensaje? Esta acción no se puede deshacer.',
             variant: 'destructive',
             confirmText: 'Eliminar',
-            cancelText: 'Cancelar'
+            cancelText: 'Cancelar',
+            position: 'right'
         });
         if (!hasConfirmed) return;
 
         try {
-            await collaborationService.deleteComment(id);
+            await api.delete(`/collaboration/comments/${id}`);
         } catch (err: any) {
             console.error("Error al eliminar comentario:", err);
             alert("No se pudo eliminar el comentario: " + (err.response?.data?.message || err.message));
@@ -418,16 +550,23 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             if (contenido.trim().startsWith('{')) {
                 return JSON.parse(contenido);
             }
-        } catch (e) {}
+        } catch { }
         return null;
     };
 
-    // Cálculo dinámico de progreso global basado en aprobaciones
+    // Función de normalización semántica (En redacción / Por revisar / Completado)
+    const normalizeSectionStatus = useCallback((status?: string): 'En redacción' | 'Por revisar' | 'Completado' => {
+        if (status === 'Completado' || status === 'Aprobado') return 'Completado';
+        if (status === 'Por revisar' || status === 'Revisión') return 'Por revisar';
+        return 'En redacción';
+    }, []);
+
+    // Cálculo dinámico de progreso global basado en secciones completadas
     const globalProgress = useMemo(() => {
         if (!allSections.length) return 0;
-        const approvedCount = allSections.filter(s => sectionStatuses[s] === 'Aprobado').length;
-        return Math.round((approvedCount / allSections.length) * 100);
-    }, [allSections, sectionStatuses]);
+        const completedCount = allSections.filter(s => normalizeSectionStatus(sectionStatuses[s]) === 'Completado').length;
+        return Math.round((completedCount / allSections.length) * 100);
+    }, [allSections, sectionStatuses, normalizeSectionStatus]);
 
     // Publicar comentario en tiempo real
     const handlePostComment = async () => {
@@ -443,7 +582,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
                 const payload = {
                     type: 'audio',
-                    audioUrl: uploadRes.url || (uploadRes as any).data?.url,
+                    audioUrl: uploadRes.url,
                     text: comment.trim() || 'Explicación de audio adjunta'
                 };
                 contentStr = JSON.stringify(payload);
@@ -451,48 +590,49 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 contentStr = comment.trim();
             }
 
-            await cowork.postComment(instanceUuid, contentStr);
+            await cowork.postComment(instanceUuid, contentStr, replyingToComment?.idComentario);
             setComment('');
+            setReplyingToComment(null);
             setAudioBlob(null);
             setAudioUrl('');
-        } catch (err) {
-            console.error("[Team Pulse] Error al enviar comentario:", err);
+        } catch (err: any) {
+            console.error("Error al publicar comentario:", err);
+            alert("No se pudo enviar el comentario. Intente nuevamente.");
         } finally {
             setSendingAudio(false);
         }
     };
 
-    // Actualizar estado de sección colaborativa
+    // Actualizar estado de la sección actual
     const handleUpdateStatus = async (status: string) => {
+        if (!sectionName || sectionName === 'output') return;
         try {
+            if (onSectionStatusChange) {
+                onSectionStatusChange(sectionName, status);
+            } else {
+                setLocalSectionStatuses(prev => ({
+                    ...prev,
+                    [sectionName]: status
+                }));
+            }
             await cowork.updateSectionStatus(instanceUuid, sectionName, status);
         } catch (err) {
-            console.error("[Team Pulse] Error al actualizar estado:", err);
-        }
-    };
-
-    // Formatear hora de forma legible
-    const formatTime = (dateStr: string) => {
-        try {
-            const date = new Date(dateStr);
-            return date.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
-        } catch {
-            return '';
+            console.error("Error al actualizar estado de sección:", err);
         }
     };
 
     return (
-        <aside className="w-full h-full bg-bg-deep flex flex-col z-40">
-            {/* Tabs & Close Control */}
-            <div className="flex items-center border-b border-border-thin bg-surface-hover/30">
-                {isProtocolDocument && (projectStatus === 'En Corrección' || comments.some(c => parseAuditComment(c.contenido) !== null)) && (
+        <aside className="w-full h-full flex flex-col bg-surface border-l border-border-thin z-30 transition-all duration-300">
+            {/* Header Tabs */}
+            <div className="flex items-center justify-between border-b border-border-thin bg-surface shrink-0 select-none">
+                {isProtocolDocument && projectStatus === 'En Corrección' && (
                     <button
                         onClick={() => setActiveTab('correcciones')}
-                        className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-text-main text-text-main bg-text-main/5' : 'border-transparent text-text-dim hover:text-text-main'
+                        className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-error text-error bg-error/5' : 'border-transparent text-text-dim hover:text-text-main'
                             }`}
                     >
-                        <Shield size={14} className={projectStatus === 'En Corrección' ? 'text-warning animate-pulse' : ''} />
-                        <span>Correcciones</span>
+                        <Shield size={14} className="text-error" />
+                        <span>Ajustes</span>
                     </button>
                 )}
                 <button
@@ -530,7 +670,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             </div>
 
             {/* Content Container */}
-            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden' : 'overflow-y-auto'} p-4 custom-scrollbar bg-bg-deep/10 flex flex-col`}>
+            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep/10 flex flex-col`}>
                 {isLoadingPulse ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 py-10 opacity-70">
                         <Loader size={24} className="animate-spin text-text-main" />
@@ -540,117 +680,267 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     <>
                         {activeTab === 'comments' && (
                             <div className="flex flex-col h-full flex-1 overflow-hidden">
-                                <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1 custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto space-y-3 mb-2 px-1 pt-3.5 pb-1 custom-scrollbar">
                                     {(() => {
                                         const chatComments = comments.filter(c => parseAuditComment(c.contenido) === null);
                                         if (chatComments.length === 0) {
                                             return (
-                                                <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
-                                                    <MessageSquare size={24} className="text-text-dim mb-2" />
-                                                    <p className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Sin comentarios aún</p>
-                                                    <p className="text-xs text-text-dim mt-1 max-w-[180px] leading-relaxed">Escribe un mensaje para coordinar la redacción.</p>
+                                                <div className="text-center py-12 opacity-50 flex flex-col items-center justify-center">
+                                                    <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
+                                                        <MessageSquare size={20} className="text-text-dim" />
+                                                    </div>
+                                                    <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Sin comentarios aún</p>
+                                                    <p className="text-[8px] text-text-dim mt-1 max-w-[150px] leading-relaxed">Escribe un mensaje para coordinar la redacción.</p>
                                                 </div>
                                             );
                                         }
 
                                         return (
-                                            <div className="space-y-3 flex flex-col">
+                                            <div className="space-y-3 flex flex-col w-full min-w-0">
                                                 {chatComments.map((c, i) => {
                                                     const parsed = parseCommentContent(c.contenido);
-                                                    const isMsgFromAdmin = c.usuarioUuid === 'admin' || c.nombreUsuario.toLowerCase().includes('admin') || c.nombreUsuario.toLowerCase().includes('director');
+                                                    const isMsgFromAdmin = c.usuarioUuid === 'admin' || c.nombreUsuario?.toLowerCase().includes('admin') || c.nombreUsuario?.toLowerCase().includes('coordinador');
                                                     const isMe = c.usuarioUuid === user?.id_referencia;
+                                                    const isEditingThis = editingCommentId === c.idComentario;
 
                                                     return (
                                                         <div
                                                             key={c.idComentario || c.uuid || i}
-                                                            className={`flex flex-col w-full max-w-[90%] ${
+                                                            id={`comment-${c.idComentario}`}
+                                                            className={`group flex flex-col min-w-0 ${
+                                                                isEditingThis ? 'w-full max-w-full' : 'max-w-[85%]'
+                                                            } ${
                                                                 isMe ? 'ml-auto items-end' : 'mr-auto items-start'
                                                             } animate-fade-up`}
                                                         >
-                                                            <div className="flex items-center gap-1.5 mb-0.5">
-                                                                <span className={`text-[8px] font-black uppercase tracking-wider ${
-                                                                    isMe ? 'text-emerald-400' : isMsgFromAdmin ? 'text-amber-400' : 'text-brand'
+                                                            {/* Nombre de remitente para mensajes de terceros */}
+                                                            {!isMe && (
+                                                                <span className={`text-[10px] font-semibold mb-1 px-1 tracking-tight truncate max-w-full ${
+                                                                    isMsgFromAdmin ? 'text-amber-500 dark:text-amber-400' : 'text-text-main dark:text-zinc-300'
                                                                 }`}>
-                                                                    {isMe ? 'Tú' : c.nombreUsuario}
+                                                                    {c.nombreUsuario}
                                                                 </span>
-                                                                <span className="text-[7px] text-text-dim font-mono">
-                                                                    {formatTime(c.creadoEn)}
-                                                                </span>
-                                                                {isMe && (
-                                                                    <div className="flex items-center gap-1 ml-2 opacity-60 hover:opacity-100 transition-opacity">
-                                                                        {!parsed?.audioUrl && (
+                                                            )}
+
+                                                            {/* Wrapper relativo ceñido a la burbuja con padding superior para evitar corte */}
+                                                            <div className={`relative ${isEditingThis ? 'w-full' : 'w-fit'} max-w-full min-w-0 pt-2.5`}>
+                                                                {/* Acciones flotantes ARRIBA a la derecha de la burbuja */}
+                                                                {!isEditingThis && (
+                                                                    <div className="absolute top-0 right-2 hidden group-hover:flex items-center gap-0.5 bg-surface border border-border-thin shadow-md rounded-full px-1.5 py-0.5 z-30 transition-all">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setReplyingToComment(c);
+                                                                                commentInputRef.current?.focus();
+                                                                            }}
+                                                                            className="text-text-dim hover:text-text-main p-0.5 rounded transition-colors"
+                                                                            title="Responder mensaje"
+                                                                        >
+                                                                            <Reply size={11} />
+                                                                        </button>
+                                                                        {isMe && !parsed?.audioUrl && (
                                                                             <button
                                                                                 onClick={() => {
                                                                                     setEditingCommentId(c.idComentario);
                                                                                     setEditingCommentText(parsed ? parsed.text : c.contenido);
                                                                                 }}
-                                                                                className="text-[8px] text-text-dim hover:text-text-main"
-                                                                                title="Editar"
+                                                                                className="text-text-dim hover:text-text-main p-0.5 rounded transition-colors"
+                                                                                title="Editar mensaje"
                                                                             >
-                                                                                <Edit2 size={10} />
+                                                                                <Edit2 size={11} />
                                                                             </button>
                                                                         )}
-                                                                        <button
-                                                                            onClick={() => handleDeleteComment(c.idComentario)}
-                                                                            className="text-[8px] text-text-dim hover:text-red-500"
-                                                                            title="Eliminar"
-                                                                        >
-                                                                            <XCircle size={10} />
-                                                                        </button>
+                                                                        {isMe && (
+                                                                            <button
+                                                                                onClick={() => handleDeleteComment(c.idComentario)}
+                                                                                className="text-text-dim hover:text-error p-0.5 rounded transition-colors"
+                                                                                title="Eliminar mensaje"
+                                                                            >
+                                                                                <XCircle size={11} />
+                                                                            </button>
+                                                                        )}
                                                                     </div>
                                                                 )}
-                                                            </div>
 
-                                                            <div className={`rounded-xl p-3 border shadow-sm select-text transition-all duration-300 w-full ${
-                                                                isMe
-                                                                    ? 'bg-emerald-500/5 border-emerald-500/20 text-text-main rounded-tr-none hover:border-emerald-500/40 shadow-emerald-500/5'
-                                                                    : isMsgFromAdmin
-                                                                        ? 'bg-amber-500/5 border-amber-500/20 text-text-main rounded-tl-none hover:border-amber-500/40 shadow-amber-500/5'
-                                                                        : 'bg-surface border-border-thin text-text-main rounded-tl-none hover:border-border-hover'
-                                                            }`}>
-                                                                {editingCommentId === c.idComentario ? (
-                                                                    <div className="space-y-2">
-                                                                        <textarea
-                                                                            value={editingCommentText}
-                                                                            onChange={(e) => setEditingCommentText(e.target.value)}
-                                                                            className="w-full bg-bg-deep border border-border-thin rounded-lg p-2 text-[11px] text-text-main focus:outline-none focus:border-text-main outline-none resize-none h-12 transition-colors custom-scrollbar placeholder:text-text-dim/60 font-medium"
-                                                                        />
-                                                                        <div className="flex justify-end gap-1">
-                                                                            <button
+                                                                {/* Burbuja Principal */}
+                                                                <div className={`p-2.5 rounded-2xl border text-xs shadow-xs transition-all w-fit max-w-full min-w-0 ${
+                                                                    isMe
+                                                                        ? 'bg-text-main text-bg-deep border-transparent rounded-tr-xs'
+                                                                        : isMsgFromAdmin
+                                                                            ? 'bg-surface border-amber-500/30 text-text-main rounded-tl-xs shadow-amber-500/5'
+                                                                            : 'bg-surface border-border-thin text-text-main rounded-tl-xs'
+                                                                }`}>
+                                                                    {/* Mensaje Padre si es una respuesta */}
+                                                                    {c.idPadre && (() => {
+                                                                        const parentComment = comments.find(p => p.idComentario === c.idPadre);
+                                                                        if (!parentComment) return null;
+                                                                        const parentParsed = parseCommentContent(parentComment.contenido);
+                                                                        return (
+                                                                            <div
                                                                                 onClick={() => {
-                                                                                    setEditingCommentId(null);
-                                                                                    setEditingCommentText('');
+                                                                                    const el = document.getElementById(`comment-${parentComment.idComentario}`);
+                                                                                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                                    el?.classList.add('ring-2', 'ring-brand', 'ring-offset-2');
+                                                                                    setTimeout(() => el?.classList.remove('ring-2', 'ring-brand', 'ring-offset-2'), 1500);
                                                                                 }}
-                                                                                className="px-2 py-0.5 rounded border border-border-thin bg-surface-hover hover:border-border-hover text-[8px] font-bold uppercase tracking-wider text-text-dim transition-all"
+                                                                                className={`mb-1.5 px-2 py-1 rounded-lg text-[10px] cursor-pointer border-l-2 transition-all ${
+                                                                                    isMe
+                                                                                        ? 'bg-bg-deep/15 border-bg-deep/60 text-bg-deep/90 hover:bg-bg-deep/25'
+                                                                                        : 'bg-bg-deep/50 border-border-hover text-text-dim hover:bg-bg-deep'
+                                                                                }`}
                                                                             >
-                                                                                Cancelar
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    let updatedContent = editingCommentText;
-                                                                                    if (parsed) {
-                                                                                        updatedContent = JSON.stringify({ ...parsed, text: editingCommentText });
-                                                                                    }
-                                                                                    handleUpdateComment(c.idComentario, updatedContent);
-                                                                                }}
-                                                                                className="px-2 py-0.5 bg-emerald-500 text-bg-deep rounded text-[8px] font-black uppercase tracking-wider hover:bg-emerald-600 transition-all shadow-md"
-                                                                            >
-                                                                                Guardar
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : parsed ? (
-                                                                    <div className="space-y-2">
-                                                                        {parsed.text && <p className="text-xs text-text-main leading-relaxed select-text">{parsed.text}</p>}
-                                                                        {parsed.audioUrl && (
-                                                                            <div className="mt-1">
-                                                                                <AudioBubblePlayer src={parsed.audioUrl} />
+                                                                                <div className="font-bold flex items-center gap-1 mb-0.5">
+                                                                                    <Reply size={9} className="opacity-75" />
+                                                                                    <span className="truncate">{parentComment.nombreUsuario}</span>
+                                                                                </div>
+                                                                                <p className="truncate text-[9.5px] opacity-85">
+                                                                                    {parentParsed?.text || parentComment.contenido}
+                                                                                </p>
                                                                             </div>
-                                                                        )}
-                                                                    </div>
-                                                                ) : (
-                                                                    <p className="text-xs text-text-main leading-relaxed select-text">{c.contenido}</p>
-                                                                )}
+                                                                        );
+                                                                    })()}
+
+                                                                    {isEditingThis ? (
+                                                                        <div className="space-y-2 min-w-[200px]">
+                                                                            <textarea
+                                                                                value={editingCommentText}
+                                                                                onChange={(e) => setEditingCommentText(e.target.value)}
+                                                                                className={`w-full p-2 text-xs rounded-lg border outline-none resize-none h-16 transition-colors custom-scrollbar font-sans ${
+                                                                                    isMe
+                                                                                        ? 'bg-bg-deep text-text-main border-bg-deep/30 focus:border-bg-deep'
+                                                                                        : 'bg-bg-deep border-border-thin text-text-main focus:border-border-hover'
+                                                                                }`}
+                                                                            />
+                                                                            <div className="flex justify-end gap-1.5">
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setEditingCommentId(null);
+                                                                                        setEditingCommentText('');
+                                                                                    }}
+                                                                                    className={`px-2.5 py-1 rounded-lg text-[8.5px] font-bold uppercase tracking-wider transition-all active:scale-95 ${
+                                                                                        isMe
+                                                                                            ? 'border border-bg-deep/25 bg-bg-deep/10 text-bg-deep hover:bg-bg-deep/20'
+                                                                                            : 'border border-border-thin bg-surface hover:bg-surface-hover text-text-dim hover:text-text-main'
+                                                                                    }`}
+                                                                                >
+                                                                                    Cancelar
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        let updatedContent = editingCommentText;
+                                                                                        if (parsed) {
+                                                                                            updatedContent = JSON.stringify({ ...parsed, text: editingCommentText });
+                                                                                        }
+                                                                                        handleUpdateComment(c.idComentario, updatedContent);
+                                                                                    }}
+                                                                                    className={`px-3.5 py-1 rounded-lg text-[8.5px] font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 ${
+                                                                                        isMe
+                                                                                            ? 'bg-bg-deep text-text-main hover:opacity-90'
+                                                                                            : 'bg-text-main text-bg-deep hover:opacity-90'
+                                                                                    }`}
+                                                                                >
+                                                                                    Guardar
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : parsed ? (
+                                                                        <div className="space-y-2 min-w-0 max-w-full">
+                                                                            {parsed.text && (
+                                                                                <p className="text-[12.5px] leading-relaxed select-text break-words min-w-0">
+                                                                                    {parsed.text}
+                                                                                </p>
+                                                                            )}
+                                                                            {parsed.audioUrl && (
+                                                                                <div className="mt-1">
+                                                                                    <AudioBubblePlayer src={parsed.audioUrl} />
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="flex items-center justify-end gap-1 mt-1 select-none">
+                                                                                <span className={`text-[9px] font-mono ${isMe ? 'opacity-70' : 'text-text-dim'}`}>
+                                                                                    {formatTime(c.creadoEn)}
+                                                                                </span>
+                                                                                {isMe && (() => {
+                                                                                    const lecturas = c.lecturas || [];
+                                                                                    const readers = lecturas.filter((l: any) => (l.usuarioUuid || l.usuario_uuid) !== user?.id_referencia);
+                                                                                    const isRead = readers.length > 0;
+
+                                                                                    return (
+                                                                                        <div className="relative group/read flex items-center cursor-help">
+                                                                                            {isRead ? (
+                                                                                                <CheckCheck size={14} className="text-sky-400 stroke-[2.5]" />
+                                                                                            ) : (
+                                                                                                <CheckCheck size={14} className="opacity-50 stroke-[2]" />
+                                                                                            )}
+
+                                                                                            <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/read:flex flex-col bg-surface text-text-main text-[10px] rounded-lg py-1.5 px-2.5 shadow-xl border border-border-thin whitespace-nowrap z-50 pointer-events-none transition-colors">
+                                                                                                <div className="flex items-center gap-1.5 pb-1 border-b border-border-thin font-bold text-text-main">
+                                                                                                    <CheckCheck size={12} className={isRead ? "text-sky-500 stroke-[2.5]" : "text-text-dim stroke-[2]"} />
+                                                                                                    <span>{isRead ? `Leído por (${readers.length})` : 'Entregado'}</span>
+                                                                                                </div>
+                                                                                                {isRead ? (
+                                                                                                    <div className="pt-1 space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+                                                                                                        {readers.map((r: any, idx: number) => (
+                                                                                                            <div key={idx} className="flex items-center justify-between gap-3 text-[9px]">
+                                                                                                                <span className="font-medium text-text-main">{r.nombreUsuario || r.nombre_usuario}</span>
+                                                                                                                <span className="font-mono text-text-dim text-[8px]">{formatTime(r.leidoEn || r.leido_en)}</span>
+                                                                                                            </div>
+                                                                                                        ))}
+                                                                                                    </div>
+                                                                                                ) : (
+                                                                                                    <span className="pt-1 text-[9px] text-text-dim font-medium">Entregado al equipo</span>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })()}
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="space-y-1 min-w-0 max-w-full">
+                                                                            <p className="text-[12.5px] leading-relaxed select-text break-words min-w-0 font-normal">
+                                                                                {c.contenido}
+                                                                            </p>
+                                                                            <div className="flex items-center justify-end gap-1 mt-0.5 select-none">
+                                                                                <span className={`text-[9px] font-mono ${isMe ? 'opacity-70' : 'text-text-dim'}`}>
+                                                                                    {formatTime(c.creadoEn)}
+                                                                                </span>
+                                                                                {isMe && (() => {
+                                                                                    const lecturas = c.lecturas || [];
+                                                                                    const readers = lecturas.filter((l: any) => (l.usuarioUuid || l.usuario_uuid) !== user?.id_referencia);
+                                                                                    const isRead = readers.length > 0;
+
+                                                                                    return (
+                                                                                        <div className="relative group/read flex items-center cursor-help">
+                                                                                            {isRead ? (
+                                                                                                <CheckCheck size={14} className="text-sky-400 stroke-[2.5]" />
+                                                                                            ) : (
+                                                                                                <CheckCheck size={14} className="opacity-50 stroke-[2]" />
+                                                                                            )}
+
+                                                                                            <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/read:flex flex-col bg-surface text-text-main text-[10px] rounded-lg py-1.5 px-2.5 shadow-xl border border-border-thin whitespace-nowrap z-50 pointer-events-none transition-colors">
+                                                                                                <div className="flex items-center gap-1.5 pb-1 border-b border-border-thin font-bold text-text-main">
+                                                                                                    <CheckCheck size={12} className={isRead ? "text-sky-500 stroke-[2.5]" : "text-text-dim stroke-[2]"} />
+                                                                                                    <span>{isRead ? `Leído por (${readers.length})` : 'Entregado'}</span>
+                                                                                                </div>
+                                                                                                {isRead ? (
+                                                                                                    <div className="pt-1 space-y-0.5 max-h-24 overflow-y-auto custom-scrollbar">
+                                                                                                        {readers.map((r: any, idx: number) => (
+                                                                                                            <div key={idx} className="flex items-center justify-between gap-3 text-[9px]">
+                                                                                                                <span className="font-medium text-text-main">{r.nombreUsuario || r.nombre_usuario}</span>
+                                                                                                                <span className="font-mono text-text-dim text-[8px]">{formatTime(r.leidoEn || r.leido_en)}</span>
+                                                                                                            </div>
+                                                                                                        ))}
+                                                                                                    </div>
+                                                                                                ) : (
+                                                                                                    <span className="pt-1 text-[9px] text-text-dim font-medium">Entregado al equipo</span>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })()}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -660,7 +950,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     })()}
                                     <div ref={commentsEndRef} />
                                 </div>
-                                <div className="mt-auto pt-2 shrink-0 space-y-3">
+                                <div className="mt-auto pt-1 pb-1.5 px-1 shrink-0 space-y-2">
                                     {isRecording ? (
                                         <div className="flex items-center justify-between bg-red-500/5 border border-red-500/25 rounded-xl p-2 px-3 animate-pulse">
                                             <div className="flex items-center gap-2">
@@ -702,8 +992,34 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         </div>
                                     ) : null}
 
+                                    {/* Previsualización de respuesta a un mensaje específico */}
+                                    {replyingToComment && (
+                                        <div className="flex items-center justify-between bg-surface border border-border-thin/40 rounded-xl p-2 px-3 shadow-xs animate-fade-in text-[10.5px] mb-2 gap-2">
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                <Reply size={13} className="text-text-dim shrink-0" />
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="font-semibold text-text-main truncate text-[10px] leading-tight">
+                                                        Respondiendo a <strong className="font-bold">{replyingToComment.nombreUsuario}</strong>
+                                                    </span>
+                                                    <span className="text-text-dim truncate text-[9px] leading-tight mt-0.5">
+                                                        {parseCommentContent(replyingToComment.contenido)?.text || replyingToComment.contenido}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setReplyingToComment(null)}
+                                                className="text-text-dim hover:text-text-main p-1 rounded-md hover:bg-surface-hover transition-colors shrink-0"
+                                                title="Cancelar respuesta"
+                                            >
+                                                <X size={13} />
+                                            </button>
+                                        </div>
+                                    )}
+
                                     <div className="relative">
                                         <textarea
+                                            ref={commentInputRef}
                                             value={comment}
                                             onChange={(e) => setComment(e.target.value)}
                                             onKeyDown={(e) => {
@@ -712,8 +1028,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                     handlePostComment();
                                                 }
                                             }}
-                                            placeholder="Escribe un mensaje al equipo..."
-                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 pr-20 text-xs focus:ring-2 focus:ring-text-main/10 focus:border-text-main outline-none resize-none h-20 transition-all custom-scrollbar placeholder:text-text-dim/60"
+                                            placeholder={replyingToComment ? `Respondiendo a ${replyingToComment.nombreUsuario}...` : "Escribe un mensaje al equipo..."}
+                                            className="w-full bg-surface border border-border-thin/40 rounded-xl p-3 pr-20 text-xs focus:!border-border-thin focus:!ring-1 focus:!ring-border-thin/40 focus:!shadow-none outline-none resize-none h-20 transition-all custom-scrollbar placeholder:text-text-dim/50 shadow-2xs"
                                         />
                                         <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
                                             {!audioUrl && !isRecording && (
@@ -729,7 +1045,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                             <button
                                                 onClick={handlePostComment}
                                                 disabled={sendingAudio || (!comment.trim() && !audioBlob)}
-                                                className="p-2 bg-text-main hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-bg-deep rounded-lg shadow-lg active:scale-95 transition-all flex items-center justify-center"
+                                                className="p-2 bg-text-main hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-bg-deep rounded-lg shadow-sm active:scale-95 transition-all flex items-center justify-center cursor-pointer"
                                                 title="Enviar mensaje"
                                             >
                                                 {sendingAudio ? <Loader size={12} className="animate-spin" /> : <Send size={12} />}
@@ -741,42 +1057,65 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         )}
 
                         {activeTab === 'status' && (
-                            <div className="space-y-5">
+                            <div className="space-y-4">
                                 {sectionName !== 'output' && (
-                                    <div className="bg-surface border border-border-thin rounded-2xl p-5 shadow-sm">
-                                        <h4 className="text-[9px] font-black uppercase text-text-dim mb-3 tracking-widest">Mi Sección Actual</h4>
-                                        <p className="text-xs font-black text-text-main mb-4 capitalize">{(sectionName || '').replace(/_/g, ' ')}</p>
-                                        <div className="grid grid-cols-1 gap-2.5">
+                                    <div className="bg-bg-deep border border-border-thin rounded-2xl p-4 shadow-sm space-y-3">
+                                        <div className="px-0.5">
+                                            <h4 className="text-[9px] font-mono font-bold uppercase text-text-dim tracking-widest">
+                                                Sección Actual
+                                            </h4>
+                                            <p className="text-xs font-bold text-text-main tracking-tight truncate mt-0.5" title={currentSectionLabel}>
+                                                {currentSectionLabel}
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-1.5">
                                             {[
-                                                { label: 'Borrador', value: 'Borrador', desc: 'Edición activa por los redactores', icon: <Edit3 size={14} className="shrink-0" />, activeStyle: 'bg-surface border-border-hover text-text-main shadow-md font-bold' },
-                                                { label: 'Revisión', value: 'Revisión', desc: 'Lista para control de calidad', icon: <Eye size={14} className="shrink-0" />, activeStyle: 'bg-amber-500/15 border-amber-500/40 text-amber-400 shadow-md font-bold' },
-                                                { label: 'Aprobado', value: 'Aprobado', desc: 'Sección consolidada y cerrada', icon: <CheckCircle size={14} className="shrink-0" />, activeStyle: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-md font-bold' }
+                                                {
+                                                    label: 'En redacción',
+                                                    value: 'En redacción',
+                                                    icon: <Edit3 size={18} className="shrink-0" />,
+                                                    activeColor: 'text-text-main',
+                                                    activeText: 'text-text-main font-bold'
+                                                },
+                                                {
+                                                    label: 'Por revisar',
+                                                    value: 'Por revisar',
+                                                    icon: <Eye size={18} className="shrink-0" />,
+                                                    activeColor: 'text-amber-500 dark:text-amber-400',
+                                                    activeText: 'text-amber-600 dark:text-amber-400 font-bold'
+                                                },
+                                                {
+                                                    label: 'Completado',
+                                                    value: 'Completado',
+                                                    icon: <CheckCircle size={18} className="shrink-0" />,
+                                                    activeColor: 'text-emerald-500 dark:text-emerald-400',
+                                                    activeText: 'text-emerald-600 dark:text-emerald-400 font-bold'
+                                                }
                                             ].map(s => {
-                                                const isActive = (sectionStatuses[sectionName] || 'Borrador') === s.value;
+                                                const currentNormalized = normalizeSectionStatus(sectionStatuses[sectionName]);
+                                                const isActive = currentNormalized === s.value;
                                                 return (
                                                     <button
                                                         key={s.value}
                                                         onClick={() => handleUpdateStatus(s.value)}
-                                                        className={`w-full px-4 py-3 rounded-xl text-left border transition-all duration-300 flex items-center justify-between group ${
-                                                            isActive
-                                                                ? s.activeStyle
-                                                                : 'bg-bg-deep/50 border-border-thin/60 text-text-dim hover:text-text-main hover:bg-surface-hover hover:border-border-hover'
-                                                        }`}
+                                                        className={`w-full flex items-center justify-between px-4.5 py-4 rounded-xl text-sm border transition-all cursor-pointer ${isActive
+                                                                ? 'bg-surface border-border-thin shadow-xs'
+                                                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50 font-normal'
+                                                            }`}
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`p-1.5 rounded-lg transition-colors ${
-                                                                isActive 
-                                                                    ? (s.value === 'Aprobado' ? 'bg-emerald-500/20' : s.value === 'Revisión' ? 'bg-amber-500/20' : 'bg-surface-hover')
-                                                                    : 'bg-bg-deep group-hover:bg-surface'
-                                                            }`}>
+                                                        <div className="flex items-center gap-3.5">
+                                                             <span className={isActive ? s.activeColor : 'text-text-dim transition-colors'}>
                                                                 {s.icon}
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <p className="text-[10px] font-black uppercase tracking-wider">{s.label}</p>
-                                                                <p className="text-[8px] text-text-dim font-semibold leading-none mt-0.5">{s.desc}</p>
-                                                            </div>
+                                                            </span>
+                                                            <span className={`tracking-wide ${isActive ? s.activeText : ''}`}>
+                                                                {s.label}
+                                                            </span>
                                                         </div>
-                                                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />}
+
+                                                        {isActive && (
+                                                            <Check size={17} strokeWidth={2.5} className={`shrink-0 ${s.activeColor}`} />
+                                                        )}
                                                     </button>
                                                 );
                                             })}
@@ -784,44 +1123,123 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     </div>
                                 )}
 
-                                <div className="p-5 bg-surface border border-border-thin rounded-2xl space-y-4 shadow-sm hover:border-border-hover transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h4 className="text-[9px] font-black uppercase text-text-dim tracking-widest mb-0.5">Progreso de Redacción</h4>
-                                            <p className="text-[8px] text-text-dim uppercase leading-relaxed font-bold tracking-tight">
-                                                {allSections.filter(s => sectionStatuses[s] === 'Aprobado').length} de {allSections.length} secciones aprobadas
-                                            </p>
-                                        </div>
-                                        <span className="text-[14px] font-mono font-black text-text-main">{globalProgress}%</span>
-                                    </div>
-                                    <div className="w-full bg-bg-deep h-2 rounded-full overflow-hidden p-[1px] border border-border-thin/40">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-brand to-emerald-500 transition-all duration-700 ease-out rounded-full shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                                            style={{ width: `${globalProgress}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
+                                {(() => {
+                                    const completedCount = allSections.filter(s => normalizeSectionStatus(sectionStatuses[s]) === 'Completado').length;
+
+                                    const progressTheme = globalProgress < 35
+                                        ? { bar: 'from-red-500 to-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.35)]', text: 'text-rose-600 dark:text-rose-400' }
+                                        : globalProgress < 75
+                                            ? { bar: 'from-amber-500 to-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.35)]', text: 'text-amber-600 dark:text-amber-400' }
+                                            : { bar: 'from-emerald-500 to-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.35)]', text: 'text-emerald-600 dark:text-emerald-400' };
+
+                                    return (
+                                        <>
+                                            {/* Tarjeta de Progreso y Métricas de Alta Densidad */}
+                                            <div className="p-4 bg-bg-deep border border-border-thin rounded-2xl space-y-3 shadow-sm hover:border-border-hover transition-all">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <h4 className="text-[10px] font-mono font-bold uppercase text-text-dim tracking-wider mb-0.5">Progreso Curricular</h4>
+                                                        <p className="text-[10px] text-text-main/70 uppercase leading-relaxed font-semibold tracking-tight">
+                                                            {completedCount} de {allSections.length} secciones completadas
+                                                        </p>
+                                                    </div>
+                                                    <span className={`text-sm font-mono font-black transition-colors ${progressTheme.text}`}>{globalProgress}%</span>
+                                                </div>
+
+                                                <div className="w-full bg-surface-hover h-1.5 rounded-full overflow-hidden p-[1px] border border-border-thin/40">
+                                                    <div
+                                                        className={`h-full bg-gradient-to-r ${progressTheme.bar} transition-all duration-700 ease-out rounded-full`}
+                                                        style={{ width: `${globalProgress}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Desglose de Secciones del PEA */}
+                                            {allSections.length > 0 && (
+                                                <div className="bg-bg-deep border border-border-thin rounded-2xl p-4 shadow-sm space-y-2.5">
+                                                    <div className="px-0.5">
+                                                        <h4 className="text-[9px] font-mono font-bold uppercase text-text-dim tracking-widest">
+                                                            Estado por Sección
+                                                        </h4>
+                                                    </div>
+
+                                                    <div className="divide-y divide-border-thin/30 max-h-[320px] overflow-y-auto custom-scrollbar pr-0.5">
+                                                        {allSections.map((secKey, idx) => {
+                                                            const st = normalizeSectionStatus(sectionStatuses[secKey]);
+                                                            const isCurrent = secKey === sectionName;
+                                                            const item = sectionItems?.find(s => s.id === secKey);
+                                                            let rawLabel = item?.label;
+                                                            if (!rawLabel) {
+                                                                const FALLBACK_NAMES: Record<string, string> = {
+                                                                    caracterizacion: 'Caracterización de la asignatura',
+                                                                    competencias: 'Competencias y resultados',
+                                                                    contenidos: 'Contenidos y programación',
+                                                                    metodologia: 'Metodología pedagógica',
+                                                                    recursos: 'Recursos didácticos',
+                                                                    evaluacion: 'Evaluación y acreditación',
+                                                                    bibliografia: 'Bibliografía',
+                                                                    firmas: 'Firmas y legalización'
+                                                                };
+                                                                rawLabel = FALLBACK_NAMES[secKey] || secKey.replace(/_/g, ' ');
+                                                            }
+                                                            const title = toSentenceCase(rawLabel, idx);
+
+                                                            const badgeStyle = st === 'Completado'
+                                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                                                : st === 'Por revisar'
+                                                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                                                    : 'bg-surface text-text-dim border-border-thin';
+
+                                                            return (
+                                                                <div
+                                                                    key={secKey}
+                                                                    className={`flex items-center justify-between py-2.5 px-2 rounded-xl text-xs transition-colors ${
+                                                                        isCurrent ? 'bg-surface font-semibold shadow-2xs' : 'hover:bg-surface/50'
+                                                                    }`}
+                                                                >
+                                                                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                                            st === 'Completado' ? 'bg-emerald-500' : st === 'Por revisar' ? 'bg-amber-500' : 'bg-border-hover'
+                                                                        }`} />
+                                                                        <span className="truncate text-[11px] text-text-main" title={title}>
+                                                                            {title}
+                                                                        </span>
+                                                                    </div>
+                                                                    <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 font-bold ${badgeStyle}`}>
+                                                                        {st}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         )}
 
                         {activeTab === 'activity' && (
-                            <div>
+                            <div className="flex flex-col h-full flex-1 overflow-hidden">
                                 {activities.length === 0 ? (
-                                    <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
-                                        <Activity size={24} className="text-text-dim mb-2" />
-                                        <p className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Esperando actividad...</p>
-                                        <p className="text-xs text-text-dim mt-1 max-w-[180px] leading-relaxed">Los movimientos del equipo aparecerán en este panel en tiempo real.</p>
+                                    <div className="text-center py-12 opacity-50 flex flex-col items-center justify-center">
+                                        <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
+                                            <Activity size={20} className="text-text-dim" />
+                                        </div>
+                                        <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Sin actividad reciente</p>
+                                        <p className="text-[8px] text-text-dim mt-1 max-w-[150px] leading-relaxed">Las ediciones y cambios de estado aparecerán aquí.</p>
                                     </div>
                                 ) : (
-                                    <div className="divide-y divide-border-thin/40 border-y border-border-thin/40">
-                                        {activities.map((a, i) => (
-                                            <div key={i} className="flex items-start gap-3 py-3 px-1 animate-fade-up">
-                                                <div className="mt-0.5 shrink-0 text-text-dim">
-                                                    <User size={13} />
+                                    <div className="space-y-2.5 divide-y divide-border-thin/40 overflow-y-auto custom-scrollbar pr-1">
+                                        {activities.map((a, idx) => (
+                                            <div key={idx} className="pt-2.5 first:pt-0 flex items-start gap-2.5">
+                                                <div className="w-6 h-6 rounded-lg bg-surface border border-border-thin flex items-center justify-center shrink-0 mt-0.5">
+                                                    <User size={12} className="text-text-dim" />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-[11px] text-text-main leading-snug">
-                                                        <span className="font-bold text-text-main text-[10.5px] uppercase tracking-wider">{a.userName || 'Usuario'}</span>{' '}
+                                                    <p className="text-[11px] leading-snug">
+                                                        <strong className="font-bold text-text-main">{a.userName} </strong>
                                                         <span className="text-text-dim font-medium">{a.action}</span>
                                                     </p>
                                                     <p className="text-[9px] text-text-dim/80 font-bold uppercase tracking-wider mt-0.5">
@@ -840,22 +1258,22 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
                         {activeTab === 'correcciones' && (
                             <div className="flex flex-col h-full flex-1 overflow-hidden space-y-5">
-                                {/* Observación General del Administrador y Plazo */}
+                                {/* Observación General de la Coordinación y Plazo */}
                                 {ultimaObservacion && (
-                                    <div className="p-4 rounded-lg border border-rose-500/20 bg-rose-500/[0.02] space-y-2.5 animate-fade-in">
+                                    <div className="p-4 rounded-xl border border-error/20 bg-error/[0.02] space-y-2.5 animate-fade-in shadow-inner">
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-2">
-                                                <Shield size={14} className="text-rose-500 shrink-0" />
-                                                <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">Observación General del Administrador</span>
+                                                <Shield size={13} className="text-error shrink-0" />
+                                                <span className="text-[10px] font-black text-error uppercase tracking-widest block">Observación Curricular de la Coordinación</span>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-text-main font-medium italic font-mono leading-relaxed break-words pl-5">
+                                        <p className="text-[11px] text-text-main font-medium italic font-mono leading-relaxed break-words pl-5">
                                             "{ultimaObservacion}"
                                         </p>
                                         {deadlineBadge && (
-                                            <div className={`mt-2 flex items-center justify-between px-3 py-2 rounded-md border text-xs font-mono font-medium ${deadlineBadge.colorClass}`}>
+                                            <div className={`mt-2 flex items-center justify-between px-3 py-2 rounded-lg border text-[10px] font-mono font-bold ${deadlineBadge.colorClass}`}>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Clock size={13} className="shrink-0" />
+                                                    <Clock size={12} className="shrink-0" />
                                                     <span>{deadlineBadge.text}</span>
                                                 </div>
                                                 <span className="opacity-80">{deadlineBadge.date}</span>
@@ -867,12 +1285,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                 {/* Checklist de correcciones por sección */}
                                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                                     <div className="pb-1.5 border-b border-border-thin flex justify-between items-center">
-                                        <h4 className="text-[10px] font-semibold text-text-dim uppercase tracking-wider">Ajustes Solicitados</h4>
-                                        <span className="text-xs font-mono text-text-dim/60">
+                                        <h4 className="text-[9px] font-black text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
+                                        <span className="text-[8px] font-mono font-bold text-text-dim/60">
                                             {comments.filter(c => parseAuditComment(c.contenido) !== null).length} Observaciones
                                         </span>
                                     </div>
-                                    
+
                                     {(() => {
                                         const auditItems = comments
                                             .map(c => ({ comment: c, audit: parseAuditComment(c.contenido) }))
@@ -881,9 +1299,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         if (auditItems.length === 0) {
                                             return (
                                                 <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
-                                                    <CheckCircle size={24} className="text-emerald-500 mb-2" />
-                                                    <p className="text-[10px] font-semibold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
-                                                    <p className="text-xs text-text-dim mt-1 max-w-[180px] leading-relaxed">El administrador no ha registrado observaciones específicas en los campos del protocolo.</p>
+                                                    <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
+                                                        <CheckCircle size={20} className="text-emerald-500" />
+                                                    </div>
+                                                    <p className="text-[9px] font-bold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
+                                                    <p className="text-[8px] text-text-dim mt-1 max-w-[180px] leading-relaxed">La coordinación no ha registrado observaciones específicas en los campos del PEA.</p>
                                                 </div>
                                             );
                                         }
@@ -893,19 +1313,15 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                 {auditItems.map((item, idx) => {
                                                     const isAprobado = item.audit.estado === 'Aprobado';
                                                     return (
-                                                        <div key={idx} className="p-3.5 rounded-lg border border-slate-200/90 dark:border-zinc-800 bg-surface space-y-2">
+                                                        <div key={idx} className="p-3.5 rounded-2xl border border-border-thin bg-surface hover:border-border-hover transition-all space-y-2 shadow-sm">
                                                             <div className="flex justify-between items-center gap-2">
-                                                                <span className="text-xs font-medium text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
+                                                                <span className="text-[9px] font-black text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
                                                                     {item.audit.seccion}
                                                                 </span>
-                                                                 <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-medium ${
-                                                                    isAprobado 
-                                                                        ? 'text-emerald-600 dark:text-emerald-400' 
-                                                                        : 'text-amber-600 dark:text-amber-400'
-                                                                }`}>
-                                                                    <span className={`w-1.5 h-1.5 rounded-full ${
-                                                                        isAprobado ? 'bg-emerald-500' : 'bg-amber-500'
-                                                                    }`} />
+                                                                <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 ${isAprobado
+                                                                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                                                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                                                    }`}>
                                                                     {item.audit.estado}
                                                                 </span>
                                                             </div>
@@ -924,9 +1340,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     </>
                 )}
             </div>
-
         </aside>
     );
 };
 
-export default CollaborationSidebar;
+export default React.memo(CollaborationSidebar);

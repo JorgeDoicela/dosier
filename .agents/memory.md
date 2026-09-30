@@ -188,6 +188,36 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
   - **Navegación y Barra Lateral (`SidebarNav.tsx` / `useSidebar.ts`):**
     - Se agregó el elemento `Solicitudes` en el menú lateral con submenú interactivo (*Catálogo de Trámites*, *Prórrogas de Plazo*, *Clonación Curricular*, *Buzón de Incidencias*) sincronizado reactivamente con la ruta y los parámetros de búsqueda.
   - **Validación:** 100% de las pruebas pasando (283/283 en Vitest, 51/51 en xUnit) y compilación TypeScript limpia (`tsc --noEmit`).
+* **Reubicación de Botones de Acción de Usuario en la Barra Superior (`DashboardLayout.tsx`):**
+  - **Causa y Requerimiento:** El acceso a controles frecuentes (Modo Oscuro/Claro, Configuración, Papelera y Cerrar Sesión) se encontraba oculto dentro del menú emergente al pie del panel lateral (`SidebarFooter`), mientras que la cabecera superior derecha disponía de espacio disponible junto a los botones de incidencias y ayuda interactiva.
+  - **Implementación:** Se integraron botones vectoriales directos (`Sun`/`Moon`, `Settings`, `Trash2`, `LogOut`) en la cabecera superior derecha de `DashboardLayout.tsx` con tooltips accesibles, navegación atómica (`/configuracion`, `/papelera`), control de permisos (`isAdmin || DOSIER_DOCENTE`), desconexión limpia con redirección (`logout() -> /`) y soporte reactivo tanto en Desktop TopBar como en Mobile Header, optimizando la ergonomía de navegación según el estándar Modern Enterprise Docs.
+* **Homologación de Notificaciones y Alertas Toast en la Esquina Superior Derecha (`alerts.css`, `NotificationBell.tsx`):**
+  - **Causa Raíz:** Las alertas emergentes en tiempo real (`.toast-container-vercel`) aparecían ancladas en la esquina inferior izquierda (`bottom: 1.5rem; left: 1.5rem;`), y la campana de notificaciones residía en el pie del menú lateral (`SidebarFooter`), desplegando el panel hacia la izquierda baja y fragmentando la visibilidad del usuario.
+  - **Solución Implementada:**
+    - Se trasladó el contenedor de toasts (`.toast-container-vercel`) a `top: 1.5rem; right: 1.5rem;` con animación direccional `@keyframes toastSlideInRight` y `pointer-events: none` con captura de eventos por elemento.
+    - Se trasladó la campana de notificaciones al grupo de utilidades superior derecho en `DashboardLayout.tsx` (`NotificationBell size="sm"` en escritorio y `size="md"` en móvil) con punto azul corporativo `#0070f3`, popover desplegable alineado a la derecha con fondo 100% sólido y scrollbar personalizada.
+    - Se erradicó la campana residual y el portal inferior izquierdo en `SidebarFooter.tsx` y `Sidebar.tsx`, unificando toda la observabilidad del sistema en la barra superior.
+    - Se eliminó el menú flotante redundante de usuario (`Modo Oscuro`, `Configuración`, `Papelera`, `Cerrar Sesión`) en `SidebarFooter.tsx`, preservando exclusivamente el conmutador de rol institucional cuando el usuario dispone de múltiples roles (`hasMultipleRoles`), dejando la tarjeta de perfil limpia y sin popovers vacíos.
+    - Se eliminó la etiqueta 'Tecnológico Traversari' y el contenedor absoluto centrado de la cabecera (`DashboardLayout.tsx`), posicionando el título de la vista directamente a la izquierda junto al conmutador de colapso del sidebar para otorgar holgura y espacio natural a las acciones de la barra superior derecha.
+* **Homologación Integral del Panel Lateral de Colaboración (`CollaborationSidebar.tsx`) según Estándar DIITRA:**
+  - **Causa Raíz:** En DOSIER el panel lateral carecía de las mejoras clave desarrolladas en DIITRA: notas de voz interactivas, comentarios jerárquicos (respuestas citadas con previsualización), confirmaciones de lectura en tiempo real ("visto" con doble check azul y desglose de lectores), selector moderno de estado de sección, tarjeta de progreso global de alta densidad con gradiente tricolor dinámico y checklist de correcciones/ajustes en tiempo real para estados de corrección.
+  - **Implementación Full-Stack:**
+    * *Base de Datos y Backend:* Se agregó la columna `lecturas JSON NULL` a la tabla `doc_collaboration_comments` en MySQL y en el script DDL `01_sistema_base.sql`. Se actualizó `DocCollaborationComment` con `LecturasJson`, `Lecturas` y `CollaborationCommentReadItem`. Se agregó `MarkCommentsReadRequest` y se implementó `MarkCommentsAsReadAsync` en `CollaborationService` junto con el endpoint `POST /api/collaboration/comments/{instanceUuid}/read` en `CollaborationController`. Se implementó la retransmisión SignalR `CommentsReadUpdated` con datos del lector y timestamp.
+    * *Capa de Transporte y Tipos CoWork:* Se añadieron los listeners `onCommentsReadUpdated` a `SignalRTransport.ts`, `CoWorkHandle` en `types.ts` y el hook `useCoWork.ts`.
+    * *Capa de Servicios Frontend:* Se agregó `markCommentsAsRead` en `collaborationService.ts`.
+    * *Gestión de Estado de Secciones:* En `useBuilderLayout.ts` se implementó la sincronización reactiva de `sectionStatuses` y `setSectionStatus`, suministrados a `DOSIERBuilderShell.tsx` como fuente única de verdad para la navegación y el panel de colaboración.
+    * *Componente UI `CollaborationSidebar.tsx`:*
+      - Pestañas `CHAT`, `ESTADO`, `ACTIVIDAD` y pestaña condicional de `AJUSTES` (ajustes solicitados cuando el PEA está en estado 'En Corrección').
+      - Botón de cierre ergonómico con `ChevronRight` para colapsar el panel lateral.
+      - Pestaña Chat: Estado vacío idéntico con icono circular y tipografía refinada; soporte completo de notas de voz con `MediaRecorder` y ecualizador animado `AudioBubblePlayer`; respuestas anidadas con cita previa y scroll suave al mensaje padre; confirmación de lectura en vivo ("visto" con doble check azul `CheckCheck`, tooltip de lectores y auto-marcado como leído al entrar a la pestaña); edición inline y eliminación con modal de confirmación destructiva `useConfirm`.
+      - Pestaña Estado: Selector ergonómico de estado de sección (*En redacción*, *Por revisar*, *Completado*) con iconos vectoriales y checkmark activo; tarjeta de progreso global con gradiente dinámico (<35% rojo, 35-74% ámbar, >=75% esmeralda); desglose completo de secciones normativas del PEA con normalización semántica `toSentenceCase` preservando siglas institucionales (PEA, CACES, CES, ISTPET, SIGAFI).
+      - Pestaña Actividad: Feed de auditoría en vivo con deduplicación por ventana de 2 minutos.
+      - Pestaña Ajustes (Correcciones): Observación general de la coordinación con tarjeta de advertencia y medidor de plazo/vencimiento, más checklist de observaciones por sección con badges de estado.
+      - Optimización de rendimiento: Memoizado con `React.memo` y referencias anti-flicker (`lastFetchedEntityUuidRef`, `lastFetchedPulseUuidRef`).
+    * *Validación:* Build de Vite exitoso en 5.84s (0 errores), 100% de pruebas pasando (283/283 en Vitest).
+
+
+
 
 
 

@@ -72,6 +72,12 @@ export const collaborationService = {
      */
     deleteImage: (imageUrl: string): Promise<any> =>
         api.delete(`/collaboration/delete-image?url=${encodeURIComponent(imageUrl)}`).then(r => r.data),
+
+    /**
+     * Registra la confirmación de lectura de comentarios para el usuario autenticado.
+     */
+    markCommentsAsRead: (instanceUuid: string, commentIds: number[]): Promise<{ markedCount: number }> =>
+        api.post<{ markedCount: number }>(`/collaboration/comments/${encodeURIComponent(instanceUuid)}/read`, { commentIds }).then(r => r.data),
 };
 
 export default collaborationService;

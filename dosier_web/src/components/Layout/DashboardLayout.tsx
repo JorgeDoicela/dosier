@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
 import Sidebar from './Sidebar';
 import { CommandPalette } from '../Common/CommandPalette';
-import { Menu, HelpCircle, MessageSquarePlus } from 'lucide-react';
+import { Menu, HelpCircle, MessageSquarePlus, Sun, Moon, Settings, Trash2, LogOut } from 'lucide-react';
 import NotificationBell from '../Notifications/NotificationBell';
 import { HelpModal } from './Help/HelpModal';
 import { WelcomeModal } from './WelcomeModal/WelcomeModal';
@@ -43,9 +43,10 @@ const getPageTitle = (pathname: string): string => {
 };
 
 const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }) => {
-    const { isAuthenticated, isLoading, user } = useAuth();
+    const { isAuthenticated, isLoading, user, logout, isAdmin } = useAuth();
     const { addToast, fetchNotifications, isConnected } = useNotifications();
     const location = useLocation();
+    const navigate = useNavigate();
     const isWorkspace = location.pathname.includes('/workspace/');
     const isFullHeightPage = isWorkspace || location.pathname === '/plantillas' || location.pathname === '/admin/plantillas';
     const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -287,13 +288,13 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                             ? 'max-h-0 opacity-0 overflow-hidden border-b-0 pointer-events-none'
                             : 'max-h-14 h-14 opacity-100'
                         }`}>
-                        <div className="max-w-[1600px] mx-auto w-full px-4 md:px-10 flex items-center justify-between relative">
-                            <div className="flex items-center gap-4">
+                        <div className="max-w-[1600px] mx-auto w-full px-4 md:px-10 flex items-center justify-between">
+                            <div className="flex items-center gap-3 min-w-0">
                                 {isCollapsed && (
                                     <>
                                         <button
                                             onClick={handleSidebarExpand}
-                                            className="p-1.5 rounded-md hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors duration-150 cursor-pointer"
+                                            className="p-1.5 rounded-md hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors duration-150 cursor-pointer shrink-0"
                                             title="Mostrar panel lateral"
                                         >
                                             <svg
@@ -312,14 +313,12 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                                 <path d="M9 3v18" />
                                             </svg>
                                         </button>
-                                        <div className="h-4 w-[1px] bg-border-thin mx-1" />
+                                        <div className="h-4 w-[1px] bg-border-thin mx-0.5 shrink-0" />
                                     </>
                                 )}
-                                <span className="section-label !text-text-main !font-semibold !tracking-widest">Tecnológico Traversari</span>
-                            </div>
-
-                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-widest text-text-main pointer-events-none select-none">
-                                {getPageTitle(location.pathname)}
+                                <span className="text-[11px] font-mono font-semibold uppercase tracking-widest text-text-main truncate select-none">
+                                    {getPageTitle(location.pathname)}
+                                </span>
                             </div>
 
                             <div className="flex items-center gap-1">
@@ -338,6 +337,50 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                     aria-label="Abrir guía interactiva"
                                 >
                                     <HelpCircle size={16} className="text-text-main" />
+                                </button>
+                                <NotificationBell size="sm" />
+
+                                <div className="h-4 w-[1px] bg-border-thin mx-1" />
+
+                                <button
+                                    onClick={toggleTheme}
+                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+                                    title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+                                    aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                                >
+                                    {theme === 'dark' ? <Sun size={16} className="text-text-main" /> : <Moon size={16} className="text-text-main" />}
+                                </button>
+
+                                <Link
+                                    to="/configuracion"
+                                    className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                    title="Configuración"
+                                    aria-label="Ir a Configuración"
+                                >
+                                    <Settings size={16} className="text-text-main" />
+                                </Link>
+
+                                {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
+                                    <Link
+                                        to="/papelera"
+                                        className="p-1.5 rounded-md text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                        title="Papelera"
+                                        aria-label="Ir a Papelera"
+                                    >
+                                        <Trash2 size={16} className="text-text-main" />
+                                    </Link>
+                                )}
+
+                                <button
+                                    onClick={async () => {
+                                        await logout();
+                                        navigate('/');
+                                    }}
+                                    className="p-1.5 rounded-md text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center justify-center"
+                                    title="Cerrar Sesión"
+                                    aria-label="Cerrar Sesión"
+                                >
+                                    <LogOut size={16} />
                                 </button>
                             </div>
                         </div>
@@ -380,7 +423,41 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                             >
                                 <HelpCircle size={20} className="text-text-main" />
                             </button>
-                            <NotificationBell />
+                            <NotificationBell size="md" />
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer"
+                                title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+                                aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                            >
+                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                            </button>
+                            <Link
+                                to="/configuracion"
+                                className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                title="Configuración"
+                            >
+                                <Settings size={20} />
+                            </Link>
+                            {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
+                                <Link
+                                    to="/papelera"
+                                    className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                    title="Papelera"
+                                >
+                                    <Trash2 size={20} />
+                                </Link>
+                            )}
+                            <button
+                                onClick={async () => {
+                                    await logout();
+                                    navigate('/');
+                                }}
+                                className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md transition-colors cursor-pointer flex items-center justify-center"
+                                title="Cerrar Sesión"
+                            >
+                                <LogOut size={20} />
+                            </button>
                         </div>
                     </header>
                 )}

@@ -532,6 +532,7 @@ CREATE TABLE doc_collaboration_comments (
     userName            VARCHAR(255)  NOT NULL,
     content             TEXT          NOT NULL,
     parentId            INT           NULL COMMENT 'Para hilos de conversación',
+    lecturas            JSON          NULL COMMENT 'Registro de confirmaciones de lectura en tiempo real (visto)',
     creadoEn            TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_instance (instanceUuid),
     CONSTRAINT fk_doc_comment_parent FOREIGN KEY (parentId) REFERENCES doc_collaboration_comments(idComment) ON DELETE CASCADE

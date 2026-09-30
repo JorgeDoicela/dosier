@@ -9,5 +9,6 @@ namespace dosier_application.Collaboration.Interfaces
         Task<CommentOpResult> PostCommentAsync(CreateCommentRequest request, string userUuid, string userName);
         Task<CommentOpResult> UpdateCommentAsync(int id, UpdateCommentRequest request, string userUuid, bool isAdmin);
         Task<CommentOpResult> DeleteCommentAsync(int id, string userUuid, bool isAdmin);
+        Task<int> MarkCommentsAsReadAsync(string instanceUuid, List<int> commentIds, string userUuid, string userName);
     }
 }

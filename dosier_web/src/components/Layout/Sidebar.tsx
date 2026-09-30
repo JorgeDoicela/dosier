@@ -5,7 +5,6 @@ import { SidebarBrand } from './Sidebar/components/SidebarBrand';
 import { SidebarSearch } from './Sidebar/components/SidebarSearch';
 import { SidebarNav } from './Sidebar/components/SidebarNav';
 import { SidebarFooter } from './Sidebar/components/SidebarFooter';
-import { NotificationPanel } from './Sidebar/components/NotificationPanel';
 
 const SIDEBAR_TRANSITION_MS = 280;
 const SIDEBAR_COLLAPSE_MS = 420;
@@ -40,21 +39,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         isDesktop,
         sidebarReveal,
         isSidebarClosing,
-        bellRef,
-        notifPanelPos,
         isUserMenuOpen,
         setIsUserMenuOpen,
-        isNotificationsOpen,
-        setIsNotificationsOpen,
         sidebarProjects,
         sidebarMyProjects,
         sidebarProjectsLoading,
         showAllProjects,
         setShowAllProjects,
-        notifications,
-        unreadCount,
-        markAllAsRead,
-        handleNotificationClick,
         activeItem,
         group1,
         group2,
@@ -64,7 +55,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         triggerCommandPalette,
         userInitials,
         username,
-        updateNotifPanelPos,
         expandedWidth,
         isAnalyticsOpen,
         setIsAnalyticsOpen,
@@ -147,11 +137,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                     />
 
                     <SidebarFooter
-                        currentTheme={currentTheme}
-                        toggleTheme={toggleTheme}
                         isUserMenuOpen={isUserMenuOpen}
                         setIsUserMenuOpen={setIsUserMenuOpen}
-                        logout={logout}
                         isAdmin={isAdmin}
                         user={user}
                         userInitials={userInitials}
@@ -160,12 +147,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                         availableRoles={availableRoles}
                         activeRole={activeRole}
                         setActiveRole={setActiveRole}
-                        bellRef={bellRef}
-                        isNotificationsOpen={isNotificationsOpen}
-                        setIsNotificationsOpen={setIsNotificationsOpen}
-                        unreadCount={unreadCount}
-                        updateNotifPanelPos={updateNotifPanelPos}
-                        navigate={navigate}
                     />
                 </div>
 
@@ -199,17 +180,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <div className="absolute inset-y-0 left-[2px] w-px bg-border-thin/60 group-hover:bg-text-dim/50 group-active:bg-text-dim/70 transition-colors" />
                 </div>
             )}
-
-            <NotificationPanel
-                isNotificationsOpen={isNotificationsOpen}
-                setIsNotificationsOpen={setIsNotificationsOpen}
-                notifPanelPos={notifPanelPos}
-                unreadCount={unreadCount}
-                notifications={notifications}
-                markAllAsRead={markAllAsRead}
-                handleNotificationClick={handleNotificationClick}
-                navigate={navigate}
-            />
 
             {/* Zona de arrastre para reabrir (estilo Vercel) */}
             {isCollapsed && (
