@@ -76,6 +76,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         setIsInvestigacionOpen,
         isMisProyectosOpen,
         setIsMisProyectosOpen,
+        isSolicitudesOpen,
+        setIsSolicitudesOpen,
         collapseAllMenus
     } = useSidebar({ isCollapsed, onCollapse, onExpand });
 
@@ -127,6 +129,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         setIsInvestigacionOpen={setIsInvestigacionOpen}
                         isMisProyectosOpen={isMisProyectosOpen}
                         setIsMisProyectosOpen={setIsMisProyectosOpen}
+                        isSolicitudesOpen={isSolicitudesOpen}
+                        setIsSolicitudesOpen={setIsSolicitudesOpen}
                         isAnalyticsOpen={isAnalyticsOpen}
                         setIsAnalyticsOpen={setIsAnalyticsOpen}
                         isUsersOpen={isUsersOpen}

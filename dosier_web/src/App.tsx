@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet, useParams 
 import { AuthProvider, useAuth } from './api/AuthContext';
 import { NotificationsProvider } from './api/NotificationsContext';
 import { ConfirmProvider } from './api/ConfirmContext';
-import { buildWorkspacePath } from './core/documents/templateUrl';
 import { FullscreenLoader } from './components/Common/FullscreenLoader';
 
 // ─── Lazy imports: cada página se carga solo cuando se necesita ───────────────
@@ -42,6 +41,7 @@ const DocumentMaintenancePage = lazy(() => import('./pages/Admin/DocumentMainten
 const DocumentTemplatesPage   = lazy(() => import('./pages/Admin/Templates/DocumentTemplatesPage'));
 const AdminFeedbackPage       = lazy(() => import('./pages/Admin/Feedback/AdminFeedbackPage').then(m => ({ default: m.AdminFeedbackPage })));
 const UserFeedbackPage        = lazy(() => import('./pages/Feedback/UserFeedbackPage').then(m => ({ default: m.UserFeedbackPage })));
+const SolicitudesPage         = lazy(() => import('./pages/Solicitudes/SolicitudesPage'));
 
 // ─── Fallback de carga ────────────────────────────────────────────────────────
 const PageLoader = () => (
@@ -113,7 +113,7 @@ const PermissionRoute = ({ children, module, op }: { children: React.ReactNode; 
 };
 
 export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
-    const { isAuthenticated, isLoading, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, isRevisor, roles } = useAuth();
+    const { isAuthenticated, isLoading, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles } = useAuth();
 
     if (isLoading) {
         return <PageLoader />;
@@ -146,14 +146,6 @@ const NavigateToProjectDetail = () => {
     const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
     const prefix = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
     return <Navigate to={`${prefix}/monitoreo/${projectUuid}`} replace />;
-};
-
-const NavigateToWorkspaceDetail = () => {
-    const { projectUuid } = useParams();
-    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
-    const isSupervisor = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
-    const prefix = isSupervisor ? '/documentacion' : '/documentacion/mis-proyectos';
-    return <Navigate to={buildWorkspacePath('PEA_OFICIAL', projectUuid!, '', prefix)} replace />;
 };
 
 const NavigateToCurriculumProjects = () => {
@@ -255,6 +247,8 @@ function App() {
                              <Route path="/plantillas" element={<AdminRoute><DocumentTemplatesPage /></AdminRoute>} />
                              <Route path="/admin/plantillas" element={<RedirectPreserveSearch to="/plantillas" />} />
                              <Route path="/templates" element={<RedirectPreserveSearch to="/plantillas" />} />
+                             <Route path="/solicitudes" element={<SolicitudesPage />} />
+                             <Route path="/solicitud" element={<RedirectPreserveSearch to="/solicitudes" />} />
                              <Route path="/incidencias" element={<FeedbackRouteDispatcher />} />
                              <Route path="/feedback" element={<RedirectPreserveSearch to="/incidencias" />} />
                              <Route path="/sugerencias" element={<RedirectPreserveSearch to="/incidencias" />} />

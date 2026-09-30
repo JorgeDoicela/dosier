@@ -165,6 +165,29 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
     - *Popover de Planificación Avanzado:* Se integró `PlanificacionPopover` con edición rápida de título de la tarea (soporte de tecla Enter), opción directa "Sin fecha", integración de `GeistDatePicker` para fechas personalizadas, y soporte para cerrar con tecla Escape.
     - *Supresión de Hover durante Arrastre:* Mediante `body.body-dragging-active`, se apagan los botones de acción y punteros flotantes para evitar interferencias o disparos accidentales mientras se mueve un elemento.
   - **Validación:** 100% de la suite de pruebas unitarias e integradas pasando (277/277 en Vitest, 51/51 en xUnit).
+* **Implementación del Centro de Solicitudes Curriculares (`/solicitudes`) — Modern Enterprise Docs:**
+  - **Causa Raíz y Alcance:** Se requería una ventanilla única institucional que homologara la gestión de trámites y solicitudes para los 5 roles curriculares (`DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), adaptando el patrón de DIITRA a la Clean Architecture y al sistema de diseño Modern Enterprise Docs de DOSIER.
+  - **Arquitectura de Servicios y Dominio (`solicitudesService.ts`):**
+    - Catálogo tipado oficial (`CATALOGO_TRAMITES_OFICIALES`) con SLA normativo, instancia responsable y filtrado defensivo por roles (`getTramitesPorRoles`).
+    - Trámites específicos por perfil:
+      * *Docente:* Solicitud formal de prórroga para entrega de PEA, clonación de contenidos desde ciclos históricos aprobados, y buzón de incidencias horarias o distributivas de SIGAFI.
+      * *Coordinación de Carrera:* Concesión de prórrogas de carrera, envío de recordatorios a docentes rezagados e incidencias curriculares.
+      * *Coordinación Académica:* Concesión global de prórrogas, activación de convocatorias lectivas y recordatorios masivos.
+      * *Vicerrectorado Académico:* Excepciones normativas de calendario CACES/CES y supervisión general.
+      * *Administrador:* Configuración de parámetros normativos de solicitud (`/configuracion?tab=parametros`) y auditoría de peticiones.
+    - Historial fáctico de resoluciones (`REGISTROS_HISTORIAL_MOCK` / `getHistorialSolicitudes`).
+  - **Diseño Visual e Interfaz de Usuario:**
+    - Maquetación Bento espaciosa (`p-6 md:p-8`, `gap-6`) con superficies 100% sólidas (`bg-white dark:bg-zinc-950 border border-slate-200/90 dark:border-zinc-800 rounded-xl`).
+    - Iconografía técnica vectorial desnuda de Lucide (`Clock`, `Copy`, `Calendar`, `Bell`, `ShieldCheck`, `MessageSquarePlus`, `Send`, `Layers`), cero cápsulas ni fondos tintados alrededor de iconos.
+    - Pestañas sobre riel plano continuo (`<nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar">`) con indicador inferior `#0070f3`, cero segmented controls y cero márgenes negativos en botones individuales.
+    - Subfiltros directos con capitalización natural (*Todos los trámites*, *Prórrogas de plazo*, *Clonación curricular*, *Convocatorias y aperturas*, *Incidencias y soporte*), cero mayúsculas forzadas (ALL CAPS).
+    - Fichas clave-valor (`<dl>`) con SLA e instancia responsable, cero KPIs gigantes.
+    - Tabla de historial con puntos discretos de estado (`w-1.5 h-1.5 rounded-full`) y divisores finos.
+  - **Integración con Modales Operativos:**
+    - Conexión directa y fluida con `ProrrogaPlazoModal`, `ClonarPeaModal`, `AperturaConvocatoriaModal` y `RecordatorioDocentesModal`.
+  - **Navegación y Barra Lateral (`SidebarNav.tsx` / `useSidebar.ts`):**
+    - Se agregó el elemento `Solicitudes` en el menú lateral con submenú interactivo (*Catálogo de Trámites*, *Prórrogas de Plazo*, *Clonación Curricular*, *Buzón de Incidencias*) sincronizado reactivamente con la ruta y los parámetros de búsqueda.
+  - **Validación:** 100% de las pruebas pasando (283/283 en Vitest, 51/51 en xUnit) y compilación TypeScript limpia (`tsc --noEmit`).
 
 
 

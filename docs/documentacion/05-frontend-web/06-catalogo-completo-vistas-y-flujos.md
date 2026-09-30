@@ -18,7 +18,8 @@ dosier_web/src/pages/
 ├── Notificaciones/  # Centro de notificaciones in-app
 ├── Public/          # Validador público de documentos vía código QR
 ├── RecycleBin/      # Papelera de reciclaje y recuperación de registros
-└── Settings/        # Configuración de cuenta, seguridad y apariencia
+├── Settings/        # Configuración de cuenta, seguridad y apariencia
+└── Solicitudes/     # Centro de Solicitudes y trámites curriculares por rol
 ```
 
 ---
@@ -174,4 +175,35 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
   * Vista centralizada para administradores (`DOSIER_ADMIN`) con tabla interactiva, filtros combinados y buscador de texto completo.
   * Panel de diagnóstico técnico con visualización de metadatos de máquina, agente de usuario y visor multimedia con navegación por teclado y deslizamiento.
   * Gestión de ciclo de vida del reporte (transición de estados) y respuesta técnica directa desde el hilo de soporte.
+
+---
+
+### 2.8. Módulo Centro de Solicitudes (`src/pages/Solicitudes/` - `/solicitudes`)
+
+Portal unificado de gobernanza y ventanilla única para la tramitación de peticiones y requerimientos curriculares adaptado dinámicamente según el rol institucional del usuario:
+
+* **Arquitectura de Maquetación (Modern Enterprise Docs):**
+  * **Encabezado Institucional (`SolicitudesHeader.tsx`):** Título directo con descripción operativa y accesos contextuales según perfil.
+  * **Pestañas sobre Riel Plano Continuo (`SolicitudesTabs.tsx`):** Conmutación sin cajas encapsuladas entre *Catálogo de Trámites* e *Historial y Resoluciones*, con subfiltros directos por tipo de trámite (*Prórrogas*, *Clonación*, *Convocatorias*, *Soporte*) en capitalización natural.
+  * **Tarjetas Bento de Trámites (`SolicitudBentoCard.tsx`):** Superficies 100% sólidas sin transparencias, iconografía vectorial desnuda de Lucide, especificación técnica clave-valor (`<dl>`) con SLA de resolución e instancia responsable (cero KPIs gigantes), y botón de ejecución directa.
+  * **Tabla de Historial y Resoluciones (`SolicitudesHistoryTable.tsx`):** Registro de solicitudes presentadas con puntos discretos de estado (`w-1.5 h-1.5 rounded-full`), divisores tenues y buscador reactivo.
+* **Catálogo de Trámites por Rol:**
+  * **Docentes (`DOSIER_DOCENTE`):**
+    * *Prórroga de Entrega de PEA:* Apertura de `ProrrogaPlazoModal` para solicitar ampliación formal de plazo ante Coordinación de Carrera.
+    * *Clonación de PEA Aprobado:* Apertura de `ClonarPeaModal` para importar unidades temáticas, metodología y bibliografía de ciclos anteriores acreditados por CACES.
+    * *Buzón de Incidencias Curriculares:* Acceso directo a `/incidencias` para reportar inconsistencias en distributivo SIGAFI o asistencia técnica.
+  * **Coordinación de Carrera (`DOSIER_COORD_CARRERA`):**
+    * *Concesión de Prórrogas de Carrera:* Gestión de días adicionales para docentes de la carrera con justificación académica.
+    * *Recordatorio Masivo a Docentes:* Apertura de `RecordatorioDocentesModal` para notificar a docentes con PEAs en borrador o próximos a vencer.
+    * *Incidencias Curriculares de Carrera:* Canalización de novedades académicas.
+  * **Coordinación Académica (`DOSIER_COORD_ACAD`):**
+    * *Concesión Institucional de Prórrogas:* Dictamen de prórrogas curriculares globales.
+    * *Apertura de Convocatoria Curricular:* Apertura de `AperturaConvocatoriaModal` para activar períodos lectivos y sincronizar plazos normativos.
+    * *Notificación Masiva a la Planta Docente:* Emisión de alertas institucionales.
+  * **Vicerrectorado Académico (`DOSIER_VICERRECTOR`):**
+    * *Excepciones Normativas de Calendario:* Autorización de prórrogas mayores fuera de término formal CACES.
+    * *Apertura de Convocatoria Extraordinaria:* Activación de calendarios excepcionales.
+  * **Administrador (`DOSIER_ADMIN`):**
+    * *Parámetros Normativos de Solicitudes:* Enlace directo a `/configuracion?tab=parametros` para fijar límites de días y políticas de clonación.
+    * *Administración Global:* Auditoría de peticiones y consola de soporte técnico.
 

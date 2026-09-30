@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ClipboardList, PenTool, BarChart3, ShieldCheck, Users, Activity, Mail, Bell, Calendar, Award, Gavel, FileCode2, Sparkles, BookOpen, MessageSquarePlus } from 'lucide-react';
+import { Home, ClipboardList, BarChart3, ShieldCheck, Users, Activity, Mail, Bell, Calendar, FileCode2, BookOpen, MessageSquarePlus, Send } from 'lucide-react';
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { curriculumProjectService } from '../../../../services/curriculumProjectService';
@@ -25,7 +25,7 @@ interface UseSidebarProps {
 }
 
 export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProps) => {
-    const { logout, hasPermission, roles, availableRoles, activeRole, setActiveRole, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isRevisor, user, roleDisplayName } = useAuth();
+    const { logout, hasPermission, roles, availableRoles, activeRole, setActiveRole, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, user, roleDisplayName } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -106,6 +106,9 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
     );
     const [isMisProyectosOpen, setIsMisProyectosOpen] = useState(
         location.pathname.startsWith('/documentacion/mis-proyectos')
+    );
+    const [isSolicitudesOpen, setIsSolicitudesOpen] = useState(
+        location.pathname.startsWith('/solicitudes')
     );
     const [sidebarProjects, setSidebarProjects] = useState<SidebarProject[]>([]);
     const [sidebarMyProjects, setSidebarMyProjects] = useState<SidebarProject[]>([]);
@@ -189,6 +192,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         setIsParametrosOpen(false);
         setIsInvestigacionOpen(false);
         setIsMisProyectosOpen(false);
+        setIsSolicitudesOpen(false);
     }, []);
 
     useEffect(() => {
@@ -203,6 +207,9 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         }
         if (location.pathname.startsWith('/documentacion/mis-proyectos')) {
             setIsMisProyectosOpen(true);
+        }
+        if (location.pathname.startsWith('/solicitudes')) {
+            setIsSolicitudesOpen(true);
         }
         
         const isDocumentacionRoute = (location.pathname.startsWith('/documentacion') && !location.pathname.startsWith('/documentacion/mis-proyectos')) ||
@@ -282,6 +289,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Mis Instrumentos PEA', icon: BookOpen, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ADMIN'], group: 1, hasChevron: true },
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
+        { name: 'Solicitudes', icon: Send, path: '/solicitudes', roles: ['ANY'], group: 2, hasChevron: true },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2, hasChevron: true },
         { name: 'Incidencias', icon: MessageSquarePlus, path: '/incidencias', roles: ['ANY'], group: 2 },
         // ── Administración y Control Total del Sistema ──────────────────────
@@ -551,6 +559,8 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         setIsInvestigacionOpen,
         isMisProyectosOpen,
         setIsMisProyectosOpen,
+        isSolicitudesOpen,
+        setIsSolicitudesOpen,
         sidebarProjects,
         sidebarMyProjects,
         sidebarProjectsLoading,

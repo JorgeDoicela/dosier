@@ -14,7 +14,12 @@ import {
     Loader2,
     FileCheck2,
     HardDrive,
-    UserCheck
+    UserCheck,
+    Clock,
+    Copy,
+    MessageSquarePlus,
+    Layers,
+    Send
 } from 'lucide-react';
 import type { MenuItem, SidebarProject } from '../types';
 
@@ -63,6 +68,8 @@ interface SidebarNavProps {
     setIsInvestigacionOpen: (v: boolean) => void;
     isMisProyectosOpen: boolean;
     setIsMisProyectosOpen: (v: boolean) => void;
+    isSolicitudesOpen: boolean;
+    setIsSolicitudesOpen: (v: boolean) => void;
     isAnalyticsOpen: boolean;
     setIsAnalyticsOpen: (v: boolean) => void;
     isUsersOpen: boolean;
@@ -89,6 +96,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     setIsInvestigacionOpen,
     isMisProyectosOpen,
     setIsMisProyectosOpen,
+    isSolicitudesOpen,
+    setIsSolicitudesOpen,
     isAnalyticsOpen,
     setIsAnalyticsOpen,
     isUsersOpen,
@@ -331,6 +340,106 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                     (subItem.path.includes('tab=general') && (!location.search || location.search.includes('tab=general'))) ||
                                     location.search.includes(subItem.path.split('?')[1])
                                 );
+
+                                return (
+                                    <Link
+                                        key={subItem.name}
+                                        to={subItem.path}
+                                        onClick={() => {
+                                            if (onClose) onClose();
+                                        }}
+                                        className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 ${
+                                            isSubActive
+                                                ? 'bg-blue-50/70 dark:bg-blue-950/30 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2 min-w-0 py-0.5">
+                                            <subItem.icon
+                                                size={13}
+                                                strokeWidth={isSubActive ? 2 : 1.75}
+                                                className={`shrink-0 ${
+                                                    isSubActive ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
+                                                }`}
+                                            />
+                                            <span className={`text-[12.5px] tracking-tight truncate ${
+                                                isSubActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                                            }`}>
+                                                {subItem.name}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        if (item.name === 'Solicitudes') {
+            const isMenuOpen = isSolicitudesOpen;
+            return (
+                <div key={item.name} className="flex flex-col gap-0.5">
+                    <div
+                        className={`flex items-center justify-between rounded-md transition-colors duration-150 group w-full ${
+                            isActive
+                                ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
+                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
+                        }`}
+                    >
+                        <Link
+                            to="/solicitudes"
+                            onClick={(e) => {
+                                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
+                                    setIsSolicitudesOpen(true);
+                                    if (onClose) onClose();
+                                }
+                            }}
+                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-md border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
+                        >
+                            <item.icon
+                                size={15}
+                                strokeWidth={isActive ? 2 : 1.75}
+                                className={`shrink-0 ${
+                                    isActive
+                                        ? 'text-[#0070f3] dark:text-blue-400'
+                                        : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
+                                }`}
+                            />
+                            <span className={`text-[13.5px] tracking-tight truncate ${
+                                isActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
+                            }`}>
+                                {item.name}
+                            </span>
+                        </Link>
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsSolicitudesOpen(!isSolicitudesOpen);
+                            }}
+                            className="p-1.5 mr-1 rounded text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
+                            title="Expandir"
+                        >
+                            <ChevronRightIcon className={`shrink-0 transition-transform duration-200 ${
+                                isMenuOpen ? 'rotate-90' : ''
+                            }`} />
+                        </button>
+                    </div>
+
+                    {isMenuOpen && (
+                        <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
+                            {[
+                                { name: 'Catálogo de Trámites', path: '/solicitudes', icon: Layers },
+                                { name: 'Prórrogas de Plazo', path: '/solicitudes?tipo=prorrogas', icon: Clock },
+                                { name: 'Clonación Curricular', path: '/solicitudes?tipo=clonacion', icon: Copy },
+                                { name: 'Buzón de Incidencias', path: '/incidencias', icon: MessageSquarePlus }
+                            ].map((subItem) => {
+                                const isSubActive = 
+                                    (subItem.path === '/solicitudes' && location.pathname === '/solicitudes' && (!location.search || location.search === '')) ||
+                                    (subItem.path.includes('?') && location.pathname === '/solicitudes' && location.search.includes(subItem.path.split('?')[1])) ||
+                                    (subItem.path === '/incidencias' && location.pathname === '/incidencias');
 
                                 return (
                                     <Link
