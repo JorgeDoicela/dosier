@@ -253,18 +253,18 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                     </div>
 
                                     <div className="pt-2 flex flex-col gap-2">
-                                        {isAdmin && isCurrentProtocolo && isExpedienteCompleto && projectStatus === 'Enviado' && (
+                                        {isReviewer && (
                                             <button
                                                 type="button"
                                                 onClick={() => {
                                                     const pId = projectUuid || documentUuid;
                                                     if (pId) navigate(`/documentacion/revision-tecnica/${pId}`);
                                                 }}
-                                                className="w-full py-2.5 px-3 bg-text-main hover:bg-text-main/90 text-bg-deep rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                                                className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
                                             >
-                                                <Shield size={15} />
+                                                <Shield size={14} />
                                                 <span>Ir a Revisión Técnica</span>
-                                                <ArrowRight size={14} />
+                                                <ArrowRight size={13} />
                                             </button>
                                         )}
 

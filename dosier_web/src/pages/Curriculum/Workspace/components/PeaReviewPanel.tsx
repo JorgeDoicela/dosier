@@ -22,7 +22,8 @@ import {
     UserCheck,
     Calendar,
     BookOpen,
-    HelpCircle
+    HelpCircle,
+    ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
@@ -347,9 +348,22 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                     </p>
                 </div>
 
-                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/80 text-[#0070f3] dark:text-blue-400 border border-blue-200 dark:border-blue-900/60 font-mono shrink-0">
-                    {passedChecks}/{totalChecks} Normativos
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                    {peaUuid && (
+                        <button
+                            type="button"
+                            onClick={() => window.open(`/documentacion/revision-tecnica/${peaUuid}`, '_self')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
+                            title="Abrir panel completo de revisión técnica con visor contextual y PDF"
+                        >
+                            <ExternalLink size={13} />
+                            <span>Abrir Panel Completo</span>
+                        </button>
+                    )}
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/80 text-[#0070f3] dark:text-blue-400 border border-blue-200 dark:border-blue-900/60 font-mono">
+                        {passedChecks}/{totalChecks} Normativos
+                    </span>
+                </div>
             </div>
 
             {/* Checklist de Consistencia Normativa */}
