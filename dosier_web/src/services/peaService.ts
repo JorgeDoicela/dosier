@@ -214,15 +214,22 @@ export const crearPeaDesdeAsignacion = (idAsignacion: number): Promise<PeaDto> =
 export const guardarPea = (dto: Partial<PeaDto>): Promise<PeaDto> =>
     api.post('/pea', dto).then(r => r.data);
 
-export const cambiarEstadoPea = (id: number, nuevoEstado: string, firma?: string, motivo?: string): Promise<{ success: boolean }> =>
-    api.patch(`/pea/${id}/estado`, {
+export const cambiarEstadoPea = (idOrUuid: number | string, nuevoEstado: string, firma?: string, motivo?: string): Promise<{ success: boolean }> => {
+    const url = typeof idOrUuid === 'string' && idOrUuid.includes('-')
+        ? `/pea/uuid/${idOrUuid}/estado`
+        : `/pea/${idOrUuid}/estado`;
+    return api.patch(url, {
         nuevo_estado: nuevoEstado,
         firma,
         motivo
     }).then(r => r.data);
+};
 
-export const firmarPea = (id: number, dto: FirmarPeaDto): Promise<PeaFirmaResultadoDto> =>
-    api.post(`/pea/${id}/firmar`, {
+export const firmarPea = (idOrUuid: number | string, dto: FirmarPeaDto): Promise<PeaFirmaResultadoDto> => {
+    const url = typeof idOrUuid === 'string' && idOrUuid.includes('-')
+        ? `/pea/uuid/${idOrUuid}/firmar`
+        : `/pea/${idOrUuid}/firmar`;
+    return api.post(url, {
         password: dto.password,
         rol_firmante: dto.rolFirmante,
         tipo_firma: dto.tipoFirma,
@@ -230,30 +237,43 @@ export const firmarPea = (id: number, dto: FirmarPeaDto): Promise<PeaFirmaResult
         contrasenia_p12: dto.contraseniaP12,
         motivo: dto.motivo
     }).then(r => r.data);
+};
 
 export const clonarPeaPeriodo = (id: number, nuevoPeriodo: string): Promise<PeaDto> =>
     api.post(`/pea/${id}/clonar`, null, { params: { nuevoPeriodo } }).then(r => r.data);
 
-export const getObservacionesPea = (id: number): Promise<PeaObservacionDto[]> =>
-    api.get(`/pea/${id}/observaciones`).then(r => r.data);
+export const getObservacionesPea = (idOrUuid: number | string): Promise<PeaObservacionDto[]> => {
+    const url = typeof idOrUuid === 'string' && idOrUuid.includes('-')
+        ? `/pea/uuid/${idOrUuid}/observaciones`
+        : `/pea/${idOrUuid}/observaciones`;
+    return api.get(url).then(r => r.data);
+};
 
 export const agregarObservacionPea = (
-    id: number,
+    idOrUuid: number | string,
     req: { rolObservador?: string; seccionAfectada?: string; texto: string }
-): Promise<PeaObservacionDto> =>
-    api.post(`/pea/${id}/observaciones`, {
+): Promise<PeaObservacionDto> => {
+    const url = typeof idOrUuid === 'string' && idOrUuid.includes('-')
+        ? `/pea/uuid/${idOrUuid}/observaciones`
+        : `/pea/${idOrUuid}/observaciones`;
+    return api.post(url, {
         rol_observador: req.rolObservador,
         seccion_afectada: req.seccionAfectada,
         texto: req.texto
     }).then(r => r.data);
+};
 
 export const subsanarObservacionPea = (idObs: number, respuestaDocente: string): Promise<{ success: boolean }> =>
     api.patch(`/pea/observaciones/${idObs}/subsanar`, {
         respuesta_docente: respuestaDocente
     }).then(r => r.data);
 
-export const getTrazabilidadPea = (id: number): Promise<PeaTrazabilidadDto[]> =>
-    api.get(`/pea/${id}/trazabilidad`).then(r => r.data);
+export const getTrazabilidadPea = (idOrUuid: number | string): Promise<PeaTrazabilidadDto[]> => {
+    const url = typeof idOrUuid === 'string' && idOrUuid.includes('-')
+        ? `/pea/uuid/${idOrUuid}/trazabilidad`
+        : `/pea/${idOrUuid}/trazabilidad`;
+    return api.get(url).then(r => r.data);
+};
 
 export interface PeaBandejaItemDto {
     id_pea: number;

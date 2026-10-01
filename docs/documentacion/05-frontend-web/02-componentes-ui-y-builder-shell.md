@@ -181,11 +181,36 @@ graph TD
 * **Ubicación:** `src/components/DOSIER/CollaborationSidebar.tsx`.
 * **Integración en Shell:** Montado en `DOSIERBuilderShell.tsx` y conectado directamente al handle de SignalR `cowork` (`CoWorkHandle`).
 * **Pestañas y Navegación:**
-  1. **Chat:** Hilos de discusión colegiada con estado vacío optimizado (`MessageSquare`), envío con `Enter` (salto de línea con `Shift+Enter`), soporte completo de notas de voz interactivas con `MediaRecorder` y reproductor con ecualizador animado (`AudioBubblePlayer`), respuestas anidadas con cita previa del mensaje padre (`Reply`), edición inline de mensajes propios, eliminación con modal de confirmación destructiva (`useConfirm`) y confirmaciones de lectura en vivo ("visto" con doble check azul `CheckCheck`, tooltip de lectores y fecha/hora exacta).
-  2. **Estado:** Selector accesible de estado de sección (*En redacción*, *Por revisar*, *Completado*) con iconos vectoriales y checkmark activo; tarjeta de progreso global de alta densidad con barra de gradiente tricolor dinámico (<35% rojo, 35-74% ámbar, >=75% verde esmeralda); desglose completo de secciones normativas del PEA con normalización semántica `toSentenceCase` preservando siglas institucionales (PEA, CACES, CES, ISTPET, SIGAFI).
-  3. **Actividad:** Feed de auditoría en vivo con deduplicación por ventana de 2 minutos para evitar eventos redundantes de concurrencia.
-  4. **Ajustes (Correcciones):** Pestaña contextual que se activa automáticamente cuando el PEA se encuentra en estado *En Corrección*, mostrando la observación general de la coordinación académica, medidor de vencimiento de plazo con cálculo de días restantes y checklist de observaciones por sección con badges de estado.
-* **Optimización de Rendimiento:** Componente memoizado con `React.memo` y referencias anti-flicker (`lastFetchedEntityUuidRef`, `lastFetchedPulseUuidRef`) para prevenir peticiones redundantes a la API al conmutar entre secciones.
+  1. **Revisión (`ShieldCheck`):** Pestaña dedicada para revisores y coordinadores (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`) que integra el panel `<PeaReviewPanel>` con 7 verificadores automáticos de consistencia CACES / RRA CES Art. 21 y botones de acción para emitir avales o devolver con observaciones.
+  2. **Chat (`MessageSquare`):** Hilos de discusión colegiada con estado vacío optimizado, notas de voz con `AudioBubblePlayer`, respuestas anidadas `Reply`, edición inline y confirmaciones de lectura en vivo (`CheckCheck`).
+  3. **Estado (`CheckCircle`):** Selector de estado de sección (*En redacción*, *Por revisar*, *Completado*) y desglose de progreso con métricas normativas.
+  4. **Actividad (`Clock`):** Feed de auditoría y pulso de edición en vivo con deduplicación temporal.
+  5. **Ajustes / Correcciones (`Shield`):** Pestaña contextual para docentes ante PEAs en estado *Observado* / *En Corrección*, con bitácora de observaciones y plazo restante.
+
+### 4.15. `<PeaReviewPanel>`: Panel de Revisión Técnica, Auditoría CACES y Emisión de Avales
+* **Ubicación:** `src/pages/Curriculum/Workspace/components/PeaReviewPanel.tsx`.
+* **Propósito:** Proporcionar una experiencia integral de evaluación curricular (homologada con el estándar de DIITRA) para todos los roles evaluadores.
+* **Chequeos Automáticos de Consistencia (7 Reglas):**
+  1. *Distribución de Horas (RRA CES Art. 21):* Valida que `Horas Contacto + Horas Práctico-Experimental + Horas Autónomo == Total Horas Asignatura`.
+  2. *Unidades Temáticas y Contenidos:* Valida existencia de unidades y desglose de temas de aprendizaje.
+  3. *Resultados de Aprendizaje (RDA):* Valida existencia de descriptores observables de logro formativo.
+  4. *Prácticas APE:* Valida registro de talleres y laboratorios cuando la materia posee horas prácticas.
+  5. *Sistema de Evaluación:* Valida la matriz oficial de calificación sobre 10,00 puntos.
+  6. *Bibliografía:* Valida referencias bibliográficas en formato APA 7.ª edición.
+  7. *Firma Previa:* Valida registro de elaboración docente previo a la emisión de avales.
+* **Acciones de Workflow Curricular:**
+  * `DOSIER_COORD_CARRERA`: "Emitir Aval de Carrera" (`RevisadoCoord`) y "Devolver con Observaciones" (`Observado`).
+  * `DOSIER_COORD_ACAD`: "Emitir Aval Académico" (`RevisadoAcad`) y "Devolver con Observaciones" (`Observado`).
+  * `DOSIER_VICERRECTOR`: Legalización y firma institucional o devolución.
+  * Soporte interactivo de reversión (`onUndo`) en notificaciones Toast.
+
+### 4.16. `<OutputSection>`: Emisión, Previsualización PDF y Panel de Dictamen
+* **Ubicación:** `src/components/DOSIER/shell/components/OutputSection.tsx`.
+* **Diseño Dividido:**
+  * **Columna Izquierda (Panel de Controles con Selector de Modo):**
+    * *Modo Auditoría y Avales:* Renderiza `<PeaReviewPanel>` para revisión normativa integral.
+    * *Modo Emisión y Firma:* Control de modo borrador, generación de PDF y carga de firmas institucionales / PKCS#12 (.p12).
+  * **Columna Derecha (Visor PDF Oficial):** Iframe con compilación y renderizado en tiempo real del documento oficial del PEA.
 
 
 

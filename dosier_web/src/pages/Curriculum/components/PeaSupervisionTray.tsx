@@ -15,7 +15,12 @@ import {
     Shield,
     FileCheck2,
     Eye,
-    GraduationCap
+    GraduationCap,
+    LayoutGrid,
+    List,
+    Building2,
+    ArrowRight,
+    ExternalLink
 } from 'lucide-react';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useNotifications } from '../../../api/NotificationsContext';
@@ -36,6 +41,7 @@ export const PeaSupervisionTray: React.FC = () => {
     const [selectedCarrera, setSelectedCarrera] = useState<string>('todas');
     const [selectedEstado, setSelectedEstado] = useState<string>('todos');
     const [search, setSearch] = useState<string>('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState<boolean>(true);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -142,58 +148,68 @@ export const PeaSupervisionTray: React.FC = () => {
                 return {
                     label: 'Aprobado Institucional',
                     dotClass: 'bg-emerald-500',
-                    textClass: 'text-emerald-600 dark:text-emerald-400'
+                    textClass: 'text-emerald-600 dark:text-emerald-400',
+                    borderClass: 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80'
                 };
             case 'RevisadoAcad':
                 return {
                     label: 'Aval Académico',
                     dotClass: 'bg-[#0070f3]',
-                    textClass: 'text-[#0070f3] dark:text-blue-400'
+                    textClass: 'text-[#0070f3] dark:text-blue-400',
+                    borderClass: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80'
                 };
             case 'RevisadoCoord':
                 return {
                     label: 'Aval Carrera',
                     dotClass: 'bg-blue-500',
-                    textClass: 'text-blue-600 dark:text-blue-400'
+                    textClass: 'text-blue-600 dark:text-blue-400',
+                    borderClass: 'border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80'
                 };
             case 'EnRevision':
                 return {
                     label: 'En Revisión',
                     dotClass: 'bg-amber-500',
-                    textClass: 'text-amber-600 dark:text-amber-400'
+                    textClass: 'text-amber-600 dark:text-amber-400',
+                    borderClass: 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80'
                 };
             case 'Observado':
                 return {
                     label: 'Con Observaciones',
                     dotClass: 'bg-rose-500',
-                    textClass: 'text-rose-600 dark:text-rose-400'
+                    textClass: 'text-rose-600 dark:text-rose-400',
+                    borderClass: 'border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/80'
                 };
             default:
                 return {
                     label: 'Borrador Docente',
                     dotClass: 'bg-zinc-400 dark:bg-zinc-500',
-                    textClass: 'text-zinc-600 dark:text-zinc-400'
+                    textClass: 'text-zinc-600 dark:text-zinc-400',
+                    borderClass: 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900'
                 };
         }
     };
 
     const handleAbrirPea = (uuid: string) => {
+        navigate(`/documentacion/revision-tecnica/${uuid}`);
+    };
+
+    const handleAbrirEditor = (uuid: string) => {
         navigate(`/documentacion/workspace/pea-oficial/${uuid}?edit=pea-oficial`);
     };
 
     return (
         <div className="space-y-6">
             {/* ── BARRA DE FILTROS Y CONTROLES ── */}
-            <div className="bg-surface p-4 rounded-xl border border-border-thin space-y-3">
+            <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3 shadow-xs">
                 <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center">
                     <div className="relative flex-1">
-                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-dim" />
+                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Buscar por asignatura, código institucional, docente o carrera..."
-                            className="input-vercel !pl-10 !rounded-lg !py-2 !text-xs w-full"
+                            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-[#0070f3]"
                         />
                     </div>
 
@@ -210,10 +226,38 @@ export const PeaSupervisionTray: React.FC = () => {
                             />
                         </div>
 
+                        {/* Selector de Modo de Vista: Cuadros vs Lista */}
+                        <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    viewMode === 'grid'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                }`}
+                                title="Vista en Cuadros"
+                            >
+                                <LayoutGrid size={14} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    viewMode === 'list'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                }`}
+                                title="Vista en Lista"
+                            >
+                                <List size={14} />
+                            </button>
+                        </div>
+
                         <button
                             onClick={handleRefrescar}
                             disabled={refreshing}
-                            className="btn-vercel-secondary h-9 px-3 flex items-center gap-1.5 text-xs rounded-lg shrink-0"
+                            className="h-9 px-3 flex items-center gap-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors shrink-0 cursor-pointer"
                             title="Sincronizar lista"
                         >
                             <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
@@ -222,19 +266,19 @@ export const PeaSupervisionTray: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2.5 border-t border-border-thin text-xs">
-                    <div className="flex items-center gap-1.5 text-text-dim">
+                <div className="flex flex-wrap items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-zinc-800 text-xs">
+                    <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
                         <Filter size={12} />
-                        <span className="text-[11px] font-semibold uppercase tracking-wider">Filtros:</span>
+                        <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Filtros:</span>
                     </div>
 
                     {/* Filtro de Carrera */}
                     <div className="flex items-center gap-1">
-                        <label className="text-text-dim text-[11px]">Carrera:</label>
+                        <label className="text-zinc-500 dark:text-zinc-400 text-[11px]">Carrera:</label>
                         <select
                             value={selectedCarrera}
                             onChange={e => setSelectedCarrera(e.target.value)}
-                            className="input-vercel !py-1 !px-2 !text-xs !rounded-md"
+                            className="py-1 px-2 text-xs rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none"
                         >
                             <option value="todas">Todas las Carreras</option>
                             {carrerasDisponibles.map(c => (
@@ -245,11 +289,11 @@ export const PeaSupervisionTray: React.FC = () => {
 
                     {/* Filtro de Estado */}
                     <div className="flex items-center gap-1">
-                        <label className="text-text-dim text-[11px]">Estado:</label>
+                        <label className="text-zinc-500 dark:text-zinc-400 text-[11px]">Estado:</label>
                         <select
                             value={selectedEstado}
                             onChange={e => setSelectedEstado(e.target.value)}
-                            className="input-vercel !py-1 !px-2 !text-xs !rounded-md"
+                            className="py-1 px-2 text-xs rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none"
                         >
                             <option value="todos">Todos los Estados</option>
                             <option value="Borrador">Borrador</option>
@@ -268,7 +312,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 setSelectedCarrera('todas');
                                 setSelectedEstado('todos');
                             }}
-                            className="text-[11px] text-text-dim hover:text-text-main underline cursor-pointer ml-auto"
+                            className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer ml-auto"
                         >
                             Restablecer filtros
                         </button>
@@ -284,37 +328,135 @@ export const PeaSupervisionTray: React.FC = () => {
                 </div>
             )}
 
-            {/* ── BANDEJA DE PEAS (LISTA TABULAR DE ALTA DENSIDAD) ── */}
+            {/* ── BANDEJA DE PEAS (RENDERIZADO DUAL: CUADROS O LISTA) ── */}
             {loading ? (
-                <div className="py-16 text-center text-text-dim text-xs flex flex-col items-center gap-2">
-                    <RefreshCw size={20} className="animate-spin text-brand" />
+                <div className="py-16 text-center text-zinc-400 text-xs flex flex-col items-center gap-2">
+                    <RefreshCw size={20} className="animate-spin text-[#0070f3]" />
                     <span>Consultando instrumentos curriculares registrados...</span>
                 </div>
             ) : filteredPeas.length === 0 ? (
-                <div className="bg-surface rounded-xl border border-dashed border-border-thin p-12 text-center text-text-dim text-xs space-y-2">
-                    <BookOpen size={28} className="mx-auto text-text-dim/60" />
-                    <p className="font-semibold text-text-main text-sm">No se encontraron Programas de Estudio (PEA)</p>
-                    <p className="max-w-md mx-auto text-text-dim text-[11px]">
+                <div className="bg-white dark:bg-zinc-950 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-12 text-center text-zinc-500 text-xs space-y-2">
+                    <BookOpen size={28} className="mx-auto text-zinc-400" />
+                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">No se encontraron Programas de Estudio (PEA)</p>
+                    <p className="max-w-md mx-auto text-zinc-500 dark:text-zinc-400 text-[11px]">
                         No existen instrumentos registrados para el período lectivo y criterios seleccionados. Verifique que los docentes hayan inicializado sus asignaturas desde su panel institucional.
                     </p>
                 </div>
+            ) : viewMode === 'grid' ? (
+                /* ── MODO CUADROS / TARJETAS (ESTILO DOCENTE) ── */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredPeas.map(pea => {
+                        const badge = getEstadoBadge(pea.estado);
+                        return (
+                            <div
+                                key={pea.uuid}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => handleAbrirPea(pea.uuid)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleAbrirPea(pea.uuid);
+                                    }
+                                }}
+                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
+                            >
+                                {/* Encabezado de la Tarjeta */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                            <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
+                                            <span className="truncate">{pea.nombre_carrera}</span>
+                                        </div>
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${badge.borderClass} ${badge.textClass} shrink-0`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
+                                            {badge.label}
+                                        </span>
+                                    </div>
+
+                                    {/* Nombre de la Asignatura */}
+                                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                        {pea.nombre_asignatura}
+                                    </h3>
+
+                                    {/* Docente Elaborador */}
+                                    <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-0.5">
+                                        <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
+                                        <span className="truncate">{pea.nombre_docente_elaborador || 'Docente de Asignatura'}</span>
+                                    </div>
+
+                                    {/* Metadatos Curriculares */}
+                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+                                        {pea.codigo_asignatura && (
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
+                                                {pea.codigo_asignatura}
+                                            </span>
+                                        )}
+                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                            {pea.total_horas_asignatura}h ({pea.creditos} Créditos)
+                                        </span>
+                                        {pea.semestre_nivel && (
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                {pea.semestre_nivel}
+                                            </span>
+                                        )}
+                                        {pea.total_observaciones_pendientes > 0 && (
+                                            <span className="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-semibold text-[11px] inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                                {pea.total_observaciones_pendientes} Obs.
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Pie de Tarjeta con Acción */}
+                                <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-zinc-900">
+                                    <button
+                                        type="button"
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            handleAbrirEditor(pea.uuid);
+                                        }}
+                                        className="text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                        title="Abrir en Editor de Documento"
+                                    >
+                                        <ExternalLink size={12} />
+                                        <span>Editor</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            handleAbrirPea(pea.uuid);
+                                        }}
+                                        className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                    >
+                                        <Eye size={13} />
+                                        <span>Revisión Técnica</span>
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             ) : (
+                /* ── MODO LISTA TABULAR ── */
                 <div className="space-y-2.5">
                     {filteredPeas.map(pea => {
                         const badge = getEstadoBadge(pea.estado);
                         return (
                             <div
                                 key={pea.uuid}
-                                className="bg-surface hover:bg-slate-50 dark:hover:bg-zinc-850/50 p-4 rounded-lg border border-slate-200/90 dark:border-zinc-800 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                                className="bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs"
                             >
                                 {/* Bloque de Asignatura y Carrera */}
                                 <div className="space-y-1.5 flex-1 min-w-0">
                                     <div className="flex flex-wrap items-center gap-2.5">
-                                        <h3 className="text-sm font-semibold text-text-main tracking-tight truncate">
+                                        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                                             {pea.nombre_asignatura}
                                         </h3>
                                         {pea.codigo_asignatura && (
-                                            <span className="font-mono text-xs text-text-dim">
+                                            <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
                                                 {pea.codigo_asignatura}
                                             </span>
                                         )}
@@ -330,8 +472,8 @@ export const PeaSupervisionTray: React.FC = () => {
                                         )}
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-dim">
-                                        <span className="flex items-center gap-1 font-medium text-text-main/80">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span className="flex items-center gap-1 font-medium text-zinc-800 dark:text-zinc-200">
                                             <GraduationCap size={13} className="text-[#0070f3]" />
                                             {pea.nombre_carrera}
                                         </span>
@@ -354,58 +496,24 @@ export const PeaSupervisionTray: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Circuito de 4 Firmas (Puntos Discretos, Cero Cápsulas) */}
-                                <div className="flex items-center gap-2 shrink-0 bg-slate-50 dark:bg-zinc-900/60 px-3 py-1.5 rounded-md border border-slate-200/90 dark:border-zinc-800 text-xs">
-                                    <span className="text-[11px] font-medium text-text-dim uppercase tracking-wider mr-1">Circuito:</span>
-                                    
-                                    {/* 1. Docente */}
-                                    <span
-                                        title={pea.firma_docente ? `Elaborado por Docente (${pea.fecha_elaborado || 'Firmado'})` : 'Pendiente firma docente'}
-                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_docente ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60 line-through'}`}
-                                    >
-                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_docente ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
-                                        Docente
-                                    </span>
-                                    <ChevronRight size={11} className="text-text-dim/40" />
-
-                                    {/* 2. Coordinador de Carrera */}
-                                    <span
-                                        title={pea.firma_coord ? `Revisado por Coordinación de Carrera (${pea.fecha_revisado_coord || 'Firmado'})` : 'Pendiente revisión coordinador'}
-                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_coord ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60'}`}
-                                    >
-                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_coord ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
-                                        Coord. Carrera
-                                    </span>
-                                    <ChevronRight size={11} className="text-text-dim/40" />
-
-                                    {/* 3. Coordinador Académico */}
-                                    <span
-                                        title={pea.firma_acad ? `Aprobado por Coordinación Académica (${pea.fecha_revisado_acad || 'Firmado'})` : 'Pendiente aval académico'}
-                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_acad ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60'}`}
-                                    >
-                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_acad ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
-                                        Coord. Acad.
-                                    </span>
-                                    <ChevronRight size={11} className="text-text-dim/40" />
-
-                                    {/* 4. Vicerrectorado */}
-                                    <span
-                                        title={pea.firma_vicerrector ? `Legalizado por Vicerrectorado (${pea.fecha_aprobado || 'Firmado'})` : 'Pendiente legalización vicerrectorado'}
-                                        className={`inline-flex items-center gap-1 font-medium ${pea.firma_vicerrector ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-dim/60'}`}
-                                    >
-                                        <span className={`w-1.5 h-1.5 rounded-full ${pea.firma_vicerrector ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
-                                        Vicerrector
-                                    </span>
-                                </div>
-
                                 {/* Acciones */}
                                 <div className="flex items-center gap-2 shrink-0">
                                     <button
+                                        type="button"
+                                        onClick={() => handleAbrirEditor(pea.uuid)}
+                                        className="h-8 px-2.5 flex items-center gap-1.5 text-xs rounded-md font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800"
+                                        title="Abrir en Editor de Documento"
+                                    >
+                                        <ExternalLink size={12} />
+                                        <span>Editor</span>
+                                    </button>
+                                    <button
+                                        type="button"
                                         onClick={() => handleAbrirPea(pea.uuid)}
-                                        className="h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-md font-medium text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer"
+                                        className="h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-md font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
                                     >
                                         <Eye size={13} />
-                                        <span>Revisar PEA</span>
+                                        <span>Revisión Técnica</span>
                                     </button>
                                 </div>
                             </div>
@@ -416,3 +524,4 @@ export const PeaSupervisionTray: React.FC = () => {
         </div>
     );
 };
+

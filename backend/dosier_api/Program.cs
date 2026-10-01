@@ -136,11 +136,19 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // Configuración para leer el JWT tanto desde cookie (DOSIER Local) como de Authorization Header (SSO Global)
+    // Configuración para leer el JWT desde cookie (DOSIER Local), Authorization Header o Query String (SignalR WebSockets)
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+                return Task.CompletedTask;
+            }
+
             context.Token = context.Request.Cookies["dosier_auth"];
             if (string.IsNullOrEmpty(context.Token))
             {

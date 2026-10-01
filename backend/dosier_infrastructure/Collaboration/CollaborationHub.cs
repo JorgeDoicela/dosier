@@ -40,46 +40,88 @@ namespace dosier_infrastructure.Collaboration
             var instanceUuid = documentId.Split('_')[0];
 
             // 1.1 SEGURIDAD: Control de Acceso por Defensa en Profundidad
-            var isHubAdmin = Context.User?.FindFirst("es_admin")?.Value == "true" ||
+            var username = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                           ?? Context.User?.FindFirst("id_sigafi")?.Value
+                           ?? Context.User?.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                username = userUuid; // Fallback para entornos de desarrollo locales
+            }
+
+            if (string.IsNullOrEmpty(username))
+            {
+                throw new HubException("No autenticado o credenciales inválidas.");
+            }
+
+            var user = await _db.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.IdSigafi.Trim() == username.Trim() || u.IdUsuario.ToString() == username.Trim());
+
+            if (user == null)
+            {
+                throw new HubException("Usuario no registrado en el sistema.");
+            }
+
+            // Extraer roles asignados
+            var userRoleCodes = user.UserRoles
+                .Where(ur => ur.EsActivo ?? true)
+                .Select(ur => (ur.Role?.CodigoRol ?? ur.Role?.Nombre ?? "").ToUpperInvariant())
+                .Where(c => !string.IsNullOrEmpty(c))
+                .ToList();
+
+            var isHubAdmin = user.Administrador ||
+                             userRoleCodes.Contains("DOSIER_ADMIN") ||
+                             Context.User?.FindFirst("es_admin")?.Value == "true" ||
                              Context.User?.IsInRole("DOSIER_ADMIN") == true;
 
-            if (!isHubAdmin)
+            var isCurricularAuthority = isHubAdmin ||
+                                        userRoleCodes.Contains("DOSIER_COORD_CARRERA") ||
+                                        userRoleCodes.Contains("DOSIER_COORD_ACAD") ||
+                                        userRoleCodes.Contains("DOSIER_VICERRECTOR") ||
+                                        Context.User?.IsInRole("DOSIER_COORD_CARRERA") == true ||
+                                        Context.User?.IsInRole("DOSIER_COORD_ACAD") == true ||
+                                        Context.User?.IsInRole("DOSIER_VICERRECTOR") == true;
+
+            if (!isCurricularAuthority)
             {
-                var username = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Context.User?.Identity?.Name;
-                if (string.IsNullOrEmpty(username))
-                {
-                    username = userUuid; // Fallback para entornos de desarrollo locales
-                }
-
-                if (string.IsNullOrEmpty(username))
-                {
-                    throw new HubException("No autenticado o credenciales inválidas.");
-                }
-
-                var user = await _db.Users.FirstOrDefaultAsync(u => u.IdSigafi.Trim() == username.Trim());
-                if (user == null)
-                {
-                    throw new HubException("Usuario no registrado en el sistema.");
-                }
-
-                var instanceToCheck = await _db.DocumentInstances
+                // Verificar designación activa en doc_autoridades_curriculares
+                var tieneDesignacion = await _db.DocAutoridadesCurriculares
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(i => i.Uuid == instanceUuid);
-
-                string? peaUuid = instanceToCheck?.EntityUuid ?? instanceUuid;
-
-                var pea = await _db.Set<dosier_domain.Curriculum.Entities.DocPea>()
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.Uuid == peaUuid);
-
-                if (pea != null)
+                    .AnyAsync(a => a.IdSigafi == user.IdSigafi && a.EsActivo);
+                if (tieneDesignacion)
                 {
-                    bool isElaborador = pea.IdDocenteElaborador == user.IdSigafi;
-                    if (!isElaborador && !isHubAdmin)
-                    {
-                        _logger.LogWarning("[HUB] Access Denied: User {User} no es elaborador del PEA {PeaUuid}", username, peaUuid);
-                        throw new HubException("No tienes permisos para unirte a la sesión colaborativa de este PEA.");
-                    }
+                    isCurricularAuthority = true;
+                }
+            }
+
+            // Tolerancia para roles de revisión/supervisión declarados por el cliente autenticado
+            if (!isCurricularAuthority && !string.IsNullOrEmpty(userRole))
+            {
+                var normRole = userRole.ToUpperInvariant();
+                if (normRole.Contains("ADMIN") || normRole.Contains("COORD") || normRole.Contains("VICER") || normRole.Contains("REVISOR") || normRole.Contains("SUPERVIS"))
+                {
+                    isCurricularAuthority = true;
+                }
+            }
+
+            var instanceToCheck = await _db.DocumentInstances
+                .AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Uuid == instanceUuid);
+
+            string? peaUuid = instanceToCheck?.EntityUuid ?? instanceUuid;
+
+            var pea = await _db.Set<dosier_domain.Curriculum.Entities.DocPea>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Uuid == peaUuid);
+
+            if (pea != null)
+            {
+                bool isElaborador = pea.IdDocenteElaborador == user.IdSigafi;
+                if (!isElaborador && !isCurricularAuthority)
+                {
+                    _logger.LogWarning("[HUB] Access Denied: User {User} no es elaborador ni autoridad supervisora del PEA {PeaUuid}", username, peaUuid);
+                    throw new HubException("No tienes permisos para unirte a la sesión colaborativa de este PEA.");
                 }
             }
 
@@ -92,26 +134,11 @@ namespace dosier_infrastructure.Collaboration
             bool isReadOnly = instance != null && (int)instance.State >= 3;
             bool isOversightObserver = false;
 
-            if (isHubAdmin)
+            if (isCurricularAuthority && pea != null && pea.IdDocenteElaborador != user.IdSigafi)
             {
-                var observerId = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!string.IsNullOrEmpty(observerId))
-                {
-                    var observerUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == observerId);
-                    if (observerUser != null)
-                    {
-                        string? observedPeaUuid = instance?.EntityUuid ?? instanceUuid;
-                        var observedPea = await _db.Set<dosier_domain.Curriculum.Entities.DocPea>().AsNoTracking()
-                            .FirstOrDefaultAsync(p => p.Uuid == observedPeaUuid);
-
-                        if (observedPea != null && observedPea.IdDocenteElaborador != observerUser.IdSigafi)
-                        {
-                            isOversightObserver = true;
-                            userName = $"{userName} (Supervisión)";
-                            userRole = "Observador";
-                        }
-                    }
-                }
+                isOversightObserver = true;
+                userName = $"{userName} (Revisión)";
+                userRole = "Revisor";
             }
 
             // 3. Registrar auditoría de acceso (LOPDP)

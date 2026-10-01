@@ -354,6 +354,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 entityUuid={entityUuid}
                                                 projectStatus={projectStatus}
                                                 templateCode={templateCode}
+                                                peaData={formData}
                                                 onClose={handleCloseSidebar}
                                                 sectionStatuses={layout.sectionStatuses}
                                                 onSectionStatusChange={layout.setSectionStatus}

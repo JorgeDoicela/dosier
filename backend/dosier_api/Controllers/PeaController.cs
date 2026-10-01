@@ -89,12 +89,25 @@ namespace dosier_api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.IdPea }, result);
         }
 
-        [HttpPatch("{id}/estado")]
-        [Authorize(Roles = "DOSIER_ADMIN")]
+        [HttpPatch("{id:int}/estado")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR,DOSIER_DOCENTE")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] CambiarEstadoRequest req)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
             var ok = await _peaService.CambiarEstadoAsync(id, req.NuevoEstado, req.Firma, userId, req.Motivo);
+            if (!ok) return NotFound("No se pudo actualizar el estado del PEA.");
+            return Ok(new { success = true });
+        }
+
+        [HttpPatch("uuid/{uuid}/estado")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR,DOSIER_DOCENTE")]
+        public async Task<IActionResult> CambiarEstadoByUuid(string uuid, [FromBody] CambiarEstadoRequest req)
+        {
+            var pea = await _peaService.GetByUuidAsync(uuid);
+            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var ok = await _peaService.CambiarEstadoAsync(pea.IdPea, req.NuevoEstado, req.Firma, userId, req.Motivo);
             if (!ok) return NotFound("No se pudo actualizar el estado del PEA.");
             return Ok(new { success = true });
         }
@@ -121,6 +134,26 @@ namespace dosier_api.Controllers
             return Ok(resultado);
         }
 
+        [HttpPost("uuid/{uuid}/firmar")]
+        public async Task<IActionResult> FirmarByUuid(string uuid, [FromBody] FirmarPeaDto dto)
+        {
+            var pea = await _peaService.GetByUuidAsync(uuid);
+            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+
+            var userIdStr = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                ?? User.FindFirstValue("sub");
+
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int idUsuario))
+                return Unauthorized(new { message = "Sesión inválida o identificador de usuario no encontrado." });
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            var userAgent = Request.Headers["User-Agent"].ToString();
+
+            var resultado = await _peaService.FirmarPeaAsync(pea.IdPea, idUsuario, dto, ip, userAgent);
+            return Ok(resultado);
+        }
+
         [HttpPost("{id}/clonar")]
         [Authorize(Roles = "DOSIER_ADMIN,DOSIER_DOCENTE,DOSIER_COORD_CARRERA")]
         public async Task<IActionResult> Clonar(int id, [FromQuery] string nuevoPeriodo)
@@ -142,6 +175,15 @@ namespace dosier_api.Controllers
             return Ok(list);
         }
 
+        [HttpGet("uuid/{uuid}/observaciones")]
+        public async Task<IActionResult> GetObservacionesByUuid(string uuid)
+        {
+            var pea = await _peaService.GetByUuidAsync(uuid);
+            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+            var list = await _peaService.GetObservacionesByPeaAsync(pea.IdPea);
+            return Ok(list);
+        }
+
         [HttpPost("{id:int}/observaciones")]
         [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
         public async Task<IActionResult> AgregarObservacion(int id, [FromBody] AgregarObservacionRequest req)
@@ -153,6 +195,23 @@ namespace dosier_api.Controllers
             int? idUserInt = int.TryParse(userId, out int u) ? u : null;
 
             var obs = await _peaService.AgregarObservacionAsync(id, req.RolObservador ?? "CoordinadorCarrera", req.SeccionAfectada ?? "General", req.Texto, idUserInt);
+            return Ok(obs);
+        }
+
+        [HttpPost("uuid/{uuid}/observaciones")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
+        public async Task<IActionResult> AgregarObservacionByUuid(string uuid, [FromBody] AgregarObservacionRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.Texto)) return BadRequest("El texto de la observación no puede estar vacío.");
+            var pea = await _peaService.GetByUuidAsync(uuid);
+            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int? idUserInt = int.TryParse(userId, out int u) ? u : null;
+
+            var obs = await _peaService.AgregarObservacionAsync(pea.IdPea, req.RolObservador ?? "CoordinadorCarrera", req.SeccionAfectada ?? "General", req.Texto, idUserInt);
             return Ok(obs);
         }
 
@@ -174,6 +233,15 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> GetTrazabilidad(int id)
         {
             var list = await _peaService.GetTrazabilidadByPeaAsync(id);
+            return Ok(list);
+        }
+
+        [HttpGet("uuid/{uuid}/trazabilidad")]
+        public async Task<IActionResult> GetTrazabilidadByUuid(string uuid)
+        {
+            var pea = await _peaService.GetByUuidAsync(uuid);
+            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+            var list = await _peaService.GetTrazabilidadByPeaAsync(pea.IdPea);
             return Ok(list);
         }
     }

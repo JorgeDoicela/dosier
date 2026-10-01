@@ -18,7 +18,14 @@ import {
     Building2,
     RefreshCw,
     Search,
-    Loader2
+    Loader2,
+    LayoutGrid,
+    List,
+    Clock,
+    FileText,
+    CheckCircle2,
+    Award,
+    Shield
 } from 'lucide-react';
 
 export const DocentePeaDashboard: React.FC = () => {
@@ -31,6 +38,7 @@ export const DocentePeaDashboard: React.FC = () => {
     const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
     const [search, setSearch] = useState<string>('');
     const [filterEstado, setFilterEstado] = useState<string>('todos');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState<boolean>(true);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [creatingPeaId, setCreatingPeaId] = useState<number | null>(null);
@@ -141,6 +149,49 @@ export const DocentePeaDashboard: React.FC = () => {
         });
     }, [materias, search, filterEstado]);
 
+    const renderEstadoBadge = (estado: string) => {
+        switch (estado) {
+            case 'Aprobado':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        Aprobado Oficial
+                    </span>
+                );
+            case 'Observado':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                        Con Observaciones
+                    </span>
+                );
+            case 'EnRevision':
+            case 'RevisadoCoord':
+            case 'RevisadoAcad':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/80 text-[#0070f3] dark:text-blue-400">
+                        <Clock className="w-3.5 h-3.5 text-[#0070f3]" />
+                        En Revisión
+                    </span>
+                );
+            case 'Borrador':
+            case 'Corregido':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300">
+                        <FileText className="w-3.5 h-3.5 text-blue-500" />
+                        En Borrador
+                    </span>
+                );
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400">
+                        <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                        No Iniciado
+                    </span>
+                );
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Encabezado */}
@@ -175,13 +226,12 @@ export const DocentePeaDashboard: React.FC = () => {
                 </div>
             )}
 
-
             {/* Listado y Filtros */}
-            <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+            <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
                 <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900">
                     <div className="flex items-center gap-3">
                         <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                            Asignaturas Asignadas en Distributivo Institucional
+                            Asignaturas en Distributivo
                         </h2>
                         {refreshing && <RefreshCw className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
                     </div>
@@ -225,10 +275,38 @@ export const DocentePeaDashboard: React.FC = () => {
                             <option value="aprobados">Aprobados</option>
                         </select>
 
+                        {/* Selector de Modo: Cuadros vs Lista */}
+                        <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    viewMode === 'grid'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                }`}
+                                title="Vista en Cuadros"
+                            >
+                                <LayoutGrid size={14} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    viewMode === 'list'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                }`}
+                                title="Vista en Lista"
+                            >
+                                <List size={14} />
+                            </button>
+                        </div>
+
                         <button
                             onClick={handleRefrescar}
                             disabled={refreshing}
-                            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 border border-zinc-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 border border-zinc-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                             title="Recargar distributivo"
                         >
                             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -236,18 +314,128 @@ export const DocentePeaDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Tabla de Asignaturas */}
-                <div className="overflow-x-auto">
-                    {loading ? (
-                        <div className="py-16 flex flex-col items-center justify-center text-zinc-400 space-y-2">
-                            <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
-                            <p className="text-xs">Consultando asignaciones académicas...</p>
-                        </div>
-                    ) : materiasFiltradas.length === 0 ? (
-                        <div className="py-12 text-center text-zinc-500 text-xs">
-                            No se encontraron asignaturas asignadas en el período seleccionado.
-                        </div>
-                    ) : (
+                {/* Contenido: Grid o Tabla */}
+                {loading ? (
+                    <div className="py-16 flex flex-col items-center justify-center text-zinc-400 space-y-2">
+                        <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
+                        <p className="text-xs">Consultando asignaciones académicas...</p>
+                    </div>
+                ) : materiasFiltradas.length === 0 ? (
+                    <div className="py-12 text-center text-zinc-500 text-xs">
+                        No se encontraron asignaturas asignadas en el período seleccionado.
+                    </div>
+                ) : viewMode === 'grid' ? (
+                    /* ── MODO CUADROS ── */
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-zinc-50/50 dark:bg-zinc-950">
+                        {materiasFiltradas.map(materia => {
+                            const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
+                            const isCreating = creatingPeaId === materia.id_asignacion;
+
+                            const handleCardClick = () => {
+                                if (isCreating) return;
+                                if (tienePea) {
+                                    handleContinuarPea(materia);
+                                } else {
+                                    handleCrearPea(materia);
+                                }
+                            };
+
+                            return (
+                                <div
+                                    key={materia.id_asignacion}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={handleCardClick}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleCardClick();
+                                        }
+                                    }}
+                                    className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
+                                >
+                                    {/* Top: Carrera y Estado */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
+                                                <span className="truncate">{materia.nombre_carrera}</span>
+                                            </div>
+                                            <div>{renderEstadoBadge(materia.estado_pea)}</div>
+                                        </div>
+
+                                        {/* Título de la Asignatura */}
+                                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                            {materia.nombre_asignatura}
+                                        </h3>
+
+                                        {/* Metadatos Curriculares */}
+                                        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+                                            {materia.codigo_asignatura && (
+                                                <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
+                                                    {materia.codigo_asignatura}
+                                                </span>
+                                            )}
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                {materia.horas_totales}h ({materia.creditos || Math.round(materia.horas_totales / 48)} Créd.)
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                {materia.nombre_nivel}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold text-[11px]">
+                                                Paralelo {materia.paralelo}
+                                            </span>
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 text-[11px]">
+                                                {materia.nombre_modalidad || 'Presencial'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Botón de Acción Principal */}
+                                    <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-zinc-900">
+                                        {tienePea ? (
+                                            <button
+                                                type="button"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    handleContinuarPea(materia);
+                                                }}
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                            >
+                                                <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
+                                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    handleCrearPea(materia);
+                                                }}
+                                                disabled={isCreating}
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                                            >
+                                                {isCreating ? (
+                                                    <>
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        <span>Inicializando...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <PlusCircle className="w-3.5 h-3.5" />
+                                                        <span>Elaborar PEA</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    /* ── MODO TABLA / LISTA ── */
+                    <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
                             <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
                                 <tr>
@@ -313,32 +501,7 @@ export const DocentePeaDashboard: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="py-3 px-3">
-                                                {m.estado_pea === 'Aprobado' ? (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                                        <span>Aprobado Institucional</span>
-                                                    </div>
-                                                ) : m.estado_pea === 'Observado' ? (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                                                        <span>Con Observaciones</span>
-                                                    </div>
-                                                ) : m.estado_pea === 'EnRevision' || m.estado_pea === 'RevisadoCoord' || m.estado_pea === 'RevisadoAcad' ? (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#0070f3] dark:text-blue-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] shrink-0" />
-                                                        <span>En Revisión</span>
-                                                    </div>
-                                                ) : m.estado_pea === 'Borrador' || m.estado_pea === 'Corregido' ? (
-                                                    <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                                                        <span>En Borrador</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
-                                                        <span>No Iniciado</span>
-                                                    </div>
-                                                )}
+                                                {renderEstadoBadge(m.estado_pea)}
                                             </td>
                                             <td className="py-3 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
@@ -376,11 +539,12 @@ export const DocentePeaDashboard: React.FC = () => {
                                 })}
                             </tbody>
                         </table>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 export default DocentePeaDashboard;
+

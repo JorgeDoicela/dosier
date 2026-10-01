@@ -67,26 +67,8 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
     readOnly = false
 }) => {
     const availableFields = useMemo(() => {
-        const fields: Record<string, string> = { ...FIELD_LABELS };
-        if (templateBlocks && Array.isArray(templateBlocks)) {
-            templateBlocks.forEach((block, bIdx) => {
-                const isStandardBlock = [
-                    'cover', 'project_general_section', 'researchers_table',
-                    'project_technical_section', 'project_budget_section',
-                    'impacts', 'gantt', 'signatures', 'title'
-                ].includes(block.type);
-
-                if (!isStandardBlock) {
-                    const fieldKey = block.config?.fieldKey || block.id || `custom_block_${bIdx}`;
-                    const blockTitle = block.title || `Sección ${bIdx + 1}`;
-                    if (!fields[fieldKey]) {
-                        fields[fieldKey] = blockTitle;
-                    }
-                }
-            });
-        }
-        return fields;
-    }, [FIELD_LABELS, templateBlocks]);
+        return { ...FIELD_LABELS };
+    }, [FIELD_LABELS]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -115,12 +97,12 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
             <div className="p-4 py-3 border-b border-border-thin bg-surface/20 shrink-0">
                 <div className="flex justify-between items-center mb-1.5">
                     <div className="flex items-center gap-2">
-                        <label className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider font-medium">
-                            Campo bajo inspección:
+                        <label className="text-[9px] font-black text-text-dim uppercase tracking-wider font-mono">
+                            CAMPO BAJO INSPECCIÓN:
                         </label>
                         {comments[activeCommentField]?.length > 0 && (
-                            <span className="text-[10px] font-medium text-amber-500 font-mono flex items-center gap-1">
-                                <AlertCircle size={11} />
+                            <span className="text-[9px] font-bold text-amber-500 font-mono flex items-center gap-1">
+                                <AlertCircle size={10} />
                                 {comments[activeCommentField].length} obs
                             </span>
                         )}
@@ -216,11 +198,13 @@ export const ObservationsSidebar: React.FC<ObservationsSidebarProps> = ({
                         </div>
                     ) : (
                         <div className="h-full flex flex-col justify-center items-center text-center text-text-dim p-6 py-12">
-                            <CheckCircle2 size={24} className="text-emerald-500 mb-2" />
-                            <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                            <div className="p-3 bg-surface rounded-full border border-border-thin mb-3 shadow-2xs text-text-dim/60">
+                                <CheckCircle2 size={24} className="text-emerald-500" />
+                            </div>
+                            <p className="text-[11px] font-black text-text-main uppercase tracking-wider">
                                 Sin observaciones
                             </p>
-                            <p className="text-[11px] text-text-dim mt-1 max-w-[200px] leading-relaxed">
+                            <p className="text-[10px] text-text-dim mt-1 max-w-[200px] leading-relaxed font-mono">
                                 Este campo está aprobado implícitamente. Si requiere correcciones, escribe abajo.
                             </p>
                         </div>

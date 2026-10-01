@@ -23,6 +23,7 @@ import {
     Edit3,
     Eye,
     Shield,
+    ShieldCheck,
     Check,
     CheckCheck,
     Reply,
@@ -37,6 +38,7 @@ import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
 import { coworkLog } from '../../core/cowork/utils/log';
 import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlayer';
+import { PeaReviewPanel } from '../../pages/Curriculum/Workspace/components/PeaReviewPanel';
 
 const toSentenceCase = (text: string, fallbackIdx?: number): string => {
     if (!text) return '';
@@ -81,6 +83,7 @@ export interface CollaborationSidebarProps {
     entityUuid?: string;
     projectStatus?: string;
     templateCode?: string;
+    peaData?: any;
     onClose: () => void;
     sectionStatuses?: Record<string, string>;
     onSectionStatusChange?: (sectionName: string, status: string) => void;
@@ -95,12 +98,15 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     entityUuid,
     projectStatus,
     templateCode,
+    peaData,
     onClose,
     sectionStatuses: sectionStatusesProp,
     onSectionStatusChange
 }) => {
-    const { user } = useAuth();
+    const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
+
+    const isReviewer = Boolean(isAdmin || isRevisor || isCoordCarrera || isCoordAcad || isVicerrector);
 
     const currentSectionLabel = useMemo(() => {
         const found = sectionItems?.find(s => s.id === sectionName);
@@ -135,14 +141,20 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         return !templateCode || templateCode === 'PEA_OFICIAL' || templateCode === 'GUIA_PRACTICA_LAB';
     }, [templateCode]);
 
-    const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones'>(() => {
-        if (isProtocolDocument && projectStatus === 'En Corrección') return 'correcciones';
-        const saved = localStorage.getItem('document_sidebar_tab');
+    const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision'>(() => {
+        if (isProtocolDocument && isReviewer && ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(projectStatus || '')) {
+            return 'revision';
+        }
+        if (isProtocolDocument && (projectStatus === 'En Corrección' || projectStatus === 'Observado')) {
+            return isReviewer ? 'revision' : 'correcciones';
+        }
+        const saved = localStorage.getItem('document_sidebar_tab') as any;
+        if (saved === 'revision' && (!isProtocolDocument || !isReviewer)) return 'comments';
         if (saved === 'correcciones' && !isProtocolDocument) return 'comments';
-        return (saved === 'comments' || saved === 'status' || saved === 'activity' || saved === 'correcciones') ? saved : 'comments';
+        return (saved === 'comments' || saved === 'status' || saved === 'activity' || saved === 'correcciones' || saved === 'revision') ? saved : 'comments';
     });
 
-    const setActiveTab = useCallback((tab: 'comments' | 'status' | 'activity' | 'correcciones') => {
+    const setActiveTab = useCallback((tab: 'comments' | 'status' | 'activity' | 'correcciones' | 'revision') => {
         localStorage.setItem('document_sidebar_tab', tab);
         setActiveTabState(tab);
     }, []);
@@ -636,13 +648,33 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         <aside className="w-full h-full flex flex-col bg-bg-deep border-l border-border-thin z-30 transition-all duration-300">
             {/* Header Tabs */}
             <div className="flex items-center justify-between border-b border-border-thin bg-bg-deep shrink-0 select-none">
-                {isProtocolDocument && projectStatus === 'En Corrección' && (
+                {/* Tab de Revisión para Evaluadores / Coordinadores */}
+                {isProtocolDocument && isReviewer && (
+                    <button
+                        onClick={() => setActiveTab('revision')}
+                        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${
+                            activeTab === 'revision'
+                                ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                        }`}
+                        title="Auditoría Normativa CACES y Emisión de Avales"
+                    >
+                        <ShieldCheck size={14} className={activeTab === 'revision' ? 'text-[#0070f3]' : 'text-text-dim'} />
+                        <span>Revisión</span>
+                    </button>
+                )}
+
+                {/* Tab de Ajustes / Observaciones para Docentes cuando el PEA está observado */}
+                {isProtocolDocument && (projectStatus === 'En Corrección' || projectStatus === 'Observado') && !isReviewer && (
                     <button
                         onClick={() => setActiveTab('correcciones')}
-                        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-error text-error bg-error/5' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                            }`}
+                        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${
+                            activeTab === 'correcciones'
+                                ? 'border-amber-500 text-amber-500 bg-amber-500/5'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                        }`}
                     >
-                        <Shield size={14} className="text-error" />
+                        <Shield size={14} className="text-amber-500" />
                         <span>Ajustes</span>
                     </button>
                 )}
@@ -681,7 +713,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             </div>
 
             {/* Content Container */}
-            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col`}>
+            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : activeTab === 'revision' ? 'overflow-y-auto p-2 sm:p-3' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col`}>
                 {isLoadingPulse ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 py-10 opacity-70">
                         <Loader size={24} className="animate-spin text-text-main" />
@@ -689,6 +721,18 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     </div>
                 ) : (
                     <>
+                        {activeTab === 'revision' && (
+                            <div className="flex flex-col h-full flex-1 overflow-y-auto custom-scrollbar">
+                                <PeaReviewPanel
+                                    peaData={peaData || {}}
+                                    entityUuid={entityUuid}
+                                    onStatusChanged={() => {
+                                        window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
+                                    }}
+                                />
+                            </div>
+                        )}
+
                         {activeTab === 'comments' && (
                             <div className="flex flex-col h-full flex-1 overflow-hidden">
                                 <div className="flex-1 overflow-y-auto space-y-3 mb-2 px-1 pt-3.5 pb-1 custom-scrollbar">

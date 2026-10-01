@@ -1,36 +1,36 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { 
+    BookOpen, 
+    FileText, 
+    Target, 
+    CheckSquare, 
+    Activity, 
+    Users, 
+    Clock, 
+    Calendar,
+    Award,
+    Shield,
+    Library
+} from 'lucide-react';
+import type { ProjectDetail } from '../types/revisionTecnicaTypes';
 
-const stripHtml = (html: string | null | undefined): string => {
-    if (!html) return '';
+const stripHtml = (html: any): string => {
+    if (!html || typeof html !== 'string') return '';
     return html.replace(/<[^>]*>/g, '').trim();
 };
 
-const renderHtml = (html: string | null | undefined, placeholder: string = 'No registrado') => {
-    if (!html || stripHtml(html).length === 0) {
+const renderHtml = (html: any, placeholder: string = 'No registrado') => {
+    const raw = typeof html === 'string' ? html : (html ? String(html) : '');
+    if (!raw || stripHtml(raw).length === 0) {
         return <p className="text-xs text-text-dim/60 italic mt-2 select-text">{placeholder}</p>;
     }
     return (
         <div 
-            className="text-xs font-mono font-medium leading-relaxed text-text-main mt-2 select-text"
-            dangerouslySetInnerHTML={{ __html: html }}
+            className="text-xs font-sans leading-relaxed text-text-main mt-2 select-text prose prose-sm dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: raw }}
         />
     );
 };
-
-interface ProjectDetail {
-    uuid: string;
-    title: string;
-    status: string;
-    presupuesto: number;
-    convocatoriaMontoMaximo: number | null;
-    convocatoria: string;
-    linea: string;
-    carrera: string;
-    dominio: string;
-    descripcion: string;
-    directorProyecto: string;
-}
 
 interface InteractiveSectionsProps {
     activeSection: string;
@@ -53,11 +53,7 @@ interface InteractiveSectionsProps {
 export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     activeSection,
     project,
-    investigadores,
     docSnapshot,
-    templateBlocks,
-    isHoursOk,
-    teachersWithExceedingHours,
     getFieldCardClasses,
     renderFieldStatusBadge,
     renderCommentButton,
@@ -65,568 +61,713 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     setIsRightSidebarOpen,
     getSafeArray
 }) => {
+    const snap = docSnapshot || {};
+
     return (
-        <div className="flex-1 h-full p-8 overflow-y-auto space-y-6 relative custom-scrollbar bg-bg-deep/20">
+        <div className="flex-1 h-full p-6 md:p-8 overflow-y-auto space-y-6 relative custom-scrollbar bg-bg-deep/20 font-sans">
 
-
-            {/* 1. IDENTIFICACIÓN */}
-            {activeSection === 'identificacion' && (
+            {/* 1. DATOS GENERALES */}
+            {activeSection === 'pea_general_section' && (
                 <div className="space-y-5 animate-fade-in">
-                    <div className="border-b border-border-thin/60 pb-3 font-sans">
-                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">1. Identificación del Proyecto</h3>
-                        <p className="text-[9px] text-text-dim uppercase mt-0.5 font-mono">Información general y metadatos del protocolo</p>
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            1. Datos Generales de la Asignatura
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Metadatos curriculares institucionales, horas y créditos
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 font-sans select-none">
-                        {/* TÍTULO */}
+                    <div className="grid grid-cols-1 gap-4 select-none">
+                        {/* ASIGNATURA */}
                         <div 
-                            id="field-card-titulo"
-                            onClick={() => { setActiveCommentField('titulo'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('titulo')}
+                            id="field-card-NombreAsignatura"
+                            onClick={() => { setActiveCommentField('NombreAsignatura'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('NombreAsignatura')}
                         >
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Tema / Nombre del Proyecto</span>
-                                    {renderFieldStatusBadge('titulo')}
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Nombre de la Asignatura
+                                    </span>
+                                    {renderFieldStatusBadge('NombreAsignatura')}
                                 </div>
-                                {renderCommentButton('titulo', 'Tema / Nombre')}
+                                {renderCommentButton('NombreAsignatura', 'Nombre de Asignatura')}
                             </div>
-                            <p className="text-xs font-bold text-text-main leading-relaxed mt-1 select-text">{stripHtml(project.title)}</p>
+                            <p className="text-sm font-bold text-text-main leading-relaxed mt-2 select-text">
+                                {stripHtml(snap.NombreAsignatura) || stripHtml(project.title) || 'No registrado'}
+                            </p>
                         </div>
 
-                        {/* PROGRAMA */}
-                        <div 
-                            id="field-card-programa"
-                            onClick={() => { setActiveCommentField('programa'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('programa')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Programa del Proyecto</span>
-                                    {renderFieldStatusBadge('programa')}
+                        {/* CÓDIGO Y CARRERA */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div 
+                                id="field-card-CodigoAsignatura"
+                                onClick={() => { setActiveCommentField('CodigoAsignatura'); setIsRightSidebarOpen(true); }}
+                                className={getFieldCardClasses('CodigoAsignatura')}
+                            >
+                                <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                            Código de la Asignatura
+                                        </span>
+                                        {renderFieldStatusBadge('CodigoAsignatura')}
+                                    </div>
+                                    {renderCommentButton('CodigoAsignatura', 'Código Asignatura')}
                                 </div>
-                                {renderCommentButton('programa', 'Programa del Proyecto')}
+                                <p className="text-xs font-mono font-semibold text-text-main mt-2 select-text">
+                                    {snap.CodigoAsignatura || project.codigo_asignatura || 'Sin código institucional'}
+                                </p>
                             </div>
-                            <p className="text-xs font-semibold text-text-main mt-1 select-text">{stripHtml(docSnapshot.ProgramaProyecto) || stripHtml(docSnapshot.Programa) || 'No definido o no requerido'}</p>
-                        </div>
 
-                        {/* GRUPO */}
-                        <div 
-                            id="field-card-grupo"
-                            onClick={() => { setActiveCommentField('grupo'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('grupo')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Grupo de Investigación</span>
-                                    {renderFieldStatusBadge('grupo')}
+                            <div 
+                                id="field-card-Carrera"
+                                onClick={() => { setActiveCommentField('Carrera'); setIsRightSidebarOpen(true); }}
+                                className={getFieldCardClasses('Carrera')}
+                            >
+                                <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                            Carrera Institucional
+                                        </span>
+                                        {renderFieldStatusBadge('Carrera')}
+                                    </div>
+                                    {renderCommentButton('Carrera', 'Carrera')}
                                 </div>
-                                {renderCommentButton('grupo', 'Grupo de Investigación')}
-                            </div>
-                            <p className="text-xs font-semibold text-text-main mt-1 select-text">{stripHtml(docSnapshot.GrupoInvestigacion) || stripHtml(docSnapshot.GrupoInvestigacionNombre) || 'No definido o sin grupo asociado'}</p>
-                        </div>
-
-                        {/* DOMINIO Y LÍNEAS */}
-                        <div 
-                            id="field-card-dominio_linea"
-                            onClick={() => { setActiveCommentField('dominio_linea'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('dominio_linea', 'space-y-2.5')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">DOMINIO Y LÍNEAS DE INVESTIGACIÓN</span>
-                                    {renderFieldStatusBadge('dominio_linea')}
-                                </div>
-                                {renderCommentButton('dominio_linea', 'Dominio y Líneas')}
-                            </div>
-                            <div className="grid grid-cols-3 gap-3 select-text">
-                                <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Dominio Académico</span>
-                                    <p className="text-xs font-medium text-text-main mt-0.5 truncate">{stripHtml(project.dominio) || stripHtml(docSnapshot.Dominio) || 'No especificado'}</p>
-                                </div>
-                                <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Línea de Investigación</span>
-                                    <p className="text-xs font-medium text-text-main mt-0.5 truncate">{stripHtml(project.linea) || stripHtml(docSnapshot.LineaInvestigacion) || 'No definida'}</p>
-                                </div>
-                                <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Sublínea</span>
-                                    <p className="text-xs font-medium text-text-main mt-0.5 truncate">{stripHtml(docSnapshot.SublineaInvestigacion) || stripHtml(docSnapshot.Sublinea) || 'No registrada'}</p>
-                                </div>
+                                <p className="text-xs font-semibold text-text-main mt-2 select-text">
+                                    {snap.Carrera || project.carrera || 'No asignada'}
+                                </p>
                             </div>
                         </div>
 
-                        {/* CAMPOS CACES */}
+                        {/* MODALIDAD, UNIDAD, NIVEL, PERIODO */}
                         <div 
-                            id="field-card-campos"
-                            onClick={() => { setActiveCommentField('campos'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('campos', 'space-y-2.5')}
+                            id="field-card-Modalidad"
+                            onClick={() => { setActiveCommentField('Modalidad'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('Modalidad')}
                         >
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">CAMPOS METADATOS CACES</span>
-                                    {renderFieldStatusBadge('campos')}
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Estructura y Régimen Curricular
+                                    </span>
+                                    {renderFieldStatusBadge('Modalidad')}
                                 </div>
-                                {renderCommentButton('campos', 'Campos CACES')}
+                                {renderCommentButton('Modalidad', 'Modalidad y Régimen')}
                             </div>
-                            <div className="grid grid-cols-4 gap-3 select-text">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 select-text">
                                 <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Tipo</span>
-                                    <p className="text-xs font-bold text-text-main mt-0.5">{stripHtml(docSnapshot.TipoInvestigacion) || 'APLICADA'}</p>
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Modalidad</span>
+                                    <span className="text-xs font-semibold text-text-main">{snap.Modalidad || project.modalidad || 'Presencial'}</span>
                                 </div>
                                 <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Campo Amplio</span>
-                                    <p className="text-xs font-medium text-text-main mt-0.5 truncate">{stripHtml(docSnapshot.CampoAmplio) || '-'}</p>
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Unidad de Org.</span>
+                                    <span className="text-xs font-semibold text-text-main">{snap.UnidadOrganizacion || 'Unidad Profesional'}</span>
                                 </div>
                                 <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Campo Específico</span>
-                                    <p className="text-xs font-medium text-text-main mt-0.5 truncate">{stripHtml(docSnapshot.CampoEspecifico) || '-'}</p>
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Semestre / Nivel</span>
+                                    <span className="text-xs font-semibold text-text-main">{snap.Nivel || project.semestre_nivel || '-'}</span>
                                 </div>
                                 <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Campo Detallado</span>
-                                    <p className="text-xs font-medium text-text-main mt-0.5 truncate">{stripHtml(docSnapshot.CampoDetallado) || '-'}</p>
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Período</span>
+                                    <span className="text-xs font-semibold text-text-main">{snap.Periodo || project.periodo || '-'}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* CARRERA */}
+                        {/* HORAS Y CRÉDITOS */}
                         <div 
-                            id="field-card-carrera"
-                            onClick={() => { setActiveCommentField('carrera'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('carrera', 'space-y-2.5')}
+                            id="field-card-TotalHorasAsignatura"
+                            onClick={() => { setActiveCommentField('TotalHorasAsignatura'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('TotalHorasAsignatura')}
                         >
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">CARRERA / UNIDAD ACADÉMICA</span>
-                                    {renderFieldStatusBadge('carrera')}
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Distribución de Horas y Créditos (CACES)
+                                    </span>
+                                    {renderFieldStatusBadge('TotalHorasAsignatura')}
                                 </div>
-                                {renderCommentButton('carrera', 'Carrera')}
+                                {renderCommentButton('TotalHorasAsignatura', 'Horas y Créditos')}
                             </div>
-                            <div className="grid grid-cols-2 gap-4 select-text">
-                                <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Carrera / Unidad</span>
-                                    <p className="text-xs font-semibold text-text-main mt-0.5">{project.carrera || docSnapshot.Carrera || 'Institucional'}</p>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-2 select-text">
+                                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800 text-center">
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Total Horas</span>
+                                    <span className="text-sm font-bold text-text-main font-mono">{snap.TotalHorasAsignatura || project.horas_totales || 0}h</span>
                                 </div>
-                                <div>
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Régimen / Asignación</span>
-                                    <p className="text-xs font-semibold text-text-main mt-0.5 truncate">{project.periodoAcademico || 'Período Académico Regular'}</p>
+                                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800 text-center">
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Créditos</span>
+                                    <span className="text-sm font-bold text-text-main font-mono">{snap.Creditos || project.creditos || 0}</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800 text-center">
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Docencia</span>
+                                    <span className="text-sm font-bold text-text-main font-mono">{snap.HorasContactoDocente || project.horas_docencia || 0}h</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800 text-center">
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Práctica APE</span>
+                                    <span className="text-sm font-bold text-text-main font-mono">{snap.HorasPracticoExperimental || project.horas_practica || 0}h</span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800 text-center">
+                                    <span className="text-[9px] text-text-dim uppercase font-mono block">Autónomo</span>
+                                    <span className="text-sm font-bold text-text-main font-mono">{snap.HorasAutonomo || project.horas_autonomo || 0}h</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* DOCENTE ELABORADOR */}
+                        <div 
+                            id="field-card-DocenteElaborador"
+                            onClick={() => { setActiveCommentField('DocenteElaborador'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('DocenteElaborador')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Docente Titular Elaborador
+                                    </span>
+                                    {renderFieldStatusBadge('DocenteElaborador')}
+                                </div>
+                                {renderCommentButton('DocenteElaborador', 'Docente')}
+                            </div>
+                            <p className="text-xs font-semibold text-text-main mt-2 select-text">
+                                {snap.DocenteElaborador || project.docente_elaborador || project.directorProyecto || 'Docente de Asignatura'}
+                            </p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* 2. EQUIPO HUMANO */}
-            {activeSection === 'equipo' && (
-                <div className="space-y-5 animate-fade-in" id="field-card-equipo">
-                    <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">2. Equipo Humano del Proyecto</h3>
-                            {renderFieldStatusBadge('equipo')}
-                        </div>
-                        {renderCommentButton('equipo', 'Equipo Humano')}
+            {/* 2. OBJETIVO FORMATIVO */}
+            {activeSection === 'pea_objectives_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            2. Objetivo de la Asignatura
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Finalidad formativa general y alcance metodológico del contenido
+                        </p>
                     </div>
 
-                    <div className="space-y-3 font-sans select-none">
-                        {investigadores.map((inv, idx) => (
-                            <div 
-                                key={idx} 
-                                className={`p-4 rounded-xl border border-border-thin bg-surface relative flex items-center justify-between ${
-                                    (inv.horasAsignadas + inv.horasSemanales) > inv.horasDisponibles ? 'border-error/20 bg-error/[0.003]' : ''
-                                }`}
-                            >
-                                <div className="space-y-1 select-text">
-                                    <p className="text-xs font-bold text-text-main uppercase">{inv.nombres_completos || inv.nombre}</p>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-brand bg-brand/5 px-2 py-0.5 rounded border border-brand/10">{inv.rol}</span>
-                                        <span className="text-[8px] font-mono text-text-dim">C.I. {inv.id_sigafi || inv.identificacion}</span>
-                                    </div>
-                                </div>
-                                <div className="text-right select-text">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest block">Carga Horaria Semanal</span>
-                                    <p className="text-xs font-mono font-bold text-text-main mt-0.5">{inv.horasSemanales || 0} horas</p>
-                                    <span className="text-[8px] text-text-dim block mt-0.5">
-                                        Disponibles: {inv.horasDisponibles || 0}h | Asignadas: {inv.horasAsignadas || 0}h
-                                    </span>
-                                    {(inv.horasAsignadas + inv.horasSemanales) > inv.horasDisponibles && (
-                                        <span className="text-[8px] font-bold text-error flex items-center gap-1 mt-1 animate-pulse">
-                                            <AlertTriangle className="w-2.5 h-2.5 shrink-0 text-red-500" />
-                                            <span>Exceso en Período Activo (+{(inv.horasAsignadas + inv.horasSemanales) - inv.horasDisponibles}h)</span>
-                                        </span>
-                                    )}
-                                </div>
+                    <div 
+                        id="field-card-ObjetivoAsignatura"
+                        onClick={() => { setActiveCommentField('ObjetivoAsignatura'); setIsRightSidebarOpen(true); }}
+                        className={getFieldCardClasses('ObjetivoAsignatura')}
+                    >
+                        <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                    b) Objetivo General de la Asignatura
+                                </span>
+                                {renderFieldStatusBadge('ObjetivoAsignatura')}
                             </div>
-                        ))}
+                            {renderCommentButton('ObjetivoAsignatura', 'Objetivo Asignatura')}
+                        </div>
+                        {renderHtml(snap.ObjetivoAsignatura || project.descripcion, 'Sin objetivo formativo redactado')}
+                    </div>
+                </div>
+            )}
 
-                        {/* CACES COMPLIANCE ALERT */}
-                        {!isHoursOk && (
-                            <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 flex gap-3">
-                                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500 mt-0.5" />
-                                <div>
-                                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">Control de consistencia de carga horaria (CACES)</p>
-                                    <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed mt-1">
-                                        Se detectó sobre-compromiso de horas de investigación en los docentes: {teachersWithExceedingHours.map(t => t.nombres_completos || t.nombre).join(', ')}.
-                                        Ajuste el distributivo académico de distributivos activos o corrija la dedicación.
-                                    </p>
-                                </div>
+            {/* 3. PRERREQUISITOS CURRICULARES */}
+            {activeSection === 'pea_prerequisites_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            3. Prerrequisitos Curriculares
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Condiciones académicas previas y tributación de malla
+                        </p>
+                    </div>
+
+                    <div 
+                        id="field-card-Prerrequisitos"
+                        onClick={() => { setActiveCommentField('Prerrequisitos'); setIsRightSidebarOpen(true); }}
+                        className={getFieldCardClasses('Prerrequisitos')}
+                    >
+                        <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                    c) Matriz de Prerrequisitos y Co-requisitos
+                                </span>
+                                {renderFieldStatusBadge('Prerrequisitos')}
                             </div>
+                            {renderCommentButton('Prerrequisitos', 'Prerrequisitos')}
+                        </div>
+
+                        {getSafeArray(snap.Prerrequisitos).length > 0 ? (
+                            <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 text-[10px] font-mono uppercase text-text-dim">
+                                        <tr>
+                                            <th className="px-3 py-2">#</th>
+                                            <th className="px-3 py-2">Asignatura Prerrequisito</th>
+                                            <th className="px-3 py-2">Observación / Condición</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60 font-medium">
+                                        {getSafeArray(snap.Prerrequisitos).map((item: any, idx: number) => (
+                                            <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/40">
+                                                <td className="px-3 py-2 font-mono text-text-dim">{idx + 1}</td>
+                                                <td className="px-3 py-2 text-text-main font-semibold">{item.asignatura || item.nombre || item['0'] || '-'}</td>
+                                                <td className="px-3 py-2 text-text-dim">{item.observacion || item.condicion || item['1'] || '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-text-dim/60 italic mt-3">No registra prerrequisitos obligatorios.</p>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* 3. PLAN TÉCNICO */}
-            {activeSection === 'plan_tecnico' && (
-                <div className="space-y-6 animate-fade-in font-sans">
+            {/* 4. RESULTADOS DE APRENDIZAJE */}
+            {activeSection === 'pea_competencies_rda_section' && (
+                <div className="space-y-5 animate-fade-in">
                     <div className="border-b border-border-thin/60 pb-3">
-                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">3. Plan Técnico del Proyecto</h3>
-                        <p className="text-[9px] text-text-dim uppercase mt-0.5 font-mono">Justificación académica, metodológica y objetivos</p>
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            4. Resultados de Aprendizaje (RDA)
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Aporte al perfil de egreso y competencias disciplinares de la asignatura
+                        </p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 select-none">
-                        {/* ANTECEDENTES */}
+                    <div className="space-y-4">
+                        {/* RDA CARRERA */}
                         <div 
-                            id="field-card-antecedentes"
-                            onClick={() => { setActiveCommentField('antecedentes'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('antecedentes')}
+                            id="field-card-RdaCarrera"
+                            onClick={() => { setActiveCommentField('RdaCarrera'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('RdaCarrera')}
                         >
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Antecedentes de la Propuesta</span>
-                                    {renderFieldStatusBadge('antecedentes')}
-                                </div>
-                                {renderCommentButton('antecedentes', 'Antecedentes')}
-                            </div>
-                             {renderHtml(docSnapshot.Antecedentes, 'No descritos en la propuesta')}
-                        </div>
-
-                        {/* JUSTIFICACIÓN */}
-                        <div 
-                            id="field-card-justificacion"
-                            onClick={() => { setActiveCommentField('justificacion'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('justificacion')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Justificación del Proyecto</span>
-                                    {renderFieldStatusBadge('justificacion')}
-                                </div>
-                                {renderCommentButton('justificacion', 'Justificación')}
-                            </div>
-                            {renderHtml(docSnapshot.Justificacion, 'No especificada en el protocolo')}
-                        </div>
-
-                        {/* OBJETIVOS GENERAL Y ESPECÍFICOS */}
-                        <div 
-                            id="field-card-objetivos"
-                            onClick={() => { setActiveCommentField('objetivos'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('objetivos', 'space-y-4')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">OBJETIVOS DE LA INVESTIGACIÓN (GENERAL Y ESPECÍFICOS)</span>
-                                    {renderFieldStatusBadge('objetivos')}
-                                </div>
-                                {renderCommentButton('objetivos', 'Objetivos')}
-                            </div>
-
-                            <div className="space-y-3 select-text">
-                                <div>
-                                    <span className="text-[8px] font-bold text-brand uppercase tracking-widest font-mono">Objetivo General</span>
-                                    {renderHtml(docSnapshot.ObjetivoGeneral, 'No registrado')}
-                                </div>
-                                <div>
-                                    <span className="text-[8px] font-bold text-brand uppercase tracking-widest block font-mono mb-1">Objetivos Específicos</span>
-                                    {typeof docSnapshot.ObjetivosEspecificos === 'string' && docSnapshot.ObjetivosEspecificos.trim() ? (
-                                        renderHtml(docSnapshot.ObjetivosEspecificos, 'No registrados')
-                                    ) : (
-                                        <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-main font-medium">
-                                            {getSafeArray(docSnapshot.ObjetivosEspecificos).map((obj: any, idx: number) => (
-                                                <li key={idx} className="leading-relaxed">{stripHtml(obj.descripcion || obj)}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* METODOLOGÍA */}
-                        <div 
-                            id="field-card-metodologia"
-                            onClick={() => { setActiveCommentField('metodologia'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('metodologia')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">Metodología y Diseño Técnico</span>
-                                    {renderFieldStatusBadge('metodologia')}
-                                </div>
-                                {renderCommentButton('metodologia', 'Metodología')}
-                            </div>
-                            {renderHtml(docSnapshot.Metodologia || docSnapshot.MarcoTeorico, 'No registrada')}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* 4. RECURSOS Y FINANCIAMIENTO */}
-            {activeSection === 'recursos' && (
-                <div className="space-y-6 animate-fade-in font-sans" id="field-card-presupuesto">
-                    <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">4. Recursos y Presupuesto Detallado</h3>
-                            {renderFieldStatusBadge('presupuesto')}
-                        </div>
-                        {renderCommentButton('presupuesto', 'Presupuesto')}
-                    </div>
-
-                    {/* CONTROL PRESUPUESTAL */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 select-none">
-                        <div className="p-4 rounded-xl border border-border-thin bg-surface flex flex-col justify-between">
-                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Presupuesto Propuesto</span>
-                            <span className="text-lg font-mono font-bold text-text-main mt-2 select-text">${(project.presupuesto || docSnapshot.CostoTotal || 0).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="p-4 rounded-xl border border-border-thin bg-surface flex flex-col justify-between">
-                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest">Total Recursos Requeridos</span>
-                            <span className="text-lg font-mono font-bold text-brand mt-2 select-text">
-                                ${(project.presupuesto || docSnapshot.CostoTotal || 0).toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* ITEMS PRESUPUESTARIOS */}
-                    {(() => {
-                        const items = [
-                            ...getSafeArray(docSnapshot.RecursosNecesarios),
-                            ...getSafeArray(docSnapshot.RecursosDisponibles),
-                            ...getSafeArray(docSnapshot.Presupuesto),
-                            ...getSafeArray(docSnapshot.ItemsPresupuesto)
-                        ];
-
-                        return (
-                            <div className="border border-border-thin rounded-xl overflow-hidden bg-surface select-none">
-                                <div className="px-4 py-2.5 bg-surface-hover/30 border-b border-border-thin flex justify-between items-center">
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim font-mono">
-                                        Desglose de Partidas y Rubros Planificados ({items.length} ítems)
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        d) Aporte a los RDA del Perfil de Egreso de la Carrera
                                     </span>
-                                    {docSnapshot.FinanciamientoIstpet !== undefined && (
-                                        <span className="text-[8px] font-mono font-semibold text-brand">
-                                            Financiamiento ISTPET: {docSnapshot.FinanciamientoIstpet ? 'SÍ' : 'NO'}
-                                        </span>
-                                    )}
+                                    {renderFieldStatusBadge('RdaCarrera')}
                                 </div>
-                                {items.length > 0 ? (
-                                    <div className="overflow-x-auto custom-scrollbar">
-                                        <table className="w-full text-left border-collapse text-xs">
-                                            <thead>
-                                                <tr className="bg-surface-hover/20 border-b border-border-thin text-[8px] font-bold text-text-dim uppercase tracking-widest">
-                                                    <th className="p-3">Partida / Tipo</th>
-                                                    <th className="p-3">Detalle del Recurso</th>
-                                                    <th className="p-3 text-center">Cant.</th>
-                                                    <th className="p-3 text-right">V. Unitario</th>
-                                                    <th className="p-3 text-right">Subtotal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border-thin/40 font-mono text-[11px]">
-                                                {items.map((item: any, idx: number) => {
-                                                    const partida = item.partida || item.tipo || item.rubro || `Item ${idx + 1}`;
-                                                    const detalle = item.detalle || item.descripcion || item.nombre || '-';
-                                                    const cantidad = item.cantidad || 1;
-                                                    const unitario = item.costoUnitario || item.valorUnitario || item.unitario || (item.total ? item.total / cantidad : 0);
-                                                    const total = item.subtotal || item.total || item.valor || (cantidad * unitario);
-
-                                                    return (
-                                                        <tr key={idx} className="hover:bg-surface-hover/30 transition-colors">
-                                                            <td className="p-3 font-semibold text-text-main uppercase font-sans text-xs">{partida}</td>
-                                                            <td className="p-3 text-text-dim font-sans">{detalle}</td>
-                                                            <td className="p-3 text-center font-bold text-text-main">{cantidad}</td>
-                                                            <td className="p-3 text-right text-text-dim">${Number(unitario).toLocaleString('es-EC', { minimumFractionDigits: 2 })}</td>
-                                                            <td className="p-3 text-right font-bold text-text-main">${Number(total).toLocaleString('es-EC', { minimumFractionDigits: 2 })}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className="p-6 text-center text-text-dim text-xs font-mono select-text">
-                                        Total consolidado: ${(project.presupuesto || docSnapshot.CostoTotal || 0).toLocaleString('es-EC', { minimumFractionDigits: 2 })} USD. Puede verificar el desglose completo en el Visor PDF.
-                                    </div>
-                                )}
+                                {renderCommentButton('RdaCarrera', 'RDA Carrera')}
                             </div>
-                        );
-                    })()}
-                </div>
-            )}
-
-            {/* 5. RESULTADOS ESPERADOS */}
-            {(activeSection === 'resultados_esperados' || activeSection === 'entregables_esperados' || activeSection === 'entregables') && (
-                <div className="space-y-6 animate-fade-in font-sans" id="field-card-resultados_esperados">
-                    <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">5. Resultados y Entregables Esperados</h3>
-                            {renderFieldStatusBadge('resultados_esperados')}
+                            {renderHtml(snap.RdaCarrera, 'Sin aportes al perfil de egreso registrados')}
                         </div>
-                        {renderCommentButton('resultados_esperados', 'Resultados Esperados')}
-                    </div>
 
-                    <div className="p-4 rounded-xl border border-border-thin bg-surface space-y-3 select-none">
-                        <span className="text-[8px] font-bold text-brand uppercase tracking-widest font-mono">Entregables Planificados del Proyecto</span>
-                        <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-main font-medium select-text">
-                            {getSafeArray(docSnapshot.ResultadosEsperados || docSnapshot.Entregables).map((e: any, idx: number) => (
-                                <li key={idx} className="leading-relaxed">{stripHtml(e.tipo || e.descripcion || e)}</li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-            )}
-
-            {/* 6. MATRIZ DE IMPACTO */}
-            {(activeSection === 'impacto' || activeSection === 'impactos') && (
-                <div className="space-y-6 animate-fade-in font-sans" id="field-card-impacto">
-                    <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">6. Matriz de Impacto</h3>
-                            {renderFieldStatusBadge('impacto')}
-                        </div>
-                        {renderCommentButton('impacto', 'Matriz de Impacto')}
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-border-thin bg-surface space-y-3 select-none">
-                        <span className="text-[8px] font-bold text-brand uppercase tracking-widest font-mono">Impactos Esperados del Proyecto</span>
-                        {(() => {
-                            const imp = docSnapshot.Impacto || docSnapshot.ImpactoEsperado;
-                            if (!imp) return <p className="text-xs text-text-dim/60 italic mt-2">No descrito</p>;
-                            if (typeof imp === 'string') return renderHtml(imp, 'No descrito');
-                            const impEntries = Object.entries(imp).filter(([, v]) => v && String(v).trim());
-                            if (impEntries.length === 0) return <p className="text-xs text-text-dim/60 italic mt-2">No descrito</p>;
-
-                            const impactBlock = (templateBlocks || []).find((b: any) => b.type === 'impacts');
-                            const customCatMap: Record<string, string> = {};
-                            if (impactBlock?.config?.impactCategories && Array.isArray(impactBlock.config.impactCategories)) {
-                                impactBlock.config.impactCategories.forEach((c: any) => {
-                                    if (c.key && c.title) customCatMap[c.key.toLowerCase()] = c.title;
-                                });
-                            }
-
-                            return (
-                                <div className="space-y-3 mt-2 select-text">
-                                    {impEntries.map(([tipo, valor]) => {
-                                        const displayLabel = customCatMap[tipo.toLowerCase()] || `Impacto ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
-                                        return (
-                                            <div key={tipo} className="p-2.5 rounded-lg border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 space-y-1">
-                                                <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">{displayLabel}</span>
-                                                <div className="text-xs font-medium text-slate-900 dark:text-white" dangerouslySetInnerHTML={{ __html: String(valor) }} />
-                                            </div>
-                                        );
-                                    })}
+                        {/* RDA ASIGNATURA */}
+                        <div 
+                            id="field-card-ResultadosAprendizaje"
+                            onClick={() => { setActiveCommentField('ResultadosAprendizaje'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('ResultadosAprendizaje')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        e) Resultados de Aprendizaje de la Asignatura (RDA)
+                                    </span>
+                                    {renderFieldStatusBadge('ResultadosAprendizaje')}
                                 </div>
-                            );
-                        })()}
-                    </div>
-                </div>
-            )}
-
-            {/* 6. CRONOGRAMA */}
-            {activeSection === 'cronograma' && (
-                <div className="space-y-6 animate-fade-in font-sans" id="field-card-cronograma">
-                    <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">6. Cronograma de Hitos y Tareas</h3>
-                            {renderFieldStatusBadge('cronograma')}
-                        </div>
-                        {renderCommentButton('cronograma', 'Cronograma')}
-                    </div>
-
-                    <div className="border border-border-thin rounded-xl overflow-hidden bg-surface">
-                        <TimelineSection
-                            cronograma={getSafeArray(docSnapshot.Cronograma)}
-                            formData={docSnapshot}
-                            readOnly={true}
-                            cowork={{ ydoc: null, session: { lastSyncedAt: null, users: [] } } as any}
-                            onAdd={() => {}}
-                            onRemove={() => {}}
-                            onUpdate={() => {}}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* 7. BIBLIOGRAFÍA Y FIRMAS */}
-            {activeSection === 'bibliografia' && (
-                <div className="space-y-6 animate-fade-in font-sans" id="field-card-bibliografia">
-                    <div className="border-b border-border-thin/60 pb-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">7. Bibliografía y Responsabilidad</h3>
-                            {renderFieldStatusBadge('bibliografia')}
-                        </div>
-                        {renderCommentButton('bibliografia', 'Bibliografía & Firmas')}
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 select-none">
-                        {/* BIBLIOGRAFÍA */}
-                        <div className="p-4 rounded-xl border border-border-thin bg-surface">
-                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest block">Bibliografía Utilizada</span>
-                            {renderHtml(docSnapshot.Bibliografia, 'No registrada')}
-                        </div>
-
-                        {/* FIRMAS DE RESPONSABILIDAD */}
-                        <div className="grid grid-cols-2 gap-4 select-text">
-                            <div className="p-4 rounded-xl border border-border-thin bg-surface">
-                                <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest block">Director de Proyecto (Docente)</span>
-                                <p className="text-xs font-bold text-text-main mt-1 uppercase">{stripHtml(project.directorProyecto)}</p>
-                                <span className="text-[9px] text-emerald-500 font-semibold flex items-center gap-1 mt-2">
-                                    Firmado Digitalmente
-                                </span>
+                                {renderCommentButton('ResultadosAprendizaje', 'RDA Asignatura')}
                             </div>
-                            <div className="p-4 rounded-xl border border-border-thin bg-surface">
-                                <span className="text-[8px] font-bold text-text-dim uppercase tracking-widest block">Coordinador de Carrera</span>
-                                <p className="text-xs font-bold text-text-main mt-1">Coordinación DOSIER ISTPET</p>
-                                <span className="text-[9px] text-emerald-500 font-semibold flex items-center gap-1 mt-2">
-                                    Firmado Digitalmente
-                                </span>
-                            </div>
+
+                            {Array.isArray(snap.ResultadosAprendizaje) && snap.ResultadosAprendizaje.length > 0 ? (
+                                <div className="mt-3 space-y-2">
+                                    {snap.ResultadosAprendizaje.map((rda: any, idx: number) => (
+                                        <div key={idx} className="p-3 rounded-lg bg-slate-50 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800 text-xs">
+                                            <span className="font-mono text-[10px] font-bold text-[#0070f3] block mb-1">
+                                                RDA {idx + 1}
+                                            </span>
+                                            <p className="text-text-main font-medium leading-relaxed">
+                                                {typeof rda === 'string' ? rda : (rda.descripcion || rda.texto || rda.rda || '-')}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                renderHtml(snap.ResultadosAprendizaje, 'Sin resultados de aprendizaje detallados')
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* BLOQUES DINÁMICOS PERSONALIZADOS CREADOS DESDE EL ADMIN */}
-            {templateBlocks && templateBlocks.length > 0 && templateBlocks.map((block, bIdx) => {
-                const isStandardBlock = [
-                    'cover', 'project_general_section', 'researchers_table',
-                    'project_technical_section', 'project_budget_section',
-                    'impacts', 'gantt', 'signatures', 'title'
-                ].includes(block.type);
+            {/* 5. CONTENIDOS DE ENSEÑANZA */}
+            {activeSection === 'pea_contents_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            5. Contenidos de Enseñanza y Horas
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Unidades temáticas, desagregación horaria y subtemas
+                        </p>
+                    </div>
 
-                if (isStandardBlock) return null;
-
-                const fieldKey = block.config?.fieldKey || block.id || `custom_block_${bIdx}`;
-                const blockTitle = block.title || `Bloque Adicional ${bIdx + 1}`;
-                const blockContent = docSnapshot[fieldKey] || docSnapshot[block.id] || block.config?.html;
-
-                if (activeSection !== 'all' && activeSection !== fieldKey) {
-                    return null;
-                }
-
-                return (
                     <div 
-                        key={block.id || bIdx}
-                        id={`field-card-${fieldKey}`}
-                        onClick={() => { setActiveCommentField(fieldKey); setIsRightSidebarOpen(true); }}
-                        className={getFieldCardClasses(fieldKey, 'space-y-3 font-sans animate-fade-in')}
+                        id="field-card-Unidades"
+                        onClick={() => { setActiveCommentField('Unidades'); setIsRightSidebarOpen(true); }}
+                        className={getFieldCardClasses('Unidades')}
                     >
                         <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                             <div className="flex items-center gap-2">
-                                <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider">{blockTitle}</span>
-                                {renderFieldStatusBadge(fieldKey)}
+                                <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                    f) Unidades de Estudio, Horas y Contenidos Temáticos
+                                </span>
+                                {renderFieldStatusBadge('Unidades')}
                             </div>
-                            {renderCommentButton(fieldKey, blockTitle)}
+                            {renderCommentButton('Unidades', 'Unidades')}
                         </div>
-                        {renderHtml(blockContent, 'Sin contenido registrado en esta sección personalizada')}
+
+                        {getSafeArray(snap.Unidades).length > 0 ? (
+                            <div className="mt-3 space-y-3">
+                                {getSafeArray(snap.Unidades).map((u: any, idx: number) => {
+                                    const nombre = u.nombre || u.nombre_unidad || u['0'] || `Unidad ${idx + 1}`;
+                                    const contenido = u.contenidos || u.temas || u['1'] || '-';
+                                    const hDoc = u.horas_docencia || u.horasDocencia || u['2'] || 0;
+                                    const hPrac = u.horas_practica || u.horasPractica || u['3'] || 0;
+                                    const hAut = u.horas_autonomo || u.horasAutonomo || u['4'] || 0;
+                                    const hTot = u.total_horas || u.totalHoras || u['5'] || (Number(hDoc) + Number(hPrac) + Number(hAut));
+
+                                    return (
+                                        <div key={idx} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 space-y-2">
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-zinc-900 pb-2">
+                                                <h4 className="text-xs font-bold text-text-main flex items-center gap-2">
+                                                    <span className="w-5 h-5 rounded-full bg-[#0070f3]/10 text-[#0070f3] flex items-center justify-center font-mono text-[10px]">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <span>{nombre}</span>
+                                                </h4>
+                                                <div className="flex items-center gap-2 text-[10px] font-mono text-text-dim">
+                                                    <span>Doc: {hDoc}h</span>
+                                                    <span>•</span>
+                                                    <span>Prác: {hPrac}h</span>
+                                                    <span>•</span>
+                                                    <span>Aut: {hAut}h</span>
+                                                    <span>•</span>
+                                                    <span className="font-bold text-[#0070f3]">Total: {hTot}h</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-text-main font-normal leading-relaxed pt-1">
+                                                {typeof contenido === 'string' ? (
+                                                    <div dangerouslySetInnerHTML={{ __html: contenido }} />
+                                                ) : Array.isArray(contenido) ? (
+                                                    <ul className="list-disc list-inside space-y-1">
+                                                        {contenido.map((t: any, tIdx: number) => (
+                                                            <li key={tIdx}>{typeof t === 'string' ? t : (t.nombre_tema || t.nombre || JSON.stringify(t))}</li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <p>{String(contenido)}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-text-dim/60 italic mt-3">Sin unidades de estudio registradas.</p>
+                        )}
                     </div>
-                );
-            })}
+                </div>
+            )}
+
+            {/* 6. METODOLOGÍA Y RECURSOS */}
+            {activeSection === 'pea_methodology_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            6. Metodología y Recursos Didácticos
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Estrategias pedagógicas activas, laboratorios y plataformas virtuales
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div 
+                            id="field-card-MetodologiaEnsenanza"
+                            onClick={() => { setActiveCommentField('MetodologiaEnsenanza'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('MetodologiaEnsenanza')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Estrategias Metodológicas de Enseñanza
+                                    </span>
+                                    {renderFieldStatusBadge('MetodologiaEnsenanza')}
+                                </div>
+                                {renderCommentButton('MetodologiaEnsenanza', 'Metodología')}
+                            </div>
+                            {renderHtml(snap.MetodologiaEnsenanza, 'Sin estrategias metodológicas registradas')}
+                        </div>
+
+                        <div 
+                            id="field-card-RecursosDidacticos"
+                            onClick={() => { setActiveCommentField('RecursosDidacticos'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('RecursosDidacticos')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Recursos Didácticos e Informatización del Aprendizaje
+                                    </span>
+                                    {renderFieldStatusBadge('RecursosDidacticos')}
+                                </div>
+                                {renderCommentButton('RecursosDidacticos', 'Recursos Didácticos')}
+                            </div>
+                            {renderHtml(snap.RecursosDidacticos, 'Sin recursos didácticos detallados')}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 7. ACTIVIDADES PRÁCTICAS (APE) */}
+            {activeSection === 'pea_resources_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            7. Actividades Prácticas y Experimentales (APE)
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Talleres, laboratorios y caracterización de actividades prácticas
+                        </p>
+                    </div>
+
+                    <div 
+                        id="field-card-ActividadesPracticas"
+                        onClick={() => { setActiveCommentField('ActividadesPracticas'); setIsRightSidebarOpen(true); }}
+                        className={getFieldCardClasses('ActividadesPracticas')}
+                    >
+                        <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                    h) Guías de Práctica de Aplicación y Experimentación
+                                </span>
+                                {renderFieldStatusBadge('ActividadesPracticas')}
+                            </div>
+                            {renderCommentButton('ActividadesPracticas', 'Prácticas APE')}
+                        </div>
+
+                        {getSafeArray(snap.ActividadesPracticas).length > 0 ? (
+                            <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 text-[10px] font-mono uppercase text-text-dim">
+                                        <tr>
+                                            <th className="px-3 py-2">#</th>
+                                            <th className="px-3 py-2">Unidad</th>
+                                            <th className="px-3 py-2">Nombre de la Práctica & Caracterización</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
+                                        {getSafeArray(snap.ActividadesPracticas).map((p: any, idx: number) => (
+                                            <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/40">
+                                                <td className="px-3 py-2 font-mono text-text-dim">{idx + 1}</td>
+                                                <td className="px-3 py-2 font-semibold text-text-main whitespace-nowrap">{p.unidad || p['0'] || '-'}</td>
+                                                <td className="px-3 py-2 text-text-main">{p.nombre || p.descripcion || p['1'] || '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-text-dim/60 italic mt-3">Sin actividades prácticas registradas.</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* 8. EVALUACIÓN DEL APRENDIZAJE */}
+            {activeSection === 'pea_evaluation_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            8. Evaluación del Aprendizaje
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Criterios, políticas normativas y ponderación de calificaciones
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div 
+                            id="field-card-EvaluacionAprendizaje"
+                            onClick={() => { setActiveCommentField('EvaluacionAprendizaje'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('EvaluacionAprendizaje')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Criterios y Políticas de Evaluación
+                                    </span>
+                                    {renderFieldStatusBadge('EvaluacionAprendizaje')}
+                                </div>
+                                {renderCommentButton('EvaluacionAprendizaje', 'Políticas Evaluación')}
+                            </div>
+                            {renderHtml(snap.EvaluacionAprendizaje, 'Sin criterios o políticas registradas')}
+                        </div>
+
+                        <div 
+                            id="field-card-Evaluaciones"
+                            onClick={() => { setActiveCommentField('Evaluaciones'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('Evaluaciones')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        i) Ponderación y Calificaciones Oficiales
+                                    </span>
+                                    {renderFieldStatusBadge('Evaluaciones')}
+                                </div>
+                                {renderCommentButton('Evaluaciones', 'Tabla Evaluaciones')}
+                            </div>
+
+                            {getSafeArray(snap.Evaluaciones).length > 0 ? (
+                                <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-800">
+                                    <table className="w-full text-xs text-left">
+                                        <thead className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 text-[10px] font-mono uppercase text-text-dim">
+                                            <tr>
+                                                <th className="px-3 py-2">Evaluación</th>
+                                                <th className="px-3 py-2">Tipo de Actividad</th>
+                                                <th className="px-3 py-2 text-right">Puntaje</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60 font-medium">
+                                            {getSafeArray(snap.Evaluaciones).map((ev: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/40">
+                                                    <td className="px-3 py-2 text-text-main font-semibold">{ev.nota || ev['0'] || '-'}</td>
+                                                    <td className="px-3 py-2 text-text-dim">{ev.tipo || ev['1'] || '-'}</td>
+                                                    <td className="px-3 py-2 text-right font-mono font-bold text-[#0070f3]">{ev.calificacion || ev['2'] || '10,00'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-text-dim/60 italic mt-3">Sin esquema de ponderación registrado.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 9. BIBLIOGRAFÍA */}
+            {activeSection === 'pea_bibliography_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            9. Bibliografía Oficial (Normas APA)
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Obras básicas de biblioteca institucional y referencias complementarias
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div 
+                            id="field-card-BibliografiaBasica"
+                            onClick={() => { setActiveCommentField('BibliografiaBasica'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('BibliografiaBasica')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Bibliografía Básica
+                                    </span>
+                                    {renderFieldStatusBadge('BibliografiaBasica')}
+                                </div>
+                                {renderCommentButton('BibliografiaBasica', 'Bibliografía Básica')}
+                            </div>
+                            {renderHtml(snap.BibliografiaBasica, 'Sin bibliografía básica registrada')}
+                        </div>
+
+                        <div 
+                            id="field-card-BibliografiaConsulta"
+                            onClick={() => { setActiveCommentField('BibliografiaConsulta'); setIsRightSidebarOpen(true); }}
+                            className={getFieldCardClasses('BibliografiaConsulta')}
+                        >
+                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                        Bibliografía de Consulta / Complementaria
+                                    </span>
+                                    {renderFieldStatusBadge('BibliografiaConsulta')}
+                                </div>
+                                {renderCommentButton('BibliografiaConsulta', 'Bibliografía de Consulta')}
+                            </div>
+                            {renderHtml(snap.BibliografiaConsulta, 'Sin bibliografía de consulta registrada')}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 10. FIRMAS DE RESPONSABILIDAD */}
+            {activeSection === 'pea_signatures_section' && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            10. Firmas de Responsabilidad Institucional
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Avales, aprobación curricular y firmas digitales de autoridad
+                        </p>
+                    </div>
+
+                    <div 
+                        id="field-card-FirmasResponsabilidad"
+                        onClick={() => { setActiveCommentField('FirmasResponsabilidad'); setIsRightSidebarOpen(true); }}
+                        className={getFieldCardClasses('FirmasResponsabilidad')}
+                    >
+                        <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
+                                    k) Cuadro de Firmas y Avales Institucionales
+                                </span>
+                                {renderFieldStatusBadge('FirmasResponsabilidad')}
+                            </div>
+                            {renderCommentButton('FirmasResponsabilidad', 'Firmas')}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+                            {/* DOCENTE */}
+                            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 text-center space-y-1">
+                                <span className="text-[9px] font-mono text-text-dim uppercase block">Elaborado por:</span>
+                                <p className="text-xs font-bold text-text-main truncate">
+                                    {snap.FirmasResponsabilidad?.DocenteNombre || snap.DocenteElaborador || project.directorProyecto || 'Docente'}
+                                </p>
+                                <span className="text-[10px] text-text-dim block">Docente Titular</span>
+                            </div>
+
+                            {/* COORDINADOR CARRERA */}
+                            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 text-center space-y-1">
+                                <span className="text-[9px] font-mono text-text-dim uppercase block">Revisado por:</span>
+                                <p className="text-xs font-bold text-text-main truncate">
+                                    {snap.FirmasResponsabilidad?.CoordinadorNombre || 'Coordinación Carrera'}
+                                </p>
+                                <span className="text-[10px] text-text-dim block">Coordinador de Carrera</span>
+                            </div>
+
+                            {/* COORDINADOR ACADÉMICO */}
+                            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 text-center space-y-1">
+                                <span className="text-[9px] font-mono text-text-dim uppercase block">Verificado por:</span>
+                                <p className="text-xs font-bold text-text-main truncate">
+                                    {snap.FirmasResponsabilidad?.CoordinadorAcadNombre || 'Coordinación Académica'}
+                                </p>
+                                <span className="text-[10px] text-text-dim block">Coordinador Académico</span>
+                            </div>
+
+                            {/* VICERRECTOR */}
+                            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 text-center space-y-1">
+                                <span className="text-[9px] font-mono text-text-dim uppercase block">Aprobado por:</span>
+                                <p className="text-xs font-bold text-text-main truncate">
+                                    {snap.FirmasResponsabilidad?.VicerrectorNombre || 'Vicerrectorado'}
+                                </p>
+                                <span className="text-[10px] text-text-dim block">Vicerrectorado Académico</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

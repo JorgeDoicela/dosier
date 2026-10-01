@@ -19,7 +19,21 @@ import {
 import { ObservacionesDisciplinarModal } from './Modals/ObservacionesDisciplinarModal';
 import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/RecordatorioDocentesModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
-import { Search, Filter, BookOpen, Clock, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import { 
+    Search, 
+    Filter, 
+    BookOpen, 
+    Clock, 
+    CheckCircle2, 
+    AlertTriangle, 
+    ShieldCheck, 
+    RefreshCw,
+    LayoutGrid,
+    List,
+    Building2,
+    UserCheck,
+    Eye
+} from 'lucide-react';
 
 export const CoordCarreraDashboard: React.FC = () => {
     const { addToast } = useNotifications();
@@ -37,6 +51,7 @@ export const CoordCarreraDashboard: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [search, setSearch] = useState<string>('');
     const [filterEstado, setFilterEstado] = useState<string>('todos');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Modales
     const [observacionPea, setObservacionPea] = useState<PeaBandejaItemDto | null>(null);
@@ -231,13 +246,13 @@ export const CoordCarreraDashboard: React.FC = () => {
 
 
             {/* Bandeja de Supervisión Disciplinar */}
-            <div className="bg-white dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl overflow-hidden">
-                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 dark:bg-zinc-900">
+            <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
+                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900">
                     <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                         Bandeja de Asignaturas: {nombreCarreraActiva}
                     </h2>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <div className="relative">
                             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                             <input
@@ -245,14 +260,14 @@ export const CoordCarreraDashboard: React.FC = () => {
                                 placeholder="Buscar asignatura o docente..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                className="pl-7 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] w-52"
+                                className="pl-7 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] w-52"
                             />
                         </div>
 
                         <select
                             value={filterEstado}
                             onChange={e => setFilterEstado(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
+                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
                         >
                             <option value="todos">Todos los Estados</option>
                             <option value="Borrador">Borrador</option>
@@ -262,37 +277,190 @@ export const CoordCarreraDashboard: React.FC = () => {
                             <option value="RevisadoAcad">Avalado por Académica</option>
                             <option value="Aprobado">Aprobado / Legalizado</option>
                         </select>
+
+                        {/* Selector de Modo: Cuadros vs Lista */}
+                        <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('grid')}
+                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    viewMode === 'grid'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                }`}
+                                title="Vista en Cuadros"
+                            >
+                                <LayoutGrid size={14} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setViewMode('list')}
+                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    viewMode === 'list'
+                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                                }`}
+                                title="Vista en Lista"
+                            >
+                                <List size={14} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Tabla de la Carrera */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th className="py-2.5 px-4">Asignatura y Carrera</th>
-                                <th className="py-2.5 px-3">Docente Elaborador</th>
-                                <th className="py-2.5 px-3">Carga Horaria</th>
-                                <th className="py-2.5 px-3">Estado Técnico</th>
-                                <th className="py-2.5 px-4 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                            {isLoading ? (
+                {/* Contenido: Grid o Tabla */}
+                {isLoading ? (
+                    <div className="py-16 text-center text-zinc-400 text-xs">
+                        <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#0070f3]" />
+                        Cargando asignaturas y estado curricular...
+                    </div>
+                ) : peasFiltrados.length === 0 ? (
+                    <div className="py-12 text-center text-zinc-500 text-xs">
+                        No se encontraron asignaturas registradas para este filtro.
+                    </div>
+                ) : viewMode === 'grid' ? (
+                    /* ── MODO CUADROS (ESTILO DOCENTE) ── */
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-zinc-50/50 dark:bg-zinc-950">
+                        {peasFiltrados.map(p => {
+                            const puedeEmitirAval = (p.estado === 'EnRevision' || p.firma_docente) && !p.firma_coord;
+
+                            return (
+                                <div
+                                    key={p.uuid}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => handleAbrirRevision(p.uuid)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleAbrirRevision(p.uuid);
+                                        }
+                                    }}
+                                    className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
+                                >
+                                    {/* Top: Carrera y Estado */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
+                                                <span className="truncate">{p.nombre_carrera}</span>
+                                            </div>
+                                            {p.estado === 'Borrador' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
+                                                    Docente Elaborando
+                                                </span>
+                                            )}
+                                            {p.estado === 'EnRevision' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                                                    Listo para Revisión
+                                                </span>
+                                            )}
+                                            {p.estado === 'Observado' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                                                    Observado ({p.total_observaciones_pendientes})
+                                                </span>
+                                            )}
+                                            {p.estado === 'RevisadoCoord' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
+                                                    Aval de Carrera
+                                                </span>
+                                            )}
+                                            {p.estado === 'RevisadoAcad' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                                                    Aval Académico
+                                                </span>
+                                            )}
+                                            {p.estado === 'Aprobado' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                                    Legalizado
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Título de la Asignatura */}
+                                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                            {p.nombre_asignatura}
+                                        </h3>
+
+                                        {/* Docente Elaborador */}
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-0.5">
+                                            <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
+                                            <span className="truncate">{p.nombre_docente_elaborador || 'Docente Responsable'}</span>
+                                        </div>
+
+                                        {/* Metadatos Curriculares */}
+                                        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+                                            {p.codigo_asignatura && (
+                                                <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
+                                                    {p.codigo_asignatura}
+                                                </span>
+                                            )}
+                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                {p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} Créd.)` : ''}
+                                            </span>
+                                            {p.semestre_nivel && (
+                                                <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                                                    {p.semestre_nivel}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Pie de Tarjeta con Acciones */}
+                                    <div className="pt-2 flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                        >
+                                            <Eye className="w-3.5 h-3.5" />
+                                            <span>Revisar</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setObservacionPea(p)}
+                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                                        >
+                                            Observar
+                                        </button>
+
+                                        {puedeEmitirAval && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEmitirAvalCarrera(p)}
+                                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
+                                            >
+                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                <span>Emitir Aval</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    /* ── MODO TABLA / LISTA ── */
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
                                 <tr>
-                                    <td colSpan={5} className="py-8 text-center text-zinc-400">
-                                        <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#0070f3]" />
-                                        Cargando asignaturas y estado curricular...
-                                    </td>
+                                    <th className="py-2.5 px-4">Asignatura y Carrera</th>
+                                    <th className="py-2.5 px-3">Docente Elaborador</th>
+                                    <th className="py-2.5 px-3">Carga Horaria</th>
+                                    <th className="py-2.5 px-3">Estado Técnico</th>
+                                    <th className="py-2.5 px-4 text-right">Acción</th>
                                 </tr>
-                            ) : peasFiltrados.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="py-8 text-center text-zinc-400">
-                                        No se encontraron asignaturas registradas para este filtro.
-                                    </td>
-                                </tr>
-                            ) : (
-                                peasFiltrados.map(p => {
+                            </thead>
+                            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                {peasFiltrados.map(p => {
                                     const puedeEmitirAval = (p.estado === 'EnRevision' || p.firma_docente) && !p.firma_coord;
                                     return (
                                         <tr key={p.uuid} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50 transition-colors">
@@ -395,11 +563,11 @@ export const CoordCarreraDashboard: React.FC = () => {
                                             </td>
                                         </tr>
                                     );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {/* Modales */}

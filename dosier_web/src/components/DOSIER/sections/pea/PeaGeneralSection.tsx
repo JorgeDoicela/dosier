@@ -27,7 +27,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
 
     return (
         <div className="space-y-6 sm:space-y-8 animate-fade-in font-sans">
-            {/* Nombre de la Asignatura (Título principal de la sección estilo DIITRA) */}
+            {/* Nombre de la Asignatura (Dato Maestro Oficial de SIGAFI / Malla) */}
             {c.showAsignatura !== false && (
                 <div className="grid grid-cols-1 gap-4 sm:gap-6">
                     <CoWorkField
@@ -35,8 +35,8 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         cowork={cowork}
                         type="text"
                         label={labelAsignatura}
-                        placeholder="Nombre de la asignatura (ej. Técnicas de Cocina Contemporánea)"
-                        readOnly={readOnly}
+                        placeholder="Nombre de la asignatura"
+                        readOnly={true}
                         className="w-full bg-bg-deep border border-border-thin rounded-xl sm:rounded-2xl px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-lg font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
                         uppercase={true}
                         onValueChange={(val) => onUpdate('NombreAsignatura', val)}
@@ -44,7 +44,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                 </div>
             )}
 
-            {/* Código de la Asignatura */}
+            {/* Código de la Asignatura (Dato Maestro Oficial de SIGAFI / Malla) */}
             {c.showCarrera !== false && (
                 <div className="grid grid-cols-1 gap-4 sm:gap-6">
                     <CoWorkField
@@ -53,7 +53,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         type="text"
                         label={labelCodigo}
                         placeholder="Código normado (ej. GAS-01-005)"
-                        readOnly={readOnly}
+                        readOnly={true}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
                         uppercase={true}
                         onValueChange={(val) => onUpdate('CodigoAsignatura', val)}
@@ -61,7 +61,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                 </div>
             )}
 
-            {/* Carrera Institucional */}
+            {/* Carrera Institucional (Dato Maestro Oficial de SIGAFI) */}
             {c.showCarrera !== false && (
                 <div className="grid grid-cols-1 gap-4 sm:gap-6">
                     <CoWorkField
@@ -69,8 +69,8 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         cowork={cowork}
                         type="text"
                         label={labelCarrera}
-                        placeholder="Carrera a la que pertenece"
-                        readOnly={readOnly}
+                        placeholder="Carrera institucional"
+                        readOnly={true}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                         onValueChange={(val) => onUpdate('Carrera', val)}
                     />
@@ -86,9 +86,10 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             label="Semestre / Nivel"
-                            placeholder="Ej. Cuarto Semestre"
-                            readOnly={readOnly}
-                            className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
+                            placeholder="Semestre / Nivel oficial"
+                            readOnly={true}
+                            className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
+                            uppercase={true}
                             onValueChange={(val) => onUpdate('Nivel', val)}
                         />
                     </div>
@@ -123,8 +124,11 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             type="select"
                             label="Unidad de Organización Curricular"
                             options={[
+                                { value: 'BASICA', label: 'Unidad Básica' },
                                 { value: 'Unidad Básica', label: 'Unidad Básica' },
+                                { value: 'PROFESIONAL', label: 'Unidad Profesional' },
                                 { value: 'Unidad Profesional', label: 'Unidad Profesional' },
+                                { value: 'TITULACION', label: 'Unidad de Integración Curricular' },
                                 { value: 'Unidad de Integración Curricular', label: 'Unidad de Integración Curricular' }
                             ]}
                             readOnly={readOnly}
@@ -138,8 +142,8 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             label="Período Académico"
-                            placeholder="Ej. OCTUBRE 2025 - MARZO 2026"
-                            readOnly={readOnly}
+                            placeholder="Período académico activo"
+                            readOnly={true}
                             className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                             onValueChange={(val) => onUpdate('Periodo', val)}
                         />
@@ -147,7 +151,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                 </div>
             )}
 
-            {/* Docente Responsable de la Asignatura */}
+            {/* Docente Responsable de la Asignatura (Dato Oficial del Distributivo) */}
             {c.showDocente !== false && (
                 <div className="grid grid-cols-1 gap-4 sm:gap-6">
                     <CoWorkField
@@ -156,7 +160,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         type="text"
                         label={labelDocente}
                         placeholder="Nombre del docente titular responsable"
-                        readOnly={readOnly}
+                        readOnly={true}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
                         uppercase={true}
                         onValueChange={(val) => onUpdate('DocenteElaborador', val)}
@@ -183,7 +187,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                 );
             })}
 
-            {/* ── Sub-Bloque de Carga Horaria Normada (Estilo DIITRA Puro sin Caja Contenedora) ── */}
+            {/* ── Sub-Bloque de Carga Horaria Normada (Datos Oficiales de la Malla SIGAFI - RRA Art. 21) ── */}
             <div className="pt-2 border-t border-border-thin space-y-3">
                 <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 text-text-dim" />
@@ -202,7 +206,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             placeholder="0"
-                            readOnly={readOnly}
+                            readOnly={true}
                             className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('HorasContactoDocente', Number(val) || 0)}
                         />
@@ -217,7 +221,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             placeholder="0"
-                            readOnly={readOnly}
+                            readOnly={true}
                             className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('HorasPracticoExperimental', Number(val) || 0)}
                         />
@@ -232,7 +236,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             placeholder="0"
-                            readOnly={readOnly}
+                            readOnly={true}
                             className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('HorasAutonomo', Number(val) || 0)}
                         />
@@ -247,7 +251,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             placeholder="0"
-                            readOnly={readOnly}
+                            readOnly={true}
                             className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('TotalHorasAsignatura', Number(val) || 0)}
                         />
@@ -262,7 +266,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             placeholder="0"
-                            readOnly={readOnly}
+                            readOnly={true}
                             className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('Creditos', Number(val) || 0)}
                         />

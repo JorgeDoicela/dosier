@@ -62,30 +62,27 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
     templateSections,
     onOpenFinalizeModal
 }) => {
+    const SECTION_FIELD_KEYS: Record<string, string[]> = {
+        pea_general_section: ['NombreAsignatura', 'CodigoAsignatura', 'Carrera', 'CodigoCarrera', 'Modalidad', 'UnidadOrganizacion', 'Periodo', 'Nivel', 'TotalHorasAsignatura', 'Creditos', 'HorasContactoDocente', 'HorasPracticoExperimental', 'HorasAutonomo', 'DocenteElaborador'],
+        pea_objectives_section: ['ObjetivoAsignatura'],
+        pea_prerequisites_section: ['Prerrequisitos'],
+        pea_competencies_rda_section: ['RdaCarrera', 'ResultadosAprendizaje'],
+        pea_contents_section: ['Unidades'],
+        pea_methodology_section: ['MetodologiaEnsenanza', 'RecursosDidacticos'],
+        pea_resources_section: ['ActividadesPracticas'],
+        pea_evaluation_section: ['EvaluacionAprendizaje', 'Evaluaciones'],
+        pea_bibliography_section: ['BibliografiaBasica', 'BibliografiaConsulta'],
+        pea_signatures_section: ['FirmasResponsabilidad']
+    };
+
     const getSectionCommentsCount = (secId: string): number => {
-        let keys: string[] = [secId];
-        if (secId === 'identificacion') {
-            keys = ['titulo', 'programa', 'grupo', 'dominio_linea', 'campos', 'carrera'];
-        } else if (secId === 'equipo') {
-            keys = ['equipo'];
-        } else if (secId === 'plan_tecnico') {
-            keys = ['antecedentes', 'justificacion', 'objetivos', 'metodologia'];
-        } else if (secId === 'recursos') {
-            keys = ['presupuesto'];
-        } else if (secId === 'impacto') {
-            keys = ['impacto'];
-        } else if (secId === 'cronograma') {
-            keys = ['cronograma'];
-        } else if (secId === 'bibliografia') {
-            keys = ['bibliografia'];
-        }
-        
+        const keys = SECTION_FIELD_KEYS[secId] || [secId];
         return keys.reduce((acc, k) => acc + (comments[k]?.length || 0), 0);
     };
 
     // Calcular las secciones visibles dinámicas
     const sectionsToDisplay = React.useMemo(() => {
-        // 1. Si provienen directamente de ui-config (idéntico a DocumentEditor)
+        // 1. Si provienen directamente de ui-config
         if (templateSections && Array.isArray(templateSections) && templateSections.length > 0) {
             return templateSections.map(sec => {
                 const mappedIcon = (sec.iconName && ICON_MAP[sec.iconName]) || (SECTIONS.find(s => s.id === sec.id)?.icon) || BookOpen;
@@ -97,56 +94,8 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
             });
         }
 
-        // 2. Si se calcula desde templateBlocks
-        if (templateBlocks && Array.isArray(templateBlocks) && templateBlocks.length > 0) {
-            const dynamicList: { id: string; label: string; icon: any }[] = [];
-            templateBlocks.forEach(b => {
-                if (b.isActive === false) return;
-
-                if (b.type === 'cover') {
-                    // Portada PDF estática: No es sección editable/navegable
-                    return;
-                } else if (b.type === 'project_general_section') {
-                    if (!dynamicList.some(s => s.id === 'identificacion')) {
-                        dynamicList.push({ id: 'identificacion', label: b.title || 'Identificación', icon: SECTIONS[0].icon });
-                    }
-                } else if (b.type === 'researchers_table') {
-                    if (!dynamicList.some(s => s.id === 'equipo')) {
-                        dynamicList.push({ id: 'equipo', label: b.title || 'Equipo Humano', icon: SECTIONS[1].icon });
-                    }
-                } else if (b.type === 'project_technical_section' || b.type === 'title') {
-                    if (!dynamicList.some(s => s.id === 'plan_tecnico')) {
-                        dynamicList.push({ id: 'plan_tecnico', label: b.title || 'Plan Técnico', icon: SECTIONS[2].icon });
-                    }
-                } else if (b.type === 'project_budget_section' || b.type === 'advanced_table' || b.type === 'multi_section_table') {
-                    if (!dynamicList.some(s => s.id === 'recursos')) {
-                        dynamicList.push({ id: 'recursos', label: b.title || 'Recursos', icon: SECTIONS[3].icon });
-                    }
-                } else if (b.type === 'impacts') {
-                    if (!dynamicList.some(s => s.id === 'impacto')) {
-                        dynamicList.push({ id: 'impacto', label: b.title || 'Matriz de Impactos', icon: SECTIONS[4].icon });
-                    }
-                } else if (b.type === 'gantt') {
-                    if (!dynamicList.some(s => s.id === 'cronograma')) {
-                        dynamicList.push({ id: 'cronograma', label: b.title || 'Cronograma (Gantt)', icon: SECTIONS[5].icon });
-                    }
-                } else if (b.type === 'signatures') {
-                    if (!dynamicList.some(s => s.id === 'bibliografia')) {
-                        dynamicList.push({ id: 'bibliografia', label: b.title || 'Bibliografía & Firmas', icon: SECTIONS[6].icon });
-                    }
-                } else {
-                    const cleanId = b.id || `custom-${b.type}`;
-                    if (!dynamicList.some(s => s.id === cleanId)) {
-                        dynamicList.push({ id: cleanId, label: b.title || 'Sección', icon: BookOpen });
-                    }
-                }
-            });
-
-            if (dynamicList.length > 0) return dynamicList;
-        }
-
         return SECTIONS;
-    }, [templateBlocks, templateSections]);
+    }, [templateSections]);
 
     return (
         <div
@@ -160,8 +109,8 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
             <div className="p-5 pb-3 border-b border-border-thin flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">
                     <BookOpen size={14} className="text-text-main shrink-0" />
-                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] font-mono">
-                        Navegación del Protocolo
+                    <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] font-mono">
+                        Navegación del PEA
                     </span>
                 </div>
                 <button

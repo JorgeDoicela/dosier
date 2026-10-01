@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { MessageSquare } from 'lucide-react';
+import { Flag } from 'lucide-react';
 import { ObservationsSidebar } from './Revision/components/ObservationsSidebar';
 import { InteractiveSections } from './Revision/components/InteractiveSections';
 import { FullscreenLoader } from '../../components/Common/FullscreenLoader';
@@ -46,18 +46,19 @@ export const RevisionCurricularPage: React.FC = () => {
         const hasComment = commentsState.comments[fieldKey] && commentsState.comments[fieldKey].length > 0;
         return (
             <button
+                type="button"
                 onClick={(e) => {
                     e.stopPropagation();
                     layout.setActiveCommentField(fieldKey);
                     layout.setIsRightSidebarOpen(true);
                 }}
                 className={`flex items-center gap-1 p-1 rounded-lg border transition-all active:scale-95 shrink-0 cursor-pointer ${hasComment
-                    ? 'bg-amber-500/5 border-amber-500/20 text-amber-500 hover:bg-amber-500/10'
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20'
                     : 'border-transparent text-text-dim/40 hover:text-text-main hover:bg-surface-hover'
                     }`}
                 title={hasComment ? 'Ver observación registrada' : 'Agregar observación contextual'}
             >
-                <MessageSquare size={13} className={hasComment ? 'fill-amber-500/5 text-amber-500' : ''} />
+                <Flag size={13} className={hasComment ? 'fill-amber-500 text-amber-500' : ''} />
                 {hasComment && (
                     <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
                 )}

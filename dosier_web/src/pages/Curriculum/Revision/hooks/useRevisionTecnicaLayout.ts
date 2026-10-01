@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 
 export const useRevisionTecnicaLayout = () => {
     const [viewMode, setViewMode] = useState<'interactive' | 'pdf' | 'history'>('interactive');
-    const [activeSection, setActiveSection] = useState<string>('identificacion');
-    const [activeCommentField, setActiveCommentField] = useState<string>('titulo');
+    const [activeSection, setActiveSection] = useState<string>('pea_general_section');
+    const [activeCommentField, setActiveCommentField] = useState<string>('NombreAsignatura');
     const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
     const [generalFeedback, setGeneralFeedback] = useState('');
 

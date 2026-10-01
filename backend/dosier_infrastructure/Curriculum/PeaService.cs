@@ -350,6 +350,16 @@ namespace dosier_infrastructure.Curriculum
                 entity.FirmaElaboradoDocente = firmaDocente;
                 entity.FechaElaborado = DateTime.UtcNow;
             }
+            else if (nuevoEstado == "RevisadoCoord")
+            {
+                entity.FirmaRevisadoCoord = firmaDocente ?? $"AVAL_COORD_{Guid.NewGuid():N}";
+                entity.FechaRevisadoCoord = DateTime.UtcNow;
+            }
+            else if (nuevoEstado == "RevisadoAcad")
+            {
+                entity.FirmaRevisadoAcad = firmaDocente ?? $"AVAL_ACAD_{Guid.NewGuid():N}";
+                entity.FechaRevisadoAcad = DateTime.UtcNow;
+            }
             else if (nuevoEstado == "Aprobado")
             {
                 entity.FirmaAprobadoVicerrector = firmaDocente;

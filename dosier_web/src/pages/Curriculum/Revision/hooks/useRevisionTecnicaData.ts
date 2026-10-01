@@ -160,29 +160,69 @@ export const useRevisionTecnicaData = ({
                 entityUuid: uuid
             });
             const dataJson = (instanceRes as any)?.dataSnapshotJson || instanceRes?.data_snapshot_json || '{}';
-            let metadata = JSON.parse(dataJson);
+            let metadata = typeof dataJson === 'string' ? JSON.parse(dataJson) : (dataJson || {});
 
-            // Si el snapshot del editor tiene datos, combinarlos con los datos del proyecto base
-            if (projectData) {
-                metadata = {
-                    Titulo: projectData.titulo || metadata.Titulo,
-                    DescripcionProyecto: projectData.descripcion_proyecto || projectData.descripcionProyecto || metadata.DescripcionProyecto,
-                    Antecedentes: metadata.Antecedentes || projectData.antecedentes,
-                    Justificacion: metadata.Justificacion || projectData.justificacion,
-                    ObjetivoGeneral: metadata.ObjetivoGeneral || projectData.objetivo_general || projectData.objetivoGeneral,
-                    ObjetivosEspecificos: metadata.ObjetivosEspecificos || projectData.objetivos_especificos || projectData.objetivosEspecificos,
-                    Metodologia: metadata.Metodologia || projectData.metodologia,
-                    CostoTotal: metadata.CostoTotal || projectData.costo_total || projectData.costoTotal,
-                    Presupuesto: metadata.Presupuesto || metadata.RecursosNecesarios || [],
-                    RecursosNecesarios: metadata.RecursosNecesarios || metadata.Presupuesto || [],
-                    Cronograma: metadata.Cronograma || projectData.cronograma || [],
-                    Dominio: metadata.Dominio || projectData.dominio,
-                    LineaInvestigacion: metadata.LineaInvestigacion || projectData.linea_investigacion,
-                    SublineaInvestigacion: metadata.SublineaInvestigacion || projectData.sublinea_investigacion,
-                    Carrera: metadata.Carrera || projectData.carrera,
-                    ...metadata
-                };
-            }
+            const pea = projectData?.peaData || projectData || {};
+
+            metadata = {
+                // 1. Datos Generales
+                NombreAsignatura: metadata.NombreAsignatura || pea.nombre_asignatura || pea.nombreAsignatura || projectData?.titulo || '',
+                CodigoAsignatura: metadata.CodigoAsignatura || pea.codigo_asignatura || pea.codigoAsignatura || projectData?.codigo_institucional || '',
+                Carrera: metadata.Carrera || pea.nombre_carrera || pea.nombreCarrera || projectData?.carrera || '',
+                CodigoCarrera: metadata.CodigoCarrera || pea.codigo_carrera || pea.codigoCarrera || '',
+                Modalidad: metadata.Modalidad || pea.modalidad || 'Presencial',
+                UnidadOrganizacion: metadata.UnidadOrganizacion || pea.unidad_organizacion || pea.unidadOrganizacion || 'Unidad Profesional',
+                Periodo: metadata.Periodo || pea.nombre_periodo || pea.nombrePeriodo || pea.periodo || '',
+                Nivel: metadata.Nivel || pea.semestre_nivel || pea.semestreNivel || '',
+                TotalHorasAsignatura: metadata.TotalHorasAsignatura || pea.total_horas_asignatura || pea.totalHorasAsignatura || 0,
+                Creditos: metadata.Creditos || pea.creditos || 0,
+                HorasContactoDocente: metadata.HorasContactoDocente || pea.horas_contacto_docente || pea.horasContactoDocente || 0,
+                HorasPracticoExperimental: metadata.HorasPracticoExperimental || pea.horas_practico_experimental || pea.horasPracticoExperimental || 0,
+                HorasAutonomo: metadata.HorasAutonomo || pea.horas_autonomo || pea.horasAutonomo || 0,
+                DocenteElaborador: metadata.DocenteElaborador || pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || projectData?.director_nombre || '',
+
+                // 2. Objetivos
+                ObjetivoAsignatura: metadata.ObjetivoAsignatura || pea.objetivo_asignatura || pea.objetivoAsignatura || projectData?.descripcion || '',
+
+                // 3. Prerrequisitos
+                Prerrequisitos: metadata.Prerrequisitos || pea.prerrequisitos || [],
+
+                // 4. RDA
+                RdaCarrera: metadata.RdaCarrera || pea.rda_carrera || '',
+                ResultadosAprendizaje: metadata.ResultadosAprendizaje || pea.resultados_aprendizaje || pea.resultadosAprendizaje || [],
+
+                // 5. Contenidos
+                Unidades: metadata.Unidades || pea.unidades || [],
+
+                // 6. Metodología
+                MetodologiaEnsenanza: metadata.MetodologiaEnsenanza || pea.metodologia_ensenanza || pea.metodologiaEnsenanza || '',
+                RecursosDidacticos: metadata.RecursosDidacticos || pea.recursos_didacticos || pea.recursosDidacticos || '',
+
+                // 7. Prácticas
+                ActividadesPracticas: metadata.ActividadesPracticas || pea.actividades_practicas || pea.actividadesPracticas || [],
+
+                // 8. Evaluación
+                EvaluacionAprendizaje: metadata.EvaluacionAprendizaje || pea.evaluacion_aprendizaje || pea.evaluacionAprendizaje || '',
+                Evaluaciones: metadata.Evaluaciones || pea.evaluaciones || [],
+
+                // 9. Bibliografía
+                BibliografiaBasica: metadata.BibliografiaBasica || '',
+                BibliografiaConsulta: metadata.BibliografiaConsulta || '',
+                Bibliografias: metadata.Bibliografias || pea.bibliografias || [],
+
+                // 10. Firmas
+                FirmasResponsabilidad: metadata.FirmasResponsabilidad || {
+                    DocenteNombre: metadata.DocenteElaborador || pea.nombre_docente_elaborador || projectData?.director_nombre || '',
+                    DocenteCargo: 'Docente Titular',
+                    CoordinadorNombre: '',
+                    CoordinadorCargo: 'Coordinador de Carrera',
+                    CoordinadorAcadNombre: '',
+                    CoordinadorAcadCargo: 'Coordinador Académico',
+                    VicerrectorNombre: '',
+                    VicerrectorCargo: 'Vicerrectorado'
+                },
+                ...metadata
+            };
 
             setDocSnapshot(metadata);
         } catch (e) {
@@ -195,30 +235,35 @@ export const useRevisionTecnicaData = ({
         setLoading(true);
         try {
             const resData = await curriculumProjectService.getProjectDetail(projectUuid);
-
-            const directorObj = (resData.investigadores || []).find((inv: any) =>
-                inv.rol?.toLowerCase().includes('director') || inv.rol?.toLowerCase().includes('principal')
-            );
-            const directorNombre = directorObj
-                ? (directorObj.nombres_completos || directorObj.nombresCompletos || `${directorObj.nombre || ''} ${directorObj.apellido || ''}`.trim())
-                : 'No asignado';
+            const pea = resData.peaData || resData;
 
             const projectDetail: ProjectDetail = {
                 uuid: resData.uuid,
-                title: resData.titulo?.trim() || '(Sin título)',
-                status: resData.estado || 'Borrador',
-                presupuesto: resData.costo_total || 0,
-                convocatoriaMontoMaximo: resData.convocatoria_monto_maximo ?? resData.convocatoriaMontoMaximo ?? resData.ConvocatoriaMontoMaximo ?? null,
-                convocatoria: resData.convocatoria_titulo || resData.convocatoriaTitulo || '',
-                linea: resData.linea_investigacion || 'No definida',
-                carrera: resData.carrera || '',
-                dominio: resData.dominio || '',
-                descripcion: resData.descripcion_proyecto || resData.descripcionProyecto || '',
-                directorProyecto: directorNombre
+                title: resData.titulo?.trim() || pea.nombre_asignatura || '(Sin título)',
+                status: resData.estado || pea.estado || 'Borrador',
+                presupuesto: 0,
+                convocatoriaMontoMaximo: null,
+                convocatoria: pea.nombre_periodo || '',
+                linea: pea.nombre_carrera || resData.carrera || '',
+                carrera: pea.nombre_carrera || resData.carrera || '',
+                dominio: pea.unidad_organizacion || '',
+                descripcion: pea.objetivo_asignatura || resData.descripcion || '',
+                directorProyecto: pea.nombre_docente_elaborador || resData.director_nombre || 'Docente Titular',
+                codigo_asignatura: pea.codigo_asignatura || '',
+                modalidad: pea.modalidad || 'Presencial',
+                semestre_nivel: pea.semestre_nivel || '',
+                horas_totales: pea.total_horas_asignatura || 0,
+                creditos: pea.creditos || 0,
+                horas_docencia: pea.horas_contacto_docente || 0,
+                horas_practica: pea.horas_practico_experimental || 0,
+                horas_autonomo: pea.horas_autonomo || 0,
+                docente_elaborador: pea.nombre_docente_elaborador || resData.director_nombre || '',
+                periodo: pea.nombre_periodo || '',
+                peaData: pea
             };
 
             setProject(projectDetail);
-            setInvestigadores(resData.investigadores || []);
+            setInvestigadores([]);
 
             const savedComments = localStorage.getItem(`comments_${projectUuid}`);
             if (savedComments) {
