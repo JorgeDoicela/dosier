@@ -64,19 +64,19 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
     };
 
     return (
-        <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
+        <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
             {/* Aviso Normativo */}
-            <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+            <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
                     Especifique las asignaturas normadas de la malla curricular aprobada que condicionan la matrícula y cursado de la presente materia, conforme al Régimen Académico del ISTPET.
                 </p>
             </div>
 
             {/* Tabla de Prerrequisitos */}
-            <div className="space-y-3">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wide text-text-main">
+                    <span className="text-sm sm:text-base font-bold text-text-main">
                         Matriz de Asignaturas Prerrequisito ({prerrequisitos.length})
                     </span>
 
@@ -84,50 +84,50 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
                         <button
                             type="button"
                             onClick={handleAddPrerrequisito}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border-thin hover:border-[#0070f3] text-xs font-semibold text-text-main transition-all cursor-pointer shadow-2xs"
+                            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-surface border border-border-thin hover:border-[#0070f3] text-xs sm:text-sm font-semibold text-text-main transition-all cursor-pointer shadow-2xs"
                         >
-                            <Plus size={14} className="text-[#0070f3]" />
+                            <Plus size={15} className="text-[#0070f3]" />
                             <span>Añadir Prerrequisito</span>
                         </button>
                     )}
                 </div>
 
                 {prerrequisitos.length === 0 ? (
-                    <div className="p-8 text-center border border-dashed border-border-thin rounded-xl bg-surface">
-                        <Layers size={28} className="mx-auto text-text-dim opacity-40 mb-2" />
-                        <p className="text-xs font-semibold text-text-dim">
+                    <div className="p-10 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
+                        <Layers size={32} className="mx-auto text-text-dim opacity-40 mb-3" />
+                        <p className="text-sm font-semibold text-text-dim">
                             No se han registrado prerrequisitos para esta asignatura.
                         </p>
-                        <p className="text-[11px] text-text-dim/70 mt-1">
+                        <p className="text-xs text-text-dim/70 mt-1">
                             Si la asignatura no tiene prerrequisitos, puede continuar a la siguiente sección.
                         </p>
                         {!readOnly && (
                             <button
                                 type="button"
                                 onClick={handleAddPrerrequisito}
-                                className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0070f3] text-white text-xs font-semibold hover:bg-[#005bb5] transition-all cursor-pointer shadow-2xs"
+                                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0070f3] text-white text-xs sm:text-sm font-semibold hover:bg-[#005bb5] transition-all cursor-pointer shadow-2xs"
                             >
-                                <Plus size={13} />
+                                <Plus size={14} />
                                 <span>Agregar primer prerrequisito</span>
                             </button>
                         )}
                     </div>
                 ) : (
-                    <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
-                        <table className="w-full text-left text-xs border-collapse">
+                    <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-xs">
+                        <table className="w-full text-left text-xs sm:text-sm border-collapse">
                             <thead>
-                                <tr className="border-b border-border-thin bg-bg-deep text-text-dim text-[10px] font-bold uppercase tracking-wider">
-                                    <th className="p-3 w-12 text-center border-r border-border-thin">
+                                <tr className="border-b border-border-thin bg-bg-deep text-text-dim text-xs font-bold uppercase tracking-wider">
+                                    <th className="p-3.5 sm:p-4 w-12 text-center border-r border-border-thin">
                                         #
                                     </th>
-                                    <th className="p-3 border-r border-border-thin">
+                                    <th className="p-3.5 sm:p-4 border-r border-border-thin">
                                         Asignatura Prerrequisito
                                     </th>
-                                    <th className="p-3 border-r border-border-thin">
+                                    <th className="p-3.5 sm:p-4 border-r border-border-thin">
                                         Observación / Condición Curricular
                                     </th>
                                     {!readOnly && (
-                                        <th className="p-3 w-14 text-center">
+                                        <th className="p-3.5 sm:p-4 w-16 text-center">
                                             Acción
                                         </th>
                                     )}
@@ -136,40 +136,40 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
                             <tbody className="divide-y divide-border-thin bg-surface">
                                 {prerrequisitos.map((item, idx) => (
                                     <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                        <td className="p-2.5 text-center font-mono text-text-dim font-bold text-xs border-r border-border-thin">
+                                        <td className="p-3 text-center font-mono text-text-dim font-bold text-xs sm:text-sm border-r border-border-thin">
                                             {idx + 1}
                                         </td>
-                                        <td className="p-2.5 border-r border-border-thin">
+                                        <td className="p-3 border-r border-border-thin">
                                             <CoWorkField
                                                 name={`Prerrequisitos[${idx}].Asignatura`}
                                                 cowork={cowork}
                                                 type="text"
                                                 readOnly={readOnly}
                                                 placeholder="Nombre normado de la asignatura previa (ej. Programación Básica)"
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-main focus:border-[#0070f3] outline-none"
+                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-text-main focus:border-[#0070f3] outline-none"
                                                 onValueChange={(val) => handleUpdatePrerrequisito(idx, 'Asignatura', val)}
                                             />
                                         </td>
-                                        <td className="p-2.5 border-r border-border-thin">
+                                        <td className="p-3 border-r border-border-thin">
                                             <CoWorkField
                                                 name={`Prerrequisitos[${idx}].Observacion`}
                                                 cowork={cowork}
                                                 type="text"
                                                 readOnly={readOnly}
                                                 placeholder="Condición de aprobación (ej. Haber cursado y aprobado)"
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main focus:border-[#0070f3] outline-none"
+                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none"
                                                 onValueChange={(val) => handleUpdatePrerrequisito(idx, 'Observacion', val)}
                                             />
                                         </td>
                                         {!readOnly && (
-                                            <td className="p-2.5 text-center">
+                                            <td className="p-3 text-center">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemovePrerrequisito(idx)}
                                                     className="p-1.5 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
                                                     title="Eliminar prerrequisito"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </td>
                                         )}

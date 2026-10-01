@@ -260,23 +260,23 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
                     {parsedOptions.length > 5 && (
                         <div className="relative mb-2 pb-2 border-b border-border-thin/50 px-1 pt-0.5 shrink-0">
                             <div className="relative flex items-center">
-                                <Search className="w-3.5 h-3.5 text-text-dim absolute left-2.5 pointer-events-none" />
+                                <Search className="w-4 h-4 text-text-dim absolute left-3 pointer-events-none" />
                                 <input
                                     ref={searchInputRef}
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Buscar en la lista..."
-                                    className="w-full bg-surface border border-border-thin/60 rounded-lg pl-8 pr-3 py-2 text-xs text-text-main placeholder:text-text-dim/50 outline-none focus:border-text-main transition-colors font-medium"
+                                    className="w-full bg-surface border border-border-thin/60 rounded-lg pl-9 pr-3 py-2.5 text-sm text-text-main placeholder:text-text-dim/50 outline-none focus:border-text-main transition-colors font-medium"
                                 />
                             </div>
                         </div>
                     )}
 
                     {/* Lista de Opciones */}
-                    <div className="overflow-y-auto max-h-64 space-y-1 custom-scrollbar pr-1 flex-1">
+                    <div className="overflow-y-auto max-h-72 space-y-1 custom-scrollbar pr-1 flex-1">
                         {filteredOptions.length === 0 ? (
-                            <div className="py-4 px-3 text-center text-xs text-text-dim italic">
+                            <div className="py-4 px-3 text-center text-sm text-text-dim italic">
                                 No se encontraron opciones que coincidan
                             </div>
                         ) : (
@@ -292,7 +292,7 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
                                         onClick={() => handleSelect(option.value)}
                                         title={option.label}
                                         className={`
-                                            w-full flex items-start justify-between px-3.5 py-2.5 rounded-lg text-xs transition-colors text-left gap-3
+                                            w-full flex items-start justify-between px-4 py-3 rounded-lg text-sm transition-colors text-left gap-3
                                             ${isSelected 
                                                 ? 'bg-text-main text-bg-deep font-bold shadow-xs' 
                                                 : isFirstDefault 
@@ -302,7 +302,7 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
                                             ${option.disabled ? 'opacity-40 cursor-default' : 'cursor-pointer'}
                                         `}
                                     >
-                                        <span className="leading-relaxed whitespace-normal break-words flex-1 text-xs">
+                                        <span className="leading-relaxed whitespace-normal break-words flex-1 text-sm">
                                             {option.label}
                                         </span>
                                         {isSelected && (

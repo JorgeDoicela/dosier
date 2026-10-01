@@ -123,6 +123,11 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
 
     const effectiveConfig = templateConfig;
 
+    const stableInitialData = React.useMemo(() => ({
+        ...docInstanceData,
+        Uuid: resolvedUuid || initialData?.Uuid || initialData?.uuid
+    }), [docInstanceData, resolvedUuid, initialData?.Uuid, initialData?.uuid]);
+
     // ── Carga paralela: configuración de plantilla + datos de instancia + catálogos ──
     useEffect(() => {
         const loadAll = async () => {
@@ -130,14 +135,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             const localConfig = DocumentTemplateRegistry[templateCode];
 
             // 2. Lanzar peticiones de red
-            const needsInstanceFetch = !!(initialData?.Uuid && !initialData.Uuid.startsWith('temp_'));
+            const rawDocUuid = initialData?.Uuid || initialData?.uuid;
+            const needsInstanceFetch = !!(rawDocUuid && !rawDocUuid.startsWith('temp_'));
 
             const [configResult, instanceResult, carrerasRes] = await Promise.all([
                 needsInstanceFetch
-                    ? documentInstanceService.getUiConfig(initialData.Uuid).catch(() => null)
+                    ? documentInstanceService.getUiConfig(rawDocUuid).catch(() => null)
                     : documentInstanceService.getTemplateUiConfig(templateCode).catch(() => null),
                 needsInstanceFetch
-                    ? documentInstanceService.getById(initialData.Uuid).catch(() => null)
+                    ? documentInstanceService.getById(rawDocUuid).catch(() => null)
                     : Promise.resolve(null),
                 getCachedOrFetch('carreras', () => analyticsService.getCarreras()),
             ]);
@@ -269,7 +275,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
         <DocumentEditorCore
             templateCode={templateCode}
             templateConfig={effectiveConfig}
-            initialData={{ ...docInstanceData, Uuid: resolvedUuid || initialData?.Uuid }}
+            initialData={stableInitialData}
             entityUuid={entityUuid}
             carreras={carreras}
             customCatalogs={customCatalogs}
@@ -353,6 +359,8 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
         coworkLog(`[DOSIER] DocumentEditorCore cargado para la plantilla: ${templateCode}, ID: ${initialData?.Uuid || 'NUEVO'}, readOnly: ${readOnly}`);
     }, [templateCode, initialData?.Uuid, readOnly]);
 
+    const [visitedSections] = useState<Set<string>>(() => new Set());
+
     // ── Merge estable del esquema + datos iniciales (uuid, título, etc.) ──
     const mergedInitial = React.useMemo(() => ({
         ...(templateConfig?.schema || {}),
@@ -361,7 +369,9 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
         ...initialData
     }), [templateConfig, initialData, entityUuid]);
 
-    const documentId = initialData?.Uuid || `temp_${Math.random().toString(36).substring(2, 9)}`;
+    const documentId = React.useMemo(() => {
+        return initialData?.Uuid || initialData?.uuid || mergedInitial?.Uuid || mergedInitial?.uuid || 'temp_doc_default';
+    }, [initialData?.Uuid, initialData?.uuid, mergedInitial?.Uuid, mergedInitial?.uuid]);
 
     // ── 3. Instanciar CoWork (V1.0: se hace AQUÍ, en el padre del Shell) ──
     const coworkUser = React.useMemo(() => coworkUserFromAuth({
@@ -450,6 +460,14 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
     }, [templateConfig]);
 
     // ── 5. Hook Maestro con ydoc REACTIVO (V1.0 — corrección bug reconexión) ──
+    const isHistoryLoaded = cowork.session.lastSyncedAt !== null;
+    const docOptions = React.useMemo(() => ({
+        lists: templateConfig?.lists || EMPTY_ARRAY,
+        richTexts,
+        nonCollaborative: nonCollaborative || EMPTY_ARRAY,
+        isHistoryLoaded
+    }), [templateConfig?.lists, richTexts, nonCollaborative, isHistoryLoaded]);
+
     const {
         formData,
         setFormData,
@@ -463,12 +481,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
     } = useDOSIERDocument(
         mergedInitial,
         cowork.ydoc,        // ← parámetro reactivo: React detecta cambios si SignalR reconecta
-        {
-            lists: templateConfig?.lists || EMPTY_ARRAY,
-            richTexts,
-            nonCollaborative: nonCollaborative || EMPTY_ARRAY,
-            isHistoryLoaded: cowork.session.lastSyncedAt !== null
-        }
+        docOptions
     );
 
     // ── 6. Cálculos derivados específicos de la sección de Recursos ──
@@ -616,112 +629,127 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             isUpgrading={isUpgrading}
         >
             {(activeTab, coworkHandle) => {
-                const activeSectionConfig = mappedSections.find((s: any) => s.id === activeTab);
-                if (!activeSectionConfig) return null;
-
-                const SectionComponent = activeSectionConfig.component;
-
-                // Props específicas de listas según la sección activa
-                let listProps: any = {};
-                if (activeTab === 'equipo') {
-                    listProps = {
-                        onAdd: () => addItem('Investigadores', { Nombre: '', Cedula: '', Email: '', Telefono: '', NivelAcademico: '', Rol: '', HorasSemanales: null }),
-                        onRemove: (i: number) => removeItem('Investigadores', i),
-                        onUpdate: (i: number, f: string, v: any) => updateItem('Investigadores', i, f, v)
-                    };
-                } else if (activeTab === 'cronograma') {
-                    const getProjectWeeksCount = () => {
-                        const startStr = formData.FechaInicio || formData.FechaInicioEstimada;
-                        const endStr = formData.FechaFin || formData.FechaFinEstimada;
-                        if (startStr && endStr) {
-                            try {
-                                const start = new Date(startStr);
-                                const end = new Date(endStr);
-                                if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
-                                    const diffTime = end.getTime() - start.getTime();
-                                    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                                    return Math.ceil(totalDays / 7);
-                                }
-                            } catch (e) {
-                                console.error("Error calculating project weeks:", e);
-                            }
-                        }
-                        return 12;
-                    };
-                    listProps = {
-                        onAdd: () => addItem('Cronograma', { 
-                            Actividad: '', 
-                            Numero: (formData.Cronograma?.length || 0) + 1, 
-                            RecursosNecesarios: '', 
-                            Responsable: '',
-                            Entregable: '',
-                            IdObjetivo: 0,
-                            FechaInicioPrevista: '',
-                            FechaFinPrevista: '',
-                            Semanas: Array(getProjectWeeksCount()).fill(false) 
-                        }),
-                        onRemove: (i: number) => removeItem('Cronograma', i),
-                        onUpdate: (i: number, f: string, v: any) => updateItem('Cronograma', i, f, v),
-                        onReorder: (fromIdx: number, toIdx: number) => reorderItem('Cronograma', fromIdx, toIdx)
-                    };
-                } else {
-                    listProps = {
-                        onAdd: (listName: string, templateObj: any) => addItem(listName, templateObj),
-                        onRemove: (listName: string, i: number) => removeItem(listName, i),
-                        onUpdateItem: (listName: string, i: number, f: string, v: any) => updateItem(listName, i, f, v)
-                    };
+                if (activeTab && !visitedSections.has(activeTab)) {
+                    visitedSections.add(activeTab);
                 }
-
-                // Determinar si esta sección específica está bloqueada por el director
-                const isSectionBlocked = formData?.BlockedSections?.[activeTab] === true;
-                const isDirectorOrAdmin = canSign || isAdmin;
-                
-                // Si la sección está bloqueada y el usuario NO es director/admin, forzar readOnly = true
-                const sectionReadOnly = readOnly || (isSectionBlocked && !isDirectorOrAdmin);
 
                 return (
                     <div className="pb-20">
-                        <SectionComponent
-                            readOnly={sectionReadOnly}
-                            formData={formData}
-                            cowork={coworkHandle}
-                            onUpdate={updateField}
-                            canSign={canSign}
-                            isAdmin={isAdmin}
-                            activeTab={activeTab}
-                            templateCode={templateCode}
-                            carreras={carreras}
-                            customCatalogs={customCatalogs}
-                            config={activeSectionConfig.config}
+                        {mappedSections.map((sec: any) => {
+                            const isSectionActive = sec.id === activeTab;
+                            const hasBeenVisited = visitedSections.has(sec.id);
+                            if (!hasBeenVisited) return null;
 
-                            // Props de listas para compatibilidad con secciones existentes
-                            investigadores={formData?.Investigadores || []}
-                            investigadoresReales={initialData?.investigadores || initialData?.Investigadores || []}
-                            recursosDisponibles={formData?.RecursosDisponibles || []}
-                            recursosNecesarios={formData?.RecursosNecesarios || []}
-                            costoTotal={formData?.CostoTotal || 0}
-                            cronograma={formData?.Cronograma || []}
-                            resultadosEsperados={formData?.ResultadosEsperados || []}
+                            const SectionComponent = sec.component;
 
-                            // Handlers genéricos de listas
-                            onAdd={(list: string, tpl: any) => addItem(list, tpl)}
-                            onRemove={(list: string, i: number) => removeItem(list, i)}
-                            onUpdateItem={(list: string, i: number, f: string, v: any) => updateItem(list, i, f, v)}
+                            // Props específicas de listas según la sección activa
+                            let listProps: any = {};
+                            if (sec.id === 'equipo') {
+                                listProps = {
+                                    onAdd: () => addItem('Investigadores', { Nombre: '', Cedula: '', Email: '', Telefono: '', NivelAcademico: '', Rol: '', HorasSemanales: null }),
+                                    onRemove: (i: number) => removeItem('Investigadores', i),
+                                    onUpdate: (i: number, f: string, v: any) => updateItem('Investigadores', i, f, v)
+                                };
+                            } else if (sec.id === 'cronograma') {
+                                const getProjectWeeksCount = () => {
+                                    const startStr = formData.FechaInicio || formData.FechaInicioEstimada;
+                                    const endStr = formData.FechaFin || formData.FechaFinEstimada;
+                                    if (startStr && endStr) {
+                                        try {
+                                            const start = new Date(startStr);
+                                            const end = new Date(endStr);
+                                            if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+                                                const diffTime = end.getTime() - start.getTime();
+                                                const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                                                return Math.ceil(totalDays / 7);
+                                            }
+                                        } catch (e) {
+                                            console.error("Error calculating project weeks:", e);
+                                        }
+                                    }
+                                    return 12;
+                                };
+                                listProps = {
+                                    onAdd: () => addItem('Cronograma', { 
+                                        Actividad: '', 
+                                        Numero: (formData.Cronograma?.length || 0) + 1, 
+                                        RecursosNecesarios: '', 
+                                        Responsable: '',
+                                        Entregable: '',
+                                        IdObjetivo: 0,
+                                        FechaInicioPrevista: '',
+                                        FechaFinPrevista: '',
+                                        Semanas: Array(getProjectWeeksCount()).fill(false) 
+                                    }),
+                                    onRemove: (i: number) => removeItem('Cronograma', i),
+                                    onUpdate: (i: number, f: string, v: any) => updateItem('Cronograma', i, f, v),
+                                    onReorder: (fromIdx: number, toIdx: number) => reorderItem('Cronograma', fromIdx, toIdx)
+                                };
+                            } else {
+                                listProps = {
+                                    onAdd: (listName: string, templateObj: any) => addItem(listName, templateObj),
+                                    onRemove: (listName: string, i: number) => removeItem(listName, i),
+                                    onUpdateItem: (listName: string, i: number, f: string, v: any) => updateItem(listName, i, f, v)
+                                };
+                            }
 
-                            // Handlers específicos para retrocompatibilidad
-                            onAddDisponible={() => addItem('RecursosDisponibles', { Descripcion: '', Cantidad: '1', Fuente: '' })}
-                            onRemoveDisponible={(i: number) => removeItem('RecursosDisponibles', i)}
-                            onUpdateDisponible={(i: number, f: string, v: any) => updateItem('RecursosDisponibles', i, f, v)}
-                            onAddNecesario={() => addItem('RecursosNecesarios', { Descripcion: '', Cantidad: '1', CostoUnitario: 0, CostoTotal: 0 })}
-                            onRemoveNecesario={(i: number) => removeItem('RecursosNecesarios', i)}
-                            onUpdateNecesario={(i: number, f: string, v: any) => updateItem('RecursosNecesarios', i, f, v)}
-                            onAddResultado={() => addItem('ResultadosEsperados', { categoria: '', tipo: '', titulo: '', indicador: '', medio_verificacion: '', cantidad: '1', plazo: '' })}
-                            onRemoveResultado={(i: number) => removeItem('ResultadosEsperados', i)}
-                            onUpdateResultado={(i: number, f: string, v: any) => updateItem('ResultadosEsperados', i, f, v)}
-                            onUpdateImpacto={(t: string, v: any) => updateField('Impacto', (prev: any) => ({ ...(prev || {}), [t.toLowerCase()]: v }))}
+                            // Determinar si esta sección específica está bloqueada por el director
+                            const isSectionBlocked = formData?.BlockedSections?.[sec.id] === true;
+                            const isDirectorOrAdmin = canSign || isAdmin;
+                            
+                            // Si la sección está bloqueada y el usuario NO es director/admin, forzar readOnly = true
+                            const sectionReadOnly = readOnly || (isSectionBlocked && !isDirectorOrAdmin);
 
-                            {...listProps}
-                        />
+                            return (
+                                <div
+                                    key={sec.id}
+                                    className={isSectionActive ? 'block min-w-0' : 'hidden'}
+                                    style={{ display: isSectionActive ? undefined : 'none' }}
+                                >
+                                    <SectionComponent
+                                        readOnly={sectionReadOnly}
+                                        formData={formData}
+                                        cowork={coworkHandle}
+                                        onUpdate={updateField}
+                                        canSign={canSign}
+                                        isAdmin={isAdmin}
+                                        activeTab={sec.id}
+                                        templateCode={templateCode}
+                                        carreras={carreras}
+                                        customCatalogs={customCatalogs}
+                                        config={sec.config}
+
+                                        // Props de listas para compatibilidad con secciones existentes
+                                        investigadores={formData?.Investigadores || []}
+                                        investigadoresReales={initialData?.investigadores || initialData?.Investigadores || []}
+                                        recursosDisponibles={formData?.RecursosDisponibles || []}
+                                        recursosNecesarios={formData?.RecursosNecesarios || []}
+                                        costoTotal={formData?.CostoTotal || 0}
+                                        cronograma={formData?.Cronograma || []}
+                                        resultadosEsperados={formData?.ResultadosEsperados || []}
+
+                                        // Handlers genéricos de listas
+                                        onAdd={(list: string, tpl: any) => addItem(list, tpl)}
+                                        onRemove={(list: string, i: number) => removeItem(list, i)}
+                                        onUpdateItem={(list: string, i: number, f: string, v: any) => updateItem(list, i, f, v)}
+
+                                        // Handlers específicos para retrocompatibilidad
+                                        onAddDisponible={() => addItem('RecursosDisponibles', { Descripcion: '', Cantidad: '1', Fuente: '' })}
+                                        onRemoveDisponible={(i: number) => removeItem('RecursosDisponibles', i)}
+                                        onUpdateDisponible={(i: number, f: string, v: any) => updateItem('RecursosDisponibles', i, f, v)}
+                                        onAddNecesario={() => addItem('RecursosNecesarios', { Descripcion: '', Cantidad: '1', CostoUnitario: 0, CostoTotal: 0 })}
+                                        onRemoveNecesario={(i: number) => removeItem('RecursosNecesarios', i)}
+                                        onUpdateNecesario={(i: number, f: string, v: any) => updateItem('RecursosNecesarios', i, f, v)}
+                                        onAddResultado={() => addItem('ResultadosEsperados', { categoria: '', tipo: '', titulo: '', indicador: '', medio_verificacion: '', cantidad: '1', plazo: '' })}
+                                        onRemoveResultado={(i: number) => removeItem('ResultadosEsperados', i)}
+                                        onUpdateResultado={(i: number, f: string, v: any) => updateItem('ResultadosEsperados', i, f, v)}
+                                        onUpdateImpacto={(t: string, v: any) => updateField('Impacto', (prev: any) => ({ ...(prev || {}), [t.toLowerCase()]: v }))}
+
+                                        {...listProps}
+                                    />
+                                </div>
+                            );
+                        })}
                     </div>
                 );
             }}

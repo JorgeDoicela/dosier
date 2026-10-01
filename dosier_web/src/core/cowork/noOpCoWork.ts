@@ -55,11 +55,12 @@ export function createNoOpCoWork(documentId = 'noop'): CoWorkHandle {
         updateSectionStatus: (_uuid, _section, _status) => Promise.resolve(),
         postComment: (_uuid, _content, _parentId?) => Promise.resolve(),
 
-        // Suscripciones en tiempo real — no-ops seguros
-        onSectionActivity: (_handler) => { /* no-op */ },
-        onSectionStatusUpdated: (_handler) => { /* no-op */ },
-        onNewCommentReceived: (_handler) => { /* no-op */ },
-        onCommentUpdated: (_handler) => { /* no-op */ },
-        onCommentDeleted: (_handler) => { /* no-op */ },
+        // Suscripciones en tiempo real — no-ops seguros con desuscriptor
+        onSectionActivity: (_handler) => () => {},
+        onSectionStatusUpdated: (_handler) => () => {},
+        onNewCommentReceived: (_handler) => () => {},
+        onCommentUpdated: (_handler) => () => {},
+        onCommentDeleted: (_handler) => () => {},
+        onCommentsReadUpdated: (_handler) => () => {},
     };
 }

@@ -71,38 +71,38 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
     ];
 
     return (
-        <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
+        <div className="w-full space-y-6 sm:space-y-7 animate-fade-in font-sans">
             {/* AVISO NORMATIVO */}
-            <div className="flex items-start gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim">
-                <Shield size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim">
+                <Shield size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
                     Las firmas consignadas en este instrumento curricular certifican la conformidad con los lineamientos del Consejo de Aseguramiento de la Calidad de la Educación Superior (CACES) y el Reglamento de Régimen Académico del ISTPET.
                 </p>
             </div>
 
             {/* MATRIZ DE 4 FIRMAS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {rolesCircuito.map((rol) => {
                     const fechaFirma = firmas[rol.fechaField] || '';
 
                     return (
                         <div
                             key={rol.key}
-                            className="rounded-xl border border-border-thin bg-surface p-4 flex flex-col justify-between shadow-xs space-y-4 hover:border-brand/30 transition-colors"
+                            className="rounded-xl border border-border-thin bg-surface p-4 sm:p-5 flex flex-col justify-between shadow-xs space-y-4 sm:space-y-5 hover:border-brand/30 transition-colors"
                         >
                             {/* Rol y Estado */}
-                            <div className="border-b border-slate-200/90 dark:border-zinc-800 pb-2 flex items-center justify-between">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-text-main">
+                            <div className="border-b border-slate-200/90 dark:border-zinc-800 pb-2.5 flex items-center justify-between">
+                                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-main">
                                     {rol.etiqueta}
                                 </span>
                                 {rol.firmado ? (
-                                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                                         Firmado
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-dim">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-600" />
+                                        <span className="w-2 h-2 rounded-full bg-zinc-400 dark:bg-zinc-600" />
                                         Pendiente
                                     </span>
                                 )}
@@ -111,21 +111,21 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                             {/* Área de Sello / Firma */}
                             <div className="py-2 text-center">
                                 {rol.firmado ? (
-                                    <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-center space-y-1">
-                                        <CheckCircle2 size={24} className="mx-auto text-emerald-500" />
-                                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 block">
+                                    <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center space-y-1.5">
+                                        <CheckCircle2 size={28} className="mx-auto text-emerald-500" />
+                                        <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">
                                             Firma Electrónica Válida
                                         </span>
                                         {fechaFirma && (
-                                            <span className="text-[9px] text-text-dim font-mono block">
+                                            <span className="text-[11px] text-text-dim font-mono block">
                                                 {fechaFirma}
                                             </span>
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="p-4 rounded-lg bg-bg-deep/50 border border-dashed border-border-thin text-center space-y-1">
-                                        <UserCheck size={20} className="mx-auto text-text-dim opacity-50" />
-                                        <span className="text-[10px] text-text-dim font-medium block">
+                                    <div className="p-5 sm:p-6 rounded-xl bg-bg-deep/50 border border-dashed border-border-thin text-center space-y-1.5">
+                                        <UserCheck size={24} className="mx-auto text-text-dim opacity-50" />
+                                        <span className="text-xs text-text-dim font-medium block">
                                             Sello de Firma Electrónica
                                         </span>
                                     </div>
@@ -133,8 +133,8 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                             </div>
 
                             {/* Nombre del Responsable */}
-                            <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-text-dim uppercase tracking-wider block">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
                                     Nombres y Título:
                                 </label>
                                 <CoWorkField
@@ -143,17 +143,17 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                     type="text"
                                     placeholder={rol.placeholder}
                                     readOnly={readOnly || rol.firmado}
-                                    className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main font-semibold outline-none focus:border-brand"
+                                    className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none focus:border-[#0070f3]"
                                     onValueChange={(val) => updateFirma(rol.nombreField, val)}
                                 />
                             </div>
 
                             {/* Cargo Institucional */}
-                            <div className="border-t border-border-thin pt-2 text-center">
-                                <span className="text-[10px] font-bold text-text-main block">
+                            <div className="border-t border-border-thin pt-2.5 text-center">
+                                <span className="text-xs sm:text-sm font-bold text-text-main block">
                                     {rol.cargo}
                                 </span>
-                                <span className="text-[9px] text-text-dim block mt-0.5">
+                                <span className="text-[11px] text-text-dim block mt-0.5">
                                     ISTPET
                                 </span>
                             </div>

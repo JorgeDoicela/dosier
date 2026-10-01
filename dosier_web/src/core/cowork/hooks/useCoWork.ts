@@ -141,38 +141,38 @@ export function useCoWork(config: CoWorkConfig): CoWorkHandle {
 
     const onSectionActivity = useCallback((handler: (data: any) => void) => {
         const transport = activeTransportRef.current;
-        if (!transport) return;
-        transport.onSectionActivity(handler);
+        if (!transport) return () => {};
+        return transport.onSectionActivity(handler);
     }, []);
 
     const onSectionStatusUpdated = useCallback((handler: (data: any) => void) => {
         const transport = activeTransportRef.current;
-        if (!transport) return;
-        transport.onSectionStatusUpdated(handler);
+        if (!transport) return () => {};
+        return transport.onSectionStatusUpdated(handler);
     }, []);
 
     const onNewCommentReceived = useCallback((handler: (data: any) => void) => {
         const transport = activeTransportRef.current;
-        if (!transport) return;
-        transport.onNewCommentReceived(handler);
+        if (!transport) return () => {};
+        return transport.onNewCommentReceived(handler);
     }, []);
 
     const onCommentUpdated = useCallback((handler: (data: any) => void) => {
         const transport = activeTransportRef.current;
-        if (!transport) return;
-        transport.onCommentUpdated(handler);
+        if (!transport) return () => {};
+        return transport.onCommentUpdated(handler);
     }, []);
 
     const onCommentDeleted = useCallback((handler: (data: any) => void) => {
         const transport = activeTransportRef.current;
-        if (!transport) return;
-        transport.onCommentDeleted(handler);
+        if (!transport) return () => {};
+        return transport.onCommentDeleted(handler);
     }, []);
 
     const onCommentsReadUpdated = useCallback((handler: (data: any) => void) => {
         const transport = activeTransportRef.current;
-        if (!transport) return;
-        transport.onCommentsReadUpdated?.(handler);
+        if (!transport) return () => {};
+        return transport.onCommentsReadUpdated?.(handler);
     }, []);
 
     useEffect(() => {

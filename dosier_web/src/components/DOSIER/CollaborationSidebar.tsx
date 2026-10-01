@@ -346,12 +346,13 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     // Suscribirse a eventos de tiempo real del Hub CoWork
     useEffect(() => {
         if (!cowork) return;
+        const unsubs: (() => void)[] = [];
 
-        cowork.onNewCommentReceived((data) => {
+        const u1 = cowork.onNewCommentReceived?.((data) => {
             const normalized = {
                 idComentario: data.idComentario ?? data.id_comentario ?? data.idComment,
                 usuarioUuid: data.usuarioUuid ?? data.usuario_uuid ?? '',
-                nombreUsuario: data.nombreUsuario ?? data.nombre_usuario ?? 'Usuario',
+                usuarioNombre: data.usuarioNombre ?? data.usuario_nombre ?? '',
                 contenido: data.contenido ?? '',
                 idPadre: data.idPadre ?? data.id_padre ?? null,
                 creadoEn: data.creadoEn ?? data.creado_en ?? new Date().toISOString(),
@@ -363,8 +364,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 return [...prev, normalized].slice(-50);
             });
         });
+        if (typeof u1 === 'function') unsubs.push(u1);
 
-        cowork.onCommentsReadUpdated?.((data: any) => {
+        const u2 = cowork.onCommentsReadUpdated?.((data: any) => {
             const commentIds: number[] = data.commentIds || [];
             const reader = data.reader;
             if (!commentIds.length || !reader) return;
@@ -381,8 +383,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 return c;
             }));
         });
+        if (typeof u2 === 'function') unsubs.push(u2);
 
-        cowork.onCommentUpdated?.((data) => {
+        const u3 = cowork.onCommentUpdated?.((data) => {
             const updatedId = data.idComentario ?? data.id_comentario ?? data.idComment;
             setComments(prev => prev.map(c => {
                 if (c.idComentario === updatedId) {
@@ -391,13 +394,15 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 return c;
             }));
         });
+        if (typeof u3 === 'function') unsubs.push(u3);
 
-        cowork.onCommentDeleted?.((data) => {
+        const u4 = cowork.onCommentDeleted?.((data) => {
             const deletedId = data.idComentario ?? data.id_comentario ?? data.idComment;
             setComments(prev => prev.filter(c => c.idComentario !== deletedId));
         });
+        if (typeof u4 === 'function') unsubs.push(u4);
 
-        cowork.onSectionActivity((data) => {
+        const u5 = cowork.onSectionActivity?.((data) => {
             const userName = data.userName ?? data.user_name ?? 'Usuario';
             const action = data.action ?? '';
             const secName = data.sectionName ?? data.section_name ?? '';
@@ -423,8 +428,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 return [normalized, ...prev].slice(0, 20);
             });
         });
+        if (typeof u5 === 'function') unsubs.push(u5);
 
-        cowork.onSectionStatusUpdated((data) => {
+        const u6 = cowork.onSectionStatusUpdated?.((data) => {
             if (!sectionStatusesProp) {
                 setLocalSectionStatuses(prev => ({
                     ...prev,
@@ -432,6 +438,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 }));
             }
         });
+        if (typeof u6 === 'function') unsubs.push(u6);
+
+        return () => {
+            unsubs.forEach(fn => fn());
+        };
     }, [cowork, sectionStatusesProp]);
 
     // Marcar automáticamente como leídos los comentarios ajenos cuando el usuario ve el chat

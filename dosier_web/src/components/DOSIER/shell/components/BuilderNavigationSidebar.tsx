@@ -1,11 +1,13 @@
 import React from 'react';
-import { ChevronLeft, FileText, Lock } from 'lucide-react';
+import { ChevronLeft, Lock } from 'lucide-react';
 import type { BuilderSection } from '../hooks/useBuilderLayout';
+import { formatDynamicSectionLabel } from '../../../../utils/sectionNumbering';
 
 export interface BuilderNavigationSidebarProps {
     sections: BuilderSection[];
     activeTab: string;
     formData: any;
+    sectionStatuses?: Record<string, string>;
     isLeftSidebarOpen: boolean;
     leftSidebarWidth: number;
     showMobileSections: boolean;
@@ -15,46 +17,11 @@ export interface BuilderNavigationSidebarProps {
     setShowMobileSections: (show: boolean) => void;
 }
 
-const calculateSectionProgress = (config: any, formData: any): number | null => {
-    if (!formData) return null;
-    const completionFields = config?.completionFields || config?.completion_fields;
-    if (!completionFields || !Array.isArray(completionFields) || completionFields.length === 0) {
-        return null;
-    }
-    
-    let completedCount = 0;
-    completionFields.forEach((field: string) => {
-        const value = formData[field];
-        if (value === undefined || value === null) return;
-
-        // Si es un arreglo (ej: Investigadores, RecursosNecesarios, Cronograma)
-        if (Array.isArray(value)) {
-            if (value.length > 0) completedCount++;
-            return;
-        }
-
-        // Si es un objeto (ej: Impacto)
-        if (typeof value === 'object') {
-            const values = Object.values(value);
-            const filled = values.filter(v => v !== undefined && v !== null && v !== '').length;
-            if (filled > 0) completedCount++;
-            return;
-        }
-
-        // Si es string o rich-text
-        const str = String(value).trim();
-        if (str !== '' && str !== '<p></p>' && str !== '<p><br></p>' && str !== '<p><br/></p>') {
-            completedCount++;
-        }
-    });
-
-    return Math.round((completedCount / completionFields.length) * 100);
-};
-
 export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> = ({
     sections,
     activeTab,
     formData,
+    sectionStatuses,
     isLeftSidebarOpen,
     leftSidebarWidth,
     showMobileSections,
@@ -63,6 +30,15 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
     setIsLeftSidebarOpen,
     setShowMobileSections
 }) => {
+    const count = sections.length;
+
+    // Escala de densidad dinámica adaptativa según la cantidad de secciones de la plantilla (Estándar DIITRA)
+    const density = count <= 6
+        ? { itemPy: 'py-3.5', itemPx: 'px-2.5 sm:px-3', textSize: 'text-xs', spaceY: 'space-y-2', rounded: 'rounded-xl' }
+        : count <= 9
+            ? { itemPy: 'py-2.5 sm:py-3', itemPx: 'px-2.5 sm:px-3', textSize: 'text-xs', spaceY: 'space-y-1.5', rounded: 'rounded-xl' }
+            : { itemPy: 'py-2 sm:py-2.5', itemPx: 'px-2 sm:px-2.5', textSize: 'text-[11px]', spaceY: 'space-y-1', rounded: 'rounded-lg' };
+
     return (
         <div
             ref={leftSidebarRef}
@@ -83,64 +59,91 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
             className={`
                 overflow-hidden flex flex-col shrink-0 bg-bg-deep shadow-2xl lg:shadow-none
                 ${typeof window !== 'undefined' && window.innerWidth < 1024
-                    ? 'absolute inset-y-0 left-0 top-0 bottom-0 z-[70] h-full border-r border-border-thin !w-[85vw] sm:!w-[320px]'
+                    ? 'absolute inset-y-0 left-0 top-0 bottom-0 z-[70] h-full border-r border-border-thin !w-[85vw] sm:!w-[210px]'
                     : (isLeftSidebarOpen ? 'border-r border-border-thin lg:flex' : 'hidden lg:flex')
                 }
             `}
         >
-            <div style={{ width: showMobileSections ? '100%' : `${leftSidebarWidth}px` }} className="p-4 sm:p-5 md:p-6 flex flex-col gap-4 md:gap-5 h-full overflow-y-auto overflow-x-hidden shrink-0">
-                <div>
-                    <div className="flex justify-between items-center mb-2.5 lg:ml-1">
-                        <p className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em]">Navegación del Documento</p>
+            <div style={{ width: showMobileSections ? '100%' : `${leftSidebarWidth}px` }} className="px-2.5 py-4 sm:px-3 sm:py-5 flex flex-col justify-between h-full overflow-y-auto overflow-x-hidden shrink-0">
+                <div className="flex flex-col">
+                    <div className="flex justify-between items-center mb-5 px-1">
+                        <p className="text-xs font-black text-text-dim uppercase tracking-wider">Navegación del Documento</p>
                         <button
                             onClick={() => {
                                 setShowMobileSections(false);
                                 setIsLeftSidebarOpen(false);
                             }}
-                            className="p-1.5 hover:bg-bg-deep rounded-lg text-text-dim hover:text-text-main transition-colors cursor-pointer"
+                            className="p-1.5 hover:bg-surface-hover rounded-lg text-text-dim hover:text-text-main transition-colors cursor-pointer"
                             title="Contraer navegación"
                             aria-label="Contraer navegación"
                         >
                             <ChevronLeft size={16} />
                         </button>
                     </div>
-                    <div className="space-y-1">
-                        {sections.map(section => {
-                            const progress = calculateSectionProgress(section.config, formData);
+
+                    <div className={density.spaceY}>
+                        {sections.map((section, idx) => {
+                            const isBlocked = !!formData?.BlockedSections?.[section.id];
+                            const isActive = activeTab === section.id;
+                            const dynamicLabel = formatDynamicSectionLabel(section.label, idx);
+                            const sectionStatus = sectionStatuses?.[section.id] || 'Borrador';
 
                             return (
                                 <button
                                     key={section.id}
                                     onClick={() => { setActiveTab(section.id); setShowMobileSections(false); }}
-                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all text-left ${activeTab === section.id ? 'bg-text-main text-bg-deep shadow-xl lg:translate-x-2' : 'text-text-dim hover:bg-bg-deep hover:text-text-main'}`}
+                                    className={`w-full flex items-center justify-between ${density.itemPx} ${density.itemPy} ${density.rounded} ${density.textSize} font-bold uppercase tracking-wider transition-all text-left cursor-pointer ${isActive
+                                        ? 'bg-text-main text-bg-deep shadow-xl'
+                                        : 'text-text-dim hover:bg-surface hover:text-text-main'
+                                        }`}
+                                    title={sectionStatus !== 'Borrador' ? `${dynamicLabel} - ${sectionStatus}` : dynamicLabel}
                                 >
-                                    <span className="flex items-center gap-3 text-left min-w-0">
-                                        <span className="shrink-0 flex items-center">{section.icon}</span>
-                                        <span className="text-left leading-snug break-words">{section.label}</span>
-                                    </span>
-                                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                                        {progress !== null && (
-                                            <span className={`text-[9px] font-mono font-bold tracking-normal ${activeTab === section.id ? 'text-bg-deep' : 'text-text-dim'}`}>
-                                                {progress}%
-                                            </span>
+                                    <span className="text-left leading-snug break-words flex-1 pr-1">{dynamicLabel}</span>
+                                    <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
+                                        {isBlocked && (
+                                            <Lock size={13} className={isActive ? 'text-bg-deep' : 'text-amber-500'} />
                                         )}
-                                        {formData?.BlockedSections?.[section.id] && (
-                                            <Lock size={12} className={activeTab === section.id ? 'text-bg-deep' : 'text-amber-500'} />
-                                        )}
+                                        {(() => {
+                                            const isCompleted = sectionStatus === 'Completado' || sectionStatus === 'Aprobado';
+                                            const isReview = sectionStatus === 'Por revisar' || sectionStatus === 'Revisión';
+
+                                            const dotColor = isCompleted
+                                                ? 'bg-emerald-500'
+                                                : isReview
+                                                    ? 'bg-amber-500'
+                                                    : (isActive ? 'bg-zinc-400' : 'bg-zinc-400/80 dark:bg-zinc-500');
+
+                                            const dotTitle = isCompleted
+                                                ? 'Sección Completada'
+                                                : isReview
+                                                    ? 'Sección Por revisar'
+                                                    : 'Sección En redacción';
+
+                                            return (
+                                                <span
+                                                    className={`w-[5px] h-[5px] rounded-full shrink-0 ${dotColor}`}
+                                                    title={dotTitle}
+                                                />
+                                            );
+                                        })()}
                                     </div>
                                 </button>
                             );
                         })}
-                        <button
-                            onClick={() => { setActiveTab('output'); setShowMobileSections(false); }}
-                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all mt-4 border text-left ${activeTab === 'output' ? 'bg-text-main text-bg-deep border-text-main shadow-xl' : 'text-text-dim border-border-thin hover:bg-bg-deep hover:text-text-main'}`}
-                        >
-                            <span className="flex items-center gap-3 text-left min-w-0">
-                                <span className="shrink-0 flex items-center"><FileText size={18} /></span>
-                                <span className="text-left leading-snug">Finalizar y Firmar</span>
-                            </span>
-                        </button>
                     </div>
+                </div>
+
+                {/* Botón Finalizar y Firmar anclado al pie del Sidebar estilo DIITRA */}
+                <div className="pt-2 mt-2 shrink-0">
+                    <button
+                        onClick={() => { setActiveTab('output'); setShowMobileSections(false); }}
+                        className={`w-full flex items-center justify-between ${density.itemPx} ${density.itemPy} ${density.rounded} ${density.textSize} font-black uppercase tracking-widest transition-all border text-left cursor-pointer ${activeTab === 'output'
+                            ? 'bg-text-main text-bg-deep border-text-main shadow-xl'
+                            : 'text-text-dim border-border-thin hover:bg-surface hover:text-text-main'
+                            }`}
+                    >
+                        <span className="text-left leading-snug">Finalizar y Firmar</span>
+                    </button>
                 </div>
             </div>
         </div>

@@ -14,6 +14,12 @@ export class SignalRTransport implements ICoWorkTransport {
     private _isConnected = false;
     private _operationQueue: Promise<any> = Promise.resolve();
     private _statusListeners: ((isConnected: boolean) => void)[] = [];
+    private _sectionActivityListeners = new Set<(data: any) => void>();
+    private _sectionStatusListeners = new Set<(data: any) => void>();
+    private _newCommentListeners = new Set<(data: any) => void>();
+    private _commentUpdatedListeners = new Set<(data: any) => void>();
+    private _commentDeletedListeners = new Set<(data: any) => void>();
+    private _commentsReadListeners = new Set<(data: any) => void>();
 
     constructor(...args: any[]) {
         const hubUrl = typeof args[0] === 'string' && args[0].startsWith('http') ? args[0] : COWORK_CONFIG.SIGNALR_HUB_URL;
@@ -37,6 +43,30 @@ export class SignalRTransport implements ICoWorkTransport {
         this.connection.on('TemplatePublished', (data: any) => {
             console.info('[SignalR] Recibida notificación de plantilla publicada vía WebSocket:', data);
             notifyTemplatePublished(data || {});
+        });
+
+        this.connection.on('SectionActivity', (data: any) => {
+            this._sectionActivityListeners.forEach(fn => { try { fn(data); } catch(e) {} });
+            window.dispatchEvent(new CustomEvent('dosier-activity-updated', { detail: data }));
+        });
+        this.connection.on('SectionStatusUpdated', (data: any) => {
+            this._sectionStatusListeners.forEach(fn => { try { fn(data); } catch(e) {} });
+            window.dispatchEvent(new CustomEvent('dosier-activity-updated', { detail: data }));
+        });
+        this.connection.on('NewCommentReceived', (data: any) => {
+            this._newCommentListeners.forEach(fn => { try { fn(data); } catch(e) {} });
+            window.dispatchEvent(new CustomEvent('dosier-activity-updated', { detail: data }));
+        });
+        this.connection.on('CommentUpdated', (data: any) => {
+            this._commentUpdatedListeners.forEach(fn => { try { fn(data); } catch(e) {} });
+            window.dispatchEvent(new CustomEvent('dosier-activity-updated', { detail: data }));
+        });
+        this.connection.on('CommentDeleted', (data: any) => {
+            this._commentDeletedListeners.forEach(fn => { try { fn(data); } catch(e) {} });
+            window.dispatchEvent(new CustomEvent('dosier-activity-updated', { detail: data }));
+        });
+        this.connection.on('CommentsReadUpdated', (data: any) => {
+            this._commentsReadListeners.forEach(fn => { try { fn(data); } catch(e) {} });
         });
 
         this.connection.onreconnecting(() => { 
@@ -135,6 +165,13 @@ export class SignalRTransport implements ICoWorkTransport {
     async disconnect(): Promise<void> {
         // Marcamos inmediatamente como no conectado para que los componentes dejen de enviar datos
         this._isConnected = false;
+        this._statusListeners = [];
+        this._sectionActivityListeners.clear();
+        this._sectionStatusListeners.clear();
+        this._newCommentListeners.clear();
+        this._commentUpdatedListeners.clear();
+        this._commentDeletedListeners.clear();
+        this._commentsReadListeners.clear();
         
         return this.enqueueOperation(async () => {
             try {
@@ -227,33 +264,45 @@ export class SignalRTransport implements ICoWorkTransport {
         } catch (err) {}
     }
 
-    onSectionActivity(handler: (data: any) => void): void {
-        this.connection.off('SectionActivity');
-        this.connection.on('SectionActivity', handler);
+    onSectionActivity(handler: (data: any) => void): () => void {
+        this._sectionActivityListeners.add(handler);
+        return () => {
+            this._sectionActivityListeners.delete(handler);
+        };
     }
 
-    onSectionStatusUpdated(handler: (data: any) => void): void {
-        this.connection.off('SectionStatusUpdated');
-        this.connection.on('SectionStatusUpdated', handler);
+    onSectionStatusUpdated(handler: (data: any) => void): () => void {
+        this._sectionStatusListeners.add(handler);
+        return () => {
+            this._sectionStatusListeners.delete(handler);
+        };
     }
 
-    onNewCommentReceived(handler: (data: any) => void): void {
-        this.connection.off('NewCommentReceived');
-        this.connection.on('NewCommentReceived', handler);
+    onNewCommentReceived(handler: (data: any) => void): () => void {
+        this._newCommentListeners.add(handler);
+        return () => {
+            this._newCommentListeners.delete(handler);
+        };
     }
 
-    onCommentUpdated(handler: (data: any) => void): void {
-        this.connection.off('CommentUpdated');
-        this.connection.on('CommentUpdated', handler);
+    onCommentUpdated(handler: (data: any) => void): () => void {
+        this._commentUpdatedListeners.add(handler);
+        return () => {
+            this._commentUpdatedListeners.delete(handler);
+        };
     }
 
-    onCommentDeleted(handler: (data: any) => void): void {
-        this.connection.off('CommentDeleted');
-        this.connection.on('CommentDeleted', handler);
+    onCommentDeleted(handler: (data: any) => void): () => void {
+        this._commentDeletedListeners.add(handler);
+        return () => {
+            this._commentDeletedListeners.delete(handler);
+        };
     }
 
-    onCommentsReadUpdated(handler: (data: any) => void): void {
-        this.connection.off('CommentsReadUpdated');
-        this.connection.on('CommentsReadUpdated', handler);
+    onCommentsReadUpdated(handler: (data: any) => void): () => void {
+        this._commentsReadListeners.add(handler);
+        return () => {
+            this._commentsReadListeners.delete(handler);
+        };
     }
 }

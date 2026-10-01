@@ -90,116 +90,116 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
     };
 
     return (
-        <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
+        <div className="w-full space-y-6 sm:space-y-7 animate-fade-in font-sans">
             {/* Aviso APE */}
-            <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+            <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
                     Las actividades prácticas deben tributar al total de <strong className="text-text-main font-semibold">Horas de Aprendizaje Práctico-Experimental (APE)</strong> asignadas a la asignatura en la Sección A.
                 </p>
             </div>
 
             {/* TABLA DE ACTIVIDADES PRÁCTICAS */}
-            <div className="space-y-3">
+            <div className="space-y-3.5">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wide text-text-main">
+                    <span className="text-sm sm:text-base font-bold uppercase tracking-wide text-text-main">
                         Registro de Prácticas y Talleres ({practicas.length})
                     </span>
                     {!readOnly && (
                         <button
                             type="button"
                             onClick={handleAddPractica}
-                            className="px-3 py-1.5 bg-surface hover:bg-bg-deep border border-border-thin rounded-lg text-xs font-semibold text-text-main transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            className="px-3.5 sm:px-4 py-2 bg-surface hover:bg-bg-deep border border-border-thin rounded-xl text-xs sm:text-sm font-semibold text-text-main transition-colors flex items-center gap-2 cursor-pointer shadow-2xs"
                         >
-                            <Plus size={14} className="text-[#0070f3]" />
+                            <Plus size={16} className="text-[#0070f3]" />
                             <span>Añadir Práctica</span>
                         </button>
                     )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
-                    <table className="w-full text-left border-collapse text-xs">
+                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
                         <thead>
-                            <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
-                                <th className="p-3 w-[15%] border-r border-border-thin">Unidad</th>
-                                <th className="p-3 w-[35%] border-r border-border-thin">Nombre y Caracterización de la Actividad</th>
-                                <th className="p-3 w-[10%] text-center border-r border-border-thin">Horas</th>
-                                <th className="p-3 w-[20%] border-r border-border-thin">Escenario / Entorno</th>
-                                <th className="p-3 w-[15%] border-r border-border-thin">Producto / Entregable</th>
-                                {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
+                            <tr className="bg-bg-deep text-text-dim text-xs uppercase tracking-wider font-bold border-b border-border-thin">
+                                <th className="p-3.5 sm:p-4 w-[15%] border-r border-border-thin">Unidad</th>
+                                <th className="p-3.5 sm:p-4 w-[35%] border-r border-border-thin">Nombre y Caracterización de la Actividad</th>
+                                <th className="p-3.5 sm:p-4 w-[10%] text-center border-r border-border-thin">Horas</th>
+                                <th className="p-3.5 sm:p-4 w-[20%] border-r border-border-thin">Escenario / Entorno</th>
+                                <th className="p-3.5 sm:p-4 w-[15%] border-r border-border-thin">Producto / Entregable</th>
+                                {!readOnly && <th className="p-3.5 sm:p-4 w-[5%] text-center">Acción</th>}
                             </tr>
                         </thead>
-                            <tbody className="divide-y divide-border-thin bg-surface">
-                                {practicas.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                        <td className="p-2.5 border-r border-border-thin">
-                                            <input
-                                                type="text"
-                                                value={item.unidad}
-                                                onChange={(e) => handleUpdatePractica(idx, 'unidad', e.target.value)}
-                                                disabled={readOnly}
-                                                placeholder="Ej. Unidad 1"
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-main outline-none focus:border-brand"
-                                            />
+                        <tbody className="divide-y divide-border-thin bg-surface">
+                            {practicas.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
+                                    <td className="p-3 border-r border-border-thin">
+                                        <input
+                                            type="text"
+                                            value={item.unidad}
+                                            onChange={(e) => handleUpdatePractica(idx, 'unidad', e.target.value)}
+                                            disabled={readOnly}
+                                            placeholder="Ej. Unidad 1"
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-text-main outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    <td className="p-3 border-r border-border-thin">
+                                        <textarea
+                                            value={item.nombre}
+                                            onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
+                                            disabled={readOnly}
+                                            rows={2}
+                                            placeholder="Nombre de la práctica y objetivo operativo..."
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg p-2.5 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3] resize-none"
+                                        />
+                                    </td>
+                                    <td className="p-3 border-r border-border-thin text-center">
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={item.horas}
+                                            onChange={(e) => handleUpdatePractica(idx, 'horas', Math.max(1, parseInt(e.target.value) || 1))}
+                                            disabled={readOnly}
+                                            className="w-20 mx-auto text-center bg-bg-deep border border-border-thin rounded-lg py-2 text-sm sm:text-base font-bold font-mono text-text-main outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    <td className="p-3 border-r border-border-thin">
+                                        <input
+                                            type="text"
+                                            value={item.escenario}
+                                            onChange={(e) => handleUpdatePractica(idx, 'escenario', e.target.value)}
+                                            disabled={readOnly}
+                                            placeholder="Laboratorio / Aula / Virtual"
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    <td className="p-3 border-r border-border-thin">
+                                        <input
+                                            type="text"
+                                            value={item.producto}
+                                            onChange={(e) => handleUpdatePractica(idx, 'producto', e.target.value)}
+                                            disabled={readOnly}
+                                            placeholder="Informe / Código / Maqueta"
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3]"
+                                        />
+                                    </td>
+                                    {!readOnly && (
+                                        <td className="p-3 text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemovePractica(idx)}
+                                                className="p-2 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
+                                                title="Eliminar práctica"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </td>
-                                        <td className="p-2.5 border-r border-border-thin">
-                                            <textarea
-                                                value={item.nombre}
-                                                onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
-                                                disabled={readOnly}
-                                                rows={2}
-                                                placeholder="Nombre de la práctica y objetivo operativo..."
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg p-2 text-xs text-text-main outline-none focus:border-brand resize-none"
-                                            />
-                                        </td>
-                                        <td className="p-2.5 border-r border-border-thin text-center">
-                                            <input
-                                                type="number"
-                                                min={1}
-                                                value={item.horas}
-                                                onChange={(e) => handleUpdatePractica(idx, 'horas', Math.max(1, parseInt(e.target.value) || 1))}
-                                                disabled={readOnly}
-                                                className="w-16 mx-auto text-center bg-bg-deep border border-border-thin rounded-lg py-1.5 text-xs font-bold text-text-main outline-none focus:border-brand"
-                                            />
-                                        </td>
-                                        <td className="p-2.5 border-r border-border-thin">
-                                            <input
-                                                type="text"
-                                                value={item.escenario}
-                                                onChange={(e) => handleUpdatePractica(idx, 'escenario', e.target.value)}
-                                                disabled={readOnly}
-                                                placeholder="Laboratorio / Aula / Virtual"
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main outline-none focus:border-brand"
-                                            />
-                                        </td>
-                                        <td className="p-2.5 border-r border-border-thin">
-                                            <input
-                                                type="text"
-                                                value={item.producto}
-                                                onChange={(e) => handleUpdatePractica(idx, 'producto', e.target.value)}
-                                                disabled={readOnly}
-                                                placeholder="Informe / Código / Maqueta"
-                                                className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main outline-none focus:border-brand"
-                                            />
-                                        </td>
-                                        {!readOnly && (
-                                            <td className="p-2.5 text-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemovePractica(idx)}
-                                                    className="p-1.5 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors"
-                                                    title="Eliminar práctica"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
         </div>
     );
 };

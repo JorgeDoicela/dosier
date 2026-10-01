@@ -96,15 +96,15 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
     };
 
     return (
-        <div className="w-full space-y-6 animate-fade-in font-sans">
+        <div className="w-full space-y-8 animate-fade-in font-sans">
             {/* POLÍTICAS Y CRITERIOS DE EVALUACIÓN */}
-            <div className="space-y-3">
-                <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+            <div className="space-y-3.5">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                     Criterios y Políticas de Evaluación Continua
                 </h4>
 
-                <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                    <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                         Describa las políticas pedagógicas: <strong className="text-text-main font-semibold">evaluación diagnóstica, formativa continua y sumativa, puntualidad, deshonestidad académica y mecanismos de retroalimentación oportuna</strong>.
                     </p>
@@ -123,55 +123,55 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
             </div>
 
             {/* MATRIZ OFICIAL DE CALIFICACIONES */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3.5 pt-2">
                 <div className="flex items-center justify-between">
-                    <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+                    <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                         Matriz Oficial de Calificaciones ({evaluaciones.length})
                     </h4>
                     {!readOnly && (
                         <button
                             type="button"
                             onClick={handleAddEvaluacion}
-                            className="px-3 py-1.5 bg-surface hover:bg-bg-deep border border-border-thin rounded-lg text-xs font-semibold text-text-main transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            className="px-3.5 sm:px-4 py-2 bg-surface hover:bg-bg-deep border border-border-thin rounded-xl text-xs sm:text-sm font-semibold text-text-main transition-colors flex items-center gap-2 cursor-pointer shadow-2xs"
                         >
-                            <Plus size={14} className="text-[#0070f3]" />
+                            <Plus size={16} className="text-[#0070f3]" />
                             <span>Añadir Componente</span>
                         </button>
                     )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
-                    <table className="w-full text-left border-collapse text-xs">
+                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
                         <thead>
-                            <tr className="bg-bg-deep text-text-dim text-[10px] uppercase tracking-wider font-bold border-b border-border-thin">
-                                <th className="p-3 w-[25%] border-r border-border-thin">Notas</th>
-                                <th className="p-3 w-[55%] border-r border-border-thin">TIPO DE EVALUACIÓN</th>
-                                <th className="p-3 w-[15%] text-center border-r border-border-thin">CALIFICACION</th>
-                                {!readOnly && <th className="p-3 w-[5%] text-center">Acción</th>}
+                            <tr className="bg-bg-deep text-text-dim text-xs uppercase tracking-wider font-bold border-b border-border-thin">
+                                <th className="p-3.5 sm:p-4 w-[25%] border-r border-border-thin">Notas</th>
+                                <th className="p-3.5 sm:p-4 w-[55%] border-r border-border-thin">TIPO DE EVALUACIÓN</th>
+                                <th className="p-3.5 sm:p-4 w-[15%] text-center border-r border-border-thin">CALIFICACIÓN</th>
+                                {!readOnly && <th className="p-3.5 sm:p-4 w-[5%] text-center">Acción</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-thin bg-surface">
                             {evaluaciones.map((item, idx) => (
                                 <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                    <td className="p-2.5 border-r border-border-thin font-semibold text-text-main">
+                                    <td className="p-3 border-r border-border-thin font-semibold text-text-main">
                                         <input
                                             type="text"
                                             value={item.nota}
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'nota', e.target.value)}
                                             disabled={readOnly}
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs font-bold text-text-main outline-none focus:border-[#0070f3]"
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm font-bold text-text-main outline-none focus:border-[#0070f3]"
                                         />
                                     </td>
-                                    <td className="p-2.5 border-r border-border-thin">
+                                    <td className="p-3 border-r border-border-thin">
                                         <input
                                             type="text"
                                             value={item.tipo}
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
                                             disabled={readOnly}
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1.5 text-xs text-text-main outline-none focus:border-[#0070f3]"
+                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3]"
                                         />
                                     </td>
-                                    <td className="p-2.5 border-r border-border-thin text-center font-bold text-[#0070f3]">
+                                    <td className="p-3 border-r border-border-thin text-center font-bold text-[#0070f3]">
                                         <input
                                             type="number"
                                             min={1}
@@ -179,19 +179,19 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                                             value={item.calificacion}
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'calificacion', Number(e.target.value) || 0)}
                                             disabled={readOnly}
-                                            className="w-20 mx-auto text-center font-black text-[#0070f3] bg-bg-deep border border-border-thin rounded-lg py-1.5 text-xs outline-none focus:border-[#0070f3]"
+                                            className="w-24 mx-auto text-center font-black font-mono text-[#0070f3] bg-bg-deep border border-border-thin rounded-lg py-2 text-sm sm:text-base outline-none focus:border-[#0070f3]"
                                         />
                                     </td>
                                     {!readOnly && (
-                                        <td className="p-2.5 text-center">
+                                        <td className="p-3 text-center">
                                             {evaluaciones.length > 1 && (
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveEvaluacion(idx)}
-                                                    className="p-1.5 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors"
+                                                    className="p-2 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
                                                     title="Eliminar fila"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             )}
                                         </td>

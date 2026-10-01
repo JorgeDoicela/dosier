@@ -75,13 +75,13 @@ export interface CoWorkHandle {
     updateSectionStatus: (instanceUuid: string, sectionName: string, status: string) => Promise<void>;
     postComment: (instanceUuid: string, content: string, parentId?: number) => Promise<void>;
 
-    // Real-Time Subscriptions
-    onSectionActivity: (handler: (data: any) => void) => void;
-    onSectionStatusUpdated: (handler: (data: any) => void) => void;
-    onNewCommentReceived: (handler: (data: any) => void) => void;
-    onCommentUpdated: (handler: (data: any) => void) => void;
-    onCommentDeleted: (handler: (data: any) => void) => void;
-    onCommentsReadUpdated?: (handler: (data: any) => void) => void;
+    // Real-Time Subscriptions (retornan función de desuscripción)
+    onSectionActivity: (handler: (data: any) => void) => (() => void) | void;
+    onSectionStatusUpdated: (handler: (data: any) => void) => (() => void) | void;
+    onNewCommentReceived: (handler: (data: any) => void) => (() => void) | void;
+    onCommentUpdated: (handler: (data: any) => void) => (() => void) | void;
+    onCommentDeleted: (handler: (data: any) => void) => (() => void) | void;
+    onCommentsReadUpdated?: (handler: (data: any) => void) => (() => void) | void;
 }
 
 /**

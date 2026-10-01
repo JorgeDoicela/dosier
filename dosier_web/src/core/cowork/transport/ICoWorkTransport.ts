@@ -109,10 +109,11 @@ export interface ICoWorkTransport {
     /** Publica un comentario en el hilo de discusión del documento */
     postComment(instanceUuid: string, userUuid: string, userName: string, content: string, parentId?: number): Promise<void>;
 
-    /** Handlers para eventos de coordinación en tiempo real */
-    onSectionActivity(handler: (data: any) => void): void;
-    onSectionStatusUpdated(handler: (data: any) => void): void;
-    onNewCommentReceived(handler: (data: any) => void): void;
-    onCommentUpdated(handler: (data: any) => void): void;
-    onCommentDeleted(handler: (data: any) => void): void;
+    /** Handlers para eventos de coordinación en tiempo real (retornan función de desuscripción) */
+    onSectionActivity(handler: (data: any) => void): (() => void) | void;
+    onSectionStatusUpdated(handler: (data: any) => void): (() => void) | void;
+    onNewCommentReceived(handler: (data: any) => void): (() => void) | void;
+    onCommentUpdated(handler: (data: any) => void): (() => void) | void;
+    onCommentDeleted(handler: (data: any) => void): (() => void) | void;
+    onCommentsReadUpdated?(handler: (data: any) => void): (() => void) | void;
 }

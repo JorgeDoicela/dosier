@@ -318,7 +318,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
 
             if (type === 'select') {
                 return (
-                    <div key={name} className="p-5 bg-bg-deep border border-border-thin rounded-2xl flex flex-col gap-1.5 relative group hover:border-text-main/10 transition-all">
+                    <div key={name} className="p-5 bg-bg-deep border border-border-thin rounded-2xl flex flex-col gap-2 relative group hover:border-text-main/10 transition-all">
                         <CoWorkField
                             name={name}
                             cowork={cowork}
@@ -326,7 +326,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                             label={`${label} • Colaborativo`}
                             placeholder={placeholder}
                             onValueChange={(val) => onUpdate(name, val)}
-                            className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-2.5 text-xs text-text-main outline-none"
+                            className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-sm text-text-main outline-none"
                         >
                             <option value="">Seleccione opción...</option>
                             {options.map(opt => (
@@ -338,7 +338,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
             }
 
             return (
-                <div key={name} className="p-5 bg-bg-deep border border-border-thin rounded-2xl flex flex-col gap-1.5 relative group hover:border-text-main/10 transition-all">
+                <div key={name} className="p-5 bg-bg-deep border border-border-thin rounded-2xl flex flex-col gap-2 relative group hover:border-text-main/10 transition-all">
                     <CoWorkField
                         name={name}
                         cowork={cowork}
@@ -349,7 +349,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                             const parsed = type === 'number' ? (Number(val) || 0) : val;
                             onUpdate(name, parsed);
                         }}
-                        className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-2.5 text-xs text-text-main"
+                        className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-sm text-text-main"
                     />
                 </div>
             );
@@ -366,7 +366,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
             id: name,
             disabled: isDisabled,
             placeholder,
-            className: "w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-2.5 text-xs text-text-main outline-none focus:ring-2 focus:ring-text-main/20 transition-all"
+            className: "w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-sm text-text-main outline-none focus:ring-2 focus:ring-text-main/20 transition-all"
         };
 
         return (

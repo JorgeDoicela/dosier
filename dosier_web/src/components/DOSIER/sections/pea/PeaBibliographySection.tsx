@@ -17,15 +17,15 @@ export const PeaBibliographySection: React.FC<PeaBibliographySectionProps> = ({
     readOnly = false
 }) => {
     return (
-        <div className="w-full space-y-6 animate-fade-in font-sans">
+        <div className="w-full space-y-8 animate-fade-in font-sans">
             {/* BIBLIOGRAFÍA BÁSICA */}
-            <div className="space-y-3">
-                <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+            <div className="space-y-3.5">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                     Bibliografía Básica Institucional (Textos Guía)
                 </h4>
 
-                <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                    <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                         Ingrese los libros de texto base y manuales técnicos de la asignatura vigentes (últimos 5 años preferentemente) citados bajo norma <strong className="text-text-main font-semibold">APA 7.ª edición</strong>.
                     </p>
@@ -44,13 +44,13 @@ export const PeaBibliographySection: React.FC<PeaBibliographySectionProps> = ({
             </div>
 
             {/* BIBLIOGRAFÍA DE CONSULTA */}
-            <div className="space-y-3 pt-2">
-                <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+            <div className="space-y-3.5 pt-2">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                     Bibliografía de Consulta y Recursos Digitales Especializados
                 </h4>
 
-                <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                    <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                         Artículos de revistas indexadas (Scopus, SciELO, Redalyc, Latindex), documentación técnica oficial, repositorios institucionales y recursos educativos abiertos.
                     </p>

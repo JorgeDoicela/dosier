@@ -633,7 +633,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                 )}
             </div>
             {type === 'checkbox' && label && (
-                <label className="text-[10px] font-bold text-text-main uppercase tracking-tight cursor-pointer">
+                <label className="text-xs sm:text-sm font-medium text-text-main cursor-pointer select-none">
                     {label}
                 </label>
             )}

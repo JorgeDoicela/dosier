@@ -4,6 +4,8 @@ import type { CoWorkHandle } from '../../../../core/cowork/types';
 import { useAuth } from '../../../../api/AuthContext';
 import api from '../../../../api/axios_config';
 
+import { formatDynamicSectionLabel } from '../../../../utils/sectionNumbering';
+
 export interface BuilderSection {
     id: string;
     label: string;
@@ -48,8 +50,11 @@ export const useBuilderLayout = ({
     const sectionParam = queryParams.get('section');
     const defaultTab = (sections && sections.length > 0 && !readOnly) ? sections[0].id : 'output';
     const activeTab = (readOnly && (sections.length === 0 || !sections.some(s => s.id === sectionParam))) ? 'output' : (sectionParam || defaultTab);
-    const activeSection = sections.find(s => s.id === activeTab);
-    const activeSectionLabel = activeSection?.label || (activeTab === 'output' ? 'Vista Previa & Firmas' : 'General');
+    const activeSectionIndex = sections.findIndex(s => s.id === activeTab);
+    const activeSection = activeSectionIndex >= 0 ? sections[activeSectionIndex] : null;
+    const activeSectionLabel = activeSection
+        ? formatDynamicSectionLabel(activeSection.label, activeSectionIndex)
+        : (activeTab === 'output' ? 'Vista Previa & Firmas' : 'General');
     const isSectionBlocked = formData?.BlockedSections?.[activeTab] === true;
     const isDirectorOrAdmin = !!canSign || !!isAdmin;
 
@@ -99,8 +104,9 @@ export const useBuilderLayout = ({
                 .catch(() => {});
         }
 
+        let cleanup: (() => void) | void;
         if (onSectionStatusUpdated) {
-            onSectionStatusUpdated((data: any) => {
+            cleanup = onSectionStatusUpdated((data: any) => {
                 if (data?.sectionName && data?.status) {
                     setSectionStatuses(prev => ({
                         ...prev,
@@ -109,6 +115,10 @@ export const useBuilderLayout = ({
                 }
             });
         }
+
+        return () => {
+            if (typeof cleanup === 'function') cleanup();
+        };
     }, [docId, onSectionStatusUpdated]);
 
     const setSectionStatus = useCallback((sectionName: string, status: string) => {
@@ -121,7 +131,12 @@ export const useBuilderLayout = ({
     // ── Dimensiones y Estado de Sidebars ──
     const [leftSidebarWidth, setLeftSidebarWidth] = useState<number>(() => {
         const saved = localStorage.getItem('left_sidebar_width');
-        return saved ? parseInt(saved, 10) : 320;
+        const parsed = saved ? parseInt(saved, 10) : 210;
+        const normalized = (parsed > 210 || parsed < 160) ? 210 : parsed;
+        if (saved !== String(normalized)) {
+            localStorage.setItem('left_sidebar_width', String(normalized));
+        }
+        return normalized;
     });
 
     const [rightSidebarWidth, setRightSidebarWidth] = useState<number>(() => {
@@ -147,10 +162,25 @@ export const useBuilderLayout = ({
     const isDraggingLeft = useRef(false);
     const isDraggingRight = useRef(false);
 
+    // Sincronización forzada a 210px (estándar esbelto DIITRA) al montar para evitar anchos residuales
+    useEffect(() => {
+        const saved = localStorage.getItem('left_sidebar_width');
+        const parsed = saved ? parseInt(saved, 10) : 210;
+        if (parsed > 210 || parsed < 160) {
+            setLeftSidebarWidth(210);
+            localStorage.setItem('left_sidebar_width', '210');
+            if (leftSidebarRef.current) {
+                leftSidebarRef.current.style.width = '210px';
+            }
+        } else if (leftSidebarRef.current && isLeftSidebarOpen) {
+            leftSidebarRef.current.style.width = `${parsed}px`;
+        }
+    }, [isLeftSidebarOpen]);
+
     const setIsLeftSidebarOpen = useCallback((open: boolean) => {
         localStorage.setItem('left_sidebar_open', String(open));
         if (open) {
-            const comfortableWidth = 260;
+            const comfortableWidth = 210;
             setLeftSidebarWidth(comfortableWidth);
             localStorage.setItem('left_sidebar_width', String(comfortableWidth));
             if (leftSidebarRef.current) {
@@ -211,7 +241,7 @@ export const useBuilderLayout = ({
                 : startWidth;
 
             const clicked = maxDelta <= 4;
-            const releasedInCollapseZone = maxDelta > 4 && currentWidth < 220;
+            const releasedInCollapseZone = maxDelta > 4 && currentWidth < 120;
             const shouldCollapse = clicked || releasedInCollapseZone;
 
             if (leftSidebarRef.current) {
@@ -221,7 +251,7 @@ export const useBuilderLayout = ({
             if (shouldCollapse) {
                 setIsLeftSidebarOpen(false);
             } else {
-                const finalWidth = Math.max(200, Math.min(500, currentWidth));
+                const finalWidth = Math.max(130, Math.min(500, currentWidth));
                 setLeftSidebarWidth(finalWidth);
                 localStorage.setItem('left_sidebar_width', String(finalWidth));
                 if (leftSidebarRef.current) {

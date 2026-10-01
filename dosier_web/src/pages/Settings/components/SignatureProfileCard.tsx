@@ -3,15 +3,22 @@ import { createPortal } from 'react-dom';
 import { X, PenLine, ShieldCheck, CheckCircle2, User, Building, Clock, AlertCircle } from 'lucide-react';
 import { useSignatureProfile } from './useSignatureProfile';
 import { useImageCropper } from './useImageCropper';
+import { useAuth } from '../../../api/AuthContext';
 import { AutoSignatureTab } from './AutoSignatureTab';
 import { UploadSignatureTab } from './UploadSignatureTab';
 import { DrawSignatureTab } from './DrawSignatureTab';
+import { DocumentStampPreview } from './DocumentStampPreview';
 import './SignatureProfileCard.css';
 
 export const SignatureProfileCard: React.FC = () => {
+    const { user } = useAuth();
     const sig = useSignatureProfile();
     const cropper = useImageCropper();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showLiveStamp, setShowLiveStamp] = useState(true);
+
+    const userName = user?.nombre_completo || sig.autoText || 'Docente Institucional';
+    const userCi = user?.id_referencia || '17XXXXXXXX';
 
     const handleSaveProfile = (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,9 +73,9 @@ export const SignatureProfileCard: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => sig.setIsEditing(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-bg-deep border border-border-thin hover:border-[#0070f3] text-xs font-semibold text-text-main transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface hover:bg-bg-deep border border-border-thin hover:border-[#0070f3] text-xs font-semibold text-text-main transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
                         >
-                            <PenLine size={13} className="text-[#0070f3]" />
+                            <PenLine size={14} className="text-[#0070f3]" />
                             <span>Editar Perfil de Firma</span>
                         </button>
                     )}
@@ -104,7 +111,7 @@ export const SignatureProfileCard: React.FC = () => {
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); sig.setIsEditing(true); }}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
                         >
                             <PenLine size={14} />
                             <span>Configurar Firma Ahora</span>
@@ -112,63 +119,84 @@ export const SignatureProfileCard: React.FC = () => {
                     </div>
                 )}
 
-                {/* ── VISTA DE DETALLE (READ-ONLY) ─────────────────────────── */}
+                {/* ── VISTA DE DETALLE (READ-ONLY) CON PREVISUALIZACIÓN DUAL ─────────────────────────── */}
                 {!sig.isEditing && sig.profile?.esConfigurado && (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                        {/* Ficha Clave-Valor */}
-                        <div className="lg:col-span-7 space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="p-3.5 rounded-xl bg-bg-deep border border-border-thin space-y-1">
-                                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1.5">
-                                        <User size={12} className="text-[#0070f3]" />
-                                        Cargo Institucional
-                                    </span>
-                                    <span className="text-xs font-bold text-text-main block">
-                                        {sig.profile?.cargo || 'Docente Titular'}
-                                    </span>
-                                </div>
+                    <div className="space-y-6">
+                        {/* Fichas Clave-Valor */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="p-4 sm:p-5 rounded-xl bg-bg-deep border border-border-thin space-y-1.5">
+                                <span className="text-xs font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+                                    <User size={15} className="text-[#0070f3]" />
+                                    Cargo Institucional
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-text-main block">
+                                    {sig.profile?.cargo || 'Docente Titular'}
+                                </span>
+                            </div>
 
-                                <div className="p-3.5 rounded-xl bg-bg-deep border border-border-thin space-y-1">
-                                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1.5">
-                                        <Building size={12} className="text-[#0070f3]" />
-                                        Departamento / Unidad
-                                    </span>
-                                    <span className="text-xs font-bold text-text-main block">
-                                        {sig.profile?.departamento || 'ISTPET'}
-                                    </span>
+                            <div className="p-4 sm:p-5 rounded-xl bg-bg-deep border border-border-thin space-y-1.5">
+                                <span className="text-xs font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
+                                    <Building size={15} className="text-[#0070f3]" />
+                                    Departamento / Área
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-text-main block truncate" title={sig.profile?.departamento || 'ISTPET'}>
+                                    {sig.profile?.departamento || 'ISTPET'}
+                                </span>
+                            </div>
+
+                            <div className="p-4 sm:p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">
+                                <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
+                                <div>
+                                    <span className="font-bold text-sm block">Perfil Activo</span>
+                                    <span className="text-xs opacity-80">Listo para firmar PEA</span>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
-                                    <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />
-                                    <span className="font-semibold">Perfil activo y listo para firmar</span>
+                            <div className="p-4 sm:p-5 rounded-xl bg-bg-deep border border-border-thin flex items-center gap-3 text-xs sm:text-sm text-text-dim">
+                                <Clock size={18} className="text-text-dim shrink-0" />
+                                <div>
+                                    <span className="text-xs font-bold uppercase tracking-wider block">Última Actualización</span>
+                                    <span className="text-sm font-semibold text-text-main">
+                                        {sig.profile?.actualizadoEn ? new Date(sig.profile.actualizadoEn).toLocaleDateString() : 'Vigente'}
+                                    </span>
                                 </div>
-
-                                {sig.profile?.actualizadoEn && (
-                                    <div className="p-3.5 rounded-xl bg-bg-deep border border-border-thin flex items-center gap-2 text-xs text-text-dim">
-                                        <Clock size={14} className="text-text-dim shrink-0" />
-                                        <span>Actualizado el {new Date(sig.profile.actualizadoEn).toLocaleDateString()}</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
-                        {/* Vista Previa del Trazo Oficial */}
-                        <div className="lg:col-span-5 space-y-1.5">
-                            <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider block">
-                                Sello y Trazo Digital Registrado
+                        {/* Vista Previa Dual (Trazo Digital + Sello Institucional) */}
+                        <div className="space-y-3.5 pt-2">
+                            <span className="text-sm sm:text-base font-bold uppercase tracking-wide text-text-main block">
+                                Instrumentos Digitales Registrados
                             </span>
-                            <div className="p-4 rounded-xl border border-border-thin bg-surface flex items-center justify-center min-h-[120px] shadow-2xs overflow-hidden">
-                                {sig.profile?.firmaImagenB64 ? (
-                                    <img
-                                        src={sig.profile.firmaImagenB64}
-                                        alt="Firma registrada"
-                                        className="max-h-24 w-auto object-contain dark:invert transition-all"
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                                {/* Trazo Digital */}
+                                <div className="lg:col-span-4 flex flex-col gap-2">
+                                    <span className="text-xs sm:text-sm font-semibold text-text-dim">Trazo Digital Manuscrito</span>
+                                    <div className="p-5 rounded-xl border border-border-thin bg-surface flex items-center justify-center min-h-[160px] h-full shadow-2xs overflow-hidden">
+                                        {sig.profile?.firmaImagenB64 ? (
+                                            <img
+                                                src={sig.profile.firmaImagenB64}
+                                                alt="Firma registrada"
+                                                className="max-h-28 w-auto object-contain dark:invert transition-all"
+                                            />
+                                        ) : (
+                                            <span className="text-xs sm:text-sm text-text-dim italic">No hay trazo registrado</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Sello Institucional Oficial */}
+                                <div className="lg:col-span-8 flex flex-col gap-2">
+                                    <span className="text-xs sm:text-sm font-semibold text-text-dim">Sello Institucional Oficial (Idéntico al PDF)</span>
+                                    <DocumentStampPreview
+                                        nombreFirmante={userName}
+                                        cargo={sig.profile?.cargo || 'Docente'}
+                                        departamento={sig.profile?.departamento || 'Coordinación Académica'}
+                                        cedula={userCi}
+                                        firmaImagenB64={sig.profile?.firmaImagenB64}
+                                        firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
                                     />
-                                ) : (
-                                    <span className="text-xs text-text-dim italic">No hay trazo registrado</span>
-                                )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -188,7 +216,7 @@ export const SignatureProfileCard: React.FC = () => {
                                     value={sig.cargo}
                                     onChange={(e) => sig.setCargo(e.target.value)}
                                     placeholder="Ej. Docente Titular"
-                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs font-semibold text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
+                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-xs sm:text-sm font-semibold text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -201,7 +229,7 @@ export const SignatureProfileCard: React.FC = () => {
                                     value={sig.departamento}
                                     onChange={(e) => sig.setDepartamento(e.target.value)}
                                     placeholder="Ej. Tecnología Superior en Desarrollo de Software"
-                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
+                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
                                 />
                             </div>
                         </div>
@@ -218,7 +246,7 @@ export const SignatureProfileCard: React.FC = () => {
                                             key={mode}
                                             type="button"
                                             onClick={() => sig.selectMode(mode)}
-                                            className={`pb-2.5 border-b-2 font-semibold text-xs tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
+                                            className={`pb-2.5 border-b-2 font-semibold text-xs sm:text-sm tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
                                                 sig.activeMode === mode
                                                     ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400'
                                                     : 'border-transparent text-text-dim hover:text-text-main'
@@ -259,18 +287,47 @@ export const SignatureProfileCard: React.FC = () => {
                             )}
                         </div>
 
+                        {/* Previsualización en Tiempo Real del Sello Institucional */}
+                        <div className="border-t border-border-thin pt-5 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck size={16} className="text-[#0070f3]" />
+                                    <span className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider">
+                                        Previsualización del Sello Institucional (En Tiempo Real)
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLiveStamp(!showLiveStamp)}
+                                    className="text-xs text-text-dim hover:text-text-main font-semibold transition-colors cursor-pointer"
+                                >
+                                    {showLiveStamp ? 'Ocultar Previsualización' : 'Mostrar Previsualización'}
+                                </button>
+                            </div>
+
+                            {showLiveStamp && (
+                                <DocumentStampPreview
+                                    nombreFirmante={sig.autoText || userName}
+                                    cargo={sig.cargo.trim() || 'Docente Titular'}
+                                    departamento={sig.departamento.trim() || 'Coordinación Académica'}
+                                    cedula={userCi}
+                                    firmaImagenB64={sig.firmaImagenB64}
+                                />
+                            )}
+                        </div>
+
                         <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-thin">
                             <button
                                 type="button"
                                 onClick={sig.cancelEdit}
-                                className="px-4 py-2 rounded-xl border border-border-thin hover:bg-bg-deep text-xs font-semibold text-text-dim hover:text-text-main transition-all cursor-pointer shadow-2xs"
+                                className="px-4 py-2.5 rounded-xl border border-border-thin hover:bg-bg-deep text-xs sm:text-sm font-semibold text-text-dim hover:text-text-main transition-all cursor-pointer shadow-2xs"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
                                 disabled={sig.saving || !sig.firmaImagenB64}
-                                className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl font-semibold text-xs transition-all disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="px-5 py-2.5 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl font-semibold text-xs sm:text-sm transition-all disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
                                 {sig.saving ? 'Guardando...' : 'Guardar y Activar Firma'}
                             </button>
@@ -285,66 +342,94 @@ export const SignatureProfileCard: React.FC = () => {
                     ))}
                 </div>
 
-                {/* ── MODAL DE CONFIRMACIÓN ─────────────────────────────────── */}
+                {/* ── MODAL DRAWER DE CONFIRMACIÓN CON VISTA DE SELLO COMPLETO ─────────────────────────────────── */}
                 {showConfirmModal && createPortal(
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-                        <div className="bg-surface border border-border-thin rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-scale-in">
+                    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-fade-in">
+                        <div
+                            className="fixed inset-0"
+                            onClick={() => setShowConfirmModal(false)}
+                            aria-hidden="true"
+                        />
+
+                        <div className="relative w-full max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800 flex flex-col z-10 animate-slide-left shadow-2xl">
                             {/* Cabecera */}
-                            <div className="flex items-center justify-between p-5 border-b border-border-thin bg-surface">
-                                <div className="flex items-center gap-2">
-                                    <ShieldCheck size={18} className="text-[#0070f3]" />
-                                    <h3 className="font-bold text-sm text-text-main uppercase tracking-tight">
-                                        Confirmar Firma Digital
-                                    </h3>
+                            <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                                <div className="flex items-center gap-3">
+                                    <span className="px-2.5 py-1 bg-surface text-text-dim border border-border-thin text-[10px] font-mono uppercase font-bold rounded-md">
+                                        FIRMA-DIGITAL
+                                    </span>
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#0070f3]">
+                                        <span className="w-2 h-2 rounded-full bg-[#0070f3] animate-pulse" />
+                                        <span>Verificación de Sello</span>
+                                    </div>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="p-1 rounded-lg text-text-dim hover:text-text-main hover:bg-bg-deep transition-colors cursor-pointer"
+                                    className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
                                 >
                                     <X size={18} />
                                 </button>
                             </div>
 
-                            {/* Contenido */}
-                            <div className="p-6 space-y-4 text-left">
-                                <p className="text-xs text-text-dim leading-relaxed">
-                                    Esta información se incrustará de manera oficial al estampar su firma en los documentos. ¿Desea guardar y activar su perfil con los siguientes datos?
-                                </p>
+                            {/* Contenido con Bento Cards */}
+                            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 bg-white dark:bg-zinc-950 text-left">
+                                <div className="space-y-2">
+                                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-main leading-tight font-sans">
+                                        Confirmar Firma y Sello Institucional
+                                    </h2>
+                                    <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-medium">
+                                        A continuación se presenta cómo quedará estampado su sello oficial en los Programas de Estudio de la Asignatura (PEA) y actas del ISTPET. Verifique los datos antes de activar.
+                                    </p>
+                                </div>
 
-                                <div className="space-y-2.5 p-4 rounded-xl bg-bg-deep border border-border-thin text-xs">
-                                    <div className="flex justify-between items-center py-1 border-b border-border-thin">
-                                        <span className="text-text-dim">Cargo:</span>
-                                        <span className="font-bold text-text-main">{sig.cargo.trim()}</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="p-4 sm:p-5 rounded-xl border border-border-thin bg-bg-deep space-y-1.5">
+                                        <div className="text-xs font-bold text-text-dim uppercase tracking-wider">
+                                            Cargo Institucional
+                                        </div>
+                                        <div className="text-base sm:text-lg font-bold text-text-main font-sans">
+                                            {sig.cargo.trim()}
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center py-1 border-b border-border-thin">
-                                        <span className="text-text-dim">Departamento:</span>
-                                        <span className="font-bold text-text-main">{sig.departamento.trim()}</span>
-                                    </div>
-                                    <div className="pt-2">
-                                        <span className="text-text-dim block mb-1.5 text-[10px] uppercase font-bold tracking-wider">
-                                            Trazo Oficial:
-                                        </span>
-                                        <div className="p-3 bg-surface border border-border-thin rounded-lg flex items-center justify-center">
-                                            <img src={sig.firmaImagenB64} alt="Firma a guardar" className="max-h-20 object-contain dark:invert" />
+                                    <div className="p-4 sm:p-5 rounded-xl border border-border-thin bg-bg-deep space-y-1.5">
+                                        <div className="text-xs font-bold text-text-dim uppercase tracking-wider">
+                                            Departamento / Unidad
+                                        </div>
+                                        <div className="text-base sm:text-lg font-bold text-text-main font-sans truncate" title={sig.departamento.trim()}>
+                                            {sig.departamento.trim()}
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Previsualización del Sello Institucional */}
+                                <div className="space-y-3">
+                                    <div className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider">
+                                        Sello Institucional Oficial (Vista Previa en Vivo)
+                                    </div>
+                                    <DocumentStampPreview
+                                        nombreFirmante={sig.autoText || userName}
+                                        cargo={sig.cargo.trim()}
+                                        departamento={sig.departamento.trim()}
+                                        cedula={userCi}
+                                        firmaImagenB64={sig.firmaImagenB64}
+                                    />
+                                </div>
                             </div>
 
-                            {/* Pie de página */}
-                            <div className="p-4 bg-bg-deep/50 border-t border-border-thin flex justify-end gap-3">
+                            {/* Pie de página con botones */}
+                            <div className="p-6 sm:p-8 border-t border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2 rounded-xl border border-border-thin bg-surface hover:bg-bg-deep text-xs font-semibold text-text-dim transition-colors cursor-pointer shadow-2xs"
+                                    className="flex-1 px-5 py-3 rounded-xl border border-border-thin bg-surface hover:bg-bg-deep text-xs sm:text-sm font-semibold text-text-dim hover:text-text-main transition-colors cursor-pointer shadow-2xs"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleConfirmSave}
-                                    className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+                                    className="flex-1 px-5 py-3 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
                                 >
                                     Confirmar y Activar
                                 </button>
@@ -357,4 +442,3 @@ export const SignatureProfileCard: React.FC = () => {
         </div>
     );
 };
-

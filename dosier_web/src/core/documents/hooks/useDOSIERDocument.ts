@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as Y from 'yjs';
 import { coworkLog } from '../../cowork/utils/log';
 
@@ -74,6 +74,12 @@ export function useDOSIERDocument<T extends Record<string, any>>(
     const [localChangeCount, setLocalChangeCount] = useState(0);
     const [remoteChangeCount, setRemoteChangeCount] = useState(0);
 
+    const initialDataRef = useRef(initialData);
+    initialDataRef.current = initialData;
+
+    const optionsRef = useRef(options);
+    optionsRef.current = options;
+
     const [formData, setFormData] = useState<T>(() => {
         const enriched: any = { ...initialData };
         options.lists?.forEach(listName => {
@@ -98,20 +104,21 @@ export function useDOSIERDocument<T extends Record<string, any>>(
 
     const updateField = useCallback((name: string, value: any, meta?: { source?: 'local' | 'remote' | 'system' }) => {
         const source = meta?.source ?? 'local';
+        const currentOptions = optionsRef.current;
 
         setFormData(prev => {
             const resolvedValue = typeof value === 'function' ? value(prev[name]) : value;
             if (isEqualValue(prev[name], resolvedValue)) return prev;
 
-            const isList = options.lists?.includes(name) || name.startsWith('MultiSec_') || (ydoc && ydoc.share.get(name) instanceof Y.Array);
+            const isList = currentOptions.lists?.includes(name) || name.startsWith('MultiSec_') || (ydoc && ydoc.share.get(name) instanceof Y.Array);
 
-            const isRichText = options.richTexts?.some(rt => rt.toLowerCase() === name.toLowerCase()) || /^field_\d+/i.test(name) || name.endsWith('Izquierda') || name.endsWith('Derecha');
+            const isRichText = currentOptions.richTexts?.some(rt => rt.toLowerCase() === name.toLowerCase()) || /^field_\d+/i.test(name) || name.endsWith('Izquierda') || name.endsWith('Derecha');
 
             if (source !== 'remote' &&
                 ydoc &&
                 !isList &&
                 !isRichText &&
-                !options.nonCollaborative?.includes(name) &&
+                !currentOptions.nonCollaborative?.includes(name) &&
                 name.toLowerCase() !== 'uuid' &&
                 name.toLowerCase() !== 'entityuuid') {
                 // Evitar conflicto de constructor en Yjs: Si la clave ya está registrada como un XmlFragment o Array,
@@ -140,8 +147,7 @@ export function useDOSIERDocument<T extends Record<string, any>>(
         if (source !== 'remote' && source !== 'system') {
             setLocalChangeCount(c => c + 1);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ydoc, options.lists, options.richTexts, options.nonCollaborative]);
+    }, [ydoc]);
 
     const ensureYArray = (listName: string): Y.Array<any> | null => {
         if (!ydoc || !listName || listName.includes('[') || listName.includes('.')) return null;
@@ -242,27 +248,34 @@ export function useDOSIERDocument<T extends Record<string, any>>(
         setLocalChangeCount(c => c + 1);
     }, [ydoc]);
 
+    const listsKey = (options.lists || []).join(',');
+    const richTextsKey = (options.richTexts || []).join(',');
+    const nonCollabKey = (options.nonCollaborative || []).join(',');
+    const isHistoryLoaded = !!options.isHistoryLoaded;
+
     useEffect(() => {
         if (!ydoc) return;
 
         const cleanups: (() => void)[] = [];
+        const currentInitialData = initialDataRef.current;
+        const currentOptions = optionsRef.current;
 
         // Aseguramos observar BlockedSections para sincronizar el bloqueo de secciones en tiempo real.
-        const keysToObserve = new Set(Object.keys(initialData));
+        const keysToObserve = new Set(Object.keys(currentInitialData));
         keysToObserve.add('BlockedSections');
 
         const isListNameKey = (k: string) => {
             if (!k || k.includes('[') || k.includes('.')) return false;
-            if (options.lists?.includes(k)) return true;
+            if (currentOptions.lists?.includes(k)) return true;
             if (k.startsWith('MultiSec_')) return true;
             const shared = ydoc.share.get(k);
             if (shared instanceof Y.Array) return true;
             return false;
         };
 
-        const listsToObserve = new Set<string>(options.lists || []);
+        const listsToObserve = new Set<string>(currentOptions.lists || []);
 
-        Object.keys(initialData).forEach(k => {
+        Object.keys(currentInitialData).forEach(k => {
             if (isListNameKey(k)) {
                 listsToObserve.add(k);
             }
@@ -405,8 +418,8 @@ export function useDOSIERDocument<T extends Record<string, any>>(
         listsToObserve.forEach(listName => {
             const yarray = ydoc.getArray(listName);
             const currentArray = yarray.toArray() as any[];
-            const dbInvestigadores = initialData.investigadores || initialData.Investigadores;
-            if (listName === 'Investigadores' && options.isHistoryLoaded && Array.isArray(dbInvestigadores)) {
+            const dbInvestigadores = currentInitialData.investigadores || currentInitialData.Investigadores;
+            if (listName === 'Investigadores' && isHistoryLoaded && Array.isArray(dbInvestigadores)) {
                 const targetArray = dbInvestigadores.map((dbInv: any, idx: number) => {
                     const dbCedula = dbInv.Cedula || dbInv.cedula;
                     const yjsInv = currentArray.find((yInv: any) => {
@@ -497,8 +510,8 @@ export function useDOSIERDocument<T extends Record<string, any>>(
                     if (isEqualValue(prev[listName], uniqueEnriched)) return prev;
                     return { ...prev, [listName]: uniqueEnriched };
                 });
-            } else if (options.isHistoryLoaded && Array.isArray(initialData[listName]) && initialData[listName].length > 0) {
-                const enriched = initialData[listName].map((item: any, idx: number) => {
+            } else if (isHistoryLoaded && Array.isArray(currentInitialData[listName]) && currentInitialData[listName].length > 0) {
+                const enriched = currentInitialData[listName].map((item: any, idx: number) => {
                     if (item && typeof item === 'object') {
                         const newItem = { ...item };
                         if (!newItem.id) {
@@ -520,7 +533,7 @@ export function useDOSIERDocument<T extends Record<string, any>>(
 
         return () => cleanups.forEach(c => c());
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ydoc, initialData, options.lists, options.richTexts, options.nonCollaborative, options.isHistoryLoaded]);
+    }, [ydoc, listsKey, richTextsKey, nonCollabKey, isHistoryLoaded]);
 
     // Sincronizar initialData en formData cuando initialData cambie (ej: al terminar la carga de la API)
     useEffect(() => {

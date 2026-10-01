@@ -156,6 +156,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                     sections={sections}
                                     activeTab={layout.activeTab}
                                     formData={formData}
+                                    sectionStatuses={layout.sectionStatuses}
                                     isLeftSidebarOpen={layout.isLeftSidebarOpen}
                                     leftSidebarWidth={layout.leftSidebarWidth}
                                     showMobileSections={layout.showMobileSections}
@@ -177,7 +178,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 <div className="flex-1 bg-bg-deep overflow-hidden flex">
                                     {layout.activeTab !== 'output' ? (
                                         <div className="flex-1 pt-4 pb-8 px-3 sm:pt-6 sm:pb-12 sm:px-6 md:pt-8 md:pb-16 md:px-12 overflow-y-auto custom-scrollbar">
-                                            <div className="w-full mx-auto transition-all duration-300 max-w-[98%] sm:max-w-[94%]">
+                                            <div className="w-full mx-auto max-w-[98%] sm:max-w-[94%] transition-all duration-300">
                                                 <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                                     <div>
                                                         <h3 className="text-lg sm:text-2xl font-black text-text-main tracking-tighter uppercase">{layout.activeSectionLabel}</h3>

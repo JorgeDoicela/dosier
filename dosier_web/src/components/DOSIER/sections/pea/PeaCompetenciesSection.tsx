@@ -17,15 +17,15 @@ export const PeaCompetenciesSection: React.FC<PeaCompetenciesSectionProps> = ({
     readOnly = false
 }) => {
     return (
-        <div className="w-full space-y-6 animate-fade-in font-sans">
+        <div className="w-full space-y-8 animate-fade-in font-sans">
             {/* d) RESULTADOS DE APRENDIZAJE DE LA CARRERA */}
-            <div className="space-y-3">
-                <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+            <div className="space-y-3.5">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                     d) Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta
                 </h4>
 
-                <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                    <Info size={16} className="text-[#0070f3] shrink-0 mt-0.5" />
+                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                         Especifique los resultados de aprendizaje del <strong className="text-text-main font-semibold">perfil de egreso</strong> de la carrera técnica/tecnológica a los cuales tributa directamente la presente asignatura.
                     </p>
@@ -44,13 +44,13 @@ export const PeaCompetenciesSection: React.FC<PeaCompetenciesSectionProps> = ({
             </div>
 
             {/* e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA */}
-            <div className="space-y-3 pt-2">
-                <h4 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+            <div className="space-y-3.5 pt-2">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                     e) Resultados de Aprendizaje de la Asignatura (RDA Específicos)
                 </h4>
 
-                <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs text-text-dim items-start">
-                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
+                    <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                         Redacte los <strong className="text-text-main font-semibold">resultados de aprendizaje específicos (RDA)</strong> observables y medibles que el estudiante demostrará al culminar la asignatura (mínimo uno por unidad temática).
                     </p>
