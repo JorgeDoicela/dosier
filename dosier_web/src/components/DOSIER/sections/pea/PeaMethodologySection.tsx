@@ -24,12 +24,9 @@ export const PeaMethodologySection: React.FC<PeaMethodologySectionProps> = ({
                     Estrategias Metodológicas de Enseñanza Activa
                 </h4>
 
-                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                    <p className="leading-relaxed">
-                        Detalle los métodos didácticos a emplear según el Modelo Educativo del ISTPET: <strong className="text-text-main font-semibold">Aprendizaje Basado en Problemas (ABP), Aprendizaje Orientado a Proyectos (POL), aula invertida, estudios de caso y prácticas colaborativas</strong>.
-                    </p>
-                </div>
+                <p className="text-xs text-text-dim leading-relaxed">
+                    Detalle los métodos didácticos a emplear según el Modelo Educativo del ISTPET (ABP, aprendizaje orientado a proyectos, aula invertida, estudios de caso y prácticas colaborativas).
+                </p>
 
                 <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                     <CoWorkEditor
@@ -49,12 +46,9 @@ export const PeaMethodologySection: React.FC<PeaMethodologySectionProps> = ({
                     Recursos Didácticos e Informatización del Aprendizaje
                 </h4>
 
-                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                    <p className="leading-relaxed">
-                        Indique las herramientas tecnológicas institucionales: <strong className="text-text-main font-semibold">Entorno Virtual de Aprendizaje (EVA - ISTPET), simuladores, repositorios Git, software especializado y guías digitales de la asignatura</strong>.
-                    </p>
-                </div>
+                <p className="text-xs text-text-dim leading-relaxed">
+                    Indique las herramientas tecnológicas institucionales (EVA - ISTPET, simuladores, repositorios Git, software especializado y guías digitales).
+                </p>
 
                 <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                     <CoWorkEditor

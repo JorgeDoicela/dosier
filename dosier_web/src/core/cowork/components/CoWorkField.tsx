@@ -523,7 +523,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
     return (
         <div className={type === 'checkbox' ? "flex items-center gap-3" : "w-full"}>
             {type !== 'checkbox' && label && (
-                <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                     {label}
                 </label>
             )}
@@ -532,10 +532,10 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                     <div className="absolute right-2 -top-2.5 z-50 flex items-center gap-1">
                         {/* Usuario principal con nombre completo */}
                         <div 
-                            className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[7px] font-black text-white uppercase tracking-widest shadow-md select-none pointer-events-none transition-all duration-300 animate-fade-in"
+                            className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[7px] font-semibold text-white uppercase tracking-wider shadow-md select-none pointer-events-none transition-all duration-300 animate-fade-in"
                             style={{ backgroundColor: activeUsersEditing[0].color }}
                         >
-                            <div className="w-2.5 h-2.5 rounded-full bg-white text-bg-deep flex items-center justify-center text-[5.5px] font-black" style={{ color: activeUsersEditing[0].color }}>
+                            <div className="w-2.5 h-2.5 rounded-full bg-white text-bg-deep flex items-center justify-center text-[5.5px] font-bold" style={{ color: activeUsersEditing[0].color }}>
                                 {activeUsersEditing[0].initials}
                             </div>
                             <span>{activeUsersEditing[0].name.toUpperCase()}</span>
@@ -545,7 +545,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                         {activeUsersEditing.slice(1).map((usr) => (
                             <div 
                                 key={usr.clientId}
-                                className="w-4 h-4 rounded-full flex items-center justify-center text-[6px] font-black text-white shadow-md border border-surface select-none pointer-events-none transition-all duration-300 animate-fade-in -ml-1.5"
+                                className="w-4 h-4 rounded-full flex items-center justify-center text-[6px] font-bold text-white shadow-md border border-surface select-none pointer-events-none transition-all duration-300 animate-fade-in -ml-1.5"
                                 style={{ backgroundColor: usr.color }}
                                 title={usr.name.toUpperCase()}
                             >

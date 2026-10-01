@@ -119,7 +119,7 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                         <span className="text-xs font-semibold font-mono text-text-main block mt-0.5">{selectedProj.totalInvestigadores || 1} docente(s)</span>
                                     </div>
                                     <div>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Revisiones Técnicas</span>
+                                        <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider block">Revisiones Técnicas</span>
                                         <span className="text-xs font-bold font-mono text-success block mt-0.5">{selectedProj.informesAprobados || 0} / {selectedProj.totalInformes || 0} completadas</span>
                                     </div>
                                 </div>
@@ -150,10 +150,10 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                             />
                                         </svg>
                                         <div className="absolute flex flex-col items-center justify-center text-center">
-                                            <span className="text-xl font-black text-text-main font-mono leading-none">
+                                            <span className="text-xl font-bold text-text-main font-mono leading-none">
                                                 {pctAvance}%
                                             </span>
-                                            <span className="text-[7.5px] font-black text-text-dim uppercase tracking-wider mt-1">
+                                            <span className="text-[7.5px] font-bold text-text-dim uppercase tracking-wider mt-1">
                                                 AVANCE TÉCNICO
                                             </span>
                                         </div>
@@ -162,13 +162,13 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                     {/* Campo Curricular y Carrera */}
                                     <div className="space-y-3.5 flex-1 max-w-md w-full">
                                         <div className="space-y-0.5">
-                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Área / Campo Curricular</span>
+                                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider block">Área / Campo Curricular</span>
                                             <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.lineaInvestigacion || 'General'}>
                                                 {selectedProj.lineaInvestigacion || 'Campo de Formación Profesional'}
                                             </p>
                                         </div>
                                         <div className="space-y-0.5">
-                                            <span className="text-[8px] font-black text-text-dim uppercase tracking-wider block">Carrera / Unidad Académica</span>
+                                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider block">Carrera / Unidad Académica</span>
                                             <p className="text-xs text-text-main font-semibold leading-normal truncate" title={selectedProj.carrera || 'Institucional'}>
                                                 {selectedProj.carrera || 'Asignación Institucional'}
                                             </p>
@@ -178,7 +178,7 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
 
                                 {/* Fila Inferior de Informes y Entregables */}
                                 <div className="space-y-3 pt-4 border-t border-brand/20 select-none animate-fade-up">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-text-dim pl-1 font-mono block">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim pl-1 font-mono block">
                                         Fases y Estado del Instrumento Curricular
                                     </span>
                                     
@@ -186,7 +186,7 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
                                         
                                         {/* Columna 1: Borrador / Formulación */}
                                         <div className="border border-border-thin bg-surface rounded-xl p-3.5 space-y-2 min-h-[120px]">
-                                            <div className="flex items-center justify-between text-[9px] font-black text-text-dim uppercase pb-1.5 border-b border-border-thin">
+                                            <div className="flex items-center justify-between text-[9px] font-bold text-text-dim uppercase pb-1.5 border-b border-border-thin">
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
                                                     Formulación
@@ -203,7 +203,7 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
 
                                         {/* Columna 2: En Revisión Técnica */}
                                         <div className="border border-border-thin bg-surface rounded-xl p-3.5 space-y-2 min-h-[120px]">
-                                            <div className="flex items-center justify-between text-[9px] font-black text-warning uppercase pb-1.5 border-b border-border-thin">
+                                            <div className="flex items-center justify-between text-[9px] font-bold text-warning uppercase pb-1.5 border-b border-border-thin">
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                                                     Revisión Técnica
@@ -226,7 +226,7 @@ export const AnalyticsProjectsTab: React.FC<AnalyticsProjectsTabProps> = ({
 
                                         {/* Columna 3: Aprobado / Firmado */}
                                         <div className="border border-border-thin bg-surface rounded-xl p-3.5 space-y-2 min-h-[120px]">
-                                            <div className="flex items-center justify-between text-[9px] font-black text-success uppercase pb-1.5 border-b border-border-thin">
+                                            <div className="flex items-center justify-between text-[9px] font-bold text-success uppercase pb-1.5 border-b border-border-thin">
                                                 <span className="flex items-center gap-1.5">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-success" />
                                                     Legalizado / Firmado

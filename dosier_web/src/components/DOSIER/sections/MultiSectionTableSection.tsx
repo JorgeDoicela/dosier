@@ -131,7 +131,7 @@ export const MultiSectionTableSection: React.FC<MultiSectionTableSectionProps> =
                         <div className="flex items-center justify-between px-1">
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-primary" />
-                                <h4 className="text-xs font-black uppercase tracking-widest text-foreground">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
                                     {sec.title || `Sección ${secIdx + 1}`}
                                 </h4>
                             </div>
@@ -151,7 +151,7 @@ export const MultiSectionTableSection: React.FC<MultiSectionTableSectionProps> =
                                                 return (
                                                     <th
                                                         key={hIdx}
-                                                        className="p-3 text-[10px] font-black uppercase tracking-wider text-center border-r last:border-r-0 border-white/10"
+                                                        className="p-3 text-[10px] font-bold uppercase tracking-wider text-center border-r last:border-r-0 border-white/10"
                                                         style={{ width: sec.colWidths?.[hIdx] || 'auto' }}
                                                     >
                                                         {h}
@@ -159,7 +159,7 @@ export const MultiSectionTableSection: React.FC<MultiSectionTableSectionProps> =
                                                 );
                                             })}
                                             {!readOnly && (
-                                                <th className="p-3 text-[10px] font-black uppercase tracking-wider text-center w-12">
+                                                <th className="p-3 text-[10px] font-bold uppercase tracking-wider text-center w-12">
                                                     Acciones
                                                 </th>
                                             )}
@@ -273,7 +273,7 @@ export const MultiSectionTableSection: React.FC<MultiSectionTableSectionProps> =
                         <Calculator size={16} />
                         <span>Total Acumulado de la Tabla Multi-Sección:</span>
                     </div>
-                    <div className="text-base font-black font-mono text-primary px-4 py-1.5 rounded-lg bg-background border border-primary/30 shadow-sm">
+                    <div className="text-base font-bold font-mono text-primary px-4 py-1.5 rounded-lg bg-background border border-primary/30 shadow-sm">
                         ${grandTotal.toFixed(2)}
                     </div>
                 </div>

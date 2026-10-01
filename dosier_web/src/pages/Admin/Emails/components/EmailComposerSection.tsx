@@ -108,7 +108,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                 {/* Dual System Context Selection */}
                 <div className="space-y-4 p-4 bg-surface border border-border-thin rounded-xl shadow-sm">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-text-main uppercase tracking-widest">Vincular al sistema</span>
+                        <span className="text-[10px] font-bold text-text-main uppercase tracking-wider">Vincular al sistema</span>
                         <span className="text-[9px] font-mono text-brand font-semibold flex items-center gap-1">
                             <Sparkles size={10} /> Datos automáticos
                         </span>
@@ -234,7 +234,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                     <div className="space-y-4 p-4 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg">
                         <div className="flex items-center gap-2">
                             <Layers size={14} className="text-brand" />
-                            <h5 className="text-[10px] font-black text-text-main uppercase tracking-widest">
+                            <h5 className="text-[10px] font-bold text-text-main uppercase tracking-wider">
                                 Variables del Mensaje ({userFacingTokens.length})
                             </h5>
                         </div>
@@ -270,7 +270,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                 {/* Documentos del Sistema Checkboxes */}
                 <div className="space-y-3 p-4 bg-surface border border-border-thin rounded-xl shadow-sm">
                     <div className="flex items-center justify-between border-b border-border-thin pb-2">
-                        <span className="text-[10px] font-black text-text-main uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-text-main uppercase tracking-wider flex items-center gap-1.5">
                             <FileText size={12} className="text-brand" /> Documentos del Sistema (PDF Autogenerado)
                         </span>
                         <span className="text-[8px] font-mono text-brand font-semibold uppercase tracking-wider">Generación al Vuelo</span>
@@ -295,7 +295,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                     {/* Firma Electrónica (.p12) para adjuntos del sistema */}
                     <div className="mt-4 pt-3 border-t border-border-thin space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-black text-text-main uppercase tracking-widest flex items-center gap-1">
+                            <span className="text-[9px] font-bold text-text-main uppercase tracking-wider flex items-center gap-1">
                                 <Shield size={11} className="text-brand" /> Firma Electrónica (.p12)
                             </span>
                             <span className="text-[8px] text-text-dim uppercase tracking-wider">Opcional para Actas/Rúbricas</span>
@@ -309,7 +309,7 @@ export const EmailComposerSection: React.FC<EmailComposerSectionProps> = ({
                                         type="file"
                                         accept=".p12,.pfx"
                                         onChange={e => setSignatureFile(e.target.files?.[0] || null)}
-                                        className="w-full text-xs text-text-dim file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[8px] file:font-black file:uppercase file:tracking-widest file:bg-bg-deep file:text-text-main hover:file:opacity-85 file:cursor-pointer border border-border-thin rounded p-1.5 bg-bg-deep/20"
+                                        className="w-full text-xs text-text-dim file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[8px] file:font-bold file:uppercase file:tracking-wider file:bg-bg-deep file:text-text-main hover:file:opacity-85 file:cursor-pointer border border-border-thin rounded p-1.5 bg-bg-deep/20"
                                     />
                                     {signatureFile && (
                                         <span className="text-[8px] text-brand block mt-0.5 truncate">

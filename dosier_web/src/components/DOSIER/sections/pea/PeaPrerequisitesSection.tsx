@@ -65,13 +65,10 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
 
     return (
         <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
-            {/* Aviso Normativo */}
-            <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                    Especifique las asignaturas normadas de la malla curricular aprobada que condicionan la matrícula y cursado de la presente materia, conforme al Régimen Académico del ISTPET.
-                </p>
-            </div>
+            {/* Descripción Normativa */}
+            <p className="text-xs text-text-dim leading-relaxed">
+                Especifique las asignaturas normadas de la malla curricular aprobada que condicionan la matrícula y cursado de la presente materia, conforme al Régimen Académico del ISTPET.
+            </p>
 
             {/* Tabla de Prerrequisitos */}
             <div className="space-y-4">

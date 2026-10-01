@@ -448,32 +448,8 @@ export const MisAsignaturasPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Desglose de Horas Oficiales (RRA Art. 21) */}
-                                <div className="p-3 rounded-lg border border-zinc-100 dark:border-zinc-900 bg-zinc-50 dark:bg-zinc-900/50 grid grid-cols-4 gap-2 text-center text-xs">
-                                    <div>
-                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">CD</span>
-                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{materia.horas_docencia}h</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">APE</span>
-                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{materia.horas_practico_experimental}h</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">TA</span>
-                                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{materia.horas_autonomo}h</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">Total</span>
-                                        <span className="font-bold text-zinc-900 dark:text-zinc-100">{materia.horas_totales}h</span>
-                                    </div>
-                                </div>
-
                                 {/* Botón de Acción Principal */}
-                                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
-                                    <div className="text-[11px] text-zinc-400">
-                                        {tienePea && materia.version_pea ? `Versión ${materia.version_pea}.0` : 'Sin PEA registrado'}
-                                    </div>
-
+                                <div className="pt-2 flex items-center justify-end">
                                     {tienePea ? (
                                         <button
                                             type="button"

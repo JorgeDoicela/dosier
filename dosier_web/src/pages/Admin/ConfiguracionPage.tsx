@@ -34,7 +34,7 @@ const ConfiguracionPage: React.FC<ConfiguracionPageProps> = ({ embedded = false 
                             <Settings2 size={10} className="text-text-main animate-spin-slow" />
                             <span>Catálogos Institucionales</span>
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-black text-text-main tracking-tight uppercase">
+                        <h1 className="text-2xl md:text-3xl font-bold text-text-main tracking-tight uppercase">
                             Configuración del Sistema
                         </h1>
                         <p className="text-xs text-text-dim max-w-md leading-relaxed">

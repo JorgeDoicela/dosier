@@ -103,12 +103,9 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                     Criterios y Políticas de Evaluación Continua
                 </h4>
 
-                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                    <p className="leading-relaxed">
-                        Describa las políticas pedagógicas: <strong className="text-text-main font-semibold">evaluación diagnóstica, formativa continua y sumativa, puntualidad, deshonestidad académica y mecanismos de retroalimentación oportuna</strong>.
-                    </p>
-                </div>
+                <p className="text-xs text-text-dim leading-relaxed">
+                    Describa las políticas pedagógicas: evaluación diagnóstica, formativa continua y sumativa, puntualidad y retroalimentación oportuna.
+                </p>
 
                 <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                     <CoWorkEditor
@@ -179,7 +176,7 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                                             value={item.calificacion}
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'calificacion', Number(e.target.value) || 0)}
                                             disabled={readOnly}
-                                            className="w-24 mx-auto text-center font-black font-mono text-[#0070f3] bg-bg-deep border border-border-thin rounded-lg py-2 text-sm sm:text-base outline-none focus:border-[#0070f3]"
+                                            className="w-24 mx-auto text-center font-bold font-mono text-[#0070f3] bg-bg-deep border border-border-thin rounded-lg py-2 text-sm sm:text-base outline-none focus:border-[#0070f3]"
                                         />
                                     </td>
                                     {!readOnly && (

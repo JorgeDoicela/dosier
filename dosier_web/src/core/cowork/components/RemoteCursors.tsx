@@ -336,7 +336,7 @@ export const RemoteCursors: React.FC<RemoteCursorsProps> = ({ editor, awareness,
 
                         {/* Etiqueta Flotante (Pill Style) */}
                         <div
-                            className={`absolute top-0 px-2 py-1 rounded-full whitespace-nowrap text-[10px] font-black text-white shadow-lg flex items-center gap-1.5 ${
+                            className={`absolute top-0 px-2 py-1 rounded-full whitespace-nowrap text-[10px] font-bold text-white shadow-lg flex items-center gap-1.5 ${
                                 cursor.isNearRightEdge
                                     ? 'right-0 rounded-tr-none'
                                     : 'left-0 rounded-tl-none'

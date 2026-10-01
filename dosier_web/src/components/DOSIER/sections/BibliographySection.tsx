@@ -30,14 +30,14 @@ export const BibliographySection: React.FC<BibliographySectionProps> = ({
                 <SectionBlockGuard id="bibliografia_texto" title="8. Bibliografía">
                     <div className="space-y-6 animate-fade-in">
                         <div className="space-y-2">
-                            <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 px-2">
+                            <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 px-2">
                                 <Library size={18} /> 8. Bibliografía
                             </h3>
                             <div className="flex gap-3 p-4 rounded-xl bg-bg-deep/50 border border-border-thin text-xs text-text-dim items-start">
                                 <Info size={16} className="text-text-main shrink-0 mt-0.5" />
                                 <p className="leading-relaxed font-medium">
                                     Ingrese las fuentes bibliográficas de sustento científico del proyecto de investigación. <br />
-                                    <span className="text-text-main font-black">REQUISITO: EL PROYECTO DEBE TENER MÍNIMO 10 Y MÁXIMO 15 FUENTES BIBLIOGRÁFICAS EN FORMATO APA 7ª EDICIÓN.</span>
+                                    <span className="text-text-main font-bold">REQUISITO: EL PROYECTO DEBE TENER MÍNIMO 10 Y MÁXIMO 15 FUENTES BIBLIOGRÁFICAS EN FORMATO APA 7ª EDICIÓN.</span>
                                 </p>
                             </div>
                         </div>
@@ -118,7 +118,7 @@ const FirmasBlock: React.FC<{
                 if (!includeDirector) return null;
                 return (
                     <div key="director" className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-brand block border-b border-border-thin/20 pb-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-brand block border-b border-border-thin/20 pb-1.5">
                             Elaborado por: Director del Proyecto
                         </span>
                         <CoWorkField 
@@ -144,7 +144,7 @@ const FirmasBlock: React.FC<{
                     const invCarrera = inv.Carrera || inv.carrera || 'Docente Investigador';
                     return (
                         <div key={`docente_${idx}`} className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
                                 Elaborado por: Docente Investigador #{idx + 1}
                             </span>
                             <CoWorkField 
@@ -170,7 +170,7 @@ const FirmasBlock: React.FC<{
                     const estNombre = inv.Nombre || inv.nombre || '';
                     return (
                         <div key={`estudiante_${idx}`} className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
                                 Colaborador: Estudiante Auxiliar #{idx + 1}
                             </span>
                             <CoWorkField 
@@ -194,7 +194,7 @@ const FirmasBlock: React.FC<{
                 if (!includeCoordCarrera) return null;
                 return (
                     <div key="coord_carrera" className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
                             Revisado por: Coordinación de Carrera
                         </span>
                         <CoWorkField 
@@ -217,7 +217,7 @@ const FirmasBlock: React.FC<{
                 if (!includeCoordDosier) return null;
                 return (
                     <div key="coord_dosier" className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-amber-500 block border-b border-border-thin/20 pb-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-500 block border-b border-border-thin/20 pb-1.5">
                             Aprobado por: Comisión de Investigación
                         </span>
                         <CoWorkField 
@@ -240,7 +240,7 @@ const FirmasBlock: React.FC<{
                 if (!includeVicerrector) return null;
                 return (
                     <div key="vicerrectorado" className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
                             Resolución: Vicerrectorado Académico
                         </span>
                         <CoWorkField 
@@ -267,7 +267,7 @@ const FirmasBlock: React.FC<{
     return (
         <div className="p-6 bg-bg-deep border border-border-thin rounded-2xl space-y-6 shadow-sm animate-fade-in">
             <div className="space-y-2">
-                <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 px-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 px-2">
                     <Shield size={18} /> {title}
                 </h3>
                 {!isCustomTitle && (
@@ -281,7 +281,7 @@ const FirmasBlock: React.FC<{
                 {hasCustomSignatories ? (
                     signatories.map((sig: any, idx: number) => (
                         <div key={idx} className="p-5 bg-surface border border-border-thin rounded-xl space-y-3 shadow-xs">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-text-dim block border-b border-border-thin/20 pb-1.5">
                                 {sig.label || "Firmante:"}
                             </span>
                             <CoWorkField 

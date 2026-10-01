@@ -67,7 +67,7 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
             <div style={{ width: showMobileSections ? '100%' : `${leftSidebarWidth}px` }} className="px-2.5 py-4 sm:px-3 sm:py-5 flex flex-col justify-between h-full overflow-y-auto overflow-x-hidden shrink-0">
                 <div className="flex flex-col">
                     <div className="flex justify-between items-center mb-5 px-1">
-                        <p className="text-xs font-black text-text-dim uppercase tracking-wider">Navegación del Documento</p>
+                        <p className="text-xs font-bold text-text-dim uppercase tracking-wider">Navegación del Documento</p>
                         <button
                             onClick={() => {
                                 setShowMobileSections(false);
@@ -137,7 +137,7 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
                 <div className="pt-2 mt-2 shrink-0">
                     <button
                         onClick={() => { setActiveTab('output'); setShowMobileSections(false); }}
-                        className={`w-full flex items-center justify-between ${density.itemPx} ${density.itemPy} ${density.rounded} ${density.textSize} font-black uppercase tracking-widest transition-all border text-left cursor-pointer ${activeTab === 'output'
+                        className={`w-full flex items-center justify-between ${density.itemPx} ${density.itemPy} ${density.rounded} ${density.textSize} font-bold uppercase tracking-widest transition-all border text-left cursor-pointer ${activeTab === 'output'
                             ? 'bg-text-main text-bg-deep border-text-main shadow-xl'
                             : 'text-text-dim border-border-thin hover:bg-surface hover:text-text-main'
                             }`}

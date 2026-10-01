@@ -91,13 +91,10 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
 
     return (
         <div className="w-full space-y-6 sm:space-y-7 animate-fade-in font-sans">
-            {/* Aviso APE */}
-            <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                    Las actividades prácticas deben tributar al total de <strong className="text-text-main font-semibold">Horas de Aprendizaje Práctico-Experimental (APE)</strong> asignadas a la asignatura en la Sección A.
-                </p>
-            </div>
+            {/* Descripción APE */}
+            <p className="text-xs text-text-dim leading-relaxed">
+                Las actividades prácticas deben tributar al total de <strong className="text-text-main font-semibold">Horas de Aprendizaje Práctico-Experimental (APE)</strong> asignadas a la asignatura.
+            </p>
 
             {/* TABLA DE ACTIVIDADES PRÁCTICAS */}
             <div className="space-y-3.5">

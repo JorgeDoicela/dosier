@@ -134,7 +134,7 @@ export const CoWorkToolbar: React.FC<CoWorkToolbarProps> = ({
         <button
             key={level}
             onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
-            className={`${btn(editor.isActive('heading', { level }))} px-1.5 text-[10px] font-black tracking-tight`}
+            className={`${btn(editor.isActive('heading', { level }))} px-1.5 text-[10px] font-bold tracking-tight`}
             title={tooltip}
         >
             {label}
@@ -157,7 +157,7 @@ export const CoWorkToolbar: React.FC<CoWorkToolbarProps> = ({
                     {isApaFull && (
                         <>
                             <div className="w-px h-4 bg-border-thin mx-0.5" />
-                            <span className="text-[8px] font-black text-text-dim uppercase tracking-widest px-1">APA:</span>
+                            <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider px-1">APA:</span>
                             {headingBtn(1, 'N1', 'Nivel 1 APA — Negrita, centrado')}
                             {headingBtn(2, 'N2', 'Nivel 2 APA — Negrita, izquierda')}
                             {headingBtn(3, 'N3', 'Nivel 3 APA — Negrita cursiva, izquierda')}
@@ -213,7 +213,7 @@ export const CoWorkToolbar: React.FC<CoWorkToolbarProps> = ({
                     {/* Controles contextuales de tabla activa */}
                     {editor.isActive('table') && (
                         <div className="flex items-center gap-1 bg-surface border border-border-thin px-2 py-0.5 rounded ml-1">
-                            <span className="text-[8px] font-black text-brand uppercase tracking-widest mr-0.5">Tabla:</span>
+                            <span className="text-[8px] font-bold text-brand uppercase tracking-wider mr-0.5">Tabla:</span>
                             <button onClick={() => editor.chain().focus().addRowAfter().run()} className="px-1 py-0.5 rounded text-text-dim hover:text-text-main hover:bg-surface-hover text-[8px] font-bold" title="Añadir fila">+Fila</button>
                             <button onClick={() => editor.chain().focus().addColumnAfter().run()} className="px-1 py-0.5 rounded text-text-dim hover:text-text-main hover:bg-surface-hover text-[8px] font-bold" title="Añadir columna">+Col</button>
                             <button onClick={() => editor.chain().focus().deleteRow().run()} className="px-1 py-0.5 rounded text-text-dim hover:text-error hover:bg-error/10 text-[8px] font-bold" title="Eliminar fila">-Fila</button>
@@ -244,7 +244,7 @@ export const CoWorkToolbar: React.FC<CoWorkToolbarProps> = ({
             {showCitationPanel && (
                 <div className="absolute top-full left-0 right-0 z-50 bg-surface border-b border-border-thin shadow-lg p-3 flex flex-wrap items-end gap-2 animate-in slide-in-from-top-1 duration-150">
                     <div className="flex flex-col gap-1">
-                        <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Tipo de cita</span>
+                        <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-wider">Tipo de cita</span>
                         <div className="flex gap-1">
                             {(['parenthetical', 'narrative', 'et_al'] as CitationType[]).map(type => (
                                 <button

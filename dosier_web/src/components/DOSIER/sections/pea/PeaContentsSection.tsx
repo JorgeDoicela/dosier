@@ -175,19 +175,19 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-center">
                     <div className="p-3 sm:p-4 rounded-xl bg-bg-deep border border-border-thin">
                         <span className="text-xs sm:text-[13px] font-semibold text-text-dim block mb-1">Total Docencia (CD)</span>
-                        <span className="text-xl sm:text-2xl font-black font-mono text-text-main">{mathSummary.sumCD}h</span>
+                        <span className="text-xl sm:text-2xl font-bold font-mono text-text-main">{mathSummary.sumCD}h</span>
                     </div>
                     <div className="p-3 sm:p-4 rounded-xl bg-bg-deep border border-border-thin">
                         <span className="text-xs sm:text-[13px] font-semibold text-text-dim block mb-1">Total Prácticas (APE)</span>
-                        <span className="text-xl sm:text-2xl font-black font-mono text-text-main">{mathSummary.sumAPE}h</span>
+                        <span className="text-xl sm:text-2xl font-bold font-mono text-text-main">{mathSummary.sumAPE}h</span>
                     </div>
                     <div className="p-3 sm:p-4 rounded-xl bg-bg-deep border border-border-thin">
                         <span className="text-xs sm:text-[13px] font-semibold text-text-dim block mb-1">Total Autónomo (TA)</span>
-                        <span className="text-xl sm:text-2xl font-black font-mono text-text-main">{mathSummary.sumTA}h</span>
+                        <span className="text-xl sm:text-2xl font-bold font-mono text-text-main">{mathSummary.sumTA}h</span>
                     </div>
                     <div className="p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
                         <span className="text-xs sm:text-[13px] font-bold text-[#0070f3] block mb-1">Total Planificado</span>
-                        <span className="text-xl sm:text-2xl font-black font-mono text-[#0070f3]">{mathSummary.grandTotal}h</span>
+                        <span className="text-xl sm:text-2xl font-bold font-mono text-[#0070f3]">{mathSummary.grandTotal}h</span>
                     </div>
                 </div>
 
@@ -248,7 +248,7 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                         {/* Cabecera de la Unidad */}
                         <div className="p-3.5 sm:p-4 bg-bg-deep/70 border-b border-border-thin flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5 flex-1">
-                                <span className="font-mono text-xs sm:text-sm font-black px-2.5 py-1 rounded-md bg-surface border border-border-thin text-[#0070f3] shrink-0">
+                                <span className="font-mono text-xs sm:text-sm font-bold px-2.5 py-1 rounded-md bg-surface border border-border-thin text-[#0070f3] shrink-0">
                                     U{idx + 1}
                                 </span>
                                 <input

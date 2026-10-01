@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Lock, Unlock, Shield, Award, Loader2, RefreshCw, X } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
 import CollaborationSidebar from './CollaborationSidebar';
@@ -7,6 +7,7 @@ import { useDOSIERBuilderShell } from './shell/hooks/useDOSIERBuilderShell';
 import { BuilderHeader } from './shell/components/BuilderHeader';
 import { BuilderNavigationSidebar } from './shell/components/BuilderNavigationSidebar';
 import { BuilderFloatingTab } from './shell/components/BuilderFloatingTab';
+import { BuilderSectionFooterNav } from './shell/components/BuilderSectionFooterNav';
 import { OutputSection } from './shell/components/OutputSection';
 import type { BuilderSection } from './shell/hooks/useBuilderLayout';
 
@@ -97,6 +98,14 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     const sectionItemPairs = useMemo(() => sections.map(s => ({ id: s.id, label: s.label })), [sections]);
     const handleCloseSidebar = useCallback(() => layout.setIsSidebarOpen(false), [layout.setIsSidebarOpen]);
 
+    const contentScrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (contentScrollRef.current) {
+            contentScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [layout.activeTab]);
+
     return (
         <DocumentDataContext.Provider value={formData}>
             <DocumentMetadataContext.Provider value={{ readOnlyReason }}>
@@ -177,11 +186,11 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 {/* ── Área Principal: Editor & Visor PDF ── */}
                                 <div className="flex-1 bg-bg-deep overflow-hidden flex">
                                     {layout.activeTab !== 'output' ? (
-                                        <div className="flex-1 pt-4 pb-8 px-3 sm:pt-6 sm:pb-12 sm:px-6 md:pt-8 md:pb-16 md:px-12 overflow-y-auto custom-scrollbar">
+                                        <div ref={contentScrollRef} className="flex-1 pt-4 pb-8 px-3 sm:pt-6 sm:pb-12 sm:px-6 md:pt-8 md:pb-16 md:px-12 overflow-y-auto custom-scrollbar">
                                             <div className="w-full mx-auto max-w-[98%] sm:max-w-[94%] transition-all duration-300">
                                                 <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                                     <div>
-                                                        <h3 className="text-lg sm:text-2xl font-black text-text-main tracking-tighter uppercase">{layout.activeSectionLabel}</h3>
+                                                        <h3 className="text-lg sm:text-2xl font-bold text-text-main tracking-tight uppercase">{layout.activeSectionLabel}</h3>
                                                         <div className="w-12 sm:w-20 h-1 md:h-1.5 bg-text-main mt-2 md:mt-3 rounded-full" />
                                                     </div>
 
@@ -224,56 +233,48 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 </div>
 
                                                 {hasTemplateUpdate && !readOnly && onUpgradeTemplate && !showUpdateModal && (
-                                                    <div className="callout-vercel callout-vercel-info mb-8 animate-fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                                        <div className="flex gap-3">
-                                                            <Award size={16} className="text-info mt-0.5 shrink-0" />
-                                                            <div>
-                                                                <p className="callout-vercel-title">Nueva versión de plantilla disponible</p>
-                                                                <p className="callout-vercel-body">
-                                                                    El administrador ha actualizado el formato oficial de esta plantilla a la versión {templateVersion}. Tu borrador actual utiliza la versión {instanceVersion}. Puedes actualizar para aplicar las últimas secciones y formatos. Tus datos actuales se conservarán.
-                                                                </p>
-                                                            </div>
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3.5 py-2.5 mb-6 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-400">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <RefreshCw size={14} className="shrink-0 text-[#0070f3]" />
+                                                            <span>Nueva versión de plantilla disponible ({templateVersion}). Sus datos se conservarán.</span>
                                                         </div>
                                                         <button
                                                             onClick={onUpgradeTemplate}
                                                             disabled={isUpgrading}
-                                                            className="px-4 py-2 bg-info hover:bg-info/90 text-white rounded-xl font-bold text-xs uppercase tracking-wider shrink-0 disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                                            className="btn-vercel-primary text-xs shrink-0 py-1.5 px-3 cursor-pointer"
                                                         >
-                                                            {isUpgrading ? (
-                                                                <>
-                                                                    <Loader2 size={14} className="animate-spin shrink-0" />
-                                                                    <span>Actualizando...</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <RefreshCw size={14} className="shrink-0" />
-                                                                    <span>Actualizar Formato</span>
-                                                                </>
-                                                            )}
+                                                            {isUpgrading ? 'Actualizando...' : 'Actualizar Formato'}
                                                         </button>
                                                     </div>
                                                 )}
 
                                                 {readOnly && (
-                                                    <div className="callout-vercel callout-vercel-warning mb-8 animate-fade-in">
-                                                        <Shield size={16} className="text-warning mt-0.5 shrink-0" />
-                                                        <div>
-                                                            <p className="callout-vercel-title">Vista de solo lectura activa</p>
-                                                            <p className="callout-vercel-body">
-                                                                {readOnlyReason === 'state' ? (
-                                                                    `Este documento ha sido emitido y firmado formalmente (se encuentra en estado "${projectStatus || 'Oficial'}"), por lo que su contenido ha sido sellado para garantizar la integridad institucional. No se admiten modificaciones.`
-                                                                ) : readOnlyReason === 'review' ? (
-                                                                    "Estás visualizando este documento en modo de solo lectura para fines de revisión y auditoría académica."
-                                                                ) : (
-                                                                    "Has accedido a este documento en modalidad de solo lectura debido a que no figuras como un miembro activo con permisos de escritura en este proyecto. No podrás realizar modificaciones."
-                                                                )}
-                                                            </p>
-                                                        </div>
+                                                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 mb-6 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
+                                                        <Shield size={14} className="shrink-0" />
+                                                        <span>
+                                                            {readOnlyReason === 'state'
+                                                                ? `Documento en modo solo lectura (Estado: ${projectStatus || 'En Revisión'}). No se admiten modificaciones.`
+                                                                : readOnlyReason === 'review'
+                                                                ? 'Documento en modo solo lectura para revisión académica.'
+                                                                : 'Acceso en modo solo lectura sin permisos de edición.'}
+                                                        </span>
                                                     </div>
                                                 )}
 
                                                 {/* Render de los componentes hijos del documento con el cowork handle */}
                                                 {children(layout.activeTab, cowork)}
+
+                                                {/* ── Navegación Inteligente al Pie de Sección ── */}
+                                                <BuilderSectionFooterNav
+                                                    sections={sections}
+                                                    activeTab={layout.activeTab}
+                                                    setActiveTab={layout.setActiveTab}
+                                                    canSign={canSign}
+                                                    readOnly={readOnly}
+                                                    onNavigate={() => {
+                                                        contentScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     ) : (
@@ -385,7 +386,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#0070f3] dark:text-blue-400">
                                             Actualización disponible
                                         </span>
-                                        <h3 className="text-xl sm:text-2xl font-black text-text-main tracking-tight mt-1">
+                                        <h3 className="text-xl sm:text-2xl font-bold text-text-main tracking-tight mt-1">
                                             Nueva versión de plantilla disponible
                                         </h3>
                                     </div>

@@ -118,8 +118,8 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
             {c.showHeader !== false && (
                 <div className="border border-black flex mb-0 bg-white relative group">
                     <div className="w-[30%] border-r border-black p-2.5 flex flex-col items-center justify-center text-center">
-                        <div className="flex items-center gap-1.5 font-black text-slate-900 leading-none">
-                            <span className="text-xl font-extrabold tracking-tighter text-[#1e2a4a]">IST</span>
+                        <div className="flex items-center gap-1.5 font-bold text-slate-900 leading-none">
+                            <span className="text-xl font-bold tracking-tight text-[#1e2a4a]">IST</span>
                             <div className="text-left text-[8px] font-bold uppercase tracking-tight text-slate-700 leading-tight">
                                 <div>TECNOLÓGICO</div>
                                 <div>TRAVERSARI</div>

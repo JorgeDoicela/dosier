@@ -160,7 +160,7 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
             <div className="p-5 pb-3 border-b border-border-thin flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">
                     <BookOpen size={14} className="text-text-main shrink-0" />
-                    <span className="text-[10px] font-black text-text-dim uppercase tracking-[0.2em] font-mono">
+                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-[0.2em] font-mono">
                         Navegación del Protocolo
                     </span>
                 </div>

@@ -50,6 +50,7 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
       - Modo Lectura: Implementada previsualización dual (Trazo Digital + Sello Institucional Oficial completo idéntico al PDF).
       - Modo Edición: Incorporado bloque interactivo de previsualización en tiempo real del sello institucional con toggle para mostrar/ocultar que actualiza el sello inmediatamente conforme se escribe, dibuja o sube el trazo.
       - Modal de Confirmación: Transformado a Drawer lateral con Bento Cards para Cargo y Departamento / Área, y previsualización completa del sello institucional antes de activar, cumpliendo con la regla cardinal de fondos 100% sólidos (`bg-white` / `bg-zinc-950`).
+      - Contenedor de Previsualización del Sello: Estandarizado en [DocumentStampPreview.css](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/DocumentStampPreview.css) utilizando las variables oficiales del sistema de diseño (`var(--subtle)` y `var(--border)`) para adaptarse de forma natural tanto al tema claro (fondo claro sutil) como oscuro, eliminando el fallback negro forzado.
 * **Homologación de Bloques de Formulario en el Workspace al Estándar Modern Enterprise (Estilo DIITRA):** Se eliminaron las tablas con cabeceras de fondo azul marino (`#1e2a4a`) y celdas tintadas en [PeaGeneralSection.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/DOSIER/sections/pea/PeaGeneralSection.tsx) y en todas las secciones del PEA. Se adoptó la estructura limpia de DIITRA basada en tarjetas sólidas (`rounded-xl border border-border-thin bg-surface`), cuadrículas responsivas (`grid grid-cols-1 md:grid-cols-2`), inputs `<CoWorkField>` con etiquetas sobrias en mayúsculas pequeñas, y cabeceras de sección con divisores continuos `border-b` sin banners de color duro. Asimismo, se desacopló el campo de **Docente Responsable de la Asignatura** extrayéndolo del cuadro contenedor de datos de la asignatura para ubicarlo como una tarjeta independiente con su propio identificador y cabecera (`UserCheck`), preservando la jerarquía limpia e idéntica al protocolo de DIITRA.
 * **Desacoplamiento y Separación Modular de Secciones B y C (`PeaObjectivesSection` y `PeaPrerequisitesSection`):** Se separaron formalmente las secciones compuestas heredadas en dos módulos independientes de primer orden:
   - **Sección b (`pea_objectives_section` / `PeaObjectivesSection`):** Redacción colaborativa del Objetivo General Formativo de la Asignatura con editor enriquecido APA y guía pedagógica institucional.
@@ -317,6 +318,67 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
       * Jerarquía tipográfica del título del documento homologada a `text-sm md:text-base font-black text-text-main tracking-tight uppercase leading-none`.
       * Incorporado botón de reporte de incidentes y sugerencias (`MessageSquarePlus`) al final de la barra de acciones conectado al evento institucional `dosier-open-feedback`.
   - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript libre de errores (`tsc --noEmit`).
+* **Erradicación de Cajas Envolventes de Aviso en Secciones del PEA (Cero Bloques Inflados):**
+  - **Causa Raíz:** Se utilizaban contenedores tipo tarjeta con borde, fondo y padding grande (`p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs`) para mostrar avisos o instrucciones normativas en las secciones del PEA (`PeaPrerequisitesSection`, `PeaObjectivesSection`, `PeaCompetenciesSection`, `PeaMethodologySection`, `PeaResourcesSection`, `PeaEvaluationSection`), ocupando espacio vertical valioso y generando amontonamiento visual.
+  - **Solución Estructural:** Se removieron los contenedores envolventes, transformando las indicaciones en textos directos, discretos y compactos (`text-xs text-text-dim leading-relaxed`) que fluyen naturalmente sobre el lienzo sin cajas artificiales.
+  - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript libre de errores (`tsc --noEmit`).
+* **Navegación Inferior Inteligente y Minimalista entre Secciones ([BuilderSectionFooterNav.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/DOSIER/shell/components/BuilderSectionFooterNav.tsx)):**
+  - **Causa Raíz y Requerimiento:** Al terminar de diligenciar una sección, los usuarios requerían navegar a la siguiente sección desde el pie del lienzo sin scrolls forzados ni cajas infladas con textos redundantes.
+  - **Solución Estructural (Estándar styles-dosier):**
+    - Se simplificó [BuilderSectionFooterNav.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/DOSIER/shell/components/BuilderSectionFooterNav.tsx) a botones directos y sobrios de una sola línea (`btn-vercel-secondary` con "Anterior" a la izquierda y `btn-vercel-primary` con "Siguiente" / "Finalizar y Firmar" a la derecha).
+    - Se eliminaron tarjetas envolventes con doble línea de texto (kicker en mayúsculas forzadas + título largo truncado).
+    - Conserva el cambio de estado reactivo y el scroll automático suave (`behavior: 'smooth'`) hacia arriba al navegar.
+  - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript sin errores (`tsc --noEmit`).
+* **Simplificación y Limpieza de Tarjetas de Asignatura ([MisAsignaturasPage.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Curriculum/MisAsignaturasPage.tsx)):**
+  - **Causa Raíz:** Las tarjetas contenían bloques redundantes de desglose horario intermedio (`CD`, `APE`, `TA`, `Total`), separadores de línea (`border-t`) y textos estáticos de versión (`Versión 1.0`), recargando la interfaz y restando protagonismo a los datos clave de la materia y a la acción principal.
+  - **Solución Estructural:** Se eliminó la caja intermedia de desglose de horas, la línea divisoria y la etiqueta de versión, dejando la tarjeta con presentación limpia, concisa y con el botón de acción alineado al pie.
+  - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript sin errores (`tsc --noEmit`).
+* **Ampliación, Confort Visual y Simplificación del Panel de Emisión ([OutputSection.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/DOSIER/shell/components/OutputSection.tsx)):**
+  - **Causa Raíz:** El panel lateral izquierdo de emisión en la pestaña de finalización y firma se encontraba comprimido en 3 columnas (`col-span-3`), con micro-fuentes (`text-[9px]`, `text-[10px]`), botones angostos y controles redundantes innecesarios ("Vista sin identidades").
+  - **Solución Estructural (Estilo DIITRA):**
+    - Se amplió la retícula a `lg:col-span-4` para el panel lateral de emisión y `lg:col-span-8` para el visor de PDF.
+    - Se eliminó el botón redundante de vista sin identidades.
+    - Se escalaron tipografías e inputs a estándares cómodos (`text-xs` y `text-sm font-semibold`), con botones de acción confortables (`py-3 px-4 rounded-xl`), fondos 100% sólidos y acento corporativo `#0070f3`.
+  - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript sin errores (`tsc --noEmit`).
+* **Gobernanza RBAC del Menú Lateral de Incidencias ([useSidebar.ts](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/Sidebar/hooks/useSidebar.ts) y [SidebarNav.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/Sidebar/components/SidebarNav.tsx)):**
+  - **Causa Raíz:** El acceso a la bandeja de gestión de incidencias (`/incidencias`) se renderizaba de forma pública para todos los roles en el menú lateral principal y en el submenú de Solicitudes. Docentes y coordinadores ya disponen de los botones contextuales de reporte en el TopBar superior y en la cabecera del editor (`BuilderHeader.tsx`).
+  - **Solución Estructural Sin Parches:**
+    - Se reclasificó el ítem `Incidencias` en [useSidebar.ts](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/Sidebar/hooks/useSidebar.ts) al Grupo 3 de Administración con permisos exclusivos para `roles: ['DOSIER_ADMIN']`.
+    - En [SidebarNav.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/Sidebar/components/SidebarNav.tsx), se condicionó la presencia de "Buzón de Incidencias" en el catálogo de trámites al contexto institucional de administrador (`isAdmin`), garantizando que docentes, coordinadores y vicerrectorado mantengan un menú lateral limpio y enfocado exclusivamente en sus atribuciones curriculares.
+  - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript sin errores (`tsc --noEmit`).
+* **Gobernanza RBAC de Pestañas en la Vista de Configuración ([SettingsPage.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/SettingsPage.tsx)):**
+  - **Causa Raíz:** En la vista de configuración (`/configuracion`), la barra de pestañas dependía únicamente del flag binario `isAdmin`, impidiendo que roles de supervisión como Coordinación Académica (`DOSIER_COORD_ACAD`) o Vicerrectorado (`DOSIER_VICERRECTOR`) accedieran a las pestañas de Parámetros del Sistema o Firmas por Plantilla, al tiempo que exponía de forma no segmentada la pestaña de Almacenamiento a usuarios sin privilegios administrativos.
+  - **Solución Estructural (Homologada con DIITRA):**
+    - Se definieron permisos granulares por bloque funcional:
+      * `canManageParams` = `isAdmin || isCoordAcad || isVicerrector` (Parámetros y Calendario).
+      * `canManageTemplates` = `isAdmin || isCoordAcad || isVicerrector` (Firmas y Molde de Plantillas).
+      * `canManageStorage` = `isAdmin` (Mantenimiento físico y depuración de almacenamiento).
+      * `hasAdminTabs` = `canManageParams || canManageTemplates || canManageStorage`.
+    - La resolución de `activeMainTab` y el renderizado de la barra de pestañas se ejecutan de manera condicional según los permisos del usuario activo.
+    - Los usuarios estándar (Docentes, Coordinadores de Carrera) acceden directamente y de forma limpia a su Perfil de Firma, Consentimiento LOPDP y Contraseña sin ruido de pestañas administrativas inaccesibles.
+* **Delegación y Gobernanza RBAC del Botón de Notificaciones ([useSidebar.ts](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/Sidebar/hooks/useSidebar.ts)):**
+  - **Causa Raíz:** El acceso a la vista `/notificaciones` se presentaba como un ítem global en el menú lateral izquierdo para todos los usuarios. En la arquitectura de experiencia de usuario de DIITRA/DOSIER, la interacción con notificaciones para docentes y coordinadores está centralizada en la campana del TopBar superior (con dropdown flotante, lectura rápida y enlace "Ver todo el historial"), mientras que el acceso directo desde el menú lateral queda reservado exclusivamente a la administración del sistema.
+  - **Solución Estructural (Estándar DIITRA):**
+    - En [useSidebar.ts](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/Layout/Sidebar/hooks/useSidebar.ts), se configuró `roles: ['DOSIER_ADMIN']` para el ítem `Notificaciones` y se añadió la condición `if (item.path === '/notificaciones' && !isAdmin) return false;`.
+    - Docentes, coordinadores y vicerrectorado interactúan de forma ágil y contextual con sus avisos a través de la campana interactiva del TopBar sin saturar la barra lateral de navegación.
+* **Simplificación de Avisos de Solo Lectura y Actualización de Plantilla ([DOSIERBuilderShell.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/components/DOSIER/DOSIERBuilderShell.tsx)):**
+  - **Causa Raíz:** Los avisos de solo lectura y actualización de plantillas en el lienzo de trabajo utilizaban cajas pesadas (`callout-vercel-warning`, `callout-vercel-info`) con títulos redundantes y explicaciones extensas de múltiples líneas que recargaban el encabezado del documento.
+  - **Solución Estructural (Estándar styles-dosier):**
+    - Se transformaron en alertas compactas, sobrias y directas de una sola línea (`flex items-center gap-2.5 px-3.5 py-2.5 mb-6 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400`).
+    - Texto sintético y fáctico: *"Documento en modo solo lectura (Estado: [Estado]). No se admiten modificaciones."*
+    - Se aplicó idéntica simplificación al banner de actualización de plantillas (`bg-blue-500/10 border-blue-500/20`).
+* **Homologación 1:1 con DIITRA en Generación de Firma Automática ([AutoSignatureTab.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/AutoSignatureTab.tsx), [AutoSignatureTab.css](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/AutoSignatureTab.css) y [SignatureProfileCard.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/SignatureProfileCard.tsx)):**
+  - **Causa Raíz:** En [SignatureProfileCard.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/SignatureProfileCard.tsx), se había omitido la clase `.signature-profile-container` en el nodo raíz. Al depender [AutoSignatureTab.css](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/AutoSignatureTab.css) de dicha regla, el layout de 2 columnas (`.sig-auto-layout`) y la lista de estilos de fuentes cursivas (`.sig-fonts-grid`) perdían su hoja de estilos.
+  - **Solución Estructural (Paridad 1:1 con DIITRA):**
+    - Se restituyó la clase `.signature-profile-container` en [SignatureProfileCard.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/SignatureProfileCard.tsx).
+    - Se homologaron [AutoSignatureTab.css](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/AutoSignatureTab.css) y [AutoSignatureTab.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Settings/components/AutoSignatureTab.tsx) de forma exacta y fiel a la implementación oficial de DIITRA.
+  - **Validación:** 100% de las pruebas unitarias pasando (283/283 en Vitest) y TypeScript sin errores (`tsc --noEmit`).
+
+
+
+
+
+
 
 
 

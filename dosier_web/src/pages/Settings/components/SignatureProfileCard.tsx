@@ -54,7 +54,7 @@ export const SignatureProfileCard: React.FC = () => {
     }
 
     return (
-        <div className="bg-surface rounded-xl border border-border-thin shadow-2xs overflow-hidden" id="perfil-firma">
+        <div className="signature-profile-container bg-surface rounded-xl border border-border-thin shadow-2xs overflow-hidden" id="perfil-firma">
             <div className="p-5 sm:p-6 space-y-6">
                 {/* Cabecera de la Tarjeta */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border-thin">

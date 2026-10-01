@@ -70,10 +70,10 @@ export const CareerLinkageModal: React.FC<CareerLinkageModalProps> = ({
                             <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3">
                                 <div className="space-y-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <h4 className="text-xs font-black text-text-main uppercase truncate">
+                                        <h4 className="text-xs font-bold text-text-main uppercase truncate">
                                             {selectedCoordName || 'Coordinador Responsable'}
                                         </h4>
-                                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter bg-emerald-500/15 border border-emerald-500/20 text-emerald-400">
+                                        <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/20 text-emerald-400">
                                             Coordinador
                                         </span>
                                     </div>

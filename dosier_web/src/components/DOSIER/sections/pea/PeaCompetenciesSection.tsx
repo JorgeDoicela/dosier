@@ -24,12 +24,9 @@ export const PeaCompetenciesSection: React.FC<PeaCompetenciesSectionProps> = ({
                     d) Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta
                 </h4>
 
-                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                    <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                    <p className="leading-relaxed">
-                        Especifique los resultados de aprendizaje del <strong className="text-text-main font-semibold">perfil de egreso</strong> de la carrera técnica/tecnológica a los cuales tributa directamente la presente asignatura.
-                    </p>
-                </div>
+                <p className="text-xs text-text-dim leading-relaxed">
+                    Especifique los resultados de aprendizaje del <strong className="text-text-main font-semibold">perfil de egreso</strong> de la carrera a los cuales tributa directamente la asignatura.
+                </p>
 
                 <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                     <CoWorkEditor
@@ -49,12 +46,9 @@ export const PeaCompetenciesSection: React.FC<PeaCompetenciesSectionProps> = ({
                     e) Resultados de Aprendizaje de la Asignatura (RDA Específicos)
                 </h4>
 
-                <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
-                    <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-                    <p className="leading-relaxed">
-                        Redacte los <strong className="text-text-main font-semibold">resultados de aprendizaje específicos (RDA)</strong> observables y medibles que el estudiante demostrará al culminar la asignatura (mínimo uno por unidad temática).
-                    </p>
-                </div>
+                <p className="text-xs text-text-dim leading-relaxed">
+                    Redacte los <strong className="text-text-main font-semibold">resultados de aprendizaje específicos (RDA)</strong> observables y medibles al culminar la asignatura (mínimo uno por unidad temática).
+                </p>
 
                 <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                     <CoWorkEditor

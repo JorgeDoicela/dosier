@@ -53,14 +53,9 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
 
                     {/* Identidad */}
                     <div className="min-w-0">
-                        <h2 className="text-sm md:text-base font-black text-text-main tracking-tight uppercase leading-none truncate max-w-[200px] xs:max-w-[280px] sm:max-w-[380px] md:max-w-[480px] lg:max-w-[650px]" title={title}>
+                        <h2 className="text-sm md:text-base font-bold text-text-main tracking-tight uppercase leading-none truncate max-w-[200px] xs:max-w-[280px] sm:max-w-[380px] md:max-w-[480px] lg:max-w-[650px]" title={title}>
                             {title}
                         </h2>
-                        {subtitle && (
-                            <p className="text-[10px] text-text-dim truncate mt-0.5" title={subtitle}>
-                                {subtitle}
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>
@@ -96,17 +91,17 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
                     {!isOnline ? (
                         <>
                             <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-[7px] md:text-[8px] font-black text-red-500 uppercase tracking-widest">Sin conexión</span>
+                            <span className="text-[7px] md:text-[8px] font-semibold text-red-500 uppercase tracking-widest">Sin conexión</span>
                         </>
                     ) : isSlowConnection ? (
                         <>
                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                            <span className="text-[7px] md:text-[8px] font-black text-amber-500 uppercase tracking-widest">Señal débil</span>
+                            <span className="text-[7px] md:text-[8px] font-semibold text-amber-500 uppercase tracking-widest">Señal débil</span>
                         </>
                     ) : (
                         <>
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-[7px] md:text-[8px] font-black text-green-500 uppercase tracking-widest">En línea</span>
+                            <span className="text-[7px] md:text-[8px] font-semibold text-green-500 uppercase tracking-widest">En línea</span>
                         </>
                     )}
                 </div>
@@ -117,7 +112,7 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
                         {users.map((u, i) => (
                             <div
                                 key={`${u.id}-${i}`}
-                                className="w-5 h-5 rounded-full border border-surface flex items-center justify-center text-[8px] font-black text-white shadow-md cursor-default transition-transform hover:-translate-y-0.5"
+                                className="w-5 h-5 rounded-full border border-surface flex items-center justify-center text-[8px] font-semibold text-white shadow-md cursor-default transition-transform hover:-translate-y-0.5"
                                 style={{ backgroundColor: u.color }}
                                 title={`${u.name} (${u.role})`}
                             >

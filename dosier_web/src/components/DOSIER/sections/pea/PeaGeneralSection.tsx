@@ -37,7 +37,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         label={labelAsignatura}
                         placeholder="Nombre de la asignatura (ej. Técnicas de Cocina Contemporánea)"
                         readOnly={readOnly}
-                        className="w-full bg-bg-deep border border-border-thin rounded-xl sm:rounded-2xl px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-lg font-black text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
+                        className="w-full bg-bg-deep border border-border-thin rounded-xl sm:rounded-2xl px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-lg font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
                         uppercase={true}
                         onValueChange={(val) => onUpdate('NombreAsignatura', val)}
                     />
@@ -187,14 +187,14 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
             <div className="pt-2 border-t border-border-thin space-y-3">
                 <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 text-text-dim" />
-                    <span className="text-[10px] font-black text-text-dim uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">
                         Organización de Aprendizajes y Carga Horaria (Horas normadas RRA Art. 21)
                     </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
                     <div>
-                        <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                        <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                             Contacto Docente (CD)
                         </label>
                         <CoWorkField
@@ -209,7 +209,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                        <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                             Práctico Exp. (APE)
                         </label>
                         <CoWorkField
@@ -224,7 +224,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                        <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                             Autónomo (TA)
                         </label>
                         <CoWorkField
@@ -239,7 +239,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                        <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                             Total Horas
                         </label>
                         <CoWorkField
@@ -248,13 +248,13 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             type="text"
                             placeholder="0"
                             readOnly={readOnly}
-                            className="w-full text-center font-black font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
+                            className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('TotalHorasAsignatura', Number(val) || 0)}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                        <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                             Créditos
                         </label>
                         <CoWorkField
@@ -263,7 +263,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             type="text"
                             placeholder="0"
                             readOnly={readOnly}
-                            className="w-full text-center font-black font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
+                            className="w-full text-center font-bold font-mono text-text-main bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl py-3 text-xs sm:text-sm outline-none focus:border-text-main"
                             onValueChange={(val) => onUpdate('Creditos', Number(val) || 0)}
                         />
                     </div>

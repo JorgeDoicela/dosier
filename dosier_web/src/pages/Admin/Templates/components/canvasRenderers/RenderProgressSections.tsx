@@ -692,7 +692,7 @@ export const RenderProgressStatusSection: React.FC<{
                     <tbody>
                         <tr>
                             {options.map((opt: string) => (
-                                <td key={opt} className="p-2 border border-slate-900 font-black text-[10pt] text-slate-900">
+                                <td key={opt} className="p-2 border border-slate-900 font-bold text-[10pt] text-slate-900">
                                     {opt === 'EN AVANCE' ? '(X)' : ''}
                                 </td>
                             ))}

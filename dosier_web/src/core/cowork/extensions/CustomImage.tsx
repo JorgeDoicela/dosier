@@ -453,7 +453,7 @@ const ImageNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, select
                 <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4">
                     <div className="bg-bg-deep border border-border-thin rounded-xl max-w-xl w-full p-6 shadow-xl flex flex-col gap-4 text-text-main">
                         <div className="flex items-center justify-between border-b border-border-thin pb-3">
-                            <span className="text-xs font-black uppercase tracking-widest text-text-dim flex items-center gap-1.5">
+                            <span className="text-xs font-bold uppercase tracking-wider text-text-dim flex items-center gap-1.5">
                                 <CropIcon size={16} className="text-indigo-500" /> Recortar Imagen de Colaboración
                             </span>
                         </div>
@@ -476,14 +476,14 @@ const ImageNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, select
                             <button
                                 type="button"
                                 onClick={() => setIsCropping(false)}
-                                className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-text-dim hover:bg-bg-deep rounded-lg transition-all"
+                                className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-text-dim hover:bg-bg-deep rounded-lg transition-all"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="button"
                                 onClick={handleCropSave}
-                                className="px-4 py-2 text-[10px] font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all"
+                                className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all"
                             >
                                 Aplicar Recorte
                             </button>

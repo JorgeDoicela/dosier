@@ -182,7 +182,7 @@ const VercelToastItem: React.FC<VercelToastItemProps> = ({ toast, onDismiss, nav
                     }}
                     className="group/btn self-stretch -my-3 flex items-center justify-center px-3.5 bg-transparent border-0 cursor-pointer select-none disabled:opacity-50"
                 >
-                    <span className="text-[10px] font-sans font-black uppercase tracking-widest text-amber-500 hover:text-amber-400 group-hover/btn:underline">
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 group-hover/btn:underline">
                         {isUndoing ? "..." : "Deshacer"}
                     </span>
                 </button>

@@ -7,9 +7,9 @@
 
 /* Contenedor del Sello */
 .doc-stamp-display-wrapper {
-    background: var(--bg-deep, #090d16);
-    border: 1px solid var(--border-thin, #1e2638);
-    border-radius: var(--radius-xl, 12px);
+    background: var(--subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 8px);
     padding: 22px 18px;
     display: flex;
     justify-content: center;

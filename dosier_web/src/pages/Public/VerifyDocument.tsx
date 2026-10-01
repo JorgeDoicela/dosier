@@ -436,7 +436,7 @@ const VerifyDocument = () => {
                                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border-thin">
                                     <ShieldCheck size={32} className="text-success shrink-0" />
                                     <div>
-                                        <h3 className="text-xl font-semibold tracking-tighter text-text-main">
+                                        <h3 className="text-xl font-semibold tracking-tight text-text-main">
                                             {result.template_code === 'DFRM-VERIFY' || result.templateCode === 'DFRM-VERIFY' 
                                                 ? 'Firma Auténtica Registrada' 
                                                 : 'Documento Auténtico'}
@@ -498,7 +498,7 @@ const VerifyDocument = () => {
 
                         {result.signatures && result.signatures.length > 0 && (
                             <div className="lg:col-span-7 bento-card static p-8 md:p-10 overflow-hidden animate-fade-in">
-                                <h3 className="text-xl font-semibold tracking-tighter text-text-main mb-2">Cadena de Custodia Criptográfica</h3>
+                                <h3 className="text-xl font-semibold tracking-tight text-text-main mb-2">Cadena de Custodia Criptográfica</h3>
                                 <p className="text-xs text-text-dim mb-6 leading-relaxed">
                                     DOSIER implementa un modelo de firmas digitales institucionales consecutivas (en cascada). Cada firmante sella el documento en su estado actual, estampando su bloque visual e incorporando la huella digital criptográfica (hash).
                                 </p>

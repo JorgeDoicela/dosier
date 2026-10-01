@@ -136,7 +136,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
                                     { label: 'Convocatoria', tokens: ['[[convocatoria_titulo]]', '[[convocatoria_codigo]]', '[[convocatoria_anio]]', '[[convocatoria_apertura]]', '[[convocatoria_cierre]]', '[[convocatoria_presupuesto]]', '[[convocatoria_monto_maximo]]', '[[convocatoria_bases_url]]', '[[convocatoria_estado]]'] }
                                 ].map(group => (
                                     <div key={group.label}>
-                                        <span className="text-[8px] font-black text-text-dim uppercase tracking-widest block mb-1">{group.label}:</span>
+                                        <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider block mb-1">{group.label}:</span>
                                         <div className="flex flex-wrap gap-1">
                                             {group.tokens.map(tok => (
                                                 <button

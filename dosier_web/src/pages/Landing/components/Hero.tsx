@@ -126,7 +126,7 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                 </svg>
             ),
-            text: <span className="font-sans font-black italic tracking-tighter text-[16px]">firma<span className="text-brand">.ec</span></span>
+            text: <span className="font-sans font-bold italic tracking-tight text-[16px]">firma<span className="text-brand">.ec</span></span>
         },
         {
             name: 'ISTPET',
@@ -137,7 +137,7 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                     <path d="M12 22.08V12" />
                 </svg>
             ),
-            text: <span className="font-sans font-black tracking-wider text-[15px]">IST<span className="text-brand">PET</span></span>
+            text: <span className="font-sans font-bold tracking-wider text-[15px]">IST<span className="text-brand">PET</span></span>
         }
     ];
 

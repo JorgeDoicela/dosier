@@ -37,14 +37,14 @@ export const RenderTitle: React.FC<{ config: any; themeConfig?: any; title?: str
 
     if (fontSize === 'H1') {
         return (
-            <h1 className="text-sm font-black uppercase tracking-tight mb-2 mt-4 pb-1 border-b-2" style={{ ...alignStyle, color: primaryColor, borderColor: secondaryColor }}>
+            <h1 className="text-sm font-bold uppercase tracking-tight mb-2 mt-4 pb-1 border-b-2" style={{ ...alignStyle, color: primaryColor, borderColor: secondaryColor }}>
                 {text}
             </h1>
         );
     }
     if (fontSize === 'H2') {
         return (
-            <h2 className="text-xs font-black px-3 py-2 uppercase tracking-wide mb-2 mt-4 shadow-xs rounded-xs" style={{ ...alignStyle, backgroundColor: tableHeaderBg, color: tableHeaderColor }}>
+            <h2 className="text-xs font-bold px-3 py-2 uppercase tracking-wide mb-2 mt-4 shadow-xs rounded-xs" style={{ ...alignStyle, backgroundColor: tableHeaderBg, color: tableHeaderColor }}>
                 {text}
             </h2>
         );

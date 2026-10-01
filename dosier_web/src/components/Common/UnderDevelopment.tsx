@@ -14,7 +14,7 @@ const UnderDevelopment = ({
       <div className="w-16 h-16 bg-surface border border-border-thin rounded-2xl flex items-center justify-center text-text-dim">
         <Construction size={32} />
       </div>
-      <h2 className="text-xl font-bold text-text-main uppercase tracking-tighter">{title}</h2>
+      <h2 className="text-xl font-bold text-text-main uppercase tracking-tight">{title}</h2>
       <p className="text-sm text-text-dim max-w-xs">{description}</p>
     </div>
   );

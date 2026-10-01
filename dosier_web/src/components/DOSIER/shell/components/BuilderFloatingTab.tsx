@@ -41,12 +41,12 @@ export const BuilderFloatingTab: React.FC<BuilderFloatingTabProps> = ({
             {isLeft ? (
                 <>
                     <FileText size={15} />
-                    <span className="[writing-mode:vertical-lr] rotate-180 text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Nav</span>
+                    <span className="[writing-mode:vertical-lr] rotate-180 text-[8px] font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Nav</span>
                 </>
             ) : (
                 <>
                     <MessageSquare size={15} className={isOnline ? 'animate-pulse' : ''} />
-                    <span className="[writing-mode:vertical-lr] text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Chat</span>
+                    <span className="[writing-mode:vertical-lr] text-[8px] font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">Chat</span>
                 </>
             )}
         </button>

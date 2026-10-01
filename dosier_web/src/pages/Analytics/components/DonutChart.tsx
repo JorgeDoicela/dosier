@@ -60,19 +60,19 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             <div className="absolute flex flex-col items-center justify-center text-center">
                 {selectedSegment ? (
                     <>
-                        <span className="text-[8px] font-black text-text-dim uppercase tracking-wider font-mono">
+                        <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider font-mono">
                             {selectedSegment}
                         </span>
-                        <span className="text-2xl font-black text-text-main font-mono">
+                        <span className="text-2xl font-bold text-text-main font-mono">
                             {elements.find(i => i.estado === selectedSegment)?.cantidad}
                         </span>
                     </>
                 ) : (
                     <>
-                        <span className="text-[8px] font-black text-text-dim uppercase tracking-widest font-mono">
+                        <span className="text-[8px] font-bold text-text-dim uppercase tracking-wider font-mono">
                             TOTAL
                         </span>
-                        <span className="text-3xl font-black text-text-main font-mono leading-none">
+                        <span className="text-3xl font-bold text-text-main font-mono leading-none">
                             {total}
                         </span>
                     </>

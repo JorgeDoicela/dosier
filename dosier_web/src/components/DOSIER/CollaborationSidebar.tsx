@@ -639,7 +639,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 {isProtocolDocument && projectStatus === 'En Corrección' && (
                     <button
                         onClick={() => setActiveTab('correcciones')}
-                        className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-error text-error bg-error/5' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'correcciones' ? 'border-error text-error bg-error/5' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                             }`}
                     >
                         <Shield size={14} className="text-error" />
@@ -648,7 +648,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 )}
                 <button
                     onClick={() => setActiveTab('comments')}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'comments' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                    className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'comments' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
                 >
                     <MessageSquare size={14} />
@@ -656,7 +656,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 </button>
                 <button
                     onClick={() => setActiveTab('status')}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'status' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                    className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'status' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
                 >
                     <CheckCircle size={14} />
@@ -664,7 +664,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 </button>
                 <button
                     onClick={() => setActiveTab('activity')}
-                    className={`flex-1 py-3 text-[9px] font-black uppercase tracking-widest transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'activity' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                    className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'activity' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
                 >
                     <Clock size={14} />
@@ -700,7 +700,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                     <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
                                                         <MessageSquare size={20} className="text-text-dim" />
                                                     </div>
-                                                    <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Sin comentarios aún</p>
+                                                    <p className="text-[9px] font-bold text-text-dim uppercase tracking-wider">Sin comentarios aún</p>
                                                     <p className="text-[8px] text-text-dim mt-1 max-w-[150px] leading-relaxed">Escribe un mensaje para coordinar la redacción.</p>
                                                 </div>
                                             );
@@ -966,7 +966,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         <div className="flex items-center justify-between bg-red-500/5 border border-red-500/25 rounded-xl p-2 px-3 animate-pulse">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
-                                                <span className="text-[8px] font-black uppercase text-red-400 tracking-wider font-mono">
+                                                <span className="text-[8px] font-bold uppercase text-red-400 tracking-wider font-mono">
                                                     Grabando ({Math.floor(recordingTime / 60)}:{(recordingTime % 60) < 10 ? '0' : ''}{recordingTime % 60})
                                                 </span>
                                             </div>
@@ -981,7 +981,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                 <button
                                                     type="button"
                                                     onClick={stopRecording}
-                                                    className="px-2 py-0.5 bg-red-500 text-white rounded text-[8px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-md"
+                                                    className="px-2 py-0.5 bg-red-500 text-white rounded text-[8px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all shadow-md"
                                                 >
                                                     ok
                                                 </button>
@@ -990,7 +990,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     ) : audioUrl ? (
                                         <div className="flex items-center justify-between bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-2 animate-fade-in">
                                             <div className="space-y-0.5 min-w-0 flex-1 mr-2">
-                                                <span className="text-[7px] font-black uppercase text-emerald-400 tracking-widest block mb-1">Audio grabado</span>
+                                                <span className="text-[7px] font-bold uppercase text-emerald-400 tracking-widest block mb-1">Audio grabado</span>
                                                 <AudioBubblePlayer src={audioUrl} />
                                             </div>
                                             <button
@@ -1154,7 +1154,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                             {completedCount} de {allSections.length} secciones completadas
                                                         </p>
                                                     </div>
-                                                    <span className={`text-sm font-mono font-black transition-colors ${progressTheme.text}`}>{globalProgress}%</span>
+                                                    <span className={`text-sm font-mono font-bold transition-colors ${progressTheme.text}`}>{globalProgress}%</span>
                                                 </div>
 
                                                 <div className="w-full bg-surface-hover h-1.5 rounded-full overflow-hidden p-[1px] border border-border-thin/40">
@@ -1238,7 +1238,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
                                             <Activity size={20} className="text-text-dim" />
                                         </div>
-                                        <p className="text-[9px] font-black text-text-dim uppercase tracking-wider">Sin actividad reciente</p>
+                                        <p className="text-[9px] font-bold text-text-dim uppercase tracking-wider">Sin actividad reciente</p>
                                         <p className="text-[8px] text-text-dim mt-1 max-w-[150px] leading-relaxed">Las ediciones y cambios de estado aparecerán aquí.</p>
                                     </div>
                                 ) : (
@@ -1275,7 +1275,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-2">
                                                 <Shield size={13} className="text-error shrink-0" />
-                                                <span className="text-[10px] font-black text-error uppercase tracking-widest block">Observación Curricular de la Coordinación</span>
+                                                <span className="text-[10px] font-bold text-error uppercase tracking-widest block">Observación Curricular de la Coordinación</span>
                                             </div>
                                         </div>
                                         <p className="text-[11px] text-text-main font-medium italic font-mono leading-relaxed break-words pl-5">
@@ -1296,7 +1296,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                 {/* Checklist de correcciones por sección */}
                                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                                     <div className="pb-1.5 border-b border-border-thin flex justify-between items-center">
-                                        <h4 className="text-[9px] font-black text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
+                                        <h4 className="text-[9px] font-bold text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
                                         <span className="text-[8px] font-mono font-bold text-text-dim/60">
                                             {comments.filter(c => parseAuditComment(c.contenido) !== null).length} Observaciones
                                         </span>
@@ -1326,7 +1326,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                     return (
                                                         <div key={idx} className="p-3.5 rounded-2xl border border-border-thin bg-surface hover:border-border-hover transition-all space-y-2 shadow-sm">
                                                             <div className="flex justify-between items-center gap-2">
-                                                                <span className="text-[9px] font-black text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
+                                                                <span className="text-[9px] font-bold text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
                                                                     {item.audit.seccion}
                                                                 </span>
                                                                 <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 ${isAprobado

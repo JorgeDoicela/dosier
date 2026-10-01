@@ -22,6 +22,7 @@ import {
     Send
 } from 'lucide-react';
 import type { MenuItem, SidebarProject } from '../types';
+import { useAuth } from '../../../../api/AuthContext';
 
 const ChevronRightIcon = ({ className = "w-3 h-3", size = 12 }: { className?: string; size?: number }) => (
     <svg
@@ -112,6 +113,8 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
     location,
     onClose
 }) => {
+    const { isAdmin } = useAuth();
+
     const renderMenuItem = (item: MenuItem) => {
         const isActive = item === activeItem;
         const isDocumentacion = item.name === 'Documentación' || item.name === 'Mis Instrumentos PEA' || item.path.startsWith('/documentacion');
@@ -434,7 +437,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                 { name: 'Catálogo de Trámites', path: '/solicitudes', icon: Layers },
                                 { name: 'Prórrogas de Plazo', path: '/solicitudes?tipo=prorrogas', icon: Clock },
                                 { name: 'Clonación Curricular', path: '/solicitudes?tipo=clonacion', icon: Copy },
-                                { name: 'Buzón de Incidencias', path: '/incidencias', icon: MessageSquarePlus }
+                                ...(isAdmin ? [{ name: 'Buzón de Incidencias', path: '/incidencias', icon: MessageSquarePlus }] : [])
                             ].map((subItem) => {
                                 const isSubActive = 
                                     (subItem.path === '/solicitudes' && location.pathname === '/solicitudes' && (!location.search || location.search === '')) ||

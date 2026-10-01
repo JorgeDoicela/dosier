@@ -1541,10 +1541,10 @@ export const RenderExpectedProducts: React.FC<{ config: any; blockId?: string; o
                         type="text"
                         value={productosTitle}
                         onChange={e => onUpdateConfig(blockId, 'productosTitle', e.target.value)}
-                        className="text-[10px] font-black uppercase text-slate-800 tracking-wide bg-transparent border-b border-dashed border-slate-300 focus:border-emerald-600 focus:outline-none w-full py-0.5"
+                        className="text-[10px] font-bold uppercase text-slate-800 tracking-wide bg-transparent border-b border-dashed border-slate-300 focus:border-emerald-600 focus:outline-none w-full py-0.5"
                     />
                 ) : (
-                    <h5 className="text-[9.5px] font-black uppercase text-slate-800 tracking-wide">{productosTitle}</h5>
+                    <h5 className="text-[9.5px] font-bold uppercase text-slate-800 tracking-wide">{productosTitle}</h5>
                 )}
 
                 {layoutMode === 'grouped_sections' ? (
@@ -1757,10 +1757,10 @@ export const RenderImpacts: React.FC<{
                         type="text"
                         value={displayTitle}
                         onChange={e => onUpdateConfig(blockId, 'impactsTitle', e.target.value)}
-                        className="text-[9.5px] font-black uppercase text-slate-800 tracking-wide bg-transparent border-b border-dashed border-slate-300 focus:border-indigo-600 focus:outline-none py-0.5 max-w-md"
+                        className="text-[9.5px] font-bold uppercase text-slate-800 tracking-wide bg-transparent border-b border-dashed border-slate-300 focus:border-indigo-600 focus:outline-none py-0.5 max-w-md"
                     />
                 ) : (
-                    <h5 className="text-[9.5px] font-black uppercase text-slate-800 tracking-wide">{displayTitle}</h5>
+                    <h5 className="text-[9.5px] font-bold uppercase text-slate-800 tracking-wide">{displayTitle}</h5>
                 )}
 
                 {onUpdateConfig && blockId && (

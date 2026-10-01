@@ -295,7 +295,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
             {/* Días de la Semana */}
             <div className="grid grid-cols-7 gap-1 text-center mb-1">
                 {DAY_NAMES.map((dName) => (
-                    <div key={dName} className="text-[10px] font-black text-text-dim/60 uppercase tracking-widest py-1">
+                    <div key={dName} className="text-[10px] font-bold text-text-dim/60 uppercase tracking-wider py-1">
                         {dName}
                     </div>
                 ))}
@@ -342,7 +342,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                             onClick={() => handleSelectDay(dayNum)}
                             className={`h-8 w-full flex items-center justify-center rounded-lg text-xs transition-all relative ${
                                 isSelected
-                                    ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-black shadow-sm'
+                                    ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-bold shadow-sm'
                                     : isToday
                                     ? 'border border-text-main/40 font-bold text-text-main hover:bg-surface-hover'
                                     : 'font-medium text-text-main hover:bg-surface-hover'

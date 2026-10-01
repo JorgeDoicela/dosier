@@ -99,7 +99,7 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
     return (
         <div ref={containerRef} className={`relative w-full ${containerClassName}`}>
             {label && (
-                <label className="block text-[10px] font-black text-text-dim uppercase tracking-widest ml-2 mb-1.5 sm:mb-2">
+                <label className="block text-[10px] font-bold text-text-dim uppercase tracking-wider ml-2 mb-1.5 sm:mb-2">
                     {label}
                 </label>
             )}
@@ -144,7 +144,7 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
             </div>
 
             {error && (
-                <p className="text-[9px] font-black text-red-500 uppercase tracking-wider mt-1.5 ml-2 animate-fade-in">
+                <p className="text-[9px] font-bold text-red-500 uppercase tracking-wider mt-1.5 ml-2 animate-fade-in">
                     {error}
                 </p>
             )}

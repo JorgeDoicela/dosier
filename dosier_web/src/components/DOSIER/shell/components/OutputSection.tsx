@@ -148,20 +148,20 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
 
     return (
         <div className="flex-1 p-2 sm:p-4 lg:p-6 flex flex-col gap-3 md:gap-4 animate-fade-in overflow-y-auto lg:overflow-hidden custom-scrollbar">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 md:gap-5 flex-1 min-h-0 lg:overflow-hidden p-0.5">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 lg:overflow-hidden p-0.5">
                 {/* Panel de Controles Unificado */}
-                <div className="col-span-1 lg:col-span-3 bg-bg-deep border border-border-thin rounded-2xl shadow-sm flex flex-col lg:overflow-hidden lg:h-full">
-                    {/* Sección 1: Emisión */}
-                    <div className="p-5 flex flex-col gap-4 shrink-0">
-                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-text-dim flex items-center gap-2">
-                            <Settings size={16} className="text-text-dim" /> Emisión
+                <div className="col-span-1 lg:col-span-4 bg-bg-deep border border-border-thin rounded-2xl shadow-sm flex flex-col lg:overflow-hidden lg:h-full">
+                    {/* Sección 1: Emisión y Vista Previa */}
+                    <div className="p-5 sm:p-6 flex flex-col gap-4 shrink-0">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-text-dim flex items-center gap-2">
+                            <Settings size={16} className="text-text-dim" /> Emisión del Documento
                         </h4>
 
                         {/* Switch Modo Borrador */}
-                        <div className="flex items-center justify-between p-3.5 bg-surface/50 border border-border-thin/80 rounded-xl hover:border-border-hover transition-colors">
+                        <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border-thin">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-semibold text-text-main">Modo borrador</span>
-                                <span className="text-[10px] text-text-dim">Marca de agua de seguridad</span>
+                                <span className="text-xs sm:text-sm font-semibold text-text-main">Modo borrador</span>
+                                <span className="text-xs text-text-dim">Marca de agua institucional</span>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input
@@ -170,56 +170,44 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                     onChange={(e) => setIsDraftMode(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className="w-9 h-5 bg-border-thin peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-text-main"></div>
+                                <div className="w-10 h-6 bg-border-thin peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0070f3]"></div>
                             </label>
                         </div>
 
-                        {/* Botones de Generación y Vista */}
-                        <div className="flex flex-col gap-2">
-                            <button
-                                type="button"
-                                onClick={() => handleGeneratePdf(false)}
-                                disabled={isGenerating}
-                                className="w-full py-2.5 px-4 btn-vercel-primary text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
-                            >
-                                <FileText size={14} />
-                                <span>{isGenerating ? 'Generando...' : 'Generar vista previa'}</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => handleGeneratePdf(true)}
-                                disabled={isGenerating}
-                                className="w-full py-2.5 px-4 btn-vercel-secondary text-xs font-medium rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                            >
-                                <Users size={14} />
-                                <span>Vista sin identidades</span>
-                            </button>
-                        </div>
+                        {/* Botón de Generación de Vista Previa */}
+                        <button
+                            type="button"
+                            onClick={() => handleGeneratePdf(false)}
+                            disabled={isGenerating}
+                            className="w-full py-3 px-4 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs sm:text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                        >
+                            <FileText size={16} />
+                            <span>{isGenerating ? 'Generando vista previa...' : 'Generar Vista Previa'}</span>
+                        </button>
                     </div>
 
                     <div className="h-[1px] bg-border-thin/60 w-full shrink-0" />
 
                     {/* Sección 2: Firmas */}
-                    <div className="p-5 flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+                    <div className="p-5 sm:p-6 flex-1 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
                         <div className="space-y-4">
                             {isDocumentSigned ? (
-                                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center space-y-3 animate-fade-in">
+                                <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center space-y-3 animate-fade-in">
                                     <div className="flex justify-center">
-                                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-sm">
-                                            <CheckCircle size={20} />
+                                        <div className="w-11 h-11 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-sm">
+                                            <CheckCircle size={22} />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-sm font-semibold text-text-main">Documento Firmado Oficialmente</p>
+                                        <p className="text-sm font-bold text-text-main">Documento Firmado Oficialmente</p>
                                         <p className="text-xs text-text-dim leading-relaxed">
                                             {isCurrentProtocolo && isExpedienteCompleto && projectStatus === 'Enviado'
-                                                ? 'El protocolo cuenta con firmas electrónicas y ha sido remitido a la etapa de Revisión del Administrador.'
+                                                ? 'El documento cuenta con firmas electrónicas y ha sido remitido a la etapa de Revisión del Administrador.'
                                                 : 'Este documento cuenta con firma electrónica oficial y registro inmutable de trazabilidad.'}
                                         </p>
                                     </div>
 
-                                    <div className="pt-1 flex flex-col gap-2">
+                                    <div className="pt-2 flex flex-col gap-2">
                                         {isAdmin && isCurrentProtocolo && isExpedienteCompleto && projectStatus === 'Enviado' && (
                                             <button
                                                 type="button"
@@ -227,11 +215,11 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                     const pId = projectUuid || documentUuid;
                                                     if (pId) navigate(`/documentacion/revision-tecnica/${pId}`);
                                                 }}
-                                                className="w-full py-2 px-3 bg-text-main hover:bg-text-main/90 text-bg-deep rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                                                className="w-full py-2.5 px-3 bg-text-main hover:bg-text-main/90 text-bg-deep rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                                             >
-                                                <Shield size={14} />
+                                                <Shield size={15} />
                                                 <span>Ir a Revisión Técnica</span>
-                                                <ArrowRight size={13} />
+                                                <ArrowRight size={14} />
                                             </button>
                                         )}
 
@@ -243,44 +231,43 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                 url.searchParams.delete('section');
                                                 navigate(url.pathname);
                                             }}
-                                            className="w-full py-2 px-3 btn-vercel-secondary text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                            className="w-full py-2.5 px-3 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                         >
-                                            <Settings size={14} />
-                                            <span>Ver Proyecto</span>
+                                            <Settings size={15} />
+                                            <span>Ver Asignatura</span>
                                         </button>
                                     </div>
                                 </div>
                             ) : !canSign ? (
-                                <div className="p-4 bg-surface border border-border-thin rounded-xl text-center space-y-2.5">
+                                <div className="p-5 bg-surface border border-border-thin rounded-xl text-center space-y-2.5">
                                     <div className="flex justify-center">
-                                        <div className="icon-circle icon-circle-warning !p-2">
-                                            <Shield size={16} />
+                                        <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-500">
+                                            <Shield size={18} />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-sm font-semibold text-text-main">Firma restringida</p>
                                         <p className="text-xs text-text-dim leading-relaxed">
-                                            Solo el Administrador / Coordinación de Investigación está autorizado/a para firmar digitalmente este documento.
+                                            Solo los roles autorizados (Docente, Coordinación o Vicerrectorado) pueden firmar digitalmente este instrumento.
                                         </p>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-4">
                                     {(signatureType === 'DOSIER' || signatureType === 'HIBRIDO') && (
-                                        <div className="flex flex-col gap-3 p-4 border border-border-thin rounded-2xl bg-surface/30">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <Shield size={16} className="text-text-main" />
-                                                <h4 className="text-xs font-black uppercase tracking-wider text-text-main">Firma Institucional DOSIER</h4>
+                                        <div className="flex flex-col gap-3.5 p-5 border border-border-thin rounded-xl bg-surface">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <Shield size={18} className="text-[#0070f3]" />
+                                                <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Institucional DOSIER</h4>
                                             </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-text-dim block">Contraseña Institucional</label>
-                                                <p className="text-[9px] text-text-dim">Por seguridad, confirme su contraseña de cuenta para firmar.</p>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-text-dim block">Contraseña Institucional</label>
                                                 <input
                                                     type="password"
-                                                    placeholder="Contraseña de tu cuenta"
+                                                    placeholder="Ingresa la contraseña de tu cuenta"
                                                     value={institutionalPassword}
                                                     onChange={(e) => setInstitutionalPassword(e.target.value)}
-                                                    className="w-full bg-surface border border-border-thin rounded-xl px-3 py-2 text-xs focus:border-text-main outline-none transition-all placeholder:text-text-dim/50"
+                                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all placeholder:text-text-dim/40"
                                                 />
                                             </div>
 
@@ -288,28 +275,28 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                 type="button"
                                                 onClick={handleSignDosier}
                                                 disabled={isSigning || !institutionalPassword}
-                                                className={`w-full py-2.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!institutionalPassword)
-                                                        ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed'
-                                                        : 'bg-text-main text-bg-deep hover:bg-text-main/90 shadow-sm'
+                                                className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!institutionalPassword || isSigning)
+                                                        ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
+                                                        : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
                                                     }`}
                                             >
-                                                {isSigning ? <><Clock size={14} className="animate-spin" /> Firmando...</> : <><Shield size={14} /> Aplicar firma DOSIER</>}
+                                                {isSigning ? <><Clock size={15} className="animate-spin" /> Firmando documento...</> : <><Shield size={15} /> Aplicar firma institucional</>}
                                             </button>
                                         </div>
                                     )}
 
                                     {(signatureType === 'ECUADOR_P12' || signatureType === 'HIBRIDO') && (
-                                        <div className="flex flex-col gap-3 p-4 border border-border-thin rounded-2xl bg-surface/30">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <FileText size={16} className="text-text-main" />
-                                                <h4 className="text-xs font-black uppercase tracking-wider text-text-main">Firma Digital (.p12 / .pfx)</h4>
+                                        <div className="flex flex-col gap-3.5 p-5 border border-border-thin rounded-xl bg-surface">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <FileText size={18} className="text-[#0070f3]" />
+                                                <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Digital (.p12 / .pfx)</h4>
                                             </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-text-dim block">Certificado .p12</label>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-text-dim block">Certificado .p12</label>
                                                 <label
-                                                    className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-3 cursor-pointer transition-all gap-1.5 ${signatureCertFile
-                                                            ? 'border-green-500/40 bg-green-500/5'
-                                                            : 'border-border-thin hover:border-text-main/30 bg-surface'
+                                                    className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all gap-1.5 ${signatureCertFile
+                                                            ? 'border-emerald-500/50 bg-emerald-500/5'
+                                                            : 'border-border-thin hover:border-[#0070f3]/50 bg-bg-deep'
                                                         }`}
                                                 >
                                                     <input
@@ -320,28 +307,28 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                     />
                                                     {signatureCertFile ? (
                                                         <>
-                                                            <CheckCircle size={16} className="text-green-500" />
-                                                            <span className="text-[10px] font-semibold text-text-main truncate max-w-[160px]">{signatureCertFile.name}</span>
-                                                            <span className="text-[9px] text-text-dim">Clic para cambiar</span>
+                                                            <CheckCircle size={18} className="text-emerald-500" />
+                                                            <span className="text-xs font-semibold text-text-main truncate max-w-[200px]">{signatureCertFile.name}</span>
+                                                            <span className="text-[11px] text-text-dim">Clic para cambiar archivo</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <Shield size={16} className="text-text-dim" />
-                                                            <span className="text-[10px] font-semibold text-text-main">Seleccionar .p12 / .pfx</span>
-                                                            <span className="text-[9px] text-text-dim">No se guarda en el servidor</span>
+                                                            <Shield size={18} className="text-text-dim" />
+                                                            <span className="text-xs font-semibold text-text-main">Seleccionar archivo .p12 / .pfx</span>
+                                                            <span className="text-[11px] text-text-dim">No se almacena en el servidor</span>
                                                         </>
                                                     )}
                                                 </label>
                                             </div>
 
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-text-dim block">Contraseña del certificado</label>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-text-dim block">Contraseña del certificado</label>
                                                 <input
                                                     type="password"
-                                                    placeholder="Contraseña del .p12"
+                                                    placeholder="Contraseña del archivo .p12"
                                                     value={signaturePassword}
                                                     onChange={(e) => setSignaturePassword(e.target.value)}
-                                                    className="w-full bg-surface border border-border-thin rounded-xl px-3 py-2 text-xs focus:border-text-main outline-none transition-all placeholder:text-text-dim/50"
+                                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all placeholder:text-text-dim/40"
                                                 />
                                             </div>
 
@@ -349,30 +336,30 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                 type="button"
                                                 onClick={handleSign}
                                                 disabled={isSigning || !signatureCertFile}
-                                                className={`w-full py-2.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!signatureCertFile || isSigning)
-                                                        ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed'
-                                                        : 'bg-text-main text-bg-deep hover:bg-text-main/90 shadow-sm'
+                                                className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!signatureCertFile || isSigning)
+                                                        ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
+                                                        : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
                                                     }`}
                                             >
-                                                {isSigning ? <><Clock size={14} className="animate-spin" /> Firmando...</> : <><Shield size={14} /> Aplicar firma electrónica</>}
+                                                {isSigning ? <><Clock size={15} className="animate-spin" /> Firmando documento...</> : <><Shield size={15} /> Aplicar firma electrónica</>}
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            <div className="mt-4 border-t border-border-thin pt-4">
+                            <div className="mt-2 border-t border-border-thin pt-4">
                                 <SignatureBlock 
                                     documentoUuid={documentUuid || formData.Uuid || formData.uuid || ''} 
                                     refreshTrigger={signatureRefreshTrigger} 
-                                />
+                                    />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Visor de PDF */}
-                <div className="col-span-1 lg:col-span-9 bg-bg-deep border border-border-thin rounded-2xl flex flex-col shadow-inner relative overflow-hidden h-[85vh] sm:h-[88vh] min-h-[750px] lg:h-full lg:min-h-0">
+                <div className="col-span-1 lg:col-span-8 bg-bg-deep border border-border-thin rounded-2xl flex flex-col shadow-inner relative overflow-hidden h-[85vh] sm:h-[88vh] min-h-[750px] lg:h-full lg:min-h-0">
                     {isGenerating ? (
                         <FullscreenLoader 
                             fullscreen={false} 
@@ -388,8 +375,8 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                     ) : (
                         <div className="flex-1 flex flex-col items-center justify-center text-text-dim/20 p-8">
                             <FileText size={80} strokeWidth={0.5} className="mb-6 lg:mb-8 md:w-[120px]" />
-                            <p className="text-xs md:text-sm font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-center">Listo para generar</p>
-                            <button onClick={() => handleGeneratePdf(false)} className="mt-6 px-6 py-3 bg-text-main text-bg-deep rounded-xl text-[10px] font-black uppercase tracking-widest lg:hidden cursor-pointer">
+                            <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] md:tracking-[0.5em] text-center">Listo para generar</p>
+                            <button onClick={() => handleGeneratePdf(false)} className="mt-6 px-6 py-3 bg-text-main text-bg-deep rounded-xl text-[10px] font-bold uppercase tracking-widest lg:hidden cursor-pointer">
                                 Generar PDF
                             </button>
                         </div>

@@ -32,7 +32,7 @@ export const EmailHistoryDrawer: React.FC<EmailHistoryDrawerProps> = ({ historyH
             <div className="relative w-full max-w-2xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-slide-in-right overflow-hidden">
                 <header className="modal-header">
                     <div className="space-y-1">
-                        <h3 className="text-lg font-bold tracking-tighter text-text-main uppercase">Bitácora de Despacho</h3>
+                        <h3 className="text-lg font-bold tracking-tight text-text-main uppercase">Bitácora de Despacho</h3>
                         <p className="text-[10px] font-mono text-text-dim uppercase tracking-widest">ID Log: {selectedHistoryLog.uuid}</p>
                     </div>
                     <button onClick={() => setIsHistoryDrawerOpen(false)} className="text-text-dim hover:text-text-main transition-colors cursor-pointer">

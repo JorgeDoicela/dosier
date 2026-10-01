@@ -282,7 +282,7 @@ export const RenderCover: React.FC<RenderCoverProps> = ({
         if (!textInst) return null;
         return (
             <span
-                className={`font-black uppercase tracking-widest select-none inline-flex items-center gap-1.5 ${institutionItalica ? 'italic' : ''}`}
+                className={`font-bold uppercase tracking-widest select-none inline-flex items-center gap-1.5 ${institutionItalica ? 'italic' : ''}`}
                 style={{
                     fontSize: `${institutionFontSize}pt`,
                     color: colorInst === '#ffffff' && !activeCoverImage ? '#1e2a4a' : colorInst

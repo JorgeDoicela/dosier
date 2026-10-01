@@ -58,7 +58,7 @@ export const RenderMultiSectionTable: React.FC<{ config: any }> = ({ config }) =
         <div className="space-y-4 my-2">
             {sections.map((sec, sIdx) => (
                 <div key={sIdx} className="space-y-1">
-                    <h5 className="text-[9px] font-black text-slate-700 uppercase tracking-wider">{sec.title || `Sub-tabla N° ${sIdx + 1}`}</h5>
+                    <h5 className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">{sec.title || `Sub-tabla N° ${sIdx + 1}`}</h5>
                     <table className="w-full border-collapse text-[10px] border border-slate-200">
                         <thead>
                             <tr>
@@ -285,8 +285,8 @@ export const RenderRubricTable: React.FC<{ config: any }> = ({ config }) => {
                     </tr>
                     <tr className="bg-slate-50 font-bold">
                         <td className="border border-slate-300 p-2 text-right text-slate-700 uppercase text-[9px]">Puntaje Total Consolidado:</td>
-                        <td className="border border-slate-300 p-2 text-center text-slate-800 font-black">100</td>
-                        <td className="border border-slate-300 p-2 text-center bg-slate-100 text-brand font-black text-xs">[Por calificar]</td>
+                        <td className="border border-slate-300 p-2 text-center text-slate-800 font-bold">100</td>
+                        <td className="border border-slate-300 p-2 text-center bg-slate-100 text-brand font-bold text-xs">[Por calificar]</td>
                     </tr>
                 </tbody>
             </table>

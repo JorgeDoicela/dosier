@@ -19,8 +19,13 @@ interface PerfilData {
 
 const SettingsPage: React.FC = () => {
     const { addToast } = useNotifications();
-    const { logout, isAdmin } = useAuth();
+    const { logout, isAdmin, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
+
+    const canManageParams = isAdmin || isCoordAcad || isVicerrector;
+    const canManageTemplates = isAdmin || isCoordAcad || isVicerrector;
+    const canManageStorage = isAdmin;
+    const hasAdminTabs = canManageParams || canManageTemplates || canManageStorage;
 
     const [searchParams, setSearchParams] = useSearchParams();
     const tabParam = searchParams.get('tab');
@@ -28,15 +33,19 @@ const SettingsPage: React.FC = () => {
 
     // Activar pestaña de administración si el parámetro de URL apunta a catálogos
     const isParamTab = tabParam === 'periodos' || tabParam === 'calendario';
-    const activeMainTab = (isAdmin && isParamTab) 
+    const activeMainTab = (canManageParams && isParamTab) 
         ? 'parametros' 
-        : (isAdmin && (tabParam === 'plantillas' || mainTabParam === 'plantillas')) 
+        : (canManageTemplates && (tabParam === 'plantillas' || mainTabParam === 'plantillas')) 
             ? 'plantillas' 
-            : (isAdmin && (tabParam === 'almacenamiento' || mainTabParam === 'almacenamiento'))
+            : (canManageStorage && (tabParam === 'almacenamiento' || mainTabParam === 'almacenamiento'))
                 ? 'almacenamiento'
                 : 'perfil';
 
     const setActiveMainTab = (tab: 'perfil' | 'parametros' | 'plantillas' | 'almacenamiento') => {
+        if (tab === 'parametros' && !canManageParams) return;
+        if (tab === 'plantillas' && !canManageTemplates) return;
+        if (tab === 'almacenamiento' && !canManageStorage) return;
+
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
             next.set('mainTab', tab);
@@ -172,10 +181,10 @@ const SettingsPage: React.FC = () => {
     };
 
     useEffect(() => {
-        if (isAdmin && activeMainTab === 'plantillas') {
+        if (canManageTemplates && activeMainTab === 'plantillas') {
             fetchTemplates();
         }
-    }, [isAdmin, activeMainTab]);
+    }, [canManageTemplates, activeMainTab]);
 
 
 
@@ -257,7 +266,7 @@ const SettingsPage: React.FC = () => {
                 }
             />
 
-            {isAdmin && (
+            {hasAdminTabs && (
                 <div className="tabs-vercel !mb-2">
                     <button
                         onClick={() => setActiveMainTab('perfil')}
@@ -268,33 +277,39 @@ const SettingsPage: React.FC = () => {
                         <User size={14} />
                         <span>Mi Perfil de Firma</span>
                     </button>
-                    <button
-                        onClick={() => setActiveMainTab('parametros')}
-                        className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
-                            activeMainTab === 'parametros' ? 'active' : ''
-                        }`}
-                    >
-                        <Settings2 size={14} />
-                        <span>Parámetros del Sistema</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveMainTab('plantillas')}
-                        className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
-                            activeMainTab === 'plantillas' ? 'active' : ''
-                        }`}
-                    >
-                        <Shield size={14} />
-                        <span>Firmas por Plantilla</span>
-                    </button>
-                    <button
-                        onClick={() => setActiveMainTab('almacenamiento')}
-                        className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
-                            activeMainTab === 'almacenamiento' ? 'active' : ''
-                        }`}
-                    >
-                        <HardDrive size={14} />
-                        <span>Almacenamiento</span>
-                    </button>
+                    {canManageParams && (
+                        <button
+                            onClick={() => setActiveMainTab('parametros')}
+                            className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
+                                activeMainTab === 'parametros' ? 'active' : ''
+                            }`}
+                        >
+                            <Settings2 size={14} />
+                            <span>Parámetros del Sistema</span>
+                        </button>
+                    )}
+                    {canManageTemplates && (
+                        <button
+                            onClick={() => setActiveMainTab('plantillas')}
+                            className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
+                                activeMainTab === 'plantillas' ? 'active' : ''
+                            }`}
+                        >
+                            <Shield size={14} />
+                            <span>Firmas por Plantilla</span>
+                        </button>
+                    )}
+                    {canManageStorage && (
+                        <button
+                            onClick={() => setActiveMainTab('almacenamiento')}
+                            className={`tab-vercel-item flex items-center gap-2 cursor-pointer ${
+                                activeMainTab === 'almacenamiento' ? 'active' : ''
+                            }`}
+                        >
+                            <HardDrive size={14} />
+                            <span>Almacenamiento</span>
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -515,9 +530,9 @@ const SettingsPage: React.FC = () => {
                         )}
                     </div>
                 </div>
-            ) : (
+            ) : activeMainTab === 'almacenamiento' && canManageStorage ? (
                 <DocumentMaintenancePage isEmbedded={true} />
-            )}
+            ) : null}
         </div>
     );
 };
