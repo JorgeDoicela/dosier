@@ -85,8 +85,8 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                     <button
                         onClick={onNavigateBack}
                         className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors group cursor-pointer text-xs font-medium bg-white dark:bg-zinc-950 shadow-2xs"
-                        title="Volver al Workspace"
-                        aria-label="Volver al Workspace"
+                        title="Volver"
+                        aria-label="Volver"
                     >
                         <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
                         <span>Volver</span>

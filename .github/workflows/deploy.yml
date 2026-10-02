@@ -341,14 +341,40 @@ jobs:
             MYSQL_PASS="$DB_ROOT_PASSWORD"
             docker compose exec -T dosier-db mysqladmin ping -h localhost -u root -p"$MYSQL_PASS" --silent --wait=60
 
-            echo "=== Sincronizando y recreando base de datos sigafi_es con scripts SQL oficiales ==="
-            docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" -e "DROP DATABASE IF EXISTS sigafi_es; CREATE DATABASE sigafi_es CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 | grep -v "Warning: Using a password" || true
-            for sql in 00_sigafi_esquema_y_datos_demo.sql 01_sistema_base.sql 02_gobernanza_y_antecedentes_curriculares.sql 03_curriculum_pea_oficial.sql 04_seguridad_rbac_roles_curriculares.sql; do
-              if [ -f "scripts/base_datos/$sql" ]; then
-                echo "Ejecutando script: $sql"
-                docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" --default-character-set=utf8mb4 sigafi_es < "scripts/base_datos/$sql" 2>&1 | grep -v "Warning: Using a password" || true
+            echo "=== Verificando estado de la base de datos sigafi_es ==="
+            DB_EXISTS=$(docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" -N -e "SHOW DATABASES LIKE 'sigafi_es';" 2>/dev/null | tr -d '\r\n' || true)
+
+            # Por solicitud en fase de pruebas: se reinicia la BD si RESET_DATABASE_ON_DEPLOY=true en .env (default), si se pide reset_database en workflow_dispatch, o si la BD no existe aún.
+            SHOULD_RESET="false"
+            if [ "${{ github.event.inputs.reset_database }}" = "true" ] || [ -z "$DB_EXISTS" ] || [ "$RESET_DATABASE_ON_DEPLOY" != "false" ]; then
+              SHOULD_RESET="true"
+            fi
+
+            if [ "$SHOULD_RESET" = "true" ]; then
+              echo "=== Modo Reinicio Activo: Recreando base de datos limpia para pruebas en produccion ==="
+              if [ -n "$DB_EXISTS" ]; then
+                echo "Generando snapshot de respaldo preventivo en backups/..."
+                mkdir -p backups
+                docker compose exec -T dosier-db mysqldump -u root -p"$MYSQL_PASS" sigafi_es 2>/dev/null | gzip > "backups/pre_reset_$(date +%Y%m%d_%H%M%S).sql.gz" || true
               fi
-            done
+
+              docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" -e "DROP DATABASE IF EXISTS sigafi_es; CREATE DATABASE sigafi_es CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 | grep -v "Warning: Using a password" || true
+              for sql in 00_sigafi_esquema_y_datos_demo.sql 01_sistema_base.sql 02_gobernanza_y_antecedentes_curriculares.sql 03_curriculum_pea_oficial.sql 04_seguridad_rbac_roles_curriculares.sql; do
+                if [ -f "scripts/base_datos/$sql" ]; then
+                  echo "Ejecutando script inicial oficial: $sql"
+                  docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" --default-character-set=utf8mb4 sigafi_es < "scripts/base_datos/$sql" 2>&1 | grep -v "Warning: Using a password" || true
+                fi
+              done
+            else
+              echo "=== Modo Persistencia Definitiva: Base de datos sigafi_es existente conservada ==="
+              docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" -e "CREATE DATABASE IF NOT EXISTS sigafi_es CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>&1 | grep -v "Warning: Using a password" || true
+              for sql in 01_sistema_base.sql 02_gobernanza_y_antecedentes_curriculares.sql 03_curriculum_pea_oficial.sql 04_seguridad_rbac_roles_curriculares.sql; do
+                if [ -f "scripts/base_datos/$sql" ]; then
+                  echo "Aplicando esquema incremental: $sql"
+                  docker compose exec -T dosier-db mysql -u root -p"$MYSQL_PASS" --default-character-set=utf8mb4 sigafi_es < "scripts/base_datos/$sql" 2>&1 | grep -v "Warning: Using a password" || true
+                fi
+              done
+            fi
 
             echo "=== Sincronizando rol de superadministrador configurado en .env ==="
             if [ -n "$SECURITY_SUPER_ADMIN_CEDULA" ]; then

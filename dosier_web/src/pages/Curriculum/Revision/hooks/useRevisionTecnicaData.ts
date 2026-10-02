@@ -85,8 +85,9 @@ export const useRevisionTecnicaData = ({
                 } catch {}
 
                 const tmplRes = await documentTemplateService.getTemplateByCode('PEA_OFICIAL');
-                if (tmplRes?.htmlContent) {
-                    const match = tmplRes.data.htmlContent.match(/<!-- DOSIER_SECTIONS_JSON: (.*?) -->/);
+                const rawHtml = tmplRes?.htmlContent || (tmplRes as any)?.html_content;
+                if (rawHtml) {
+                    const match = rawHtml.match(/<!-- DOSIER_SECTIONS_JSON:\s*(.*?) -->/);
                     if (match && match[1]) {
                         try {
                             const decoded = decodeURIComponent(escape(atob(match[1])));
@@ -94,9 +95,10 @@ export const useRevisionTecnicaData = ({
                         } catch {}
                     }
                 }
-                if (loadedBlocks.length === 0 && tmplRes.data?.collaborativeFieldsJson) {
+                const rawCollab = tmplRes?.collaborativeFieldsJson || (tmplRes as any)?.collaborative_fields_json;
+                if (loadedBlocks.length === 0 && rawCollab) {
                     try {
-                        const parsed = JSON.parse(tmplRes.data.collaborativeFieldsJson);
+                        const parsed = JSON.parse(rawCollab);
                         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
                             loadedBlocks = parsed;
                         }

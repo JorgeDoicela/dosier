@@ -25,6 +25,7 @@ import {
     HelpCircle,
     ExternalLink
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { useConfirm } from '../../../../api/ConfirmContext';
@@ -51,6 +52,7 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
     onStatusChanged,
     className = ''
 }) => {
+    const navigate = useNavigate();
     const { user, isAdmin } = useAuth();
     const { addToast } = useNotifications();
     const confirm = useConfirm();
@@ -352,7 +354,7 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                     {peaUuid && (
                         <button
                             type="button"
-                            onClick={() => window.open(`/documentacion/revision-tecnica/${peaUuid}`, '_self')}
+                            onClick={() => navigate(`/documentacion/revision-tecnica/${peaUuid}`)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
                             title="Abrir panel completo de revisión técnica con visor contextual y PDF"
                         >

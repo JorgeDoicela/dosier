@@ -89,7 +89,11 @@ export const useRevisionTecnica = () => {
                 return;
             }
         }
-        navigate(`/documentacion/workspace/pea-oficial/${projectUuid}?edit=pea-oficial`);
+        if (window.history.state && window.history.state.idx > 0) {
+            navigate(-1);
+        } else {
+            navigate('/documentacion/proyectos?tab=supervision-pea', { replace: true });
+        }
     };
 
     return {

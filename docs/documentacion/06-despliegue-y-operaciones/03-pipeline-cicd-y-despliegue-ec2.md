@@ -181,7 +181,10 @@ networks:
 ```
 
 ### 4.1 Politica de Persistencia y Almacenamiento
-* **`./mysql_data:/var/lib/mysql`:** Persistencia física de los archivos de tablas y registros de MySQL 8.0. En modo desarrollo/pruebas, el pipeline realiza un reseteo automático para recrear la estructura limpia desde los 5 scripts oficiales.
+
+* **`./mysql_data:/var/lib/mysql`:** Persistencia física de los archivos de tablas y registros de MySQL 8.0. El pipeline implementa una política dual gobernada por la variable de entorno `RESET_DATABASE_ON_DEPLOY`:
+  - **Fase de Pruebas (`RESET_DATABASE_ON_DEPLOY=true` o por defecto):** En cada despliegue genera automáticamente una copia de seguridad comprimida previa en `backups/pre_reset_*.sql.gz` y reinicializa la base de datos limpia con los 5 scripts SQL oficiales (`00_` a `04_`) para garantizar un entorno conocido, predecible y reproducible en cada validación.
+  - **Fase de Producción Definitiva (`RESET_DATABASE_ON_DEPLOY=false`):** Conserva al 100% todos los datos transaccionales existentes y únicamente aplica scripts DDL incrementales.
 * **`./scripts/base_datos:/docker-entrypoint-initdb.d:ro`:** Monta los 5 scripts DDL oficiales en modo lectura (`00_` a `04_`), garantizando la auto-inicialización y sincronización continua del esquema.
 * **`./uploads:/app/uploads`:** Almacena los archivos PDF oficiales generados por el motor `DocumentEngine`, firmas electrónicas PKCS#12 y evidencias curriculares.
 * **`./backups:/app/backups`:** Almacena volcados periódicos y copias de seguridad de la base de datos `sigafi_es`.
@@ -221,6 +224,9 @@ JWT_SETTINGS_SECRET=CLAVE_SECRETA_SSO_COMPARTIDA_MINIMO_32_BYTES
 BACKEND_PORT=5001
 FRONTEND_PORT=80
 FRONTEND_URL=https://dosier.jorgedoicela.com
+
+# Politica de persistencia en cada despliegue (true: reinicio limpio con respaldo previo para pruebas; false: produccion definitiva)
+RESET_DATABASE_ON_DEPLOY=true
 ```
 
 ---

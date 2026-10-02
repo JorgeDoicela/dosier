@@ -1,0 +1,15 @@
+.git
+.agents
+.vscode
+.idea
+docs
+scripts
+*.md
+.env*
+!.env.example
+node_modules
+dosier_web/node_modules
+dosier_web/dist
+**/bin/
+**/obj/
+**/TestResults/

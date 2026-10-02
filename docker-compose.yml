@@ -1,4 +1,4 @@
-﻿services:
+services:
   # ---------------------------------------------------------------------------
   # 1. Base de Datos Relacional (MySQL 8.0 con Auto-Inicialización de Scripts)
   # ---------------------------------------------------------------------------
@@ -28,8 +28,8 @@
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${DB_ROOT_PASSWORD}\""]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
 
   # ---------------------------------------------------------------------------
   # 2. Backend ASP.NET Core (.NET 8 Web API)
@@ -46,15 +46,15 @@
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
-      # Conexión a MySQL: dosier-db en Docker o host.docker.internal para MySQL nativo en Windows
+      # Conexión a MySQL: dosier-db en AWS Producción, o host.docker.internal en Staging local
       - ConnectionStrings__default_connection=Server=${DB_HOST:-dosier-db};Port=${DB_PORT_INTERNAL:-3306};Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
       - ConnectionStrings__DefaultConnection=Server=${DB_HOST:-dosier-db};Port=${DB_PORT_INTERNAL:-3306};Database=sigafi_es;User=root;Password=${DB_ROOT_PASSWORD};CharSet=utf8mb4;
       - Jwt__Secret=${JWT_SECRET:-DOSIER_JWT_zsJpOeYEHWFI8QL0dnTxolGUMywNPZB9V512Da3C7biXrtgf}
       - JWTSettings__Secret=${JWT_SETTINGS_SECRET:-DOSIER_SSO_Q612U9OpgHkBdhXTsAonNFC0jzSviWel73rftxRbyE5wMIac}
       - Jwt__Issuer=DosierApi
       - Jwt__Audience=DosierClients
-      # FrontendUrl controla CORS y links en emails — apunta al túnel o frontend activo
-      - FrontendUrl=${FRONTEND_URL:-http://localhost:80}
+      # FrontendUrl controla CORS y links en emails — staging-dosier.doicela.dev o frontend local
+      - FrontendUrl=${FRONTEND_URL:-https://staging-dosier.doicela.dev}
       - Security__SuperAdminCedula=${SECURITY_SUPER_ADMIN_CEDULA}
       - Security__MasterAdminId=${SECURITY_MASTER_ADMIN_ID}
     extra_hosts:
@@ -69,9 +69,6 @@
       options:
         max-size: "20m"
         max-file: "3"
-    depends_on:
-      dosier-db:
-        condition: service_healthy
     networks:
       - dosier-network
     healthcheck:
@@ -105,15 +102,13 @@
       - dosier-network
 
   # ---------------------------------------------------------------------------
-  # 4. Cloudflare Tunnel (Acceso Remoto HTTPS con Dominio Propio o Quick Tunnel)
+  # 4. Cloudflare Named Tunnel (Staging Oficial: staging-dosier.doicela.dev)
   # ---------------------------------------------------------------------------
   dosier-tunnel:
     image: cloudflare/cloudflared:latest
     container_name: dosier-tunnel
     restart: unless-stopped
-    # Si CLOUDFLARE_TUNNEL_TOKEN está definido en .env, usa el Named Tunnel persistente (staging-dosier.doicela.dev).
-    # De lo contrario, genera un Quick Tunnel temporal (*.trycloudflare.com).
-    command: ${CLOUDFLARE_TUNNEL_CMD:-tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}}
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     networks:
       - dosier-network
     depends_on:

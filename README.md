@@ -116,13 +116,16 @@ El diseño visual de DOSIER sigue estrictamente el estándar **Modern Enterprise
 
 ## 6. Configuración y Ejecución Local
 
-### Opción A: Ejecución Integral con Docker (Recomendada)
-Para levantar el stack completo (MySQL 8.0, Backend .NET, Frontend Nginx y Túnel HTTPS de Cloudflare):
+### Opción A: Ejecución de Staging con Docker (Recomendada)
+Para levantar el stack de Staging en Docker (Backend .NET 8 y Frontend Nginx conectados a tu MySQL local en Windows):
 ```powershell
-# Levantar stack con túnel público HTTPS
-.\scripts\despliegue\docker\start-local.ps1 -Tunnel
+# Levantar contenedores de Staging (expone http://localhost:8080)
+.\scripts\despliegue\docker\start-local.ps1
 
-# O detener el stack conservando los volúmenes de datos
+# Reconstruir imágenes tras cambios de código
+.\scripts\despliegue\docker\start-local.ps1 -Rebuild
+
+# Detener los contenedores
 .\scripts\despliegue\docker\start-local.ps1 -Down
 ```
 
@@ -192,6 +195,7 @@ La especificación completa del sistema está organizada en el directorio `docs/
 * [Sección 06: Seguridad Perimetral y SSL Cloudflare Origin CA](docs/documentacion/06-despliegue-y-operaciones/04-seguridad-ssl-cloudflare-origin-ca.md)
 * [Sección 06: Dimensionamiento de Servidor y Topología en AWS EC2](docs/documentacion/06-despliegue-y-operaciones/05-topologia-de-red-y-arquitectura-servidor.md)
 * [Sección 06: Guía de Aprovisionamiento, Migración y Rotación de Seguridad](docs/documentacion/06-despliegue-y-operaciones/06-guia-provisionamiento-y-migracion-servidores.md)
+* [Sección 06: Acceso Remoto Seguro con Cloudflare Tunnel (Staging)](docs/documentacion/06-despliegue-y-operaciones/07-acceso-remoto-cloudflare-tunnel.md)
 
 ---
 
@@ -200,6 +204,7 @@ La especificación completa del sistema está organizada en el directorio `docs/
 El repositorio implementa integración y despliegue continuo (CI/CD) automatizado mediante GitHub Actions hacia instancias AWS EC2 con Docker Compose:
 
 * **Pipeline Principal (`deploy.yml`):** Detección de cambios por rutas (`backend/**` vs `dosier_web/**`), compilación multi-stage, publicación de imágenes en GitHub Container Registry (`ghcr.io`), transferencia segura por SCP y despliegue zero-downtime vía SSH.
+* **Política de Persistencia y Reinicio Controlado:** En fase de pruebas, el pipeline reinicializa automáticamente la base de datos limpia con los 5 scripts SQL oficiales (`RESET_DATABASE_ON_DEPLOY=true`), generando siempre un respaldo comprimido previo en `backups/pre_reset_*.sql.gz`. Para pasar a producción definitiva con persistencia continua de datos, basta con establecer `RESET_DATABASE_ON_DEPLOY=false` en el servidor sin modificar código.
 * **Mecanismo de Rollback (`rollback.yml`):** Reversión instantánea por commit SHA sin re-compilación.
 * **Seguridad Perimetral:** Nginx como proxy inverso con terminación SSL en puerto 443 mediante certificados Cloudflare Origin CA bajo modo Full (Strict).
 
