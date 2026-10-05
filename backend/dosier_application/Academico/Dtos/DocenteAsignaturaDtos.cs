@@ -97,6 +97,7 @@ public class AcademicContextDto
     public int IdAsignacion { get; set; }
     public string IdProfesor { get; set; } = null!;
     public string IdPeriodo { get; set; } = null!;
+    public string? NombrePeriodo { get; set; }
     public int IdCarrera { get; set; }
     public string? NombreCarrera { get; set; }
     public string? CodigoCarrera { get; set; }

@@ -923,6 +923,10 @@ namespace dosier_infrastructure.Curriculum
             var docente = !string.IsNullOrEmpty(pea.IdDocenteElaborador) 
                 ? await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == pea.IdDocenteElaborador)
                 : null;
+            var periodo = !string.IsNullOrEmpty(pea.IdPeriodo)
+                ? await _context.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == pea.IdPeriodo)
+                : null;
+            string nombrePeriodo = !string.IsNullOrWhiteSpace(periodo?.Detalle) ? periodo.Detalle : pea.IdPeriodo;
 
             // Fallbacks defensivos de metadatos institucionales oficiales de SIGAFI
             string? semestreNivel = pea.SemestreNivel;
@@ -979,6 +983,7 @@ namespace dosier_infrastructure.Curriculum
                 NombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura",
                 CodigoAsignatura = asignatura?.Codigo,
                 IdPeriodo = pea.IdPeriodo,
+                NombrePeriodo = nombrePeriodo,
                 IdAsignacion = pea.IdAsignacion,
                 IdMalla = pea.IdMalla,
                 IdDetalleMalla = pea.IdDetalleMalla,

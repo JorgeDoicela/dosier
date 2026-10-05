@@ -66,7 +66,7 @@ export const DocumentWorkspace: React.FC = () => {
             const pea = currentProject?.peaData || currentProject || {};
             const asigNombre = pea.nombre_asignatura || pea.nombreAsignatura || currentProject?.titulo || currentProject?.title || '';
             const carreraNombre = pea.nombre_carrera || pea.nombreCarrera || currentProject?.carrera || '';
-            const perNombre = pea.id_periodo || pea.idPeriodo || currentProject?.convocatoria || '';
+            const perNombre = pea.nombre_periodo || pea.nombrePeriodo || pea.periodo || currentProject?.convocatoria || pea.id_periodo || pea.idPeriodo || '';
             const docNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || currentProject?.directorProyecto || '';
 
             base.titulo = asigNombre;
@@ -80,6 +80,10 @@ export const DocumentWorkspace: React.FC = () => {
             base.carrera = carreraNombre;
             base.Periodo = perNombre;
             base.periodo = perNombre;
+            base.NombrePeriodo = perNombre;
+            base.nombre_periodo = perNombre;
+            base.IdPeriodo = pea.id_periodo || pea.idPeriodo || '';
+            base.id_periodo = base.IdPeriodo;
             base.Modalidad = pea.modalidad || 'Presencial';
             base.modalidad = pea.modalidad || 'Presencial';
             base.Nivel = pea.semestre_nivel || pea.semestreNivel || '';

@@ -14,6 +14,7 @@ namespace dosier_application.Curriculum.Dtos
         public string NombreAsignatura { get; set; } = string.Empty;
         public string? CodigoAsignatura { get; set; }
         public string IdPeriodo { get; set; } = string.Empty;
+        public string? NombrePeriodo { get; set; }
         public int? IdAsignacion { get; set; }
         public int? IdMalla { get; set; }
         public int? IdDetalleMalla { get; set; }

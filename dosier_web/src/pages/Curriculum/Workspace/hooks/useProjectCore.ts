@@ -194,7 +194,7 @@ export function useProjectCore() {
                     dominio: pea.modalidad || 'Presencial',
                     descripcion: `Programa de Estudio de la Asignatura (PEA) para ${pea.nombre_asignatura || ''}.`,
                     carrera: pea.nombre_carrera || pea.nombreCarrera || '',
-                    convocatoria: pea.id_periodo || pea.idPeriodo || '',
+                    convocatoria: pea.nombre_periodo || pea.nombrePeriodo || pea.periodo || pea.id_periodo || pea.idPeriodo || '',
                     convocatoriaMontoMaximo: null,
                     fechaInicio: pea.fecha_creacion || null,
                     fechaFin: null,

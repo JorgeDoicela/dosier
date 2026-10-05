@@ -1,5 +1,4 @@
 import React from 'react';
-import { Clock } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 
@@ -209,123 +208,94 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
             })}
 
             {/* 10. Organización de aprendizajes por modalidad, número de horas destinadas a cada componente */}
-            <div className="pt-2 border-t border-border-thin space-y-3">
+            <div>
                 <div className="rounded-xl border border-border-thin overflow-hidden bg-surface shadow-xs">
-                    <div className="flex flex-col md:flex-row">
-                        {/* Celda Izquierda Oficial: Texto Descriptivo */}
-                        <div className="w-full md:w-5/12 p-4 sm:p-5 bg-bg-deep/40 border-b md:border-b-0 md:border-r border-border-thin flex flex-col justify-center">
-                            <div className="flex items-center gap-2.5">
-                                <Clock className="w-4 h-4 text-[#0070f3] shrink-0" />
-                                <span className="text-[11px] sm:text-xs font-bold text-text-main tracking-tight uppercase leading-snug">
-                                    Organización de aprendizajes por modalidad, número de horas destinadas a cada componente
-                                </span>
+                    {/* Encabezado compacto sin SVG */}
+                    <div className="px-4 py-2.5 bg-bg-deep/40 border-b border-border-thin">
+                        <span className="text-[11px] sm:text-xs font-bold text-text-main tracking-tight uppercase leading-snug">
+                            Organización de aprendizajes por modalidad, número de horas destinadas a cada componente
+                        </span>
+                    </div>
+
+                    {/* 3 Componentes en Grid horizontal compacto */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border-thin bg-surface">
+                        {/* Componente 1: Contacto Docente */}
+                        <div className="p-3 sm:p-3.5 flex items-center justify-between gap-2 sm:gap-3">
+                            <label className="text-xs sm:text-sm font-semibold text-text-main leading-tight">
+                                Total horas de contacto docente:
+                            </label>
+                            <div className="w-20 sm:w-24 shrink-0">
+                                <CoWorkField
+                                    name="HorasContactoDocente"
+                                    cowork={cowork}
+                                    type="number"
+                                    min={0}
+                                    max={totalHoras > 0 ? totalHoras : 999}
+                                    placeholder="0"
+                                    readOnly={readOnly}
+                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
+                                    onValueChange={(val) => onUpdate('HorasContactoDocente', Math.max(0, parseInt(val, 10) || 0))}
+                                />
                             </div>
                         </div>
 
-                        {/* Celda Derecha Oficial: 3 Filas Horizontales Idénticas al Formato Oficial */}
-                        <div className="w-full md:w-7/12 divide-y divide-border-thin bg-surface">
-                            {/* Fila 1: Contacto Docente */}
-                            <div className="p-3 sm:p-4 flex items-center justify-between gap-4">
-                                <label className="text-xs sm:text-sm font-semibold text-text-main">
-                                    Total horas de contacto docente:
-                                </label>
-                                <div className="w-24 sm:w-32 shrink-0">
-                                    <CoWorkField
-                                        name="HorasContactoDocente"
-                                        cowork={cowork}
-                                        type="text"
-                                        placeholder="0"
-                                        readOnly={readOnly}
-                                        className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
-                                        onValueChange={(val) => onUpdate('HorasContactoDocente', Number(val) || 0)}
-                                    />
-                                </div>
+                        {/* Componente 2: Práctico Experimental */}
+                        <div className="p-3 sm:p-3.5 flex items-center justify-between gap-2 sm:gap-3">
+                            <label className="text-xs sm:text-sm font-semibold text-text-main leading-tight">
+                                Total horas de práctico experimental:
+                            </label>
+                            <div className="w-20 sm:w-24 shrink-0">
+                                <CoWorkField
+                                    name="HorasPracticoExperimental"
+                                    cowork={cowork}
+                                    type="number"
+                                    min={0}
+                                    max={totalHoras > 0 ? totalHoras : 999}
+                                    placeholder="0"
+                                    readOnly={readOnly}
+                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
+                                    onValueChange={(val) => onUpdate('HorasPracticoExperimental', Math.max(0, parseInt(val, 10) || 0))}
+                                />
                             </div>
+                        </div>
 
-                            {/* Fila 2: Práctico Experimental */}
-                            <div className="p-3 sm:p-4 flex items-center justify-between gap-4">
-                                <label className="text-xs sm:text-sm font-semibold text-text-main">
-                                    Total horas de práctico experimental:
-                                </label>
-                                <div className="w-24 sm:w-32 shrink-0">
-                                    <CoWorkField
-                                        name="HorasPracticoExperimental"
-                                        cowork={cowork}
-                                        type="text"
-                                        placeholder="0"
-                                        readOnly={readOnly}
-                                        className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
-                                        onValueChange={(val) => onUpdate('HorasPracticoExperimental', Number(val) || 0)}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Fila 3: Aprendizaje Autónomo */}
-                            <div className="p-3 sm:p-4 flex items-center justify-between gap-4">
-                                <label className="text-xs sm:text-sm font-semibold text-text-main">
-                                    Total horas de aprendizaje autónomo:
-                                </label>
-                                <div className="w-24 sm:w-32 shrink-0">
-                                    <CoWorkField
-                                        name="HorasAutonomo"
-                                        cowork={cowork}
-                                        type="text"
-                                        placeholder="0"
-                                        readOnly={readOnly}
-                                        className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
-                                        onValueChange={(val) => onUpdate('HorasAutonomo', Number(val) || 0)}
-                                    />
-                                </div>
+                        {/* Componente 3: Aprendizaje Autónomo */}
+                        <div className="p-3 sm:p-3.5 flex items-center justify-between gap-2 sm:gap-3">
+                            <label className="text-xs sm:text-sm font-semibold text-text-main leading-tight">
+                                Total horas de aprendizaje autónomo:
+                            </label>
+                            <div className="w-20 sm:w-24 shrink-0">
+                                <CoWorkField
+                                    name="HorasAutonomo"
+                                    cowork={cowork}
+                                    type="number"
+                                    min={0}
+                                    max={totalHoras > 0 ? totalHoras : 999}
+                                    placeholder="0"
+                                    readOnly={readOnly}
+                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
+                                    onValueChange={(val) => onUpdate('HorasAutonomo', Math.max(0, parseInt(val, 10) || 0))}
+                                />
                             </div>
                         </div>
                     </div>
 
-                    {/* Fila Inferior Completa: Total, Balance y Recomendaciones Claras */}
+                    {/* Fila Inferior Concisa y Legible */}
                     {totalHoras > 0 && (
-                        <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+                        <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin flex items-center gap-3 text-sm sm:text-base ${
                             isHorasBalanced
-                                ? 'bg-emerald-50/70 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-300'
+                                ? 'bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300'
                                 : diffHoras > 0
-                                ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-900 dark:text-rose-300'
-                                : 'bg-amber-50/80 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300'
+                                ? 'bg-rose-50/70 dark:bg-rose-950/30 text-rose-900 dark:text-rose-300'
+                                : 'bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300'
                         }`}>
-                            <div className="flex flex-wrap items-center gap-2.5">
-                                <span className={`font-mono font-bold px-2.5 py-1 rounded-md text-xs border ${
-                                    isHorasBalanced
-                                        ? 'bg-emerald-100 dark:bg-emerald-900/60 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100'
-                                        : diffHoras > 0
-                                        ? 'bg-rose-100 dark:bg-rose-900/60 border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-100'
-                                        : 'bg-amber-100 dark:bg-amber-900/60 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100'
-                                }`}>
-                                    Total: {sumaHoras} / {totalHoras} hrs
-                                </span>
-
-                                <span className="text-xs font-medium">
-                                    {isHorasBalanced && (
-                                        <>Distribución horaria conforme. Cumple exactamente con las {totalHoras} horas de la malla.</>
-                                    )}
-                                    {diffHoras > 0 && (
-                                        <>
-                                            Exceso de <strong>{diffHoras} {diffHoras === 1 ? 'hora' : 'horas'}</strong>. 
-                                            Recomendación: Reduce {diffHoras}h en Contacto Docente, Práctico o Autónomo para cuadrar.
-                                        </>
-                                    )}
-                                    {diffHoras < 0 && (
-                                        <>
-                                            Faltan <strong>{Math.abs(diffHoras)} {Math.abs(diffHoras) === 1 ? 'hora' : 'horas'}</strong> por asignar. 
-                                            Recomendación: Distribuye las {Math.abs(diffHoras)}h restantes en los componentes.
-                                        </>
-                                    )}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2 font-mono text-[11px] text-text-dim shrink-0 self-end md:self-auto">
-                                <span>CD: <strong className="text-text-main">{horasCd}h</strong></span>
-                                <span>·</span>
-                                <span>APE: <strong className="text-text-main">{horasApe}h</strong></span>
-                                <span>·</span>
-                                <span>TA: <strong className="text-text-main">{horasTa}h</strong></span>
-                            </div>
+                            <span className="font-mono font-bold tracking-tight">Total: {sumaHoras} / {totalHoras} hrs</span>
+                            <span className="opacity-40">·</span>
+                            <span className="text-xs sm:text-sm font-semibold">
+                                {isHorasBalanced && 'Conforme'}
+                                {diffHoras > 0 && `Exceso de ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`}
+                                {diffHoras < 0 && `Faltan ${Math.abs(diffHoras)} ${Math.abs(diffHoras) === 1 ? 'hora' : 'horas'}`}
+                            </span>
                         </div>
                     )}
                 </div>

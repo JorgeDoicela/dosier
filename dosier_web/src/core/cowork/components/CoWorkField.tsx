@@ -15,12 +15,14 @@ interface CoWorkFieldProps {
     placeholder?: string;
     className?: string;
     label?: string;
-    type?: 'text' | 'textarea' | 'select' | 'checkbox';
+    type?: 'text' | 'number' | 'textarea' | 'select' | 'checkbox';
     onValueChange?: (value: any, meta?: { source?: 'local' | 'remote' }) => void;
     children?: React.ReactNode;
     readOnly?: boolean;
-    mask?: 'date';
+    mask?: 'date' | 'number';
     uppercase?: boolean;
+    min?: number;
+    max?: number;
     minDate?: string;
     maxDate?: string;
     options?: { value: string | number; label: string; disabled?: boolean }[];
@@ -239,6 +241,16 @@ function resolveDbValue(parentFormData: any, name: string): any {
         return parentFormData.Semestre ?? parentFormData.semestre ?? parentFormData.Nivel ?? parentFormData.nivel ?? parentFormData.semestre_nivel ?? parentFormData.semestreNivel;
     }
 
+    if (name === 'Periodo' || name === 'PeriodoAcademico') {
+        const pDesc = parentFormData.NombrePeriodo ?? parentFormData.nombre_periodo ?? parentFormData.Detalle ?? parentFormData.detalle;
+        if (pDesc && String(pDesc).trim() !== '') return String(pDesc).trim();
+        const pDirect = parentFormData.Periodo ?? parentFormData.periodo;
+        if (pDirect && String(pDirect).trim() !== '' && !/^[A-Z]{3}\d{4}$/.test(String(pDirect).trim())) {
+            return String(pDirect).trim();
+        }
+        return pDirect ?? parentFormData.IdPeriodo ?? parentFormData.id_periodo;
+    }
+
     return undefined;
 }
 
@@ -254,6 +266,8 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
     readOnly,
     mask,
     uppercase,
+    min,
+    max,
     minDate,
     maxDate,
     options,
@@ -436,6 +450,20 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                 cowork.awareness.setLocalStateField('focusedField', null);
             }
         }
+        if ((type === 'number' || mask === 'number') && (displayValue === '' || displayValue === undefined)) {
+            const defaultVal = min !== undefined ? String(min) : '0';
+            setDisplayValue(defaultVal);
+            onValueChange?.(defaultVal, { source: 'local' });
+            if (ydoc) {
+                const ytext = ydoc.getText(name);
+                if (ytext.toString() !== defaultVal) {
+                    ydoc.transact(() => {
+                        ytext.delete(0, ytext.length);
+                        ytext.insert(0, defaultVal);
+                    }, 'local-input');
+                }
+            }
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -444,6 +472,16 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
             const isDelete = newValue.length < (displayValue || '').length;
             const deletedSlash = isDelete && (displayValue || '').endsWith('/') && !newValue.endsWith('/');
             newValue = maskDate(newValue, deletedSlash);
+        }
+        if ((type === 'number' || mask === 'number') && typeof newValue === 'string') {
+            // Solo permitir números enteros no negativos
+            newValue = newValue.replace(/\D/g, '');
+            if (max !== undefined && newValue !== '') {
+                const parsed = parseInt(newValue, 10);
+                if (parsed > max) {
+                    newValue = String(max);
+                }
+            }
         }
         if (uppercase && typeof newValue === 'string') {
             newValue = newValue.toUpperCase();
@@ -591,7 +629,31 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                         ))}
                     </div>
                 )}
-                {type === 'text' && <input {...commonProps} type="text" value={displayValue} onChange={handleChange} />}
+                {(type === 'text' || type === 'number') && (
+                    <input
+                        {...commonProps}
+                        type="text"
+                        inputMode={type === 'number' || mask === 'number' ? 'numeric' : undefined}
+                        pattern={type === 'number' || mask === 'number' ? '[0-9]*' : undefined}
+                        value={displayValue}
+                        onChange={handleChange}
+                        onKeyDown={(e) => {
+                            if (type === 'number' || mask === 'number') {
+                                const allowedKeys = [
+                                    'Backspace', 'Tab', 'Enter', 'Escape', 
+                                    'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 
+                                    'Delete', 'Home', 'End'
+                                ];
+                                if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+                                    return;
+                                }
+                                if (!/^[0-9]$/.test(e.key)) {
+                                    e.preventDefault();
+                                }
+                            }
+                        }}
+                    />
+                )}
                 {type === 'textarea' && <textarea {...commonProps} value={displayValue} onChange={handleChange} />}
                 {type === 'select' && (
                     <GeistSelect

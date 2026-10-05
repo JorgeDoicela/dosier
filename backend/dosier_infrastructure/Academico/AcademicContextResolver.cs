@@ -113,6 +113,9 @@ public class AcademicContextResolver : IAcademicContextResolver
         var practicalHours = detail.HorasPracticoExperimental ?? 0m;
         var autonomousHours = Math.Max(0m, totalHours - teachingHours - practicalHours);
 
+        var period = await _context.Periodos.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdPeriodo == assignment.IdPeriodo, cancellationToken);
+
         _logger.LogDebug(
             "Contexto academico resuelto para asignacion {AssignmentId} mediante {GridSource}",
             idAsignacion,
@@ -123,6 +126,7 @@ public class AcademicContextResolver : IAcademicContextResolver
             IdAsignacion = assignment.IdAsignacion,
             IdProfesor = assignment.IdProfesor,
             IdPeriodo = assignment.IdPeriodo,
+            NombrePeriodo = !string.IsNullOrWhiteSpace(period?.Detalle) ? period.Detalle : assignment.IdPeriodo,
             IdCarrera = career.IdCarrera,
             NombreCarrera = career.Carrera1,
             CodigoCarrera = !string.IsNullOrWhiteSpace(career.CodigoCases) ? career.CodigoCases : career.AliasCarrera,

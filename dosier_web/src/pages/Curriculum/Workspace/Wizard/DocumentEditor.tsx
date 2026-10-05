@@ -155,6 +155,15 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             }
         }
 
+        // Si initialData trae NombrePeriodo descriptivo oficial, prevalece sobre código técnico previo en el snapshot
+        const officialPeriodName = initialData?.NombrePeriodo || initialData?.nombre_periodo || (initialData?.Periodo && !/^[A-Z]{3}\d{4}$/.test(String(initialData.Periodo).trim()) ? initialData.Periodo : undefined);
+        if (officialPeriodName) {
+            merged.Periodo = officialPeriodName;
+            merged.periodo = officialPeriodName;
+            merged.NombrePeriodo = officialPeriodName;
+            merged.nombre_periodo = officialPeriodName;
+        }
+
         return merged;
     }, [docInstanceData, resolvedUuid, initialData]);
 
