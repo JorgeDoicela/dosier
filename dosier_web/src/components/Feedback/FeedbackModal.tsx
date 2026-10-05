@@ -484,19 +484,19 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
     return createPortal(
         <div 
-            className="fixed inset-0 z-[9999] flex justify-end"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200"
             role="dialog"
             aria-modal="true"
             aria-label="Buzón de Incidencias DOSIER"
         >
             {/* Backdrop sólido */}
             <div 
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={onClose}
             />
 
-            {/* Panel Lateral Derecho (Drawer 100% Sólido) */}
-            <div className="relative w-full max-w-lg md:max-w-xl h-full bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            {/* Modal Centrado 100% Sólido */}
+            <div className="relative w-full max-w-lg md:max-w-xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 
                 {/* Header Sólido */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
@@ -832,16 +832,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
             {/* Modal de Previsualización de Adjuntos */}
             {previewModalIndex !== null && previews[previewModalIndex] && createPortal(
                 <div 
-                    className="fixed inset-0 z-[100000] flex justify-end"
+                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200"
                     role="dialog"
                     aria-modal="true"
                     aria-label="Previsualización de adjunto"
                 >
                     <div 
-                        className="absolute inset-0 bg-black/70 cursor-pointer animate-fade-in"
+                        className="absolute inset-0 cursor-pointer"
                         onClick={() => setPreviewModalIndex(null)}
                     />
-                    <div className="relative w-full max-w-xl h-full bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+                    <div className="relative w-full max-w-xl max-h-[85vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                             <div>
                                 <h3 className="text-[13.5px] font-semibold text-text-main truncate max-w-xs">

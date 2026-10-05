@@ -50,15 +50,15 @@ export const ConsentDetailPanel: React.FC<ConsentDetailPanelProps> = ({
     const isOtorgado = detailConsent.estado === 'Otorgado';
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
             {/* Backdrop sólido sobre toda la ventana */}
             <div
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={onClose}
             />
 
-            {/* Drawer Lateral idéntico al estándar de Convocatorias / Paneles DOSIER */}
-            <div className="relative w-full max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-slate-200/90 dark:border-zinc-800 flex flex-col z-10 animate-fade-up overflow-hidden">
+            {/* Modal Centrado DOSIER */}
+            <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200/90 dark:border-zinc-800 rounded-xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden shadow-2xl">
                 {/* Top Bar / Header */}
                 <div className="flex items-center justify-between px-8 py-6 border-b border-slate-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                     <div className="flex items-center gap-3">

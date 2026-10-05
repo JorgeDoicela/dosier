@@ -22,12 +22,12 @@ export const ConfiguracionDetailDrawer: React.FC<ConfiguracionDetailDrawerProps>
     } = hook;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
             <div 
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={() => setDetailItem(null)}
             />
-            <div className="relative w-full max-w-xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-fade-up overflow-hidden">
+            <div className="relative w-full max-w-xl max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="modal-header">
                     <div className="flex items-center gap-3">
                         <Calendar size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />

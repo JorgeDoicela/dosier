@@ -163,15 +163,15 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
     if (!isOpen || !template) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-            {/* Fondo oscuro sólido sin efecto de desenfoque translúcido */}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/75 animate-in fade-in duration-200">
+            {/* Fondo oscuro sólido */}
             <div
-                className="absolute inset-0 bg-black/75 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={onClose}
             />
 
-            {/* Contenedor lateral con fondo 100% sólido */}
-            <div className="relative w-full md:w-[54vw] lg:w-[56vw] xl:w-[58vw] h-full bg-white dark:bg-zinc-950 border-l border-slate-200/80 dark:border-zinc-800 flex flex-col z-10 animate-slide-in-right overflow-hidden shadow-xl">
+            {/* Contenedor centrado con fondo 100% sólido */}
+            <div className="relative w-full max-w-5xl h-[92vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden shadow-2xl">
                 
                 {/* Barra superior de acciones */}
                 <div className="relative flex items-center justify-between px-5 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">

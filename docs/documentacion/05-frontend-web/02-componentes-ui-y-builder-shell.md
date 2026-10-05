@@ -204,13 +204,16 @@ graph TD
   * `DOSIER_VICERRECTOR`: Legalización y firma institucional o devolución.
   * Soporte interactivo de reversión (`onUndo`) en notificaciones Toast.
 
-### 4.16. `<OutputSection>`: Emisión, Previsualización PDF y Panel de Dictamen
+### 4.16. `<OutputSection>`: Emisión y Firma Digital Oficial
 * **Ubicación:** `src/components/DOSIER/shell/components/OutputSection.tsx`.
+* **Propósito y Arquitectura Especializada:** Desacoplada del panel de dictamen (el cual reside en la consola de revisión técnica y en el panel lateral de colaboración) para dedicarse exclusivamente a la emisión y estampado de firmas electrónicas.
 * **Diseño Dividido:**
-  * **Columna Izquierda (Panel de Controles con Selector de Modo):**
-    * *Modo Auditoría y Avales:* Renderiza `<PeaReviewPanel>` para revisión normativa integral.
-    * *Modo Emisión y Firma:* Control de modo borrador, generación de PDF y carga de firmas institucionales / PKCS#12 (.p12).
-  * **Columna Derecha (Visor PDF Oficial):** Iframe con compilación y renderizado en tiempo real del documento oficial del PEA.
+  * **Columna Izquierda (Panel de Controles de Emisión y Firma):**
+    * *Cabecera Técnica:* Título institucional con indicador de estado firmado.
+    * *Emisión del Documento:* Alternador de modo borrador (marca de agua institucional) y botón de generación/actualización de vista previa PDF.
+    * *Firma Digital:* Formularios contextuales para Firma Institucional DOSIER (contraseña) o Firma Digital (.p12 / .pfx con contraseña) según el tipo de firma asignado, o banner de documento firmado con navegación a revisión técnica para autoridades.
+    * *Trazabilidad de Firmas:* Integración de `<SignatureBlock>` para consultar las firmas electrónicas registradas y válidas.
+  * **Columna Derecha (Visor PDF Oficial):** Iframe con renderizado en tiempo real del documento oficial del PEA compilado en backend.
 
 
 

@@ -24,12 +24,12 @@ export const EmailHistoryDrawer: React.FC<EmailHistoryDrawerProps> = ({ historyH
     if (!isHistoryDrawerOpen || !selectedHistoryLog) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
             <div
-                className="absolute inset-0 bg-black/70 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={() => setIsHistoryDrawerOpen(false)}
             />
-            <div className="relative w-full max-w-2xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            <div className="relative w-full max-w-2xl max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 <header className="modal-header">
                     <div className="space-y-1">
                         <h3 className="text-lg font-bold tracking-tight text-text-main uppercase">Bitácora de Despacho</h3>

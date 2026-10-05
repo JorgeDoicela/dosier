@@ -182,17 +182,17 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[9999] flex justify-end"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200"
             role="dialog"
             aria-modal="true"
             aria-label={`Visor de adjuntos: ${report.titulo}`}
         >
             <div
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-slate-200/80 dark:border-zinc-800 shadow-xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            <div className="relative w-full max-w-lg sm:max-w-xl lg:max-w-3xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
                         {isCurrentVideo ? <Video size={18} className="text-[#0070f3] dark:text-blue-400 shrink-0" /> : <ImageIcon size={18} className="text-[#0070f3] dark:text-blue-400 shrink-0" />}

@@ -1,13 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, FileText, Users, Shield, ShieldCheck, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { Settings, FileText, Shield, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 import { FullscreenLoader } from '../../../Common/FullscreenLoader';
 import { TimedSuccessModal } from '../../../Common/TimedSuccessModal';
 import { getDocumentSignatures } from '../../../../services/signaturesService';
 import { SignatureBlock } from '../../SignatureBlock';
 import { useAuth } from '../../../../api/AuthContext';
 import { documentInstanceService } from '../../../../services/documentInstanceService';
-import { PeaReviewPanel } from '../../../../pages/Curriculum/Workspace/components/PeaReviewPanel';
 
 export interface OutputSectionProps {
     title: string;
@@ -70,9 +69,6 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
 }) => {
     const { isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const isReviewer = Boolean(isAdmin || isRevisor || isCoordCarrera || isCoordAcad || isVicerrector);
-    const [panelViewMode, setPanelViewMode] = React.useState<'emission' | 'review'>(() => {
-        return isReviewer ? 'review' : 'emission';
-    });
     const navigate = useNavigate();
     const [signatures, setSignatures] = React.useState<any[]>([]);
     const [isProtocoloSigned, setIsProtocoloSigned] = React.useState<boolean | null>(null);
@@ -154,53 +150,29 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
     return (
         <div className="flex-1 p-2 sm:p-4 lg:p-6 flex flex-col gap-3 md:gap-4 animate-fade-in overflow-y-auto lg:overflow-hidden custom-scrollbar">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 lg:overflow-hidden p-0.5">
-                {/* Panel de Controles Unificado */}
+                {/* Panel de Controles Unificado de Emisión y Firma */}
                 <div className="col-span-1 lg:col-span-4 bg-bg-deep border border-border-thin rounded-2xl shadow-sm flex flex-col lg:overflow-hidden lg:h-full">
-                    {/* Selector de Modo: Auditoría vs Emisión */}
-                    <div className="flex border-b border-border-thin bg-bg-deep shrink-0 select-none">
-                        <button
-                            type="button"
-                            onClick={() => setPanelViewMode('review')}
-                            className={`flex-1 py-3 px-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 border-b-2 transition-all ${
-                                panelViewMode === 'review'
-                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5 font-bold'
-                                    : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                            }`}
-                        >
-                            <ShieldCheck size={14} />
-                            <span>Auditoría y Avales</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setPanelViewMode('emission')}
-                            className={`flex-1 py-3 px-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 border-b-2 transition-all ${
-                                panelViewMode === 'emission'
-                                    ? 'border-text-main text-text-main bg-surface/50 font-bold'
-                                    : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                            }`}
-                        >
-                            <Settings size={14} />
-                            <span>Emisión y Firma</span>
-                        </button>
+                    {/* Cabecera Técnica */}
+                    <div className="px-5 py-3.5 border-b border-border-thin bg-surface/30 shrink-0 flex items-center justify-between select-none">
+                        <div className="flex items-center gap-2">
+                            <Shield size={15} className="text-[#0070f3]" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-text-main">
+                                Emisión y Firma Digital
+                            </span>
+                        </div>
+                        {isDocumentSigned && (
+                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                Firmado
+                            </span>
+                        )}
                     </div>
 
-                    {panelViewMode === 'review' ? (
-                        <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar">
-                            <PeaReviewPanel
-                                peaData={formData}
-                                entityUuid={projectUuid || directDocId}
-                                onStatusChanged={() => {
-                                    window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
-                            {/* Sección 1: Emisión y Vista Previa */}
-                    <div className="p-5 sm:p-6 flex flex-col gap-4 shrink-0">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-text-dim flex items-center gap-2">
-                            <Settings size={16} className="text-text-dim" /> Emisión del Documento
-                        </h4>
+                    <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+                        {/* Sección 1: Emisión y Vista Previa */}
+                        <div className="p-5 sm:p-6 flex flex-col gap-4 shrink-0">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-text-dim flex items-center gap-2">
+                                <Settings size={16} className="text-text-dim" /> Emisión del Documento
+                            </h4>
 
                         {/* Switch Modo Borrador */}
                         <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border-thin">
@@ -392,18 +364,17 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                     )}
                                 </div>
                             )}
+                        </div>
 
-                            <div className="mt-2 border-t border-border-thin pt-4">
-                                <SignatureBlock 
-                                    documentoUuid={documentUuid || formData.Uuid || formData.uuid || ''} 
-                                    refreshTrigger={signatureRefreshTrigger} 
-                                    />
-                            </div>
+                        <div className="mt-2 border-t border-border-thin pt-4">
+                            <SignatureBlock 
+                                documentoUuid={documentUuid || formData.Uuid || formData.uuid || ''} 
+                                refreshTrigger={signatureRefreshTrigger} 
+                            />
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            </div>
 
                 {/* Visor de PDF */}
                 <div className="col-span-1 lg:col-span-8 bg-bg-deep border border-border-thin rounded-2xl flex flex-col shadow-inner relative overflow-hidden h-[85vh] sm:h-[88vh] min-h-[750px] lg:h-full lg:min-h-0">

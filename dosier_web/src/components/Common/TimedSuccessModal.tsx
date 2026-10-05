@@ -79,17 +79,17 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[10000] flex justify-end select-none">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200 select-none">
             {/* Backdrop sólido */}
             <div
-                className="absolute inset-0 bg-black/60 transition-opacity duration-300"
+                className="absolute inset-0"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            {/* Panel Lateral Derecho (Side Drawer) */}
+            {/* Modal Centrado 100% Sólido */}
             <div
-                className="relative flex h-full w-full max-w-lg bg-surface border-l border-border-thin shadow-xl flex-col z-10 animate-fade-in-right overflow-hidden font-sans"
+                className="relative flex w-full max-w-lg max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden font-sans"
                 onClick={e => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"

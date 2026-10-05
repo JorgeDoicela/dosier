@@ -35,13 +35,13 @@ export const EventoDetailDrawer: React.FC<EventoDetailDrawerProps> = ({
     const canManageNormativo = isAdmin && isNormativo;
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
             <div
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-2xl h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-slide-in-right">
+            <div className="relative w-full max-w-2xl max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="flex items-center justify-between px-8 py-6 border-b border-border-thin bg-surface">
                     <div className="flex items-center gap-3">
                         <span

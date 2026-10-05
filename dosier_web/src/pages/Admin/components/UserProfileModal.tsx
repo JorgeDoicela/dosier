@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Award, RefreshCw, ChevronRight, FileText } from 'lucide-react';
+import { Award, RefreshCw, X, FileText } from 'lucide-react';
 import { usersService } from '../../../services/usersService';
 import { useConfirm } from '../../../api/ConfirmContext';
 
@@ -126,12 +126,12 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex justify-end">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
             <div 
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={handleCloseModal}
             />
-            <div className="relative w-full max-w-md h-full bg-surface border-l border-border-thin flex flex-col z-10 animate-fade-up overflow-hidden">
+            <div className="relative w-full max-w-md max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="modal-header">
                     <div className="flex items-center gap-3">
                         <Award size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
@@ -140,8 +140,8 @@ const UserProfileModal = ({ user, onClose, onDraftCleared }: UserProfileModalPro
                             <p className="section-label text-text-dim">Gestión de Cuenta de Usuario</p>
                         </div>
                     </div>
-                    <button onClick={handleCloseModal} className="text-text-dim hover:text-text-main p-2 transition-colors">
-                        <ChevronRight size={20} />
+                    <button onClick={handleCloseModal} className="text-text-dim hover:text-text-main p-2 transition-colors cursor-pointer">
+                        <X size={18} />
                     </button>
                 </div>
 

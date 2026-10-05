@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { lopdpService } from '../../services/lopdpService';
 import { useAuth } from '../../api/AuthContext';
 import { useNotifications } from '../../api/NotificationsContext';
+import { useConfirm } from '../../api/ConfirmContext';
 
 const LopdpConsentPage: React.FC = () => {
     const { logout, refreshUser, user } = useAuth();
     const { addToast } = useNotifications();
+    const confirm = useConfirm();
     const navigate = useNavigate();
 
     const [hasRead, setHasRead] = useState(false);
@@ -49,6 +51,15 @@ const LopdpConsentPage: React.FC = () => {
     };
 
     const handleLogout = async () => {
+        const ok = await confirm({
+            title: 'Cerrar Sesión',
+            message: '¿Está seguro de que desea salir del sistema? Deberá iniciar sesión nuevamente para revisar y aceptar los términos institucionales.',
+            confirmText: 'Cerrar Sesión',
+            cancelText: 'Cancelar',
+            variant: 'destructive',
+            icon: LogOut,
+        });
+        if (!ok) return;
         await logout();
         navigate('/login');
     };

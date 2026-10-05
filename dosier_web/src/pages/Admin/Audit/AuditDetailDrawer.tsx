@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Info, Plus, Minus, ArrowDown, Copy, Check } from 'lucide-react';
+import { Shield, Info, Plus, Minus, ArrowDown, Copy, Check, X } from 'lucide-react';
 import { formatDateSafe, formatKeyName } from './auditTypes';
 import type { AuditLog } from './auditTypes';
 
@@ -155,8 +155,12 @@ export const AuditDetailDrawer: React.FC<AuditDetailDrawerProps> = ({
     const isOtherAction = !hasBefore && !hasAfter;
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex justify-end animate-fade-in">
-            <div className="w-full max-w-2xl bg-surface border-l border-border-thin h-full flex flex-col shadow-xl animate-slide-left">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div 
+                className="absolute inset-0 cursor-pointer"
+                onClick={onClose}
+            />
+            <div className="relative w-full max-w-2xl bg-surface border border-border-thin rounded-xl max-h-[90vh] flex flex-col shadow-2xl z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 <div className="p-6 border-b border-border-thin flex items-center justify-between bg-surface">
                     <div className="flex items-center gap-3">
                         <Shield size={20} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
@@ -167,9 +171,9 @@ export const AuditDetailDrawer: React.FC<AuditDetailDrawerProps> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="btn-vercel-secondary !p-2 cursor-pointer"
+                        className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
                     >
-                        ✕
+                        <X size={18} />
                     </button>
                 </div>
 

@@ -82,17 +82,17 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
             {/* Overlay 100% sólido sin transparencias translúcidas ni blur */}
             <div
-                className="fixed inset-0 bg-black/70 transition-opacity animate-fade-in"
+                className="absolute inset-0"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            {/* Panel lateral deslizable con fondo 100% sólido (blanco en claro, zinc-950 en oscuro) */}
+            {/* Modal centrado con fondo 100% sólido */}
             <div
-                className="relative z-10 w-full max-w-xl bg-white dark:bg-zinc-950 border-l border-border-thin shadow-xl flex flex-col h-full overflow-hidden animate-slide-left"
+                className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
                 role="dialog"
                 aria-modal="true"
             >

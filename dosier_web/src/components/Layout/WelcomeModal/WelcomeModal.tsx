@@ -66,19 +66,19 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
     return createPortal(
         <div 
-            className="fixed inset-0 z-[9999] flex justify-end"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200"
             role="dialog"
             aria-modal="true"
             aria-label="Bienvenida a DOSIER"
         >
             {/* Overlay Sólido */}
             <div 
-                className="absolute inset-0 bg-black/60 cursor-pointer animate-fade-in"
+                className="absolute inset-0 cursor-pointer"
                 onClick={handleFinish}
             />
 
-            {/* Panel lateral derecho (Drawer Vercel Geist) */}
-            <div className="relative w-full max-w-lg md:max-w-xl h-full bg-surface border-l border-border-thin shadow-xl flex flex-col z-10 animate-slide-in-right overflow-hidden">
+            {/* Modal Centrado 100% Sólido */}
+            <div className="relative w-full max-w-lg md:max-w-xl max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
                 
                 {/* Header Institucional */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border-thin bg-surface shrink-0">

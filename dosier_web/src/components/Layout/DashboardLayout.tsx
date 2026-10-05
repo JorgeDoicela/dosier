@@ -13,6 +13,7 @@ import { getStickyNotes } from '../../services/calendarioService';
 import { FeedbackModal } from '../Feedback/FeedbackModal';
 import api from '../../api/axios_config';
 import { useNotifications } from '../../api/NotificationsContext';
+import { useConfirm } from '../../api/ConfirmContext';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -59,8 +60,24 @@ const formatShortName = (fullName?: string): string => {
 const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }) => {
     const { isAuthenticated, isLoading, user, logout, isAdmin, isCoordAcad, isVicerrector, availableRoles, activeRole, setActiveRole, roleDisplayName } = useAuth();
     const { addToast, fetchNotifications, isConnected } = useNotifications();
+    const confirm = useConfirm();
     const location = useLocation();
     const navigate = useNavigate();
+
+    const handleConfirmLogout = async () => {
+        const ok = await confirm({
+            title: 'Cerrar Sesión',
+            message: '¿Está seguro de que desea salir del sistema? Se guardarán los cambios sincronizados y se cerrará su sesión de trabajo.',
+            confirmText: 'Cerrar Sesión',
+            cancelText: 'Cancelar',
+            variant: 'destructive',
+            icon: LogOut,
+        });
+        if (!ok) return;
+        await logout();
+        navigate('/');
+    };
+
     const isWorkspace = location.pathname.includes('/workspace/');
     const isTemplateEditor = (location.pathname === '/plantillas' || location.pathname === '/admin/plantillas') && (isAdmin || isCoordAcad || isVicerrector);
     const isFullHeightPage = isWorkspace || isTemplateEditor;
@@ -454,10 +471,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                 <div className="h-5 w-[1px] bg-border-thin mx-0.5 shrink-0" />
 
                                 <button
-                                    onClick={async () => {
-                                        await logout();
-                                        navigate('/');
-                                    }}
+                                    onClick={handleConfirmLogout}
                                     className="w-8 h-8 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center justify-center shrink-0"
                                     title="Cerrar Sesión"
                                     aria-label="Cerrar Sesión"
@@ -531,10 +545,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                 </Link>
                             )}
                             <button
-                                onClick={async () => {
-                                    await logout();
-                                    navigate('/');
-                                }}
+                                onClick={handleConfirmLogout}
                                 className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md transition-colors cursor-pointer flex items-center justify-center"
                                 title="Cerrar Sesión"
                             >

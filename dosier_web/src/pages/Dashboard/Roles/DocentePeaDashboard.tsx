@@ -226,107 +226,109 @@ export const DocentePeaDashboard: React.FC = () => {
                 </div>
             )}
 
-            {/* Listado y Filtros */}
-            <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
-                <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                            Asignaturas en Distributivo
-                        </h2>
-                        {refreshing && <RefreshCw className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        {/* Selector de Período Oficial */}
-                        <div className="w-48">
-                            <GeistSelect
-                                value={selectedPeriodo}
-                                onChange={handlePeriodoChange}
-                                options={periodos.map(p => ({
-                                    value: p.id_periodo,
-                                    label: p.periodo
-                                }))}
-                                placeholder="Período..."
-                            />
-                        </div>
-
-                        {/* Buscador */}
-                        <div className="relative">
-                            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar asignatura o carrera..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-400 w-48"
-                            />
-                        </div>
-
-                        {/* Filtro de Estado */}
-                        <select
-                            value={filterEstado}
-                            onChange={e => setFilterEstado(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none"
-                        >
-                            <option value="todos">Todos los Estados</option>
-                            <option value="pendientes">Pendientes / Borrador</option>
-                            <option value="revision">En Revisión</option>
-                            <option value="observados">Con Observaciones</option>
-                            <option value="aprobados">Aprobados</option>
-                        </select>
-
-                        {/* Selector de Modo: Cuadros vs Lista */}
-                        <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                    viewMode === 'grid'
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                                }`}
-                                title="Vista en Cuadros"
-                            >
-                                <LayoutGrid size={14} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                    viewMode === 'list'
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                                }`}
-                                title="Vista en Lista"
-                            >
-                                <List size={14} />
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={handleRefrescar}
-                            disabled={refreshing}
-                            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 border border-zinc-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-                            title="Recargar distributivo"
-                        >
-                            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                        </button>
-                    </div>
+            {/* Controles y Filtros de Asignaturas */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div className="flex items-center gap-2.5">
+                    <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                        Asignaturas en Distributivo
+                    </h2>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-medium border border-slate-200 dark:border-zinc-700">
+                        {materiasFiltradas.length}
+                    </span>
+                    {refreshing && <RefreshCw className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
                 </div>
 
-                {/* Contenido: Grid o Tabla */}
-                {loading ? (
-                    <div className="py-16 flex flex-col items-center justify-center text-zinc-400 space-y-2">
-                        <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
-                        <p className="text-xs">Consultando asignaciones académicas...</p>
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Selector de Período Oficial */}
+                    <div className="w-48">
+                        <GeistSelect
+                            value={selectedPeriodo}
+                            onChange={handlePeriodoChange}
+                            options={periodos.map(p => ({
+                                value: p.id_periodo,
+                                label: p.periodo
+                            }))}
+                            placeholder="Período..."
+                        />
                     </div>
-                ) : materiasFiltradas.length === 0 ? (
-                    <div className="py-12 text-center text-zinc-500 text-xs">
-                        No se encontraron asignaturas asignadas en el período seleccionado.
+
+                    {/* Buscador */}
+                    <div className="relative">
+                        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar asignatura o carrera..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] dark:focus:border-blue-500 w-48 shadow-2xs"
+                        />
                     </div>
-                ) : viewMode === 'grid' ? (
-                    /* ── MODO CUADROS ── */
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-zinc-50/50 dark:bg-zinc-950">
+
+                    {/* Filtro de Estado */}
+                    <select
+                        value={filterEstado}
+                        onChange={e => setFilterEstado(e.target.value)}
+                        className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3] dark:focus:border-blue-500 shadow-2xs cursor-pointer"
+                    >
+                        <option value="todos">Todos los Estados</option>
+                        <option value="pendientes">Pendientes / Borrador</option>
+                        <option value="revision">En Revisión</option>
+                        <option value="observados">Con Observaciones</option>
+                        <option value="aprobados">Aprobados</option>
+                    </select>
+
+                    {/* Selector de Modo: Cuadros vs Lista */}
+                    <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 p-0.5 shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('grid')}
+                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                viewMode === 'grid'
+                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                            }`}
+                            title="Vista en Cuadros"
+                        >
+                            <LayoutGrid size={14} />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                viewMode === 'list'
+                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                            }`}
+                            title="Vista en Lista"
+                        >
+                            <List size={14} />
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={handleRefrescar}
+                        disabled={refreshing}
+                        className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 border border-slate-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer shadow-2xs"
+                        title="Recargar distributivo"
+                    >
+                        <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Contenido: Grid o Tabla */}
+            {loading ? (
+                <div className="py-16 flex flex-col items-center justify-center text-zinc-400 space-y-2 rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                    <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
+                    <p className="text-xs">Consultando asignaciones académicas...</p>
+                </div>
+            ) : materiasFiltradas.length === 0 ? (
+                <div className="py-12 text-center text-zinc-500 text-xs rounded-xl border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                    No se encontraron asignaturas asignadas en el período seleccionado.
+                </div>
+            ) : viewMode === 'grid' ? (
+                /* ── MODO CUADROS ── */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {materiasFiltradas.map(materia => {
                             const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
                             const isCreating = creatingPeaId === materia.id_asignacion;
@@ -435,9 +437,9 @@ export const DocentePeaDashboard: React.FC = () => {
                     </div>
                 ) : (
                     /* ── MODO TABLA / LISTA ── */
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xs">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
+                            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 font-semibold text-xs">
                                 <tr>
                                     <th className="py-2.5 px-4">Asignatura y Carrera</th>
                                     <th className="py-2.5 px-3">Carga Horaria</th>
@@ -541,7 +543,6 @@ export const DocentePeaDashboard: React.FC = () => {
                         </table>
                     </div>
                 )}
-            </div>
         </div>
     );
 };

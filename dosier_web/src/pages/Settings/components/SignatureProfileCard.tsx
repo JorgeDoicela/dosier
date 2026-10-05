@@ -342,16 +342,16 @@ export const SignatureProfileCard: React.FC = () => {
                     ))}
                 </div>
 
-                {/* ── MODAL DRAWER DE CONFIRMACIÓN CON VISTA DE SELLO COMPLETO ─────────────────────────────────── */}
+                {/* ── MODAL CENTRADO DE CONFIRMACIÓN CON VISTA DE SELLO COMPLETO ─────────────────────────────────── */}
                 {showConfirmModal && createPortal(
-                    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-fade-in">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
                         <div
-                            className="fixed inset-0"
+                            className="absolute inset-0 cursor-pointer"
                             onClick={() => setShowConfirmModal(false)}
                             aria-hidden="true"
                         />
 
-                        <div className="relative w-full max-w-2xl h-full bg-white dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800 flex flex-col z-10 animate-slide-left shadow-2xl">
+                        <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl flex flex-col z-10 animate-in zoom-in-95 duration-200 shadow-2xl overflow-hidden">
                             {/* Cabecera */}
                             <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                                 <div className="flex items-center gap-3">

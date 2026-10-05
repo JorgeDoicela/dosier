@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
+import { useConfirm } from '../../api/ConfirmContext';
 import { curriculumProjectService } from '../../services/curriculumProjectService';
 import { usersService } from '../../services/usersService';
 import { buildWorkspacePath } from '../../core/documents/templateUrl';
@@ -192,7 +193,15 @@ function useRoleFilter() {
 
 // ─── Static catalog ───────────────────────────────────────────────────────────
 
-function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boolean, isDocente: boolean, isCoordAcad: boolean = false, isVicerrector: boolean = false): SearchItem[] {
+function buildStaticItems(
+    navigate: ReturnType<typeof useNavigate>,
+    isAdmin: boolean,
+    isDocente: boolean,
+    isCoordAcad: boolean = false,
+    isVicerrector: boolean = false,
+    confirm?: ReturnType<typeof useConfirm>,
+    logout?: () => Promise<void>
+): SearchItem[] {
     const canEditTemplates = isAdmin || isCoordAcad || isVicerrector;
     return [
         // ── Navegación ──────────────────────────────────────────────────
@@ -224,7 +233,33 @@ function buildStaticItems(navigate: ReturnType<typeof useNavigate>, isAdmin: boo
         { id: 'settings', label: 'Configuración', description: 'Preferencias de cuenta, firma digital y ajustes personales', category: 'Configuración', icon: Settings, path: '/configuracion', roles: ['ANY'], keywords: ['perfil', 'cuenta', 'preferencias', 'firma', 'configuracion', 'settings'], boost: 4 },
         // ── Acciones Rápidas ──────────────────────────────────────────
         { id: 'export-analiticas', label: 'Exportar Reporte PDF', description: 'Descargar reporte consolidado de analíticas curriculares', category: 'Acciones Rápidas', icon: FileDown, shortcut: 'E', action: () => navigate('/analiticas'), roles: ['DOSIER_ADMIN'], keywords: ['exportar', 'pdf', 'descargar', 'reporte', 'informe'], boost: isAdmin ? 6 : 0 },
-        { id: 'logout', label: 'Cerrar Sesión', description: 'Salir de la sesión actual de forma segura', category: 'Acciones Rápidas', icon: LogOut, action: () => navigate('/login'), roles: ['ANY'], keywords: ['salir', 'cerrar sesion', 'logout', 'desconectar'], boost: 0 },
+        {
+            id: 'logout',
+            label: 'Cerrar Sesión',
+            description: 'Salir de la sesión actual de forma segura',
+            category: 'Acciones Rápidas',
+            icon: LogOut,
+            action: async () => {
+                if (confirm) {
+                    const ok = await confirm({
+                        title: 'Cerrar Sesión',
+                        message: '¿Está seguro de que desea salir del sistema? Se guardarán los cambios sincronizados y se cerrará su sesión de trabajo.',
+                        confirmText: 'Cerrar Sesión',
+                        cancelText: 'Cancelar',
+                        variant: 'destructive',
+                        icon: LogOut,
+                    });
+                    if (!ok) return;
+                }
+                if (logout) {
+                    await logout();
+                }
+                navigate('/login');
+            },
+            roles: ['ANY'],
+            keywords: ['salir', 'cerrar sesion', 'logout', 'desconectar'],
+            boost: 0
+        },
     ];
 }
 
@@ -380,12 +415,13 @@ export const CommandPalette = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<AbortController | null>(null);
-    const { isAdmin, isDocente, isCoordAcad, isVicerrector, roleDisplayName, hasPermission } = useAuth();
+    const { isAdmin, isDocente, isCoordAcad, isVicerrector, roleDisplayName, hasPermission, logout } = useAuth();
+    const confirm = useConfirm();
     const passesRoleFilter = useRoleFilter();
 
     const staticItems = React.useMemo(
-        () => buildStaticItems(navigate, isAdmin, isDocente, isCoordAcad, isVicerrector),
-        [navigate, isAdmin, isDocente, isCoordAcad, isVicerrector]
+        () => buildStaticItems(navigate, isAdmin, isDocente, isCoordAcad, isVicerrector, confirm, logout),
+        [navigate, isAdmin, isDocente, isCoordAcad, isVicerrector, confirm, logout]
     );
 
     // Ref keeps the current flatItems list accessible inside useEffect without
