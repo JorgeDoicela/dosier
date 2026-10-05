@@ -94,11 +94,11 @@ dosier/
 Los scripts ubicados en `scripts/base_datos/` administran el esquema del módulo curricular con prefijo `doc_` sin alterar las tablas nativas de SIGAFI:
 
 0. `00_sigafi_esquema_y_datos_demo.sql`: Esquema maestro preexistente de SIGAFI y datos sintéticos representativos del ISTPET (LOPDP compliant para producción y defensa de grado).
-1. `01_sistema_base.sql`: Núcleo de auditoría, eventos normativos, seguridad, metadatos, tablas CoWork (`doc_cowork_documentos`) y tablas LOPDP.
+1. `01_sistema_base.sql`: Núcleo de auditoría, eventos normativos, seguridad, metadatos, tablas CoWork (`doc_cowork_documentos`), tablas LOPDP y buzón de incidencias/soporte (`doc_feedback_reportes`).
 2. `02_gobernanza_y_antecedentes_curriculares.sql`: Normativas externas inalterables (CES, CACES, SENESCYT), modelos educativos institucionales, proyectos de carrera aprobados por CES, perfiles de egreso y matriz de antecedentes epistemológicos de asignaturas.
 3. `03_curriculum_pea_oficial.sql`: Arquitectura completa y normalizada del Programa de Estudio de la Asignatura (Secciones a - k: unidades, temas, RDA con aporte al perfil, prácticas, evaluación institucional 10 pts, bibliografía, observaciones y trazabilidad).
 4. `04_seguridad_rbac_roles_curriculares.sql`: Identidad oficial de DOSIER (Sistema ID 6), módulos curriculares, catálogo de los 5 roles institucionales y asignación granular de permisos.
-* `extensiones/05_extension_futura_curriculum_silabo_guias.sql`: Esquema DDL para extensiones curriculares futuras (Sílabo analítico y Guías APE).
+* `extensiones/99_extension_futura_curriculum_silabo_guias.sql`: Esquema DDL para extensiones curriculares futuras (Sílabo analítico y Guías APE).
 
 ---
 

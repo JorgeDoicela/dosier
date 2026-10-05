@@ -25,9 +25,11 @@ DROP TRIGGER IF EXISTS trg_doc_email_tpl_uuid;
 DROP TRIGGER IF EXISTS trg_doc_email_hist_uuid;
 DROP TRIGGER IF EXISTS trg_doc_ical_token_uuid;
 DROP TRIGGER IF EXISTS trg_doc_cal_norm_uuid;
+DROP TRIGGER IF EXISTS trg_doc_feedback_uuid;
 
 DROP TABLE IF EXISTS
-    -- Grupo K (Seguridad y Notificaciones)
+    -- Grupo K (Seguridad, Notificaciones y Feedback)
+    doc_feedback_reportes,
     doc_backup_logs,
     doc_lopdp_consentimientos,
     doc_lopdp_auditoria_datos,
@@ -753,6 +755,38 @@ VALUES
 CREATE INDEX idx_cal_norm_fechas ON doc_calendario_eventos_normativos(fechaInicio, fechaFin);
 CREATE INDEX idx_cal_norm_tipo   ON doc_calendario_eventos_normativos(tipoEvento, activo);
 CREATE INDEX idx_cal_nota_bandeja ON doc_calendario_eventos_normativos(creadoPor, fechaInicio, ordenBandeja);
+
+-- =============================================================================
+-- SECCIÓN: SOPORTE, FEEDBACK E INCIDENCIAS DEL SISTEMA
+-- =============================================================================
+
+CREATE TABLE doc_feedback_reportes (
+    idFeedback            INT(11) NOT NULL AUTO_INCREMENT,
+    uuid                  VARCHAR(36) NOT NULL,
+    idUsuario             INT(11) DEFAULT NULL,
+    cedula                VARCHAR(20) DEFAULT NULL,
+    nombreUsuario         VARCHAR(255) NOT NULL,
+    rolUsuario            VARCHAR(50) NOT NULL,
+    tipo                  VARCHAR(30) NOT NULL DEFAULT 'SUGERENCIA', -- SUGERENCIA | ERROR | DUDA
+    titulo                VARCHAR(200) NOT NULL,
+    descripcion           TEXT NOT NULL,
+    rutaOrigen            VARCHAR(255) DEFAULT NULL,
+    archivosAdjuntosJson  JSON DEFAULT NULL,
+    conversacionJson      JSON DEFAULT NULL,
+    estado                VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE', -- PENDIENTE | EN_REVISION | ATENDIDO | DESCARTADO
+    observacionAdmin      TEXT DEFAULT NULL,
+    fechaCreacion         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaActualizacion    TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (idFeedback),
+    UNIQUE KEY uq_doc_feedback_uuid (uuid),
+    KEY idx_doc_feedback_usuario (idUsuario),
+    KEY idx_doc_feedback_tipo (tipo),
+    KEY idx_doc_feedback_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='[SISTEMA] Buzón de Incidencias, Reportes y Sugerencias';
+
+CREATE TRIGGER trg_doc_feedback_uuid
+BEFORE INSERT ON doc_feedback_reportes FOR EACH ROW
+SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 
 

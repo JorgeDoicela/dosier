@@ -33,13 +33,19 @@
   <!-- CABECERA OFICIAL ISTPET -->
   <table style="width: 100%; border-collapse: collapse; border: 1px solid #000000; margin-bottom: 0; background: #ffffff;">
     <tr>
-      <td style="width: 28%; border: 1px solid #000000; padding: 8px; text-align: center; vertical-align: middle;">
+      <td style="width: 28%; border: none; padding: 6px; text-align: center; vertical-align: middle;">
+        {{#if logo_header_base64}}
+        <img src="data:image/png;base64,{{logo_header_base64}}" alt="ISTPET" style="max-width: 150px; max-height: 48px; object-fit: contain; display: block; margin: 0 auto;" />
+        {{else if logo_base64}}
+        <img src="data:image/png;base64,{{logo_base64}}" alt="ISTPET" style="max-width: 150px; max-height: 48px; object-fit: contain; display: block; margin: 0 auto;" />
+        {{else}}
         <div style="font-weight: 900; font-size: 16pt; color: #1e2a4a; line-height: 1;">IST</div>
         <div style="font-size: 7.5pt; font-weight: bold; color: #334155; line-height: 1.1; text-transform: uppercase;">
           TECNOLÓGICO<br/>TRAVERSARI
         </div>
+        {{/if}}
       </td>
-      <td style="padding: 6px 10px; text-align: center; vertical-align: middle; border: 1px solid #000000;">
+      <td style="padding: 6px 10px; text-align: center; vertical-align: middle; border: none;">
         <div style="font-size: 9.5pt; font-weight: bold; text-transform: uppercase; color: #000000;">INSTITUTO SUPERIOR TECNOLÓGICO "MAYOR PEDRO TRAVERSARI"</div>
         <div style="font-size: 7.5pt; font-weight: 600; text-transform: uppercase; color: #1e293b; margin-top: 2px;">MATILDE ALVAREZ S/N Y MARISCAL SUCRE (CHILLOGALLO)</div>
         <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; color: #000000; margin-top: 4px;">PROGRAMA DE ESTUDIO DE LA ASIGNATURA</div>
@@ -96,16 +102,13 @@
         <td style="padding: 0; vertical-align: top;">
           <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
             <tr>
-              <td style="border: none; border-bottom: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 6px; width: 65%;">Total horas de contacto docente:</td>
-              <td style="border: none; border-bottom: 1px solid #000000; padding: 4px 6px; font-weight: bold;">{{default HorasContactoDocente (default horas_contacto_docente 0)}}</td>
+              <td style="border: none; border-bottom: 1px solid #000000; padding: 4px 6px;">Total horas de contacto docente: &nbsp;<strong>{{default HorasContactoDocente (default horas_contacto_docente 0)}}</strong></td>
             </tr>
             <tr>
-              <td style="border: none; border-bottom: 1px solid #000000; border-right: 1px solid #000000; padding: 4px 6px;">Total horas de práctico experimental:</td>
-              <td style="border: none; border-bottom: 1px solid #000000; padding: 4px 6px; font-weight: bold;">{{default HorasPracticoExperimental (default horas_practico_experimental 0)}}</td>
+              <td style="border: none; border-bottom: 1px solid #000000; padding: 4px 6px;">Total horas de práctico experimental: &nbsp;<strong>{{default HorasPracticoExperimental (default horas_practico_experimental 0)}}</strong></td>
             </tr>
             <tr>
-              <td style="border: none; border-right: 1px solid #000000; padding: 4px 6px;">Total horas de aprendizaje autónomo:</td>
-              <td style="border: none; padding: 4px 6px; font-weight: bold;">{{default HorasAutonomo (default horas_autonomo 0)}}</td>
+              <td style="border: none; padding: 4px 6px;">Total horas de aprendizaje autónomo: &nbsp;<strong>{{default HorasAutonomo (default horas_autonomo 0)}}</strong></td>
             </tr>
           </table>
         </td>

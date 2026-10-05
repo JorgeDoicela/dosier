@@ -9,6 +9,7 @@ namespace dosier_application.Curriculum.Dtos
         public string Uuid { get; set; } = string.Empty;
         public int IdCarrera { get; set; }
         public string NombreCarrera { get; set; } = string.Empty;
+        public string? CodigoCarrera { get; set; }
         public int IdAsignatura { get; set; }
         public string NombreAsignatura { get; set; } = string.Empty;
         public string? CodigoAsignatura { get; set; }

@@ -117,8 +117,18 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
             {/* CABECERA INSTITUCIONAL OFICIAL (LOGO + INSTITUTO TRAVERSARI CHILLOGALLO) */}
             {c.showHeader !== false && (
                 <div className="border border-black flex mb-0 bg-white relative group">
-                    <div className="w-[30%] border-r border-black p-2.5 flex flex-col items-center justify-center text-center">
-                        <div className="flex items-center gap-1.5 font-bold text-slate-900 leading-none">
+                    <div className="w-[30%] p-2 flex flex-col items-center justify-center text-center">
+                        <img
+                            src="/ISTPET-ORIGINAL.png"
+                            alt="ISTPET - Instituto Tecnológico Traversari"
+                            className="max-h-[46px] max-w-[150px] w-auto h-auto object-contain"
+                            onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                                const fallback = (e.target as HTMLElement).nextElementSibling;
+                                if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                            }}
+                        />
+                        <div className="hidden items-center gap-1.5 font-bold text-slate-900 leading-none">
                             <span className="text-xl font-bold tracking-tight text-[#1e2a4a]">IST</span>
                             <div className="text-left text-[8px] font-bold uppercase tracking-tight text-slate-700 leading-tight">
                                 <div>TECNOLÓGICO</div>
@@ -278,8 +288,8 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
                         </tr>
                     )}
 
-                    {/* 4. Código de asignatura */}
-                    {c.showCodigoAsignatura !== false && (
+                    {/* 4. Código de asignatura (No oficial en Bloque A) */}
+                    {c.showCodigoAsignatura === true && (
                         <tr className={rowBorderCss}>
                             <td className={`p-1.5 font-bold ${cellBorderCss} bg-white`}>
                                 {renderEditableLabel('customLabel_showCodigoAsignatura', 'Código de la asignatura:')}
@@ -372,27 +382,18 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
                                 <table className="w-full text-left border-collapse text-[8.5px]">
                                     <tbody>
                                         <tr className="border-b border-black">
-                                            <td className={`p-1.5 font-medium ${cellBorderCss} w-[65%]`}>
-                                                Total horas de contacto docente:
-                                            </td>
-                                            <td className="p-1.5 text-slate-700 font-semibold">
-                                                64
+                                            <td className="p-1.5 font-medium">
+                                                Total horas de contacto docente: <span className="text-slate-700 font-semibold ml-2">64</span>
                                             </td>
                                         </tr>
                                         <tr className="border-b border-black">
-                                            <td className={`p-1.5 font-medium ${cellBorderCss}`}>
-                                                Total horas de práctico experimental:
-                                            </td>
-                                            <td className="p-1.5 text-slate-700 font-semibold">
-                                                32
+                                            <td className="p-1.5 font-medium">
+                                                Total horas de práctico experimental: <span className="text-slate-700 font-semibold ml-2">32</span>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td className={`p-1.5 font-medium ${cellBorderCss}`}>
-                                                Total horas de aprendizaje autónomo:
-                                            </td>
-                                            <td className="p-1.5 text-slate-700 font-semibold">
-                                                64
+                                            <td className="p-1.5 font-medium">
+                                                Total horas de aprendizaje autónomo: <span className="text-slate-700 font-semibold ml-2">64</span>
                                             </td>
                                         </tr>
                                     </tbody>

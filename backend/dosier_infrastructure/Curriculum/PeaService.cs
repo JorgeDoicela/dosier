@@ -924,6 +924,49 @@ namespace dosier_infrastructure.Curriculum
                 ? await _context.Profesores.AsNoTracking().FirstOrDefaultAsync(p => p.IdProfesor == pea.IdDocenteElaborador)
                 : null;
 
+            // Fallbacks defensivos de metadatos institucionales oficiales de SIGAFI
+            string? semestreNivel = pea.SemestreNivel;
+            if (string.IsNullOrEmpty(semestreNivel) && pea.IdNivel.HasValue)
+            {
+                var curso = await _context.Cursos.AsNoTracking().FirstOrDefaultAsync(c => c.IdNivel == pea.IdNivel);
+                semestreNivel = curso?.Nivel;
+            }
+
+            string modalidad = pea.Modalidad;
+            if (string.IsNullOrEmpty(modalidad) && pea.IdModalidad.HasValue)
+            {
+                var mod = await _context.Modalidades.AsNoTracking().FirstOrDefaultAsync(m => m.IdModalidad == pea.IdModalidad);
+                modalidad = mod?.ModalidadImpresion ?? mod?.Modalidad1 ?? "Presencial";
+            }
+
+            string? unidadOrg = pea.UnidadOrganizacion;
+            int totalHoras = pea.TotalHorasAsignatura;
+            decimal creditos = pea.Creditos;
+            int horasCd = pea.HorasContactoDocente;
+            int horasApe = pea.HorasPracticoExperimental;
+            int horasTa = pea.HorasAutonomo;
+
+            if ((string.IsNullOrEmpty(unidadOrg) || totalHoras == 0) && pea.IdDetalleMalla.HasValue)
+            {
+                var detalle = await _context.DetalleMallas.AsNoTracking().FirstOrDefaultAsync(d => d.IdDetalleMalla == pea.IdDetalleMalla);
+                if (detalle != null)
+                {
+                    if (string.IsNullOrEmpty(unidadOrg) && detalle.IdTipoAsignatura > 0)
+                    {
+                        var tipoAsig = await _context.TiposAsignatura.AsNoTracking().FirstOrDefaultAsync(t => t.IdTipoAsignatura == detalle.IdTipoAsignatura);
+                        unidadOrg = tipoAsig?.TipoAsignatura1;
+                    }
+                    if (totalHoras == 0)
+                    {
+                        totalHoras = detalle.Horas ?? 0;
+                        creditos = detalle.Creditos ?? 0;
+                        horasCd = detalle.HorasDocente ?? 0;
+                        horasApe = decimal.ToInt32(detalle.HorasPracticoExperimental ?? 0m);
+                        horasTa = Math.Max(0, totalHoras - horasCd - horasApe);
+                    }
+                }
+            }
+
             return new PeaDto
             {
                 IdPea = pea.IdPea,
@@ -931,6 +974,7 @@ namespace dosier_infrastructure.Curriculum
                 IdExpediente = pea.IdExpediente,
                 IdCarrera = pea.IdCarrera,
                 NombreCarrera = carrera?.Carrera1 ?? "Carrera ISTPET",
+                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera?.CodigoCases) ? carrera.CodigoCases : carrera?.AliasCarrera,
                 IdAsignatura = pea.IdAsignatura,
                 NombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura",
                 CodigoAsignatura = asignatura?.Codigo,
@@ -945,14 +989,14 @@ namespace dosier_infrastructure.Curriculum
                 FuenteMalla = pea.FuenteMalla,
                 IdDocenteElaborador = pea.IdDocenteElaborador,
                 NombreDocenteElaborador = docente != null ? $"{docente.Nombres} {docente.Apellidos}".Trim() : null,
-                Modalidad = pea.Modalidad,
-                UnidadOrganizacion = pea.UnidadOrganizacion,
-                SemestreNivel = pea.SemestreNivel,
-                TotalHorasAsignatura = pea.TotalHorasAsignatura,
-                Creditos = pea.Creditos,
-                HorasContactoDocente = pea.HorasContactoDocente,
-                HorasPracticoExperimental = pea.HorasPracticoExperimental,
-                HorasAutonomo = pea.HorasAutonomo,
+                Modalidad = modalidad,
+                UnidadOrganizacion = unidadOrg,
+                SemestreNivel = semestreNivel,
+                TotalHorasAsignatura = totalHoras,
+                Creditos = creditos,
+                HorasContactoDocente = horasCd,
+                HorasPracticoExperimental = horasApe,
+                HorasAutonomo = horasTa,
                 ObjetivoAsignatura = pea.ObjetivoAsignatura,
                 MetodologiaEnsenanza = pea.MetodologiaEnsenanza,
                 RecursosDidacticos = pea.RecursosDidacticos,

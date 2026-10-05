@@ -515,6 +515,12 @@ namespace Dosier.Infrastructure.Common.Documents
                     extraImageVars["portada_base64"] = coverBase64;
                 }
 
+                var logoHeaderBase64 = await _imageLoader.LoadAsBase64Async("ISTPET-ORIGINAL.png");
+                if (logoHeaderBase64 != null)
+                {
+                    extraImageVars["logo_header_base64"] = logoHeaderBase64;
+                }
+
                 var logoBase64 = await _imageLoader.LoadAsBase64Async("logo_istpet_negro.png");
                 if (logoBase64 != null)
                 {

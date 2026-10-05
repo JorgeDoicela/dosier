@@ -205,7 +205,41 @@ function resolveDbValue(parentFormData: any, name: string): any {
         }
     }
 
-    return parentFormData[name];
+    // Manejo prioritario de Código de Carrera con fallback institucional (ej. GAS para Gastronomía)
+    if (name === 'CodigoCarrera' || name === 'codigo_carrera') {
+        // 1. Prioridad máxima: Código oficial CACES/CES de la carrera (codigo_cases)
+        // 2. Prioridad institucional: Código de carrera asignado (CodigoCarrera / aliasCarrera)
+        const val = parentFormData.codigoCases || parentFormData.codigo_cases || parentFormData.CodigoCarrera || parentFormData.codigo_carrera || parentFormData.aliasCarrera || parentFormData.alias_carrera;
+        if (val && String(val).trim() !== '') {
+            return String(val).trim();
+        }
+        const cName = parentFormData.Carrera || parentFormData.carrera;
+        if (cName && typeof cName === 'string' && cName.trim() !== '') {
+            return cName.trim().substring(0, 3).toUpperCase();
+        }
+    }
+
+    if (parentFormData[name] !== undefined) {
+        return parentFormData[name];
+    }
+
+    // Fallbacks defensivos: camelCase y snake_case
+    const camelCase = name.charAt(0).toLowerCase() + name.slice(1);
+    if (parentFormData[camelCase] !== undefined) {
+        return parentFormData[camelCase];
+    }
+
+    const snakeCase = name.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+    if (parentFormData[snakeCase] !== undefined) {
+        return parentFormData[snakeCase];
+    }
+
+    // Fallbacks adicionales específicos de metadatos curriculares comunes
+    if (name === 'Nivel' || name === 'Semestre') {
+        return parentFormData.Semestre ?? parentFormData.semestre ?? parentFormData.Nivel ?? parentFormData.nivel ?? parentFormData.semestre_nivel ?? parentFormData.semestreNivel;
+    }
+
+    return undefined;
 }
 
 export const CoWorkField: React.FC<CoWorkFieldProps> = ({
@@ -292,6 +326,9 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
             } else {
                 setDisplayValue(dbValue);
             }
+        } else if (readOnly && dbValue !== undefined && dbValue !== null && dbValue !== '') {
+            const parsed = type === 'checkbox' ? dbValue === 'true' || dbValue === true : dbValue;
+            setDisplayValue(parsed);
         } else if (currentYjsVal !== null) {
             setDisplayValue(currentYjsVal);
         } else if (

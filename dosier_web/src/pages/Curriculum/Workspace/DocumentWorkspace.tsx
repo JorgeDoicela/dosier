@@ -74,6 +74,8 @@ export const DocumentWorkspace: React.FC = () => {
             base.nombre_asignatura = asigNombre;
             base.CodigoAsignatura = pea.codigo_asignatura || pea.codigoAsignatura || '';
             base.codigo_asignatura = pea.codigo_asignatura || pea.codigoAsignatura || '';
+            base.CodigoCarrera = pea.codigo_carrera || pea.codigoCarrera || currentProject?.codigo_carrera || currentProject?.codigoCarrera || currentProject?.alias_carrera || currentProject?.aliasCarrera || (currentProject?.carrera ? currentProject.carrera.substring(0, 3).toUpperCase() : '');
+            base.codigo_carrera = base.CodigoCarrera;
             base.Carrera = carreraNombre;
             base.carrera = carreraNombre;
             base.Periodo = perNombre;
@@ -83,7 +85,7 @@ export const DocumentWorkspace: React.FC = () => {
             base.Nivel = pea.semestre_nivel || pea.semestreNivel || '';
             base.nivel = pea.semestre_nivel || pea.semestreNivel || '';
             base.UnidadOrganizacion = pea.unidad_organizacion || pea.unidadOrganizacion || '';
-            base.unidad_organizacion = pea.unidadOrganizacion || pea.unidadOrganizacion || '';
+            base.unidad_organizacion = pea.unidad_organizacion || pea.unidadOrganizacion || '';
             base.TotalHorasAsignatura = pea.total_horas_asignatura ?? pea.totalHorasAsignatura ?? 0;
             base.total_horas_asignatura = pea.total_horas_asignatura ?? pea.totalHorasAsignatura ?? 0;
             base.Creditos = pea.creditos ?? 0;

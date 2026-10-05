@@ -77,7 +77,7 @@ namespace dosier_infrastructure.Curriculum
                     IdCarrera = c.IdCarrera,
                     NombreCarrera = c.Carrera1 ?? "Carrera sin nombre",
                     AliasCarrera = c.AliasCarrera,
-                    CodigoCarrera = c.CodigoCases,
+                    CodigoCarrera = !string.IsNullOrWhiteSpace(c.CodigoCases) ? c.CodigoCases : c.AliasCarrera,
                     TotalAsignaturas = totalAsignaturas
                 });
             }

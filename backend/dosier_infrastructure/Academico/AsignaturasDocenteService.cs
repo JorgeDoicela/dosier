@@ -20,41 +20,40 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
 
     public async Task<PeriodoAcademicoDto?> GetPeriodoActivoAsync()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        var periodos = await _context.Periodos
-            .AsNoTracking()
-            .ToListAsync();
-
+        var periodos = await GetPeriodosDisponiblesAsync();
         if (!periodos.Any()) return null;
 
-        var periodo = periodos
-            .OrderByDescending(p => p.Periodoactivoinstituto == 1)
-            .ThenByDescending(p => p.Activo == true)
-            .ThenByDescending(p => p.FechaInicial <= today && p.FechaFinal >= today)
-            .ThenByDescending(p => p.FechaInicial)
-            .FirstOrDefault();
+        // Prioridad 1: Periodo oficial activo del instituto (Periodoactivoinstituto == 1, ej. OCT2025)
+        // Prioridad 2: Periodo activo más reciente
+        var periodo = periodos.FirstOrDefault(p => p.EsActivo) ?? periodos.First();
 
-        if (periodo == null) return null;
-
-        return new PeriodoAcademicoDto
-        {
-            IdPeriodo = periodo.IdPeriodo,
-            Detalle = periodo.Detalle,
-            FechaInicial = periodo.FechaInicial,
-            FechaFinal = periodo.FechaFinal,
-            EsActivo = (periodo.Periodoactivoinstituto == 1 || periodo.Activo == true)
-        };
+        return periodo;
     }
 
     public async Task<List<PeriodoAcademicoDto>> GetPeriodosDisponiblesAsync()
     {
+        // 1. Obtener identificadores de periodos que cuentan con asignaciones reales en carreras del instituto (esInstituto = 1)
+        var periodosInstitutoQuery = await (
+            from a in _context.AsignacionesProfesores.AsNoTracking()
+            join cu in _context.Cursos.AsNoTracking() on a.IdNivel equals cu.IdNivel
+            join c in _context.Carreras.AsNoTracking() on cu.IdCarrera equals c.IdCarrera
+            where c.EsInstituto == 1
+            select a.IdPeriodo
+        ).Distinct().ToListAsync();
+
+        // 2. Filtrar únicamente los períodos oficiales del instituto (excluyendo Conducción y legados sin materias)
         var periodos = await _context.Periodos
             .AsNoTracking()
+            .Where(p => 
+                p.Periodoactivoinstituto == 1 ||
+                p.EsInstituto == 1 ||
+                periodosInstitutoQuery.Contains(p.IdPeriodo)
+            )
             .ToListAsync();
 
         return periodos
-            .OrderByDescending(p => p.FechaInicial)
+            .OrderByDescending(p => p.Periodoactivoinstituto == 1)
+            .ThenByDescending(p => p.FechaInicial)
             .Select(p => new PeriodoAcademicoDto
             {
                 IdPeriodo = p.IdPeriodo,
@@ -221,7 +220,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 NombreAsignatura = asignatura.Asignatura1,
 
                 IdCarrera = carrera.IdCarrera,
-                CodigoCarrera = carrera.CodigoCases,
+                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera.CodigoCases) ? carrera.CodigoCases : carrera.AliasCarrera,
                 NombreCarrera = carrera.Carrera1,
                 AliasCarrera = carrera.AliasCarrera,
 
@@ -325,7 +324,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
 
             IdCarrera = idCarrera,
             NombreCarrera = carrera?.Carrera1,
-            CodigoCases = carrera?.CodigoCases,
+            CodigoCases = !string.IsNullOrWhiteSpace(carrera?.CodigoCases) ? carrera.CodigoCases : carrera?.AliasCarrera,
 
             IdNivel = detalle?.IdNivel ?? 0,
             Nivel = curso?.Nivel,

@@ -123,10 +123,40 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
 
     const effectiveConfig = templateConfig;
 
-    const stableInitialData = React.useMemo(() => ({
-        ...docInstanceData,
-        Uuid: resolvedUuid || initialData?.Uuid || initialData?.uuid
-    }), [docInstanceData, resolvedUuid, initialData?.Uuid, initialData?.uuid]);
+    const stableInitialData = React.useMemo(() => {
+        const merged: any = {
+            ...(initialData || {}),
+            ...(docInstanceData || {}),
+            Uuid: resolvedUuid || initialData?.Uuid || initialData?.uuid
+        };
+
+        // Para metadatos institucionales oficiales de SIGAFI (distributivo y malla),
+        // asegurar que prevalezca el dato institucional si la instancia guardada tiene vacío o nulo
+        const sigafiFields = [
+            'NombreAsignatura', 'nombre_asignatura',
+            'CodigoAsignatura', 'codigo_asignatura',
+            'Carrera', 'carrera',
+            'CodigoCarrera', 'codigo_carrera',
+            'Periodo', 'periodo',
+            'Modalidad', 'modalidad',
+            'Nivel', 'nivel',
+            'UnidadOrganizacion', 'unidad_organizacion',
+            'TotalHorasAsignatura', 'total_horas_asignatura',
+            'Creditos', 'creditos',
+            'HorasContactoDocente', 'horas_contacto_docente',
+            'HorasPracticoExperimental', 'horas_practico_experimental',
+            'HorasAutonomo', 'horas_autonomo',
+            'DocenteElaborador', 'docente'
+        ];
+
+        for (const f of sigafiFields) {
+            if ((merged[f] === undefined || merged[f] === null || merged[f] === '') && initialData?.[f] !== undefined && initialData?.[f] !== null && initialData?.[f] !== '') {
+                merged[f] = initialData[f];
+            }
+        }
+
+        return merged;
+    }, [docInstanceData, resolvedUuid, initialData]);
 
     // ── Carga paralela: configuración de plantilla + datos de instancia + catálogos ──
     useEffect(() => {

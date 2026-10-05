@@ -23,13 +23,10 @@ export const generatePeaGeneralHtml = (block: DocumentBlock): string => {
         headerHtml = `
   <table style="width: 100%; border-collapse: collapse; ${borderCss} margin-bottom: 0; background: #ffffff;">
     <tr>
-      <td style="width: 28%; ${borderCss} padding: 8px; text-align: center; vertical-align: middle;">
-        <div style="font-weight: 900; font-size: 16pt; color: #1e2a4a; line-height: 1;">IST</div>
-        <div style="font-size: 7pt; font-weight: bold; color: #334155; line-height: 1.1; text-transform: uppercase;">
-          TECNOLÓGICO<br/>TRAVERSARI
-        </div>
+      <td style="width: 28%; border: none; padding: 6px; text-align: center; vertical-align: middle;">
+        <img src="/ISTPET-ORIGINAL.png" alt="ISTPET" style="max-height: 46px; max-width: 150px; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto;" />
       </td>
-      <td style="padding: 6px 10px; text-align: center; vertical-align: middle;">
+      <td style="padding: 6px 10px; text-align: center; vertical-align: middle; border: none;">
         <div style="font-size: 9.5pt; font-weight: bold; text-transform: uppercase; color: #000000;">${instName}</div>
         <div style="font-size: 7.5pt; font-weight: 600; text-transform: uppercase; color: #1e293b; margin-top: 2px;">${instAddr}</div>
         <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; color: #000000; margin-top: 4px;">${docTitle}</div>
@@ -89,16 +86,13 @@ export const generatePeaGeneralHtml = (block: DocumentBlock): string => {
         <td style="padding: 0; vertical-align: top;">
           <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
             <tr>
-              <td style="${borderCss} border-left: none; border-top: none; padding: 4px 6px; width: 65%;">Total horas de contacto docente:</td>
-              <td style="${borderCss} border-left: none; border-top: none; border-right: none; padding: 4px 6px; font-weight: bold;">{{default horas_contacto_docente 0}}</td>
+              <td style="${borderCss} border-left: none; border-top: none; border-right: none; padding: 4px 6px;">Total horas de contacto docente: &nbsp;<strong>{{default horas_contacto_docente 0}}</strong></td>
             </tr>
             <tr>
-              <td style="${borderCss} border-left: none; border-top: none; padding: 4px 6px;">Total horas de práctico experimental:</td>
-              <td style="${borderCss} border-left: none; border-top: none; border-right: none; padding: 4px 6px; font-weight: bold;">{{default horas_practico_experimental 0}}</td>
+              <td style="${borderCss} border-left: none; border-top: none; border-right: none; padding: 4px 6px;">Total horas de práctico experimental: &nbsp;<strong>{{default horas_practico_experimental 0}}</strong></td>
             </tr>
             <tr>
-              <td style="${borderCss} border-left: none; border-top: none; border-bottom: none; padding: 4px 6px;">Total horas de aprendizaje autónomo:</td>
-              <td style="border: none; padding: 4px 6px; font-weight: bold;">{{default horas_autonomo 0}}</td>
+              <td style="border: none; padding: 4px 6px;">Total horas de aprendizaje autónomo: &nbsp;<strong>{{default horas_autonomo 0}}</strong></td>
             </tr>
           </table>
         </td>

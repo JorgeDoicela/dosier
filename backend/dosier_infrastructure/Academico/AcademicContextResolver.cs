@@ -125,7 +125,7 @@ public class AcademicContextResolver : IAcademicContextResolver
             IdPeriodo = assignment.IdPeriodo,
             IdCarrera = career.IdCarrera,
             NombreCarrera = career.Carrera1,
-            CodigoCarrera = career.CodigoCases,
+            CodigoCarrera = !string.IsNullOrWhiteSpace(career.CodigoCases) ? career.CodigoCases : career.AliasCarrera,
             IdMalla = grid.IdMalla,
             DescripcionMalla = grid.Descripcion,
             IdDetalleMalla = detail.IdDetalleMalla,
