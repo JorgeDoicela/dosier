@@ -31,7 +31,7 @@ graph TD
 Recopila los metadatos requeridos para la plantilla mediante el patrón Strategy (`IDocumentDataProvider`). Obtiene los datos oficiales de la asignatura, carrera, horas y créditos desde SIGAFI en modo solo lectura (`AsNoTracking`) y los combina con las secciones co-redactadas en el módulo CoWork (`doc_cowork_documentos`).
 
 ### 2.2. Evaluación de Plantillas (`HandlebarsTemplateEngine` / `Scriban`)
-Sustituye variables, procesa bucles de iteración (unidades temáticas, temas, actividades prácticas, bibliografía, matriz de evaluación) y evalúa expresiones condicionales en el marcado HTML de la plantilla seleccionada (`doc_document_templates`).
+Sustituye variables, procesa bucles de iteración (unidades temáticas, temas, actividades prácticas, bibliografía, matriz de evaluación) y evalúa expresiones condicionales en el marcado HTML de la plantilla seleccionada (`doc_document_templates`). Incorpora un paso de normalización canónica de colecciones (`NormalizePeaCollections`) que proyecta dinámicamente cada entidad en PascalCase, camelCase y snake_case, garantizando que ninguna tabla o bloque evaluativo dependa de filas estáticas o claves asimétricas entre el frontend y el motor de reportes.
 
 ### 2.3. Inyección de Cumplimiento Institucional (`LegalComplianceInjector`)
 Añade al HTML evaluado los elementos normativos requeridos por el ISTPET:

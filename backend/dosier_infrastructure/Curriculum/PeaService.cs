@@ -190,16 +190,21 @@ namespace dosier_infrastructure.Curriculum
                 }
 
                 entity.Modalidad = dto.Modalidad;
+                if (!string.IsNullOrWhiteSpace(dto.UnidadOrganizacion))
+                {
+                    entity.UnidadOrganizacion = dosier_infrastructure.Academico.AcademicContextResolver.NormalizarUnidadOrganizacion(dto.UnidadOrganizacion);
+                }
+
                 if (entity.IdAsignacion == null)
                 {
-                    entity.UnidadOrganizacion = dto.UnidadOrganizacion;
                     entity.SemestreNivel = dto.SemestreNivel;
                     entity.TotalHorasAsignatura = dto.TotalHorasAsignatura;
                     entity.Creditos = dto.Creditos;
-                    entity.HorasContactoDocente = dto.HorasContactoDocente;
-                    entity.HorasPracticoExperimental = dto.HorasPracticoExperimental;
-                    entity.HorasAutonomo = dto.HorasAutonomo;
                 }
+
+                entity.HorasContactoDocente = dto.HorasContactoDocente;
+                entity.HorasPracticoExperimental = dto.HorasPracticoExperimental;
+                entity.HorasAutonomo = dto.HorasAutonomo;
 
                 entity.ObjetivoAsignatura = dto.ObjetivoAsignatura;
                 entity.MetodologiaEnsenanza = dto.MetodologiaEnsenanza;
@@ -1230,25 +1235,75 @@ namespace dosier_infrastructure.Curriculum
                     {
                         string titulo = "";
                         if (uEl.TryGetProperty("titulo", out var tProp) && tProp.ValueKind == System.Text.Json.JsonValueKind.String) titulo = tProp.GetString() ?? "";
+                        else if (uEl.TryGetProperty("Titulo", out var tProp2) && tProp2.ValueKind == System.Text.Json.JsonValueKind.String) titulo = tProp2.GetString() ?? "";
                         else if (uEl.TryGetProperty("NombreUnidad", out var nuProp) && nuProp.ValueKind == System.Text.Json.JsonValueKind.String) titulo = nuProp.GetString() ?? "";
+                        else if (uEl.TryGetProperty("nombre_unidad", out var nuProp2) && nuProp2.ValueKind == System.Text.Json.JsonValueKind.String) titulo = nuProp2.GetString() ?? "";
                         else if (uEl.TryGetProperty("0", out var zeroProp) && zeroProp.ValueKind == System.Text.Json.JsonValueKind.String) titulo = zeroProp.GetString() ?? "";
 
                         int cd = 0, ape = 0, ta = 0;
                         if (uEl.TryGetProperty("horasCD", out var cdP) && cdP.TryGetInt32(out var cdV)) cd = cdV;
+                        else if (uEl.TryGetProperty("HorasCD", out var cdP0) && cdP0.TryGetInt32(out var cdV0)) cd = cdV0;
                         else if (uEl.TryGetProperty("HorasDocencia", out var cdP2) && cdP2.TryGetInt32(out var cdV2)) cd = cdV2;
 
                         if (uEl.TryGetProperty("horasAPE", out var apeP) && apeP.TryGetInt32(out var apeV)) ape = apeV;
+                        else if (uEl.TryGetProperty("HorasAPE", out var apeP0) && apeP0.TryGetInt32(out var apeV0)) ape = apeV0;
                         else if (uEl.TryGetProperty("HorasPracticoExp", out var apeP2) && apeP2.TryGetInt32(out var apeV2)) ape = apeV2;
 
                         if (uEl.TryGetProperty("horasTA", out var taP) && taP.TryGetInt32(out var taV)) ta = taV;
+                        else if (uEl.TryGetProperty("HorasTA", out var taP0) && taP0.TryGetInt32(out var taV0)) ta = taV0;
                         else if (uEl.TryGetProperty("HorasAutonomo", out var taP2) && taP2.TryGetInt32(out var taV2)) ta = taV2;
 
                         int totalH = cd + ape + ta;
+                        if (uEl.TryGetProperty("TotalHorasUnidad", out var thuP) && thuP.TryGetInt32(out var thuV) && thuV > 0) totalH = thuV;
+                        else if (uEl.TryGetProperty("horasTotal", out var htP) && htP.TryGetInt32(out var htV) && htV > 0) totalH = htV;
 
-                        string contenidos = "";
-                        if (uEl.TryGetProperty("contenidos", out var contP) && contP.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = contP.GetString() ?? "";
-                        else if (uEl.TryGetProperty("Contenidos", out var contP2) && contP2.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = contP2.GetString() ?? "";
-                        else if (uEl.TryGetProperty("1", out var oneP) && oneP.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = oneP.GetString() ?? "";
+                        var temasList = new List<DocPeaTema>();
+                        var temasPropFound = uEl.TryGetProperty("Temas", out var tmProp) || uEl.TryGetProperty("temas", out tmProp);
+                        if (temasPropFound && tmProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                        {
+                            int tIdx = 1;
+                            foreach (var tmEl in tmProp.EnumerateArray())
+                            {
+                                string tTitulo = "";
+                                if (tmEl.TryGetProperty("TituloTema", out var ttP) && ttP.ValueKind == System.Text.Json.JsonValueKind.String) tTitulo = ttP.GetString() ?? "";
+                                else if (tmEl.TryGetProperty("titulo_tema", out var ttP2) && ttP2.ValueKind == System.Text.Json.JsonValueKind.String) tTitulo = ttP2.GetString() ?? "";
+                                else if (tmEl.TryGetProperty("titulo", out var ttP3) && ttP3.ValueKind == System.Text.Json.JsonValueKind.String) tTitulo = ttP3.GetString() ?? "";
+
+                                string tDesc = "";
+                                if (tmEl.TryGetProperty("DescripcionSubtemas", out var dsP) && dsP.ValueKind == System.Text.Json.JsonValueKind.String) tDesc = dsP.GetString() ?? "";
+                                else if (tmEl.TryGetProperty("descripcion_subtemas", out var dsP2) && dsP2.ValueKind == System.Text.Json.JsonValueKind.String) tDesc = dsP2.GetString() ?? "";
+
+                                if (!string.IsNullOrWhiteSpace(tTitulo) || !string.IsNullOrWhiteSpace(tDesc))
+                                {
+                                    temasList.Add(new DocPeaTema
+                                    {
+                                        Uuid = Guid.NewGuid().ToString(),
+                                        NumeroTema = tIdx,
+                                        TituloTema = string.IsNullOrWhiteSpace(tTitulo) ? $"Tema {tIdx}" : tTitulo,
+                                        DescripcionSubtemas = tDesc,
+                                        Orden = tIdx
+                                    });
+                                    tIdx++;
+                                }
+                            }
+                        }
+
+                        if (temasList.Count == 0)
+                        {
+                            string contenidos = "";
+                            if (uEl.TryGetProperty("contenidos", out var contP) && contP.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = contP.GetString() ?? "";
+                            else if (uEl.TryGetProperty("Contenidos", out var contP2) && contP2.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = contP2.GetString() ?? "";
+                            else if (uEl.TryGetProperty("1", out var oneP) && oneP.ValueKind == System.Text.Json.JsonValueKind.String) contenidos = oneP.GetString() ?? "";
+
+                            temasList.Add(new DocPeaTema
+                            {
+                                Uuid = Guid.NewGuid().ToString(),
+                                NumeroTema = 1,
+                                TituloTema = "Contenidos y Subtemas de Aprendizaje",
+                                DescripcionSubtemas = contenidos,
+                                Orden = 1
+                            });
+                        }
 
                         var nuevaUnidad = new DocPeaUnidad
                         {
@@ -1261,24 +1316,14 @@ namespace dosier_infrastructure.Curriculum
                             HorasPracticoExp = ape,
                             HorasAutonomo = ta,
                             Orden = uIdx,
-                            Temas = new List<DocPeaTema>
-                            {
-                                new DocPeaTema
-                                {
-                                    Uuid = Guid.NewGuid().ToString(),
-                                    NumeroTema = 1,
-                                    TituloTema = "Contenidos y Subtemas de Aprendizaje",
-                                    DescripcionSubtemas = contenidos,
-                                    Orden = 1
-                                }
-                            }
+                            Temas = temasList
                         };
                         entity.Unidades.Add(nuevaUnidad);
                         uIdx++;
                     }
                 }
 
-                // ── 4. Sincronización Relacional: Prerrequisitos ──
+                // ── 4. Sincronización Relacional: Prerrequisitos Curriculares ──
                 var prerreqPropFound = root.TryGetProperty("Prerrequisitos", out var prProp) || root.TryGetProperty("prerrequisitos", out prProp);
                 if (prerreqPropFound && prProp.ValueKind == System.Text.Json.JsonValueKind.Array)
                 {
@@ -1291,6 +1336,8 @@ namespace dosier_infrastructure.Curriculum
                         string asig = "";
                         if (prEl.TryGetProperty("Asignatura", out var asP) && asP.ValueKind == System.Text.Json.JsonValueKind.String) asig = asP.GetString() ?? "";
                         else if (prEl.TryGetProperty("asignatura", out var asP2) && asP2.ValueKind == System.Text.Json.JsonValueKind.String) asig = asP2.GetString() ?? "";
+                        else if (prEl.TryGetProperty("NombreAsignatura", out var asP3) && asP3.ValueKind == System.Text.Json.JsonValueKind.String) asig = asP3.GetString() ?? "";
+                        else if (prEl.TryGetProperty("nombre_asignatura", out var asP4) && asP4.ValueKind == System.Text.Json.JsonValueKind.String) asig = asP4.GetString() ?? "";
                         else if (prEl.TryGetProperty("0", out var asZero) && asZero.ValueKind == System.Text.Json.JsonValueKind.String) asig = asZero.GetString() ?? "";
 
                         string obs = "";
@@ -1325,18 +1372,30 @@ namespace dosier_infrastructure.Curriculum
                         string nombre = "";
                         if (prEl.TryGetProperty("nombre", out var nmP) && nmP.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmP.GetString() ?? "";
                         else if (prEl.TryGetProperty("NombrePractica", out var nmP2) && nmP2.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmP2.GetString() ?? "";
+                        else if (prEl.TryGetProperty("nombre_practica", out var nmP3) && nmP3.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmP3.GetString() ?? "";
                         else if (prEl.TryGetProperty("1", out var nmOne) && nmOne.ValueKind == System.Text.Json.JsonValueKind.String) nombre = nmOne.GetString() ?? "";
 
                         int horas = 2;
                         if (prEl.TryGetProperty("horas", out var hP) && hP.TryGetInt32(out var hV)) horas = hV;
                         else if (prEl.TryGetProperty("DuracionHoras", out var hP2) && hP2.TryGetInt32(out var hV2)) horas = hV2;
+                        else if (prEl.TryGetProperty("duracion_horas", out var hP3) && hP3.TryGetInt32(out var hV3)) horas = hV3;
 
                         string esc = "";
                         if (prEl.TryGetProperty("escenario", out var escP) && escP.ValueKind == System.Text.Json.JsonValueKind.String) esc = escP.GetString() ?? "";
+                        else if (prEl.TryGetProperty("Escenario", out var escP2) && escP2.ValueKind == System.Text.Json.JsonValueKind.String) esc = escP2.GetString() ?? "";
+
                         string prod = "";
                         if (prEl.TryGetProperty("producto", out var prdP) && prdP.ValueKind == System.Text.Json.JsonValueKind.String) prod = prdP.GetString() ?? "";
+                        else if (prEl.TryGetProperty("Producto", out var prdP2) && prdP2.ValueKind == System.Text.Json.JsonValueKind.String) prod = prdP2.GetString() ?? "";
 
-                        string caracterizacion = string.Join(" | ", new[] { esc, prod }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                        string caracterizacion = "";
+                        if (prEl.TryGetProperty("caracterizacion", out var carP) && carP.ValueKind == System.Text.Json.JsonValueKind.String) caracterizacion = carP.GetString() ?? "";
+                        else if (prEl.TryGetProperty("Caracterizacion", out var carP2) && carP2.ValueKind == System.Text.Json.JsonValueKind.String) caracterizacion = carP2.GetString() ?? "";
+
+                        if (string.IsNullOrWhiteSpace(caracterizacion))
+                        {
+                            caracterizacion = string.Join(" | ", new[] { esc, prod }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                        }
 
                         if (!string.IsNullOrWhiteSpace(nombre))
                         {
@@ -1366,17 +1425,23 @@ namespace dosier_infrastructure.Curriculum
                     {
                         string nota = "";
                         if (evEl.TryGetProperty("nota", out var ntP) && ntP.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntP.GetString() ?? "";
+                        else if (evEl.TryGetProperty("Nota", out var ntP0) && ntP0.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntP0.GetString() ?? "";
                         else if (evEl.TryGetProperty("Denominacion", out var ntP2) && ntP2.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntP2.GetString() ?? "";
+                        else if (evEl.TryGetProperty("denominacion", out var ntP3) && ntP3.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntP3.GetString() ?? "";
                         else if (evEl.TryGetProperty("0", out var ntZero) && ntZero.ValueKind == System.Text.Json.JsonValueKind.String) nota = ntZero.GetString() ?? "";
 
                         string tipo = "";
                         if (evEl.TryGetProperty("tipo", out var tpP) && tpP.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpP.GetString() ?? "";
+                        else if (evEl.TryGetProperty("Tipo", out var tpP0) && tpP0.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpP0.GetString() ?? "";
                         else if (evEl.TryGetProperty("TipoEvaluacion", out var tpP2) && tpP2.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpP2.GetString() ?? "";
+                        else if (evEl.TryGetProperty("tipo_evaluacion", out var tpP3) && tpP3.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpP3.GetString() ?? "";
                         else if (evEl.TryGetProperty("1", out var tpOne) && tpOne.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tpOne.GetString() ?? "";
 
                         decimal calif = 10;
                         if (evEl.TryGetProperty("calificacion", out var clP) && clP.TryGetDecimal(out var clV)) calif = clV;
+                        else if (evEl.TryGetProperty("Calificacion", out var clP0) && clP0.TryGetDecimal(out var clV0)) calif = clV0;
                         else if (evEl.TryGetProperty("CalificacionMaxima", out var clP2) && clP2.TryGetDecimal(out var clV2)) calif = clV2;
+                        else if (evEl.TryGetProperty("calificacion_maxima", out var clP3) && clP3.TryGetDecimal(out var clV3)) calif = clV3;
                         else if (evEl.TryGetProperty("2", out var clTwo) && decimal.TryParse(clTwo.GetString(), out var clParsed)) calif = clParsed;
 
                         if (!string.IsNullOrWhiteSpace(nota))
@@ -1390,6 +1455,160 @@ namespace dosier_infrastructure.Curriculum
                                 CalificacionMaxima = calif,
                                 Orden = evIdx++
                             });
+                        }
+                    }
+                }
+
+                // ── 7. Sincronización Relacional: Resultados de Aprendizaje (RDAs) ──
+                var rdaPropFound = root.TryGetProperty("ResultadosAprendizaje", out var rdaProp) || root.TryGetProperty("resultados_aprendizaje", out rdaProp);
+                if (rdaPropFound)
+                {
+                    _context.DocPeaResultadosAprendizaje.RemoveRange(entity.ResultadosAprendizaje);
+                    entity.ResultadosAprendizaje.Clear();
+
+                    int rIdx = 1;
+                    if (rdaProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var rEl in rdaProp.EnumerateArray())
+                        {
+                            string codigo = "";
+                            if (rEl.TryGetProperty("CodigoRda", out var cP) && cP.ValueKind == System.Text.Json.JsonValueKind.String) codigo = cP.GetString() ?? "";
+                            else if (rEl.TryGetProperty("codigo_rda", out var cP2) && cP2.ValueKind == System.Text.Json.JsonValueKind.String) codigo = cP2.GetString() ?? "";
+
+                            string desc = "";
+                            if (rEl.TryGetProperty("Descripcion", out var dP) && dP.ValueKind == System.Text.Json.JsonValueKind.String) desc = dP.GetString() ?? "";
+                            else if (rEl.TryGetProperty("descripcion", out var dP2) && dP2.ValueKind == System.Text.Json.JsonValueKind.String) desc = dP2.GetString() ?? "";
+
+                            string nivel = "Medio";
+                            if (rEl.TryGetProperty("NivelDesarrollo", out var nP) && nP.ValueKind == System.Text.Json.JsonValueKind.String) nivel = nP.GetString() ?? "Medio";
+                            else if (rEl.TryGetProperty("nivel_desarrollo", out var nP2) && nP2.ValueKind == System.Text.Json.JsonValueKind.String) nivel = nP2.GetString() ?? "Medio";
+
+                            if (!string.IsNullOrWhiteSpace(desc))
+                            {
+                                entity.ResultadosAprendizaje.Add(new DocPeaResultadoAprendizaje
+                                {
+                                    Uuid = Guid.NewGuid().ToString(),
+                                    IdPea = entity.IdPea,
+                                    CodigoRda = string.IsNullOrWhiteSpace(codigo) ? $"RDA-{rIdx}" : codigo,
+                                    Descripcion = desc,
+                                    NivelDesarrollo = nivel,
+                                    TipoRda = "Asignatura",
+                                    Orden = rIdx++
+                                });
+                            }
+                        }
+                    }
+                    else if (rdaProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(rdaProp.GetString()))
+                    {
+                        var rawText = rdaProp.GetString()!;
+                        var cleaned = System.Text.RegularExpressions.Regex.Replace(rawText, @"<[^>]+>", "\n");
+                        var lines = cleaned.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var line in lines)
+                        {
+                            if (!string.IsNullOrWhiteSpace(line))
+                            {
+                                entity.ResultadosAprendizaje.Add(new DocPeaResultadoAprendizaje
+                                {
+                                    Uuid = Guid.NewGuid().ToString(),
+                                    IdPea = entity.IdPea,
+                                    CodigoRda = $"RDA-{rIdx}",
+                                    Descripcion = line,
+                                    NivelDesarrollo = "Medio",
+                                    TipoRda = "Asignatura",
+                                    Orden = rIdx++
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // ── 8. Sincronización Relacional: Bibliografía Básica y Complementaria ──
+                var biblioPropFound = root.TryGetProperty("Bibliografias", out var bProp) || root.TryGetProperty("bibliografias", out bProp);
+                bool hasArrayBiblio = biblioPropFound && bProp.ValueKind == System.Text.Json.JsonValueKind.Array && bProp.GetArrayLength() > 0;
+
+                _context.DocPeaBibliografias.RemoveRange(entity.Bibliografias);
+                entity.Bibliografias.Clear();
+
+                int bIdx = 1;
+                if (hasArrayBiblio)
+                {
+                    foreach (var bEl in bProp.EnumerateArray())
+                    {
+                        string tipo = "Basica";
+                        if (bEl.TryGetProperty("TipoBibliografia", out var tbP) && tbP.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tbP.GetString() ?? "Basica";
+                        else if (bEl.TryGetProperty("tipo_bibliografia", out var tbP2) && tbP2.ValueKind == System.Text.Json.JsonValueKind.String) tipo = tbP2.GetString() ?? "Basica";
+
+                        string autor = "";
+                        if (bEl.TryGetProperty("Autor", out var aP) && aP.ValueKind == System.Text.Json.JsonValueKind.String) autor = aP.GetString() ?? "";
+                        else if (bEl.TryGetProperty("autor", out var aP2) && aP2.ValueKind == System.Text.Json.JsonValueKind.String) autor = aP2.GetString() ?? "";
+
+                        string titulo = "";
+                        if (bEl.TryGetProperty("TituloLibro", out var tlP) && tlP.ValueKind == System.Text.Json.JsonValueKind.String) titulo = tlP.GetString() ?? "";
+                        else if (bEl.TryGetProperty("titulo_libro", out var tlP2) && tlP2.ValueKind == System.Text.Json.JsonValueKind.String) titulo = tlP2.GetString() ?? "";
+
+                        string cita = "";
+                        if (bEl.TryGetProperty("CitaCompletaApa", out var caP) && caP.ValueKind == System.Text.Json.JsonValueKind.String) cita = caP.GetString() ?? "";
+                        else if (bEl.TryGetProperty("cita_completa_apa", out var caP2) && caP2.ValueKind == System.Text.Json.JsonValueKind.String) cita = caP2.GetString() ?? "";
+
+                        string editorial = "";
+                        if (bEl.TryGetProperty("EditorialCiudad", out var edP) && edP.ValueKind == System.Text.Json.JsonValueKind.String) editorial = edP.GetString() ?? "";
+                        else if (bEl.TryGetProperty("editorial_ciudad", out var edP2) && edP2.ValueKind == System.Text.Json.JsonValueKind.String) editorial = edP2.GetString() ?? "";
+
+                        entity.Bibliografias.Add(new DocPeaBibliografia
+                        {
+                            Uuid = Guid.NewGuid().ToString(),
+                            IdPea = entity.IdPea,
+                            TipoBibliografia = tipo,
+                            Autor = autor,
+                            TituloLibro = titulo,
+                            EditorialCiudad = editorial,
+                            CitaCompletaApa = string.IsNullOrWhiteSpace(cita) ? $"{autor} {titulo}".Trim() : cita,
+                            Orden = bIdx++
+                        });
+                    }
+                }
+                else
+                {
+                    // Fallback desde campos de texto enriquecido BibliografiaBasica y BibliografiaConsulta
+                    if (root.TryGetProperty("BibliografiaBasica", out var bbProp) && bbProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(bbProp.GetString()))
+                    {
+                        var cleaned = System.Text.RegularExpressions.Regex.Replace(bbProp.GetString()!, @"<[^>]+>", "\n");
+                        var lines = cleaned.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var line in lines)
+                        {
+                            if (!string.IsNullOrWhiteSpace(line))
+                            {
+                                entity.Bibliografias.Add(new DocPeaBibliografia
+                                {
+                                    Uuid = Guid.NewGuid().ToString(),
+                                    IdPea = entity.IdPea,
+                                    TipoBibliografia = "Basica",
+                                    CitaCompletaApa = line,
+                                    TituloLibro = line,
+                                    Orden = bIdx++
+                                });
+                            }
+                        }
+                    }
+
+                    if (root.TryGetProperty("BibliografiaConsulta", out var bcProp) && bcProp.ValueKind == System.Text.Json.JsonValueKind.String && !string.IsNullOrWhiteSpace(bcProp.GetString()))
+                    {
+                        var cleaned = System.Text.RegularExpressions.Regex.Replace(bcProp.GetString()!, @"<[^>]+>", "\n");
+                        var lines = cleaned.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var line in lines)
+                        {
+                            if (!string.IsNullOrWhiteSpace(line))
+                            {
+                                entity.Bibliografias.Add(new DocPeaBibliografia
+                                {
+                                    Uuid = Guid.NewGuid().ToString(),
+                                    IdPea = entity.IdPea,
+                                    TipoBibliografia = "Complementaria",
+                                    CitaCompletaApa = line,
+                                    TituloLibro = line,
+                                    Orden = bIdx++
+                                });
+                            }
                         }
                     }
                 }

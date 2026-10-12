@@ -148,11 +148,25 @@ public class AcademicContextResolver : IAcademicContextResolver
             HorasPracticoExperimental = practicalHours,
             HorasAutonomo = autonomousHours,
             Creditos = detail.Creditos ?? 0,
-            UnidadOrganizacionCurricular = subjectType?.TipoAsignatura1,
+            UnidadOrganizacionCurricular = NormalizarUnidadOrganizacion(subjectType?.TipoAsignatura1),
             ModalidadAutorizada = modalityAuthorized,
             FuenteMalla = source,
             Prerrequisitos = prerequisites,
             Advertencias = warnings
+        };
+    }
+
+    public static string NormalizarUnidadOrganizacion(string? tipoAsignatura)
+    {
+        if (string.IsNullOrWhiteSpace(tipoAsignatura)) return "Unidad Profesional";
+        var upper = tipoAsignatura.Trim().ToUpperInvariant();
+        return upper switch
+        {
+            "BASICA" or "BÁSICA" or "UNIDAD BASICA" or "UNIDAD BÁSICA" => "Unidad Básica",
+            "PROFESIONAL" or "UNIDAD PROFESIONAL" => "Unidad Profesional",
+            "TITULACION" or "TITULACIÓN" or "INTEGRACION" or "INTEGRACIÓN" or "UNIDAD DE INTEGRACION CURRICULAR" or "UNIDAD DE INTEGRACIÓN CURRICULAR" => "Unidad de Integración Curricular",
+            "TRONCO COMUN" or "TRONCO COMÚN" => "Unidad Básica",
+            _ => tipoAsignatura
         };
     }
 }

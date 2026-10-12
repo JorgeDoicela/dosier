@@ -597,6 +597,11 @@ namespace Dosier.Infrastructure.Common.Documents
                             var materiaNombre = asignatura?.Asignatura1 ?? "Asignatura ISTPET";
                             var carreraNombre = carrera?.Carrera1 ?? "Carrera ISTPET";
 
+                            var periodo = !string.IsNullOrEmpty(pea.IdPeriodo)
+                                ? await _db.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == pea.IdPeriodo, cancellationToken)
+                                : null;
+                            var periodoNombre = !string.IsNullOrWhiteSpace(periodo?.Detalle) ? periodo.Detalle : (pea.IdPeriodo ?? "");
+
                             void Put(string k, object? v)
                             {
                                 if (v != null)
@@ -612,11 +617,11 @@ namespace Dosier.Infrastructure.Common.Documents
                             if (NeedsField("NombreAsignatura")) Put("NombreAsignatura", materiaNombre);
                             if (NeedsField("titulo")) Put("titulo", materiaNombre);
                             if (NeedsField("Carrera")) Put("Carrera", carreraNombre);
-                            if (NeedsField("Periodo")) Put("Periodo", pea.IdPeriodo);
+                            if (NeedsField("Periodo")) Put("Periodo", periodoNombre);
                             if (NeedsField("CodigoAsignatura")) Put("CodigoAsignatura", asignatura?.Codigo ?? "");
                             if (NeedsField("Modalidad")) Put("Modalidad", pea.Modalidad);
                             if (NeedsField("Nivel")) Put("Nivel", pea.SemestreNivel);
-                            if (NeedsField("UnidadOrganizacion")) Put("UnidadOrganizacion", pea.UnidadOrganizacion);
+                            if (NeedsField("UnidadOrganizacion")) Put("UnidadOrganizacion", dosier_infrastructure.Academico.AcademicContextResolver.NormalizarUnidadOrganizacion(pea.UnidadOrganizacion));
                             if (NeedsField("DocenteElaborador")) Put("DocenteElaborador", docenteNombre);
                             if (NeedsField("TotalHorasAsignatura") || Convert.ToInt32(dataDict.GetValueOrDefault("TotalHorasAsignatura") ?? 0) == 0)
                                 Put("TotalHorasAsignatura", pea.TotalHorasAsignatura);
@@ -714,6 +719,15 @@ namespace Dosier.Infrastructure.Common.Documents
                                 dataDict["FirmaRevisadoAcad"] = pea.FirmaRevisadoAcad;
                             if (!string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector))
                                 dataDict["FirmaAprobadoVicerrector"] = pea.FirmaAprobadoVicerrector;
+
+                            if (pea.FechaElaborado.HasValue)
+                                dataDict["FechaElaborado"] = pea.FechaElaborado.Value.ToString("dd/MM/yyyy");
+                            if (pea.FechaRevisadoCoord.HasValue)
+                                dataDict["FechaRevisadoCarrera"] = pea.FechaRevisadoCoord.Value.ToString("dd/MM/yyyy");
+                            if (pea.FechaRevisadoAcad.HasValue)
+                                dataDict["FechaRevisadoAcademico"] = pea.FechaRevisadoAcad.Value.ToString("dd/MM/yyyy");
+                            if (pea.FechaAprobado.HasValue)
+                                dataDict["FechaAprobado"] = pea.FechaAprobado.Value.ToString("dd/MM/yyyy");
                         }
 
                         renderData = dataDict;

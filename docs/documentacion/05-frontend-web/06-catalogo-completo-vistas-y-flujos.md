@@ -31,10 +31,9 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 #### 2.1.1. Tableros Específicos por Rol (`src/pages/Dashboard/Roles/`)
 * **`DocentePeaDashboard.tsx` (`DOSIER_DOCENTE`):**
-  * Presenta las asignaturas asignadas al docente para el período lectivo ordinario extraídas de SIGAFI (`detallemallas`).
-  * Semáforo de estado curricular por asignatura (`Borrador`, `EnRevision`, `Observado`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`).
-  * Indicador de balance horario (horas docencia CD, prácticas APE y autónomas AA).
-  * Acciones: Crear/Abrir PEA en Workspace, Clonar PEA de período previo (`ClonarPeaModal.tsx`) y Enviar a Revisión Técnica.
+  * **Panel de Actividades y Formulación Curricular (`DocenteActividadesPanel.tsx`):** Lista priorizada de cátedras asignadas para el período activo con avance in-situ desplegado abajo de cada una (`0% Sin Iniciar`, `25% Borrador`, `30% Observado`, `50% En Revisión`, `75% Aval de Carrera`, `90% Aval Académico`, `100% Aprobado Oficial`), con barra de progreso y acciones directas contextuales ("Elaborar PEA", "Continuar PEA", "Corregir PEA", "Ver PEA").
+  * **Agenda y Calendario Curricular (`DocenteAgendaWidget.tsx`):** Columna lateral de próximos hitos normativos CACES, fechas de entrega institucional y acceso directo al módulo de Calendario.
+  * **Desacople del Distributivo Exhaustivo:** La cuadrícula/tabla completa de exploración de asignaturas se canaliza exclusivamente a través de la *Vista Folio de Proyectos* (`MisAsignaturasPage.tsx` en `/documentacion/mis-proyectos`), eliminando redundancias en el dashboard.
 * **`CoordCarreraDashboard.tsx` (`DOSIER_COORD_CARRERA`):**
   * Vista panorámica de todas las asignaturas pertenecientes a las carreras bajo su coordinación técnica.
   * Filtro disciplinar por nivel, paralelo y estado.

@@ -85,7 +85,7 @@
       </tr>
       <tr>
         <td style="font-weight: bold;">Semestre:</td>
-        <td>{{default Semestre (default semestre "---")}}</td>
+        <td>{{default Semestre (default semestre (default Nivel (default nivel "---")))}}</td>
       </tr>
       <tr>
         <td style="font-weight: bold;">Número de horas de la asignatura:</td>
@@ -138,8 +138,8 @@
     <tbody>
       {{#each Prerrequisitos}}
       <tr>
-        <td>{{this.Asignatura}}</td>
-        <td>{{this.Observacion}}</td>
+        <td>{{default this.Asignatura (default this.asignatura (default this.NombreAsignatura (default this.nombre_asignatura "---")))}}</td>
+        <td>{{default this.Observacion (default this.observacion "")}}</td>
       </tr>
       {{/each}}
     </tbody>
@@ -183,22 +183,22 @@
       {{#each Unidades}}
       <tr style="page-break-inside: avoid;">
         <td style="text-align: center; font-weight: bold; font-size: 11pt; vertical-align: middle;">
-          {{this.Numero}}
+          {{default this.Numero (default this.num (default this.NumeroUnidad (default this.numero 1)))}}
         </td>
         <td style="padding: 0; vertical-align: top;">
           <div style="background-color: #bdd7ee; color: #000000; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid #000000;">
-            <span>UNIDAD {{this.Numero}}: {{this.Titulo}}</span>
-            <span>Total de horas por unidad: {{this.TotalHoras}}</span>
+            <span>UNIDAD {{default this.Numero (default this.num (default this.NumeroUnidad 1))}}: {{default this.Titulo (default this.titulo (default this.NombreUnidad "Unidad"))}}</span>
+            <span>Total de horas por unidad: {{default this.TotalHoras (default this.horasTotal (default this.TotalHorasUnidad 0))}}</span>
           </div>
           <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; background-color: #bdd7ee; border-bottom: 1px solid #000000;">
             <tr>
-              <td style="border: none; border-right: 1px solid #000000; padding: 3px 6px; width: 33.3%;">Horas contacto con el docente: <strong>{{this.HorasCD}}</strong></td>
-              <td style="border: none; border-right: 1px solid #000000; padding: 3px 6px; width: 33.3%;">Horas Práctico-experimental: <strong>{{this.HorasAPE}}</strong></td>
-              <td style="border: none; padding: 3px 6px; width: 33.3%;">Horas de aprendizaje autónomo: <strong>{{this.HorasTA}}</strong></td>
+              <td style="border: none; border-right: 1px solid #000000; padding: 3px 6px; width: 33.3%;">Horas contacto con el docente: <strong>{{default this.HorasCD (default this.horasCD (default this.HorasDocencia 0))}}</strong></td>
+              <td style="border: none; border-right: 1px solid #000000; padding: 3px 6px; width: 33.3%;">Horas Práctico-experimental: <strong>{{default this.HorasAPE (default this.horasAPE (default this.HorasPracticoExp 0))}}</strong></td>
+              <td style="border: none; padding: 3px 6px; width: 33.3%;">Horas de aprendizaje autónomo: <strong>{{default this.HorasTA (default this.horasTA (default this.HorasAutonomo 0))}}</strong></td>
             </tr>
           </table>
           <div style="padding: 6px 8px; font-size: 8pt; min-height: 40px; background: #ffffff;">
-            {{this.Contenidos}}
+            {{default this.Contenidos (default this.contenidos (default this.DescripcionSubtemas "---"))}}
           </div>
         </td>
       </tr>
@@ -239,8 +239,8 @@
     <tbody>
       {{#each ActividadesPracticas}}
       <tr>
-        <td style="text-align: center; font-weight: bold;">{{this.Unidad}}</td>
-        <td>{{this.NombreCaracterizacion}}</td>
+        <td style="text-align: center; font-weight: bold;">{{default this.Unidad (default this.unidad "---")}}</td>
+        <td>{{default this.NombreCaracterizacion (default this.nombre_caracterizacion (default this.NombrePractica (default this.nombre "---")))}}</td>
       </tr>
       {{/each}}
     </tbody>
@@ -259,21 +259,31 @@
       </tr>
     </thead>
     <tbody>
+      {{#if Evaluaciones}}
+      {{#each Evaluaciones}}
       <tr>
-        <td style="font-weight: bold;">NOTA PARCIAL 1</td>
-        <td>ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)</td>
+        <td style="font-weight: bold; text-align: left;">{{default this.Nota (default this.nota (default this.Denominacion (default this.denominacion "---")))}}</td>
+        <td style="text-align: left;">{{default this.Tipo (default this.tipo (default this.TipoEvaluacion (default this.tipo_evaluacion "---")))}}</td>
+        <td style="text-align: center; font-weight: bold;">{{default this.Calificacion (default this.calificacion (default this.CalificacionMaxima (default this.calificacion_maxima "10,00")))}}</td>
+      </tr>
+      {{/each}}
+      {{else}}
+      <tr>
+        <td style="font-weight: bold; text-align: left;">NOTA PARCIAL 1</td>
+        <td style="text-align: left;">ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)</td>
         <td style="text-align: center; font-weight: bold;">10,00</td>
       </tr>
       <tr>
-        <td style="font-weight: bold;">NOTA PARCIAL 2</td>
-        <td>EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)</td>
+        <td style="font-weight: bold; text-align: left;">NOTA PARCIAL 2</td>
+        <td style="text-align: left;">EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)</td>
         <td style="text-align: center; font-weight: bold;">10,00</td>
       </tr>
       <tr>
-        <td style="font-weight: bold;">EVALUACIÓN FINAL</td>
-        <td>EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)</td>
+        <td style="font-weight: bold; text-align: left;">EVALUACIÓN FINAL</td>
+        <td style="text-align: left;">EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)</td>
         <td style="text-align: center; font-weight: bold;">10,00</td>
       </tr>
+      {{/if}}
     </tbody>
   </table>
 

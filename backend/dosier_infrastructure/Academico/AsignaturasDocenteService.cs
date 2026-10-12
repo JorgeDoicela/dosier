@@ -243,7 +243,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 HorasPracticoExperimental = horasApe,
                 HorasAutonomo = Math.Max(0m, horasTotales - horasDocencia - horasApe),
                 Creditos = detalle.Creditos ?? 0,
-                UnidadOrganizacionCurricular = tipoAsignatura?.TipoAsignatura1,
+                UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsignatura?.TipoAsignatura1),
 
                 Prerrequisitos = prereqList,
                 AdvertenciasContexto = warnings,
@@ -334,7 +334,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             HorasPracticoExperimental = horasApe,
             HorasAutonomo = horasAutonomo,
             Creditos = detalle?.Creditos ?? 0,
-            UnidadOrganizacionCurricular = tipoAsig?.TipoAsignatura1,
+            UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1),
             DescripcionMalla = mallaActiva?.Descripcion,
 
             Prerrequisitos = prerequisitosItems

@@ -431,6 +431,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             SyncKeyAlias("EvaluacionAprendizaje", "evaluacion_aprendizaje");
             SyncKeyAlias("UnidadOrganizacion", "unidad_organizacion");
             SyncKeyAlias("Nivel", "nivel");
+            SyncKeyAlias("Nivel", "Semestre");
             SyncKeyAlias("Nivel", "semestre");
             SyncKeyAlias("Nivel", "semestre_nivel");
             SyncKeyAlias("RdaCarrera", "rda_carrera");
@@ -458,6 +459,9 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                     }
                 }
             }
+
+            // ── Normalización de colecciones para plantillas oficiales (PEA_OFICIAL) ──
+            NormalizePeaCollections(dict);
 
 
             // Variables globales del sistema (siempre disponibles en cualquier plantilla)
@@ -716,6 +720,317 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 return prop.GetValue(item)?.ToString() ?? string.Empty;
             }
             return string.Empty;
+        }
+
+        private static void NormalizePeaCollections(Dictionary<string, object?> dict)
+        {
+            // 1. Normalizar Unidades
+            if (dict.TryGetValue("Unidades", out var rawUnidades) || dict.TryGetValue("unidades", out rawUnidades))
+            {
+                if (rawUnidades is System.Collections.IEnumerable enumUnidades && !(rawUnidades is string))
+                {
+                    var normalizedList = new List<Dictionary<string, object?>>();
+                    int uIdx = 1;
+                    foreach (var item in enumUnidades)
+                    {
+                        var uDict = item as Dictionary<string, object?> ?? new Dictionary<string, object?>();
+                        if (item is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                        {
+                            uDict = ToNativeType(je) as Dictionary<string, object?> ?? uDict;
+                        }
+
+                        int num = uIdx;
+                        if (uDict.TryGetValue("num", out var nVal) && int.TryParse(nVal?.ToString(), out var nParsed)) num = nParsed;
+                        else if (uDict.TryGetValue("Numero", out var nVal2) && int.TryParse(nVal2?.ToString(), out var nParsed2)) num = nParsed2;
+                        else if (uDict.TryGetValue("NumeroUnidad", out var nVal3) && int.TryParse(nVal3?.ToString(), out var nParsed3)) num = nParsed3;
+
+                        string titulo = uDict.GetValueOrDefault("titulo")?.ToString()
+                            ?? uDict.GetValueOrDefault("Titulo")?.ToString()
+                            ?? uDict.GetValueOrDefault("NombreUnidad")?.ToString()
+                            ?? uDict.GetValueOrDefault("nombre_unidad")?.ToString()
+                            ?? $"Unidad {num}";
+
+                        int cd = Convert.ToInt32(uDict.GetValueOrDefault("horasCD") ?? uDict.GetValueOrDefault("HorasCD") ?? uDict.GetValueOrDefault("HorasDocencia") ?? 0);
+                        int ape = Convert.ToInt32(uDict.GetValueOrDefault("horasAPE") ?? uDict.GetValueOrDefault("HorasAPE") ?? uDict.GetValueOrDefault("HorasPracticoExp") ?? 0);
+                        int ta = Convert.ToInt32(uDict.GetValueOrDefault("horasTA") ?? uDict.GetValueOrDefault("HorasTA") ?? uDict.GetValueOrDefault("HorasAutonomo") ?? 0);
+                        int total = cd + ape + ta;
+                        if (uDict.TryGetValue("horasTotal", out var ht) && int.TryParse(ht?.ToString(), out var htVal) && htVal > 0) total = htVal;
+                        else if (uDict.TryGetValue("TotalHoras", out var th) && int.TryParse(th?.ToString(), out var thVal) && thVal > 0) total = thVal;
+                        else if (uDict.TryGetValue("TotalHorasUnidad", out var thu) && int.TryParse(thu?.ToString(), out var thuVal) && thuVal > 0) total = thuVal;
+
+                        string contenidos = uDict.GetValueOrDefault("contenidos")?.ToString()
+                            ?? uDict.GetValueOrDefault("Contenidos")?.ToString()
+                            ?? uDict.GetValueOrDefault("DescripcionSubtemas")?.ToString()
+                            ?? "";
+
+                        if (string.IsNullOrWhiteSpace(contenidos) && uDict.TryGetValue("Temas", out var temasObj) && temasObj is System.Collections.IEnumerable enumTemas)
+                        {
+                            var temasLines = new List<string>();
+                            foreach (var tm in enumTemas)
+                            {
+                                string tTit = GetProperty(tm, "TituloTema");
+                                if (string.IsNullOrWhiteSpace(tTit)) tTit = GetProperty(tm, "titulo");
+                                string tDesc = GetProperty(tm, "DescripcionSubtemas");
+                                if (string.IsNullOrWhiteSpace(tDesc)) tDesc = GetProperty(tm, "descripcion");
+                                if (!string.IsNullOrWhiteSpace(tTit)) temasLines.Add(string.IsNullOrWhiteSpace(tDesc) ? tTit : $"{tTit}: {tDesc}");
+                            }
+                            if (temasLines.Count > 0) contenidos = string.Join("\n", temasLines);
+                        }
+
+                        var normU = new Dictionary<string, object?>(uDict, StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["Numero"] = num,
+                            ["num"] = num,
+                            ["NumeroUnidad"] = num,
+                            ["Titulo"] = titulo,
+                            ["titulo"] = titulo,
+                            ["NombreUnidad"] = titulo,
+                            ["TotalHoras"] = total,
+                            ["totalHoras"] = total,
+                            ["TotalHorasUnidad"] = total,
+                            ["HorasCD"] = cd,
+                            ["horasCD"] = cd,
+                            ["HorasDocencia"] = cd,
+                            ["HorasAPE"] = ape,
+                            ["horasAPE"] = ape,
+                            ["HorasPracticoExp"] = ape,
+                            ["HorasTA"] = ta,
+                            ["horasTA"] = ta,
+                            ["HorasAutonomo"] = ta,
+                            ["Contenidos"] = contenidos,
+                            ["contenidos"] = contenidos
+                        };
+                        normalizedList.Add(normU);
+                        uIdx++;
+                    }
+                    dict["Unidades"] = normalizedList;
+                    dict["unidades"] = normalizedList;
+                }
+            }
+
+            // 2. Normalizar ActividadesPracticas
+            if (dict.TryGetValue("ActividadesPracticas", out var rawPracticas) || dict.TryGetValue("actividades_practicas", out rawPracticas))
+            {
+                if (rawPracticas is System.Collections.IEnumerable enumPracticas && !(rawPracticas is string))
+                {
+                    var normalizedList = new List<Dictionary<string, object?>>();
+                    int prIdx = 1;
+                    foreach (var item in enumPracticas)
+                    {
+                        var pDict = item as Dictionary<string, object?> ?? new Dictionary<string, object?>();
+                        if (item is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                        {
+                            pDict = ToNativeType(je) as Dictionary<string, object?> ?? pDict;
+                        }
+
+                        string unidad = pDict.GetValueOrDefault("unidad")?.ToString()
+                            ?? pDict.GetValueOrDefault("Unidad")?.ToString()
+                            ?? $"Unidad {prIdx}";
+
+                        string nombre = pDict.GetValueOrDefault("nombre")?.ToString()
+                            ?? pDict.GetValueOrDefault("Nombre")?.ToString()
+                            ?? pDict.GetValueOrDefault("NombrePractica")?.ToString()
+                            ?? pDict.GetValueOrDefault("nombre_practica")?.ToString()
+                            ?? "";
+
+                        string caracterizacion = pDict.GetValueOrDefault("caracterizacion")?.ToString()
+                            ?? pDict.GetValueOrDefault("Caracterizacion")?.ToString()
+                            ?? "";
+
+                        string esc = pDict.GetValueOrDefault("escenario")?.ToString() ?? pDict.GetValueOrDefault("Escenario")?.ToString() ?? "";
+                        string prod = pDict.GetValueOrDefault("producto")?.ToString() ?? pDict.GetValueOrDefault("Producto")?.ToString() ?? "";
+                        if (string.IsNullOrWhiteSpace(caracterizacion) && (!string.IsNullOrWhiteSpace(esc) || !string.IsNullOrWhiteSpace(prod)))
+                        {
+                            caracterizacion = string.Join(" | ", new[] { esc, prod }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                        }
+
+                        string nombreCaract = !string.IsNullOrWhiteSpace(caracterizacion) && !string.IsNullOrWhiteSpace(nombre)
+                            ? $"{nombre} - {caracterizacion}"
+                            : (!string.IsNullOrWhiteSpace(nombre) ? nombre : (!string.IsNullOrWhiteSpace(caracterizacion) ? caracterizacion : "---"));
+
+                        var normP = new Dictionary<string, object?>(pDict, StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["Unidad"] = unidad,
+                            ["unidad"] = unidad,
+                            ["Nombre"] = nombre,
+                            ["nombre"] = nombre,
+                            ["NombrePractica"] = nombre,
+                            ["Caracterizacion"] = caracterizacion,
+                            ["caracterizacion"] = caracterizacion,
+                            ["NombreCaracterizacion"] = nombreCaract,
+                            ["nombre_caracterizacion"] = nombreCaract
+                        };
+                        normalizedList.Add(normP);
+                        prIdx++;
+                    }
+                    dict["ActividadesPracticas"] = normalizedList;
+                    dict["actividades_practicas"] = normalizedList;
+                }
+            }
+
+            // 3. Normalizar Evaluaciones
+            if (dict.TryGetValue("Evaluaciones", out var rawEval) || dict.TryGetValue("evaluaciones", out rawEval))
+            {
+                if (rawEval is System.Collections.IEnumerable enumEval && !(rawEval is string))
+                {
+                    var normalizedList = new List<Dictionary<string, object?>>();
+                    int eIdx = 1;
+                    foreach (var item in enumEval)
+                    {
+                        var eDict = item as Dictionary<string, object?> ?? new Dictionary<string, object?>();
+                        if (item is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                        {
+                            eDict = ToNativeType(je) as Dictionary<string, object?> ?? eDict;
+                        }
+
+                        string nota = eDict.GetValueOrDefault("nota")?.ToString()
+                            ?? eDict.GetValueOrDefault("Nota")?.ToString()
+                            ?? eDict.GetValueOrDefault("Denominacion")?.ToString()
+                            ?? eDict.GetValueOrDefault("denominacion")?.ToString()
+                            ?? $"Evaluación {eIdx}";
+
+                        string tipo = eDict.GetValueOrDefault("tipo")?.ToString()
+                            ?? eDict.GetValueOrDefault("Tipo")?.ToString()
+                            ?? eDict.GetValueOrDefault("TipoEvaluacion")?.ToString()
+                            ?? eDict.GetValueOrDefault("tipo_evaluacion")?.ToString()
+                            ?? "Actividades evaluativas";
+
+                        string calif = eDict.GetValueOrDefault("calificacion")?.ToString()
+                            ?? eDict.GetValueOrDefault("Calificacion")?.ToString()
+                            ?? eDict.GetValueOrDefault("CalificacionMaxima")?.ToString()
+                            ?? eDict.GetValueOrDefault("calificacion_maxima")?.ToString()
+                            ?? "10,00";
+
+                        var normE = new Dictionary<string, object?>(eDict, StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["Nota"] = nota,
+                            ["nota"] = nota,
+                            ["Denominacion"] = nota,
+                            ["Tipo"] = tipo,
+                            ["tipo"] = tipo,
+                            ["TipoEvaluacion"] = tipo,
+                            ["Calificacion"] = calif,
+                            ["calificacion"] = calif,
+                            ["CalificacionMaxima"] = calif
+                        };
+                        normalizedList.Add(normE);
+                        eIdx++;
+                    }
+                    dict["Evaluaciones"] = normalizedList;
+                    dict["evaluaciones"] = normalizedList;
+                }
+            }
+
+            // 4. Normalizar Prerrequisitos
+            if (dict.TryGetValue("Prerrequisitos", out var rawPrerreq) || dict.TryGetValue("prerrequisitos", out rawPrerreq))
+            {
+                if (rawPrerreq is System.Collections.IEnumerable enumPrerreq && !(rawPrerreq is string))
+                {
+                    var normalizedList = new List<Dictionary<string, object?>>();
+                    foreach (var item in enumPrerreq)
+                    {
+                        var pDict = item as Dictionary<string, object?> ?? new Dictionary<string, object?>();
+                        if (item is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                        {
+                            pDict = ToNativeType(je) as Dictionary<string, object?> ?? pDict;
+                        }
+
+                        string asig = pDict.GetValueOrDefault("Asignatura")?.ToString()
+                            ?? pDict.GetValueOrDefault("asignatura")?.ToString()
+                            ?? pDict.GetValueOrDefault("NombreAsignatura")?.ToString()
+                            ?? pDict.GetValueOrDefault("nombre_asignatura")?.ToString()
+                            ?? "---";
+
+                        string obs = pDict.GetValueOrDefault("Observacion")?.ToString()
+                            ?? pDict.GetValueOrDefault("observacion")?.ToString()
+                            ?? "";
+
+                        var normPr = new Dictionary<string, object?>(pDict, StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["Asignatura"] = asig,
+                            ["asignatura"] = asig,
+                            ["NombreAsignatura"] = asig,
+                            ["Observacion"] = obs,
+                            ["observacion"] = obs
+                        };
+                        normalizedList.Add(normPr);
+                    }
+                    dict["Prerrequisitos"] = normalizedList;
+                    dict["prerrequisitos"] = normalizedList;
+                }
+            }
+
+            // 5. Normalizar Firmas y Autoridades
+            if (dict.TryGetValue("FirmasResponsabilidad", out var rawFirmas) || dict.TryGetValue("firmas_responsabilidad", out rawFirmas))
+            {
+                var fDict = rawFirmas as Dictionary<string, object?>;
+                if (rawFirmas is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                {
+                    fDict = ToNativeType(je) as Dictionary<string, object?>;
+                }
+
+                if (fDict != null)
+                {
+                    void SetIfEmpty(string targetKey, string sourceKey)
+                    {
+                        if ((!dict.ContainsKey(targetKey) || string.IsNullOrWhiteSpace(dict[targetKey]?.ToString())) &&
+                            fDict.TryGetValue(sourceKey, out var sVal) && !string.IsNullOrWhiteSpace(sVal?.ToString()))
+                        {
+                            dict[targetKey] = sVal;
+                            var snake = ToSnakeCase(targetKey);
+                            dict[snake] = sVal;
+                        }
+                    }
+
+                    SetIfEmpty("DocenteElaborador", "DocenteNombre");
+                    SetIfEmpty("CoordinadorCarrera", "CoordinadorNombre");
+                    SetIfEmpty("CoordinadorAcademico", "CoordinadorAcadNombre");
+                    SetIfEmpty("Vicerrector", "VicerrectorNombre");
+                    SetIfEmpty("FechaElaborado", "DocenteFecha");
+                    SetIfEmpty("FechaRevisadoCarrera", "CoordinadorFecha");
+                    SetIfEmpty("FechaRevisadoAcademico", "CoordinadorAcadFecha");
+                    SetIfEmpty("FechaAprobado", "VicerrectorFecha");
+                }
+            }
+
+            // 6. Normalizar Bibliografías
+            if ((!dict.ContainsKey("BibliografiaBasica") || string.IsNullOrWhiteSpace(dict["BibliografiaBasica"]?.ToString())) &&
+                (dict.TryGetValue("Bibliografias", out var rawBib) || dict.TryGetValue("bibliografias", out rawBib)) &&
+                rawBib is System.Collections.IEnumerable enumBib && !(rawBib is string))
+            {
+                var basicas = new List<string>();
+                var complementarias = new List<string>();
+                foreach (var b in enumBib)
+                {
+                    string tipo = GetProperty(b, "TipoBibliografia");
+                    if (string.IsNullOrWhiteSpace(tipo)) tipo = GetProperty(b, "tipo_bibliografia");
+                    string cita = GetProperty(b, "CitaCompletaApa");
+                    if (string.IsNullOrWhiteSpace(cita)) cita = GetProperty(b, "cita_completa_apa");
+                    if (string.IsNullOrWhiteSpace(cita))
+                    {
+                        string autor = GetProperty(b, "Autor");
+                        string tit = GetProperty(b, "TituloLibro");
+                        cita = $"{autor} {tit}".Trim();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(cita))
+                    {
+                        if (string.Equals(tipo, "Basica", StringComparison.OrdinalIgnoreCase)) basicas.Add(cita);
+                        else complementarias.Add(cita);
+                    }
+                }
+
+                if (basicas.Count > 0)
+                {
+                    dict["BibliografiaBasica"] = string.Join("<br/>", basicas);
+                    dict["bibliografia_basica"] = dict["BibliografiaBasica"];
+                }
+                if (complementarias.Count > 0 && (!dict.ContainsKey("BibliografiaConsulta") || string.IsNullOrWhiteSpace(dict["BibliografiaConsulta"]?.ToString())))
+                {
+                    dict["BibliografiaConsulta"] = string.Join("<br/>", complementarias);
+                    dict["bibliografia_consulta"] = dict["BibliografiaConsulta"];
+                }
+            }
         }
     }
 }

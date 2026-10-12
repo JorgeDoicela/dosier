@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
+import { getPeriodosAcademicos, type PeriodoAcademicoDto } from '../../../../services/docenteAsignaturasService';
 
 interface PeaGeneralSectionProps {
     formData: any;
@@ -19,6 +20,43 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
 }) => {
     const c = config || {};
     const customFields: any[] = Array.isArray(c.customFields) ? c.customFields : [];
+
+    const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
+
+    useEffect(() => {
+        let isMounted = true;
+        getPeriodosAcademicos().then(list => {
+            if (isMounted) setPeriodos(list || []);
+        }).catch(() => {});
+        return () => { isMounted = false; };
+    }, []);
+
+    // Auto-resolver código corto (ej. ABR2026) al nombre oficial de la BD (ej. ABRIL - SEPTIEMBRE 2026)
+    useEffect(() => {
+        const valActual = formData?.Periodo;
+        if (!valActual || periodos.length === 0) return;
+
+        const matched = periodos.find(p => p.id_periodo === valActual);
+        if (matched && matched.detalle && matched.detalle !== valActual) {
+            onUpdate('Periodo', matched.detalle);
+        }
+    }, [formData?.Periodo, periodos, onUpdate]);
+
+    // Auto-resolver código de unidad (ej. BASICA) al nombre formal oficial (ej. Unidad Básica)
+    useEffect(() => {
+        const valActual = formData?.UnidadOrganizacion;
+        if (!valActual) return;
+        const upper = String(valActual).trim().toUpperCase();
+        let normalized = valActual;
+        if (upper === 'BASICA' || upper === 'BÁSICA') normalized = 'Unidad Básica';
+        else if (upper === 'PROFESIONAL') normalized = 'Unidad Profesional';
+        else if (upper === 'TITULACION' || upper === 'TITULACIÓN') normalized = 'Unidad de Integración Curricular';
+        else if (upper === 'TRONCO COMUN' || upper === 'TRONCO COMÚN') normalized = 'Unidad Básica';
+
+        if (normalized !== valActual) {
+            onUpdate('UnidadOrganizacion', normalized);
+        }
+    }, [formData?.UnidadOrganizacion, onUpdate]);
 
     const labelAsignatura = c.customLabel_showAsignatura || 'Nombre de la asignatura';
     const labelCodigoCarrera = c.customLabel_showCodigoCarrera || 'Código de carrera';
@@ -114,11 +152,8 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             type="select"
                             label="Unidad de Organización Curricular"
                             options={[
-                                { value: 'BASICA', label: 'Unidad Básica' },
                                 { value: 'Unidad Básica', label: 'Unidad Básica' },
-                                { value: 'PROFESIONAL', label: 'Unidad Profesional' },
                                 { value: 'Unidad Profesional', label: 'Unidad Profesional' },
-                                { value: 'TITULACION', label: 'Unidad de Integración Curricular' },
                                 { value: 'Unidad de Integración Curricular', label: 'Unidad de Integración Curricular' }
                             ]}
                             readOnly={true}

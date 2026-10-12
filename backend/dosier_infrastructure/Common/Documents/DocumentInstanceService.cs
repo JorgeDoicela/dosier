@@ -709,16 +709,21 @@ namespace Dosier.Infrastructure.Common.Documents
 
                     var docenteNombre = docente != null ? $"{docente.Nombres} {docente.Apellidos}".Trim() : "";
 
+                    var periodo = !string.IsNullOrEmpty(pea.IdPeriodo)
+                        ? await _context.Periodos.AsNoTracking().FirstOrDefaultAsync(p => p.IdPeriodo == pea.IdPeriodo, ct)
+                        : null;
+                    var periodoNombre = !string.IsNullOrWhiteSpace(periodo?.Detalle) ? periodo.Detalle : (pea.IdPeriodo ?? "");
+
                     var initialDict = new Dictionary<string, object?>
                     {
                         ["CodigoAsignatura"] = asignatura?.Codigo ?? "",
                         ["NombreAsignatura"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
                         ["titulo"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
                         ["Carrera"] = carrera?.Carrera1 ?? "Carrera ISTPET",
-                        ["Periodo"] = pea.IdPeriodo,
+                        ["Periodo"] = periodoNombre,
                         ["Modalidad"] = pea.Modalidad,
                         ["Nivel"] = pea.SemestreNivel ?? "",
-                        ["UnidadOrganizacion"] = pea.UnidadOrganizacion ?? "",
+                        ["UnidadOrganizacion"] = dosier_infrastructure.Academico.AcademicContextResolver.NormalizarUnidadOrganizacion(pea.UnidadOrganizacion),
                         ["TotalHorasAsignatura"] = pea.TotalHorasAsignatura,
                         ["Creditos"] = pea.Creditos,
                         ["HorasContactoDocente"] = pea.HorasContactoDocente,
