@@ -106,12 +106,6 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                                                     <span className={`w-1.5 h-1.5 rounded-full ${((u.horas_docente ?? u.horas_clase) || 0) > 0 ? 'bg-success' : 'bg-text-dim/40'}`} />
                                                     Docencia: <span className="font-semibold text-text-main">{u.horas_docente ?? u.horas_clase ?? 0}h/sem</span>
                                                 </span>
-                                                {(u.horas_investigacion ?? 0) > 0 && (
-                                                    <span className="text-text-dim flex items-center gap-1.5" title="Horas asignadas a Proyectos de Investigación (SIGAFI)">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-                                                        Investigación: <span className="font-semibold text-violet-400">{u.horas_investigacion}h/sem</span>
-                                                    </span>
-                                                )}
                                                 <span className="text-text-dim flex items-center gap-1.5" title="Asignaturas / Paralelos Activos asignados en el Período">
                                                     <span className={`w-1.5 h-1.5 rounded-full ${((u.materias_asignadas ?? u.catedras_asignadas) || 0) > 0 ? 'bg-info' : 'bg-text-dim/40'}`} />
                                                     Asignaturas: <span className="font-semibold text-text-main">{u.materias_asignadas ?? u.catedras_asignadas ?? 0}</span>

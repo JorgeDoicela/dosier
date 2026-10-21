@@ -23,4 +23,5 @@ public interface IAdminService
     Task<bool> RevokeRoleAsync(string idUsuario, string roleCode, string userType = "DOCENTE");
     Task<List<AuditLogDto>> GetRecentAuditLogsAsync();
     Task<PagedResult<AuditLogDto>> GetAuditLogsPagedAsync(DateTime? from, DateTime? to, string? action, string? modulo, string? searchTerm, int page = 1, int pageSize = 20);
+    Task<GobernanzaCurricularDto> GetGobernanzaCurricularAsync(string? idPeriodo = null);
 }

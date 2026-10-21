@@ -92,8 +92,12 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 ### 2.3. Módulo de Administración (`src/pages/Admin/`)
 
 * **Gestión de Usuarios (`/usuarios`):**
-  * Catálogo de usuarios institucionales sincronizados desde SIGAFI.
-  * Asignación de roles curriculares RBAC (`idSistema = 6`).
+  * Navegación por pestañas sincronizada con la URL mediante el parámetro `type`: `/usuarios?type=DOCENTE`, `/usuarios?type=ADMINISTRATIVO` y `/usuarios?type=CARRERAS`.
+  * Catálogo de usuarios institucionales sincronizados desde SIGAFI (Docentes y Administrativos) con paginación, filtros multicriterio y asignación de roles curriculares RBAC (`idSistema = 6`).
+  * **Estructura por Carreras y Gobernanza (`OrganigramaVerticalView.tsx`):**
+    * *Cúspide Institucional:* Enlace jerárquico de supervisión entre Vicerrectorado Académico (cierre PEA) y Coordinación Académica Institucional (cuadre distributivo).
+    * *Árbol de Carreras (Columna Izquierda):* Riel vertical con líneas conectoras de rama, buscador rápido, conteo de docentes y filtro de estado (Todas, Con coordinador titular, Vacantes).
+    * *Detalle y Claustro (Columna Derecha):* Ficha del Coordinador titular de la carrera activa y tabla compacta del claustro docente asignado con horas de carga horaria (`h/sem`), materias en malla, cédula y rol institucional.
   * Bloqueo y reseteo de credenciales de acceso.
 * **Diseñador de Plantillas / Canvas Builder (`/plantillas`):**
   * Maquetador visual e interactivo de bloques curriculares (`BlockCanvas.tsx`, `availableBlocks.ts`).

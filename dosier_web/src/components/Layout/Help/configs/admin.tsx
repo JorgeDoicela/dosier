@@ -449,7 +449,7 @@ export const GRUPOS_CONFIG: HelpConfig = {
             roles: ['admin', 'docente']
         },
         {
-            text: "Si eres estudiante, tu participación activa en un grupo de investigación acredita horas de investigación formativa según el reglamento.",
+            text: "Si eres estudiante, tu participación activa en un grupo acredita tu vinculación académica según el reglamento.",
             roles: ['estudiante']
         },
         "Actualiza el plan de trabajo bienal de tu grupo para evitar el estado de inactividad temporal en el sistema."

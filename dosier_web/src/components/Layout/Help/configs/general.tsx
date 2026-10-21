@@ -71,10 +71,10 @@ export const DASHBOARD_CONFIG: HelpConfig = {
             highlight: 'topbar'
         }
     ],
-    compliance: "Mapea directamente los indicadores del Criterio B.1.1 (Vinculación del Claustro Docente con la Investigación) del CACES, certificando el porcentaje de profesores de tiempo completo asignados formalmente a proyectos y la ejecución de horas de investigación validadas.",
+    compliance: "Mapea directamente los indicadores de gestión académica del CACES, certificando el porcentaje de profesores asignados formalmente y la ejecución de horas docentes validadas.",
     tips: [
-        "Si observas que tus horas asignadas en investigación no corresponden a tu distributivo, contacta al administrador del sistema para iniciar una resincronización forzada con el área académica.",
-        "Utiliza el atajo del buscador rápido superior para localizar expedientes de investigación utilizando únicamente el código alfanumérico institucional."
+        "Si observas que tus horas docentes asignadas no corresponden a tu distributivo, contacta al administrador del sistema para iniciar una resincronización con el área académica.",
+        "Utiliza el atajo del buscador rápido superior para localizar expedientes utilizando únicamente el código alfanumérico institucional."
     ],
     Mockup: ({ highlightTopClass, highlightBottomClass }: MockupProps) => (
         <>

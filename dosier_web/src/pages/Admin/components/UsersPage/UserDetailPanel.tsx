@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { User as UserIcon, ChevronRight, Mail, Hash, Activity, GraduationCap, Shield, Fingerprint, Settings2, Building2, Briefcase, FlaskConical } from 'lucide-react';
+import { User as UserIcon, ChevronRight, Mail, Hash, Activity, GraduationCap, Shield, Fingerprint, Settings2, Building2, Briefcase } from 'lucide-react';
 import type { ManagedUser } from '../../hooks/useUsersPage';
 import { formatCarrera, formatNombre } from './utils';
 
@@ -88,15 +88,6 @@ export const UserDetailPanel: React.FC<UserDetailPanelProps> = ({
                                         {detailUser.materias_asignadas ?? detailUser.catedras_asignadas ?? 0} paralelos
                                     </div>
                                 </div>
-                                {(detailUser.horas_investigacion ?? 0) > 0 && (
-                                    <div className="col-span-2">
-                                        <p className="section-label text-text-dim mb-1">Horas de Investigación</p>
-                                        <div className="flex items-center gap-1.5 text-sm font-semibold text-violet-400">
-                                            <FlaskConical size={14} className="text-violet-400" />
-                                            {detailUser.horas_investigacion}h/sem en proyectos activos
-                                        </div>
-                                    </div>
-                                )}
                                 {detailUser.horas_clase && (
                                     <div className="col-span-2">
                                         <p className="section-label text-text-dim mb-1">Horas Clase Frente a Aula</p>

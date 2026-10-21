@@ -136,7 +136,7 @@ public partial class DosierContext : DbContext
     public virtual DbSet<Etnia>                Etnias             { get; set; }  // etnias (caces)
     public virtual DbSet<Discapacidade>        Discapacidades     { get; set; }  // discapacidades (caces)
 
-    // --- Actividades del docente (horas de investigación) ---
+    // --- Actividades y distributivo del docente ---
     public virtual DbSet<ProfesoresActividade>     ProfesoresActividades    { get; set; } // profesores_actividades
     public virtual DbSet<SubcategoriasActividade>  SubcategoriasActividades { get; set; } // subcategorias_actividades
     public virtual DbSet<Contrato>                 Contratos                { get; set; } // contratos

@@ -11,7 +11,6 @@ export interface SelectedMemberResult {
     carrera?: string;
     departamento?: string;
     cargo_instituto?: string;
-    horas_investigacion?: number;
     horas_asignadas?: number;
     es_graduado?: boolean;
     es_instituto?: boolean;
@@ -145,7 +144,6 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                     carrera: candidate.carrera,
                     departamento: candidate.departamento,
                     cargo_instituto: candidate.cargo_instituto,
-                    horas_investigacion: candidate.horas_investigacion,
                     horas_asignadas: candidate.horas_asignadas,
                     rol: 'Coordinador',
                     telefono: candidate.telefono || ''
@@ -186,7 +184,6 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
             carrera: selectedCandidate.carrera,
             departamento: selectedCandidate.departamento,
             cargo_instituto: selectedCandidate.cargo_instituto,
-            horas_investigacion: selectedCandidate.horas_investigacion,
             horas_asignadas: selectedCandidate.horas_asignadas,
             es_graduado: selectedCandidate.es_graduado,
             es_instituto: selectedCandidate.es_instituto,
@@ -352,10 +349,10 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                                 </div>
 
                                                 <div className="shrink-0 flex items-center gap-2">
-                                                    {((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) || 0) > 0) && (
+                                                    {((candidate.horas_docente ?? candidate.horas_clase) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase) || 0) > 0) && (
                                                         <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
                                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                            {candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia
+                                                            {candidate.horas_docente ?? candidate.horas_clase}h Docencia
                                                         </span>
                                                     )}
                                                     {candidate.type === 'ESTUDIANTE' && candidate.es_graduado === false && (
@@ -412,8 +409,8 @@ export const MemberSearchSelector: React.FC<MemberSearchSelectorProps> = ({
                                                 <div className="space-y-0.5 min-w-0">
                                                     <p className="font-semibold text-text-main text-xs flex items-center gap-2 truncate">
                                                         <span>{formatNombre(candidate.nombre_completo || candidate.nombre)}</span>
-                                                        {((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion) || 0) > 0) && (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{candidate.horas_docente ?? candidate.horas_clase ?? candidate.horas_investigacion}h Docencia</span>
+                                                        {((candidate.horas_docente ?? candidate.horas_clase) !== undefined && ((candidate.horas_docente ?? candidate.horas_clase) || 0) > 0) && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{candidate.horas_docente ?? candidate.horas_clase}h Docencia</span>
                                                         )}
                                                     </p>
                                                     <p className="text-text-dim font-mono text-[10px] truncate">

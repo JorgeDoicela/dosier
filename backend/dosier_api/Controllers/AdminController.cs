@@ -56,6 +56,13 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("gobernanza-carreras")]
+    public async Task<IActionResult> GetGobernanzaCarreras([FromQuery] string? idPeriodo = null)
+    {
+        var result = await _adminService.GetGobernanzaCurricularAsync(idPeriodo);
+        return Ok(result);
+    }
+
     [HttpGet("roles")]
     public async Task<IActionResult> GetRoles()
     {

@@ -203,16 +203,8 @@ public class AdminService : IAdminService
                  || _context.ProfesoresActividades.Any(pa => pa.IdProfesor == p.IdProfesor)
                 ));
 
-            // Filtrar por docentes que tengan investigación o carga docente en el periodo actual
-            if (soloConInvestigacion)
-            {
-                query = query.Where(p => _context.ProfesoresActividades.Any(pa =>
-                    pa.IdProfesor == p.IdProfesor &&
-                    pa.IdSubcategoria == 7 &&
-                    (string.IsNullOrEmpty(periodId) || pa.IdPeriodo == periodId) &&
-                    pa.HorasSemana > 0));
-            }
-            else if (soloConHoras && !string.IsNullOrEmpty(periodId))
+            // Filtrar por docentes con carga docente en el periodo actual
+            if (soloConHoras && !string.IsNullOrEmpty(periodId))
             {
                 query = query.Where(p =>
                     _context.AsignacionesProfesores.Any(ap => ap.IdProfesor == p.IdProfesor && ap.IdPeriodo == periodId && ap.Activo == 1) ||
@@ -331,7 +323,6 @@ public class AdminService : IAdminService
                 var horasClase = profActividades.Where(h => h.IdSubcategoria == 1).Sum(h => h.HorasSemana);
                 var horasDocenciaTotal = profActividades.Where(h => docenciaSubcats.Contains(h.IdSubcategoria)).Sum(h => h.HorasSemana);
                 if (horasDocenciaTotal == 0 && horasClase > 0) horasDocenciaTotal = horasClase;
-                var horasInvestigacion = profActividades.Where(h => h.IdSubcategoria == 7).Sum(h => h.HorasSemana);
                 var numMaterias = activeAssignments.Count(a => a.IdProfesor == pId);
 
                 var roleInfo = userRoles.Where(ur => ur.IdSigafi == pId).ToList();
@@ -363,8 +354,8 @@ public class AdminService : IAdminService
                     HorasClase = horasClase > 0 ? horasClase : (decimal?)null,
                     MateriasAsignadas = numMaterias,
                     CatedrasAsignadas = numMaterias,
-                    HorasInvestigacion = horasInvestigacion > 0 ? horasInvestigacion : (decimal?)null,
-                    HorasAsignadas = (horasDocenciaTotal + horasInvestigacion) > 0 ? (horasDocenciaTotal + horasInvestigacion) : null,
+                    HorasInvestigacion = null,
+                    HorasAsignadas = horasDocenciaTotal > 0 ? horasDocenciaTotal : (horasClase > 0 ? horasClase : null),
                     Departamento = contract?.Departamento,
                     CargoInstituto = contract?.CargoInstituto,
                     TipoContrato = contract?.TipoContrato
@@ -671,4 +662,197 @@ public class AdminService : IAdminService
         return string.Empty;
     }
 
+    public async Task<GobernanzaCurricularDto> GetGobernanzaCurricularAsync(string? idPeriodo = null)
+    {
+        var periodId = idPeriodo;
+        if (string.IsNullOrEmpty(periodId))
+        {
+            var activePeriod = await _context.Periodos.AsNoTracking()
+                .Where(p => p.Activo == true && p.EsInstituto == 1)
+                .OrderByDescending(p => p.IdPeriodo)
+                .FirstOrDefaultAsync();
+            periodId = activePeriod?.IdPeriodo ?? "";
+        }
+
+        var result = new GobernanzaCurricularDto
+        {
+            PeriodoActivo = periodId
+        };
+
+        // 1. Cargar Autoridades Curriculares Institucionales
+        var autoridades = await _context.DocAutoridadesCurriculares.AsNoTracking()
+            .Where(a => a.EsActivo)
+            .ToListAsync();
+
+        var autoridadSigafiIds = autoridades.Select(a => a.IdSigafi.Trim()).Distinct().ToList();
+        var profAutoridades = await _context.Profesores.AsNoTracking()
+            .Where(p => autoridadSigafiIds.Contains(p.IdProfesor.Trim()))
+            .Select(p => new { IdProfesor = p.IdProfesor.Trim(), p.EmailInstitucional, p.Email })
+            .ToListAsync();
+
+        var vicerrectorEntity = autoridades.FirstOrDefault(a => a.CargoCurricular == "VICERRECTOR");
+        if (vicerrectorEntity != null)
+        {
+            var pInfo = profAutoridades.FirstOrDefault(p => p.IdProfesor == vicerrectorEntity.IdSigafi.Trim());
+            result.Vicerrector = new AutoridadInstitucionalDto
+            {
+                IdAutoridad = vicerrectorEntity.IdAutoridad,
+                IdSigafi = vicerrectorEntity.IdSigafi,
+                NombreCompleto = vicerrectorEntity.NombreCompleto,
+                CargoCurricular = vicerrectorEntity.CargoCurricular,
+                Email = ResolveContactEmail(pInfo?.EmailInstitucional, pInfo?.Email),
+                EsActivo = vicerrectorEntity.EsActivo
+            };
+        }
+
+        var coordAcadEntity = autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_ACADEMICO");
+        if (coordAcadEntity != null)
+        {
+            var pInfo = profAutoridades.FirstOrDefault(p => p.IdProfesor == coordAcadEntity.IdSigafi.Trim());
+            result.CoordinadorAcademico = new AutoridadInstitucionalDto
+            {
+                IdAutoridad = coordAcadEntity.IdAutoridad,
+                IdSigafi = coordAcadEntity.IdSigafi,
+                NombreCompleto = coordAcadEntity.NombreCompleto,
+                CargoCurricular = coordAcadEntity.CargoCurricular,
+                Email = ResolveContactEmail(pInfo?.EmailInstitucional, pInfo?.Email),
+                EsActivo = coordAcadEntity.EsActivo
+            };
+        }
+
+        // 2. Cargar Carreras del Instituto
+        var carreras = await _context.Carreras.AsNoTracking()
+            .Where(c => c.EsInstituto == 1 && (c.Activa == true || c.Activa == null))
+            .OrderBy(c => c.Carrera1)
+            .ToListAsync();
+
+        // 3. Cargar Asignaciones de Profesores a Carreras en el Periodo
+        var profCarrerasQuery = _context.ProfesoresCarrerasPeriodos.AsNoTracking()
+            .Where(pc => pc.EsActivo == 1 && pc.IdCarrera != null);
+        if (!string.IsNullOrEmpty(periodId))
+        {
+            profCarrerasQuery = profCarrerasQuery.Where(pc => pc.IdPeriodo == periodId);
+        }
+        var profCarreras = await profCarrerasQuery
+            .Select(pc => new { IdProfesor = pc.IdProfesor.Trim(), IdCarrera = pc.IdCarrera!.Value })
+            .ToListAsync();
+
+        var profesorIds = profCarreras.Select(pc => pc.IdProfesor).Distinct().ToList();
+
+        // Profesores activos
+        var profesores = await _context.Profesores.AsNoTracking()
+            .Where(p => profesorIds.Contains(p.IdProfesor.Trim()) && p.Activo == 1)
+            .Select(p => new
+            {
+                IdProfesor = p.IdProfesor.Trim(),
+                NombreCompleto = $"{p.PrimerNombre} {p.SegundoNombre} {p.PrimerApellido} {p.SegundoApellido}".Replace("  ", " ").Trim(),
+                p.EmailInstitucional,
+                p.Email
+            })
+            .ToListAsync();
+
+        // Horas docentes
+        var docenciaSubcats = new[] { 1, 2, 3, 4, 5, 6 };
+        var profActsQuery = _context.ProfesoresActividades.AsNoTracking()
+            .Where(pa => profesorIds.Contains(pa.IdProfesor.Trim()) && docenciaSubcats.Contains(pa.IdSubcategoria));
+        if (!string.IsNullOrEmpty(periodId))
+        {
+            profActsQuery = profActsQuery.Where(pa => pa.IdPeriodo == periodId);
+        }
+        var profActs = await profActsQuery
+            .Select(pa => new { IdProfesor = pa.IdProfesor.Trim(), pa.HorasSemana })
+            .ToListAsync();
+
+        // Materias asignadas
+        var profMatsQuery = _context.AsignacionesProfesores.AsNoTracking()
+            .Where(ap => profesorIds.Contains(ap.IdProfesor.Trim()) && ap.Activo == 1);
+        if (!string.IsNullOrEmpty(periodId))
+        {
+            profMatsQuery = profMatsQuery.Where(ap => ap.IdPeriodo == periodId);
+        }
+        var profMats = await profMatsQuery
+            .Select(ap => new { IdProfesor = ap.IdProfesor.Trim(), ap.IdAsignatura })
+            .ToListAsync();
+
+        // Roles DOSIER de profesores
+        var userRoles = await _context.UserRoles.AsNoTracking()
+            .Where(ur => ur.User != null && profesorIds.Contains(ur.User.IdSigafi) && (ur.EsActivo ?? true))
+            .Where(ur => ur.Role.RoleModuleOperations.Any(rmo => rmo.ModuleOperation.Module.Sistema.Codigo == "DOSIER"))
+            .Select(ur => new {
+                IdSigafi = ur.User!.IdSigafi.Trim(),
+                RoleNombre = ur.Role.Nombre,
+                RoleCodigo = ur.Role.CodigoRol
+            })
+            .ToListAsync();
+
+        // 4. Armar cada carrera
+        foreach (var c in carreras)
+        {
+            var carreraDto = new CarreraGobernanzaDto
+            {
+                IdCarrera = c.IdCarrera,
+                Carrera = c.Carrera1 ?? "Carrera Sin Nombre",
+                AliasCarrera = c.AliasCarrera,
+                Resolucion = c.CodigoCases
+            };
+
+            // Coordinador de esta carrera
+            var coordEntity = autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera == c.IdCarrera);
+            if (coordEntity != null)
+            {
+                var pInfo = profAutoridades.FirstOrDefault(p => p.IdProfesor == coordEntity.IdSigafi.Trim());
+                carreraDto.Coordinador = new AutoridadInstitucionalDto
+                {
+                    IdAutoridad = coordEntity.IdAutoridad,
+                    IdSigafi = coordEntity.IdSigafi,
+                    NombreCompleto = coordEntity.NombreCompleto,
+                    CargoCurricular = coordEntity.CargoCurricular,
+                    IdCarrera = coordEntity.IdCarrera,
+                    CarreraNombre = c.Carrera1,
+                    Email = ResolveContactEmail(pInfo?.EmailInstitucional, pInfo?.Email),
+                    EsActivo = coordEntity.EsActivo
+                };
+            }
+
+            // Docentes vinculados a esta carrera
+            var docentesEnCarreraIds = profCarreras
+                .Where(pc => pc.IdCarrera == c.IdCarrera)
+                .Select(pc => pc.IdProfesor)
+                .Distinct()
+                .ToList();
+
+            var docentesList = new List<DocenteCarreraResumenDto>();
+            foreach (var pId in docentesEnCarreraIds)
+            {
+                var p = profesores.FirstOrDefault(prof => prof.IdProfesor == pId);
+                if (p == null) continue;
+
+                var horas = (decimal)profActs.Where(h => h.IdProfesor == pId).Sum(h => h.HorasSemana ?? 0);
+                var numMaterias = profMats.Count(m => m.IdProfesor == pId);
+                var roles = userRoles.Where(ur => ur.IdSigafi == pId).Select(ur => ur.RoleNombre).Distinct().ToList();
+                var esCoord = coordEntity != null && coordEntity.IdSigafi.Trim() == pId;
+
+                docentesList.Add(new DocenteCarreraResumenDto
+                {
+                    IdProfesor = pId,
+                    NombreCompleto = p.NombreCompleto,
+                    Email = ResolveContactEmail(p.EmailInstitucional, p.Email),
+                    HorasDocente = horas,
+                    MateriasAsignadas = numMaterias,
+                    Roles = roles,
+                    EsCoordinador = esCoord
+                });
+            }
+
+            carreraDto.Docentes = docentesList.OrderByDescending(d => d.EsCoordinador).ThenBy(d => d.NombreCompleto).ToList();
+            carreraDto.TotalDocentes = carreraDto.Docentes.Count;
+            carreraDto.TotalMaterias = carreraDto.Docentes.Sum(d => d.MateriasAsignadas);
+
+            result.Carreras.Add(carreraDto);
+        }
+
+        return result;
+    }
+
 }
+

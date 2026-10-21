@@ -58,6 +58,45 @@ export interface UserMetadataDto {
     [key: string]: any;
 }
 
+export interface AutoridadInstitucionalDto {
+    id_autoridad: number;
+    id_sigafi: string;
+    nombre_completo: string;
+    cargo_curricular: string;
+    email?: string;
+    id_carrera?: number;
+    carrera_nombre?: string;
+    es_activo: boolean;
+}
+
+export interface DocenteCarreraResumenDto {
+    id_profesor: string;
+    nombre_completo: string;
+    email?: string;
+    horas_docente: number;
+    materias_asignadas: number;
+    roles: string[];
+    es_coordinador: boolean;
+}
+
+export interface CarreraGobernanzaDto {
+    id_carrera: number;
+    carrera: string;
+    alias_carrera?: string;
+    resolucion?: string;
+    coordinador?: AutoridadInstitucionalDto;
+    total_docentes: number;
+    total_materias: number;
+    docentes: DocenteCarreraResumenDto[];
+}
+
+export interface GobernanzaCurricularDto {
+    periodo_activo: string;
+    vicerrector?: AutoridadInstitucionalDto;
+    coordinador_academico?: AutoridadInstitucionalDto;
+    carreras: CarreraGobernanzaDto[];
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Servicio de Administración de Usuarios y Roles
 // ─────────────────────────────────────────────────────────────
@@ -114,6 +153,14 @@ export const usersService = {
      */
     updateUserMetadata: (userUuid: string, metadata: UserMetadataDto): Promise<{ message: string }> =>
         api.put(`/Admin/metadata/${encodeURIComponent(userUuid)}`, metadata).then(r => r.data),
+
+    /**
+     * Obtiene el árbol relacional completo de gobernanza curricular y carreras del instituto.
+     */
+    getGobernanzaCarreras: (periodo?: string): Promise<GobernanzaCurricularDto> => {
+        const query = periodo ? `?idPeriodo=${encodeURIComponent(periodo)}` : '';
+        return api.get(`/Admin/gobernanza-carreras${query}`).then(r => r.data);
+    },
 };
 
 export default usersService;

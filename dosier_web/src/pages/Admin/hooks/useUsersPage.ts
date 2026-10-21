@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { usersService, type ManagedUserDto, type RoleDto } from '../../../services/usersService';
+import type { UsersTabMode } from '../components/UsersPage/UsersHeader';
 
 export type ManagedUser = ManagedUserDto;
 export type Role = RoleDto;
@@ -29,30 +30,43 @@ export const useUsersPage = () => {
     const lastOpenedUuidRef = useRef<string | null>(null);
     const openedAtRef = useRef<number>(0);
     const isOverlayMouseDownRef = useRef(false);
-    const typeParam = searchParams.get('type');
+    const typeParam = searchParams.get('type')?.toUpperCase();
+    const activeTab: UsersTabMode = 
+        typeParam === 'CARRERAS' ? 'CARRERAS' :
+        typeParam === 'ADMINISTRATIVO' ? 'ADMINISTRATIVOS' : 'DOCENTES';
     const userType: 'DOCENTE' | 'ADMINISTRATIVO' = 
         (typeParam === 'ADMINISTRATIVO') ? 'ADMINISTRATIVO' : 'DOCENTE';
     const openUuid = searchParams.get('open');
 
     // Subfiltros de segmentación
-    const [filtroDocente, setFiltroDocente] = useState<'CON_DOCENCIA' | 'CON_INVESTIGACION' | 'TODOS'>('CON_DOCENCIA');
+    const [filtroDocente, setFiltroDocente] = useState<'CON_DOCENCIA' | 'TODOS'>('CON_DOCENCIA');
     const soloConHoras = filtroDocente === 'CON_DOCENCIA';
     const setSoloConHoras = (val: boolean) => setFiltroDocente(val ? 'CON_DOCENCIA' : 'TODOS');
     const [estadoEstudiante, setEstadoEstudiante] = useState<'ACTIVO' | 'GRADUADO' | 'TODOS'>('ACTIVO');
     const [origenEstudiante, setOrigenEstudiante] = useState<'INSTITUTO' | 'CONDUCCION' | 'TODOS'>('INSTITUTO');
     const [departamento, setDepartamento] = useState('');
 
-    const setUserType = (type: 'DOCENTE' | 'ADMINISTRATIVO') => {
+    const setActiveTab = (tab: UsersTabMode) => {
         setSearch('');
         setDetailUser(null);
         setPage(1);
         lastOpenedUuidRef.current = null;
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
-            next.set('type', type);
+            if (tab === 'CARRERAS') {
+                next.set('type', 'CARRERAS');
+            } else if (tab === 'ADMINISTRATIVOS') {
+                next.set('type', 'ADMINISTRATIVO');
+            } else {
+                next.set('type', 'DOCENTE');
+            }
             next.delete('open');
             return next;
         });
+    };
+
+    const setUserType = (type: 'DOCENTE' | 'ADMINISTRATIVO') => {
+        setActiveTab(type === 'ADMINISTRATIVO' ? 'ADMINISTRATIVOS' : 'DOCENTES');
     };
 
     const [page, setPage] = useState(1);
@@ -79,6 +93,7 @@ export const useUsersPage = () => {
     });
 
     const fetchUsers = async () => {
+        if (activeTab === 'CARRERAS') return;
         setLoading(true);
         setError('');
         try {
@@ -88,7 +103,6 @@ export const useUsersPage = () => {
                 page: String(page),
                 pageSize: String(pageSize),
                 soloConHoras: String(filtroDocente === 'CON_DOCENCIA'),
-                soloConInvestigacion: String(filtroDocente === 'CON_INVESTIGACION'),
                 estadoEstudiante,
                 origenEstudiante,
                 departamento
@@ -111,12 +125,13 @@ export const useUsersPage = () => {
 
     // Disparo reactivo de búsqueda con debounce al modificar filtros
     useEffect(() => {
+        if (activeTab === 'CARRERAS') return;
         const timer = setTimeout(() => {
             fetchUsers();
         }, search ? 280 : 0);
 
         return () => clearTimeout(timer);
-    }, [search, userType, page, filtroDocente, departamento]);
+    }, [search, userType, page, filtroDocente, departamento, activeTab]);
 
     // Deep-link from CommandPalette
     useEffect(() => {
@@ -282,6 +297,8 @@ export const useUsersPage = () => {
     };
 
     return {
+        activeTab,
+        setActiveTab,
         users,
         roles,
         search,
