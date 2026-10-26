@@ -437,9 +437,12 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
         };
     }, [cowork.awareness, name]);
 
-    const handleFocus = () => {
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (cowork.awareness) {
             cowork.awareness.setLocalStateField('focusedField', name);
+        }
+        if (type === 'number' || mask === 'number') {
+            e.currentTarget.select();
         }
     };
 
@@ -476,6 +479,9 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
         if ((type === 'number' || mask === 'number') && typeof newValue === 'string') {
             // Solo permitir números enteros no negativos
             newValue = newValue.replace(/\D/g, '');
+            if (newValue.length > 1 && newValue.startsWith('0')) {
+                newValue = newValue.replace(/^0+/, '') || '0';
+            }
             if (max !== undefined && newValue !== '') {
                 const parsed = parseInt(newValue, 10);
                 if (parsed > max) {
@@ -589,7 +595,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
             : `${className} ${isDateField ? 'pr-10 cursor-pointer select-none' : ''} ${type === 'select' ? (isFieldReadOnly ? 'appearance-none pr-10' : 'cursor-pointer') : ''} ${isFieldReadOnly && !isDateField ? 'pr-10 cursor-default bg-surface/30 opacity-90 select-none' : ''} transition-all duration-200 focus:ring-2 focus:ring-text-main/20 outline-none`,
         disabled: cowork.session.readOnly || isFieldReadOnly,
         readOnly: isFieldReadOnly || isDateField,
-        onClick: isDateField ? toggleCalendar : undefined,
+        onClick: isDateField ? toggleCalendar : (type === 'number' || mask === 'number' ? ((e: any) => (e.currentTarget as HTMLInputElement).select()) : undefined),
         onFocus: isDateField ? undefined : handleFocus,
         onBlur: isDateField ? undefined : handleBlur,
         style: borderStyle
@@ -637,6 +643,18 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                         pattern={type === 'number' || mask === 'number' ? '[0-9]*' : undefined}
                         value={displayValue}
                         onChange={handleChange}
+                        onFocus={(e) => {
+                            commonProps.onFocus?.(e);
+                            if (type === 'number' || mask === 'number') {
+                                e.currentTarget.select();
+                            }
+                        }}
+                        onClick={(e) => {
+                            commonProps.onClick?.(e);
+                            if (type === 'number' || mask === 'number') {
+                                (e.currentTarget as HTMLInputElement).select();
+                            }
+                        }}
                         onKeyDown={(e) => {
                             if (type === 'number' || mask === 'number') {
                                 const allowedKeys = [

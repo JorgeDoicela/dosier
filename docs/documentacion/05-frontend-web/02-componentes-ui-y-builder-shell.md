@@ -41,9 +41,11 @@ graph TD
 | Sección | Componente React | Ubicación | Funcionalidad y Validación |
 | :--- | :--- | :--- | :--- |
 | **Sección A: Datos Generales** | `PeaGeneralSection.tsx` | `src/components/DOSIER/sections/pea/` | Muestra código, nivel, modalidad, carrera, créditos y distribución de horas (CD, APE, TA). Sincronizado con SIGAFI e interactivo con CoWork. |
-| **Sección B y C: Objetivo y Prerrequisitos** | `PeaCharacterizationSection.tsx` | `src/components/DOSIER/sections/pea/` | Objetivo formativo de la asignatura en CoWorkEditor y tabla dinámica de asignaturas prerrequisito. |
-| **Sección D y E: Resultados de Aprendizaje** | `PeaCompetenciesSection.tsx` | `src/components/DOSIER/sections/pea/` | Articulación con el perfil de egreso de la carrera y RDA específicos observables de la asignatura en CoWorkEditor. |
-| **Sección F: Contenidos Temáticos y Horas** | `PeaContentsSection.tsx` | `src/components/DOSIER/sections/pea/` | Desglose modular de unidades y subtemas. Validador matemático en tiempo real que suma CD + APE + TA y alerta discrepancias contra el total normado de SIGAFI. |
+| **Sección B: Objetivo de la Asignatura** | `PeaObjectivesSection.tsx` | `src/components/DOSIER/sections/pea/` | Objetivo formativo general de la asignatura en CoWorkEditor (`ObjetivoAsignatura`). |
+| **Sección C: Prerrequisitos Curriculares** | `PeaPrerequisitesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla dinámica de asignaturas prerrequisito y condiciones curriculares (`Prerrequisitos`). |
+| **Sección D: Resultados de Aprendizaje de la Carrera** | `PeaCareerOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la carrera a los que la asignatura aporta (`RdaCarrera`). |
+| **Sección E: Resultados de Aprendizaje de la Asignatura:** | `PeaSubjectOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la asignatura específicos medibles y observables (`ResultadosAprendizaje`). |
+| **Sección F: Contenidos de Enseñanza:** | `PeaContentsSection.tsx` | `src/components/DOSIER/sections/pea/` | Matriz tabular oficial CACES/ISTPET (`No` \| `UNIDADES DE ESTUDIO Y SUS CONTENIDOS`) con subcabeceras celestes de horas (CD/APE/TA) y validador matemático en tiempo real (RRA Art. 21) contra SIGAFI. |
 | **Sección G: Metodología** | `PeaMethodologySection.tsx` | `src/components/DOSIER/sections/pea/` | Métodos didácticos activos basados en el Modelo Educativo Institucional ISTPET y recursos de informatización. |
 | **Sección H: Recursos y Prácticas** | `PeaResourcesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla de prácticas de laboratorio, talleres y actividades de aprendizaje práctico-experimental (APE). |
 | **Sección I: Evaluación del Aprendizaje** | `PeaEvaluationSection.tsx` | `src/components/DOSIER/sections/pea/` | Criterios pedagógicos y matriz oficial de 3 componentes (Parcial 1: 10 pts, Parcial 2: 10 pts, Examen Final: 10 pts). |

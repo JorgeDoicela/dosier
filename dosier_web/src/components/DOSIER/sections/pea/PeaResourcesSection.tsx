@@ -1,5 +1,6 @@
-import React from 'react';
-import { CheckSquare, Plus, Trash2, Info, FlaskConical } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { GeistSelect } from '../../../Common/GeistSelect';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 
 interface PracticaItem {
@@ -12,7 +13,7 @@ interface PracticaItem {
 
 interface PeaResourcesSectionProps {
     formData: any;
-    cowork: CoWorkHandle;
+    cowork?: CoWorkHandle;
     onUpdate: (field: string, value: any, meta?: { source?: 'local' | 'remote' }) => void;
     readOnly?: boolean;
     config?: any;
@@ -31,34 +32,97 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
     onUpdateItem
 }) => {
     const c = config || {};
-    const displayTitle = c.title || 'h) ACTIVIDADES PRÁCTICAS Y EXPERIMENTALES';
+    const colUnidadLabel = c.colUnidadLabel || 'Unidad';
+    const colPracticaLabel = c.colPracticaLabel || 'Nombre de la práctica y caracterización de la actividad';
+
+    // ── Opciones inteligentes de Unidades tomadas del PEA oficial ────────────
+    const availableUnits = useMemo(() => {
+        const rawUnidades: any[] = Array.isArray(formData?.Unidades)
+            ? formData.Unidades
+            : (Array.isArray(formData?.unidades) ? formData.unidades : []);
+
+        if (rawUnidades.length > 0) {
+            return rawUnidades.map((u, idx) => {
+                const num = u.num || u.numero || idx + 1;
+                const label = `Unidad ${num}`;
+                const title = (u.titulo || u.Titulo || '').trim();
+                return {
+                    value: label,
+                    display: title ? `${label} - ${title}` : label,
+                    num
+                };
+            });
+        }
+
+        return [1, 2, 3, 4].map(num => ({
+            value: `Unidad ${num}`,
+            display: `Unidad ${num}`,
+            num
+        }));
+    }, [formData?.Unidades, formData?.unidades]);
 
     const rawPracticas: any[] = Array.isArray(formData?.ActividadesPracticas) ? formData.ActividadesPracticas : [];
 
-    const practicas: PracticaItem[] = rawPracticas.length > 0 ? rawPracticas.map(p => ({
-        unidad: p.unidad || p.Unidad || p['0'] || 'Unidad 1',
-        nombre: p.nombre || p.Nombre || p.descripcion || p['1'] || '',
-        horas: Number(p.horas ?? p.Horas ?? p['2'] ?? 4),
-        escenario: p.escenario || p.Escenario || p['3'] || 'Laboratorio de Cómputo / Taller',
-        producto: p.producto || p.Producto || p['4'] || 'Informe técnico y código fuente'
+    const practicas: PracticaItem[] = rawPracticas.length > 0 ? rawPracticas.map((p, idx) => ({
+        unidad: p.unidad || p.Unidad || p['0'] || availableUnits[0]?.value || `Unidad ${idx + 1}`,
+        nombre: p.nombre_caracterizacion || p.NombreCaracterizacion || p.nombre || p.Nombre || p.descripcion || p['1'] || '',
+        horas: p.horas ?? p.Horas,
+        escenario: p.escenario || p.Escenario,
+        producto: p.producto || p.Producto
     })) : [
         {
-            unidad: 'Unidad 1',
-            nombre: 'Práctica 1: Configuración de entorno y primeros despliegues',
-            horas: 4,
-            escenario: 'Laboratorio de Computación / IDE Local',
-            producto: 'Guía de práctica resuelta e informe de resultados'
+            unidad: availableUnits[0]?.value || 'Unidad 1',
+            nombre: ''
         }
     ];
 
+    // ── Sugerencia inteligente de Unidad basada en cobertura curricular ───────
+    const getNextSmartUnit = (currentList: PracticaItem[]): string => {
+        if (availableUnits.length === 0) return 'Unidad 1';
+
+        // 1. Contar prácticas asignadas a cada unidad oficial de la asignatura
+        const countMap = new Map<string, number>();
+        availableUnits.forEach(u => countMap.set(u.value.toLowerCase(), 0));
+
+        currentList.forEach(p => {
+            const rawVal = (p.unidad || '').toLowerCase().trim();
+            for (const u of availableUnits) {
+                if (rawVal === u.value.toLowerCase() || rawVal === `unidad ${u.num}`) {
+                    countMap.set(u.value.toLowerCase(), (countMap.get(u.value.toLowerCase()) || 0) + 1);
+                    break;
+                }
+            }
+        });
+
+        // 2. Primera prioridad: Si hay unidades oficiales sin práctica, sugerir la siguiente en orden
+        const uncovered = availableUnits.find(u => (countMap.get(u.value.toLowerCase()) || 0) === 0);
+        if (uncovered) {
+            return uncovered.value;
+        }
+
+        // 3. Segunda prioridad: Si todas ya tienen prácticas, seguir la secuencia cíclica desde la última
+        if (currentList.length > 0) {
+            const lastRaw = (currentList[currentList.length - 1]?.unidad || '').toLowerCase().trim();
+            const lastIndex = availableUnits.findIndex(
+                u => lastRaw === u.value.toLowerCase() || lastRaw === `unidad ${u.num}`
+            );
+            if (lastIndex !== -1) {
+                const nextIndex = (lastIndex + 1) % availableUnits.length;
+                return availableUnits[nextIndex].value;
+            }
+        }
+
+        return availableUnits[0].value;
+    };
+
     const handleAddPractica = () => {
         if (readOnly) return;
+
+        const suggestedUnit = getNextSmartUnit(practicas);
+
         const newItem: PracticaItem = {
-            unidad: `Unidad ${practicas.length + 1}`,
-            nombre: '',
-            horas: 4,
-            escenario: 'Laboratorio / Taller Institucional',
-            producto: 'Informe técnico de práctica'
+            unidad: suggestedUnit,
+            nombre: ''
         };
 
         if (onAdd) {
@@ -90,113 +154,88 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
     };
 
     return (
-        <div className="w-full space-y-6 sm:space-y-7 animate-fade-in font-sans">
-            {/* Descripción APE */}
-            <p className="text-xs text-text-dim leading-relaxed">
-                Las actividades prácticas deben tributar al total de <strong className="text-text-main font-semibold">Horas de Aprendizaje Práctico-Experimental (APE)</strong> asignadas a la asignatura.
-            </p>
-
-            {/* TABLA DE ACTIVIDADES PRÁCTICAS */}
-            <div className="space-y-3.5">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm sm:text-base font-bold uppercase tracking-wide text-text-main">
-                        Registro de Prácticas y Talleres ({practicas.length})
-                    </span>
-                    {!readOnly && (
-                        <button
-                            type="button"
-                            onClick={handleAddPractica}
-                            className="px-3.5 sm:px-4 py-2 bg-surface hover:bg-bg-deep border border-border-thin rounded-xl text-xs sm:text-sm font-semibold text-text-main transition-colors flex items-center gap-2 cursor-pointer shadow-2xs"
-                        >
-                            <Plus size={16} className="text-[#0070f3]" />
-                            <span>Añadir Práctica</span>
-                        </button>
-                    )}
-                </div>
-
-                <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
-                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr className="bg-bg-deep text-text-dim text-xs uppercase tracking-wider font-bold border-b border-border-thin">
-                                <th className="p-3.5 sm:p-4 w-[15%] border-r border-border-thin">Unidad</th>
-                                <th className="p-3.5 sm:p-4 w-[35%] border-r border-border-thin">Nombre y Caracterización de la Actividad</th>
-                                <th className="p-3.5 sm:p-4 w-[10%] text-center border-r border-border-thin">Horas</th>
-                                <th className="p-3.5 sm:p-4 w-[20%] border-r border-border-thin">Escenario / Entorno</th>
-                                <th className="p-3.5 sm:p-4 w-[15%] border-r border-border-thin">Producto / Entregable</th>
-                                {!readOnly && <th className="p-3.5 sm:p-4 w-[5%] text-center">Acción</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border-thin bg-surface">
-                            {practicas.map((item, idx) => (
-                                <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                    <td className="p-3 border-r border-border-thin">
-                                        <input
-                                            type="text"
-                                            value={item.unidad}
-                                            onChange={(e) => handleUpdatePractica(idx, 'unidad', e.target.value)}
-                                            disabled={readOnly}
-                                            placeholder="Ej. Unidad 1"
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                    </td>
-                                    <td className="p-3 border-r border-border-thin">
-                                        <textarea
-                                            value={item.nombre}
-                                            onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
-                                            disabled={readOnly}
-                                            rows={2}
-                                            placeholder="Nombre de la práctica y objetivo operativo..."
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg p-2.5 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3] resize-none"
-                                        />
-                                    </td>
-                                    <td className="p-3 border-r border-border-thin text-center">
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            value={item.horas}
-                                            onChange={(e) => handleUpdatePractica(idx, 'horas', Math.max(1, parseInt(e.target.value) || 1))}
-                                            disabled={readOnly}
-                                            className="w-20 mx-auto text-center bg-bg-deep border border-border-thin rounded-lg py-2 text-sm sm:text-base font-bold font-mono text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                    </td>
-                                    <td className="p-3 border-r border-border-thin">
-                                        <input
-                                            type="text"
-                                            value={item.escenario}
-                                            onChange={(e) => handleUpdatePractica(idx, 'escenario', e.target.value)}
-                                            disabled={readOnly}
-                                            placeholder="Laboratorio / Aula / Virtual"
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                    </td>
-                                    <td className="p-3 border-r border-border-thin">
-                                        <input
-                                            type="text"
-                                            value={item.producto}
-                                            onChange={(e) => handleUpdatePractica(idx, 'producto', e.target.value)}
-                                            disabled={readOnly}
-                                            placeholder="Informe / Código / Maqueta"
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                    </td>
-                                    {!readOnly && (
-                                        <td className="p-3 text-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemovePractica(idx)}
-                                                className="p-2 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
-                                                title="Eliminar práctica"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+        <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
+            <div className="flex items-center justify-between gap-4">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
+                    h) Actividades Prácticas
+                </h4>
             </div>
+
+            {/* TABLA OFICIAL INSTITUCIONAL: UNIDAD Y CARACTERIZACIÓN */}
+            <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
+                <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr className="bg-bg-deep text-text-dim text-xs uppercase tracking-wider font-bold border-b border-border-thin">
+                            <th className="p-3.5 sm:p-4 w-[28%] sm:w-[26%] border-r border-border-thin">
+                                {colUnidadLabel}
+                            </th>
+                            <th className="p-3.5 sm:p-4">
+                                {colPracticaLabel}
+                            </th>
+                            {!readOnly && (
+                                <th className="p-3.5 sm:p-4 w-[60px] text-center border-l border-border-thin">
+                                    Acción
+                                </th>
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-thin bg-surface">
+                        {practicas.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
+                                <td className="p-3 border-r border-border-thin align-top">
+                                    <GeistSelect
+                                        value={item.unidad || availableUnits[0]?.value || 'Unidad 1'}
+                                        options={(() => {
+                                            const base = availableUnits.map(u => ({ value: u.value, label: u.display }));
+                                            if (item.unidad && !base.some(b => String(b.value).toLowerCase() === item.unidad.toLowerCase())) {
+                                                return [{ value: item.unidad, label: item.unidad }, ...base];
+                                            }
+                                            return base;
+                                        })()}
+                                        onChange={(val) => handleUpdatePractica(idx, 'unidad', String(val))}
+                                        disabled={readOnly}
+                                        className="w-full text-xs sm:text-sm font-semibold"
+                                    />
+                                </td>
+                                <td className="p-3 align-top">
+                                    <textarea
+                                        value={item.nombre}
+                                        onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
+                                        disabled={readOnly}
+                                        rows={Math.max(2, (item.nombre || '').split('\n').length)}
+                                        placeholder="Nombre de la práctica y caracterización de la actividad..."
+                                        className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main outline-none focus:border-text-main resize-none transition-colors leading-relaxed placeholder:text-text-dim/40"
+                                    />
+                                </td>
+                                {!readOnly && (
+                                    <td className="p-3 text-center align-top border-l border-border-thin">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemovePractica(idx)}
+                                            className="p-2 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
+                                            title="Eliminar práctica"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* BOTÓN AL PIE DE LA TABLA: FLUJO SECUENCIAL Y NATURAL */}
+            {!readOnly && (
+                <button
+                    type="button"
+                    onClick={handleAddPractica}
+                    className="w-full py-3 px-4 rounded-xl bg-surface hover:bg-bg-deep border border-dashed border-border-thin hover:border-[#0070f3] flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-text-main transition-all cursor-pointer shadow-2xs"
+                >
+                    <Plus size={16} className="text-[#0070f3]" />
+                    <span>Añadir Práctica</span>
+                </button>
+            )}
         </div>
     );
 };

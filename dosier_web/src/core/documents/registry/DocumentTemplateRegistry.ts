@@ -49,7 +49,9 @@ export interface SectionSchema {
     component_name?: string;
     config?: {
         referenceTemplateCode?: string;
+        toolbarMode?: string;
         fields?: FieldConfig[];
+        [key: string]: any;
     };
 }
 
@@ -198,7 +200,6 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             ResultadosAprendizaje: '',
             MetodologiaEnsenanza: '',
             RecursosDidacticos: '',
-            EvaluacionAprendizaje: '',
             BibliografiaBasica: '',
             BibliografiaConsulta: '',
 
@@ -207,7 +208,11 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             Unidades: [],
             ActividadesPracticas: [],
             Bibliografias: [],
-            Evaluaciones: [],
+            Evaluaciones: [
+                { nota: 'NOTA PARCIAL 1', tipo: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', calificacion: 10 },
+                { nota: 'NOTA PARCIAL 2', tipo: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', calificacion: 10 },
+                { nota: 'EVALUACIÓN FINAL', tipo: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', calificacion: 10 }
+            ],
             FirmasResponsabilidadDetalle: [],
 
             // Firmas de Responsabilidad Institucional
@@ -254,12 +259,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                 iconName: 'Target',
                 componentName: 'PeaObjectivesSection',
                 config: {
+                    toolbarMode: 'none',
                     fields: [
                         {
                             name: 'ObjetivoAsignatura',
                             label: 'b) Objetivo de la Asignatura',
                             type: 'rich-text',
                             collaborative: true,
+                            toolbarMode: 'none',
                             headerStyle: 'blue',
                             placeholder: 'Defina el objetivo formativo general de la asignatura...'
                         }
@@ -288,23 +295,33 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                 }
             },
             {
-                id: 'pea_competencies_rda_section',
-                label: 'd) y e) Resultados de Aprendizaje',
+                id: 'pea_career_outcomes_section',
+                label: 'd) Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta',
                 iconName: 'Award',
-                componentName: 'PeaCompetenciesSection',
+                componentName: 'PeaCareerOutcomesSection',
                 config: {
                     fields: [
                         {
                             name: 'RdaCarrera',
-                            label: 'd) Resultados de Aprendizaje de la Carrera a los que Aporta',
+                            label: 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
                             type: 'rich-text',
                             collaborative: true,
                             headerStyle: 'blue',
                             placeholder: 'Indique los resultados de aprendizaje del perfil de egreso a los que tributa la asignatura...'
-                        },
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'pea_subject_outcomes_section',
+                label: 'e) Resultados de Aprendizaje de la Asignatura:',
+                iconName: 'CheckSquare',
+                componentName: 'PeaSubjectOutcomesSection',
+                config: {
+                    fields: [
                         {
                             name: 'ResultadosAprendizaje',
-                            label: 'e) Resultados de Aprendizaje de la Asignatura (RDA)',
+                            label: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
                             type: 'rich-text',
                             collaborative: true,
                             headerStyle: 'blue',
@@ -369,7 +386,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                     fields: [
                         {
                             name: 'ActividadesPracticas',
-                            label: 'h) Actividades Prácticas y Experimentales',
+                            label: 'h) Actividades Prácticas',
                             type: 'table',
                             collaborative: true,
                             config: {
@@ -388,14 +405,6 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                 componentName: 'PeaEvaluationSection',
                 config: {
                     fields: [
-                        {
-                            name: 'EvaluacionAprendizaje',
-                            label: 'Criterios y Políticas de Evaluación',
-                            type: 'rich-text',
-                            collaborative: true,
-                            headerStyle: 'blue',
-                            placeholder: 'Describa las políticas institucionales de evaluación continua, formativa y sumativa...'
-                        },
                         {
                             name: 'Evaluaciones',
                             label: 'i) EVALUACIÓN DEL APRENDIZAJE',

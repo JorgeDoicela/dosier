@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Layers, Plus, Trash2, CheckCircle2, AlertTriangle, Calculator, Clock, HelpCircle } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 
 interface UnidadTematica {
@@ -33,7 +33,7 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
     onUpdateItem
 }) => {
     const c = config || {};
-    const displayTitle = c.title || 'f) CONTENIDOS DE ENSEÑANZA';
+    const displayTitle = c.title || 'f) CONTENIDOS DE ENSEÑANZA:';
 
     // Horas normadas oficiales de la asignatura en SIGAFI / Malla
     const totalHorasOficial = Number(
@@ -72,9 +72,19 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                 conts = conts.join('\n');
             }
 
+            const unitNum = Number(u.num ?? u.Numero ?? u.NumeroUnidad) || idx + 1;
+            const rawTit = String(u.titulo ?? u.Titulo ?? u.NombreUnidad ?? u['0'] ?? '').trim();
+            let cleanTit = rawTit;
+            // Si el valor era el genérico "Unidad 1" / "UNIDAD 1", limpiarlo para que no se duplique con el badge "UNIDAD 1:"
+            if (new RegExp(`^unidad\\s*${unitNum}$`, 'i').test(rawTit)) {
+                cleanTit = '';
+            } else if (new RegExp(`^unidad\\s*${unitNum}\\s*[:\\-]?\\s*`, 'i').test(rawTit)) {
+                cleanTit = rawTit.replace(new RegExp(`^unidad\\s*${unitNum}\\s*[:\\-]?\\s*`, 'i'), '').trim();
+            }
+
             return {
-                num: u.num || idx + 1,
-                titulo: u.titulo || u.Titulo || u['0'] || `Unidad ${idx + 1}`,
+                num: unitNum,
+                titulo: cleanTit,
                 horasCD: cd,
                 horasAPE: ape,
                 horasTA: ta,
@@ -105,14 +115,15 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
 
     const handleAddUnit = () => {
         if (readOnly) return;
+        const nextNum = unidades.length + 1;
         const newUnit: UnidadTematica = {
-            num: unidades.length + 1,
-            titulo: `Unidad ${unidades.length + 1}: Nueva Unidad Temática`,
+            num: nextNum,
+            titulo: '', // Campo limpio para que el docente escriba el tema sin duplicar "Unidad X"
             horasCD: 0,
             horasAPE: 0,
             horasTA: 0,
             horasTotal: 0,
-            contenidos: '1. Tema principal\n2. Subtema de aplicación'
+            contenidos: ''
         };
 
         if (onAdd) {
@@ -147,209 +158,368 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
             return next;
         });
 
+        // Aseguramos que el payload contenga tanto el título limpio como el formato completo para PDF y motores documentales
+        const payload = updatedList.map((u, i) => {
+            const num = u.num || i + 1;
+            const cleanTitle = (u.titulo || '').trim();
+            const fullTitle = cleanTitle ? `UNIDAD ${num}: ${cleanTitle}` : `UNIDAD ${num}:`;
+            return {
+                ...u,
+                num,
+                numero: num,
+                titulo: cleanTitle,
+                nombre: cleanTitle,
+                nombre_unidad: cleanTitle,
+                titulo_completo: fullTitle,
+                encabezado_unidad: fullTitle
+            };
+        });
+
         if (onUpdateItem) {
             onUpdateItem('Unidades', idx, field, value);
         } else {
-            onUpdate('Unidades', updatedList);
+            onUpdate('Unidades', payload);
         }
     };
 
     return (
         <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
-            {/* VALIDADOR MATEMÁTICO EN TIEMPO REAL */}
-            <div className="rounded-xl border border-border-thin bg-surface p-4 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <Calculator className="w-5 h-5 text-[#0070f3]" />
-                        <span className="text-sm sm:text-base font-bold text-text-main">
-                            Validador Matemático de Horas Curriculares (RRA Art. 21)
-                        </span>
-                    </div>
-                    {totalHorasOficial > 0 && (
-                        <span className="text-xs font-mono font-bold px-3 py-1 rounded-md bg-bg-deep text-text-dim border border-border-thin">
-                            Oficial SIGAFI: {totalHorasOficial}h
-                        </span>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-center">
-                    <div className="p-3 sm:p-4 rounded-xl bg-bg-deep border border-border-thin">
-                        <span className="text-xs sm:text-[13px] font-semibold text-text-dim block mb-1">Total Docencia (CD)</span>
-                        <span className="text-xl sm:text-2xl font-bold font-mono text-text-main">{mathSummary.sumCD}h</span>
-                    </div>
-                    <div className="p-3 sm:p-4 rounded-xl bg-bg-deep border border-border-thin">
-                        <span className="text-xs sm:text-[13px] font-semibold text-text-dim block mb-1">Total Prácticas (APE)</span>
-                        <span className="text-xl sm:text-2xl font-bold font-mono text-text-main">{mathSummary.sumAPE}h</span>
-                    </div>
-                    <div className="p-3 sm:p-4 rounded-xl bg-bg-deep border border-border-thin">
-                        <span className="text-xs sm:text-[13px] font-semibold text-text-dim block mb-1">Total Autónomo (TA)</span>
-                        <span className="text-xl sm:text-2xl font-bold font-mono text-text-main">{mathSummary.sumTA}h</span>
-                    </div>
-                    <div className="p-3 sm:p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                        <span className="text-xs sm:text-[13px] font-bold text-[#0070f3] block mb-1">Total Planificado</span>
-                        <span className="text-xl sm:text-2xl font-bold font-mono text-[#0070f3]">{mathSummary.grandTotal}h</span>
-                    </div>
-                </div>
-
-                {/* ALERTA DE CONCORDANCIA MATEMÁTICA */}
-                {totalHorasOficial > 0 ? (
-                    mathSummary.isMatched ? (
-                        <div className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm">
-                            <CheckCircle2 size={18} className="shrink-0 text-emerald-500" />
-                            <span className="font-semibold">
-                                ¡Balance horario exacto! La sumatoria de las unidades ({mathSummary.grandTotal}h) coincide perfectamente con las {totalHorasOficial} horas normadas en SIGAFI.
-                            </span>
-                        </div>
-                    ) : mathSummary.diff < 0 ? (
-                        <div className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs sm:text-sm">
-                            <AlertTriangle size={18} className="shrink-0 text-amber-500" />
-                            <span>
-                                <strong>Déficit de horas:</strong> Se han planificado {mathSummary.grandTotal}h de las {totalHorasOficial}h oficiales. Faltan <strong>{Math.abs(mathSummary.diff)} horas</strong> por distribuir en las unidades temáticas.
-                            </span>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-3 p-3.5 sm:p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs sm:text-sm">
-                            <AlertTriangle size={18} className="shrink-0 text-rose-500" />
-                            <span>
-                                <strong>Exceso de horas:</strong> La planificación actual ({mathSummary.grandTotal}h) supera por <strong>{mathSummary.diff} horas</strong> el total normado de {totalHorasOficial}h. Ajuste la carga en las unidades.
-                            </span>
-                        </div>
-                    )
-                ) : (
-                    <div className="flex items-center gap-3 p-3.5 rounded-xl bg-bg-deep border border-border-thin text-xs text-text-dim">
-                        <Clock size={16} className="text-[#0070f3] shrink-0" />
-                        <span>
-                            Ingrese o sincronice las horas totales en los Datos Generales (Sección A) para habilitar la verificación automática de balance horario.
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            {/* LISTA DE UNIDADES TEMÁTICAS */}
+            {/* 1. SECCIÓN DE UNIDADES DE ESTUDIO (SIN ANIDAMIENTO REDUNDANTE) */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm sm:text-base font-bold text-text-main">
-                        Desglose de Unidades de Aprendizaje ({unidades.length})
-                    </span>
-                    {!readOnly && (
-                        <button
-                            type="button"
-                            onClick={handleAddUnit}
-                            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-surface border border-border-thin hover:border-[#0070f3] text-xs sm:text-sm font-semibold text-text-main transition-all cursor-pointer shadow-2xs"
-                        >
-                            <Plus size={15} className="text-[#0070f3]" />
-                            <span>Añadir Unidad Temática</span>
-                        </button>
-                    )}
+                <div className="flex items-center justify-between gap-4">
+                    <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
+                        Unidades de Estudio y Contenidos ({unidades.length})
+                    </h4>
                 </div>
 
-                {unidades.map((u, idx) => (
-                    <div key={idx} className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden">
-                        {/* Cabecera de la Unidad */}
-                        <div className="p-3.5 sm:p-4 bg-bg-deep/70 border-b border-border-thin flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5 flex-1">
-                                <span className="font-mono text-xs sm:text-sm font-bold px-2.5 py-1 rounded-md bg-surface border border-border-thin text-[#0070f3] shrink-0">
-                                    U{idx + 1}
-                                </span>
-                                <input
-                                    type="text"
-                                    value={u.titulo}
-                                    onChange={(e) => handleUpdateUnit(idx, 'titulo', e.target.value)}
-                                    disabled={readOnly}
-                                    placeholder={`Título de la Unidad ${idx + 1}`}
-                                    className="w-full bg-surface border border-border-thin rounded-lg px-3 py-2 text-sm sm:text-base text-text-main font-bold outline-none focus:border-[#0070f3]"
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-2.5 shrink-0">
-                                <span className="text-xs sm:text-sm font-mono font-bold text-text-dim bg-surface px-2.5 py-1.5 rounded-lg border border-border-thin">
-                                    Total: {u.horasTotal || 0}h
-                                </span>
-                                {!readOnly && unidades.length > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveUnit(idx)}
-                                        className="p-1.5 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
-                                        title="Eliminar unidad"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Distribución de Horas de la Unidad */}
-                        <div className="p-4 sm:p-5 space-y-4 sm:space-y-5">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-zinc-300 block">
-                                        Contacto Docente (CD)
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            value={u.horasCD}
-                                            onChange={(e) => handleUpdateUnit(idx, 'horasCD', Math.max(0, parseInt(e.target.value) || 0))}
-                                            disabled={readOnly}
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 sm:py-2.5 text-sm sm:text-base font-bold font-mono text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                        <span className="text-sm sm:text-base text-text-dim font-bold">h</span>
-                                    </div>
+                {/* LISTA DIRECTA DE TARJETAS DE UNIDAD (CERO CUADRO DENTRO DE CUADRO) */}
+                <div className="space-y-4 sm:space-y-5">
+                    {unidades.map((u, idx) => (
+                        <div
+                            key={idx}
+                            className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden transition-all"
+                        >
+                            {/* CABECERA DE LA UNIDAD: TÍTULO Y TOTAL DE HORAS */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-thin px-4 sm:px-5 py-3 sm:py-3.5 bg-bg-deep text-text-main">
+                                <div className="flex items-center gap-3 flex-1">
+                                    <span className="shrink-0 font-bold text-text-main text-xs sm:text-sm uppercase tracking-wide">
+                                        UNIDAD {u.num || idx + 1}:
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={u.titulo}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const num = u.num || idx + 1;
+                                            const sanitized = val.replace(new RegExp(`^unidad\\s*${num}\\s*[:\\-]?\\s*`, 'i'), '');
+                                            handleUpdateUnit(idx, 'titulo', sanitized);
+                                        }}
+                                        disabled={readOnly}
+                                        placeholder={`Nombre o tema de la Unidad ${u.num || idx + 1}`}
+                                        className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2 text-sm sm:text-base font-semibold text-text-main outline-none focus:border-text-main transition-colors placeholder:text-text-dim/40 placeholder:font-normal"
+                                    />
                                 </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-zinc-300 block">
-                                        Práctico Experimental (APE)
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            value={u.horasAPE}
-                                            onChange={(e) => handleUpdateUnit(idx, 'horasAPE', Math.max(0, parseInt(e.target.value) || 0))}
-                                            disabled={readOnly}
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 sm:py-2.5 text-sm sm:text-base font-bold font-mono text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                        <span className="text-sm sm:text-base text-text-dim font-bold">h</span>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-zinc-300 block">
-                                        Trabajo Autónomo (TA)
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            value={u.horasTA}
-                                            onChange={(e) => handleUpdateUnit(idx, 'horasTA', Math.max(0, parseInt(e.target.value) || 0))}
-                                            disabled={readOnly}
-                                            className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 sm:py-2.5 text-sm sm:text-base font-bold font-mono text-text-main outline-none focus:border-[#0070f3]"
-                                        />
-                                        <span className="text-sm sm:text-base text-text-dim font-bold">h</span>
-                                    </div>
+                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                                    <span className="text-xs sm:text-sm font-medium text-text-dim">
+                                        Total de horas por unidad: <strong className="font-mono text-text-main text-sm sm:text-base ml-1">{u.horasTotal || 0}</strong>
+                                    </span>
+                                    {!readOnly && unidades.length > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveUnit(idx)}
+                                            className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                            title="Eliminar esta unidad"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Contenidos y Subtemas */}
-                            <div className="space-y-2">
-                                <label className="text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-zinc-300 block">
-                                    Contenidos Temáticos y Subtemas (1 por línea)
-                                </label>
+                            {/* DISTRIBUCIÓN HORARIA REGLAMENTARIA (3 COLUMNAS CON STEPPERS DISTINGUIDOS) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 border-b border-border-thin divide-y sm:divide-y-0 sm:divide-x divide-border-thin bg-surface text-text-main">
+                                {/* Horas contacto con el docente */}
+                                <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                                    <span className="font-semibold text-text-dim text-xs sm:text-sm">
+                                        Horas contacto con el docente:
+                                    </span>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex items-stretch bg-bg-deep border border-border-thin rounded-xl overflow-hidden focus-within:border-text-main transition-colors">
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                value={u.horasCD}
+                                                onFocus={(e) => e.currentTarget.select()}
+                                                onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        handleUpdateUnit(idx, 'horasCD', (u.horasCD || 0) + 1);
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        handleUpdateUnit(idx, 'horasCD', Math.max(0, (u.horasCD || 0) - 1));
+                                                    }
+                                                }}
+                                                onChange={(e) => {
+                                                    const raw = e.target.value.replace(/\D/g, '');
+                                                    const clean = raw.length > 1 && raw.startsWith('0') ? raw.replace(/^0+/, '') || '0' : raw;
+                                                    handleUpdateUnit(idx, 'horasCD', Math.max(0, parseInt(clean, 10) || 0));
+                                                }}
+                                                disabled={readOnly}
+                                                className="w-14 sm:w-16 py-2 px-2 text-center font-bold font-mono text-sm sm:text-base text-text-main bg-transparent outline-none cursor-pointer"
+                                            />
+                                            {!readOnly && (
+                                                <div className="flex flex-col border-l border-border-thin divide-y divide-border-thin bg-surface">
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => handleUpdateUnit(idx, 'horasCD', (u.horasCD || 0) + 1)}
+                                                        className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
+                                                        title="Aumentar hora"
+                                                    >
+                                                        <ChevronUp size={13} strokeWidth={2.5} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => handleUpdateUnit(idx, 'horasCD', Math.max(0, (u.horasCD || 0) - 1))}
+                                                        className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
+                                                        title="Disminuir hora"
+                                                    >
+                                                        <ChevronDown size={13} strokeWidth={2.5} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Horas Práctico-experimental */}
+                                <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                                    <span className="font-semibold text-text-dim text-xs sm:text-sm">
+                                        Horas Práctico-experimental:
+                                    </span>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex items-stretch bg-bg-deep border border-border-thin rounded-xl overflow-hidden focus-within:border-text-main transition-colors">
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                value={u.horasAPE}
+                                                onFocus={(e) => e.currentTarget.select()}
+                                                onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        handleUpdateUnit(idx, 'horasAPE', (u.horasAPE || 0) + 1);
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        handleUpdateUnit(idx, 'horasAPE', Math.max(0, (u.horasAPE || 0) - 1));
+                                                    }
+                                                }}
+                                                onChange={(e) => {
+                                                    const raw = e.target.value.replace(/\D/g, '');
+                                                    const clean = raw.length > 1 && raw.startsWith('0') ? raw.replace(/^0+/, '') || '0' : raw;
+                                                    handleUpdateUnit(idx, 'horasAPE', Math.max(0, parseInt(clean, 10) || 0));
+                                                }}
+                                                disabled={readOnly}
+                                                className="w-14 sm:w-16 py-2 px-2 text-center font-bold font-mono text-sm sm:text-base text-text-main bg-transparent outline-none cursor-pointer"
+                                            />
+                                            {!readOnly && (
+                                                <div className="flex flex-col border-l border-border-thin divide-y divide-border-thin bg-surface">
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => handleUpdateUnit(idx, 'horasAPE', (u.horasAPE || 0) + 1)}
+                                                        className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
+                                                        title="Aumentar hora"
+                                                    >
+                                                        <ChevronUp size={13} strokeWidth={2.5} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => handleUpdateUnit(idx, 'horasAPE', Math.max(0, (u.horasAPE || 0) - 1))}
+                                                        className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
+                                                        title="Disminuir hora"
+                                                    >
+                                                        <ChevronDown size={13} strokeWidth={2.5} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Horas de aprendizaje autónomo */}
+                                <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                                    <span className="font-semibold text-text-dim text-xs sm:text-sm">
+                                        Horas de aprendizaje autónomo:
+                                    </span>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex items-stretch bg-bg-deep border border-border-thin rounded-xl overflow-hidden focus-within:border-text-main transition-colors">
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                value={u.horasTA}
+                                                onFocus={(e) => e.currentTarget.select()}
+                                                onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'ArrowUp') {
+                                                        e.preventDefault();
+                                                        handleUpdateUnit(idx, 'horasTA', (u.horasTA || 0) + 1);
+                                                    } else if (e.key === 'ArrowDown') {
+                                                        e.preventDefault();
+                                                        handleUpdateUnit(idx, 'horasTA', Math.max(0, (u.horasTA || 0) - 1));
+                                                    }
+                                                }}
+                                                onChange={(e) => {
+                                                    const raw = e.target.value.replace(/\D/g, '');
+                                                    const clean = raw.length > 1 && raw.startsWith('0') ? raw.replace(/^0+/, '') || '0' : raw;
+                                                    handleUpdateUnit(idx, 'horasTA', Math.max(0, parseInt(clean, 10) || 0));
+                                                }}
+                                                disabled={readOnly}
+                                                className="w-14 sm:w-16 py-2 px-2 text-center font-bold font-mono text-sm sm:text-base text-text-main bg-transparent outline-none cursor-pointer"
+                                            />
+                                            {!readOnly && (
+                                                <div className="flex flex-col border-l border-border-thin divide-y divide-border-thin bg-surface">
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => handleUpdateUnit(idx, 'horasTA', (u.horasTA || 0) + 1)}
+                                                        className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
+                                                        title="Aumentar hora"
+                                                    >
+                                                        <ChevronUp size={13} strokeWidth={2.5} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        tabIndex={-1}
+                                                        onClick={() => handleUpdateUnit(idx, 'horasTA', Math.max(0, (u.horasTA || 0) - 1))}
+                                                        className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
+                                                        title="Disminuir hora"
+                                                    >
+                                                        <ChevronDown size={13} strokeWidth={2.5} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CUERPO DE CONTENIDOS Y TEMAS */}
+                            <div className="p-4 sm:p-5 bg-surface">
+                                <div className="mb-2.5 flex items-center justify-between">
+                                    <span className="text-xs sm:text-[13px] font-bold text-text-dim uppercase tracking-wider">
+                                        Contenidos Temáticos y Subtemas (1 por línea):
+                                    </span>
+                                </div>
                                 <textarea
                                     value={u.contenidos}
                                     onChange={(e) => handleUpdateUnit(idx, 'contenidos', e.target.value)}
                                     disabled={readOnly}
-                                    rows={5}
-                                    placeholder="1.1 Título del subtema&#10;1.2 Descripción y actividades de aprendizaje&#10;1.3 Prácticas asociadas"
-                                    className="w-full bg-bg-deep border border-border-thin rounded-lg p-3.5 sm:p-4 text-xs sm:text-sm text-text-main font-mono outline-none focus:border-[#0070f3] resize-y leading-relaxed min-h-[130px]"
+                                    rows={Math.max(5, (u.contenidos || '').split('\n').length + 1)}
+                                    placeholder="1.1 Introducción y contextualización&#10;1.2 Principios teóricos y normativos&#10;1.3 Casos prácticos y aplicación inicial"
+                                    className="w-full bg-bg-deep border border-border-thin rounded-xl p-4 text-sm sm:text-base font-sans text-text-main outline-none focus:border-text-main resize-none leading-relaxed transition-colors placeholder:text-text-dim/40"
                                 />
                             </div>
                         </div>
+                    ))}
+
+                    {!readOnly && (
+                        <button
+                            type="button"
+                            onClick={handleAddUnit}
+                            className="w-full py-3 px-4 rounded-xl bg-surface hover:bg-bg-deep border border-dashed border-border-thin hover:border-[#0070f3] flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-text-main transition-all cursor-pointer shadow-2xs"
+                        >
+                            <Plus size={16} className="text-[#0070f3]" />
+                            <span>Añadir Unidad de Estudio</span>
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* 2. PANEL INDEPENDIENTE: ASISTENTE DE CÁLCULO Y BALANCE HORARIO */}
+            <div className="rounded-xl border border-border-thin overflow-hidden bg-bg-deep shadow-xs">
+                {/* Encabezado del panel de balance */}
+                <div className="px-4 sm:px-5 py-3 bg-bg-deep border-b border-border-thin">
+                    <h5 className="text-xs sm:text-sm font-bold text-text-main tracking-tight">
+                        Balance de horas por componente
+                    </h5>
+                    <p className="text-xs text-text-dim mt-0.5">
+                        Verifica que la suma de las unidades coincida con la malla oficial.
+                    </p>
+                </div>
+
+                {/* 3 Componentes en Grid horizontal sin cajas blancas que aparenten inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border-thin bg-bg-deep">
+                    {/* Componente 1: Contacto Docente */}
+                    <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                        <span className="text-xs sm:text-sm font-medium text-text-dim leading-tight">
+                            Total horas de contacto docente:
+                        </span>
+                        <span className="font-bold font-mono text-sm sm:text-base text-text-main shrink-0">
+                            {mathSummary.sumCD}h
+                        </span>
                     </div>
-                ))}
+
+                    {/* Componente 2: Práctico Experimental */}
+                    <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                        <span className="text-xs sm:text-sm font-medium text-text-dim leading-tight">
+                            Total horas de práctico experimental:
+                        </span>
+                        <span className="font-bold font-mono text-sm sm:text-base text-text-main shrink-0">
+                            {mathSummary.sumAPE}h
+                        </span>
+                    </div>
+
+                    {/* Componente 3: Aprendizaje Autónomo */}
+                    <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                        <span className="text-xs sm:text-sm font-medium text-text-dim leading-tight">
+                            Total horas de aprendizaje autónomo:
+                        </span>
+                        <span className="font-bold font-mono text-sm sm:text-base text-text-main shrink-0">
+                            {mathSummary.sumTA}h
+                        </span>
+                    </div>
+                </div>
+
+                {/* Fila Inferior Concisa y Legible */}
+                {totalHorasOficial > 0 ? (
+                    <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin bg-bg-deep flex items-center gap-3 text-sm sm:text-base ${
+                        mathSummary.isMatched
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : mathSummary.diff > 0
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-amber-600 dark:text-amber-400'
+                    }`}>
+                        <span className="font-mono font-bold tracking-tight">
+                            Total: {mathSummary.grandTotal} / {totalHorasOficial} hrs
+                        </span>
+                        <span className="opacity-50">·</span>
+                        <span className="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                                mathSummary.isMatched
+                                    ? 'bg-emerald-500'
+                                    : mathSummary.diff > 0
+                                    ? 'bg-rose-500'
+                                    : 'bg-amber-500'
+                            }`} />
+                            <span>
+                                {mathSummary.isMatched && 'Conforme'}
+                                {mathSummary.diff > 0 && `Exceso de ${mathSummary.diff} ${mathSummary.diff === 1 ? 'hora' : 'horas'}`}
+                                {mathSummary.diff < 0 && `Faltan ${Math.abs(mathSummary.diff)} ${Math.abs(mathSummary.diff) === 1 ? 'hora' : 'horas'} por asignar`}
+                            </span>
+                        </span>
+                    </div>
+                ) : (
+                    <div className="px-4 py-2.5 border-t border-border-thin bg-bg-deep text-xs text-text-dim">
+                        Total acumulado: {mathSummary.grandTotal} hrs
+                    </div>
+                )}
             </div>
         </div>
     );

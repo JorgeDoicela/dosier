@@ -744,11 +744,26 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         else if (uDict.TryGetValue("Numero", out var nVal2) && int.TryParse(nVal2?.ToString(), out var nParsed2)) num = nParsed2;
                         else if (uDict.TryGetValue("NumeroUnidad", out var nVal3) && int.TryParse(nVal3?.ToString(), out var nParsed3)) num = nParsed3;
 
-                        string titulo = uDict.GetValueOrDefault("titulo")?.ToString()
+                        string rawTitulo = uDict.GetValueOrDefault("titulo")?.ToString()
                             ?? uDict.GetValueOrDefault("Titulo")?.ToString()
                             ?? uDict.GetValueOrDefault("NombreUnidad")?.ToString()
                             ?? uDict.GetValueOrDefault("nombre_unidad")?.ToString()
-                            ?? $"Unidad {num}";
+                            ?? "";
+
+                        string cleanTitulo = rawTitulo.Trim();
+                        if (System.Text.RegularExpressions.Regex.IsMatch(cleanTitulo, $@"^Unidad\s*{num}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                        {
+                            cleanTitulo = "";
+                        }
+                        else
+                        {
+                            cleanTitulo = System.Text.RegularExpressions.Regex.Replace(cleanTitulo, $@"^Unidad\s*{num}\s*[:\-]?\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+                        }
+
+                        string encabezadoUnidad = string.IsNullOrWhiteSpace(cleanTitulo)
+                            ? $"UNIDAD {num}:"
+                            : $"UNIDAD {num}: {cleanTitulo}";
+                        string titulo = cleanTitulo;
 
                         int cd = Convert.ToInt32(uDict.GetValueOrDefault("horasCD") ?? uDict.GetValueOrDefault("HorasCD") ?? uDict.GetValueOrDefault("HorasDocencia") ?? 0);
                         int ape = Convert.ToInt32(uDict.GetValueOrDefault("horasAPE") ?? uDict.GetValueOrDefault("HorasAPE") ?? uDict.GetValueOrDefault("HorasPracticoExp") ?? 0);
@@ -785,6 +800,12 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             ["Titulo"] = titulo,
                             ["titulo"] = titulo,
                             ["NombreUnidad"] = titulo,
+                            ["nombre"] = titulo,
+                            ["nombre_unidad"] = titulo,
+                            ["EncabezadoUnidad"] = encabezadoUnidad,
+                            ["encabezado_unidad"] = encabezadoUnidad,
+                            ["TituloCompleto"] = encabezadoUnidad,
+                            ["titulo_completo"] = encabezadoUnidad,
                             ["TotalHoras"] = total,
                             ["totalHoras"] = total,
                             ["TotalHorasUnidad"] = total,

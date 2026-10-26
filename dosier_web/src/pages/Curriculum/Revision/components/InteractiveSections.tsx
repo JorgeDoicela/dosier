@@ -1,17 +1,4 @@
 import React from 'react';
-import { 
-    BookOpen, 
-    FileText, 
-    Target, 
-    CheckSquare, 
-    Activity, 
-    Users, 
-    Clock, 
-    Calendar,
-    Award,
-    Shield,
-    Library
-} from 'lucide-react';
 import type { ProjectDetail } from '../types/revisionTecnicaTypes';
 
 const stripHtml = (html: any): string => {
@@ -323,15 +310,15 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                 </div>
             )}
 
-            {/* 4. RESULTADOS DE APRENDIZAJE */}
-            {activeSection === 'pea_competencies_rda_section' && (
+            {/* 4. RESULTADOS DE APRENDIZAJE DE LA CARRERA (D) */}
+            {(activeSection === 'pea_career_outcomes_section' || activeSection === 'pea_competencies_rda_section') && (
                 <div className="space-y-5 animate-fade-in">
                     <div className="border-b border-border-thin/60 pb-3">
                         <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
-                            4. Resultados de Aprendizaje (RDA)
+                            d) Resultados de Aprendizaje de la Carrera
                         </h3>
                         <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
-                            Aporte al perfil de egreso y competencias disciplinares de la asignatura
+                            Aporte al perfil de egreso de la carrera a los cuales tributa directamente la asignatura
                         </p>
                     </div>
 
@@ -345,7 +332,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
-                                        d) Aporte a los RDA del Perfil de Egreso de la Carrera
+                                        d) RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA
                                     </span>
                                     {renderFieldStatusBadge('RdaCarrera')}
                                 </div>
@@ -353,7 +340,23 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             </div>
                             {renderHtml(snap.RdaCarrera, 'Sin aportes al perfil de egreso registrados')}
                         </div>
+                    </div>
+                </div>
+            )}
 
+            {/* 5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA (E) */}
+            {(activeSection === 'pea_subject_outcomes_section' || activeSection === 'pea_competencies_rda_section') && (
+                <div className="space-y-5 animate-fade-in">
+                    <div className="border-b border-border-thin/60 pb-3">
+                        <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
+                            e) Resultados de Aprendizaje de la Asignatura:
+                        </h3>
+                        <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
+                            Competencias y logros específicos alcanzables por el estudiante al finalizar el curso
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
                         {/* RDA ASIGNATURA */}
                         <div 
                             id="field-card-ResultadosAprendizaje"
@@ -363,7 +366,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
-                                        e) Resultados de Aprendizaje de la Asignatura (RDA)
+                                        e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:
                                     </span>
                                     {renderFieldStatusBadge('ResultadosAprendizaje')}
                                 </div>
@@ -391,15 +394,15 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                 </div>
             )}
 
-            {/* 5. CONTENIDOS DE ENSEÑANZA */}
+            {/* f) CONTENIDOS DE ENSEÑANZA */}
             {activeSection === 'pea_contents_section' && (
                 <div className="space-y-5 animate-fade-in">
                     <div className="border-b border-border-thin/60 pb-3">
                         <h3 className="text-xs font-bold text-text-main uppercase tracking-widest font-mono">
-                            5. Contenidos de Enseñanza y Horas
+                            f) Contenidos de Enseñanza
                         </h3>
                         <p className="text-[10px] text-text-dim uppercase mt-0.5 font-mono">
-                            Unidades temáticas, desagregación horaria y subtemas
+                            Unidades de estudio, desagregación horaria y temas
                         </p>
                     </div>
 
@@ -589,23 +592,6 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                     </div>
 
                     <div className="space-y-4">
-                        <div 
-                            id="field-card-EvaluacionAprendizaje"
-                            onClick={() => { setActiveCommentField('EvaluacionAprendizaje'); setIsRightSidebarOpen(true); }}
-                            className={getFieldCardClasses('EvaluacionAprendizaje')}
-                        >
-                            <div className="flex justify-between items-center border-b border-border-thin/20 pb-1.5">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[9px] font-bold text-text-dim uppercase tracking-wider font-mono">
-                                        Criterios y Políticas de Evaluación
-                                    </span>
-                                    {renderFieldStatusBadge('EvaluacionAprendizaje')}
-                                </div>
-                                {renderCommentButton('EvaluacionAprendizaje', 'Políticas Evaluación')}
-                            </div>
-                            {renderHtml(snap.EvaluacionAprendizaje, 'Sin criterios o políticas registradas')}
-                        </div>
-
                         <div 
                             id="field-card-Evaluaciones"
                             onClick={() => { setActiveCommentField('Evaluaciones'); setIsRightSidebarOpen(true); }}

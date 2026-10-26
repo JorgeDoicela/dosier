@@ -288,7 +288,7 @@ export const generatePeaContentsHtml = (block: DocumentBlock): string => {
         </td>
         <td style="padding: 0; vertical-align: top;">
           <div style="background-color: ${subHeaderBg}; color: #000000; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 1px solid #000000;">
-            <span>UNIDAD {{this.numero}}: {{this.nombre}}</span>
+            <span>UNIDAD {{this.numero}}:{{#if this.nombre}} {{this.nombre}}{{/if}}</span>
             <span>Total de horas por unidad: {{this.total_horas}}</span>
           </div>
           <table style="width: 100%; border-collapse: collapse; font-size: 7.5pt; background-color: ${subHeaderBg}; border-bottom: 1px solid #000000;">

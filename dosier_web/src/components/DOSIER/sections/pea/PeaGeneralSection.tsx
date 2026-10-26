@@ -268,7 +268,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                     max={totalHoras > 0 ? totalHoras : 999}
                                     placeholder="0"
                                     readOnly={readOnly}
-                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
+                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3] select-all cursor-pointer"
                                     onValueChange={(val) => onUpdate('HorasContactoDocente', Math.max(0, parseInt(val, 10) || 0))}
                                 />
                             </div>
@@ -288,7 +288,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                     max={totalHoras > 0 ? totalHoras : 999}
                                     placeholder="0"
                                     readOnly={readOnly}
-                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
+                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3] select-all cursor-pointer"
                                     onValueChange={(val) => onUpdate('HorasPracticoExperimental', Math.max(0, parseInt(val, 10) || 0))}
                                 />
                             </div>
@@ -308,7 +308,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                     max={totalHoras > 0 ? totalHoras : 999}
                                     placeholder="0"
                                     readOnly={readOnly}
-                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3]"
+                                    className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3] select-all cursor-pointer"
                                     onValueChange={(val) => onUpdate('HorasAutonomo', Math.max(0, parseInt(val, 10) || 0))}
                                 />
                             </div>
@@ -317,19 +317,30 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
 
                     {/* Fila Inferior Concisa y Legible */}
                     {totalHoras > 0 && (
-                        <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin flex items-center gap-3 text-sm sm:text-base ${
-                            isHorasBalanced
-                                ? 'bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300'
-                                : diffHoras > 0
-                                ? 'bg-rose-50/70 dark:bg-rose-950/30 text-rose-900 dark:text-rose-300'
-                                : 'bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300'
-                        }`}>
-                            <span className="font-mono font-bold tracking-tight">Total: {sumaHoras} / {totalHoras} hrs</span>
-                            <span className="opacity-40">·</span>
-                            <span className="text-xs sm:text-sm font-semibold">
-                                {isHorasBalanced && 'Conforme'}
-                                {diffHoras > 0 && `Exceso de ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`}
-                                {diffHoras < 0 && `Faltan ${Math.abs(diffHoras)} ${Math.abs(diffHoras) === 1 ? 'hora' : 'horas'}`}
+                        <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin bg-surface flex items-center gap-3 text-sm sm:text-base ${
+                                isHorasBalanced
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : diffHoras > 0
+                                    ? 'text-rose-600 dark:text-rose-400'
+                                    : 'text-amber-600 dark:text-amber-400'
+                            }`}>
+                            <span className="font-mono font-bold tracking-tight">
+                                Total: {sumaHoras} / {totalHoras} hrs
+                            </span>
+                            <span className="opacity-50">·</span>
+                            <span className="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                    isHorasBalanced
+                                        ? 'bg-emerald-500'
+                                        : diffHoras > 0
+                                        ? 'bg-rose-500'
+                                        : 'bg-amber-500'
+                                }`} />
+                                <span>
+                                    {isHorasBalanced && 'Conforme'}
+                                    {diffHoras > 0 && `Exceso de ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`}
+                                    {diffHoras < 0 && `Faltan ${Math.abs(diffHoras)} ${Math.abs(diffHoras) === 1 ? 'hora' : 'horas'}`}
+                                </span>
                             </span>
                         </div>
                     )}

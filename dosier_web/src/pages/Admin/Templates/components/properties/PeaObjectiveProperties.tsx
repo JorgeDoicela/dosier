@@ -58,6 +58,30 @@ export const PeaObjectiveProperties: React.FC<PeaObjectivePropertiesProps> = ({
                 </div>
             </div>
 
+                        {/* Modo de Barra de Herramientas */}
+            <div className="border border-border-thin rounded-lg p-3 space-y-2">
+                <h4 className="text-[11px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-violet-500" />
+                    Herramientas del Editor
+                </h4>
+                <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-text-dim">Modo de Barra de Redacción</label>
+                    <select
+                        value={c.toolbarMode || 'none'}
+                        onChange={(e) => handleConfigChange('toolbarMode', e.target.value)}
+                        className="w-full bg-surface-subtle border border-border-thin rounded px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-violet-500 cursor-pointer"
+                    >
+                        <option value="none">Sin barra (Ocultar herramientas)</option>
+                        <option value="apa_full">Completo APA 7 (Niveles, Tablas, Figuras, Citas y Refs)</option>
+                        <option value="standard">Redacción Estándar (Formato, Listas y Citas en Bloque)</option>
+                        <option value="compact">Compacto / Texto Directo (Solo Negrita, Cursiva y Listas)</option>
+                    </select>
+                    <span className="text-[10px] text-text-dim block leading-tight">
+                        Determina si se muestra la barra de herramientas sobre el editor del objetivo.
+                    </span>
+                </div>
+            </div>
+
             {/* Configuración de Contenido */}
             <div className="border border-border-thin rounded-lg p-3 space-y-3">
                 <h4 className="text-[11px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1.5">

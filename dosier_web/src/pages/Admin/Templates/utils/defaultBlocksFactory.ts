@@ -138,7 +138,8 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
                 headerColor: '#1e2a4a',
                 objetivoLabel: 'b) OBJETIVO DE LA ASIGNATURA',
                 objetivoPlaceholder: 'Formular con Verbo en infinitivo + ¿Qué? + ¿Cómo? + ¿Para qué? articulado al nivel formativo de la carrera.',
-                lineCount: 4
+                lineCount: 4,
+                toolbarMode: 'none'
             }
         },
         {

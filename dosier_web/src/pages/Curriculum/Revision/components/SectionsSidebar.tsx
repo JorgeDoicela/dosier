@@ -2,7 +2,6 @@ import React from 'react';
 import {
     ChevronLeft,
     BookOpen,
-    MessageSquare,
     CheckCircle2,
     AlertCircle,
     FileText,
@@ -58,19 +57,21 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
     onClose,
     startDraggingLeft,
     comments,
-    templateBlocks,
+    templateBlocks: _templateBlocks,
     templateSections,
-    onOpenFinalizeModal
+    onOpenFinalizeModal: _onOpenFinalizeModal
 }) => {
     const SECTION_FIELD_KEYS: Record<string, string[]> = {
         pea_general_section: ['NombreAsignatura', 'CodigoAsignatura', 'Carrera', 'CodigoCarrera', 'Modalidad', 'UnidadOrganizacion', 'Periodo', 'Nivel', 'TotalHorasAsignatura', 'Creditos', 'HorasContactoDocente', 'HorasPracticoExperimental', 'HorasAutonomo', 'DocenteElaborador'],
         pea_objectives_section: ['ObjetivoAsignatura'],
         pea_prerequisites_section: ['Prerrequisitos'],
+        pea_career_outcomes_section: ['RdaCarrera'],
+        pea_subject_outcomes_section: ['ResultadosAprendizaje'],
         pea_competencies_rda_section: ['RdaCarrera', 'ResultadosAprendizaje'],
         pea_contents_section: ['Unidades'],
         pea_methodology_section: ['MetodologiaEnsenanza', 'RecursosDidacticos'],
         pea_resources_section: ['ActividadesPracticas'],
-        pea_evaluation_section: ['EvaluacionAprendizaje', 'Evaluaciones'],
+        pea_evaluation_section: ['Evaluaciones'],
         pea_bibliography_section: ['BibliografiaBasica', 'BibliografiaConsulta'],
         pea_signatures_section: ['FirmasResponsabilidad']
     };

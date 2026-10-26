@@ -1,7 +1,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { CoWorkEditor } from '../../../../core/cowork/components/CoWorkEditor';
-import type { CoWorkHandle } from '../../../../core/cowork/types';
+import type { CoWorkHandle, ToolbarMode } from '../../../../core/cowork/types';
 
 interface PeaObjectivesSectionProps {
     formData?: any;
@@ -14,8 +14,10 @@ interface PeaObjectivesSectionProps {
 export const PeaObjectivesSection: React.FC<PeaObjectivesSectionProps> = ({
     cowork,
     onUpdate,
-    readOnly = false
+    readOnly = false,
+    config
 }) => {
+    const toolbarMode: ToolbarMode = (config?.toolbarMode as ToolbarMode) || 'none';
     return (
         <div className="w-full space-y-5 sm:space-y-6 animate-fade-in font-sans">
             {/* Guía Pedagógica */}
@@ -29,7 +31,7 @@ export const PeaObjectivesSection: React.FC<PeaObjectivesSectionProps> = ({
                     field="ObjetivoAsignatura"
                     cowork={cowork}
                     readOnly={readOnly}
-                    toolbarMode="apa_full"
+                    toolbarMode={toolbarMode}
                     placeholder="Defina el objetivo formativo de la asignatura articulado a las competencias del perfil profesional..."
                     onChange={(html, meta) => onUpdate('ObjetivoAsignatura', html, meta)}
                 />
