@@ -158,6 +158,26 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             }
         }
 
+        // Resolución defensiva de Código de Carrera institucional (ej. GAS para Gastronomía)
+        if (!merged.CodigoCarrera || merged.CodigoCarrera === '' || merged.CodigoCarrera === '---') {
+            const carreraNombre = String(merged.Carrera || merged.carrera || initialData?.Carrera || initialData?.carrera || '').toUpperCase();
+            if (carreraNombre.includes('GASTRONOM')) merged.CodigoCarrera = 'GAS';
+            else if (carreraNombre.includes('SOFTWARE')) merged.CodigoCarrera = 'SOF';
+            else if (carreraNombre.includes('DEPORTIV') || carreraNombre.includes('ENTRENAMIENTO')) merged.CodigoCarrera = 'DEP';
+            else if (carreraNombre.includes('AUTOMOTRIZ') || carreraNombre.includes('MECANICA') || carreraNombre.includes('MECÁNICA')) merged.CodigoCarrera = 'MCA';
+            else if (carreraNombre.includes('TRIBUTAR') || carreraNombre.includes('CONTABILIDAD')) merged.CodigoCarrera = 'CTA';
+            else if (carreraNombre.includes('TALENTO') || carreraNombre.includes('HUMANO')) merged.CodigoCarrera = 'ATH';
+            else if (carreraNombre.includes('GRAFICO') || carreraNombre.includes('GRÁFICO')) merged.CodigoCarrera = 'DGF';
+            else if (carreraNombre.includes('INICIAL')) merged.CodigoCarrera = 'EBI';
+            else if (carreraNombre.includes('MARKETING')) merged.CodigoCarrera = 'MKT';
+            else if (carreraNombre.includes('INCLUSIVA')) merged.CodigoCarrera = 'EIN';
+            else if (carreraNombre.includes('BASICA') || carreraNombre.includes('BÁSICA')) merged.CodigoCarrera = 'EBA';
+            else if (carreraNombre.includes('TELECOMUNICACION') || carreraNombre.includes('REDES')) merged.CodigoCarrera = 'RDT';
+            else if (carreraNombre.includes('ELECTRONIC') || carreraNombre.includes('ELECTRÓNIC')) merged.CodigoCarrera = 'ELT';
+            else if (carreraNombre.length >= 3) merged.CodigoCarrera = carreraNombre.substring(0, 3);
+        }
+        merged.codigo_carrera = merged.CodigoCarrera;
+
         // Hidratación defensiva de firmas si en el snapshot previo estaban vacías
         const initFirmas = initialData?.FirmasResponsabilidad || {};
         if (!merged.FirmasResponsabilidad || typeof merged.FirmasResponsabilidad !== 'object') {

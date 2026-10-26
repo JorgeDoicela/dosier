@@ -49,7 +49,7 @@ export const generatePeaGeneralHtml = (block: DocumentBlock): string => {
       </tr>
       <tr>
         <td style="${borderCss} padding: 4px 6px; font-weight: bold;">${c.customLabel_showCodigoCarrera || 'Código de carrera:'}</td>
-        <td style="${borderCss} padding: 4px 6px; font-family: monospace;">{{default codigo_carrera ""}}</td>
+        <td style="${borderCss} padding: 4px 6px;">{{default codigo_carrera ""}}</td>
       </tr>
       <tr>
         <td style="${borderCss} padding: 4px 6px; font-weight: bold;">${c.customLabel_showCarrera || 'Carrera:'}</td>

@@ -74,13 +74,25 @@ graph TD
 * **`MemberSearchSelector.tsx`:** Buscador dinámico de co-docentes y revisores institucionales. Presenta una lista de resultados con fondo completamente opaco y navegación por teclado.
 * **`FirmaModal.tsx`:** Ventana modal de alta seguridad para la firma electrónica. Fondo modal 100% sólido, carga del archivo PKCS#12 (`.p12` o `.pfx`), campo de contraseña enmascarado y validación de certificado ante el backend.
 
-### 4.4. `<NormativaDrawer>`: Asistente Regulatorio y Checklist Curricular
+### 4.4. `PeaSignaturesSection.tsx`: Protección de Autoridades y Confirmación de Modificación Manual
+* **Ubicación:** `src/components/DOSIER/sections/pea/PeaSignaturesSection.tsx`
+* **Mecanismo de Salvaguarda:**
+  * **Protección Limpia:** Los nombres de las autoridades curriculares (Docente, Coordinador de Carrera, Coordinador Académico, Vicerrector) se hidratan desde la gobernanza institucional y se presentan en una interfaz despejada sin elementos visuales redundantes.
+  * **Sincronización Autónoma en Segundo Plano (Zero-Button):** Eliminación total de botones manuales de refresco. El sistema sincroniza las autoridades vigentes de forma transparente y reactiva:
+    1. *Al montar el documento:* Consulta defensiva de la gobernanza curricular oficial del periodo.
+    2. *Al recuperar el foco o visibilidad (`focus` / `visibilitychange`):* Reconciliación silenciosa si las autoridades fueron modificadas en otra pestaña.
+    3. *Por eventos en tiempo real (SignalR):* Escucha del evento `dosier-projects-changed` para actualizar las instancias abiertas sin recargar la página.
+  * **Confirmación Directa al Clic:** Al hacer clic sobre cualquier campo de autoridad protegida, se despliega de inmediato un modal sobrio con fondo sólido (`bg-white dark:bg-zinc-950`) que informa con total claridad que el cambio **solo afectará a este documento**, sin alterar la asignación central de la carrera en el sistema institucional.
+  * **Auto-Bloqueo al Salir (`onBlur` / `Enter`):** Una vez confirmada la edición, el campo toma el foco y se selecciona el texto automáticamente. Tan pronto el usuario da clic fuera (`onBlur`) o presiona `Enter`, el campo vuelve automáticamente a su estado bloqueado y protegido, sin requerir botones adicionales.
+  * **Inmutabilidad Post-Firma (Ley 67):** Si el rol registra firma electrónica válida (`rol.firmado === true`), el campo queda sellado de forma inmutable sin permitir desbloqueo alguno ni manipulación en cliente.
+
+### 4.5. `<NormativaDrawer>`: Asistente Regulatorio y Checklist Curricular
 * **Ubicación:** `src/pages/Curriculum/Workspace/components/NormativaDrawer.tsx`
 * **Servicio:** `src/services/normativaService.ts` conectado a `/api/normativas/checklist`.
 * **Propósito:** Permite la consulta contextual inalterable de resoluciones vigentes del Consejo de Educación Superior (CES Art. 21 y 27), Modelo de Evaluación Externa CACES y Modelo Educativo Institucional (MED) durante la redacción del PEA.
 * **Estándar Visual:** Panel deslizable con fondo 100% sólido (`bg-white dark:bg-zinc-950`), overlay opaco sin `backdrop-blur` y búsqueda en tiempo real por artículos y requisitos microcurriculares.
 
-### 4.5. Tableros Analíticos Curriculares e Indicadores CACES
+### 4.6. Tableros Analíticos Curriculares e Indicadores CACES
 * **Ubicación:** `src/pages/Analytics/components/` (`AnalyticsOverviewTab.tsx`, `AnalyticsProjectsTab.tsx`, `AnalyticsCacesTab.tsx`, `cacesCalculator.ts`).
 * **Métricas Pedagógicas:** En lugar de métricas financieras o presupuestos ajenos a la docencia, el sistema cuantifica:
   1. **Cobertura Curricular:** Porcentaje de asignaturas con PEA formulado y aprobado frente a la malla vigente.

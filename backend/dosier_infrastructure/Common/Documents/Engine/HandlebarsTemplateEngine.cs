@@ -415,6 +415,11 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             SyncKeyAlias("NombreAsignatura", "nombre_asignatura");
             SyncKeyAlias("CodigoAsignatura", "codigo_asignatura");
             SyncKeyAlias("CodigoAsignatura", "codigo");
+            SyncKeyAlias("CodigoCarrera", "codigo_carrera");
+            SyncKeyAlias("CodigoCarrera", "codigo_cases");
+            SyncKeyAlias("CodigoCarrera", "codigoCases");
+            SyncKeyAlias("CodigoCarrera", "alias_carrera");
+            SyncKeyAlias("CodigoCarrera", "aliasCarrera");
             SyncKeyAlias("Carrera", "carrera");
             SyncKeyAlias("Periodo", "periodo");
             SyncKeyAlias("DocenteElaborador", "docente_elaborador");
@@ -722,6 +727,19 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             return string.Empty;
         }
 
+        private static Dictionary<string, object?> CreateCaseInsensitiveDictionary(Dictionary<string, object?>? source)
+        {
+            var dict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            if (source != null)
+            {
+                foreach (var kvp in source)
+                {
+                    dict[kvp.Key] = kvp.Value;
+                }
+            }
+            return dict;
+        }
+
         private static void NormalizePeaCollections(Dictionary<string, object?> dict)
         {
             // 1. Normalizar Unidades
@@ -792,35 +810,34 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             if (temasLines.Count > 0) contenidos = string.Join("\n", temasLines);
                         }
 
-                        var normU = new Dictionary<string, object?>(uDict, StringComparer.OrdinalIgnoreCase)
-                        {
-                            ["Numero"] = num,
-                            ["num"] = num,
-                            ["NumeroUnidad"] = num,
-                            ["Titulo"] = titulo,
-                            ["titulo"] = titulo,
-                            ["NombreUnidad"] = titulo,
-                            ["nombre"] = titulo,
-                            ["nombre_unidad"] = titulo,
-                            ["EncabezadoUnidad"] = encabezadoUnidad,
-                            ["encabezado_unidad"] = encabezadoUnidad,
-                            ["TituloCompleto"] = encabezadoUnidad,
-                            ["titulo_completo"] = encabezadoUnidad,
-                            ["TotalHoras"] = total,
-                            ["totalHoras"] = total,
-                            ["TotalHorasUnidad"] = total,
-                            ["HorasCD"] = cd,
-                            ["horasCD"] = cd,
-                            ["HorasDocencia"] = cd,
-                            ["HorasAPE"] = ape,
-                            ["horasAPE"] = ape,
-                            ["HorasPracticoExp"] = ape,
-                            ["HorasTA"] = ta,
-                            ["horasTA"] = ta,
-                            ["HorasAutonomo"] = ta,
-                            ["Contenidos"] = contenidos,
-                            ["contenidos"] = contenidos
-                        };
+                        var normU = CreateCaseInsensitiveDictionary(uDict);
+                        normU["Numero"] = num;
+                        normU["num"] = num;
+                        normU["NumeroUnidad"] = num;
+                        normU["Titulo"] = titulo;
+                        normU["titulo"] = titulo;
+                        normU["NombreUnidad"] = titulo;
+                        normU["nombre"] = titulo;
+                        normU["nombre_unidad"] = titulo;
+                        normU["EncabezadoUnidad"] = encabezadoUnidad;
+                        normU["encabezado_unidad"] = encabezadoUnidad;
+                        normU["TituloCompleto"] = encabezadoUnidad;
+                        normU["titulo_completo"] = encabezadoUnidad;
+                        normU["TotalHoras"] = total;
+                        normU["totalHoras"] = total;
+                        normU["TotalHorasUnidad"] = total;
+                        normU["HorasCD"] = cd;
+                        normU["horasCD"] = cd;
+                        normU["HorasDocencia"] = cd;
+                        normU["HorasAPE"] = ape;
+                        normU["horasAPE"] = ape;
+                        normU["HorasPracticoExp"] = ape;
+                        normU["HorasTA"] = ta;
+                        normU["horasTA"] = ta;
+                        normU["HorasAutonomo"] = ta;
+                        normU["Contenidos"] = contenidos;
+                        normU["contenidos"] = contenidos;
+
                         normalizedList.Add(normU);
                         uIdx++;
                     }
@@ -869,18 +886,17 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             ? $"{nombre} - {caracterizacion}"
                             : (!string.IsNullOrWhiteSpace(nombre) ? nombre : (!string.IsNullOrWhiteSpace(caracterizacion) ? caracterizacion : "---"));
 
-                        var normP = new Dictionary<string, object?>(pDict, StringComparer.OrdinalIgnoreCase)
-                        {
-                            ["Unidad"] = unidad,
-                            ["unidad"] = unidad,
-                            ["Nombre"] = nombre,
-                            ["nombre"] = nombre,
-                            ["NombrePractica"] = nombre,
-                            ["Caracterizacion"] = caracterizacion,
-                            ["caracterizacion"] = caracterizacion,
-                            ["NombreCaracterizacion"] = nombreCaract,
-                            ["nombre_caracterizacion"] = nombreCaract
-                        };
+                        var normP = CreateCaseInsensitiveDictionary(pDict);
+                        normP["Unidad"] = unidad;
+                        normP["unidad"] = unidad;
+                        normP["Nombre"] = nombre;
+                        normP["nombre"] = nombre;
+                        normP["NombrePractica"] = nombre;
+                        normP["Caracterizacion"] = caracterizacion;
+                        normP["caracterizacion"] = caracterizacion;
+                        normP["NombreCaracterizacion"] = nombreCaract;
+                        normP["nombre_caracterizacion"] = nombreCaract;
+
                         normalizedList.Add(normP);
                         prIdx++;
                     }
@@ -922,18 +938,17 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             ?? eDict.GetValueOrDefault("calificacion_maxima")?.ToString()
                             ?? "10,00";
 
-                        var normE = new Dictionary<string, object?>(eDict, StringComparer.OrdinalIgnoreCase)
-                        {
-                            ["Nota"] = nota,
-                            ["nota"] = nota,
-                            ["Denominacion"] = nota,
-                            ["Tipo"] = tipo,
-                            ["tipo"] = tipo,
-                            ["TipoEvaluacion"] = tipo,
-                            ["Calificacion"] = calif,
-                            ["calificacion"] = calif,
-                            ["CalificacionMaxima"] = calif
-                        };
+                        var normE = CreateCaseInsensitiveDictionary(eDict);
+                        normE["Nota"] = nota;
+                        normE["nota"] = nota;
+                        normE["Denominacion"] = nota;
+                        normE["Tipo"] = tipo;
+                        normE["tipo"] = tipo;
+                        normE["TipoEvaluacion"] = tipo;
+                        normE["Calificacion"] = calif;
+                        normE["calificacion"] = calif;
+                        normE["CalificacionMaxima"] = calif;
+
                         normalizedList.Add(normE);
                         eIdx++;
                     }
@@ -966,14 +981,13 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             ?? pDict.GetValueOrDefault("observacion")?.ToString()
                             ?? "";
 
-                        var normPr = new Dictionary<string, object?>(pDict, StringComparer.OrdinalIgnoreCase)
-                        {
-                            ["Asignatura"] = asig,
-                            ["asignatura"] = asig,
-                            ["NombreAsignatura"] = asig,
-                            ["Observacion"] = obs,
-                            ["observacion"] = obs
-                        };
+                        var normPr = CreateCaseInsensitiveDictionary(pDict);
+                        normPr["Asignatura"] = asig;
+                        normPr["asignatura"] = asig;
+                        normPr["NombreAsignatura"] = asig;
+                        normPr["Observacion"] = obs;
+                        normPr["observacion"] = obs;
+
                         normalizedList.Add(normPr);
                     }
                     dict["Prerrequisitos"] = normalizedList;
@@ -1051,6 +1065,47 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                     dict["BibliografiaConsulta"] = string.Join("<br/>", complementarias);
                     dict["bibliografia_consulta"] = dict["BibliografiaConsulta"];
                 }
+            }
+
+            // 7. Normalizar Código de Carrera (resiliencia institucional CACES / SIGAFI)
+            string? codCarrera = dict.GetValueOrDefault("CodigoCarrera")?.ToString()
+                ?? dict.GetValueOrDefault("codigo_carrera")?.ToString()
+                ?? dict.GetValueOrDefault("codigo_cases")?.ToString()
+                ?? dict.GetValueOrDefault("codigoCases")?.ToString()
+                ?? dict.GetValueOrDefault("alias_carrera")?.ToString()
+                ?? dict.GetValueOrDefault("aliasCarrera")?.ToString();
+
+            if (string.IsNullOrWhiteSpace(codCarrera) || codCarrera == "---")
+            {
+                string? carreraNombre = dict.GetValueOrDefault("Carrera")?.ToString()
+                    ?? dict.GetValueOrDefault("carrera")?.ToString()
+                    ?? dict.GetValueOrDefault("NombreCarrera")?.ToString()
+                    ?? dict.GetValueOrDefault("nombre_carrera")?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(carreraNombre))
+                {
+                    var normCarrera = carreraNombre.Trim().ToUpperInvariant();
+                    if (normCarrera.Contains("GASTRONOM")) codCarrera = "GAS";
+                    else if (normCarrera.Contains("SOFTWARE")) codCarrera = "SOF";
+                    else if (normCarrera.Contains("DEPORTIV") || normCarrera.Contains("ENTRENAMIENTO")) codCarrera = "DEP";
+                    else if (normCarrera.Contains("AUTOMOTRIZ") || normCarrera.Contains("MECANICA") || normCarrera.Contains("MECÁNICA")) codCarrera = "MCA";
+                    else if (normCarrera.Contains("TRIBUTAR") || normCarrera.Contains("CONTABILIDAD")) codCarrera = "CTA";
+                    else if (normCarrera.Contains("TALENTO") || normCarrera.Contains("HUMANO")) codCarrera = "ATH";
+                    else if (normCarrera.Contains("GRAFICO") || normCarrera.Contains("GRÁFICO")) codCarrera = "DGF";
+                    else if (normCarrera.Contains("INICIAL")) codCarrera = "EBI";
+                    else if (normCarrera.Contains("MARKETING")) codCarrera = "MKT";
+                    else if (normCarrera.Contains("INCLUSIVA")) codCarrera = "EIN";
+                    else if (normCarrera.Contains("BASICA") || normCarrera.Contains("BÁSICA")) codCarrera = "EBA";
+                    else if (normCarrera.Contains("TELECOMUNICACION") || normCarrera.Contains("REDES")) codCarrera = "RDT";
+                    else if (normCarrera.Contains("ELECTRONIC") || normCarrera.Contains("ELECTRÓNIC")) codCarrera = "ELT";
+                    else if (normCarrera.Length >= 3) codCarrera = normCarrera.Substring(0, 3);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(codCarrera))
+            {
+                dict["CodigoCarrera"] = codCarrera.Trim();
+                dict["codigo_carrera"] = codCarrera.Trim();
             }
         }
     }

@@ -725,11 +725,17 @@ namespace Dosier.Infrastructure.Common.Documents
                     var coordAcad = autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_ACADEMICO" || a.CargoCurricular == "COORD_ACAD");
                     var vicerrector = autoridades.FirstOrDefault(a => a.CargoCurricular == "VICERRECTOR");
 
+                    var codigoCarrera = !string.IsNullOrWhiteSpace(carrera?.CodigoCases)
+                        ? carrera.CodigoCases
+                        : (!string.IsNullOrWhiteSpace(carrera?.AliasCarrera) ? carrera.AliasCarrera : (carrera?.Carrera1?.Length >= 3 ? carrera.Carrera1.Substring(0, 3).ToUpper() : ""));
+
                     var initialDict = new Dictionary<string, object?>
                     {
                         ["CodigoAsignatura"] = asignatura?.Codigo ?? "",
                         ["NombreAsignatura"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
                         ["titulo"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
+                        ["CodigoCarrera"] = codigoCarrera,
+                        ["codigo_carrera"] = codigoCarrera,
                         ["Carrera"] = carrera?.Carrera1 ?? "Carrera ISTPET",
                         ["Periodo"] = periodoNombre,
                         ["Modalidad"] = pea.Modalidad,

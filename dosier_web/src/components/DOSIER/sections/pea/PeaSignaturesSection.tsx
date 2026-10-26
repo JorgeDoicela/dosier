@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { ShieldCheck, CheckCircle2, UserCheck, Shield } from 'lucide-react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 import usersService from '../../../../services/usersService';
@@ -25,109 +25,177 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
     const firmas = formData?.FirmasResponsabilidad || {};
     const hasAutoSyncedRef = useRef(false);
+    const isSyncingRef = useRef(false);
+    const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
+    const [confirmModal, setConfirmModal] = useState<{
+        open: boolean;
+        rolKey: string;
+        etiqueta: string;
+        cargo: string;
+        nombreField: string;
+    } | null>(null);
 
-    // Sincronización y autoguardado inteligente según datos oficiales del sistema
-    useEffect(() => {
-        let isMounted = true;
+    // Sincronización continua de autoridades según datos oficiales de gobernanza institucional
+    const sincronizarAutoridades = useCallback(async (forzar = false) => {
+        try {
+            const fActual = formData?.FirmasResponsabilidad || {};
+            const isDocenteFirmado = Boolean(fActual.DocenteFirmado || fActual.docente_firmado);
+            const isCoordFirmado = Boolean(fActual.CoordinadorFirmado || fActual.coordinador_firmado);
+            const isCoordAcadFirmado = Boolean(fActual.CoordinadorAcadFirmado || fActual.coordinador_acad_firmado);
+            const isVicerrectorFirmado = Boolean(fActual.VicerrectorFirmado || fActual.vicerrector_firmado);
 
-        const autoCompletarAutoridades = async () => {
-            try {
-                const fActual = formData?.FirmasResponsabilidad || {};
-                const faltaDocente = !fActual.DocenteNombre && Boolean(formData?.DocenteElaborador || formData?.docente);
-                const faltaCoord = !fActual.CoordinadorNombre;
-                const faltaCoordAcad = !fActual.CoordinadorAcadNombre;
-                const faltaVicerrector = !fActual.VicerrectorNombre;
+            // Si no se fuerza y ya están todos los nombres completos o ya se autoguardaron, evitar consultas redundantes
+            if (!forzar && !(!fActual.DocenteNombre) && !(!fActual.CoordinadorNombre) && !(!fActual.CoordinadorAcadNombre) && !(!fActual.VicerrectorNombre)) {
+                return;
+            }
 
-                // Si ya están todos los nombres completos o ya se autoguardaron, evitar consultas innecesarias
-                if (!faltaDocente && !faltaCoord && !faltaCoordAcad && !faltaVicerrector) {
-                    return;
-                }
+            if (isSyncingRef.current) return;
+            if (!forzar && hasAutoSyncedRef.current) return;
+            hasAutoSyncedRef.current = true;
+            isSyncingRef.current = true;
 
-                if (hasAutoSyncedRef.current) return;
-                hasAutoSyncedRef.current = true;
+            // 1. Fallbacks defensivos inmediatos de datos inyectados en formData
+            let coordCarreraNombre = formData?.CoordinadorCarrera || formData?.coordinador_carrera || formData?.nombre_coordinador_carrera || '';
+            let coordAcadNombre = formData?.CoordinadorAcademico || formData?.coordinador_academico || formData?.nombre_coordinador_academico || '';
+            let vicerrectorNombre = formData?.Vicerrector || formData?.vicerrector || formData?.nombre_vicerrector || '';
 
-                // Fallbacks defensivos inmediatos de datos inyectados en formData
-                let coordCarreraNombre = formData?.CoordinadorCarrera || formData?.coordinador_carrera || formData?.nombre_coordinador_carrera || '';
-                let coordAcadNombre = formData?.CoordinadorAcademico || formData?.coordinador_academico || formData?.nombre_coordinador_academico || '';
-                let vicerrectorNombre = formData?.Vicerrector || formData?.vicerrector || formData?.nombre_vicerrector || '';
+            // 2. Consulta en vivo al árbol de gobernanza curricular del periodo
+            const periodo = formData?.IdPeriodo || formData?.id_periodo;
+            const gobernanza = await usersService.getGobernanzaCarreras(periodo).catch(() => null);
 
-                const periodo = formData?.IdPeriodo || formData?.id_periodo;
-                const gobernanza = await usersService.getGobernanzaCarreras(periodo).catch(() => null);
-                if (!isMounted) return;
+            if (gobernanza) {
+                vicerrectorNombre = gobernanza.vicerrector?.nombre_completo || (gobernanza.vicerrector as any)?.nombreCompleto || vicerrectorNombre;
+                coordAcadNombre = gobernanza.coordinador_academico?.nombre_completo || (gobernanza.coordinador_academico as any)?.nombreCompleto || coordAcadNombre;
 
-                if (gobernanza) {
-                    vicerrectorNombre = vicerrectorNombre || gobernanza.vicerrector?.nombre_completo || (gobernanza.vicerrector as any)?.nombreCompleto || '';
-                    coordAcadNombre = coordAcadNombre || gobernanza.coordinador_academico?.nombre_completo || (gobernanza.coordinador_academico as any)?.nombreCompleto || '';
+                const idCarrera = formData?.IdCarrera || formData?.id_carrera;
+                const carreraTexto = String(formData?.Carrera || formData?.carrera || '').toLowerCase().trim();
 
-                    const idCarrera = formData?.IdCarrera || formData?.id_carrera;
-                    const carreraTexto = String(formData?.Carrera || formData?.carrera || '').toLowerCase().trim();
+                const carreraMatch = (gobernanza.carreras || []).find((c: any) =>
+                    (idCarrera && Number(c.id_carrera) === Number(idCarrera)) ||
+                    (carreraTexto && (c.carrera || '').toLowerCase().trim().includes(carreraTexto)) ||
+                    (carreraTexto && carreraTexto.includes((c.carrera || '').toLowerCase().trim()))
+                );
 
-                    const carreraMatch = (gobernanza.carreras || []).find((c: any) =>
-                        (idCarrera && Number(c.id_carrera) === Number(idCarrera)) ||
-                        (carreraTexto && (c.carrera || '').toLowerCase().trim().includes(carreraTexto)) ||
-                        (carreraTexto && carreraTexto.includes((c.carrera || '').toLowerCase().trim()))
-                    );
+                coordCarreraNombre = carreraMatch?.coordinador?.nombre_completo || (carreraMatch?.coordinador as any)?.nombreCompleto || coordCarreraNombre;
+            }
 
-                    coordCarreraNombre = coordCarreraNombre || carreraMatch?.coordinador?.nombre_completo || (carreraMatch?.coordinador as any)?.nombreCompleto || '';
-                }
+            const docNombre = fActual.DocenteNombre || formData?.DocenteElaborador || formData?.docente || '';
 
-                const docNombre = fActual.DocenteNombre || formData?.DocenteElaborador || formData?.docente || '';
+            // 3. Regla de inmutabilidad jurídica: Las firmas ya emitidas jamás se sobreescriben; las no firmadas se actualizan a la autoridad vigente
+            const firmasActualizadas = {
+                ...fActual,
+                DocenteNombre: isDocenteFirmado ? fActual.DocenteNombre : (fActual.DocenteNombre || docNombre),
+                DocenteCargo: fActual.DocenteCargo || 'Docente',
+                CoordinadorNombre: isCoordFirmado ? fActual.CoordinadorNombre : (coordCarreraNombre || fActual.CoordinadorNombre || ''),
+                CoordinadorCargo: fActual.CoordinadorCargo || 'Coordinador de Carrera',
+                CoordinadorAcadNombre: isCoordAcadFirmado ? fActual.CoordinadorAcadNombre : (coordAcadNombre || fActual.CoordinadorAcadNombre || ''),
+                CoordinadorAcadCargo: fActual.CoordinadorAcadCargo || 'Coordinador Académico',
+                VicerrectorNombre: isVicerrectorFirmado ? fActual.VicerrectorNombre : (vicerrectorNombre || fActual.VicerrectorNombre || ''),
+                VicerrectorCargo: fActual.VicerrectorCargo || 'Vicerrectorado'
+            };
 
-                const firmasActualizadas = {
-                    ...fActual,
-                    DocenteNombre: fActual.DocenteNombre || docNombre,
-                    DocenteCargo: fActual.DocenteCargo || 'Docente',
-                    CoordinadorNombre: fActual.CoordinadorNombre || coordCarreraNombre,
-                    CoordinadorCargo: fActual.CoordinadorCargo || 'Coordinador de Carrera',
-                    CoordinadorAcadNombre: fActual.CoordinadorAcadNombre || coordAcadNombre,
-                    CoordinadorAcadCargo: fActual.CoordinadorAcadCargo || 'Coordinador Académico',
-                    VicerrectorNombre: fActual.VicerrectorNombre || vicerrectorNombre,
-                    VicerrectorCargo: fActual.VicerrectorCargo || 'Vicerrectorado'
-                };
-
-                // Sembrado directo en Yjs para que los CoWorkField individuales se actualicen en vivo
-                if (cowork?.ydoc) {
-                    cowork.ydoc.transact(() => {
-                        const pairs: [string, string][] = [
-                            ['Firmas_DocenteNombre', firmasActualizadas.DocenteNombre],
-                            ['Firmas_CoordinadorNombre', firmasActualizadas.CoordinadorNombre],
-                            ['Firmas_CoordinadorAcadNombre', firmasActualizadas.CoordinadorAcadNombre],
-                            ['Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre]
-                        ];
-                        for (const [key, val] of pairs) {
-                            if (val && String(val).trim() !== '') {
-                                const ytext = cowork.ydoc.getText(key);
-                                if (ytext.toString().trim() === '') {
-                                    ytext.delete(0, ytext.length);
-                                    ytext.insert(0, val);
-                                }
+            // 4. Sembrado reactivo directo en Yjs para sincronización instantánea en CoWorkField
+            if (cowork?.ydoc) {
+                cowork.ydoc.transact(() => {
+                    const pairs: [string, string, boolean][] = [
+                        ['Firmas_DocenteNombre', firmasActualizadas.DocenteNombre, isDocenteFirmado],
+                        ['Firmas_CoordinadorNombre', firmasActualizadas.CoordinadorNombre, isCoordFirmado],
+                        ['Firmas_CoordinadorAcadNombre', firmasActualizadas.CoordinadorAcadNombre, isCoordAcadFirmado],
+                        ['Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre, isVicerrectorFirmado]
+                    ];
+                    for (const [key, val, firmado] of pairs) {
+                        if (!firmado && val && String(val).trim() !== '') {
+                            const ytext = cowork.ydoc.getText(key);
+                            if (ytext.toString().trim() !== val) {
+                                ytext.delete(0, ytext.length);
+                                ytext.insert(0, val);
                             }
                         }
-                    }, 'auto-autoridades');
-                }
+                    }
+                }, 'auto-autoridades');
+            }
 
-                const huboCambios =
-                    firmasActualizadas.DocenteNombre !== fActual.DocenteNombre ||
-                    firmasActualizadas.CoordinadorNombre !== fActual.CoordinadorNombre ||
-                    firmasActualizadas.CoordinadorAcadNombre !== fActual.CoordinadorAcadNombre ||
-                    firmasActualizadas.VicerrectorNombre !== fActual.VicerrectorNombre;
+            const huboCambios =
+                firmasActualizadas.DocenteNombre !== fActual.DocenteNombre ||
+                firmasActualizadas.CoordinadorNombre !== fActual.CoordinadorNombre ||
+                firmasActualizadas.CoordinadorAcadNombre !== fActual.CoordinadorAcadNombre ||
+                firmasActualizadas.VicerrectorNombre !== fActual.VicerrectorNombre;
 
-                if (huboCambios) {
-                    onUpdate('FirmasResponsabilidad', firmasActualizadas);
-                    if (firmasActualizadas.DocenteNombre) onUpdate('Firmas_DocenteNombre', firmasActualizadas.DocenteNombre);
-                    if (firmasActualizadas.CoordinadorNombre) onUpdate('Firmas_CoordinadorNombre', firmasActualizadas.CoordinadorNombre);
-                    if (firmasActualizadas.CoordinadorAcadNombre) onUpdate('Firmas_CoordinadorAcadNombre', firmasActualizadas.CoordinadorAcadNombre);
-                    if (firmasActualizadas.VicerrectorNombre) onUpdate('Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre);
-                }
-            } catch (err) {
-                hasAutoSyncedRef.current = false;
-                console.warn('[DOSIER] No se pudieron sincronizar las autoridades del sistema:', err);
+            if (huboCambios) {
+                onUpdate('FirmasResponsabilidad', firmasActualizadas);
+                if (firmasActualizadas.DocenteNombre) onUpdate('Firmas_DocenteNombre', firmasActualizadas.DocenteNombre);
+                if (firmasActualizadas.CoordinadorNombre) onUpdate('Firmas_CoordinadorNombre', firmasActualizadas.CoordinadorNombre);
+                if (firmasActualizadas.CoordinadorAcadNombre) onUpdate('Firmas_CoordinadorAcadNombre', firmasActualizadas.CoordinadorAcadNombre);
+                if (firmasActualizadas.VicerrectorNombre) onUpdate('Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre);
+            }
+        } catch (err) {
+            hasAutoSyncedRef.current = false;
+            console.warn('[DOSIER] No se pudieron sincronizar las autoridades del sistema:', err);
+        } finally {
+            isSyncingRef.current = false;
+        }
+    }, [formData?.FirmasResponsabilidad, formData?.DocenteElaborador, formData?.docente, formData?.CoordinadorCarrera, formData?.coordinador_carrera, formData?.nombre_coordinador_carrera, formData?.CoordinadorAcademico, formData?.coordinador_academico, formData?.nombre_coordinador_academico, formData?.Vicerrector, formData?.vicerrector, formData?.nombre_vicerrector, formData?.IdPeriodo, formData?.id_periodo, formData?.IdCarrera, formData?.id_carrera, formData?.Carrera, formData?.carrera, onUpdate, cowork]);
+
+    // Ejecución inicial al montar
+    useEffect(() => {
+        sincronizarAutoridades(false);
+    }, [sincronizarAutoridades]);
+
+    // Sincronización autónoma silenciosa en segundo plano:
+    // 1. Al recuperar foco o visibilidad de pestaña (ej. tras asignar autoridades en otra vista)
+    // 2. Al recibir eventos reactivos de SignalR (dosier-projects-changed)
+    useEffect(() => {
+        const handleSilentSync = () => {
+            const f = formData?.FirmasResponsabilidad || {};
+            const faltaAlguna = !f.CoordinadorNombre || !f.CoordinadorAcadNombre || !f.VicerrectorNombre;
+            sincronizarAutoridades(faltaAlguna);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                handleSilentSync();
             }
         };
 
-        autoCompletarAutoridades();
-        return () => { isMounted = false; };
-    }, [formData?.IdPeriodo, formData?.id_periodo, formData?.IdCarrera, formData?.id_carrera, formData?.Carrera, formData?.carrera, formData?.DocenteElaborador, formData?.docente, formData?.CoordinadorCarrera, formData?.CoordinadorAcademico, formData?.Vicerrector, onUpdate, cowork]);
+        window.addEventListener('focus', handleSilentSync);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('dosier-projects-changed', handleSilentSync);
+
+        return () => {
+            window.removeEventListener('focus', handleSilentSync);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('dosier-projects-changed', handleSilentSync);
+        };
+    }, [sincronizarAutoridades, formData?.FirmasResponsabilidad]);
+
+    const handleRequestUnlock = (rolKey: string, etiqueta: string, cargo: string, nombreField: string) => {
+        if (readOnly) return;
+        setConfirmModal({
+            open: true,
+            rolKey,
+            etiqueta,
+            cargo,
+            nombreField
+        });
+    };
+
+    const handleConfirmUnlock = () => {
+        if (!confirmModal) return;
+        const { rolKey, nombreField } = confirmModal;
+        setUnlockedFields(prev => ({ ...prev, [rolKey]: true }));
+        setConfirmModal(null);
+        setTimeout(() => {
+            const input = document.querySelector<HTMLInputElement>(`input[name="Firmas_${nombreField}"]`);
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }, 50);
+    };
+
+    const handleLockField = (rolKey: string) => {
+        setUnlockedFields(prev => ({ ...prev, [rolKey]: false }));
+    };
 
     const updateFirma = (cargoKey: string, value: any) => {
         onUpdate('FirmasResponsabilidad', {
@@ -178,23 +246,18 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
     return (
         <div className="w-full space-y-6 sm:space-y-7 animate-fade-in font-sans">
-            <div className="flex items-center justify-between gap-4">
+            <div>
                 <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                     {displayTitle}
                 </h4>
-            </div>
-            {/* AVISO NORMATIVO */}
-            <div className="flex items-start gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim">
-                <Shield size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                    Las firmas consignadas en este instrumento curricular certifican la conformidad con los lineamientos del Consejo de Aseguramiento de la Calidad de la Educación Superior (CACES) y el Reglamento de Régimen Académico del ISTPET.
-                </p>
             </div>
 
             {/* MATRIZ DE 4 FIRMAS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {rolesCircuito.map((rol) => {
                     const fechaFirma = firmas[rol.fechaField] || '';
+                    const isUnlocked = Boolean(unlockedFields[rol.key]);
+                    const isFieldReadOnly = readOnly || rol.firmado || !isUnlocked;
 
                     return (
                         <div
@@ -219,11 +282,11 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                 )}
                             </div>
 
-                            {/* Área de Sello / Firma */}
-                            <div className="py-2 text-center">
-                                {rol.firmado ? (
+                            {/* Sello de Firma si ya fue emitido */}
+                            {rol.firmado && (
+                                <div className="py-1 text-center">
                                     <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center space-y-1.5">
-                                        <CheckCircle2 size={28} className="mx-auto text-emerald-500" />
+                                        <CheckCircle2 size={24} className="mx-auto text-emerald-500" />
                                         <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">
                                             Firma Electrónica Válida
                                         </span>
@@ -233,30 +296,49 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                             </span>
                                         )}
                                     </div>
-                                ) : (
-                                    <div className="p-5 sm:p-6 rounded-xl bg-bg-deep/50 border border-dashed border-border-thin text-center space-y-1.5">
-                                        <UserCheck size={24} className="mx-auto text-text-dim opacity-50" />
-                                        <span className="text-xs text-text-dim font-medium block">
-                                            Sello de Firma Electrónica
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
 
                             {/* Nombre del Responsable */}
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
                                     Nombres y Título:
                                 </label>
-                                <CoWorkField
-                                    name={`Firmas_${rol.nombreField}`}
-                                    cowork={cowork}
-                                    type="text"
-                                    placeholder={rol.placeholder}
-                                    readOnly={readOnly || rol.firmado}
-                                    className="w-full bg-bg-deep border border-border-thin rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none focus:border-[#0070f3]"
-                                    onValueChange={(val) => updateFirma(rol.nombreField, val)}
-                                />
+
+                                <div
+                                    className="relative"
+                                    onBlur={(e) => {
+                                        if (isUnlocked && !e.currentTarget.contains(e.relatedTarget as Node)) {
+                                            handleLockField(rol.key);
+                                        }
+                                    }}
+                                    onKeyDownCapture={(e) => {
+                                        if (e.key === 'Enter') {
+                                            (e.target as HTMLElement)?.blur();
+                                        }
+                                    }}
+                                >
+                                    <CoWorkField
+                                        name={`Firmas_${rol.nombreField}`}
+                                        cowork={cowork}
+                                        type="text"
+                                        placeholder={rol.placeholder}
+                                        readOnly={isFieldReadOnly}
+                                        className={`w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none transition-all ${
+                                            isFieldReadOnly
+                                                ? 'bg-bg-deep/70 border-border-thin cursor-pointer select-none'
+                                                : 'bg-surface border-[#0070f3] ring-2 ring-[#0070f3]/15 shadow-xs'
+                                        }`}
+                                        onValueChange={(val) => updateFirma(rol.nombreField, val)}
+                                    />
+                                    {!isUnlocked && !rol.firmado && !readOnly && (
+                                        <div
+                                            onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.nombreField)}
+                                            className="absolute inset-0 cursor-pointer z-10"
+                                            title="Clic para modificar en este documento"
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             {/* Cargo Institucional */}
@@ -272,6 +354,53 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                     );
                 })}
             </div>
+
+            {/* MODAL DE CONFIRMACIÓN DE MODIFICACIÓN MANUAL */}
+            {confirmModal && confirmModal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
+                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl p-6 space-y-5 animate-scale-in">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2.5 rounded-lg bg-blue-500/10 text-[#0070f3] dark:text-blue-400 shrink-0">
+                                <ShieldAlert size={20} strokeWidth={1.75} />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-text-main">
+                                    Modificar Autoridad
+                                </h3>
+                                <p className="text-xs text-text-dim">
+                                    {confirmModal.cargo}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-bg-deep border border-border-thin text-xs text-text-main leading-relaxed space-y-2">
+                            <p className="font-medium">
+                                Este cambio <span className="font-bold text-[#0070f3]">solo afectará a este documento</span>.
+                            </p>
+                            <p className="text-[11px] text-text-dim leading-relaxed">
+                                No modificará la asignación central de la carrera en el sistema institucional.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2.5 pt-1">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmModal(null)}
+                                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-dim hover:text-text-main hover:bg-bg-deep border border-border-thin transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmUnlock}
+                                className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors shadow-xs cursor-pointer"
+                            >
+                                Modificar solo en este documento
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
