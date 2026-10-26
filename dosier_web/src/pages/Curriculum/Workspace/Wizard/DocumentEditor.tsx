@@ -146,7 +146,10 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             'HorasContactoDocente', 'horas_contacto_docente',
             'HorasPracticoExperimental', 'horas_practico_experimental',
             'HorasAutonomo', 'horas_autonomo',
-            'DocenteElaborador', 'docente'
+            'DocenteElaborador', 'docente',
+            'CoordinadorCarrera', 'coordinador_carrera',
+            'CoordinadorAcademico', 'coordinador_academico',
+            'Vicerrector', 'vicerrector'
         ];
 
         for (const f of sigafiFields) {
@@ -154,6 +157,37 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
                 merged[f] = initialData[f];
             }
         }
+
+        // Hidratación defensiva de firmas si en el snapshot previo estaban vacías
+        const initFirmas = initialData?.FirmasResponsabilidad || {};
+        if (!merged.FirmasResponsabilidad || typeof merged.FirmasResponsabilidad !== 'object') {
+            merged.FirmasResponsabilidad = { ...initFirmas };
+        } else {
+            if (!merged.FirmasResponsabilidad.DocenteNombre && (initFirmas.DocenteNombre || initialData?.DocenteElaborador || initialData?.docente)) {
+                merged.FirmasResponsabilidad.DocenteNombre = initFirmas.DocenteNombre || initialData?.DocenteElaborador || initialData?.docente;
+            }
+            if (!merged.FirmasResponsabilidad.CoordinadorNombre && (initFirmas.CoordinadorNombre || initialData?.CoordinadorCarrera || initialData?.coordinador_carrera)) {
+                merged.FirmasResponsabilidad.CoordinadorNombre = initFirmas.CoordinadorNombre || initialData?.CoordinadorCarrera || initialData?.coordinador_carrera;
+            }
+            if (!merged.FirmasResponsabilidad.CoordinadorAcadNombre && (initFirmas.CoordinadorAcadNombre || initialData?.CoordinadorAcademico || initialData?.coordinador_academico)) {
+                merged.FirmasResponsabilidad.CoordinadorAcadNombre = initFirmas.CoordinadorAcadNombre || initialData?.CoordinadorAcademico || initialData?.coordinador_academico;
+            }
+            if (!merged.FirmasResponsabilidad.VicerrectorNombre && (initFirmas.VicerrectorNombre || initialData?.Vicerrector || initialData?.vicerrector)) {
+                merged.FirmasResponsabilidad.VicerrectorNombre = initFirmas.VicerrectorNombre || initialData?.Vicerrector || initialData?.vicerrector;
+            }
+        }
+
+        // Propagar autoridades a nivel superior e individual para garantizar visibilidad en CoWorkField
+        merged.CoordinadorCarrera = merged.FirmasResponsabilidad?.CoordinadorNombre || merged.CoordinadorCarrera || initialData?.CoordinadorCarrera;
+        merged.coordinador_carrera = merged.CoordinadorCarrera;
+        merged.CoordinadorAcademico = merged.FirmasResponsabilidad?.CoordinadorAcadNombre || merged.CoordinadorAcademico || initialData?.CoordinadorAcademico;
+        merged.coordinador_academico = merged.CoordinadorAcademico;
+        merged.Vicerrector = merged.FirmasResponsabilidad?.VicerrectorNombre || merged.Vicerrector || initialData?.Vicerrector;
+        merged.vicerrector = merged.Vicerrector;
+        merged.Firmas_DocenteNombre = merged.FirmasResponsabilidad?.DocenteNombre;
+        merged.Firmas_CoordinadorNombre = merged.FirmasResponsabilidad?.CoordinadorNombre;
+        merged.Firmas_CoordinadorAcadNombre = merged.FirmasResponsabilidad?.CoordinadorAcadNombre;
+        merged.Firmas_VicerrectorNombre = merged.FirmasResponsabilidad?.VicerrectorNombre;
 
         // Si initialData trae NombrePeriodo descriptivo oficial, prevalece sobre código técnico previo en el snapshot
         const officialPeriodName = initialData?.NombrePeriodo || initialData?.nombre_periodo || (initialData?.Periodo && !/^[A-Z]{3}\d{4}$/.test(String(initialData.Periodo).trim()) ? initialData.Periodo : undefined);
@@ -254,14 +288,18 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
                             }
                             if (!parsed.FirmasResponsabilidad || parsed.FirmasResponsabilidad === "[object Object]" || typeof parsed.FirmasResponsabilidad === 'string') {
                                 parsed.FirmasResponsabilidad = {
-                                    DirectorNombre: '',
-                                    DirectorCargo: 'Director del Proyecto',
+                                    DocenteNombre: parsed.DocenteElaborador || parsed.docente || '',
+                                    DocenteCargo: 'Docente',
                                     CoordinadorNombre: '',
-                                    CoordinadorCargo: 'Coordinador de Carrera'
+                                    CoordinadorCargo: 'Coordinador de Carrera',
+                                    CoordinadorAcadNombre: '',
+                                    CoordinadorAcadCargo: 'Coordinador Académico',
+                                    VicerrectorNombre: '',
+                                    VicerrectorCargo: 'Vicerrectorado'
                                 };
                             }
-                            if (parsed.FirmasResponsabilidad && !parsed.FirmasResponsabilidad.DirectorNombre && parsed.DirectorProyecto) {
-                                parsed.FirmasResponsabilidad.DirectorNombre = parsed.DirectorProyecto;
+                            if (parsed.FirmasResponsabilidad && !parsed.FirmasResponsabilidad.DocenteNombre && (parsed.DocenteElaborador || parsed.docente)) {
+                                parsed.FirmasResponsabilidad.DocenteNombre = parsed.DocenteElaborador || parsed.docente;
                             }
                         }
                         setDocInstanceData(parsed);

@@ -714,6 +714,17 @@ namespace Dosier.Infrastructure.Common.Documents
                         : null;
                     var periodoNombre = !string.IsNullOrWhiteSpace(periodo?.Detalle) ? periodo.Detalle : (pea.IdPeriodo ?? "");
 
+                    // Resolver autoridades curriculares oficiales activas del sistema para el PEA
+                    var autoridades = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                        .Where(a => a.EsActivo)
+                        .ToListAsync(ct);
+
+                    var coordCarrera = pea.IdCarrera > 0
+                        ? autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera == pea.IdCarrera)
+                        : null;
+                    var coordAcad = autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_ACADEMICO" || a.CargoCurricular == "COORD_ACAD");
+                    var vicerrector = autoridades.FirstOrDefault(a => a.CargoCurricular == "VICERRECTOR");
+
                     var initialDict = new Dictionary<string, object?>
                     {
                         ["CodigoAsignatura"] = asignatura?.Codigo ?? "",
@@ -793,11 +804,11 @@ namespace Dosier.Infrastructure.Common.Documents
                         {
                             ["DocenteNombre"] = docenteNombre,
                             ["DocenteCargo"] = "Docente Elaborador",
-                            ["CoordinadorNombre"] = "",
+                            ["CoordinadorNombre"] = coordCarrera?.NombreCompleto ?? "",
                             ["CoordinadorCargo"] = "Coordinador de Carrera",
-                            ["CoordinadorAcadNombre"] = "",
+                            ["CoordinadorAcadNombre"] = coordAcad?.NombreCompleto ?? "",
                             ["CoordinadorAcadCargo"] = "Coordinación Académica",
-                            ["VicerrectorNombre"] = "",
+                            ["VicerrectorNombre"] = vicerrector?.NombreCompleto ?? "",
                             ["VicerrectorCargo"] = "Vicerrectorado Académico"
                         }
                     };

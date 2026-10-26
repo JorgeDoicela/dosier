@@ -933,6 +933,17 @@ namespace dosier_infrastructure.Curriculum
                 : null;
             string nombrePeriodo = !string.IsNullOrWhiteSpace(periodo?.Detalle) ? periodo.Detalle : pea.IdPeriodo;
 
+            // Cargar autoridades oficiales activas del sistema para el PEA
+            var autoridades = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                .Where(a => a.EsActivo)
+                .ToListAsync();
+
+            var coordCarrera = pea.IdCarrera > 0
+                ? autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera == pea.IdCarrera)
+                : null;
+            var coordAcad = autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_ACADEMICO" || a.CargoCurricular == "COORD_ACAD");
+            var vicerrector = autoridades.FirstOrDefault(a => a.CargoCurricular == "VICERRECTOR");
+
             // Fallbacks defensivos de metadatos institucionales oficiales de SIGAFI
             string? semestreNivel = pea.SemestreNivel;
             if (string.IsNullOrEmpty(semestreNivel) && pea.IdNivel.HasValue)
@@ -1022,6 +1033,9 @@ namespace dosier_infrastructure.Curriculum
                 FechaRevisadoAcad = pea.FechaRevisadoAcad,
                 FirmaAprobadoVicerrector = pea.FirmaAprobadoVicerrector,
                 FechaAprobado = pea.FechaAprobado,
+                NombreCoordinadorCarrera = coordCarrera?.NombreCompleto,
+                NombreCoordinadorAcademico = coordAcad?.NombreCompleto,
+                NombreVicerrector = vicerrector?.NombreCompleto,
                 Unidades = pea.Unidades.OrderBy(u => u.Orden).Select(u => new PeaUnidadDto
                 {
                     IdUnidad = u.IdUnidad,

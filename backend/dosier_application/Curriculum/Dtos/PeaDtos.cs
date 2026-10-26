@@ -50,6 +50,10 @@ namespace dosier_application.Curriculum.Dtos
         public string? FirmaAprobadoVicerrector { get; set; }
         public DateTime? FechaAprobado { get; set; }
 
+        public string? NombreCoordinadorCarrera { get; set; }
+        public string? NombreCoordinadorAcademico { get; set; }
+        public string? NombreVicerrector { get; set; }
+
         public List<PeaUnidadDto> Unidades { get; set; } = new List<PeaUnidadDto>();
         public List<PeaResultadoAprendizajeDto> ResultadosAprendizaje { get; set; } = new List<PeaResultadoAprendizajeDto>();
         public List<PeaActividadPracticaDto> ActividadesPracticas { get; set; } = new List<PeaActividadPracticaDto>();

@@ -12,7 +12,7 @@ namespace dosier_api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "DOSIER_ADMIN")]
+[Authorize]
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
@@ -30,6 +30,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("users")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search, 
         [FromQuery] string type = "DOCENTE", 
@@ -57,6 +58,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("gobernanza-carreras")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_DOCENTE,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> GetGobernanzaCarreras([FromQuery] string? idPeriodo = null)
     {
         var result = await _adminService.GetGobernanzaCurricularAsync(idPeriodo);
@@ -64,6 +66,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("roles")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetRoles()
     {
         var roles = await _adminService.GetAvailableRolesAsync();
@@ -71,6 +74,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("departments")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetDepartments()
     {
         var departments = await _adminService.GetDepartmentsAsync();
@@ -79,6 +83,7 @@ public class AdminController : ControllerBase
 
     [HttpGet("users/{userUuid}/metadata")]
     [HttpGet("metadata/{userUuid}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetUserMetadata(string userUuid)
     {
         var metadata = await _adminService.GetUserMetadataAsync(userUuid);
@@ -88,6 +93,7 @@ public class AdminController : ControllerBase
 
     [HttpPut("users/{userUuid}/metadata")]
     [HttpPut("metadata/{userUuid}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> UpdateUserMetadata(string userUuid, [FromBody] UserMetadataDto dto)
     {
         var result = await _adminService.UpdateUserMetadataAsync(userUuid, dto);
@@ -96,6 +102,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("users/{idUsuario}/roles/{roleCode}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> AssignRole(string idUsuario, string roleCode, [FromQuery] string userType = "DOCENTE")
     {
         var result = await _adminService.AssignRoleAsync(idUsuario, roleCode, userType);
@@ -104,6 +111,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("roles/assign")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> AssignRoleLegacy([FromBody] RoleActionRequest request)
     {
         var roleIdentifier = !string.IsNullOrEmpty(request.RoleCode) ? request.RoleCode : request.RoleName;
@@ -117,6 +125,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpDelete("users/{idUsuario}/roles/{roleCode}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> RevokeRole(string idUsuario, string roleCode, [FromQuery] string userType = "DOCENTE")
     {
         var result = await _adminService.RevokeRoleAsync(idUsuario, roleCode, userType);
@@ -125,6 +134,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("roles/revoke")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> RevokeRoleLegacy([FromBody] RoleActionRequest request)
     {
         var roleIdentifier = !string.IsNullOrEmpty(request.RoleCode) ? request.RoleCode : request.RoleName;
@@ -139,6 +149,7 @@ public class AdminController : ControllerBase
 
     [HttpGet("audit-logs/recent")]
     [HttpGet("audit")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetRecentAuditLogs()
     {
         var logs = await _adminService.GetRecentAuditLogsAsync();
@@ -147,6 +158,7 @@ public class AdminController : ControllerBase
 
     [HttpGet("audit-logs")]
     [HttpGet("audit/advanced")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetAuditLogsPaged(
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
@@ -164,6 +176,7 @@ public class AdminController : ControllerBase
     /// Lista el historial de copias de seguridad del sistema (Solo administradores).
     /// </summary>
     [HttpGet("backups")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> GetBackupLogs()
     {
         var logs = await _backupAdminService.GetBackupLogsAsync();
@@ -174,6 +187,7 @@ public class AdminController : ControllerBase
     /// Obtiene información física del volumen de almacenamiento del servidor (Disco).
     /// </summary>
     [HttpGet("backups/disk-info")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public IActionResult GetDiskInfo()
     {
         try
@@ -191,6 +205,7 @@ public class AdminController : ControllerBase
     /// Desencadena manualmente una copia de seguridad local (Base de datos + Archivos).
     /// </summary>
     [HttpPost("backups/trigger")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public IActionResult TriggerBackup()
     {
         try
@@ -213,6 +228,7 @@ public class AdminController : ControllerBase
     /// Descarga un archivo de copia de seguridad por su UUID de auditoría (Solo administradores).
     /// </summary>
     [HttpGet("backups/download/{uuid}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> DownloadBackup(Guid uuid)
     {
         try
@@ -248,6 +264,7 @@ public class AdminController : ControllerBase
     /// Re-verifica en vivo la integridad del hash SHA-256 de un archivo de respaldo.
     /// </summary>
     [HttpPost("backups/verify/{uuid}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> VerifyBackupIntegrity(Guid uuid)
     {
         try
@@ -277,6 +294,7 @@ public class AdminController : ControllerBase
     /// Elimina de forma permanente el archivo físico de un respaldo y actualiza su estado.
     /// </summary>
     [HttpDelete("backups/{uuid}")]
+    [Authorize(Roles = "DOSIER_ADMIN")]
     public async Task<IActionResult> PurgeBackupFile(Guid uuid)
     {
         try

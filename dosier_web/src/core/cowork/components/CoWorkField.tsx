@@ -151,7 +151,13 @@ function resolveDbValue(parentFormData: any, name: string): any {
     if (name.startsWith('Firmas_')) {
         const fieldName = name.substring(7);
         const firmasObj = parentFormData.FirmasResponsabilidad ?? parentFormData.firmasResponsabilidad;
-        return (firmasObj && typeof firmasObj === 'object') ? firmasObj[fieldName] : undefined;
+        const fVal = (firmasObj && typeof firmasObj === 'object') ? firmasObj[fieldName] : undefined;
+        if (fVal !== undefined && String(fVal).trim() !== '') return fVal;
+        if (fieldName === 'DocenteNombre') return parentFormData.DocenteElaborador ?? parentFormData.docente ?? parentFormData.nombre_docente_elaborador;
+        if (fieldName === 'CoordinadorNombre') return parentFormData.CoordinadorCarrera ?? parentFormData.coordinador_carrera ?? parentFormData.nombre_coordinador_carrera;
+        if (fieldName === 'CoordinadorAcadNombre') return parentFormData.CoordinadorAcademico ?? parentFormData.coordinador_academico ?? parentFormData.nombre_coordinador_academico;
+        if (fieldName === 'VicerrectorNombre') return parentFormData.Vicerrector ?? parentFormData.vicerrector ?? parentFormData.nombre_vicerrector;
+        return undefined;
     }
 
     // Map list prefixes to list name and field mapping

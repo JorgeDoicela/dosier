@@ -107,8 +107,61 @@ export const DocumentWorkspace: React.FC = () => {
             base.ResultadosAprendizaje = pea.resultados_aprendizaje || pea.resultadosAprendizaje || pea.ResultadosAprendizaje || [];
             base.ActividadesPracticas = pea.actividades_practicas || pea.actividadesPracticas || pea.ActividadesPracticas || [];
             base.Bibliografias = pea.bibliografias || pea.Bibliografias || [];
+            if (!base.BibliografiaBasica && !base.bibliografia_basica && Array.isArray(base.Bibliografias)) {
+                const basica = (base.Bibliografias as any[])
+                    .filter(b => (b.tipo_bibliografia || b.tipoBibliografia || b.TipoBibliografia || '').toLowerCase() === 'basica')
+                    .map((b, idx) => `<p>${idx + 1}. ${b.cita_completa_apa || b.citaCompletaApa || b.titulo_libro || b.tituloLibro || ''}</p>`)
+                    .join('');
+                if (basica) base.BibliografiaBasica = basica;
+            }
+            if (!base.BibliografiaConsulta && !base.bibliografia_consulta && Array.isArray(base.Bibliografias)) {
+                const consulta = (base.Bibliografias as any[])
+                    .filter(b => (b.tipo_bibliografia || b.tipoBibliografia || b.TipoBibliografia || '').toLowerCase() === 'consulta')
+                    .map((b, idx) => `<p>${idx + 1}. ${b.cita_completa_apa || b.citaCompletaApa || b.titulo_libro || b.tituloLibro || ''}</p>`)
+                    .join('');
+                if (consulta) base.BibliografiaConsulta = consulta;
+            }
+            base.IdCarrera = pea.id_carrera || pea.idCarrera || (currentProject as any)?.id_carrera;
+            base.id_carrera = base.IdCarrera;
+
+            const coordCarreraNombre = pea.nombre_coordinador_carrera || pea.nombreCoordinadorCarrera || '';
+            const coordAcadNombre = pea.nombre_coordinador_academico || pea.nombreCoordinadorAcademico || '';
+            const vicerrectorNombre = pea.nombre_vicerrector || pea.nombreVicerrector || '';
+
+            base.CoordinadorCarrera = coordCarreraNombre;
+            base.coordinador_carrera = coordCarreraNombre;
+            base.CoordinadorAcademico = coordAcadNombre;
+            base.coordinador_academico = coordAcadNombre;
+            base.Vicerrector = vicerrectorNombre;
+            base.vicerrector = vicerrectorNombre;
+
             base.Prerrequisitos = pea.prerrequisitos || pea.Prerrequisitos || [];
             base.Evaluaciones = pea.evaluaciones || pea.Evaluaciones || [];
+            if (!base.FirmasResponsabilidad || typeof base.FirmasResponsabilidad !== 'object') {
+                base.FirmasResponsabilidad = {
+                    DocenteNombre: docNombre,
+                    DocenteCargo: 'Docente',
+                    CoordinadorNombre: coordCarreraNombre,
+                    CoordinadorCargo: 'Coordinador de Carrera',
+                    CoordinadorAcadNombre: coordAcadNombre,
+                    CoordinadorAcadCargo: 'Coordinador Académico',
+                    VicerrectorNombre: vicerrectorNombre,
+                    VicerrectorCargo: 'Vicerrectorado'
+                };
+            } else {
+                if (!base.FirmasResponsabilidad.DocenteNombre && docNombre) {
+                    base.FirmasResponsabilidad.DocenteNombre = docNombre;
+                }
+                if (!base.FirmasResponsabilidad.CoordinadorNombre && coordCarreraNombre) {
+                    base.FirmasResponsabilidad.CoordinadorNombre = coordCarreraNombre;
+                }
+                if (!base.FirmasResponsabilidad.CoordinadorAcadNombre && coordAcadNombre) {
+                    base.FirmasResponsabilidad.CoordinadorAcadNombre = coordAcadNombre;
+                }
+                if (!base.FirmasResponsabilidad.VicerrectorNombre && vicerrectorNombre) {
+                    base.FirmasResponsabilidad.VicerrectorNombre = vicerrectorNombre;
+                }
+            }
         }
         return base;
     }, [editorUuid, activeDocument, currentProject?.peaData, currentProject?.directorProyecto, currentProject?.titulo, currentProject?.title, currentProject?.carrera, currentProject?.convocatoria]);

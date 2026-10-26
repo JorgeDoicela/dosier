@@ -17,12 +17,18 @@ export const PeaBibliographySection: React.FC<PeaBibliographySectionProps> = ({
     readOnly = false
 }) => {
     return (
-        <div className="w-full space-y-8 animate-fade-in font-sans">
+        <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
+            <div className="flex items-center justify-between gap-4">
+                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
+                    j) Bibliografía
+                </h4>
+            </div>
+
             {/* BIBLIOGRAFÍA BÁSICA */}
             <div className="space-y-3.5">
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    Bibliografía Básica Institucional (Textos Guía)
-                </h4>
+                <h5 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+                    Bibliografía básica
+                </h5>
 
                 <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
                     <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />
@@ -45,9 +51,9 @@ export const PeaBibliographySection: React.FC<PeaBibliographySectionProps> = ({
 
             {/* BIBLIOGRAFÍA DE CONSULTA */}
             <div className="space-y-3.5 pt-2">
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    Bibliografía de Consulta y Recursos Digitales Especializados
-                </h4>
+                <h5 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">
+                    Bibliografía de consulta
+                </h5>
 
                 <div className="flex gap-3 p-4 sm:p-5 rounded-xl bg-surface border border-border-thin shadow-2xs text-xs sm:text-sm text-text-dim items-start">
                     <Info size={18} className="text-[#0070f3] shrink-0 mt-0.5" />

@@ -208,8 +208,22 @@ export const useRevisionTecnicaData = ({
                 Evaluaciones: metadata.Evaluaciones || pea.evaluaciones || [],
 
                 // 9. Bibliografía
-                BibliografiaBasica: metadata.BibliografiaBasica || '',
-                BibliografiaConsulta: metadata.BibliografiaConsulta || '',
+                BibliografiaBasica: metadata.BibliografiaBasica || metadata.bibliografia_basica || (
+                    Array.isArray(pea.bibliografias)
+                        ? (pea.bibliografias as any[])
+                            .filter(b => (b.tipo_bibliografia || b.tipoBibliografia || '').toLowerCase() === 'basica')
+                            .map((b, idx) => `<p>${idx + 1}. ${b.cita_completa_apa || b.citaCompletaApa || b.titulo_libro || b.tituloLibro || ''}</p>`)
+                            .join('')
+                        : ''
+                ),
+                BibliografiaConsulta: metadata.BibliografiaConsulta || metadata.bibliografia_consulta || (
+                    Array.isArray(pea.bibliografias)
+                        ? (pea.bibliografias as any[])
+                            .filter(b => (b.tipo_bibliografia || b.tipoBibliografia || '').toLowerCase() === 'consulta')
+                            .map((b, idx) => `<p>${idx + 1}. ${b.cita_completa_apa || b.citaCompletaApa || b.titulo_libro || b.tituloLibro || ''}</p>`)
+                            .join('')
+                        : ''
+                ),
                 Bibliografias: metadata.Bibliografias || pea.bibliografias || [],
 
                 // 10. Firmas
