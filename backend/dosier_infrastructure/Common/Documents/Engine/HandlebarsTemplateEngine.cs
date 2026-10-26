@@ -882,9 +882,9 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             caracterizacion = string.Join(" | ", new[] { esc, prod }.Where(s => !string.IsNullOrWhiteSpace(s)));
                         }
 
-                        string nombreCaract = !string.IsNullOrWhiteSpace(caracterizacion) && !string.IsNullOrWhiteSpace(nombre)
-                            ? $"{nombre} - {caracterizacion}"
-                            : (!string.IsNullOrWhiteSpace(nombre) ? nombre : (!string.IsNullOrWhiteSpace(caracterizacion) ? caracterizacion : "---"));
+                        string nombreCaract = !string.IsNullOrWhiteSpace(nombre)
+                            ? nombre
+                            : (!string.IsNullOrWhiteSpace(caracterizacion) ? caracterizacion : "---");
 
                         var normP = CreateCaseInsensitiveDictionary(pDict);
                         normP["Unidad"] = unidad;

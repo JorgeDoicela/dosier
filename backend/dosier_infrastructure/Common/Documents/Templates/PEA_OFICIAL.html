@@ -121,7 +121,7 @@
     b) OBJETIVO DE LA ASIGNATURA
   </div>
   <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 6px;">
-    {{default ObjetivoAsignatura (default objetivo_asignatura "---")}}
+    {{{default ObjetivoAsignatura (default objetivo_asignatura "---")}}}
   </div>
 
   <!-- c) PRERREQUISITOS -->
@@ -150,7 +150,7 @@
     d)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA
   </div>
   <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 6px;">
-    {{default RdaCarrera (default rda_carrera "---")}}
+    {{{default RdaCarrera (default rda_carrera "---")}}}
   </div>
 
   <!-- e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA -->
@@ -158,7 +158,7 @@
     e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:
   </div>
   <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
-    {{default ResultadosAprendizaje (default rda_asignatura "---")}}
+    {{{default ResultadosAprendizaje (default rda_asignatura "---")}}}
   </div>
 
   <!-- SALTO A PÁGINA 2 -->
@@ -198,7 +198,7 @@
             </tr>
           </table>
           <div style="padding: 6px 8px; font-size: 8pt; min-height: 40px; background: #ffffff;">
-            {{default this.Contenidos (default this.contenidos (default this.DescripcionSubtemas "---"))}}
+            {{{default this.Contenidos (default this.contenidos (default this.DescripcionSubtemas "---"))}}}
           </div>
         </td>
       </tr>
@@ -215,13 +215,13 @@
       ESTRATEGIAS METODOLÓGICAS
     </div>
     <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{default MetodologiaEnsenanza (default metodologia "---")}}
+      {{{default MetodologiaEnsenanza (default metodologia "---")}}}
     </div>
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
       RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE
     </div>
     <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt;">
-      {{default RecursosDidacticos "---"}}
+      {{{default RecursosDidacticos "---"}}}
     </div>
   </div>
 
@@ -240,7 +240,7 @@
       {{#each ActividadesPracticas}}
       <tr>
         <td style="text-align: center; font-weight: bold;">{{default this.Unidad (default this.unidad "---")}}</td>
-        <td>{{default this.NombreCaracterizacion (default this.nombre_caracterizacion (default this.NombrePractica (default this.nombre "---")))}}</td>
+        <td style="white-space: pre-line;">{{default this.Nombre (default this.nombre (default this.NombreCaracterizacion (default this.nombre_caracterizacion (default this.NombrePractica "---"))))}}</td>
       </tr>
       {{/each}}
     </tbody>
@@ -303,13 +303,13 @@
       Bibliografía básica
     </div>
     <div style="padding: 6px 8px; min-height: 45px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{default BibliografiaBasica "---"}}
+      {{{default BibliografiaBasica "---"}}}
     </div>
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
       Bibliografía de consulta
     </div>
     <div style="padding: 6px 8px; min-height: 45px; font-size: 8pt;">
-      {{default BibliografiaConsulta "---"}}
+      {{{default BibliografiaConsulta "---"}}}
     </div>
   </div>
 
@@ -330,10 +330,10 @@
     <tbody>
       <tr style="height: 55px;">
         <td style="font-weight: bold; text-align: left; vertical-align: middle;">FIRMA</td>
-        <td style="vertical-align: bottom;">{{default firma_docente_base64 ""}}</td>
-        <td style="vertical-align: bottom;">{{default firma_coordinador_carrera_base64 ""}}</td>
-        <td style="vertical-align: bottom;">{{default firma_coordinador_academico_base64 ""}}</td>
-        <td style="vertical-align: bottom;">{{default firma_vicerrector_base64 ""}}</td>
+        <td style="vertical-align: bottom;">{{{default firma_docente_base64 ""}}}</td>
+        <td style="vertical-align: bottom;">{{{default firma_coordinador_carrera_base64 ""}}}</td>
+        <td style="vertical-align: bottom;">{{{default firma_coordinador_academico_base64 ""}}}</td>
+        <td style="vertical-align: bottom;">{{{default firma_vicerrector_base64 ""}}}</td>
       </tr>
       <tr>
         <td style="font-weight: bold; text-align: left;">NOMBRE</td>

@@ -115,7 +115,7 @@ export const generatePeaObjectiveHtml = (block: DocumentBlock): string => {
     ${c.objetivoLabel || 'b) OBJETIVO DE LA ASIGNATURA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
-    {{default objetivo_asignatura ""}}
+    {{{default objetivo_asignatura ""}}}
   </div>
 </div>`;
 };
@@ -170,7 +170,7 @@ export const generatePeaCareerOutcomesHtml = (block: DocumentBlock): string => {
     ${c.rdaCarreraLabel || 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
-    {{default resultados_carrera ""}}
+    {{{default resultados_carrera ""}}}
   </div>
 </div>`;
 };
@@ -188,7 +188,7 @@ export const generatePeaSubjectOutcomesHtml = (block: DocumentBlock): string => 
     ${c.rdaAsignaturaLabel || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
-    {{default resultados_asignatura ""}}
+    {{{default resultados_asignatura ""}}}
   </div>
 </div>`;
 };
@@ -207,7 +207,7 @@ export const generatePeaCharacterizationHtml = (block: DocumentBlock): string =>
     ${c.objetivoLabel || 'b) OBJETIVO DE LA ASIGNATURA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 8px;">
-    {{default objetivo_asignatura ""}}
+    {{{default objetivo_asignatura ""}}}
   </div>
 
   <!-- c) PRERREQUISITOS -->
@@ -247,7 +247,7 @@ export const generatePeaCompetenciesRdaHtml = (block: DocumentBlock): string => 
     ${c.rdaCarreraLabel || 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 8px;">
-    {{default resultados_carrera ""}}
+    {{{default resultados_carrera ""}}}
   </div>
 
   <!-- e) RDAS ASIGNATURA -->
@@ -255,7 +255,7 @@ export const generatePeaCompetenciesRdaHtml = (block: DocumentBlock): string => 
     ${c.rdaAsignaturaLabel || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
-    {{default resultados_asignatura ""}}
+    {{{default resultados_asignatura ""}}}
   </div>
 </div>`;
 };
@@ -299,7 +299,7 @@ export const generatePeaContentsHtml = (block: DocumentBlock): string => {
             </tr>
           </table>
           <div style="padding: 6px 8px; font-size: 8pt; min-height: 40px; background: #ffffff;">
-            {{this.contenidos}}
+            {{{this.contenidos}}}
           </div>
         </td>
       </tr>
@@ -326,13 +326,13 @@ export const generatePeaMethodologyHtml = (block: DocumentBlock): string => {
       ${c.estrategiasLabel || 'ESTRATEGIAS METODOLÓGICAS'}
     </div>
     <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{default metodologia_propuesta metodologia}}
+      {{{default metodologia_propuesta metodologia}}}
     </div>
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
       ${c.recursosLabel || 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE'}
     </div>
     <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt;">
-      {{default recursos_didacticos ""}}
+      {{{default recursos_didacticos ""}}}
     </div>
   </div>
 </div>`;
@@ -428,13 +428,13 @@ export const generatePeaBibliographyHtml = (block: DocumentBlock): string => {
       ${c.basicaLabel || 'Bibliografía básica'}
     </div>
     <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{default bibliografia_basica ""}}
+      {{{default bibliografia_basica ""}}}
     </div>
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
       ${c.consultaLabel || 'Bibliografía de consulta'}
     </div>
     <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt;">
-      {{default bibliografia_consulta ""}}
+      {{{default bibliografia_consulta ""}}}
     </div>
   </div>
 </div>`;

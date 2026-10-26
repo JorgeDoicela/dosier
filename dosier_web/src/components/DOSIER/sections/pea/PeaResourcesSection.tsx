@@ -65,7 +65,7 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
 
     const practicas: PracticaItem[] = rawPracticas.length > 0 ? rawPracticas.map((p, idx) => ({
         unidad: p.unidad || p.Unidad || p['0'] || availableUnits[0]?.value || `Unidad ${idx + 1}`,
-        nombre: p.nombre_caracterizacion || p.NombreCaracterizacion || p.nombre || p.Nombre || p.descripcion || p['1'] || '',
+        nombre: p.nombre || p.Nombre || p.nombre_caracterizacion || p.NombreCaracterizacion || p.descripcion || p['1'] || '',
         horas: p.horas ?? p.Horas,
         escenario: p.escenario || p.Escenario,
         producto: p.producto || p.Producto
@@ -147,8 +147,22 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
         if (readOnly) return;
         if (onUpdateItem) {
             onUpdateItem('ActividadesPracticas', idx, field, value);
+            if (field === 'nombre') {
+                onUpdateItem('ActividadesPracticas', idx, 'nombre_caracterizacion', value);
+                onUpdateItem('ActividadesPracticas', idx, 'NombreCaracterizacion', value);
+            }
         } else {
-            const updated = practicas.map((item, i) => i === idx ? { ...item, [field]: value } : item);
+            const updated = practicas.map((item, i) => {
+                if (i === idx) {
+                    const next: any = { ...item, [field]: value };
+                    if (field === 'nombre') {
+                        next.nombre_caracterizacion = value;
+                        next.NombreCaracterizacion = value;
+                    }
+                    return next;
+                }
+                return item;
+            });
             onUpdate('ActividadesPracticas', updated);
         }
     };
