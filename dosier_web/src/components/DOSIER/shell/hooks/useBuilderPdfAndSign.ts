@@ -84,7 +84,10 @@ export const useBuilderPdfAndSign = ({
         setIsGenerating(true);
         addAudit(blind ? 'Generando vista previa sin identidades...' : 'Generando vista previa del documento...');
         try {
-            const blob = await documentInstanceService.renderDocumentPdf(templateCode, formData, isDraftMode, blind);
+            const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
+            const isAlreadySubmitted = statusNormalized === 'enrevision' || statusNormalized === 'revisadocoord' || statusNormalized === 'revisadoacad' || statusNormalized === 'aprobado' || !!formData?.FirmaElaboradoDocente || !!formData?.firma_elaborado_docente;
+            const draftMode = isDraftMode && !isAlreadySubmitted;
+            const blob = await documentInstanceService.renderDocumentPdf(templateCode, formData, draftMode, blind);
             setPdfBlob(blob);
             addAudit('PDF Generado exitosamente', 'success');
         } catch (err: any) {
@@ -100,7 +103,7 @@ export const useBuilderPdfAndSign = ({
         } finally {
             setIsGenerating(false);
         }
-    }, [templateCode, isDraftMode, formData, addAudit]);
+    }, [templateCode, isDraftMode, formData, projectStatus, addAudit]);
 
     // ── Cargar PDF firmado u oficial ──
     const fetchSignedPdf = useCallback(async (): Promise<boolean> => {
@@ -146,7 +149,9 @@ export const useBuilderPdfAndSign = ({
         const initPdf = async () => {
             const hasSigned = await fetchSignedPdf();
             if (!hasSigned && isMounted) {
-                setIsDraftMode(true);
+                const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
+                const isAlreadySubmitted = statusNormalized === 'enrevision' || statusNormalized === 'revisadocoord' || statusNormalized === 'revisadoacad' || statusNormalized === 'aprobado' || !!formData?.FirmaElaboradoDocente || !!formData?.firma_elaborado_docente;
+                setIsDraftMode(!isAlreadySubmitted);
             }
         };
         initPdf();
@@ -201,13 +206,15 @@ export const useBuilderPdfAndSign = ({
                 } catch {}
             }
 
-            const formDataObj = new FormData();
-            formDataObj.append('certificate', signatureCertFile);
-            formDataObj.append('password', signaturePassword || '');
-            formDataObj.append('documentoUuid', targetDocUuid || '');
-            formDataObj.append('rolFirmante', calculatedRol);
+            if (!isPea) {
+                const formDataObj = new FormData();
+                formDataObj.append('certificate', signatureCertFile);
+                formDataObj.append('password', signaturePassword || '');
+                formDataObj.append('documentoUuid', targetDocUuid || '');
+                formDataObj.append('rolFirmante', calculatedRol);
 
-            await signDocumentWithP12(formDataObj).catch(() => {});
+                await signDocumentWithP12(formDataObj).catch(() => {});
+            }
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf();
@@ -311,13 +318,15 @@ export const useBuilderPdfAndSign = ({
                 } catch {}
             }
 
-            const dto = {
-                documento_uuid: targetDocUuid || '',
-                rol_firmante: calculatedRol,
-                password: institutionalPassword
-            };
+            if (!isPea) {
+                const dto = {
+                    documento_uuid: targetDocUuid || '',
+                    rol_firmante: calculatedRol,
+                    password: institutionalPassword
+                };
 
-            await signDocumentWithDosier(dto as any).catch(() => {});
+                await signDocumentWithDosier(dto as any).catch(() => {});
+            }
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf();

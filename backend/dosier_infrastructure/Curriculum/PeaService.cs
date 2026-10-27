@@ -616,6 +616,13 @@ namespace dosier_infrastructure.Curriculum
             };
             _context.DocPeaTrazabilidades.Add(traza);
 
+            // 8. Sincronizar instancia documental para autosanación de PDF oficial firmado
+            var docInstancia = await _context.DocumentInstances.FirstOrDefaultAsync(d => d.EntityUuid == pea.Uuid);
+            if (docInstancia != null)
+            {
+                docInstancia.SetFinalPdfPath(null);
+            }
+
             await _context.SaveChangesAsync();
 
             string verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");

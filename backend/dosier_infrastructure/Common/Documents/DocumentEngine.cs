@@ -543,7 +543,7 @@ namespace Dosier.Infrastructure.Common.Documents
                         {
                             if (!dataDict.TryGetValue(key, out var val) || val == null) return true;
                             var str = val.ToString()?.Trim();
-                            return string.IsNullOrWhiteSpace(str);
+                            return string.IsNullOrWhiteSpace(str) || str == "---" || str == "--" || str == "-" || str == "...";
                         }
 
                         bool NeedsList(string key)
@@ -623,15 +623,47 @@ namespace Dosier.Infrastructure.Common.Documents
                             if (NeedsField("Nivel")) Put("Nivel", pea.SemestreNivel);
                             if (NeedsField("UnidadOrganizacion")) Put("UnidadOrganizacion", dosier_infrastructure.Academico.AcademicContextResolver.NormalizarUnidadOrganizacion(pea.UnidadOrganizacion));
                             if (NeedsField("DocenteElaborador")) Put("DocenteElaborador", docenteNombre);
-                            if (NeedsField("TotalHorasAsignatura") || Convert.ToInt32(dataDict.GetValueOrDefault("TotalHorasAsignatura") ?? 0) == 0)
+                            int SafeToInt(object? val)
+                            {
+                                if (val == null) return 0;
+                                if (val is int i) return i;
+                                if (val is long l) return (int)l;
+                                if (val is System.Text.Json.JsonElement je)
+                                {
+                                    if (je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetInt32(out var num)) return num;
+                                    if (je.ValueKind == System.Text.Json.JsonValueKind.String && int.TryParse(je.GetString(), out var strNum)) return strNum;
+                                    return 0;
+                                }
+                                if (int.TryParse(val.ToString(), out var parsed)) return parsed;
+                                return 0;
+                            }
+
+                            decimal SafeToDecimal(object? val)
+                            {
+                                if (val == null) return 0m;
+                                if (val is decimal dec) return dec;
+                                if (val is double d) return (decimal)d;
+                                if (val is float f) return (decimal)f;
+                                if (val is int i) return i;
+                                if (val is System.Text.Json.JsonElement je)
+                                {
+                                    if (je.ValueKind == System.Text.Json.JsonValueKind.Number && je.TryGetDecimal(out var num)) return num;
+                                    if (je.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(je.GetString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var strNum)) return strNum;
+                                    return 0m;
+                                }
+                                if (decimal.TryParse(val.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsed)) return parsed;
+                                return 0m;
+                            }
+
+                            if (NeedsField("TotalHorasAsignatura") || SafeToInt(dataDict.GetValueOrDefault("TotalHorasAsignatura")) == 0)
                                 Put("TotalHorasAsignatura", pea.TotalHorasAsignatura);
-                            if (NeedsField("Creditos") || Convert.ToDecimal(dataDict.GetValueOrDefault("Creditos") ?? 0) == 0)
+                            if (NeedsField("Creditos") || SafeToDecimal(dataDict.GetValueOrDefault("Creditos")) == 0m)
                                 Put("Creditos", pea.Creditos);
-                            if (NeedsField("HorasContactoDocente") || Convert.ToInt32(dataDict.GetValueOrDefault("HorasContactoDocente") ?? 0) == 0)
+                            if (NeedsField("HorasContactoDocente") || SafeToInt(dataDict.GetValueOrDefault("HorasContactoDocente")) == 0)
                                 Put("HorasContactoDocente", pea.HorasContactoDocente);
-                            if (NeedsField("HorasPracticoExperimental") || Convert.ToInt32(dataDict.GetValueOrDefault("HorasPracticoExperimental") ?? 0) == 0)
+                            if (NeedsField("HorasPracticoExperimental") || SafeToInt(dataDict.GetValueOrDefault("HorasPracticoExperimental")) == 0)
                                 Put("HorasPracticoExperimental", pea.HorasPracticoExperimental);
-                            if (NeedsField("HorasAutonomo") || Convert.ToInt32(dataDict.GetValueOrDefault("HorasAutonomo") ?? 0) == 0)
+                            if (NeedsField("HorasAutonomo") || SafeToInt(dataDict.GetValueOrDefault("HorasAutonomo")) == 0)
                                 Put("HorasAutonomo", pea.HorasAutonomo);
 
                             if (NeedsField("ObjetivoAsignatura")) Put("ObjetivoAsignatura", pea.ObjetivoAsignatura);
@@ -711,23 +743,63 @@ namespace Dosier.Infrastructure.Common.Documents
                                 }).ToList();
                             }
 
-                            if (!string.IsNullOrEmpty(pea.FirmaElaboradoDocente))
-                                dataDict["FirmaElaboradoDocente"] = pea.FirmaElaboradoDocente;
-                            if (!string.IsNullOrEmpty(pea.FirmaRevisadoCoord))
-                                dataDict["FirmaRevisadoCoord"] = pea.FirmaRevisadoCoord;
-                            if (!string.IsNullOrEmpty(pea.FirmaRevisadoAcad))
-                                dataDict["FirmaRevisadoAcad"] = pea.FirmaRevisadoAcad;
-                            if (!string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector))
-                                dataDict["FirmaAprobadoVicerrector"] = pea.FirmaAprobadoVicerrector;
-
                             if (pea.FechaElaborado.HasValue)
+                            {
                                 dataDict["FechaElaborado"] = pea.FechaElaborado.Value.ToString("dd/MM/yyyy");
+                                dataDict["fecha_elaborado"] = pea.FechaElaborado.Value.ToString("dd/MM/yyyy");
+                            }
                             if (pea.FechaRevisadoCoord.HasValue)
+                            {
                                 dataDict["FechaRevisadoCarrera"] = pea.FechaRevisadoCoord.Value.ToString("dd/MM/yyyy");
+                                dataDict["fecha_revisado_carrera"] = pea.FechaRevisadoCoord.Value.ToString("dd/MM/yyyy");
+                            }
                             if (pea.FechaRevisadoAcad.HasValue)
+                            {
                                 dataDict["FechaRevisadoAcademico"] = pea.FechaRevisadoAcad.Value.ToString("dd/MM/yyyy");
+                                dataDict["fecha_revisado_academico"] = pea.FechaRevisadoAcad.Value.ToString("dd/MM/yyyy");
+                            }
                             if (pea.FechaAprobado.HasValue)
+                            {
                                 dataDict["FechaAprobado"] = pea.FechaAprobado.Value.ToString("dd/MM/yyyy");
+                                dataDict["fecha_aprobado"] = pea.FechaAprobado.Value.ToString("dd/MM/yyyy");
+                            }
+
+                            if (!string.IsNullOrEmpty(pea.FirmaElaboradoDocente))
+                            {
+                                dataDict["FirmaElaboradoDocente"] = pea.FirmaElaboradoDocente;
+                                dataDict["firma_elaborado_docente"] = pea.FirmaElaboradoDocente;
+                                if (!dataDict.ContainsKey("firma_docente_base64") || string.IsNullOrWhiteSpace(dataDict["firma_docente_base64"]?.ToString()))
+                                {
+                                    dataDict["firma_docente_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                }
+                            }
+                            if (!string.IsNullOrEmpty(pea.FirmaRevisadoCoord))
+                            {
+                                dataDict["FirmaRevisadoCoord"] = pea.FirmaRevisadoCoord;
+                                dataDict["firma_revisado_coord"] = pea.FirmaRevisadoCoord;
+                                if (!dataDict.ContainsKey("firma_coordinador_carrera_base64") || string.IsNullOrWhiteSpace(dataDict["firma_coordinador_carrera_base64"]?.ToString()))
+                                {
+                                    dataDict["firma_coordinador_carrera_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                }
+                            }
+                            if (!string.IsNullOrEmpty(pea.FirmaRevisadoAcad))
+                            {
+                                dataDict["FirmaRevisadoAcad"] = pea.FirmaRevisadoAcad;
+                                dataDict["firma_revisado_acad"] = pea.FirmaRevisadoAcad;
+                                if (!dataDict.ContainsKey("firma_coordinador_academico_base64") || string.IsNullOrWhiteSpace(dataDict["firma_coordinador_academico_base64"]?.ToString()))
+                                {
+                                    dataDict["firma_coordinador_academico_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                }
+                            }
+                            if (!string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector))
+                            {
+                                dataDict["FirmaAprobadoVicerrector"] = pea.FirmaAprobadoVicerrector;
+                                dataDict["firma_aprobado_vicerrector"] = pea.FirmaAprobadoVicerrector;
+                                if (!dataDict.ContainsKey("firma_vicerrector_base64") || string.IsNullOrWhiteSpace(dataDict["firma_vicerrector_base64"]?.ToString()))
+                                {
+                                    dataDict["firma_vicerrector_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                }
+                            }
                         }
 
                         renderData = dataDict;

@@ -39,12 +39,12 @@ namespace dosier_api.Controllers
                 hasCustomSignatories = sigsList.Count > 0;
             }
 
-            if (templateCode == "PROTOCOLO_INVESTIGACION" || !hasCustomSignatories)
+            if (!hasCustomSignatories)
             {
-                // Fallback clásico
+                // Fallback institucional
                 schemaDict["FirmasResponsabilidad"] = new Dictionary<string, string> {
-                    { "DirectorNombre", "" },
-                    { "DirectorCargo", "Director del Proyecto" },
+                    { "DocenteNombre", "" },
+                    { "DocenteCargo", "Docente Elaborador" },
                     { "CoordinadorNombre", "" },
                     { "CoordinadorCargo", "Coordinador de Carrera" }
                 };
@@ -114,42 +114,26 @@ namespace dosier_api.Controllers
                 signatories = signatoriesList.ToArray()
             };
 
-            if (templateCode == "PROTOCOLO_INVESTIGACION")
+            if (!sectionsList.Any(s => s.Id == "firmas_dinamicas"))
             {
-                if (!sectionsList.Any(s => s.Id == "bibliografia"))
-                {
-                    sectionsList.Add(new UiSectionDto {
-                        Id = "bibliografia",
-                        Label = "Bibliografía & Firmas",
-                        IconName = "Library",
-                        ComponentName = "BibliographySection",
-                        Config = signaturesConfig
-                    });
-                }
-            }
-            else
-            {
-                if (!sectionsList.Any(s => s.Id == "firmas_dinamicas"))
-                {
-                    sectionsList.Add(new UiSectionDto {
-                        Id = "firmas_dinamicas",
-                        Label = string.IsNullOrEmpty(title) ? "Firmas de Responsabilidad" : title,
-                        IconName = "PenLine",
-                        ComponentName = "BibliographySection",
-                        Config = new {
-                            isBibliographyHidden = true,
-                            title = string.IsNullOrEmpty(title) ? "Firmas de Responsabilidad" : title,
-                            signaturesMode,
-                            includeDirector,
-                            includeDocentes,
-                            includeEstudiantes,
-                            includeCoordinadorCarrera,
-                            includeCoordinadorDosier,
-                            includeVicerrectorado,
-                            signatories = signatoriesList.ToArray()
-                        }
-                    });
-                }
+                sectionsList.Add(new UiSectionDto {
+                    Id = "firmas_dinamicas",
+                    Label = string.IsNullOrEmpty(title) ? "Firmas de Responsabilidad" : title,
+                    IconName = "PenLine",
+                    ComponentName = "BibliographySection",
+                    Config = new {
+                        isBibliographyHidden = true,
+                        title = string.IsNullOrEmpty(title) ? "Firmas de Responsabilidad" : title,
+                        signaturesMode,
+                        includeDirector,
+                        includeDocentes,
+                        includeEstudiantes,
+                        includeCoordinadorCarrera,
+                        includeCoordinadorDosier,
+                        includeVicerrectorado,
+                        signatories = signatoriesList.ToArray()
+                    }
+                });
             }
             return Task.CompletedTask;
         }

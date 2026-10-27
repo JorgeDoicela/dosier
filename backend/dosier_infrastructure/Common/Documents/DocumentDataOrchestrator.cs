@@ -39,37 +39,86 @@ namespace Dosier.Infrastructure.Common.Documents
             var provider = _providers.FirstOrDefault(p => p.CanHandle(entityType))
                 ?? throw new InvalidOperationException($"No hay un proveedor de datos para el tipo: {entityType}");
 
-            // 4. Obtener los datos base de la entidad
-            var entityData = await provider.GetDocumentDataAsync(instance.EntityUuid, ct);
+            // 4. Base de datos estructurada a partir del snapshot persistido en la instancia
+            var masterDict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
-            // 5. Obtener contenido colaborativo (CoWork) vinculado a esta INSTANCIA de documento
+            if (!string.IsNullOrWhiteSpace(instance.DataSnapshotJson))
+            {
+                try
+                {
+                    var snap = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(instance.DataSnapshotJson);
+                    if (snap != null)
+                    {
+                        foreach (var kv in snap)
+                        {
+                            masterDict[kv.Key] = kv.Value;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // 5. Complementar con datos del proveedor de entidad
+            try
+            {
+                var entityData = await provider.GetDocumentDataAsync(instance.EntityUuid, ct);
+                if (entityData != null)
+                {
+                    var rawEntity = System.Text.Json.JsonSerializer.Serialize(entityData);
+                    var entityDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(rawEntity);
+                    if (entityDict != null)
+                    {
+                        foreach (var kv in entityDict)
+                        {
+                            if (!masterDict.ContainsKey(kv.Key) || masterDict[kv.Key] == null || string.IsNullOrWhiteSpace(masterDict[kv.Key]?.ToString()))
+                            {
+                                masterDict[kv.Key] = kv.Value;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            // 6. Obtener contenido colaborativo (CoWork) vinculado a esta INSTANCIA y ENTIDAD
             var coworkDocs = await _db.DocCoworkDocumentos
-                .Where(d => d.EntidadUuid == instance.Uuid)
+                .Where(d => d.EntidadUuid == instance.Uuid || d.EntidadUuid == instance.EntityUuid)
                 .ToListAsync(ct);
 
-            var collaborativeContent = coworkDocs.ToDictionary(
-                d => d.CampoNombre,
-                d => d.ContentHtml ?? string.Empty
-            );
-
-            // 6. Construir DTO Maestro
-            var masterData = new
+            var collaborativeContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var d in coworkDocs)
             {
-                Data = entityData,
-                ContenidoColaborativo = collaborativeContent,
-                Emision = new
+                if (!string.IsNullOrEmpty(d.CampoNombre))
                 {
-                    Fecha = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
-                    Usuario = requestedBy,
-                    TraceCode = instance.TraceabilityCode ?? "BORRADOR"
+                    collaborativeContent[d.CampoNombre] = d.ContentHtml ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(d.ContentHtml))
+                    {
+                        masterDict[d.CampoNombre] = d.ContentHtml;
+                    }
                 }
+            }
+
+            // 7. Metadatos de la instancia
+            masterDict["Uuid"] = instance.Uuid;
+            masterDict["uuid"] = instance.Uuid;
+            masterDict["EntityUuid"] = instance.EntityUuid;
+            masterDict["entityUuid"] = instance.EntityUuid;
+            masterDict["TemplateCode"] = instance.TemplateCode;
+            masterDict["Titulo"] = instance.Title;
+            masterDict["ContenidoColaborativo"] = collaborativeContent;
+            masterDict["Emision"] = new
+            {
+                Fecha = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
+                Usuario = requestedBy,
+                TraceCode = instance.TraceabilityCode ?? "OFICIAL"
             };
 
-            // 7. Devolver Request con bandera de Draft Mode si no ha sido finalizado (o forzado vía parámetro)
+            // 8. Devolver Request con bandera de Draft Mode si no ha sido finalizado (o forzado vía parámetro)
             return new DocumentRequest
             {
                 TemplateCode = instance.TemplateCode,
-                Data = masterData,
+                Data = masterDict,
+                EntityUuid = instance.EntityUuid,
                 RequestedBy = requestedBy,
                 IsDraftMode = forceDraftMode ?? (instance.State != DocumentState.Signed),
                 IsBlindMode = false

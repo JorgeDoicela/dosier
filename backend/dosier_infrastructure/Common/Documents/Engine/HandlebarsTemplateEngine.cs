@@ -1028,6 +1028,31 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 }
             }
 
+            // Normalización y generación de bloques visuales de firma para PEA
+            string? docenteCode = dict.GetValueOrDefault("FirmaElaboradoDocente")?.ToString() ?? dict.GetValueOrDefault("firma_elaborado_docente")?.ToString();
+            if (!string.IsNullOrEmpty(docenteCode) && (!dict.ContainsKey("firma_docente_base64") || string.IsNullOrWhiteSpace(dict["firma_docente_base64"]?.ToString())))
+            {
+                dict["firma_docente_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+            }
+
+            string? coordCode = dict.GetValueOrDefault("FirmaRevisadoCoord")?.ToString() ?? dict.GetValueOrDefault("firma_revisado_coord")?.ToString();
+            if (!string.IsNullOrEmpty(coordCode) && (!dict.ContainsKey("firma_coordinador_carrera_base64") || string.IsNullOrWhiteSpace(dict["firma_coordinador_carrera_base64"]?.ToString())))
+            {
+                dict["firma_coordinador_carrera_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+            }
+
+            string? acadCode = dict.GetValueOrDefault("FirmaRevisadoAcad")?.ToString() ?? dict.GetValueOrDefault("firma_revisado_acad")?.ToString();
+            if (!string.IsNullOrEmpty(acadCode) && (!dict.ContainsKey("firma_coordinador_academico_base64") || string.IsNullOrWhiteSpace(dict["firma_coordinador_academico_base64"]?.ToString())))
+            {
+                dict["firma_coordinador_academico_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+            }
+
+            string? viceCode = dict.GetValueOrDefault("FirmaAprobadoVicerrector")?.ToString() ?? dict.GetValueOrDefault("firma_aprobado_vicerrector")?.ToString();
+            if (!string.IsNullOrEmpty(viceCode) && (!dict.ContainsKey("firma_vicerrector_base64") || string.IsNullOrWhiteSpace(dict["firma_vicerrector_base64"]?.ToString())))
+            {
+                dict["firma_vicerrector_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+            }
+
             // 6. Normalizar Bibliografías
             if ((!dict.ContainsKey("BibliografiaBasica") || string.IsNullOrWhiteSpace(dict["BibliografiaBasica"]?.ToString())) &&
                 (dict.TryGetValue("Bibliografias", out var rawBib) || dict.TryGetValue("bibliografias", out rawBib)) &&

@@ -62,6 +62,31 @@ namespace dosier_api.Controllers
         }
 
         /// <summary>
+        /// Obtiene el archivo PDF oficial/firmado de la instancia documental.
+        /// Si el archivo aún no ha sido escrito a disco, lo genera en caliente sin marca de borrador.
+        /// </summary>
+        [HttpGet("{uuid}/pdf")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPdf(string uuid, CancellationToken ct)
+        {
+            var instance = await _instanceService.GetByUuidAsync(uuid, ct);
+            if (instance == null) return NotFound(new { message = $"Documento '{uuid}' no encontrado." });
+
+            var storage = HttpContext.RequestServices.GetRequiredService<Dosier.Infrastructure.Common.Storage.IFileStorageService>();
+
+            if (!string.IsNullOrEmpty(instance.FinalPdfPath) && storage.FileExists(instance.FinalPdfPath))
+            {
+                var bytes = await storage.GetFileAsync(instance.FinalPdfPath);
+                return File(bytes, "application/pdf");
+            }
+
+            var userUuid = User.Identity?.Name ?? "anon";
+            var docRequest = await _orchestrator.PrepareRequestAsync(uuid, userUuid, forceDraftMode: false, ct: ct);
+            var buildResult = await _documentEngine.GenerateAsync(docRequest, ct);
+            return File(buildResult.PdfBytes, "application/pdf");
+        }
+
+        /// <summary>
         /// Obtiene todos los documentos vinculados a una entidad (ej: a un proyecto específico).
         /// </summary>
         [HttpGet("entity/{entityUuid}")]

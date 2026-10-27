@@ -107,12 +107,12 @@ namespace Dosier.Infrastructure.Common.Documents
                 // Si no hay Draft disponible, se retorna la sellada (el caller decide cómo manejarlo)
             }
 
-            // 3. Fallback: el UUID puede corresponder al EntityUuid del proyecto
+            // 3. Fallback: el UUID puede corresponder al EntityUuid de la entidad (PEA u otro documento del lienzo)
             if (instance == null)
             {
-                instance = await FindLatestEditableAsync(uuid, "PROTOCOLO_INVESTIGACION", ct)
+                instance = await FindLatestEditableAsync(uuid, "PEA_OFICIAL", ct)
                         ?? await _context.DocumentInstances
-                               .Where(i => i.EntityUuid == uuid && i.TemplateCode == "PROTOCOLO_INVESTIGACION")
+                               .Where(i => i.EntityUuid == uuid)
                                .OrderByDescending(i => i.CreatedAt)
                                .FirstOrDefaultAsync(ct);
             }
@@ -595,7 +595,7 @@ namespace Dosier.Infrastructure.Common.Documents
             if (isFileMissing)
             {
                 var firmasDb = await _context.DocDocumentoFirmas
-                    .Where(f => (f.DocumentoUuid == instance.Uuid || (instance.TemplateCode == "PROTOCOLO_INVESTIGACION" && f.DocumentoUuid == instance.EntityUuid)) && f.EsValida)
+                    .Where(f => (f.DocumentoUuid == instance.Uuid || f.DocumentoUuid == instance.EntityUuid) && f.EsValida)
                     .OrderBy(f => f.FechaFirma)
                     .ToListAsync(ct);
 

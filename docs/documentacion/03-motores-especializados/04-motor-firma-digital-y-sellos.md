@@ -48,13 +48,16 @@ graph TD
 
 El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para posicionar el sello institucional en la Sección k (Firmas de responsabilidad):
 
-* **Código Oficial DFRM:** Generación de un identificador institucional único de trazabilidad (ej. `DFRM-DOC-2026-0089`, `DFRM-VIC-2026-0042`).
+* **Código Oficial DFRM:** Generación de un identificador institucional único de trazabilidad (ej. `DFRM-2026-D9F7C872`).
 * **Datos del Sello Visual:**
   * Nombre completo del firmante (obtenido de su registro oficial en SIGAFI).
-  * Cargo institucional formal (`Docente Elaborador`, `Coordinador de Carrera`, `Coordinación Académica`, `Vicerrectorado Académico`).
-  * Fecha y hora exacta de firmado en estándar UTC e ISO 8601.
+  * Cargo institucional formal (`Docente`, `Coordinador de Carrera`, `Coordinador Académico`, `Vicerrectorado`).
+  * Fecha y hora exacta de firmado en estándar UTC.
   * Código hash abreviado y algoritmo criptográfico utilizado.
-* **Código QR Dinámico:** Posicionado en el pie de cada página con el enlace directo al validador público descentralizado.
+* **Geometría Adaptativa de Matriz Curricular:**
+  * En documentos con matriz normada de 4 firmas (PEA, Sección K), `SignatureStamper` detecta las columnas mediante `DocumentSignatureLayoutLocator` y genera un sello compacto de alta fidelidad (`94.0 pt` x `44.0 pt`) centrado en la fila `FIRMA` de la columna correspondiente (Elaborado, Revisado 1, Revisado 2, Aprobado).
+  * En plantillas de dos firmas (Proyectos de Investigación), emplea el bloque horizontal tradicional de `190.0 pt` x `55.0 pt`.
+* **Código QR Dinámico:** Integrado dentro del sello oficial con enlace directo a la ruta pública de verificación `/verificacion/{firmaCode}`.
 
 ---
 
