@@ -87,8 +87,12 @@ export const RevisionCurricularPage: React.FC = () => {
             <div className="flex-1 flex overflow-hidden relative">
                 {layout.viewMode === 'history' ? (
                     /* ── VISTA DE HISTORIAL Y DICTAMEN OFICIAL ── */
-                    <div className="flex-1 h-full bg-slate-50 dark:bg-zinc-950 overflow-hidden">
-                        <AdminRevisionHistoryPanel projectUuid={projectUuid ?? ''} />
+                    <div className="flex-1 h-full bg-white dark:bg-zinc-950 overflow-hidden">
+                        <AdminRevisionHistoryPanel
+                            projectUuid={projectUuid ?? ''}
+                            pea={data.rawPea}
+                            project={data.project}
+                        />
                     </div>
                 ) : (
                     /* ── VISTA DE DOCUMENTO: FOLIO COMPLETO CONTINUO O VISOR PDF ── */

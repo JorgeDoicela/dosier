@@ -4,7 +4,9 @@ import type { LucideIcon } from 'lucide-react';
 export interface ProjectDetail {
     uuid: string;
     title: string;
+    titulo?: string;
     status: string;
+    estado?: string;
     presupuesto: number;
     convocatoriaMontoMaximo: number | null;
     convocatoria: string;
@@ -13,6 +15,7 @@ export interface ProjectDetail {
     dominio: string;
     descripcion: string;
     directorProyecto: string;
+    director_nombre?: string;
     codigo_asignatura?: string;
     modalidad?: string;
     semestre_nivel?: string;
