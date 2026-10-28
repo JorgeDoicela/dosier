@@ -92,6 +92,7 @@ Controlador central para la elaboración, edición, validación de horas, circui
 | `GET` | `/{id:int}/observaciones` | Autenticado | Lista las observaciones registradas durante la revisión. |
 | `POST`| `/{id:int}/observaciones` | Coordinadores / Vicerrector | Registra una nueva observación formal sobre una sección pedagógica. |
 | `PATCH`| `/observaciones/{idObs:int}/subsanar` | Docente / Admin | Subsanación de la observación por parte del docente con su respuesta formal. |
+| `DELETE`| `/observaciones/{idObs:int}` | Coordinadores / Vicerrector / Admin | Eliminación o retiro de una observación formal registrada. |
 | `GET` | `/{id:int}/trazabilidad` | Autenticado | Historial inmutable de cambios de estado y hashes SHA-256. |
 
 ---

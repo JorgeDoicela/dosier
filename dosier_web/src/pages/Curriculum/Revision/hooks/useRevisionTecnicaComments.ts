@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import { FIELD_LABELS } from '../types/revisionTecnicaTypes';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { SectionComment } from '../types/revisionTecnicaTypes';
-import { collaborationService } from '../../../../services/collaborationService';
+import {
+    getObservacionesPea,
+    agregarObservacionPea,
+    eliminarObservacionPea,
+    type PeaObservacionDto
+} from '../../../../services/peaService';
+import { useAuth } from '../../../../api/AuthContext';
 
 interface UseRevisionTecnicaCommentsParams {
     projectUuid: string | undefined;
@@ -14,13 +19,14 @@ export const useRevisionTecnicaComments = ({
     activeCommentField,
     addToast
 }: UseRevisionTecnicaCommentsParams) => {
+    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const [comments, setComments] = useState<Record<string, SectionComment[]>>({});
     const [contextualInput, setContextualInput] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+    const [loadingComments, setLoadingComments] = useState(false);
 
     const prevActiveFieldRef = useRef(activeCommentField);
-    const commentsLoadedRef = useRef(false);
 
     useEffect(() => {
         const fieldChanged = prevActiveFieldRef.current !== activeCommentField;
@@ -29,93 +35,113 @@ export const useRevisionTecnicaComments = ({
             setContextualInput('');
             prevActiveFieldRef.current = activeCommentField;
         }
-    }, [activeCommentField, setContextualInput]);
+    }, [activeCommentField]);
 
+    // Cargar observaciones oficiales desde doc_pea_observaciones
+    const loadObservations = useCallback(async () => {
+        if (!projectUuid) return;
+        setLoadingComments(true);
+        try {
+            const list: PeaObservacionDto[] = await getObservacionesPea(projectUuid);
+            const grouped: Record<string, SectionComment[]> = {};
 
-    const addCommentLocal = (section: string, comment: SectionComment) => {
-        setComments(prev => {
-            const current = prev[section] || [];
-            const updated = {
-                ...prev,
-                [section]: [...current, comment]
-            };
-            if (projectUuid) {
-                localStorage.setItem(`comments_${projectUuid}`, JSON.stringify(updated));
-            }
-            return updated;
-        });
-    };
+            list.forEach(obs => {
+                const key = obs.seccionAfectada || 'General';
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push({
+                    id: obs.idObservacion,
+                    uuid: obs.uuid,
+                    status: obs.estado,
+                    text: obs.textoObservacion,
+                    creadoEn: obs.fechaObservacion,
+                    nombreUsuario: obs.nombreObservador || obs.rolObservador || 'Revisor Curricular',
+                    rolObservador: obs.rolObservador,
+                    seccionAfectada: obs.seccionAfectada,
+                    respuestaDocente: obs.respuestaDocente,
+                    fechaResolucion: obs.fechaResolucion
+                });
+            });
 
-    const updateCommentLocal = (section: string, id: number, text: string) => {
-        setComments(prev => {
-            const current = prev[section] || [];
-            const updatedList = current.map(c => c.id === id ? { ...c, text } : c);
-            const updated = {
-                ...prev,
-                [section]: updatedList
-            };
-            if (projectUuid) {
-                localStorage.setItem(`comments_${projectUuid}`, JSON.stringify(updated));
-            }
-            return updated;
-        });
-    };
+            setComments(grouped);
+        } catch (err) {
+            console.error('[DOSIER] Error al cargar observaciones del PEA:', err);
+        } finally {
+            setLoadingComments(false);
+        }
+    }, [projectUuid]);
 
-    const removeCommentLocal = (section: string, id: number) => {
-        setComments(prev => {
-            const current = prev[section] || [];
-            const updatedList = current.filter(c => c.id !== id);
-            const updated = {
-                ...prev,
-                [section]: updatedList
-            };
-            if (projectUuid) {
-                localStorage.setItem(`comments_${projectUuid}`, JSON.stringify(updated));
-            }
-            return updated;
-        });
+    useEffect(() => {
+        loadObservations();
+    }, [loadObservations]);
+
+    const removeCommentLocal = async (section: string, id: number) => {
+        try {
+            await eliminarObservacionPea(id);
+            setComments(prev => {
+                const current = prev[section] || [];
+                const updatedList = current.filter(c => c.id !== id);
+                return {
+                    ...prev,
+                    [section]: updatedList
+                };
+            });
+            addToast("Observación Eliminada", "La observación ha sido retirada del expediente curricular.", "info");
+        } catch (err: any) {
+            console.error('[DOSIER] Error al eliminar observación:', err);
+            addToast("Error", err.response?.data?.message || "No se pudo eliminar la observación.", "error");
+        }
     };
 
     const saveContextualComment = async () => {
-        if (!contextualInput.trim()) return;
-        const newStatus = 'Corregir';
-        const label = FIELD_LABELS[activeCommentField] || activeCommentField.toUpperCase();
-        const content = `[KEY:${activeCommentField}] [${label}] (Observación): ${contextualInput.trim()}`;
+        if (!contextualInput.trim() || !projectUuid) return;
+
+        const rolObservador = isVicerrector
+            ? 'Vicerrector'
+            : isCoordAcad
+                ? 'CoordinadorAcademico'
+                : isCoordCarrera
+                    ? 'CoordinadorCarrera'
+                    : isAdmin
+                        ? 'Administrador'
+                        : 'CoordinadorCarrera';
 
         try {
-            if (editingCommentId) {
-                await collaborationService.updateComment(editingCommentId, {
-                    contenido: content,
-                    Contenido: content
-                });
+            const nuevaObs = await agregarObservacionPea(projectUuid, {
+                rolObservador,
+                seccionAfectada: activeCommentField,
+                texto: contextualInput.trim()
+            });
 
-                updateCommentLocal(activeCommentField, editingCommentId, contextualInput.trim());
-                setEditingCommentId(null);
-            } else {
-                const res = await collaborationService.createComment({
-                    documentoUuid: projectUuid,
-                    DocumentoUuid: projectUuid,
-                    documento_uuid: projectUuid,
-                    contenido: content,
-                    Contenido: content,
-                    idPadre: null,
-                    IdPadre: null,
-                    id_padre: null
-                });
+            const newComment: SectionComment = {
+                id: nuevaObs.idObservacion,
+                uuid: nuevaObs.uuid,
+                status: nuevaObs.estado,
+                text: nuevaObs.textoObservacion,
+                creadoEn: nuevaObs.fechaObservacion,
+                nombreUsuario: nuevaObs.nombreObservador || rolObservador,
+                rolObservador: nuevaObs.rolObservador,
+                seccionAfectada: nuevaObs.seccionAfectada,
+                respuestaDocente: nuevaObs.respuestaDocente
+            };
 
-                const newId = (res as any)?.idComentario || res?.id || Date.now();
+            setComments(prev => {
+                const current = prev[activeCommentField] || [];
+                return {
+                    ...prev,
+                    [activeCommentField]: [...current, newComment]
+                };
+            });
 
-                addCommentLocal(activeCommentField, {
-                    id: newId,
-                    status: newStatus,
-                    text: contextualInput.trim()
-                });
-            }
-
-            setContextualInput("");
+            setContextualInput('');
+            setEditingCommentId(null);
+            addToast(
+                "Observación Registrada",
+                `Se ha guardado la observación técnica en ${activeCommentField}. El PEA pasa a estado Observado.`,
+                "success"
+            );
         } catch (err: any) {
-            console.error("Error al persistir comentario en backend:", err);
-            addToast("Error de conexión", "No se pudo sincronizar el comentario con el servidor backend.", "error");
+            console.error('[DOSIER] Error al registrar observación:', err);
+            addToast("Error", err.response?.data?.message || "No se pudo guardar la observación en el servidor.", "error");
         }
     };
 
@@ -140,11 +166,11 @@ export const useRevisionTecnicaComments = ({
                 console.error("Speech recognition error:", e);
                 setIsListening(false);
                 if (e.error === 'not-allowed') {
-                    addToast("Permiso denegado", "Habilite el acceso al micrófono en su navegador para usar el dictado por voz.", "warning");
+                    addToast("Permiso denegado", "Habilite el acceso al micrófono en su navegador.", "warning");
                 } else if (e.error === 'no-speech') {
-                    addToast("No se detectó voz", "No se escuchó ningún sonido. Intente hablar más fuerte o cerca del micrófono.", "info");
+                    addToast("Sin audio", "No se detectó voz. Intente hablar más cerca del micrófono.", "info");
                 } else {
-                    addToast("Error de dictado", "No se pudo procesar el audio. Intente de nuevo.", "error");
+                    addToast("Error de dictado", "No se pudo procesar el audio.", "error");
                 }
             };
 
@@ -175,8 +201,10 @@ export const useRevisionTecnicaComments = ({
         isListening,
         editingCommentId,
         setEditingCommentId,
+        loadingComments,
         removeCommentLocal,
         saveContextualComment,
-        handleStartListening
+        handleStartListening,
+        reloadObservations: loadObservations
     };
 };

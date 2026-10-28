@@ -109,22 +109,26 @@ export const curriculumProjectService = {
     /**
      * Obtiene el historial de trazabilidad de cambios de estado del PEA o documento.
      */
-    getTraceability: (projectUuid: string): Promise<TraceabilityItemDto[]> =>
-        api.get<TraceabilityItemDto[]>(`/pea/${encodeURIComponent(projectUuid)}/trazabilidad`)
+    getTraceability: (projectUuid: string): Promise<TraceabilityItemDto[]> => {
+        const url = projectUuid.includes("-")
+            ? `/pea/uuid/${encodeURIComponent(projectUuid)}/trazabilidad`
+            : `/pea/${encodeURIComponent(projectUuid)}/trazabilidad`;
+        return api.get<TraceabilityItemDto[]>(url)
             .then(r => r.data || [])
-            .catch(() => []),
+            .catch(() => []);
+    },
 
     /**
      * Ejecuta una transición de estado del proyecto curricular con observaciones y plazo opcional.
      */
     transitionState: (projectUuid: string, newState: string, observation?: string, _fechaLimite?: string): Promise<any> => {
-        return api.patch(
-            `/pea/${encodeURIComponent(projectUuid)}/estado`,
-            {
-                nuevo_estado: newState,
-                motivo: observation || ''
-            }
-        ).then(r => r.data).catch(() => ({ success: true }));
+        const url = projectUuid.includes('-')
+            ? `/pea/uuid/${encodeURIComponent(projectUuid)}/estado`
+            : `/pea/${encodeURIComponent(projectUuid)}/estado`;
+        return api.patch(url, {
+            nuevo_estado: newState,
+            motivo: observation || ''
+        }).then(r => r.data);
     },
 
     /**

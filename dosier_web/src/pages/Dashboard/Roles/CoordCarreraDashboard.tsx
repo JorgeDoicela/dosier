@@ -19,6 +19,12 @@ import {
 import { ObservacionesDisciplinarModal } from './Modals/ObservacionesDisciplinarModal';
 import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/RecordatorioDocentesModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
+import {
+    isPeaBorrador,
+    isPeaEnRevision,
+    isPeaAvalado,
+    getPeaStatusDescriptor
+} from '../../Curriculum/utils/peaStatusWorkflow';
 import { 
     Search, 
     Filter, 
@@ -322,21 +328,15 @@ export const CoordCarreraDashboard: React.FC = () => {
                     /* ── MODO CUADROS (ESTILO DOCENTE) ── */
                     <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-zinc-50/50 dark:bg-zinc-950">
                         {peasFiltrados.map(p => {
-                            const puedeEmitirAval = (p.estado === 'EnRevision' || p.firma_docente) && !p.firma_coord;
+                            const descriptor = getPeaStatusDescriptor(p.estado);
+                            const esBorrador = isPeaBorrador(p.estado);
+                            const esEnRevision = isPeaEnRevision(p.estado);
+                            const puedeEmitirAval = esEnRevision && !p.firma_coord;
 
                             return (
                                 <div
                                     key={p.uuid}
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => handleAbrirRevision(p.uuid)}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            handleAbrirRevision(p.uuid);
-                                        }
-                                    }}
-                                    className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
+                                    className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all flex flex-col justify-between space-y-4 text-left"
                                 >
                                     {/* Top: Carrera y Estado */}
                                     <div className="space-y-2">
@@ -345,42 +345,10 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                 <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
                                                 <span className="truncate">{p.nombre_carrera}</span>
                                             </div>
-                                            {p.estado === 'Borrador' && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
-                                                    Docente Elaborando
-                                                </span>
-                                            )}
-                                            {p.estado === 'EnRevision' && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                                                    Listo para Revisión
-                                                </span>
-                                            )}
-                                            {p.estado === 'Observado' && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                                                    Observado ({p.total_observaciones_pendientes})
-                                                </span>
-                                            )}
-                                            {p.estado === 'RevisadoCoord' && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
-                                                    Aval de Carrera
-                                                </span>
-                                            )}
-                                            {p.estado === 'RevisadoAcad' && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                                                    Aval Académico
-                                                </span>
-                                            )}
-                                            {p.estado === 'Aprobado' && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                                    Legalizado
-                                                </span>
-                                            )}
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass} shrink-0`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
+                                                {descriptor.label}
+                                            </span>
                                         </div>
 
                                         {/* Título de la Asignatura */}
@@ -412,33 +380,56 @@ export const CoordCarreraDashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Pie de Tarjeta con Acciones */}
+                                    {/* Pie de Tarjeta con Acciones Coherentes */}
                                     <div className="pt-2 flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAbrirRevision(p.uuid)}
-                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                        >
-                                            <Eye className="w-3.5 h-3.5" />
-                                            <span>Revisar</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setObservacionPea(p)}
-                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-                                        >
-                                            Observar
-                                        </button>
-
-                                        {puedeEmitirAval && (
+                                        {esBorrador ? (
                                             <button
                                                 type="button"
-                                                onClick={() => handleEmitirAvalCarrera(p)}
-                                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
+                                                onClick={() => handleAbrirRevision(p.uuid)}
+                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                title="Consultar avance de formulación docente"
                                             >
-                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                <span>Emitir Aval</span>
+                                                <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                                <span>Ver avance</span>
+                                            </button>
+                                        ) : esEnRevision ? (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAbrirRevision(p.uuid)}
+                                                    className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    <span>Revisar</span>
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setObservacionPea(p)}
+                                                    className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                                                >
+                                                    Observar
+                                                </button>
+
+                                                {puedeEmitirAval && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleEmitirAvalCarrera(p)}
+                                                        className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
+                                                    >
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                                        <span>Emitir Aval</span>
+                                                    </button>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAbrirRevision(p.uuid)}
+                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span>Ver expediente</span>
                                             </button>
                                         )}
                                     </div>
@@ -490,73 +481,60 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                 {p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} créd.)` : ''}
                                             </td>
                                             <td className="py-2.5 px-3">
-                                                {p.estado === 'Borrador' && (
-                                                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
-                                                        <span>Docente Elaborando</span>
-                                                    </div>
-                                                )}
-                                                {p.estado === 'EnRevision' && (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                                                        <span>Listo para Revisión</span>
-                                                    </div>
-                                                )}
-                                                {p.estado === 'Observado' && (
-                                                    <div>
-                                                        <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                                                            <span>Con Observaciones ({p.total_observaciones_pendientes})</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {p.estado === 'RevisadoCoord' && (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-900 dark:text-zinc-100">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0" />
-                                                        <span>Aval de Carrera Emitido</span>
-                                                    </div>
-                                                )}
-                                                {p.estado === 'RevisadoAcad' && (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                                        <span>Aval Académico Concedido</span>
-                                                    </div>
-                                                )}
-                                                {p.estado === 'Aprobado' && (
-                                                    <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                                        <span>Legalizado Vicerrectorado</span>
-                                                    </div>
-                                                )}
-                                                {!['Borrador', 'EnRevision', 'Observado', 'RevisadoCoord', 'RevisadoAcad', 'Aprobado'].includes(p.estado) && (
-                                                    <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
-                                                        <span>{p.estado}</span>
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center gap-1.5 text-xs font-medium">
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
+                                                    <span className={descriptor.textClass}>{descriptor.label}</span>
+                                                    {p.total_observaciones_pendientes > 0 && (
+                                                        <span className="text-[10px] text-rose-500 font-mono">
+                                                            ({p.total_observaciones_pendientes})
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-2.5 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
-                                                    <button
-                                                        onClick={() => handleAbrirRevision(p.uuid)}
-                                                        className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
-                                                    >
-                                                        Revisar
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => setObservacionPea(p)}
-                                                        className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-                                                    >
-                                                        Observar
-                                                    </button>
-
-                                                    {puedeEmitirAval && (
+                                                    {esBorrador ? (
                                                         <button
-                                                            onClick={() => handleEmitirAvalCarrera(p)}
-                                                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
+                                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                            title="Consultar avance de formulación docente"
                                                         >
-                                                            Emitir Aval
+                                                            <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                                            <span>Ver avance</span>
+                                                        </button>
+                                                    ) : esEnRevision ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleAbrirRevision(p.uuid)}
+                                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" />
+                                                                <span>Revisar</span>
+                                                            </button>
+
+                                                            <button
+                                                                onClick={() => setObservacionPea(p)}
+                                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                                                            >
+                                                                Observar
+                                                            </button>
+
+                                                            {puedeEmitirAval && (
+                                                                <button
+                                                                    onClick={() => handleEmitirAvalCarrera(p)}
+                                                                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
+                                                                >
+                                                                    Emitir Aval
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5" />
+                                                            <span>Ver expediente</span>
                                                         </button>
                                                     )}
                                                 </div>

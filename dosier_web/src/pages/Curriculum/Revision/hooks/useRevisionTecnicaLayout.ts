@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 export const useRevisionTecnicaLayout = () => {
     const [viewMode, setViewMode] = useState<'interactive' | 'pdf' | 'history'>('interactive');
@@ -7,14 +7,16 @@ export const useRevisionTecnicaLayout = () => {
     const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
     const [generalFeedback, setGeneralFeedback] = useState('');
 
-    const [isDraggingLeft, setIsDraggingLeft] = useState(false);
-    const [isDraggingRight, setIsDraggingRight] = useState(false);
-
     const [leftSidebarWidth, setLeftSidebarWidth] = useState<number>(() => {
         const saved = localStorage.getItem('rev_left_sidebar_width');
-        return saved ? parseInt(saved, 10) : 260;
+        const parsed = saved ? parseInt(saved, 10) : 280;
+        const normalized = (parsed < 260 || parsed > 500) ? 280 : parsed;
+        if (saved !== String(normalized)) {
+            localStorage.setItem('rev_left_sidebar_width', String(normalized));
+        }
+        return normalized;
     });
-    const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState<boolean>(() => {
+    const [isLeftSidebarOpen, setIsLeftSidebarOpenState] = useState<boolean>(() => {
         return localStorage.getItem('rev_left_sidebar_open') !== 'false';
     });
 
@@ -22,11 +24,14 @@ export const useRevisionTecnicaLayout = () => {
         const saved = localStorage.getItem('rev_right_sidebar_width');
         return saved ? parseInt(saved, 10) : 380;
     });
-    const [isRightSidebarOpen, setIsRightSidebarOpen] = useState<boolean>(() => {
-        return localStorage.getItem('rev_right_sidebar_open') !== 'false';
+    const [isRightSidebarOpen, setIsRightSidebarOpenState] = useState<boolean>(() => {
+        return localStorage.getItem('rev_right_sidebar_open') === 'true';
     });
 
     const leftSidebarRef = useRef<HTMLDivElement>(null);
+    const rightSidebarRef = useRef<HTMLDivElement>(null);
+    const isDraggingLeftRef = useRef(false);
+    const isDraggingRightRef = useRef(false);
 
     // Auditoría floating button drag state
     const [auditoriaButtonTop, setAuditoriaButtonTop] = useState<number>(() => {
@@ -47,7 +52,7 @@ export const useRevisionTecnicaLayout = () => {
     useEffect(() => {
         const checkScreenSize = () => {
             if (window.innerWidth < 1100) {
-                setIsLeftSidebarOpen(false);
+                setIsLeftSidebarOpenState(false);
                 localStorage.setItem('rev_left_sidebar_open', 'false');
             }
         };
@@ -56,62 +61,164 @@ export const useRevisionTecnicaLayout = () => {
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
 
-    const startDraggingLeft = (mouseDownEvent: React.MouseEvent) => {
+    const toggleLeftSidebar = useCallback((open?: boolean) => {
+        setIsLeftSidebarOpenState(prev => {
+            const nextState = open !== undefined ? open : !prev;
+            localStorage.setItem('rev_left_sidebar_open', String(nextState));
+            if (nextState) {
+                const widthToUse = Math.max(200, Math.min(500, leftSidebarWidth));
+                if (leftSidebarRef.current) {
+                    leftSidebarRef.current.style.width = `${widthToUse}px`;
+                    leftSidebarRef.current.style.transition = 'width 300ms ease-in-out';
+                }
+            } else if (leftSidebarRef.current) {
+                leftSidebarRef.current.style.width = '0px';
+                leftSidebarRef.current.style.transition = 'width 300ms ease-in-out';
+            }
+            return nextState;
+        });
+    }, [leftSidebarWidth]);
+
+    const toggleRightSidebar = useCallback((open?: boolean) => {
+        setIsRightSidebarOpenState(prev => {
+            const nextState = open !== undefined ? open : !prev;
+            localStorage.setItem('rev_right_sidebar_open', String(nextState));
+            if (nextState) {
+                const widthToUse = Math.max(320, Math.min(650, rightSidebarWidth));
+                if (rightSidebarRef.current) {
+                    rightSidebarRef.current.style.width = `${widthToUse}px`;
+                    rightSidebarRef.current.style.transition = 'width 300ms ease-in-out';
+                }
+            } else if (rightSidebarRef.current) {
+                rightSidebarRef.current.style.width = '0px';
+                rightSidebarRef.current.style.transition = 'width 300ms ease-in-out';
+            }
+            return nextState;
+        });
+    }, [rightSidebarWidth]);
+
+    // ── Redimensionado con zona de colapso automático idéntico a DOSIERBuilderShell ──
+    const startDraggingLeft = useCallback((mouseDownEvent: React.MouseEvent) => {
         mouseDownEvent.preventDefault();
+        isDraggingLeftRef.current = true;
         document.body.style.userSelect = 'none';
         document.body.style.cursor = 'col-resize';
-        setIsDraggingLeft(true);
+
+        if (leftSidebarRef.current) {
+            leftSidebarRef.current.style.transition = 'none';
+        }
 
         const startWidth = leftSidebarWidth;
         const startX = mouseDownEvent.clientX;
+        let maxDelta = 0;
 
         const doDrag = (mouseMoveEvent: MouseEvent) => {
             const deltaX = mouseMoveEvent.clientX - startX;
-            const newWidth = Math.max(220, Math.min(380, startWidth + deltaX));
-            setLeftSidebarWidth(newWidth);
-            localStorage.setItem('rev_left_sidebar_width', String(newWidth));
+            maxDelta = Math.max(maxDelta, Math.abs(deltaX));
+
+            // Permite bajar a 0 para que el usuario sienta el límite de colapso
+            const newWidth = Math.max(0, Math.min(500, startWidth + deltaX));
+            if (leftSidebarRef.current) {
+                leftSidebarRef.current.style.width = `${newWidth}px`;
+            }
         };
 
         const stopDrag = () => {
+            isDraggingLeftRef.current = false;
             document.body.style.removeProperty('user-select');
             document.body.style.removeProperty('cursor');
             document.removeEventListener('mousemove', doDrag);
             document.removeEventListener('mouseup', stopDrag);
-            setIsDraggingLeft(false);
+
+            const currentWidth = leftSidebarRef.current
+                ? parseInt(leftSidebarRef.current.style.width, 10)
+                : startWidth;
+
+            const clicked = maxDelta <= 4;
+            const releasedInCollapseZone = maxDelta > 4 && currentWidth < 140;
+            const shouldCollapse = clicked || releasedInCollapseZone;
+
+            if (leftSidebarRef.current) {
+                leftSidebarRef.current.style.transition = 'width 300ms ease-in-out';
+            }
+
+            if (shouldCollapse) {
+                toggleLeftSidebar(false);
+            } else {
+                const finalWidth = Math.max(200, Math.min(500, currentWidth));
+                setLeftSidebarWidth(finalWidth);
+                localStorage.setItem('rev_left_sidebar_width', String(finalWidth));
+                if (leftSidebarRef.current) {
+                    leftSidebarRef.current.style.width = `${finalWidth}px`;
+                }
+            }
         };
 
         document.addEventListener('mousemove', doDrag);
         document.addEventListener('mouseup', stopDrag);
-    };
+    }, [leftSidebarWidth, toggleLeftSidebar]);
 
-    const startDraggingRight = (mouseDownEvent: React.MouseEvent) => {
+    const startDraggingRight = useCallback((mouseDownEvent: React.MouseEvent) => {
         mouseDownEvent.preventDefault();
+        isDraggingRightRef.current = true;
         document.body.style.userSelect = 'none';
         document.body.style.cursor = 'col-resize';
-        setIsDraggingRight(true);
+
+        if (rightSidebarRef.current) {
+            rightSidebarRef.current.style.transition = 'none';
+        }
 
         const startWidth = rightSidebarWidth;
         const startX = mouseDownEvent.clientX;
+        let maxDelta = 0;
 
         const doDrag = (mouseMoveEvent: MouseEvent) => {
             const deltaX = startX - mouseMoveEvent.clientX;
-            const newWidth = Math.max(360, Math.min(650, startWidth + deltaX));
-            setRightSidebarWidth(newWidth);
-            localStorage.setItem('rev_right_sidebar_width', String(newWidth));
+            maxDelta = Math.max(maxDelta, Math.abs(deltaX));
+
+            // Permite bajar a 0 para que el usuario sienta el límite de colapso
+            const newWidth = Math.max(0, Math.min(700, startWidth + deltaX));
+            if (rightSidebarRef.current) {
+                rightSidebarRef.current.style.width = `${newWidth}px`;
+            }
         };
 
         const stopDrag = () => {
+            isDraggingRightRef.current = false;
             document.body.style.removeProperty('user-select');
             document.body.style.removeProperty('cursor');
             document.removeEventListener('mousemove', doDrag);
             document.removeEventListener('mouseup', stopDrag);
-            setIsDraggingRight(false);
+
+            const currentWidth = rightSidebarRef.current
+                ? parseInt(rightSidebarRef.current.style.width, 10)
+                : startWidth;
+
+            const clicked = maxDelta <= 4;
+            const releasedInCollapseZone = maxDelta > 4 && currentWidth < 220;
+            const shouldCollapse = clicked || releasedInCollapseZone;
+
+            if (rightSidebarRef.current) {
+                rightSidebarRef.current.style.transition = 'width 300ms ease-in-out';
+            }
+
+            if (shouldCollapse) {
+                toggleRightSidebar(false);
+            } else {
+                const finalWidth = Math.max(300, Math.min(700, currentWidth));
+                setRightSidebarWidth(finalWidth);
+                localStorage.setItem('rev_right_sidebar_width', String(finalWidth));
+                if (rightSidebarRef.current) {
+                    rightSidebarRef.current.style.width = `${finalWidth}px`;
+                }
+            }
         };
 
         document.addEventListener('mousemove', doDrag);
         document.addEventListener('mouseup', stopDrag);
-    };
+    }, [rightSidebarWidth, toggleRightSidebar]);
 
+    // ── Drag & Drop de Pestañas Flotantes (Nav y Auditoría) ──
     const handleButtonDragStart = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsDraggingButton(true);
@@ -155,8 +262,7 @@ export const useRevisionTecnicaLayout = () => {
                 localStorage.setItem('rev_auditoria_button_top', boundedY.toString());
             } else {
                 setAuditoriaButtonLeft(null);
-                setIsRightSidebarOpen(true);
-                localStorage.setItem('rev_right_sidebar_open', 'true');
+                toggleRightSidebar(true);
             }
         };
 
@@ -207,25 +313,12 @@ export const useRevisionTecnicaLayout = () => {
                 localStorage.setItem('rev_secciones_button_top', boundedY.toString());
             } else {
                 setSeccionesButtonLeft(null);
-                setIsLeftSidebarOpen(true);
-                localStorage.setItem('rev_left_sidebar_open', 'true');
+                toggleLeftSidebar(true);
             }
         };
 
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
-    };
-
-    const toggleLeftSidebar = (open?: boolean) => {
-        const nextState = open !== undefined ? open : !isLeftSidebarOpen;
-        setIsLeftSidebarOpen(nextState);
-        localStorage.setItem('rev_left_sidebar_open', String(nextState));
-    };
-
-    const toggleRightSidebar = (open?: boolean) => {
-        const nextState = open !== undefined ? open : !isRightSidebarOpen;
-        setIsRightSidebarOpen(nextState);
-        localStorage.setItem('rev_right_sidebar_open', String(nextState));
     };
 
     return {
@@ -239,8 +332,8 @@ export const useRevisionTecnicaLayout = () => {
         setIsFinalizeModalOpen,
         generalFeedback,
         setGeneralFeedback,
-        isDraggingLeft,
-        isDraggingRight,
+        isDraggingLeft: isDraggingLeftRef.current,
+        isDraggingRight: isDraggingRightRef.current,
         leftSidebarWidth,
         isLeftSidebarOpen,
         setIsLeftSidebarOpen: toggleLeftSidebar,
@@ -248,6 +341,7 @@ export const useRevisionTecnicaLayout = () => {
         isRightSidebarOpen,
         setIsRightSidebarOpen: toggleRightSidebar,
         leftSidebarRef,
+        rightSidebarRef,
         auditoriaButtonTop,
         auditoriaButtonLeft,
         isDraggingButton,

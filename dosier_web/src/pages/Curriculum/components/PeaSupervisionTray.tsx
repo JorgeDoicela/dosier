@@ -5,46 +5,72 @@ import {
     Clock,
     Search,
     RefreshCw,
-    FileText,
-    CheckCircle2,
     AlertCircle,
-    Layers,
     UserCheck,
-    ChevronRight,
     Filter,
-    Shield,
-    FileCheck2,
     Eye,
     GraduationCap,
     LayoutGrid,
     List,
     Building2,
-    ArrowRight,
-    ExternalLink
+    ExternalLink,
+    CheckCircle2,
+    Info
 } from 'lucide-react';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
-import { useNotifications } from '../../../api/NotificationsContext';
+import { useAuth } from '../../../api/AuthContext';
 import { getBandejaPeas, type PeaBandejaItemDto } from '../../../services/peaService';
 import {
     getPeriodosAcademicos,
     getPeriodoActivo,
     type PeriodoAcademicoDto
 } from '../../../services/docenteAsignaturasService';
+import {
+    normalizePeaStatus,
+    isPeaBorrador,
+    isPeaEnRevision,
+    isPeaAvalado,
+    getPeaStatusDescriptor
+} from '../utils/peaStatusWorkflow';
 
 export const PeaSupervisionTray: React.FC = () => {
     const navigate = useNavigate();
-    const { addToast } = useNotifications();
+    const { user, isAdmin } = useAuth();
 
     const [peas, setPeas] = useState<PeaBandejaItemDto[]>([]);
     const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
     const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
     const [selectedCarrera, setSelectedCarrera] = useState<string>('todas');
     const [selectedEstado, setSelectedEstado] = useState<string>('todos');
+    // Tab por defecto: 'por_revisar' para que las autoridades vean directamente su bandeja de trabajo operativo
+    const [workflowTab, setWorkflowTab] = useState<'por_revisar' | 'en_redaccion' | 'aprobados' | 'todos'>('por_revisar');
     const [search, setSearch] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState<boolean>(true);
-    const [refreshing, setRefreshing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Función de recarga de PEAs con soporte silencioso para tiempo real
+    const recargarPeas = useCallback(async (periodoId?: string, silent = false) => {
+        if (!silent) {
+            setLoading(true);
+        }
+        setError(null);
+        try {
+            const data = await getBandejaPeas({
+                idPeriodo: periodoId || undefined
+            });
+            setPeas(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            console.error('[DOSIER] Error al sincronizar bandeja de PEAs:', err);
+            if (!silent) {
+                setError('No se pudo cargar la información de supervisión de PEAs. Verifique la conexión con el servidor.');
+            }
+        } finally {
+            if (!silent) {
+                setLoading(false);
+            }
+        }
+    }, []);
 
     // Cargar períodos y lista inicial
     const cargarDatos = useCallback(async () => {
@@ -60,57 +86,71 @@ export const PeaSupervisionTray: React.FC = () => {
             const initialPeriod = periodoActivo?.id_periodo || periodosList[0]?.id_periodo || '';
             setSelectedPeriodo(initialPeriod);
 
-            const data = await getBandejaPeas({
-                idPeriodo: initialPeriod || undefined
-            });
-            setPeas(data);
+            await recargarPeas(initialPeriod, false);
         } catch (err: any) {
-            console.error('[DOSIER] Error al cargar bandeja de PEAs:', err);
+            console.error('[DOSIER] Error al inicializar bandeja de PEAs:', err);
             setError('No se pudo cargar la información de supervisión de PEAs. Verifique la conexión con el servidor.');
-        } finally {
             setLoading(false);
         }
-    }, []);
+    }, [recargarPeas]);
 
     useEffect(() => {
         cargarDatos();
     }, [cargarDatos]);
 
-    const handleRefrescar = async () => {
-        setRefreshing(true);
-        setError(null);
-        try {
-            const data = await getBandejaPeas({
-                idPeriodo: selectedPeriodo || undefined,
-                idCarrera: selectedCarrera !== 'todas' ? Number(selectedCarrera) : undefined,
-                estado: selectedEstado !== 'todos' ? selectedEstado : undefined
-            });
-            setPeas(data);
-            addToast('Bandeja Actualizada', 'Se sincronizaron los últimos estados de los PEAs institucionales.', 'info');
-        } catch (err: any) {
-            console.error('[DOSIER] Error al refrescar PEAs:', err);
-            setError('Error al actualizar los instrumentos curriculares.');
-        } finally {
-            setRefreshing(false);
-        }
-    };
+    // 1. Sincronización en tiempo real vía eventos de dominio (SignalR WebSockets y transiciones de workflow)
+    useEffect(() => {
+        const handleProjectsChanged = () => {
+            if (selectedPeriodo) {
+                recargarPeas(selectedPeriodo, true);
+            }
+        };
+
+        window.addEventListener('dosier-projects-changed', handleProjectsChanged);
+        return () => {
+            window.removeEventListener('dosier-projects-changed', handleProjectsChanged);
+        };
+    }, [selectedPeriodo, recargarPeas]);
+
+    // 2. Revalidación automática al recuperar foco o visibilidad de pestaña (revalidateOnFocus)
+    useEffect(() => {
+        const handleVisibilityAndFocus = () => {
+            if (document.visibilityState === 'visible' && selectedPeriodo) {
+                recargarPeas(selectedPeriodo, true);
+            }
+        };
+
+        window.addEventListener('focus', handleVisibilityAndFocus);
+        document.addEventListener('visibilitychange', handleVisibilityAndFocus);
+        return () => {
+            window.removeEventListener('focus', handleVisibilityAndFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityAndFocus);
+        };
+    }, [selectedPeriodo, recargarPeas]);
+
+    // 3. Heartbeat pasivo (revalidación periódica cada 20 segundos mientras la pestaña esté activa)
+    useEffect(() => {
+        if (!selectedPeriodo) return;
+
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                recargarPeas(selectedPeriodo, true);
+            }
+        }, 20000);
+
+        return () => clearInterval(interval);
+    }, [selectedPeriodo, recargarPeas]);
 
     const handlePeriodoChange = async (val: string | number) => {
         const idStr = String(val);
         setSelectedPeriodo(idStr);
-        setRefreshing(true);
-        try {
-            const data = await getBandejaPeas({
-                idPeriodo: idStr,
-                idCarrera: selectedCarrera !== 'todas' ? Number(selectedCarrera) : undefined,
-                estado: selectedEstado !== 'todos' ? selectedEstado : undefined
-            });
-            setPeas(data);
-        } catch (err) {
-            console.error('[DOSIER] Error al cambiar período:', err);
-        } finally {
-            setRefreshing(false);
-        }
+        await recargarPeas(idStr, false);
+    };
+
+    // Cambiar de pestaña y sincronizar coherencia de filtros
+    const handleWorkflowTabChange = (tab: 'por_revisar' | 'en_redaccion' | 'aprobados' | 'todos') => {
+        setWorkflowTab(tab);
+        setSelectedEstado('todos');
     };
 
     // Carreras únicas encontradas
@@ -124,6 +164,19 @@ export const PeaSupervisionTray: React.FC = () => {
         return Array.from(map.entries()).map(([id, nombre]) => ({ id, nombre }));
     }, [peas]);
 
+    // Métricas de estado del workflow curricular
+    const stats = useMemo(() => {
+        const porRevisar = peas.filter(p => isPeaEnRevision(p.estado)).length;
+        const enRedaccion = peas.filter(p => isPeaBorrador(p.estado)).length;
+        const aprobados = peas.filter(p => isPeaAvalado(p.estado)).length;
+        return {
+            total: peas.length,
+            porRevisar,
+            enRedaccion,
+            aprobados
+        };
+    }, [peas]);
+
     // Filtrado en memoria por búsqueda, carrera y estado
     const filteredPeas = useMemo(() => {
         return peas.filter(p => {
@@ -135,70 +188,122 @@ export const PeaSupervisionTray: React.FC = () => {
                 (p.nombre_carrera && p.nombre_carrera.toLowerCase().includes(query));
 
             const matchCarrera = selectedCarrera === 'todas' || String(p.id_carrera) === selectedCarrera;
-            const matchEstado = selectedEstado === 'todos' || p.estado === selectedEstado;
 
-            return matchSearch && matchCarrera && matchEstado;
+            let matchWorkflow = true;
+            if (workflowTab === 'por_revisar') {
+                matchWorkflow = isPeaEnRevision(p.estado);
+            } else if (workflowTab === 'en_redaccion') {
+                matchWorkflow = isPeaBorrador(p.estado);
+            } else if (workflowTab === 'aprobados') {
+                matchWorkflow = isPeaAvalado(p.estado);
+            }
+
+            const matchEstado = selectedEstado === 'todos' || normalizePeaStatus(p.estado) === normalizePeaStatus(selectedEstado);
+
+            return matchSearch && matchCarrera && matchWorkflow && matchEstado;
         });
-    }, [peas, search, selectedCarrera, selectedEstado]);
-
-    const getEstadoBadge = (estado: string) => {
-        switch (estado) {
-            case 'Aprobado':
-            case 'Publicado':
-                return {
-                    label: 'Aprobado Institucional',
-                    dotClass: 'bg-emerald-500',
-                    textClass: 'text-emerald-600 dark:text-emerald-400',
-                    borderClass: 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80'
-                };
-            case 'RevisadoAcad':
-                return {
-                    label: 'Aval Académico',
-                    dotClass: 'bg-[#0070f3]',
-                    textClass: 'text-[#0070f3] dark:text-blue-400',
-                    borderClass: 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80'
-                };
-            case 'RevisadoCoord':
-                return {
-                    label: 'Aval Carrera',
-                    dotClass: 'bg-blue-500',
-                    textClass: 'text-blue-600 dark:text-blue-400',
-                    borderClass: 'border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80'
-                };
-            case 'EnRevision':
-                return {
-                    label: 'En Revisión',
-                    dotClass: 'bg-amber-500',
-                    textClass: 'text-amber-600 dark:text-amber-400',
-                    borderClass: 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80'
-                };
-            case 'Observado':
-                return {
-                    label: 'Con Observaciones',
-                    dotClass: 'bg-rose-500',
-                    textClass: 'text-rose-600 dark:text-rose-400',
-                    borderClass: 'border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/80'
-                };
-            default:
-                return {
-                    label: 'Borrador Docente',
-                    dotClass: 'bg-zinc-400 dark:bg-zinc-500',
-                    textClass: 'text-zinc-600 dark:text-zinc-400',
-                    borderClass: 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900'
-                };
-        }
-    };
+    }, [peas, search, selectedCarrera, selectedEstado, workflowTab]);
 
     const handleAbrirPea = (uuid: string) => {
         navigate(`/documentacion/revision-tecnica/${uuid}`);
     };
 
     const handleAbrirEditor = (uuid: string) => {
-        navigate(`/documentacion/workspace/pea-oficial/${uuid}?edit=pea-oficial`);
+        navigate(`/documentacion/workspace/PEA_OFICIAL/${uuid}?edit=pea-oficial`);
+    };
+
+    // Verificar si el usuario autenticado tiene permiso de edición directa sobre este PEA
+    const puedeEditarDocumento = (p: PeaBandejaItemDto): boolean => {
+        if (isAdmin) return true;
+        if (user?.id_sigafi && p.id_docente_elaborador && user.id_sigafi === p.id_docente_elaborador) {
+            return true;
+        }
+        return false;
     };
 
     return (
         <div className="space-y-6">
+            {/* ── Riel Plano Continuo de Pestañas de Workflow (Regla 4.1 styles-dosier) ── */}
+            <div className="border-b border-slate-200 dark:border-zinc-800 -mb-px">
+                <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Bandejas de supervisión del PEA">
+                    <button
+                        type="button"
+                        onClick={() => handleWorkflowTabChange('por_revisar')}
+                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                            workflowTab === 'por_revisar'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <span>Por revisar</span>
+                        {stats.porRevisar > 0 ? (
+                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300">
+                                {stats.porRevisar}
+                            </span>
+                        ) : (
+                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                                0
+                            </span>
+                        )}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => handleWorkflowTabChange('en_redaccion')}
+                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                            workflowTab === 'en_redaccion'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <span>En redacción docente</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                            {stats.enRedaccion}
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => handleWorkflowTabChange('aprobados')}
+                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                            workflowTab === 'aprobados'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <span>Aprobados con aval</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                            {stats.aprobados}
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => handleWorkflowTabChange('todos')}
+                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                            workflowTab === 'todos'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <span>Todos</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                            {stats.total}
+                        </span>
+                    </button>
+                </nav>
+            </div>
+
+            {/* Banner explicativo contextual según la pestaña activa */}
+            {workflowTab === 'en_redaccion' && (
+                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 text-xs flex items-center gap-3">
+                    <Info size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
+                    <span>
+                        <strong>Modo de Monitoreo:</strong> Las siguientes asignaturas están en fase de formulación docente (borrador) y aún no han sido remitidas formalmente a la Coordinación. La visualización está habilitada en modo consulta de avance sin emisión de aval.
+                    </span>
+                </div>
+            )}
+
             {/* ── BARRA DE FILTROS Y CONTROLES ── */}
             <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3 shadow-xs">
                 <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center">
@@ -220,7 +325,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 onChange={handlePeriodoChange}
                                 options={periodos.map(p => ({
                                     value: p.id_periodo,
-                                    label: p.periodo
+                                    label: p.detalle || p.id_periodo
                                 }))}
                                 placeholder="Período Lectivo..."
                             />
@@ -253,16 +358,6 @@ export const PeaSupervisionTray: React.FC = () => {
                                 <List size={14} />
                             </button>
                         </div>
-
-                        <button
-                            onClick={handleRefrescar}
-                            disabled={refreshing}
-                            className="h-9 px-3 flex items-center gap-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors shrink-0 cursor-pointer"
-                            title="Sincronizar lista"
-                        >
-                            <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
-                            <span>Refrescar</span>
-                        </button>
                     </div>
                 </div>
 
@@ -287,7 +382,7 @@ export const PeaSupervisionTray: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Filtro de Estado */}
+                    {/* Filtro de Estado Específico */}
                     <div className="flex items-center gap-1">
                         <label className="text-zinc-500 dark:text-zinc-400 text-[11px]">Estado:</label>
                         <select
@@ -296,12 +391,34 @@ export const PeaSupervisionTray: React.FC = () => {
                             className="py-1 px-2 text-xs rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none"
                         >
                             <option value="todos">Todos los Estados</option>
-                            <option value="Borrador">Borrador</option>
-                            <option value="EnRevision">En Revisión</option>
-                            <option value="Observado">Observado</option>
-                            <option value="RevisadoCoord">Revisado Coord. Carrera</option>
-                            <option value="RevisadoAcad">Revisado Coord. Académica</option>
-                            <option value="Aprobado">Aprobado / Legalizado</option>
+                            {workflowTab === 'por_revisar' ? (
+                                <>
+                                    <option value="EnRevision">En Revisión Técnica</option>
+                                    <option value="Observado">Con Observaciones</option>
+                                    <option value="Corregido">Corregido</option>
+                                </>
+                            ) : workflowTab === 'en_redaccion' ? (
+                                <>
+                                    <option value="Borrador">En Redacción (Borrador)</option>
+                                    <option value="NoIniciado">Sin Inicializar</option>
+                                </>
+                            ) : workflowTab === 'aprobados' ? (
+                                <>
+                                    <option value="RevisadoCoord">Aval de Carrera</option>
+                                    <option value="RevisadoAcad">Aval Académico</option>
+                                    <option value="Aprobado">Aprobado / Legalizado</option>
+                                </>
+                            ) : (
+                                <>
+                                    <option value="Borrador">Borrador Docente</option>
+                                    <option value="EnRevision">En Revisión Técnica</option>
+                                    <option value="Observado">Observado</option>
+                                    <option value="Corregido">Corregido</option>
+                                    <option value="RevisadoCoord">Aval de Carrera</option>
+                                    <option value="RevisadoAcad">Aval Académico</option>
+                                    <option value="Aprobado">Aprobado / Legalizado</option>
+                                </>
+                            )}
                         </select>
                     </div>
 
@@ -336,17 +453,33 @@ export const PeaSupervisionTray: React.FC = () => {
                 </div>
             ) : filteredPeas.length === 0 ? (
                 <div className="bg-white dark:bg-zinc-950 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-12 text-center text-zinc-500 text-xs space-y-2">
-                    <BookOpen size={28} className="mx-auto text-zinc-400" />
-                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">No se encontraron Programas de Estudio (PEA)</p>
-                    <p className="max-w-md mx-auto text-zinc-500 dark:text-zinc-400 text-[11px]">
-                        No existen instrumentos registrados para el período lectivo y criterios seleccionados. Verifique que los docentes hayan inicializado sus asignaturas desde su panel institucional.
-                    </p>
+                    {workflowTab === 'por_revisar' ? (
+                        <>
+                            <CheckCircle2 size={30} className="mx-auto text-emerald-500 dark:text-emerald-400" />
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Bandeja de revisión al día</p>
+                            <p className="max-w-md mx-auto text-zinc-500 dark:text-zinc-400 text-[11px]">
+                                No hay Programas de Estudio pendientes de revisión técnica. Las asignaturas remitidas por los docentes han sido atendidas o no registran requerimientos.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <BookOpen size={28} className="mx-auto text-zinc-400" />
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">No se encontraron Programas de Estudio (PEA)</p>
+                            <p className="max-w-md mx-auto text-zinc-500 dark:text-zinc-400 text-[11px]">
+                                No existen instrumentos para los criterios y filtros seleccionados en este período lectivo.
+                            </p>
+                        </>
+                    )}
                 </div>
             ) : viewMode === 'grid' ? (
-                /* ── MODO CUADROS / TARJETAS (ESTILO DOCENTE) ── */
+                /* ── MODO CUADROS / TARJETAS ── */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredPeas.map(pea => {
-                        const badge = getEstadoBadge(pea.estado);
+                        const descriptor = getPeaStatusDescriptor(pea.estado);
+                        const esBorrador = isPeaBorrador(pea.estado);
+                        const esEnRevision = isPeaEnRevision(pea.estado);
+                        const esAutorOAdmin = puedeEditarDocumento(pea);
+
                         return (
                             <div
                                 key={pea.uuid}
@@ -359,7 +492,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                         handleAbrirPea(pea.uuid);
                                     }
                                 }}
-                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
+                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
                             >
                                 {/* Encabezado de la Tarjeta */}
                                 <div className="space-y-2">
@@ -368,9 +501,9 @@ export const PeaSupervisionTray: React.FC = () => {
                                             <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
                                             <span className="truncate">{pea.nombre_carrera}</span>
                                         </div>
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${badge.borderClass} ${badge.textClass} shrink-0`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
-                                            {badge.label}
+                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass} shrink-0`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass}`} />
+                                            {descriptor.label}
                                         </span>
                                     </div>
 
@@ -382,7 +515,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                     {/* Docente Elaborador */}
                                     <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-0.5">
                                         <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
-                                        <span className="truncate">{pea.nombre_docente_elaborador || 'Docente de Asignatura'}</span>
+                                        <span className="truncate">{pea.nombre_docente_elaborador || 'Docente Responsable'}</span>
                                     </div>
 
                                     {/* Metadatos Curriculares */}
@@ -409,31 +542,68 @@ export const PeaSupervisionTray: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Pie de Tarjeta con Acción */}
-                                <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-zinc-900">
-                                    <button
-                                        type="button"
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            handleAbrirEditor(pea.uuid);
-                                        }}
-                                        className="text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                                        title="Abrir en Editor de Documento"
-                                    >
-                                        <ExternalLink size={12} />
-                                        <span>Editor</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            handleAbrirPea(pea.uuid);
-                                        }}
-                                        className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-                                    >
-                                        <Eye size={13} />
-                                        <span>Revisión Técnica</span>
-                                    </button>
+                                {/* Pie de Tarjeta con Acciones Claras e Intencionales */}
+                                <div className="pt-3 flex items-center justify-between border-t border-slate-100 dark:border-zinc-900">
+                                    {esAutorOAdmin ? (
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirEditor(pea.uuid);
+                                            }}
+                                            className="text-[11px] text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors inline-flex items-center gap-1 cursor-pointer font-medium"
+                                            title="Editar contenido curricular del PEA"
+                                        >
+                                            <ExternalLink size={12} />
+                                            <span>Editar</span>
+                                        </button>
+                                    ) : (
+                                        <div />
+                                    )}
+
+                                    {esBorrador ? (
+                                        /* Borrador no enviado: Botón secundario discreto de consulta */
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirPea(pea.uuid);
+                                            }}
+                                            className="bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 shadow-2xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
+                                            title="Consultar avance de redacción docente (lectura previa a envío formal)"
+                                        >
+                                            <Eye size={13} className="text-slate-400 dark:text-zinc-500" />
+                                            <span>Consultar avance</span>
+                                        </button>
+                                    ) : esEnRevision ? (
+                                        /* Enviado a revisión técnica: Botón primario de dictamen */
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirPea(pea.uuid);
+                                            }}
+                                            className="bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                            title="Realizar revisión técnica curricular y dictamen"
+                                        >
+                                            <Eye size={13} />
+                                            <span>Revisión Técnica</span>
+                                        </button>
+                                    ) : (
+                                        /* Con aval o legalizado: Botón de consulta de expediente */
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirPea(pea.uuid);
+                                            }}
+                                            className="bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
+                                            title="Ver expediente curricular avalado"
+                                        >
+                                            <CheckCircle2 size={13} />
+                                            <span>Ver expediente</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -443,16 +613,29 @@ export const PeaSupervisionTray: React.FC = () => {
                 /* ── MODO LISTA TABULAR ── */
                 <div className="space-y-2.5">
                     {filteredPeas.map(pea => {
-                        const badge = getEstadoBadge(pea.estado);
+                        const descriptor = getPeaStatusDescriptor(pea.estado);
+                        const esBorrador = isPeaBorrador(pea.estado);
+                        const esEnRevision = isPeaEnRevision(pea.estado);
+                        const esAutorOAdmin = puedeEditarDocumento(pea);
+
                         return (
                             <div
                                 key={pea.uuid}
-                                className="bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900/60 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => handleAbrirPea(pea.uuid)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleAbrirPea(pea.uuid);
+                                    }
+                                }}
+                                className="group bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900/60 hover:border-[#0070f3] dark:hover:border-blue-500 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                             >
                                 {/* Bloque de Asignatura y Carrera */}
                                 <div className="space-y-1.5 flex-1 min-w-0">
                                     <div className="flex flex-wrap items-center gap-2.5">
-                                        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
+                                        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors tracking-tight truncate">
                                             {pea.nombre_asignatura}
                                         </h3>
                                         {pea.codigo_asignatura && (
@@ -460,9 +643,9 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 {pea.codigo_asignatura}
                                             </span>
                                         )}
-                                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${badge.textClass}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dotClass}`} />
-                                            {badge.label}
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass}`} />
+                                            {descriptor.label}
                                         </span>
                                         {pea.total_observaciones_pendientes > 0 && (
                                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
@@ -480,7 +663,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                         <span>•</span>
                                         <span className="flex items-center gap-1">
                                             <UserCheck size={13} />
-                                            {pea.nombre_docente_elaborador || 'Docente de Asignatura'}
+                                            {pea.nombre_docente_elaborador || 'Docente Responsable'}
                                         </span>
                                         <span>•</span>
                                         <span className="flex items-center gap-1 font-mono">
@@ -498,23 +681,61 @@ export const PeaSupervisionTray: React.FC = () => {
 
                                 {/* Acciones */}
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleAbrirEditor(pea.uuid)}
-                                        className="h-8 px-2.5 flex items-center gap-1.5 text-xs rounded-md font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800"
-                                        title="Abrir en Editor de Documento"
-                                    >
-                                        <ExternalLink size={12} />
-                                        <span>Editor</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleAbrirPea(pea.uuid)}
-                                        className="h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-md font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
-                                    >
-                                        <Eye size={13} />
-                                        <span>Revisión Técnica</span>
-                                    </button>
+                                    {esAutorOAdmin && (
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirEditor(pea.uuid);
+                                            }}
+                                            className="h-8 px-2.5 flex items-center gap-1.5 text-xs rounded-md font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800"
+                                            title="Editar contenido curricular del PEA"
+                                        >
+                                            <ExternalLink size={12} />
+                                            <span>Editar</span>
+                                        </button>
+                                    )}
+
+                                    {esBorrador ? (
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirPea(pea.uuid);
+                                            }}
+                                            className="h-8 px-3 flex items-center gap-1.5 text-xs rounded-md font-medium text-slate-700 dark:text-zinc-300 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer shadow-2xs"
+                                            title="Consultar avance de redacción docente (lectura previa a envío formal)"
+                                        >
+                                            <Eye size={13} className="text-slate-400 dark:text-zinc-500" />
+                                            <span>Consultar avance</span>
+                                        </button>
+                                    ) : esEnRevision ? (
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirPea(pea.uuid);
+                                            }}
+                                            className="h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-md font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
+                                            title="Realizar revisión técnica curricular"
+                                        >
+                                            <Eye size={13} />
+                                            <span>Revisión Técnica</span>
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                handleAbrirPea(pea.uuid);
+                                            }}
+                                            className="h-8 px-3 flex items-center gap-1.5 text-xs rounded-md font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer shadow-2xs"
+                                            title="Ver expediente curricular avalado"
+                                        >
+                                            <CheckCircle2 size={13} />
+                                            <span>Ver expediente</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -524,4 +745,3 @@ export const PeaSupervisionTray: React.FC = () => {
         </div>
     );
 };
-

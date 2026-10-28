@@ -50,6 +50,7 @@ namespace dosier_application.Curriculum.Interfaces
         Task<PeaFirmaResultadoDto> FirmarPeaAsync(int idPea, int idUsuario, FirmarPeaDto dto, string ipAddress, string userAgent);
         Task<PeaObservacionDto> AgregarObservacionAsync(int idPea, string rolObservador, string seccion, string texto, int? idUsuario);
         Task<bool> SubsanarObservacionAsync(int idObservacion, string respuestaDocente, int? idUsuario);
+        Task<bool> EliminarObservacionAsync(int idObservacion, int? idUsuario);
         Task<List<PeaObservacionDto>> GetObservacionesByPeaAsync(int idPea);
         Task<List<PeaTrazabilidadDto>> GetTrazabilidadByPeaAsync(int idPea);
 

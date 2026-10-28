@@ -268,6 +268,9 @@ export const subsanarObservacionPea = (idObs: number, respuestaDocente: string):
         respuesta_docente: respuestaDocente
     }).then(r => r.data);
 
+export const eliminarObservacionPea = (idObs: number): Promise<{ success: boolean }> =>
+    api.delete(`/pea/observaciones/${idObs}`).then(r => r.data);
+
 export const getTrazabilidadPea = (idOrUuid: number | string): Promise<PeaTrazabilidadDto[]> => {
     const url = typeof idOrUuid === 'string' && idOrUuid.includes('-')
         ? `/pea/uuid/${idOrUuid}/trazabilidad`

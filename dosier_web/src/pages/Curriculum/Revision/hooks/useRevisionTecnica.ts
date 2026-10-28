@@ -48,6 +48,15 @@ export const useRevisionTecnica = () => {
         }
     }, [layout.activeCommentField, layout.viewMode]);
 
+    // Auto-Scroll suave a la sección seleccionada
+    useEffect(() => {
+        if (!layout.activeSection || layout.activeSection === 'all' || layout.viewMode === 'pdf') return;
+        const targetSection = document.getElementById(`section-${layout.activeSection}`);
+        if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [layout.activeSection, layout.viewMode]);
+
     const getSafeArray = (value: any): any[] => {
         if (!value) return [];
         if (Array.isArray(value)) return value;

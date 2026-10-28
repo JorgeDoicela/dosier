@@ -1,76 +1,61 @@
 import React from 'react';
-import { BookOpen, Activity } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 
 interface FloatingSidebarButtonsProps {
-    isLeftSidebarOpen: boolean;
-    seccionesButtonTop: number;
-    seccionesButtonLeft: number | null;
-    isDraggingSeccionesButton: boolean;
-    handleSeccionesButtonDragStart: (e: React.MouseEvent) => void;
     isRightSidebarOpen: boolean;
     auditoriaButtonTop: number;
     auditoriaButtonLeft: number | null;
     isDraggingButton: boolean;
     handleButtonDragStart: (e: React.MouseEvent) => void;
+    onOpenRightSidebar?: () => void;
+    pendingCount?: number;
+    totalCount?: number;
 }
 
 export const FloatingSidebarButtons: React.FC<FloatingSidebarButtonsProps> = ({
-    isLeftSidebarOpen,
-    seccionesButtonTop,
-    seccionesButtonLeft,
-    isDraggingSeccionesButton,
-    handleSeccionesButtonDragStart,
     isRightSidebarOpen,
     auditoriaButtonTop,
     auditoriaButtonLeft,
     isDraggingButton,
-    handleButtonDragStart
+    handleButtonDragStart,
+    onOpenRightSidebar,
+    pendingCount = 0,
+    totalCount = 0
 }) => {
     return (
         <>
-            {/* Pestaña flotante de reapertura del Panel de Secciones (Izquierda) */}
-            {!isLeftSidebarOpen && (
-                <button
-                    type="button"
-                    onMouseDown={handleSeccionesButtonDragStart}
-                    style={{
-                        top: `${seccionesButtonTop}px`,
-                        left: seccionesButtonLeft !== null ? `${seccionesButtonLeft}px` : '0px',
-                    }}
-                    className={`fixed z-[60] py-7 px-2.5 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
-                        isDraggingSeccionesButton || (seccionesButtonLeft !== null && seccionesButtonLeft > 5)
-                            ? 'rounded-xl border-[#0070f3] dark:border-blue-400 text-[#0070f3] dark:text-blue-400 bg-white dark:bg-zinc-950 shadow-xl'
-                            : 'rounded-r-xl border-l-0'
-                    }`}
-                    title="Arrastra para mover / Clic para abrir navegación"
-                >
-                    <BookOpen size={14} className="text-[#0070f3] dark:text-blue-400 group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="[writing-mode:vertical-lr] rotate-180 text-[10px] font-semibold tracking-wider opacity-80 group-hover:opacity-100 transition-opacity font-mono">
-                        Navegación
-                    </span>
-                </button>
-            )}
-
-            {/* Pestaña flotante de reapertura del Panel de Auditoría (Derecha) */}
+            {/* ── Botón flotante para abrir las Observaciones del PEA (Derecha) ── */}
             {!isRightSidebarOpen && (
                 <button
                     type="button"
                     onMouseDown={handleButtonDragStart}
+                    onClick={onOpenRightSidebar}
                     style={{
                         top: `${auditoriaButtonTop}px`,
                         left: auditoriaButtonLeft !== null ? `${auditoriaButtonLeft}px` : undefined,
                         right: auditoriaButtonLeft !== null ? 'auto' : '0px'
                     }}
-                    className={`fixed z-[60] py-7 px-2.5 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-grab active:cursor-grabbing select-none ${
+                    className={`absolute z-[60] py-6 px-2 bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-[#0070f3] dark:hover:text-blue-400 shadow-md hover:shadow-xl flex flex-col items-center gap-2 transition-all duration-200 animate-fade-in group cursor-pointer select-none rounded-l-2xl border-r-0 hover:-translate-x-1.5 ${
                         isDraggingButton || (auditoriaButtonLeft !== null)
                             ? 'rounded-xl border-[#0070f3] dark:border-blue-400 text-[#0070f3] dark:text-blue-400 bg-white dark:bg-zinc-950 shadow-xl'
-                            : 'rounded-l-xl border-r-0'
+                            : ''
                     }`}
-                    title="Arrastra para mover / Clic para abrir auditoría"
+                    title={`Clic para abrir observaciones ${totalCount > 0 ? `(${totalCount})` : ''} (o arrastra para mover)`}
+                    aria-label="Abrir observaciones del PEA"
                 >
-                    <Activity size={14} className="text-[#0070f3] dark:text-blue-400 animate-pulse group-hover:scale-110 transition-transform shrink-0" />
-                    <span className="[writing-mode:vertical-lr] text-[10px] font-semibold tracking-wider opacity-80 group-hover:opacity-100 transition-opacity font-mono">
-                        Auditoría
+                    <div className="relative shrink-0">
+                        <MessageSquare
+                            size={15}
+                            className="text-[#0070f3] dark:text-blue-400 group-hover:scale-110 transition-transform"
+                        />
+                        {pendingCount > 0 ? (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                        ) : totalCount > 0 ? (
+                            <span className="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        ) : null}
+                    </div>
+                    <span className="[writing-mode:vertical-lr] text-[10px] font-bold tracking-wider opacity-85 group-hover:opacity-100 transition-opacity font-mono uppercase">
+                        Notas
                     </span>
                 </button>
             )}

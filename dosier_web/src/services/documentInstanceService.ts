@@ -91,7 +91,7 @@ export const documentInstanceService = {
      */
     getStorageFile: (cleanPath: string): Promise<Blob> =>
         api.get(`/storage/${cleanPath}`, { responseType: 'blob' })
-            .then(r => new Blob([r.data])),
+            .then(r => new Blob([r.data], { type: 'application/pdf' })),
 
     /**
      * Actualiza la versión de plantilla de una instancia documental a la más reciente.

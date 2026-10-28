@@ -28,10 +28,15 @@ export interface ProjectDetail {
 
 export interface SectionComment {
     id: number;
-    status: 'Pendiente' | 'Aprobado' | 'Corregir';
+    uuid?: string;
+    status: 'Pendiente' | 'Subsanada' | 'Desestimada';
     text: string;
     creadoEn?: string;
     nombreUsuario?: string;
+    rolObservador?: string;
+    seccionAfectada?: string;
+    respuestaDocente?: string;
+    fechaResolucion?: string;
 }
 
 export interface SectionItem {
@@ -89,15 +94,15 @@ export const FIELD_LABELS: Record<string, string> = {
 };
 
 export const SECTIONS: SectionItem[] = [
-    { id: 'pea_general_section', label: '1. Datos Generales', icon: FileText },
-    { id: 'pea_objectives_section', label: '2. Objetivo de Asignatura', icon: Target },
+    { id: 'pea_general_section', label: '1. Datos generales', icon: FileText },
+    { id: 'pea_objectives_section', label: '2. Objetivo formativo', icon: Target },
     { id: 'pea_prerequisites_section', label: '3. Prerrequisitos', icon: Activity },
-    { id: 'pea_career_outcomes_section', label: 'd) Resultados de Aprendizaje de Carrera', icon: BookOpen },
-    { id: 'pea_subject_outcomes_section', label: 'e) Resultados de Aprendizaje de Asignatura', icon: BookOpen },
-    { id: 'pea_contents_section', label: 'f) Contenidos de Enseñanza', icon: FileText },
-    { id: 'pea_methodology_section', label: '7. Metodología y Recursos', icon: BookOpen },
+    { id: 'pea_career_outcomes_section', label: '4. RDA de carrera', icon: BookOpen },
+    { id: 'pea_subject_outcomes_section', label: '5. RDA de asignatura', icon: BookOpen },
+    { id: 'pea_contents_section', label: '6. Contenidos y unidades', icon: FileText },
+    { id: 'pea_methodology_section', label: '7. Metodología y recursos', icon: BookOpen },
     { id: 'pea_resources_section', label: '8. Prácticas APE', icon: Activity },
-    { id: 'pea_evaluation_section', label: '9. Evaluación Aprendizaje', icon: Target },
-    { id: 'pea_bibliography_section', label: '10. Bibliografía APA', icon: BookOpen },
-    { id: 'pea_signatures_section', label: '11. Firmas Institucionales', icon: Users }
+    { id: 'pea_evaluation_section', label: '9. Evaluación del aprendizaje', icon: Target },
+    { id: 'pea_bibliography_section', label: '10. Bibliografía institucional', icon: BookOpen },
+    { id: 'pea_signatures_section', label: '11. Firmas de responsabilidad', icon: Users }
 ];

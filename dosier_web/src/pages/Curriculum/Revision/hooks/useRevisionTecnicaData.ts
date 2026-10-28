@@ -4,7 +4,13 @@ import type { ProjectDetail, SectionComment } from '../types/revisionTecnicaType
 import { documentInstanceService } from '../../../../services/documentInstanceService';
 import { documentTemplateService } from '../../../../services/documentTemplateService';
 import { curriculumProjectService } from '../../../../services/curriculumProjectService';
-import { collaborationService } from '../../../../services/collaborationService';
+import {
+    getPeaByUuid,
+    firmarPea,
+    cambiarEstadoPea,
+    type PeaDto
+} from '../../../../services/peaService';
+import { useAuth } from '../../../../api/AuthContext';
 
 interface UseRevisionTecnicaDataParams {
     projectUuid: string | undefined;
@@ -23,8 +29,9 @@ export const useRevisionTecnicaData = ({
     addToast,
     confirm,
     comments,
-    setComments,
+    setComments: _setComments
 }: UseRevisionTecnicaDataParams) => {
+    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const addToastRef = useRef(addToast);
     const confirmRef = useRef(confirm);
 
@@ -34,7 +41,7 @@ export const useRevisionTecnicaData = ({
     }, [addToast, confirm]);
 
     const [project, setProject] = useState<ProjectDetail | null>(null);
-    const [investigadores, setInvestigadores] = useState<any[]>([]);
+    const [rawPea, setRawPea] = useState<PeaDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -47,7 +54,6 @@ export const useRevisionTecnicaData = ({
         try {
             let loadedBlocks: any[] = [];
 
-            // 1. Anclaje de versión: obtener el snapshot inmutable guardado en la instancia del documento
             try {
                 const instanceRes = await documentInstanceService.resolve({
                     templateCode: 'PEA_OFICIAL',
@@ -75,7 +81,6 @@ export const useRevisionTecnicaData = ({
                 console.warn('[DOSIER] No se pudo obtener snapshot congelado de la instancia, usando fallback.', err);
             }
 
-            // 2. Fallback: Si es un borrador nuevo sin snapshot congelado, usar la versión activa publicada
             if (loadedBlocks.length === 0) {
                 try {
                     const uiConfigRes = await documentInstanceService.getTemplateUiConfig('PEA_OFICIAL');
@@ -95,15 +100,6 @@ export const useRevisionTecnicaData = ({
                         } catch {}
                     }
                 }
-                const rawCollab = tmplRes?.collaborativeFieldsJson || (tmplRes as any)?.collaborative_fields_json;
-                if (loadedBlocks.length === 0 && rawCollab) {
-                    try {
-                        const parsed = JSON.parse(rawCollab);
-                        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id) {
-                            loadedBlocks = parsed;
-                        }
-                    } catch {}
-                }
             }
 
             setTemplateBlocks(loadedBlocks);
@@ -111,14 +107,6 @@ export const useRevisionTecnicaData = ({
             console.error('[DOSIER] Error al cargar bloques de plantilla:', e);
         }
     }, []);
-
-    const teachersWithExceedingHours = investigadores.filter(inv => {
-        const proposed = inv.horasSemanales || 0;
-        const available = inv.horasDisponibles || inv.horas_disponibles || 0;
-        const assigned = inv.horasAsignadas || inv.horas_asignadas || 0;
-        return (assigned + proposed) > available;
-    });
-    const isHoursOk = teachersWithExceedingHours.length === 0;
 
     const loadPdf = useCallback(async (uuid: string) => {
         setLoadingPdf(true);
@@ -129,120 +117,162 @@ export const useRevisionTecnicaData = ({
             });
             const finalPath = (instanceRes as any)?.finalPdfPath || instanceRes?.final_pdf_path;
 
+            const instanceUuid = instanceRes?.uuid || (instanceRes as any)?.Uuid;
+            if (instanceUuid) {
+                try {
+                    const pdfBlob = await documentInstanceService.getInstancePdf(instanceUuid);
+                    const typedBlob = new Blob([pdfBlob], { type: 'application/pdf' });
+                    const blobUrl = URL.createObjectURL(typedBlob);
+                    setPdfUrl(blobUrl);
+                    return;
+                } catch (pdfErr) {
+                    console.warn('[DOSIER] Fallo al obtener PDF por instancia, intentando storage:', pdfErr);
+                }
+            }
+
             if (finalPath) {
                 const cleanPath = finalPath.replace(/\\/g, '/');
                 try {
                     const fileBlob = await documentInstanceService.getStorageFile(cleanPath);
-                    const blobUrl = URL.createObjectURL(fileBlob);
+                    const typedBlob = new Blob([fileBlob], { type: 'application/pdf' });
+                    const blobUrl = URL.createObjectURL(typedBlob);
                     setPdfUrl(blobUrl);
+                    return;
                 } catch (storageErr) {
-                    console.error('[DOSIER] El documento final/firmado registrado no se encuentra en el almacenamiento del servidor:', storageErr);
+                    console.error('[DOSIER] El documento final no se encuentra en storage:', storageErr);
                     setPdfUrl(null);
                 }
-                return;
             }
 
-            // Solo si no existe finalPath (instancia en borrador), se genera la previsualización de borrador
             const projectDetail = await curriculumProjectService.getProjectDetail(uuid);
             const pdfBlob = await curriculumProjectService.generatePdf(projectDetail, true);
-            const blobUrl = URL.createObjectURL(pdfBlob);
+            const typedBlob = new Blob([pdfBlob], { type: 'application/pdf' });
+            const blobUrl = URL.createObjectURL(typedBlob);
             setPdfUrl(blobUrl);
         } catch (err) {
-            console.error('[DOSIER] Error al cargar PDF:', err);
+            console.error('[DOSIER] Error al cargar PDF del PEA:', err);
             setPdfUrl(null);
         } finally {
             setLoadingPdf(false);
         }
     }, []);
 
-    const calculateMetrics = useCallback(async (uuid: string, projectData?: any) => {
+    const calculateMetrics = useCallback(async (uuid: string, pea: PeaDto) => {
         try {
-            const instanceRes = await documentInstanceService.resolve({
-                templateCode: 'PEA_OFICIAL',
-                entityUuid: uuid
-            });
-            const dataJson = (instanceRes as any)?.dataSnapshotJson || instanceRes?.data_snapshot_json || '{}';
-            let metadata = typeof dataJson === 'string' ? JSON.parse(dataJson) : (dataJson || {});
+            let metadata: any = {};
+            try {
+                const instanceRes = await documentInstanceService.resolve({
+                    templateCode: 'PEA_OFICIAL',
+                    entityUuid: uuid
+                });
+                const dataJson = (instanceRes as any)?.dataSnapshotJson || instanceRes?.data_snapshot_json || '{}';
+                metadata = typeof dataJson === 'string' ? JSON.parse(dataJson) : (dataJson || {});
+            } catch {}
 
-            const pea = projectData?.peaData || projectData || {};
+            const rdaCarreraFromPea = Array.isArray(pea.resultadosAprendizaje)
+                ? (pea.resultadosAprendizaje.find((r: any) => r.tipoRda === 'Carrera' || r.tipo_rda === 'Carrera')?.descripcion || '')
+                : '';
+
+            const rdaAsignaturaFromPea = Array.isArray(pea.resultadosAprendizaje)
+                ? pea.resultadosAprendizaje.filter((r: any) => r.tipoRda !== 'Carrera' && r.tipo_rda !== 'Carrera')
+                : [];
+
+            const rawRdaAsig = metadata.ResultadosAprendizaje ?? metadata.resultados_aprendizaje ?? metadata.resultadosAprendizaje;
+            const rdaFinal = (rawRdaAsig !== undefined && rawRdaAsig !== null && (typeof rawRdaAsig === 'string' ? rawRdaAsig.trim().length > 0 : rawRdaAsig.length > 0))
+                ? rawRdaAsig
+                : (rdaAsignaturaFromPea.length > 0 ? rdaAsignaturaFromPea : '');
+
+            const rdaCarreraFinal = metadata.RdaCarrera || metadata.rda_carrera || metadata.rdacarrera || metadata.RDA_Carrera || rdaCarreraFromPea || '';
+
+            const prerreqFinal = (Array.isArray(metadata.Prerrequisitos) && metadata.Prerrequisitos.length > 0)
+                ? metadata.Prerrequisitos
+                : (Array.isArray(metadata.prerrequisitos) && metadata.prerrequisitos.length > 0)
+                ? metadata.prerrequisitos
+                : (pea.prerrequisitos || []);
+
+            const unidadesFinal = (Array.isArray(metadata.Unidades) && metadata.Unidades.length > 0)
+                ? metadata.Unidades
+                : (Array.isArray(metadata.unidades) && metadata.unidades.length > 0)
+                ? metadata.unidades
+                : (pea.unidades || []);
+
+            const practicasFinal = (Array.isArray(metadata.ActividadesPracticas) && metadata.ActividadesPracticas.length > 0)
+                ? metadata.ActividadesPracticas
+                : (Array.isArray(metadata.actividades_practicas) && metadata.actividades_practicas.length > 0)
+                ? metadata.actividades_practicas
+                : (pea.actividadesPracticas || []);
+
+            const evalsFinal = (Array.isArray(metadata.Evaluaciones) && metadata.Evaluaciones.length > 0)
+                ? metadata.Evaluaciones
+                : (Array.isArray(metadata.evaluaciones) && metadata.evaluaciones.length > 0)
+                ? metadata.evaluaciones
+                : (pea.evaluaciones || []);
+
+            const bibliosFinal = (Array.isArray(metadata.Bibliografias) && metadata.Bibliografias.length > 0)
+                ? metadata.Bibliografias
+                : (Array.isArray(metadata.bibliografias) && metadata.bibliografias.length > 0)
+                ? metadata.bibliografias
+                : (pea.bibliografias || []);
 
             metadata = {
                 // 1. Datos Generales
-                NombreAsignatura: metadata.NombreAsignatura || pea.nombre_asignatura || pea.nombreAsignatura || projectData?.titulo || '',
-                CodigoAsignatura: metadata.CodigoAsignatura || pea.codigo_asignatura || pea.codigoAsignatura || projectData?.codigo_institucional || '',
-                Carrera: metadata.Carrera || pea.nombre_carrera || pea.nombreCarrera || projectData?.carrera || '',
-                CodigoCarrera: metadata.CodigoCarrera || pea.codigo_carrera || pea.codigoCarrera || '',
-                Modalidad: metadata.Modalidad || pea.modalidad || 'Presencial',
-                UnidadOrganizacion: metadata.UnidadOrganizacion || pea.unidad_organizacion || pea.unidadOrganizacion || 'Unidad Profesional',
-                Periodo: metadata.Periodo || pea.nombre_periodo || pea.nombrePeriodo || pea.periodo || '',
-                Nivel: metadata.Nivel || pea.semestre_nivel || pea.semestreNivel || '',
-                TotalHorasAsignatura: metadata.TotalHorasAsignatura || pea.total_horas_asignatura || pea.totalHorasAsignatura || 0,
-                Creditos: metadata.Creditos || pea.creditos || 0,
-                HorasContactoDocente: metadata.HorasContactoDocente || pea.horas_contacto_docente || pea.horasContactoDocente || 0,
-                HorasPracticoExperimental: metadata.HorasPracticoExperimental || pea.horas_practico_experimental || pea.horasPracticoExperimental || 0,
-                HorasAutonomo: metadata.HorasAutonomo || pea.horas_autonomo || pea.horasAutonomo || 0,
-                DocenteElaborador: metadata.DocenteElaborador || pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || projectData?.director_nombre || '',
+                NombreAsignatura: metadata.NombreAsignatura || metadata.nombre_asignatura || metadata.nombreAsignatura || pea.nombreAsignatura || '',
+                CodigoAsignatura: metadata.CodigoAsignatura || metadata.codigo_asignatura || metadata.codigoAsignatura || pea.codigoAsignatura || '',
+                Carrera: metadata.Carrera || metadata.nombreCarrera || pea.nombreCarrera || '',
+                Modalidad: metadata.Modalidad || metadata.modalidad || pea.modalidad || 'Presencial',
+                UnidadOrganizacion: metadata.UnidadOrganizacion || metadata.unidad_organizacion || metadata.unidadOrganizacion || pea.unidadOrganizacion || 'Unidad Profesional',
+                Periodo: metadata.Periodo || metadata.idPeriodo || pea.idPeriodo || '',
+                Nivel: metadata.Nivel || metadata.semestre_nivel || metadata.semestreNivel || pea.semestreNivel || '',
+                TotalHorasAsignatura: metadata.TotalHorasAsignatura || metadata.total_horas || metadata.totalHorasAsignatura || pea.totalHorasAsignatura || 0,
+                Creditos: metadata.Creditos || metadata.creditos || pea.creditos || 0,
+                HorasContactoDocente: metadata.HorasContactoDocente || metadata.horas_docencia || metadata.horasContactoDocente || pea.horasContactoDocente || 0,
+                HorasPracticoExperimental: metadata.HorasPracticoExperimental || metadata.horas_practica || metadata.horasPracticoExperimental || pea.horasPracticoExperimental || 0,
+                HorasAutonomo: metadata.HorasAutonomo || metadata.horas_autonomo || metadata.horasAutonomo || pea.horasAutonomo || 0,
+                DocenteElaborador: metadata.DocenteElaborador || metadata.docente_elaborador || pea.nombreDocenteElaborador || pea.idDocenteElaborador || '',
 
                 // 2. Objetivos
-                ObjetivoAsignatura: metadata.ObjetivoAsignatura || pea.objetivo_asignatura || pea.objetivoAsignatura || projectData?.descripcion || '',
+                ObjetivoAsignatura: metadata.ObjetivoAsignatura || metadata.objetivo_asignatura || metadata.objetivoAsignatura || pea.objetivoAsignatura || '',
 
                 // 3. Prerrequisitos
-                Prerrequisitos: metadata.Prerrequisitos || pea.prerrequisitos || [],
+                Prerrequisitos: prerreqFinal,
 
-                // 4. RDA
-                RdaCarrera: metadata.RdaCarrera || pea.rda_carrera || '',
-                ResultadosAprendizaje: metadata.ResultadosAprendizaje || pea.resultados_aprendizaje || pea.resultadosAprendizaje || [],
+                // 4. RDA Carrera y Asignatura
+                RdaCarrera: rdaCarreraFinal,
+                ResultadosAprendizaje: rdaFinal,
 
                 // 5. Contenidos
-                Unidades: metadata.Unidades || pea.unidades || [],
+                Unidades: unidadesFinal,
 
                 // 6. Metodología
-                MetodologiaEnsenanza: metadata.MetodologiaEnsenanza || pea.metodologia_ensenanza || pea.metodologiaEnsenanza || '',
-                RecursosDidacticos: metadata.RecursosDidacticos || pea.recursos_didacticos || pea.recursosDidacticos || '',
+                MetodologiaEnsenanza: metadata.MetodologiaEnsenanza || metadata.metodologia_ensenanza || metadata.metodologiaEnsenanza || pea.metodologiaEnsenanza || '',
+                RecursosDidacticos: metadata.RecursosDidacticos || metadata.recursos_didacticos || metadata.recursosDidacticos || pea.recursosDidacticos || '',
 
                 // 7. Prácticas
-                ActividadesPracticas: metadata.ActividadesPracticas || pea.actividades_practicas || pea.actividadesPracticas || [],
+                ActividadesPracticas: practicasFinal,
 
                 // 8. Evaluación
-                EvaluacionAprendizaje: metadata.EvaluacionAprendizaje || pea.evaluacion_aprendizaje || pea.evaluacionAprendizaje || '',
-                Evaluaciones: metadata.Evaluaciones || pea.evaluaciones || [],
+                EvaluacionAprendizaje: metadata.EvaluacionAprendizaje || metadata.evaluacion_aprendizaje || metadata.evaluacionAprendizaje || pea.evaluacionAprendizaje || '',
+                Evaluaciones: evalsFinal,
 
                 // 9. Bibliografía
-                BibliografiaBasica: metadata.BibliografiaBasica || metadata.bibliografia_basica || (
-                    Array.isArray(pea.bibliografias)
-                        ? (pea.bibliografias as any[])
-                            .filter(b => (b.tipo_bibliografia || b.tipoBibliografia || '').toLowerCase() === 'basica')
-                            .map((b, idx) => `<p>${idx + 1}. ${b.cita_completa_apa || b.citaCompletaApa || b.titulo_libro || b.tituloLibro || ''}</p>`)
-                            .join('')
-                        : ''
-                ),
-                BibliografiaConsulta: metadata.BibliografiaConsulta || metadata.bibliografia_consulta || (
-                    Array.isArray(pea.bibliografias)
-                        ? (pea.bibliografias as any[])
-                            .filter(b => (b.tipo_bibliografia || b.tipoBibliografia || '').toLowerCase() === 'consulta')
-                            .map((b, idx) => `<p>${idx + 1}. ${b.cita_completa_apa || b.citaCompletaApa || b.titulo_libro || b.tituloLibro || ''}</p>`)
-                            .join('')
-                        : ''
-                ),
-                Bibliografias: metadata.Bibliografias || pea.bibliografias || [],
+                BibliografiaBasica: metadata.BibliografiaBasica || metadata.bibliografia_basica || metadata.bibliografiaBasica || '',
+                BibliografiaConsulta: metadata.BibliografiaConsulta || metadata.bibliografia_consulta || metadata.bibliografiaConsulta || '',
+                Bibliografias: bibliosFinal,
 
                 // 10. Firmas
                 FirmasResponsabilidad: metadata.FirmasResponsabilidad || {
-                    DocenteNombre: metadata.DocenteElaborador || pea.nombre_docente_elaborador || projectData?.director_nombre || '',
+                    DocenteNombre: pea.nombreDocenteElaborador || '',
                     DocenteCargo: 'Docente Titular',
-                    CoordinadorNombre: '',
                     CoordinadorCargo: 'Coordinador de Carrera',
-                    CoordinadorAcadNombre: '',
                     CoordinadorAcadCargo: 'Coordinador Académico',
-                    VicerrectorNombre: '',
-                    VicerrectorCargo: 'Vicerrectorado'
+                    VicerrectorCargo: 'Vicerrectorado Académico'
                 },
                 ...metadata
             };
 
             setDocSnapshot(metadata);
         } catch (e) {
-            console.error('[DOSIER] Error al cargar snapshot colaborativo:', e);
+            console.error('[DOSIER] Error al calcular métricas colaborativas:', e);
         }
     }, []);
 
@@ -250,259 +280,170 @@ export const useRevisionTecnicaData = ({
         if (!projectUuid) return;
         setLoading(true);
         try {
-            const resData = await curriculumProjectService.getProjectDetail(projectUuid);
-            const pea = resData.peaData || resData;
+            const pea = await getPeaByUuid(projectUuid);
+            setRawPea(pea);
 
             const projectDetail: ProjectDetail = {
-                uuid: resData.uuid,
-                title: resData.titulo?.trim() || pea.nombre_asignatura || '(Sin título)',
-                status: resData.estado || pea.estado || 'Borrador',
+                uuid: pea.uuid,
+                title: pea.nombreAsignatura || '(Sin asignatura)',
+                status: pea.estado || 'Borrador',
                 presupuesto: 0,
                 convocatoriaMontoMaximo: null,
-                convocatoria: pea.nombre_periodo || '',
-                linea: pea.nombre_carrera || resData.carrera || '',
-                carrera: pea.nombre_carrera || resData.carrera || '',
-                dominio: pea.unidad_organizacion || '',
-                descripcion: pea.objetivo_asignatura || resData.descripcion || '',
-                directorProyecto: pea.nombre_docente_elaborador || resData.director_nombre || 'Docente Titular',
-                codigo_asignatura: pea.codigo_asignatura || '',
+                convocatoria: pea.idPeriodo || '',
+                linea: pea.nombreCarrera || '',
+                carrera: pea.nombreCarrera || '',
+                dominio: pea.unidadOrganizacion || '',
+                descripcion: pea.objetivoAsignatura || '',
+                directorProyecto: pea.nombreDocenteElaborador || 'Docente Titular',
+                codigo_asignatura: pea.codigoAsignatura || '',
                 modalidad: pea.modalidad || 'Presencial',
-                semestre_nivel: pea.semestre_nivel || '',
-                horas_totales: pea.total_horas_asignatura || 0,
+                semestre_nivel: pea.semestreNivel || '',
+                horas_totales: pea.totalHorasAsignatura || 0,
                 creditos: pea.creditos || 0,
-                horas_docencia: pea.horas_contacto_docente || 0,
-                horas_practica: pea.horas_practico_experimental || 0,
-                horas_autonomo: pea.horas_autonomo || 0,
-                docente_elaborador: pea.nombre_docente_elaborador || resData.director_nombre || '',
-                periodo: pea.nombre_periodo || '',
+                horas_docencia: pea.horasContactoDocente || 0,
+                horas_practica: pea.horasPracticoExperimental || 0,
+                horas_autonomo: pea.horasAutonomo || 0,
+                docente_elaborador: pea.nombreDocenteElaborador || pea.idDocenteElaborador || '',
+                periodo: pea.idPeriodo || '',
                 peaData: pea
             };
 
             setProject(projectDetail);
-            setInvestigadores([]);
-
-            const savedComments = localStorage.getItem(`comments_${projectUuid}`);
-            if (savedComments) {
-                setComments(JSON.parse(savedComments));
-            }
-
             loadPdf(projectUuid);
-            await calculateMetrics(projectUuid, resData);
+            await calculateMetrics(projectUuid, pea);
             await loadTemplateBlocks(projectUuid);
-
-            try {
-                const collabRes: any = await collaborationService.getPulse(projectUuid);
-                const commentsList = collabRes?.comments || collabRes?.data?.comments || [];
-                if (Array.isArray(commentsList) && commentsList.length > 0) {
-                    const backendComments: Record<string, SectionComment[]> = {};
-                    commentsList.forEach((c: any) => {
-                        const content = c.contenido || '';
-                        const keyMatch = content.match(/^\[KEY:(.*?)\]\s*\[(.*?)\]\s*\((.*?)\):\s*(.*)$/);
-                        if (keyMatch) {
-                            const fieldKey = keyMatch[1];
-                            const statusStr = keyMatch[3];
-                            const text = keyMatch[4];
-                            if (!backendComments[fieldKey]) {
-                                backendComments[fieldKey] = [];
-                            }
-                            backendComments[fieldKey].push({
-                                id: c.idComentario || c.id,
-                                status: statusStr === 'Aprobado' ? 'Aprobado' : 'Corregir',
-                                text: text,
-                                creadoEn: c.creadoEn,
-                                nombreUsuario: c.nombreUsuario
-                            });
-                        } else {
-                            const match = content.match(/^\[(.*?)\]\s*\((.*?)\):\s*(.*)$/);
-                            if (match) {
-                                const label = match[1];
-                                const statusStr = match[2];
-                                const text = match[3];
-                                const fieldKey = Object.keys(FIELD_LABELS).find(k => FIELD_LABELS[k] === label) || label;
-                                if (!backendComments[fieldKey]) {
-                                    backendComments[fieldKey] = [];
-                                }
-                                backendComments[fieldKey].push({
-                                    id: c.idComentario || c.id,
-                                    status: statusStr === 'Aprobado' ? 'Aprobado' : 'Corregir',
-                                    text: text,
-                                    creadoEn: c.creadoEn,
-                                    nombreUsuario: c.nombreUsuario
-                                });
-                            }
-                        }
-                    });
-
-                    Object.keys(backendComments).forEach(key => {
-                        backendComments[key].sort((a, b) => a.id - b.id);
-                    });
-
-                    if (Object.keys(backendComments).length > 0) {
-                        setComments(prev => {
-                            const merged = { ...prev, ...backendComments };
-                            localStorage.setItem(`comments_${projectUuid}`, JSON.stringify(merged));
-                            return merged;
-                        });
-                    }
-                }
-            } catch (err) {
-                console.error('[DOSIER] Error al sincronizar comentarios de colaboración del backend:', err);
-            }
-
         } catch (err) {
-            console.error('[DOSIER] Error al cargar detalles de revisión:', err);
-            addToastRef.current("Error", "No se pudo cargar la información del proyecto.", "error");
+            console.error('[DOSIER] Error al cargar detalles de revisión del PEA:', err);
+            addToastRef.current("Error", "No se pudo cargar el expediente curricular del PEA.", "error");
         } finally {
             setLoading(false);
         }
-    }, [projectUuid, loadPdf, calculateMetrics, setComments]);
+    }, [projectUuid, loadPdf, calculateMetrics, loadTemplateBlocks]);
 
     useEffect(() => {
         loadProjectData();
     }, [loadProjectData]);
 
-    const handleAprobar = async (generalFeedback: string): Promise<boolean> => {
-        if (!project) return false;
+    // Cuadre normativo CES Art. 21
+    const totalSumaHoras = (project?.horas_docencia || 0) + (project?.horas_practica || 0) + (project?.horas_autonomo || 0);
+    const isHoursOk = project?.horas_totales ? totalSumaHoras === project.horas_totales : true;
 
-        const isBudgetOk = project.convocatoriaMontoMaximo ? project.presupuesto <= project.convocatoriaMontoMaximo : true;
-        const hasTeam = investigadores.length > 0;
+    // ── GESTIÓN DE AVALES Y FIRMAS INSTITUCIONALES ──
+    const handleAprobar = async (
+        generalFeedback: string,
+        password?: string,
+        tipoFirma: 'DOSIER' | 'FirmaEC' = 'DOSIER',
+        certificadoP12Base64?: string,
+        contraseniaP12?: string
+    ): Promise<boolean> => {
+        if (!project || !projectUuid) return false;
 
-        if (!isBudgetOk || !hasTeam || !isHoursOk) {
-            let msg = "La propuesta no cumple con todos los controles de consistencia automática.";
-            if (!isHoursOk) {
-                msg += ` Se detectó exceso de carga horaria en los siguientes docentes: ${teachersWithExceedingHours.map(t => t.nombres_completos || t.nombre).join(', ')}.`;
-            }
-            if (!await confirm({
-                title: "Advertencia de Cumplimiento CACES",
-                message: `${msg} ¿Desea aprobarla de todos modos?`,
-                confirmText: "Aprobar de todos modos",
-                cancelText: "Cancelar",
+        const rolFirmante = isVicerrector
+            ? 'Vicerrector'
+            : isCoordAcad
+                ? 'CoordinadorAcademico'
+                : 'CoordinadorCarrera';
+
+        const rolEtiqueta = isVicerrector
+            ? 'Aprobación Definitiva de Vicerrectorado'
+            : isCoordAcad
+                ? 'Aval de Coordinación Académica'
+                : 'Aval de Coordinación de Carrera';
+
+        const pendientesCount = Object.values(comments).reduce(
+            (acc, list) => acc + (list ? list.filter(c => c.status === 'Pendiente').length : 0),
+            0
+        );
+
+        if (pendientesCount > 0) {
+            const proceed = await confirm({
+                title: "Observaciones Pendientes",
+                message: `Existen ${pendientesCount} observación(es) en estado pendiente. ¿Está seguro de emitir el aval favorable sin exigir subsanación previa?`,
+                confirmText: "Avalar de Todos Modos",
+                cancelText: "Volver a Revisar",
                 variant: "warning"
-            })) return false;
-        } else {
-            if (!await confirm({
-                title: "Aprobar Revisión Técnica",
-                message: "¿Aprobar la consistencia del protocolo y validar su revisión técnica institucional?",
-                confirmText: "Aprobar Revisión",
-                cancelText: "Cancelar",
-                variant: "primary"
-            })) return false;
+            });
+            if (!proceed) return false;
         }
 
         setSubmitting(true);
         try {
-            const sectionIssues = Object.entries(comments)
-                .filter(([_, list]) => list && list.length > 0)
-                .map(([sec, list]) => {
-                    const label = FIELD_LABELS[sec] || sec.toUpperCase();
-                    return `[${label}]: ${list.map(c => c.text).join('; ')}`;
-                })
-                .join(' | ');
-
-            const obs = generalFeedback.trim()
-                || (sectionIssues ? `Revisión Técnica aprobada con observaciones menores: ${sectionIssues}` : 'Aprobación Técnica Inicial del Administrador. Protocolo completo y consistente.');
-
-            const originalState = project.status;
-
-            await curriculumProjectService.transitionState(project.uuid, 'En Revisión', obs);
-
-            window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
+            const resultado = await firmarPea(projectUuid, {
+                password: password || undefined,
+                rolFirmante: rolFirmante as any,
+                tipoFirma,
+                certificadoP12Base64,
+                contraseniaP12,
+                motivo: generalFeedback.trim() || `Emisión oficial de ${rolEtiqueta}. Pertinencia y diseño curricular conforme a normativa CES.`
+            });
 
             addToast(
-                "Revisión Aprobada",
-                "El protocolo ha completado exitosamente la revisión técnica institucional.",
-                "success",
-                undefined,
-                async () => {
-                    try {
-                        await curriculumProjectService.transitionState(
-                            project.uuid,
-                            originalState,
-                            "Reversión (Undo): Retorno al estado anterior por cancelación de la aprobación."
-                        );
-                        addToast("Acción Revertida", `La aprobación ha sido cancelada. Proyecto en estado: ${originalState}`, "info");
-                        window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                        navigate(`/documentacion/revision-tecnica/${projectUuid}`);
-                    } catch (err) {
-                        console.error("[Undo Approval] Failed:", err);
-                        addToast("Error al Revertir", "No se pudo deshacer la aprobación del protocolo.", "error");
-                    }
-                }
+                "Aval Emitido Exitosamente",
+                `Se registró la firma digital institucional (${resultado.firmaCode}). El PEA avanzó a estado '${resultado.estadoNuevo}'.`,
+                "success"
             );
-            navigate(`/documentacion/monitoreo/${projectUuid}`);
+
+            window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
+            await loadProjectData();
             return true;
         } catch (err: any) {
-            console.error(err);
-            addToast("Error", err.response?.data?.error ?? "No se pudo realizar la transición del estado.", "error");
+            console.error('[DOSIER] Error al firmar y avalar PEA:', err);
+            const msg = err.response?.data?.message || err.response?.data?.error || "No se pudo estampar la firma del aval curricular.";
+            addToast("Error al Emitir Aval", msg, "error");
             return false;
         } finally {
             setSubmitting(false);
         }
     };
 
+    // ── DEVOLUCIÓN AL DOCENTE CON OBSERVACIONES (ESTADO: OBSERVADO) ──
     const handleDevolver = async (generalFeedback: string, fechaLimite?: string): Promise<boolean> => {
-        if (!project) return false;
+        if (!project || !projectUuid) return false;
 
-        const hasContextualComments = Object.values(comments).some(list => list && list.length > 0);
-        if (!generalFeedback.trim() && !hasContextualComments) {
-            addToast("Justificación Requerida", "Por favor redacte observaciones generales o específicas con las correcciones para el docente.", "warning");
+        const totalObservaciones = Object.values(comments).reduce((acc, list) => acc + (list?.length || 0), 0);
+        if (!generalFeedback.trim() && totalObservaciones === 0) {
+            addToast("Observaciones Requeridas", "Debe redactar una síntesis general o registrar al menos una observación por sección antes de devolver el PEA.", "warning");
             return false;
         }
 
-        if (!await confirm({
-            title: "Devolver al Docente",
-            message: `¿Retornar el proyecto a fase de formulación (En Corrección) con las observaciones descritas${fechaLimite ? ` y plazo límite al ${fechaLimite}` : ''}?`,
-            confirmText: "Devolver con Plazo",
+        const confirmDevolver = await confirm({
+            title: "Devolver PEA para Subsanaciones",
+            message: `¿Desea cambiar el estado a 'Observado' y remitir las observaciones al docente elaborador${fechaLimite ? ` con fecha límite al ${fechaLimite}` : ''}?`,
+            confirmText: "Devolver al Docente",
             cancelText: "Cancelar",
             variant: "destructive"
-        })) return false;
+        });
+        if (!confirmDevolver) return false;
 
         setSubmitting(true);
         try {
             const sectionIssues = Object.entries(comments)
                 .filter(([_, list]) => list && list.length > 0)
                 .map(([sec, list]) => {
-                    const label = FIELD_LABELS[sec] || sec.toUpperCase();
-                    return `* ${label}:\n  ` + list.map(c => `- ${c.text}`).join('\n  ');
+                    const label = FIELD_LABELS[sec] || sec;
+                    return `• ${label}: ${list.map(c => c.text).join('; ')}`;
                 })
                 .join('\n');
 
-            const fullObs = generalFeedback.trim()
-                ? `${generalFeedback.trim()}\n\nObservaciones por Sección:\n${sectionIssues}`
-                : `Correcciones solicitadas en las siguientes secciones:\n${sectionIssues}`;
+            const motivoFull = generalFeedback.trim()
+                ? `${generalFeedback.trim()}${sectionIssues ? `\n\nDetalle por Sección:\n${sectionIssues}` : ''}`
+                : `Correcciones requeridas:\n${sectionIssues}`;
 
-            const originalState = project.status;
-
-            await curriculumProjectService.transitionState(project.uuid, 'En Corrección', fullObs, fechaLimite || undefined);
+            await cambiarEstadoPea(projectUuid, 'Observado', undefined, motivoFull);
 
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-
             addToast(
-                "Proyecto Devuelto",
-                "El protocolo ha sido devuelto al docente para correcciones.",
-                "warning",
-                undefined,
-                async () => {
-                    try {
-                        await curriculumProjectService.transitionState(
-                            project.uuid,
-                            originalState,
-                            "Reversión (Undo): Retorno al estado anterior por cancelación de la devolución."
-                        );
-                        addToast("Acción Revertida", `La devolución ha sido cancelada. Proyecto en estado: ${originalState}`, "info");
-                        window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
-                        navigate(`/documentacion/revision-tecnica/${projectUuid}`);
-                    } catch (err) {
-                        console.error("[Undo Return] Failed:", err);
-                        addToast("Error al Revertir", "No se pudo deshacer la devolución del proyecto.", "error");
-                    }
-                }
+                "PEA Devuelto con Observaciones",
+                "El estado ha cambiado a 'Observado'. El editor microcurricular ha sido habilitado para que el docente subsane los requerimientos.",
+                "warning"
             );
-            navigate(`/documentacion/monitoreo/${projectUuid}`);
+
+            await loadProjectData();
             return true;
         } catch (err: any) {
-            console.error(err);
-            addToast("Error", err.response?.data?.error ?? "No se pudo realizar la devolución del proyecto.", "error");
+            console.error('[DOSIER] Error al devolver PEA:', err);
+            const msg = err.response?.data?.message || err.response?.data?.error || "No se pudo actualizar el estado del PEA.";
+            addToast("Error al Devolver", msg, "error");
             return false;
         } finally {
             setSubmitting(false);
@@ -511,7 +452,8 @@ export const useRevisionTecnicaData = ({
 
     return {
         project,
-        investigadores,
+        rawPea,
+        investigadores: [],
         loading,
         submitting,
         pdfUrl,
@@ -519,9 +461,10 @@ export const useRevisionTecnicaData = ({
         docSnapshot,
         templateBlocks,
         templateSections,
-        teachersWithExceedingHours,
         isHoursOk,
+        teachersWithExceedingHours: [],
         handleAprobar,
-        handleDevolver
+        handleDevolver,
+        reloadProject: loadProjectData
     };
 };

@@ -33,6 +33,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpGet("uuid/{uuid}")]
+        [HttpGet("{uuid:guid}")]
         public async Task<IActionResult> GetByUuid(string uuid)
         {
             var pea = await _peaService.GetByUuidAsync(uuid);
@@ -100,6 +101,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpPatch("uuid/{uuid}/estado")]
+        [HttpPatch("{uuid:guid}/estado")]
         [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR,DOSIER_DOCENTE")]
         public async Task<IActionResult> CambiarEstadoByUuid(string uuid, [FromBody] CambiarEstadoRequest req)
         {
@@ -135,6 +137,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpPost("uuid/{uuid}/firmar")]
+        [HttpPost("{uuid:guid}/firmar")]
         public async Task<IActionResult> FirmarByUuid(string uuid, [FromBody] FirmarPeaDto dto)
         {
             var pea = await _peaService.GetByUuidAsync(uuid);
@@ -176,6 +179,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpGet("uuid/{uuid}/observaciones")]
+        [HttpGet("{uuid:guid}/observaciones")]
         public async Task<IActionResult> GetObservacionesByUuid(string uuid)
         {
             var pea = await _peaService.GetByUuidAsync(uuid);
@@ -229,6 +233,20 @@ namespace dosier_api.Controllers
             return Ok(new { success = true });
         }
 
+        [HttpDelete("observaciones/{idObs:int}")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
+        public async Task<IActionResult> EliminarObservacion(int idObs)
+        {
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int? idUserInt = int.TryParse(userId, out int u) ? u : null;
+
+            var ok = await _peaService.EliminarObservacionAsync(idObs, idUserInt);
+            if (!ok) return NotFound("No se encontró la observación a eliminar.");
+            return Ok(new { success = true });
+        }
+
         [HttpGet("{id:int}/trazabilidad")]
         public async Task<IActionResult> GetTrazabilidad(int id)
         {
@@ -237,6 +255,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpGet("uuid/{uuid}/trazabilidad")]
+        [HttpGet("{uuid:guid}/trazabilidad")]
         public async Task<IActionResult> GetTrazabilidadByUuid(string uuid)
         {
             var pea = await _peaService.GetByUuidAsync(uuid);

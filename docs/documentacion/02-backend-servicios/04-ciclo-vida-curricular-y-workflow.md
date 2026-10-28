@@ -61,6 +61,16 @@ Para evitar revisiones informales en hojas dispersas o correos electrónicos, DO
 
 ---
 
+## 5. Sincronización Relacional de Metadatos (`SincronizarMetadataAsync`)
+
+Para garantizar la interoperabilidad entre el editor colaborativo dinámico (`doc_documentos_instancias.data_snapshot_json`) y el esquema relacional normalizado del PEA (`doc_pea`, `doc_pea_unidades`, `doc_pea_prerrequisitos`, `doc_pea_resultados_aprendizaje`, `doc_pea_actividades_practicas`, `doc_pea_evaluaciones`, `doc_pea_bibliografia`):
+* **Sincronización Transaccional Defensiva:** Parseo resiliente de valores numéricos y alfanuméricos mediante `SafeParseInt`, `SafeParseDecimal` y `SafeParseString`, previniendo errores por tipos de datos serializados como string.
+* **Normalización de Enumeraciones MySQL:** Mapeo estricto a los tipos `ENUM` de base de datos (`tipoBibliografia` en `'Basica'|'Consulta'|'Virtual'`, `nivelDesarrollo` en `'Inicial'|'Medio'|'Alto'`).
+* **Integridad Referencial en Cascada:** Eliminación previa de subtemas (`doc_pea_temas`) antes de purgar unidades temáticas (`doc_pea_unidades`), previniendo bloqueos por clave foránea.
+* **Sincronización en Firma del Docente:** Ejecución automática previa a la transición de estado a `EnRevision` durante la firma digital, garantizando que el hash forense SHA-256 selle datos 100% persistidos y actualizados.
+
+---
+
 ## 6. Bandeja de Supervisión Curricular Institucional
 
 Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), el endpoint `GET /api/pea/bandeja` provee la vista consolidada de los instrumentos microcurriculares:
@@ -71,4 +81,11 @@ Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COO
   * Coordinador de Carrera: Supervisión acotada a las asignaturas de su carrera respectiva.
   * Docente: Visualización exclusiva de sus asignaturas asignadas.
 * **Optimización de Carga:** Mapeo mediante carga por lotes (batching) en memoria de diccionarios de carreras, asignaturas y profesores para erradicar el problema de consultas N+1 en bases de datos relacionales.
+
+### 6.1. Separación de Tareas de Revisión vs. Monitoreo de Borradores
+
+Para evitar ambigüedad operativa en las autoridades curriculares:
+* **Bandeja de Tareas Operativas («Por revisar»):** Constituye la vista predeterminada de trabajo. Lista únicamente los instrumentos formalmente remitidos por los docentes con sellado de entrega (`EnRevision`, `Observado`, `Corregido`). Habilita de forma exclusiva el botón primario de «Revisión Técnica» y la emisión de avales.
+* **Monitoreo de Cumplimiento («En redacción docente»):** Permite verificar qué asignaturas continúan en formulación inicial (`Borrador`, `NoIniciado`). La interacción se restringe estrictamente a «Consultar avance (Lectura)», bloqueando la formulación de observaciones formales y la emisión de avales hasta la entrega formal. El botón de edición solo se habilita para el propio docente titular elaborador o administradores del sistema.
+
 

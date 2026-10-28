@@ -65,6 +65,8 @@ sequenceDiagram
 
 Para garantizar la máxima transparencia en el proceso de revisión:
 * **Observación Atómica por Sección:** El revisor selecciona la sección observada (`Objetivos`, `Unidades y Temas`, `Actividades Prácticas`, `Evaluación`, etc.) e introduce el requerimiento de ajuste en texto claro.
+* **Bloqueo y Devolución Controlada:** Al formular observaciones vía `POST /api/pea/uuid/{uuid}/observaciones`, el PEA transiciona a `Observado`. Las observaciones pueden ser retiradas por coordinadores vía `DELETE /api/pea/observaciones/{idObs}`.
+* **Espacio de Revisión Técnica (`/documentacion/revision-tecnica/:uuid`):** Interfaz especializada con semáforo normativo CES Art. 21, lectura en folio continuo de las 11 secciones oficiales y modal institucional de firma digital para emisión de avales colegiados.
 * **Bloqueo de Aprobación:** El sistema impide que un PEA sea avalado o aprobado si mantiene observaciones pendientes de atención (`estado = 'Pendiente'`).
 * **Respuesta del Docente:** El docente registra su justificación o detalle de corrección para marcar la observación como `Subsanada`.
 * **Auditoría Forense:** Cada observación y subsanación queda registrada permanentemente con usuario, cargo, fecha UTC y texto original en `doc_pea_observaciones`.
