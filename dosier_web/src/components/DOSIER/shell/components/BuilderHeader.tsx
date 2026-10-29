@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Save, Clock, CheckCircle, Shield, Sun, Moon, MessageSquarePlus } from 'lucide-react';
+import { ArrowLeft, Save, Clock, CheckCircle, Shield, Sun, Moon, MessageSquarePlus, Sparkles } from 'lucide-react';
 import type { CoWorkUser } from '../../../../core/cowork/types';
 
 export interface BuilderHeaderProps {
@@ -16,6 +16,7 @@ export interface BuilderHeaderProps {
     onClose: () => void;
     onSave: () => void;
     toggleTheme: () => void;
+    onOpenAiAssistant?: () => void;
 }
 
 export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
@@ -31,7 +32,8 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
     isDarkMode,
     onClose,
     onSave,
-    toggleTheme
+    toggleTheme,
+    onOpenAiAssistant
 }) => {
     return (
         <div className="px-4 md:px-8 py-3 border-b border-border-thin bg-bg-deep flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 z-[50]">
@@ -61,6 +63,19 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
             </div>
 
             <div className="flex items-center gap-3 md:gap-4 flex-wrap md:flex-nowrap">
+                {/* 0. Botón Asistente Curricular IA */}
+                {!readOnly && onOpenAiAssistant && (
+                    <button
+                        type="button"
+                        onClick={onOpenAiAssistant}
+                        className="px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-[#0c192c] hover:bg-blue-100 dark:hover:bg-[#112440] text-[#0070f3] dark:text-blue-400 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                        title="Abrir Asistente Curricular IA"
+                    >
+                        <Sparkles size={13} strokeWidth={1.75} className="shrink-0" />
+                        <span>Asistente IA</span>
+                    </button>
+                )}
+
                 {/* 1. Único Indicador de Persistencia Inteligente */}
                 <div className="flex items-center">
                     {readOnly ? (

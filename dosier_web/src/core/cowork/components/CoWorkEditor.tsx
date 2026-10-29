@@ -268,6 +268,39 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
         if (editor) editor.setEditable(isEditable);
     }, [editor, isEditable]);
 
+    // Hidratación inicial desde dbValue cuando el Y.XmlFragment está vacío (ej: tras autocompletado IA en otra pestaña)
+    React.useEffect(() => {
+        if (!editor || seededRef.current) return;
+        const fragment = ydoc.getXmlFragment(field);
+        if (fragment.length === 0 && typeof dbValue === 'string' && dbValue.trim().length > 0) {
+            seededRef.current = true;
+            editor.commands.setContent(dbValue);
+            const json = JSON.stringify(editor.getJSON());
+            coworkRef.current.submitFinalContent(dbValue, json, field);
+        }
+    }, [editor, ydoc, field, dbValue]);
+
+    // Escucha de hidratación en caliente desde el motor de IA / Importador documental
+    React.useEffect(() => {
+        if (!editor) return;
+
+        const handleHydrateRichText = (event: Event) => {
+            const customEvent = event as CustomEvent<{ field: string; html: string }>;
+            if (customEvent.detail?.field === fieldRef.current && typeof customEvent.detail.html === 'string') {
+                seededRef.current = true;
+                editor.commands.setContent(customEvent.detail.html);
+                const json = JSON.stringify(editor.getJSON());
+                coworkRef.current.submitFinalContent(customEvent.detail.html, json, fieldRef.current);
+                onChangeRef.current?.(customEvent.detail.html, { source: 'local' });
+            }
+        };
+
+        window.addEventListener('dosier:hydrate-richtext', handleHydrateRichText);
+        return () => {
+            window.removeEventListener('dosier:hydrate-richtext', handleHydrateRichText);
+        };
+    }, [editor]);
+
     const { session } = cowork;
 
     return (

@@ -94,6 +94,9 @@ Controlador central para la elaboración, edición, validación de horas, circui
 | `PATCH`| `/observaciones/{idObs:int}/subsanar` | Docente / Admin | Subsanación de la observación por parte del docente con su respuesta formal. |
 | `DELETE`| `/observaciones/{idObs:int}` | Coordinadores / Vicerrector / Admin | Eliminación o retiro de una observación formal registrada. |
 | `GET` | `/{id:int}/trazabilidad` | Autenticado | Historial inmutable de cambios de estado y hashes SHA-256. |
+| `GET` | `/ai/config` | Autenticado | Consulta del estado de configuración, proveedor activo, modelo y endpoint del asistente de IA. |
+| `POST`| `/ai/config` | Autenticado / Admin | Almacenamiento cifrado con AES-256 de la API Key y configuración del motor IA (personal o global). |
+| `POST`| `/uuid/{uuid}/ai/generar` | Autenticado (Docente/Admin) | Generación asistida de propuesta curricular completa o por sección con cuadre matemático SIGAFI. |
 
 ---
 

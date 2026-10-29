@@ -574,7 +574,8 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
         removeItem,
         updateItem,
         updateField,
-        reorderItem
+        reorderItem,
+        applyStructuredDraft
     } = useDOSIERDocument(
         mergedInitial,
         cowork.ydoc,        // ← parámetro reactivo: React detecta cambios si SignalR reconecta
@@ -717,6 +718,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             entityUuid={entityUuid}
             canSign={canSign}
             onUpdateField={updateField}
+            onApplyStructuredDraft={applyStructuredDraft}
             signatureType={templateConfig?.signatureType || 'DOSIER'}
             documentUuid={initialData?.Uuid || initialData?.uuid || formData?.Uuid || formData?.uuid}
             hasTemplateUpdate={showUpgradeBanner}

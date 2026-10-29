@@ -1,0 +1,339 @@
+import api from '../api/axios_config';
+
+export type PeaAiProvider =
+    | 'deepseek'
+    | 'openrouter'
+    | 'gemini'
+    | 'anthropic'
+    | 'openai'
+    | 'groq'
+    | 'ollama'
+    | 'custom';
+
+export interface PeaAiConfigStatus {
+    hasUserApiKey: boolean;
+    hasGlobalApiKey: boolean;
+    activeProvider: PeaAiProvider;
+    activeModel: string;
+    activeBaseUrl?: string | null;
+    maskedApiKey?: string | null;
+    isReady: boolean;
+}
+
+export interface SavePeaAiConfigRequest {
+    provider: PeaAiProvider;
+    model?: string;
+    baseUrl?: string;
+    apiKey?: string;
+    scope?: 'user' | 'global';
+}
+
+export interface PeaDraftPrerrequisito {
+    asignatura: string;
+    observacion: string;
+}
+
+export interface PeaDraftUnidad {
+    num: number;
+    titulo: string;
+    contenidos: string;
+    horasCD: number;
+    horasAPE: number;
+    horasTA: number;
+    horasTotal: number;
+}
+
+export interface PeaDraftActividadPractica {
+    unidad: number;
+    nombre: string;
+    horas: number;
+    escenario: string;
+    producto: string;
+    caracterizacion: string;
+}
+
+export interface PeaDraftEvaluacion {
+    nota: string;
+    tipo: string;
+    calificacion: number;
+}
+
+export interface PeaDraftBibliografia {
+    tipoBibliografia: 'Basica' | 'Consulta';
+    autor: string;
+    tituloLibro: string;
+    editorialCiudad: string;
+    citaCompletaApa: string;
+}
+
+export interface PeaDraftValidationSummary {
+    providerUsed: string;
+    modelUsed: string;
+    targetSection: string;
+    sigafiHorasCD: number;
+    sigafiHorasAPE: number;
+    sigafiHorasTA: number;
+    sigafiTotalHoras: number;
+    generatedHorasCD: number;
+    generatedHorasAPE: number;
+    generatedHorasTA: number;
+    generatedTotalHoras: number;
+    isHoursExactMatch: boolean;
+    generatedSections: string[];
+}
+
+export interface PeaStructuredDraft {
+    objetivoAsignatura: string;
+    rdaCarrera: string;
+    resultadosAprendizaje: string;
+    metodologiaEnsenanza: string;
+    recursosDidacticos: string;
+    bibliografiaBasica: string;
+    bibliografiaConsulta: string;
+    prerrequisitos: PeaDraftPrerrequisito[];
+    unidades: PeaDraftUnidad[];
+    actividadesPracticas: PeaDraftActividadPractica[];
+    evaluaciones: PeaDraftEvaluacion[];
+    bibliografias: PeaDraftBibliografia[];
+    validationSummary: PeaDraftValidationSummary;
+}
+
+export interface GeneratePeaDraftRequest {
+    targetSection?: string;
+    customInstructions?: string;
+    provider?: PeaAiProvider;
+    model?: string;
+    baseUrlOverride?: string;
+    apiKeyOverride?: string;
+    currentUnidades?: Array<{
+        num: number;
+        titulo: string;
+        contenidos: string;
+        horasCD: number;
+        horasAPE: number;
+        horasTA: number;
+    }>;
+}
+
+const normalizeConfigStatus = (raw: any): PeaAiConfigStatus => {
+    const prov = String(raw?.active_provider ?? raw?.activeProvider ?? 'deepseek').toLowerCase();
+    const validProviders: PeaAiProvider[] = ['deepseek', 'openrouter', 'gemini', 'anthropic', 'openai', 'groq', 'ollama', 'custom'];
+    const activeProvider: PeaAiProvider = validProviders.includes(prov as PeaAiProvider)
+        ? (prov as PeaAiProvider)
+        : 'deepseek';
+
+    return {
+        hasUserApiKey: Boolean(raw?.has_user_api_key ?? raw?.hasUserApiKey),
+        hasGlobalApiKey: Boolean(raw?.has_global_api_key ?? raw?.hasGlobalApiKey),
+        activeProvider,
+        activeModel: String(raw?.active_model ?? raw?.activeModel ?? 'deepseek-chat'),
+        activeBaseUrl: raw?.active_base_url ?? raw?.activeBaseUrl ?? null,
+        maskedApiKey: raw?.masked_api_key ?? raw?.maskedApiKey ?? null,
+        isReady: Boolean(raw?.is_ready ?? raw?.isReady)
+    };
+};
+
+const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
+    const rawPrerreq: any[] = raw?.prerrequisitos ?? raw?.Prerrequisitos ?? [];
+    const rawUnidades: any[] = raw?.unidades ?? raw?.Unidades ?? [];
+    const rawPracticas: any[] = raw?.actividades_practicas ?? raw?.actividadesPracticas ?? raw?.ActividadesPracticas ?? [];
+    const rawEvaluaciones: any[] = raw?.evaluaciones ?? raw?.Evaluaciones ?? [];
+    const rawBiblio: any[] = raw?.bibliografias ?? raw?.Bibliografias ?? [];
+    const vs = raw?.validation_summary ?? raw?.validationSummary ?? {};
+
+    return {
+        objetivoAsignatura: String(raw?.objetivo_asignatura ?? raw?.objetivoAsignatura ?? raw?.ObjetivoAsignatura ?? ''),
+        rdaCarrera: String(raw?.rda_carrera ?? raw?.rdaCarrera ?? raw?.RdaCarrera ?? ''),
+        resultadosAprendizaje: String(raw?.resultados_aprendizaje ?? raw?.resultadosAprendizaje ?? raw?.ResultadosAprendizaje ?? ''),
+        metodologiaEnsenanza: String(raw?.metodologia_ensenanza ?? raw?.metodologiaEnsenanza ?? raw?.MetodologiaEnsenanza ?? ''),
+        recursosDidacticos: String(raw?.recursos_didacticos ?? raw?.recursosDidacticos ?? raw?.RecursosDidacticos ?? ''),
+        bibliografiaBasica: String(raw?.bibliografia_basica ?? raw?.bibliografiaBasica ?? raw?.BibliografiaBasica ?? ''),
+        bibliografiaConsulta: String(raw?.bibliografia_consulta ?? raw?.bibliografiaConsulta ?? raw?.BibliografiaConsulta ?? ''),
+        prerrequisitos: rawPrerreq.map((p: any) => ({
+            asignatura: String(p?.asignatura ?? p?.Asignatura ?? ''),
+            observacion: String(p?.observacion ?? p?.Observacion ?? '')
+        })),
+        unidades: rawUnidades.map((u: any, idx: number) => {
+            const cd = Number(u?.horas_cd ?? u?.horasCD ?? u?.HorasCD ?? 0);
+            const ape = Number(u?.horas_ape ?? u?.horasAPE ?? u?.HorasAPE ?? 0);
+            const ta = Number(u?.horas_ta ?? u?.horasTA ?? u?.HorasTA ?? 0);
+            return {
+                num: Number(u?.num ?? u?.Num ?? idx + 1),
+                titulo: String(u?.titulo ?? u?.Titulo ?? ''),
+                contenidos: String(u?.contenidos ?? u?.Contenidos ?? ''),
+                horasCD: cd,
+                horasAPE: ape,
+                horasTA: ta,
+                horasTotal: cd + ape + ta
+            };
+        }),
+        actividadesPracticas: rawPracticas.map((p: any, idx: number) => ({
+            unidad: Number(p?.unidad ?? p?.Unidad ?? idx + 1),
+            nombre: String(p?.nombre ?? p?.Nombre ?? ''),
+            horas: Number(p?.horas ?? p?.Horas ?? 2),
+            escenario: String(p?.escenario ?? p?.Escenario ?? ''),
+            producto: String(p?.producto ?? p?.Producto ?? ''),
+            caracterizacion: String(p?.caracterizacion ?? p?.Caracterizacion ?? '')
+        })),
+        evaluaciones: rawEvaluaciones.map((e: any) => ({
+            nota: String(e?.nota ?? e?.Nota ?? ''),
+            tipo: String(e?.tipo ?? e?.Tipo ?? ''),
+            calificacion: Number(e?.calificacion ?? e?.Calificacion ?? 10)
+        })),
+        bibliografias: rawBiblio.map((b: any) => ({
+            tipoBibliografia: (String(b?.tipo_bibliografia ?? b?.tipoBibliografia ?? b?.TipoBibliografia ?? 'Basica')
+                .toLowerCase().includes('cons') ? 'Consulta' : 'Basica') as 'Basica' | 'Consulta',
+            autor: String(b?.autor ?? b?.Autor ?? ''),
+            tituloLibro: String(b?.titulo_libro ?? b?.tituloLibro ?? b?.TituloLibro ?? ''),
+            editorialCiudad: String(b?.editorial_ciudad ?? b?.editorialCiudad ?? b?.EditorialCiudad ?? ''),
+            citaCompletaApa: String(b?.cita_completa_apa ?? b?.citaCompletaApa ?? b?.CitaCompletaApa ?? '')
+        })),
+        validationSummary: {
+            providerUsed: String(vs?.provider_used ?? vs?.providerUsed ?? 'gemini'),
+            modelUsed: String(vs?.model_used ?? vs?.modelUsed ?? ''),
+            targetSection: String(vs?.target_section ?? vs?.targetSection ?? 'all'),
+            sigafiHorasCD: Number(vs?.sigafi_horas_cd ?? vs?.sigafiHorasCD ?? 0),
+            sigafiHorasAPE: Number(vs?.sigafi_horas_ape ?? vs?.sigafiHorasAPE ?? 0),
+            sigafiHorasTA: Number(vs?.sigafi_horas_ta ?? vs?.sigafiHorasTA ?? 0),
+            sigafiTotalHoras: Number(vs?.sigafi_total_horas ?? vs?.sigafiTotalHoras ?? 0),
+            generatedHorasCD: Number(vs?.generated_horas_cd ?? vs?.generatedHorasCD ?? 0),
+            generatedHorasAPE: Number(vs?.generated_horas_ape ?? vs?.generatedHorasAPE ?? 0),
+            generatedHorasTA: Number(vs?.generated_horas_ta ?? vs?.generatedHorasTA ?? 0),
+            generatedTotalHoras: Number(vs?.generated_total_horas ?? vs?.generatedTotalHoras ?? 0),
+            isHoursExactMatch: Boolean(vs?.is_hours_exact_match ?? vs?.isHoursExactMatch),
+            generatedSections: Array.isArray(vs?.generated_sections ?? vs?.generatedSections)
+                ? (vs?.generated_sections ?? vs?.generatedSections)
+                : []
+        }
+    };
+};
+
+export const getPeaAiConfig = async (): Promise<PeaAiConfigStatus> => {
+    const res = await api.get('/pea/ai/config');
+    return normalizeConfigStatus(res.data);
+};
+
+export const savePeaAiConfig = async (req: SavePeaAiConfigRequest): Promise<PeaAiConfigStatus> => {
+    const res = await api.post('/pea/ai/config', {
+        provider: req.provider,
+        model: req.model,
+        api_key: req.apiKey,
+        scope: req.scope ?? 'user'
+    });
+    return normalizeConfigStatus(res.data);
+};
+
+export const generatePeaAiDraft = async (
+    peaUuid: string,
+    req: GeneratePeaDraftRequest = {}
+): Promise<PeaStructuredDraft> => {
+    const res = await api.post(`/pea/uuid/${peaUuid}/ai/generar`, {
+        target_section: req.targetSection ?? 'all',
+        custom_instructions: req.customInstructions,
+        provider: req.provider,
+        model: req.model,
+        api_key_override: req.apiKeyOverride,
+        current_unidades: req.currentUnidades?.map(u => ({
+            num: u.num,
+            titulo: u.titulo,
+            contenidos: u.contenidos,
+            horas_cd: u.horasCD,
+            horas_ape: u.horasAPE,
+            horas_ta: u.horasTA
+        }))
+    });
+    return normalizeStructuredDraft(res.data);
+};
+
+/**
+ * Convierte un PeaStructuredDraft al mapa exacto de campos del DocumentTemplateRegistry (PEA_OFICIAL),
+ * filtrando opcionalmente por las secciones seleccionadas por el docente.
+ */
+export const convertDraftToEditorFields = (
+    draft: PeaStructuredDraft,
+    selectedSectionIds?: string[]
+): Record<string, any> => {
+    const includeSection = (secId: string) =>
+        !selectedSectionIds || selectedSectionIds.length === 0 || selectedSectionIds.includes(secId);
+
+    const patch: Record<string, any> = {};
+
+    if (includeSection('pea_objectives_section') && draft.objetivoAsignatura) {
+        patch.ObjetivoAsignatura = draft.objetivoAsignatura;
+    }
+
+    if (includeSection('pea_prerequisites_section') && draft.prerrequisitos.length > 0) {
+        patch.Prerrequisitos = draft.prerrequisitos.map((p, idx) => ({
+            id: `ai_prerreq_${Date.now()}_${idx}`,
+            Asignatura: p.asignatura,
+            Observacion: p.observacion,
+            '0': p.asignatura,
+            '1': p.observacion
+        }));
+    }
+
+    if (includeSection('pea_career_outcomes_section') && draft.rdaCarrera) {
+        patch.RdaCarrera = draft.rdaCarrera;
+    }
+
+    if (includeSection('pea_subject_outcomes_section') && draft.resultadosAprendizaje) {
+        patch.ResultadosAprendizaje = draft.resultadosAprendizaje;
+    }
+
+    if (includeSection('pea_contents_section') && draft.unidades.length > 0) {
+        patch.Unidades = draft.unidades.map((u, idx) => ({
+            id: `ai_unit_${Date.now()}_${idx}`,
+            num: u.num || idx + 1,
+            titulo: u.titulo,
+            contenidos: u.contenidos,
+            horasCD: u.horasCD,
+            horasAPE: u.horasAPE,
+            horasTA: u.horasTA,
+            horasTotal: u.horasCD + u.horasAPE + u.horasTA
+        }));
+    }
+
+    if (includeSection('pea_methodology_section')) {
+        if (draft.metodologiaEnsenanza) patch.MetodologiaEnsenanza = draft.metodologiaEnsenanza;
+        if (draft.recursosDidacticos) patch.RecursosDidacticos = draft.recursosDidacticos;
+    }
+
+    if (includeSection('pea_resources_section') && draft.actividadesPracticas.length > 0) {
+        patch.ActividadesPracticas = draft.actividadesPracticas.map((p, idx) => ({
+            id: `ai_prac_${Date.now()}_${idx}`,
+            unidad: p.unidad,
+            nombre: p.nombre,
+            horas: p.horas,
+            escenario: p.escenario,
+            producto: p.producto,
+            caracterizacion: p.caracterizacion
+        }));
+    }
+
+    if (includeSection('pea_evaluation_section') && draft.evaluaciones.length > 0) {
+        patch.Evaluaciones = draft.evaluaciones.map((e, idx) => ({
+            id: `ai_eval_${Date.now()}_${idx}`,
+            nota: e.nota,
+            tipo: e.tipo,
+            calificacion: e.calificacion
+        }));
+    }
+
+    if (includeSection('pea_bibliography_section')) {
+        if (draft.bibliografiaBasica) patch.BibliografiaBasica = draft.bibliografiaBasica;
+        if (draft.bibliografiaConsulta) patch.BibliografiaConsulta = draft.bibliografiaConsulta;
+        if (draft.bibliografias.length > 0) {
+            patch.Bibliografias = draft.bibliografias.map((b, idx) => ({
+                id: `ai_bib_${Date.now()}_${idx}`,
+                TipoBibliografia: b.tipoBibliografia,
+                Autor: b.autor,
+                TituloLibro: b.tituloLibro,
+                EditorialCiudad: b.editorialCiudad,
+                CitaCompletaApa: b.citaCompletaApa
+            }));
+        }
+    }
+
+    return patch;
+};
+

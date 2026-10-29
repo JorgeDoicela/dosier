@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Lock, Unlock, Shield, Award, Loader2, RefreshCw, X } from 'lucide-react';
+import { Lock, Unlock, Shield, Award, Loader2, RefreshCw, X, Sparkles } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
 import CollaborationSidebar from './CollaborationSidebar';
 import { DocumentDataContext, DocumentMetadataContext, SectionLockContext } from '../../core/documents/context/DocumentDataContext';
@@ -9,6 +9,7 @@ import { BuilderNavigationSidebar } from './shell/components/BuilderNavigationSi
 import { BuilderFloatingTab } from './shell/components/BuilderFloatingTab';
 import { BuilderSectionFooterNav } from './shell/components/BuilderSectionFooterNav';
 import { OutputSection } from './shell/components/OutputSection';
+import { PeaAiAssistantModal } from './shell/components/PeaAiAssistantModal';
 import type { BuilderSection } from './shell/hooks/useBuilderLayout';
 
 import { useAuth } from '../../api/AuthContext';
@@ -34,6 +35,7 @@ export interface DOSIERBuilderShellProps {
     children: (activeTab: string, cowork: CoWorkHandle) => React.ReactNode;
     canSign?: boolean;
     onUpdateField?: (name: string, value: any) => void;
+    onApplyStructuredDraft?: (patch: Record<string, any>) => void;
     signatureType?: string;
     documentUuid?: string;
     hasTemplateUpdate?: boolean;
@@ -58,6 +60,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         children,
         canSign = true,
         onUpdateField,
+        onApplyStructuredDraft,
         signatureType = 'DOSIER',
         documentUuid,
         hasTemplateUpdate = false,
@@ -70,6 +73,14 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     const { isAdmin } = useAuth();
     const { layout, autoSave, pdfAndSign, network } = useDOSIERBuilderShell(props);
     const [showUpdateModal, setShowUpdateModal] = useState<boolean>(hasTemplateUpdate);
+    const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
+    const [aiTargetSection, setAiTargetSection] = useState<string>('all');
+
+    const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
+    const isAiSupportedSection = templateCode === 'PEA_OFICIAL' &&
+        layout.activeTab !== 'pea_general_section' &&
+        layout.activeTab !== 'pea_signatures_section' &&
+        layout.activeTab !== 'output';
 
     const showRightSidebar = true;
 
@@ -132,6 +143,10 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 onClose={autoSave.handleClose}
                                 onSave={autoSave.handleSave}
                                 toggleTheme={layout.toggleTheme}
+                                onOpenAiAssistant={!readOnly && templateCode === 'PEA_OFICIAL' ? () => {
+                                    setAiTargetSection('all');
+                                    setAiModalOpen(true);
+                                } : undefined}
                             />
 
                             <div className="flex flex-1 overflow-hidden relative" ref={layout.bodyContainerRef}>
@@ -194,42 +209,58 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                         <div className="w-12 sm:w-20 h-1 md:h-1.5 bg-text-main mt-2 md:mt-3 rounded-full" />
                                                     </div>
 
-                                                    {/* Compact Section Lock Control — Gobernanza institucional y de equipo */}
-                                                    {!readOnly && layout.activeTab !== 'output' && shouldShowLockControl && (
-                                                        <div className="flex items-center gap-2 bg-surface border border-border-thin px-3 py-1.5 rounded-full animate-fade-in text-[9px] font-bold uppercase tracking-wider self-start sm:self-center select-none">
-                                                            {layout.isSectionBlocked ? (
-                                                                <>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <Lock size={12} className="text-amber-500 animate-pulse" />
-                                                                        <span className="text-amber-500">Sección Bloqueada</span>
-                                                                    </div>
-                                                                    {layout.isDirectorOrAdmin && (
-                                                                        <button
-                                                                            onClick={() => autoSave.handleToggleSectionLock(layout.activeTab)}
-                                                                            className="ml-1.5 px-2 py-0.5 bg-[#0070f3] hover:bg-[#005bb5] text-white transition-all rounded-md font-medium text-xs cursor-pointer shadow-2xs"
-                                                                        >
-                                                                            Desbloquear
-                                                                        </button>
-                                                                    )}
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <Unlock size={12} className="text-text-dim" />
-                                                                        <span className="text-text-dim">Edición Abierta</span>
-                                                                    </div>
-                                                                    {layout.isDirectorOrAdmin && (
-                                                                        <button
-                                                                            onClick={() => autoSave.handleToggleSectionLock(layout.activeTab)}
-                                                                            className="ml-1.5 px-2 py-0.5 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-all rounded-md font-medium text-xs cursor-pointer"
-                                                                        >
-                                                                            Bloquear
-                                                                        </button>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                                    <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
+                                                        {!readOnly && isAiSupportedSection && !layout.isSectionBlocked && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setAiTargetSection(layout.activeTab);
+                                                                    setAiModalOpen(true);
+                                                                }}
+                                                                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-[#0070f3] dark:hover:border-blue-500 text-slate-700 dark:text-zinc-200 hover:text-[#0070f3] dark:hover:text-blue-400 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                            >
+                                                                <Sparkles size={13} strokeWidth={1.75} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
+                                                                <span>Autocompletar sección con IA</span>
+                                                            </button>
+                                                        )}
+
+                                                        {/* Compact Section Lock Control — Gobernanza institucional y de equipo */}
+                                                        {!readOnly && layout.activeTab !== 'output' && shouldShowLockControl && (
+                                                            <div className="flex items-center gap-2 bg-surface border border-border-thin px-3 py-1.5 rounded-full animate-fade-in text-[9px] font-bold uppercase tracking-wider select-none">
+                                                                {layout.isSectionBlocked ? (
+                                                                    <>
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <Lock size={12} className="text-amber-500 animate-pulse" />
+                                                                            <span className="text-amber-500">Sección Bloqueada</span>
+                                                                        </div>
+                                                                        {layout.isDirectorOrAdmin && (
+                                                                            <button
+                                                                                onClick={() => autoSave.handleToggleSectionLock(layout.activeTab)}
+                                                                                className="ml-1.5 px-2 py-0.5 bg-[#0070f3] hover:bg-[#005bb5] text-white transition-all rounded-md font-medium text-xs cursor-pointer shadow-2xs"
+                                                                            >
+                                                                                Desbloquear
+                                                                            </button>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <Unlock size={12} className="text-text-dim" />
+                                                                            <span className="text-text-dim">Edición Abierta</span>
+                                                                        </div>
+                                                                        {layout.isDirectorOrAdmin && (
+                                                                            <button
+                                                                                onClick={() => autoSave.handleToggleSectionLock(layout.activeTab)}
+                                                                                className="ml-1.5 px-2 py-0.5 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-all rounded-md font-medium text-xs cursor-pointer"
+                                                                            >
+                                                                                Bloquear
+                                                                            </button>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {hasTemplateUpdate && !readOnly && onUpgradeTemplate && !showUpdateModal && (
@@ -432,6 +463,24 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 </div>
                             </div>
                         </div>
+                    )}
+                    {/* ── Modal del Asistente Curricular IA ── */}
+                    {templateCode === 'PEA_OFICIAL' && (
+                        <PeaAiAssistantModal
+                            isOpen={aiModalOpen}
+                            onClose={() => setAiModalOpen(false)}
+                            peaUuid={resolvedPeaUuid}
+                            formData={formData}
+                            initialTargetSection={aiTargetSection}
+                            isAdmin={isAdmin}
+                            onApplyDraft={(patch) => {
+                                if (onApplyStructuredDraft) {
+                                    onApplyStructuredDraft(patch);
+                                } else if (onUpdateField) {
+                                    Object.entries(patch).forEach(([key, val]) => onUpdateField(key, val));
+                                }
+                            }}
+                        />
                     )}
                 </SectionLockContext.Provider>
             </DocumentMetadataContext.Provider>

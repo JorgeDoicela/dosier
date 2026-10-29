@@ -46,19 +46,20 @@ export const useRevisionTecnicaComments = ({
             const grouped: Record<string, SectionComment[]> = {};
 
             list.forEach(obs => {
-                const key = obs.seccionAfectada || 'General';
+                const raw = obs as any;
+                const key = raw.seccion_afectada || obs.seccionAfectada || 'General';
                 if (!grouped[key]) grouped[key] = [];
                 grouped[key].push({
-                    id: obs.idObservacion,
-                    uuid: obs.uuid,
-                    status: obs.estado,
-                    text: obs.textoObservacion,
-                    creadoEn: obs.fechaObservacion,
-                    nombreUsuario: obs.nombreObservador || obs.rolObservador || 'Revisor Curricular',
-                    rolObservador: obs.rolObservador,
-                    seccionAfectada: obs.seccionAfectada,
-                    respuestaDocente: obs.respuestaDocente,
-                    fechaResolucion: obs.fechaResolucion
+                    id: raw.id_observacion ?? obs.idObservacion,
+                    uuid: raw.uuid ?? obs.uuid,
+                    status: raw.estado ?? obs.estado,
+                    text: raw.texto_observacion ?? obs.textoObservacion,
+                    creadoEn: raw.fecha_observacion ?? obs.fechaObservacion,
+                    nombreUsuario: raw.nombre_observador || obs.nombreObservador || raw.rol_observador || obs.rolObservador || 'Revisor Curricular',
+                    rolObservador: raw.rol_observador || obs.rolObservador,
+                    seccionAfectada: key,
+                    respuestaDocente: raw.respuesta_docente || obs.respuestaDocente,
+                    fechaResolucion: raw.fecha_resolucion || obs.fechaResolucion
                 });
             });
 
@@ -112,16 +113,17 @@ export const useRevisionTecnicaComments = ({
                 texto: text.trim()
             });
 
+            const raw = nuevaObs as any;
             const newComment: SectionComment = {
-                id: nuevaObs.idObservacion,
-                uuid: nuevaObs.uuid,
-                status: nuevaObs.estado,
-                text: nuevaObs.textoObservacion,
-                creadoEn: nuevaObs.fechaObservacion,
-                nombreUsuario: nuevaObs.nombreObservador || rolObservador,
-                rolObservador: nuevaObs.rolObservador,
-                seccionAfectada: nuevaObs.seccionAfectada,
-                respuestaDocente: nuevaObs.respuestaDocente
+                id: raw.id_observacion ?? nuevaObs.idObservacion,
+                uuid: raw.uuid ?? nuevaObs.uuid,
+                status: raw.estado ?? nuevaObs.estado,
+                text: raw.texto_observacion ?? nuevaObs.textoObservacion,
+                creadoEn: raw.fecha_observacion ?? nuevaObs.fechaObservacion,
+                nombreUsuario: raw.nombre_observador || nuevaObs.nombreObservador || rolObservador,
+                rolObservador: raw.rol_observador || nuevaObs.rolObservador || rolObservador,
+                seccionAfectada: raw.seccion_afectada || nuevaObs.seccionAfectada || section,
+                respuestaDocente: raw.respuesta_docente || nuevaObs.respuestaDocente
             };
 
             setComments(prev => {

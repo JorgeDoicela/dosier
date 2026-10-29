@@ -248,6 +248,98 @@ export function useDOSIERDocument<T extends Record<string, any>>(
         setLocalChangeCount(c => c + 1);
     }, [ydoc]);
 
+    /**
+     * Hidrata atómicamente múltiples campos (listas Y.Array, textos Y.Text y bloques rich-text Y.XmlFragment)
+     * provenientes del Asistente IA o del Importador Documental sin requerir recarga de página.
+     */
+    const applyStructuredDraft = useCallback((patch: Record<string, any>) => {
+        if (!patch || typeof patch !== 'object') return;
+        const currentOptions = optionsRef.current;
+        const richTextHydrations: Array<{ field: string; html: string }> = [];
+
+        if (ydoc) {
+            ydoc.transact(() => {
+                Object.entries(patch).forEach(([key, val]) => {
+                    if (val === undefined) return;
+
+                    const isList = Array.isArray(val) && (
+                        currentOptions.lists?.includes(key) ||
+                        key.startsWith('MultiSec_') ||
+                        ydoc.share.get(key) instanceof Y.Array
+                    );
+
+                    const isRichText = currentOptions.richTexts?.some(rt => rt.toLowerCase() === key.toLowerCase()) ||
+                        /^field_\d+/i.test(key) ||
+                        key.endsWith('Izquierda') ||
+                        key.endsWith('Derecha');
+
+                    if (isList) {
+                        const enrichedList = (val as any[]).map((item: any, idx: number) => {
+                            if (item && typeof item === 'object') {
+                                return {
+                                    ...item,
+                                    id: item.id || `ai_${generateRandomId()}_${idx}`
+                                };
+                            }
+                            return item;
+                        });
+                        const yarray = ensureYArray(key);
+                        if (yarray) {
+                            if (yarray.length > 0) {
+                                yarray.delete(0, yarray.length);
+                            }
+                            if (enrichedList.length > 0) {
+                                yarray.push(enrichedList);
+                            }
+                        }
+                    } else if (isRichText) {
+                        const sharedType = ydoc.share.get(key);
+                        if (sharedType instanceof Y.XmlFragment && sharedType.length > 0) {
+                            sharedType.delete(0, sharedType.length);
+                        }
+                        richTextHydrations.push({ field: key, html: String(val ?? '') });
+                    } else if (
+                        !currentOptions.nonCollaborative?.includes(key) &&
+                        key.toLowerCase() !== 'uuid' &&
+                        key.toLowerCase() !== 'entityuuid'
+                    ) {
+                        const sharedType = ydoc.share.get(key);
+                        if (!(sharedType instanceof Y.XmlFragment) && !(sharedType instanceof Y.Array)) {
+                            const ytext = ydoc.getText(key);
+                            const strVal = typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val ?? '');
+                            ytext.delete(0, ytext.length);
+                            if (strVal) {
+                                ytext.insert(0, strVal);
+                            }
+                        }
+                    }
+                });
+            }, 'ai-hydration');
+        } else {
+            Object.entries(patch).forEach(([key, val]) => {
+                const isRichText = currentOptions.richTexts?.some(rt => rt.toLowerCase() === key.toLowerCase());
+                if (isRichText && typeof val === 'string') {
+                    richTextHydrations.push({ field: key, html: val });
+                }
+            });
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            ...patch
+        }));
+
+        if (typeof window !== 'undefined' && richTextHydrations.length > 0) {
+            richTextHydrations.forEach(({ field, html }) => {
+                window.dispatchEvent(new CustomEvent('dosier:hydrate-richtext', {
+                    detail: { field, html }
+                }));
+            });
+        }
+
+        setLocalChangeCount(c => c + 1);
+    }, [ydoc]);
+
     const listsKey = (options.lists || []).join(',');
     const richTextsKey = (options.richTexts || []).join(',');
     const nonCollabKey = (options.nonCollaborative || []).join(',');
@@ -562,6 +654,7 @@ export function useDOSIERDocument<T extends Record<string, any>>(
         removeItem,
         updateItem,
         updateField,
-        reorderItem
+        reorderItem,
+        applyStructuredDraft
     };
 }

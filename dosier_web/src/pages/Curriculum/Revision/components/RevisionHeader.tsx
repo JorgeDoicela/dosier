@@ -168,17 +168,6 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
 
                 {/* 3. Derecha: Acciones de Cabecera y Dictamen */}
                 <div className="flex items-center gap-2 shrink-0">
-                    {/* Indicador Informativo Discreto de Observaciones */}
-                    {pendingObservationsCount > 0 && (
-                        <span
-                            className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
-                            title={`${pendingObservationsCount} observaciones pendientes de subsanar`}
-                        >
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                            <span>{pendingObservationsCount} {pendingObservationsCount === 1 ? 'pendiente' : 'pendientes'}</span>
-                        </span>
-                    )}
-
                     <button
                         onClick={toggleTheme}
                         className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"

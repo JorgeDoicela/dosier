@@ -137,31 +137,14 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     const renderSectionHeader = (
         title: string,
         _subtitle: string,
-        fieldKey: string
+        _fieldKey: string
     ) => {
-        const fieldComments = getFieldComments(fieldKey);
-        const pendingCount = fieldComments.filter(c => c.status === 'Pendiente').length;
-
         return (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+            <div className="flex items-center justify-between gap-3 pb-1">
                 <div className="min-w-0">
                     <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">
                         {title}
                     </h2>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                    {pendingCount > 0 ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                            Observado
-                        </span>
-                    ) : fieldComments.length > 0 ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Subsanado
-                        </span>
-                    ) : null}
                 </div>
             </div>
         );

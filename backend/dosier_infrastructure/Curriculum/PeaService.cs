@@ -657,6 +657,20 @@ namespace dosier_infrastructure.Curriculum
         // WORKFLOW COLEGIADO DE OBSERVACIONES Y TRAZABILIDAD
         // =====================================================================
 
+        public async Task<PeaObservacionDto> AgregarObservacionByUuidAsync(string uuid, string rolObservador, string seccion, string texto, int? idUsuario)
+        {
+            var idPea = await _context.DocPeas
+                .AsNoTracking()
+                .Where(p => p.Uuid == uuid && p.Activo)
+                .Select(p => (int?)p.IdPea)
+                .FirstOrDefaultAsync();
+
+            if (!idPea.HasValue)
+                throw new KeyNotFoundException($"No se encontró el PEA con UUID {uuid}");
+
+            return await AgregarObservacionAsync(idPea.Value, rolObservador, seccion, texto, idUsuario);
+        }
+
         public async Task<PeaObservacionDto> AgregarObservacionAsync(int idPea, string rolObservador, string seccion, string texto, int? idUsuario)
         {
             if (!idUsuario.HasValue)
@@ -719,6 +733,7 @@ namespace dosier_infrastructure.Curriculum
                 Uuid = obs.Uuid,
                 IdPea = obs.IdPea,
                 IdUsuarioObservador = obs.IdUsuarioObservador,
+                NombreObservador = user.Nombre,
                 RolObservador = obs.RolObservador,
                 SeccionAfectada = obs.SeccionAfectada,
                 TextoObservacion = obs.TextoObservacion,

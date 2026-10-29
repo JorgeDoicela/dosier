@@ -16,11 +16,16 @@ namespace dosier_api.Controllers
     public class PeaController : ControllerBase
     {
         private readonly IPeaService _peaService;
+        private readonly IPeaAiAssistantService _peaAiService;
         private readonly ILogger<PeaController> _logger;
 
-        public PeaController(IPeaService peaService, ILogger<PeaController> logger)
+        public PeaController(
+            IPeaService peaService,
+            IPeaAiAssistantService peaAiService,
+            ILogger<PeaController> logger)
         {
             _peaService = peaService;
+            _peaAiService = peaAiService;
             _logger = logger;
         }
 
@@ -207,15 +212,13 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> AgregarObservacionByUuid(string uuid, [FromBody] AgregarObservacionRequest req)
         {
             if (string.IsNullOrWhiteSpace(req.Texto)) return BadRequest("El texto de la observación no puede estar vacío.");
-            var pea = await _peaService.GetByUuidAsync(uuid);
-            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
 
             var userId = User.FindFirstValue("id_usuario")
                 ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? User.FindFirstValue("sub");
             int? idUserInt = int.TryParse(userId, out int u) ? u : null;
 
-            var obs = await _peaService.AgregarObservacionAsync(pea.IdPea, req.RolObservador ?? "CoordinadorCarrera", req.SeccionAfectada ?? "General", req.Texto, idUserInt);
+            var obs = await _peaService.AgregarObservacionByUuidAsync(uuid, req.RolObservador ?? "CoordinadorCarrera", req.SeccionAfectada ?? "General", req.Texto, idUserInt);
             return Ok(obs);
         }
 
@@ -262,6 +265,51 @@ namespace dosier_api.Controllers
             if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
             var list = await _peaService.GetTrazabilidadByPeaAsync(pea.IdPea);
             return Ok(list);
+        }
+
+        [HttpGet("ai/config")]
+        public async Task<IActionResult> GetAiConfig(CancellationToken ct)
+        {
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+
+            var status = await _peaAiService.GetConfigStatusAsync(idUserInt, ct);
+            return Ok(status);
+        }
+
+        [HttpPost("ai/config")]
+        public async Task<IActionResult> SaveAiConfig([FromBody] SavePeaAiConfigRequestDto req, CancellationToken ct)
+        {
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+            if (idUserInt <= 0)
+            {
+                return Unauthorized(new { message = "Usuario no identificado." });
+            }
+
+            bool isAdmin = User.IsInRole("DOSIER_ADMIN") || User.HasClaim("es_admin", "true");
+            var status = await _peaAiService.SaveConfigAsync(idUserInt, isAdmin, req, ct);
+            return Ok(status);
+        }
+
+        [HttpPost("uuid/{uuid}/ai/generar")]
+        [HttpPost("{uuid}/ai/generar")]
+        public async Task<IActionResult> GenerarBorradorAi(
+            string uuid,
+            [FromBody] GeneratePeaDraftRequestDto req,
+            CancellationToken ct)
+        {
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+
+            var draft = await _peaAiService.GenerateDraftAsync(uuid, idUserInt, req ?? new GeneratePeaDraftRequestDto(), ct);
+            return Ok(draft);
         }
     }
 
