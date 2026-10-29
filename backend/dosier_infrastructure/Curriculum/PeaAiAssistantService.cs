@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -7,9 +9,13 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
 using dosier_infrastructure.data.models;
+using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas.Parser;
+using iText.Kernel.Pdf.Canvas.Parser.Listener;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -220,7 +226,7 @@ namespace dosier_infrastructure.Curriculum
             string baseUrl = ResolveEffectiveBaseUrl(provider, candidateBaseUrl, defaultBaseUrl);
 
             // 2. Resolver Entidad PEA y su Contexto Institucional SIGAFI + Gobernanza
-            var contextData = await ResolveAcademicContextAsync(peaUuid, ct);
+            var contextData = await ResolveAcademicContextAsync(peaUuid, request, ct);
 
             // 3. Construir System Prompt y User Prompt con esquema JSON estricto
             string targetSection = string.IsNullOrWhiteSpace(request.TargetSection) ? "all" : request.TargetSection.Trim();
@@ -247,7 +253,298 @@ namespace dosier_infrastructure.Curriculum
             return draft;
         }
 
-        private async Task<AcademicPromptContext> ResolveAcademicContextAsync(string uuidOrEntityUuid, CancellationToken ct)
+        public async Task<PeaStructuredDraftDto> ImportFromDocumentAsync(
+            string peaUuid,
+            int idUsuario,
+            ImportPeaDocumentRequestDto request,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(peaUuid))
+            {
+                throw new ArgumentException("Se requiere el identificador UUID del PEA o de la instancia documental.");
+            }
+
+            if (request.FileBytes == null || request.FileBytes.Length == 0)
+            {
+                throw new ArgumentException("El archivo subido está vacío.");
+            }
+
+            if (request.FileBytes.Length > 15 * 1024 * 1024)
+            {
+                throw new InvalidOperationException("El archivo supera el límite máximo permitido de 15 MB.");
+            }
+
+            // 1. Extraer texto estructurado digital (.pdf o .docx) rechazando cualquier archivo de imagen
+            string extractedDocumentText = ExtractDigitalDocumentText(request.FileName, request.ContentType, request.FileBytes);
+
+            // 2. Resolver API Key, Proveedor, Modelo y BaseUrl
+            var (userKey, userProvider, userModel, userBaseUrl) = await GetUserConfigAsync(idUsuario, ct);
+            var (globalKey, globalProvider, globalModel, globalBaseUrl) = await GetGlobalConfigAsync(ct);
+            string? envKey = _configuration["AiAssistant:ApiKey"]
+                ?? _configuration["DeepSeek:ApiKey"]
+                ?? _configuration["Gemini:ApiKey"]
+                ?? _configuration["OpenAI:ApiKey"];
+
+            string? apiKey = !string.IsNullOrWhiteSpace(request.ApiKeyOverride)
+                ? request.ApiKeyOverride.Trim()
+                : (!string.IsNullOrWhiteSpace(userKey) ? userKey : (!string.IsNullOrWhiteSpace(globalKey) ? globalKey : envKey));
+
+            string provider = NormalizeProvider(
+                !string.IsNullOrWhiteSpace(request.Provider) ? request.Provider :
+                (!string.IsNullOrWhiteSpace(userProvider) ? userProvider :
+                (!string.IsNullOrWhiteSpace(globalProvider) ? globalProvider : (_configuration["AiAssistant:Provider"] ?? "deepseek"))));
+
+            if (string.IsNullOrWhiteSpace(apiKey) && !provider.Equals("ollama", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("No existe una API Key configurada para el asistente de IA. Configure su API Key antes de importar un documento.");
+            }
+
+            string defaultModel = GetDefaultModelForProvider(provider);
+            string defaultBaseUrl = GetDefaultBaseUrlForProvider(provider);
+
+            string model = !string.IsNullOrWhiteSpace(request.Model) ? request.Model.Trim() :
+                           (!string.IsNullOrWhiteSpace(userModel) ? userModel! :
+                           (!string.IsNullOrWhiteSpace(globalModel) ? globalModel! : (_configuration["AiAssistant:Model"] ?? defaultModel)));
+
+            string? candidateBaseUrl = !string.IsNullOrWhiteSpace(request.BaseUrlOverride) ? request.BaseUrlOverride.Trim() :
+                                       (!string.IsNullOrWhiteSpace(userBaseUrl) ? userBaseUrl :
+                                       (!string.IsNullOrWhiteSpace(globalBaseUrl) ? globalBaseUrl :
+                                       _configuration["AiAssistant:BaseUrl"]));
+
+            string baseUrl = ResolveEffectiveBaseUrl(provider, candidateBaseUrl, defaultBaseUrl);
+
+            // 3. Resolver contexto académico SIGAFI para cuadrar horas e ignorar encabezados antiguos
+            var contextReq = new GeneratePeaDraftRequestDto
+            {
+                TargetSection = "all",
+                CurrentHorasCD = request.CurrentHorasCD,
+                CurrentHorasAPE = request.CurrentHorasAPE,
+                CurrentHorasTA = request.CurrentHorasTA,
+                CurrentTotalHoras = request.CurrentTotalHoras
+            };
+            var contextData = await ResolveAcademicContextAsync(peaUuid, contextReq, ct);
+
+            // 4. Construir Prompts especializados para estructuración de documento importado
+            string systemPrompt = BuildSystemPrompt(contextData, "all");
+            string userPrompt = BuildDocumentImportUserPrompt(contextData, request.FileName, extractedDocumentText, request.CustomInstructions);
+
+            // 5. Invocar al proveedor LLM agnóstico
+            string rawJson;
+            if (provider == "gemini" && string.IsNullOrWhiteSpace(request.BaseUrlOverride))
+            {
+                rawJson = await CallGeminiAsync(apiKey ?? string.Empty, model, systemPrompt, userPrompt, ct);
+            }
+            else if (provider == "anthropic" && (string.IsNullOrWhiteSpace(baseUrl) || baseUrl.Contains("api.anthropic.com/v1/messages", StringComparison.OrdinalIgnoreCase)))
+            {
+                rawJson = await CallAnthropicAsync(apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
+            }
+            else
+            {
+                rawJson = await CallOpenAiCompatibleAsync(provider, apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
+            }
+
+            // 6. Parsear, normalizar y cuadrar horas contra SIGAFI
+            return ParseAndNormalizeDraft(rawJson, contextData, provider, model, "all");
+        }
+
+        private static string ExtractDigitalDocumentText(string fileName, string contentType, byte[] fileBytes)
+        {
+            string ext = Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
+            string mime = (contentType ?? string.Empty).ToLowerInvariant();
+
+            if (mime.StartsWith("image/") ||
+                ext is ".png" or ".jpg" or ".jpeg" or ".webp" or ".gif" or ".bmp" or ".tiff" or ".tif" or ".svg")
+            {
+                throw new InvalidOperationException("No se aceptan archivos de imagen. Suba únicamente un documento digital en formato PDF (.pdf) o Word (.docx).");
+            }
+
+            if (ext != ".pdf" && ext != ".docx")
+            {
+                throw new InvalidOperationException("Formato de archivo no soportado. Solo se admiten documentos digitales PDF (.pdf) o Word (.docx).");
+            }
+
+            string extracted = ext == ".pdf"
+                ? ExtractTextFromDigitalPdf(fileBytes)
+                : ExtractTextFromWordDocx(fileBytes);
+
+            int alphaNumericCount = extracted.Count(char.IsLetterOrDigit);
+            if (alphaNumericCount < 50)
+            {
+                throw new InvalidOperationException(
+                    ext == ".pdf"
+                        ? "El archivo PDF no contiene texto digital seleccionable (parece ser un PDF escaneado como imagen). Suba un PDF generado digitalmente o un archivo Word (.docx)."
+                        : "El documento Word (.docx) no contiene suficiente contenido textual curricular para procesar.");
+            }
+
+            // Limitar a 45,000 caracteres para proteger la ventana de contexto del modelo de IA
+            if (extracted.Length > 45000)
+            {
+                extracted = extracted.Substring(0, 45000);
+            }
+
+            return extracted;
+        }
+
+        private static string ExtractTextFromDigitalPdf(byte[] pdfBytes)
+        {
+            try
+            {
+                using var ms = new MemoryStream(pdfBytes);
+                using var reader = new PdfReader(ms);
+                using var pdfDoc = new PdfDocument(reader);
+
+                var sb = new StringBuilder();
+                int numPages = pdfDoc.GetNumberOfPages();
+                for (int pageNum = 1; pageNum <= numPages; pageNum++)
+                {
+                    var page = pdfDoc.GetPage(pageNum);
+                    string pageText = PdfTextExtractor.GetTextFromPage(page, new SimpleTextExtractionStrategy());
+                    if (!string.IsNullOrWhiteSpace(pageText))
+                    {
+                        sb.AppendLine($"--- PÁGINA {pageNum} ---");
+                        sb.AppendLine(pageText.Trim());
+                        sb.AppendLine();
+                    }
+                }
+
+                return sb.ToString().Trim();
+            }
+            catch (Exception ex) when (ex is not InvalidOperationException)
+            {
+                throw new InvalidOperationException("No se pudo leer el archivo PDF. Verifique que sea un documento PDF válido y sin contraseña.", ex);
+            }
+        }
+
+        private static string ExtractTextFromWordDocx(byte[] docxBytes)
+        {
+            try
+            {
+                using var ms = new MemoryStream(docxBytes);
+                using var archive = new ZipArchive(ms, ZipArchiveMode.Read);
+                var docEntry = archive.GetEntry("word/document.xml");
+                if (docEntry == null)
+                {
+                    throw new InvalidOperationException("El archivo .docx no contiene una estructura OpenXML válida (word/document.xml).");
+                }
+
+                using var entryStream = docEntry.Open();
+                var xdoc = XDocument.Load(entryStream);
+                XNamespace w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+
+                var body = xdoc.Root?.Element(w + "body");
+                if (body == null)
+                {
+                    return string.Empty;
+                }
+
+                var sb = new StringBuilder();
+                ExtractOpenXmlContainerElements(body, w, sb);
+
+                return sb.ToString().Trim();
+            }
+            catch (Exception ex) when (ex is not InvalidOperationException)
+            {
+                throw new InvalidOperationException("No se pudo procesar el archivo Word (.docx). Asegúrese de subir un archivo .docx válido.", ex);
+            }
+        }
+
+        private static void ExtractOpenXmlContainerElements(XElement container, XNamespace w, StringBuilder sb)
+        {
+            foreach (var element in container.Elements())
+            {
+                if (element.Name == w + "p")
+                {
+                    string pText = ExtractOpenXmlParagraphText(element, w);
+                    if (!string.IsNullOrWhiteSpace(pText))
+                    {
+                        sb.AppendLine(pText);
+                    }
+                }
+                else if (element.Name == w + "tbl")
+                {
+                    sb.AppendLine("[TABLA DOCUMENTAL]");
+                    foreach (var row in element.Elements(w + "tr"))
+                    {
+                        var cells = row.Elements(w + "tc")
+                            .Select(tc =>
+                            {
+                                var cellParagraphs = tc.Descendants(w + "p")
+                                    .Select(p => ExtractOpenXmlParagraphText(p, w))
+                                    .Where(t => !string.IsNullOrWhiteSpace(t));
+                                return string.Join(" / ", cellParagraphs);
+                            })
+                            .ToList();
+
+                        if (cells.Any(c => !string.IsNullOrWhiteSpace(c)))
+                        {
+                            sb.AppendLine(string.Join(" | ", cells));
+                        }
+                    }
+                    sb.AppendLine("[FIN TABLA]");
+                }
+                else if (element.HasElements)
+                {
+                    ExtractOpenXmlContainerElements(element, w, sb);
+                }
+            }
+        }
+
+        private static string ExtractOpenXmlParagraphText(XElement paragraph, XNamespace w)
+        {
+            var sb = new StringBuilder();
+            foreach (var node in paragraph.Descendants())
+            {
+                if (node.Name == w + "t")
+                {
+                    sb.Append(node.Value);
+                }
+                else if (node.Name == w + "tab")
+                {
+                    sb.Append('\t');
+                }
+                else if (node.Name == w + "br" || node.Name == w + "cr")
+                {
+                    sb.Append(' ');
+                }
+            }
+            return sb.ToString().Trim();
+        }
+
+        private static string BuildDocumentImportUserPrompt(
+            AcademicPromptContext ctx,
+            string fileName,
+            string extractedDocumentText,
+            string? customInstructions)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Se ha importado el archivo curricular '{fileName}' para poblar el Programa de Estudio de la Asignatura (PEA) de '{ctx.NombreAsignatura}' ({ctx.NombreCarrera}).");
+            sb.AppendLine("Analiza todo el texto y las tablas extraídas del documento subido y mapea cada sección al esquema JSON oficial del PEA.");
+            sb.AppendLine("IMPORTANTE:");
+            sb.AppendLine("- Ignora cualquier dato general antiguo del archivo (como periodos anteriores, códigos antiguos o nombres de docentes) ya que esos campos están bloqueados por SIGAFI.");
+            sb.AppendLine($"- Ajusta las horas de las unidades extraídas para que la suma cuadre exactamente con la carga oficial actual: Horas CD = {ctx.HorasCD}, Horas APE = {ctx.HorasAPE}, Horas TA = {ctx.HorasTA} (Total = {ctx.TotalHoras}).");
+            sb.AppendLine("- Si alguna sección no aparece explícitamente en el documento importado, complétala coherentemente con el contenido de las unidades del documento.");
+
+            if (!string.IsNullOrWhiteSpace(customInstructions))
+            {
+                sb.AppendLine();
+                sb.AppendLine("INSTRUCCIONES ADICIONALES DEL DOCENTE:");
+                sb.AppendLine(customInstructions.Trim());
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("=== CONTENIDO EXTRAÍDO DEL DOCUMENTO SUBIDO ===");
+            sb.AppendLine(extractedDocumentText);
+            sb.AppendLine("=== FIN DEL CONTENIDO EXTRAÍDO ===");
+            sb.AppendLine();
+            sb.AppendLine( BuildJsonSchemaInstruction() );
+
+            return sb.ToString();
+        }
+
+        private async Task<AcademicPromptContext> ResolveAcademicContextAsync(
+            string uuidOrEntityUuid,
+            GeneratePeaDraftRequestDto request,
+            CancellationToken ct)
         {
             var pea = await _context.DocPeas
                 .AsNoTracking()
@@ -304,6 +601,25 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
+            if (request.CurrentTotalHoras.HasValue && request.CurrentTotalHoras.Value > 0 && totalHoras <= 0)
+            {
+                totalHoras = request.CurrentTotalHoras.Value;
+            }
+
+            // Si el docente ya configuró en el editor una distribución explícita (CD > 0 o APE > 0) que cuadra con el total, respetarla
+            if (request.CurrentHorasCD.HasValue && request.CurrentHorasAPE.HasValue && request.CurrentHorasTA.HasValue)
+            {
+                int reqCd = Math.Max(0, request.CurrentHorasCD.Value);
+                int reqApe = Math.Max(0, request.CurrentHorasAPE.Value);
+                int reqTa = Math.Max(0, request.CurrentHorasTA.Value);
+                if ((reqCd > 0 || reqApe > 0) && totalHoras > 0 && (reqCd + reqApe + reqTa == totalHoras))
+                {
+                    horasCd = reqCd;
+                    horasApe = reqApe;
+                    horasTa = reqTa;
+                }
+            }
+
             if (totalHoras <= 0)
             {
                 horasCd = horasCd > 0 ? horasCd : 48;
@@ -311,9 +627,39 @@ namespace dosier_infrastructure.Curriculum
                 horasTa = horasTa > 0 ? horasTa : 48;
                 totalHoras = horasCd + horasApe + horasTa;
             }
+            else if (horasCd <= 0 && horasApe <= 0)
+            {
+                // En SIGAFI detallemallas muchas asignaturas solo registran el Total de Horas (ej. 144) con HorasDocente=0 y HorasAPE=0,
+                // lo que dejaba 0 CD / 0 APE / 144 TA. Distribuimos equitativamente en los 3 componentes normativos (CD, APE, TA).
+                int baseThird = totalHoras / 3;
+                horasCd = baseThird;
+                horasApe = baseThird;
+                horasTa = totalHoras - horasCd - horasApe;
+            }
             else if (horasCd + horasApe + horasTa != totalHoras)
             {
                 horasTa = Math.Max(0, totalHoras - horasCd - horasApe);
+            }
+
+            // Cargar prerrequisitos oficiales de la malla curricular en SIGAFI si existen
+            var sigafiPrerrequisitos = new List<string>();
+            if (pea.IdDetalleMalla.HasValue)
+            {
+                var prereqIds = await _context.Prerequisitos
+                    .AsNoTracking()
+                    .Where(p => p.IdDetalleMalla == pea.IdDetalleMalla.Value && p.Activa == 1)
+                    .Select(p => p.IdAsignatura)
+                    .Distinct()
+                    .ToListAsync(ct);
+
+                if (prereqIds.Count > 0)
+                {
+                    sigafiPrerrequisitos = await _context.Asignaturas
+                        .AsNoTracking()
+                        .Where(a => prereqIds.Contains(a.IdAsignatura) && a.Asignatura1 != null)
+                        .Select(a => a.Asignatura1!)
+                        .ToListAsync(ct);
+                }
             }
 
             // Cargar RDAs oficiales del Perfil de Egreso de la carrera si existen
@@ -345,6 +691,7 @@ namespace dosier_infrastructure.Curriculum
                 HorasAPE = horasApe,
                 HorasTA = horasTa,
                 TotalHoras = totalHoras,
+                SigafiPrerequisites = sigafiPrerrequisitos,
                 RdasPerfilEgreso = rdasPerfil,
                 ModeloEducativoResumen = modeloEducativo,
                 ExistingUnits = pea.Unidades.OrderBy(u => u.Orden).Select(u => new PeaDraftUnidadDto
@@ -366,16 +713,26 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("Tu tarea es estructurar con rigor técnico y académico el Programa de Estudio de la Asignatura (PEA).");
             sb.AppendLine("Debes responder EXCLUSIVAMENTE con un objeto JSON válido que cumpla exactamente la estructura solicitada, sin bloques markdown adicionales ni texto fuera del JSON.");
             sb.AppendLine();
-            sb.AppendLine("CONTEXTO OFICIAL INMUTABLE DE SIGAFI:");
+            sb.AppendLine("CONTEXTO DE REFERENCIA DE SIGAFI (SOLO LECTURA — NO MODIFICAR NI REPETIR COMO FICHA EN LOS TEXTOS):");
             sb.AppendLine($"- Carrera: {ctx.NombreCarrera}");
             sb.AppendLine($"- Asignatura: {ctx.NombreAsignatura} ({ctx.CodigoAsignatura})");
             sb.AppendLine($"- Nivel / Semestre: {ctx.SemestreNivel}");
             sb.AppendLine($"- Unidad de Organización Curricular: {ctx.UnidadOrganizacion}");
             sb.AppendLine($"- Modalidad: {ctx.Modalidad}");
-            sb.AppendLine($"- Horas Contacto Docente (CD): {ctx.HorasCD}");
-            sb.AppendLine($"- Horas Práctico-Experimental (APE): {ctx.HorasAPE}");
-            sb.AppendLine($"- Horas Aprendizaje Autónomo (TA): {ctx.HorasTA}");
+            sb.AppendLine($"- Horas Contacto Docente (CD) a distribuir: {ctx.HorasCD}");
+            sb.AppendLine($"- Horas Práctico-Experimental (APE) a distribuir: {ctx.HorasAPE}");
+            sb.AppendLine($"- Horas Aprendizaje Autónomo (TA) a distribuir: {ctx.HorasTA}");
             sb.AppendLine($"- TOTAL HORAS ASIGNATURA: {ctx.TotalHoras}");
+
+            if (ctx.SigafiPrerequisites.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("PRERREQUISITOS OFICIALES EN MALLA SIGAFI:");
+                foreach (var p in ctx.SigafiPrerequisites)
+                {
+                    sb.AppendLine($"- {p}");
+                }
+            }
 
             if (ctx.RdasPerfilEgreso.Count > 0)
             {
@@ -395,13 +752,15 @@ namespace dosier_infrastructure.Curriculum
 
             sb.AppendLine();
             sb.AppendLine("REGLAS OBLIGATORIAS DE FORMATO Y CALIDAD:");
-            sb.AppendLine("1. Los campos 'objetivo_asignatura', 'rda_carrera', 'resultados_aprendizaje', 'metodologia_ensenanza', 'recursos_didacticos', 'bibliografia_basica' y 'bibliografia_consulta' deben entregarse en HTML semántico limpio (<p>, <ul>, <li>, <strong>).");
-            sb.AppendLine("2. En 'unidades', genera entre 3 y 5 unidades temáticas coherentes. La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + ". La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + ". La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + ".");
-            sb.AppendLine("3. En cada unidad, el campo 'contenidos' debe listar los temas y subtemas numerados separados por saltos de línea (ej: '1.1 Conceptos fundamentales\\n1.2 Arquitectura y componentes\\n1.3 Casos prácticos').");
-            sb.AppendLine("4. En 'actividades_practicas', genera al menos 1 o 2 prácticas experimentales por cada unidad temática, especificando unidad, nombre descriptivo de la práctica, horas, escenario (laboratorio/taller/simulador) y producto verificable.");
-            sb.AppendLine("5. En 'evaluaciones', incluye los componentes normativos sobre 10 puntos (ej. Gestión Formativa / Actividades de Docencia, Gestión Práctica y Experimental, Trabajo Autónomo, Evaluación Sumativa / Examen de Unidad).");
-            sb.AppendLine("6. En 'bibliografias', incluye al menos 3 obras de tipo 'Basica' y 3 de tipo 'Consulta' reales y vigentes en formato APA 7ma edición.");
-            sb.AppendLine($"7. Sección objetivo solicitada: '{targetSection}'.");
+            sb.AppendLine("1. Los datos generales de la asignatura (nombre, código, carrera, modalidad, unidad de organización, periodo, semestre, horas totales y créditos) YA están bloqueados en el sistema; úsalos ÚNICAMENTE como contexto pedagógico y NUNCA los incluyas como tablas o encabezados dentro de las secciones redactadas.");
+            sb.AppendLine("2. Los campos 'objetivo_asignatura', 'rda_carrera', 'resultados_aprendizaje', 'metodologia_ensenanza', 'recursos_didacticos', 'bibliografia_basica' y 'bibliografia_consulta' deben entregarse en HTML semántico limpio (<p>, <ul>, <li>, <strong>).");
+            sb.AppendLine("3. En 'prerrequisitos', cada elemento debe tener obligatoriamente los campos 'asignatura' (nombre concreto de la materia previa de la carrera) y 'observacion' (condición académica o fundamento requerido, ej. 'Haber cursado y aprobado la asignatura').");
+            sb.AppendLine("4. En 'unidades', genera exactamente 4 unidades temáticas coherentes. En 'titulo' escribe SOLO el nombre temático de la unidad (sin el prefijo 'Unidad 1:'). La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + " (> 0 en cada unidad). La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + " (> 0 en cada unidad). La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + " (> 0 en cada unidad).");
+            sb.AppendLine("5. En cada unidad, el campo 'contenidos' debe listar los temas y subtemas numerados separados por saltos de línea (ej: '1.1 Conceptos fundamentales\\n1.2 Técnicas aplicadas\\n1.3 Procesos experimentales').");
+            sb.AppendLine("6. En 'actividades_practicas', genera al menos 1 práctica experimental por cada unidad temática, especificando unidad (número), nombre descriptivo de la práctica, horas, escenario (taller/laboratorio/cocina experimental) y producto verificable.");
+            sb.AppendLine("7. En 'evaluaciones', incluye los 4 componentes normativos sobre 10 puntos (Gestión Formativa / Docencia, Gestión Práctica y Experimental, Trabajo Autónomo, Evaluación Sumativa).");
+            sb.AppendLine("8. En 'bibliografias', incluye al menos 3 obras de tipo 'Basica' y 3 de tipo 'Consulta' reales y vigentes en formato APA 7ma edición.");
+            sb.AppendLine($"9. Sección objetivo solicitada: '{targetSection}'.");
 
             return sb.ToString();
         }
@@ -432,7 +791,14 @@ namespace dosier_infrastructure.Curriculum
             }
 
             sb.AppendLine();
-            sb.AppendLine(@"Devuelve un único objeto JSON con esta estructura exacta de claves:
+            sb.AppendLine(BuildJsonSchemaInstruction());
+
+            return sb.ToString();
+        }
+
+        private static string BuildJsonSchemaInstruction()
+        {
+            return @"Devuelve un único objeto JSON con esta estructura exacta de claves:
 {
   ""objetivo_asignatura"": ""<p>Verbo en infinitivo + objeto + finalidad + contexto...</p>"",
   ""rda_carrera"": ""<ul><li>Resultado de aprendizaje de carrera...</li></ul>"",
@@ -477,9 +843,7 @@ namespace dosier_infrastructure.Curriculum
       ""cita_completa_apa"": ""Apellido, N. (2023). Título del libro (2da ed.). Editorial.""
     }
   ]
-}");
-
-            return sb.ToString();
+}";
         }
 
         private async Task<string> CallGeminiAsync(
@@ -723,7 +1087,11 @@ namespace dosier_infrastructure.Curriculum
             string targetSection)
         {
             var result = new PeaStructuredDraftDto();
-            using var doc = JsonDocument.Parse(rawJson);
+            using var doc = JsonDocument.Parse(rawJson, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            });
             var root = doc.RootElement;
 
             result.ObjetivoAsignatura = TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura");
@@ -739,16 +1107,42 @@ namespace dosier_infrastructure.Curriculum
             {
                 foreach (var item in prerreqArr.EnumerateArray())
                 {
-                    string asig = TryGetString(item, "asignatura", "Asignatura", "nombre_asignatura");
-                    string obs = TryGetString(item, "observacion", "Observacion", "condicion");
+                    if (item.ValueKind == JsonValueKind.String)
+                    {
+                        string rawStr = item.GetString()?.Trim() ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(rawStr))
+                        {
+                            result.Prerrequisitos.Add(new PeaDraftPrerrequisitoDto
+                            {
+                                Asignatura = rawStr,
+                                Observacion = "Haber cursado y aprobado la asignatura según malla curricular"
+                            });
+                        }
+                        continue;
+                    }
+
+                    string asig = TryGetString(item, "asignatura", "Asignatura", "nombre_asignatura", "NombreAsignatura", "materia", "Materia", "nombre");
+                    string obs = TryGetString(item, "observacion", "Observacion", "condicion", "Condicion", "condicion_curricular", "descripcion");
                     if (!string.IsNullOrWhiteSpace(asig))
                     {
                         result.Prerrequisitos.Add(new PeaDraftPrerrequisitoDto
                         {
                             Asignatura = asig,
-                            Observacion = string.IsNullOrWhiteSpace(obs) ? "Conocimientos previos requeridos" : obs
+                            Observacion = string.IsNullOrWhiteSpace(obs) ? "Haber cursado y aprobado la asignatura según malla curricular" : obs
                         });
                     }
+                }
+            }
+
+            if (result.Prerrequisitos.Count == 0 && ctx.SigafiPrerequisites.Count > 0)
+            {
+                foreach (var sigafiPrereq in ctx.SigafiPrerequisites)
+                {
+                    result.Prerrequisitos.Add(new PeaDraftPrerrequisitoDto
+                    {
+                        Asignatura = sigafiPrereq,
+                        Observacion = "Haber cursado y aprobado la asignatura según malla curricular oficial"
+                    });
                 }
             }
 
@@ -758,18 +1152,24 @@ namespace dosier_infrastructure.Curriculum
                 int idx = 1;
                 foreach (var item in unidadesArr.EnumerateArray())
                 {
-                    string titulo = TryGetString(item, "titulo", "Titulo", "nombre_unidad", "NombreUnidad");
+                    string rawTitulo = TryGetString(item, "titulo", "Titulo", "nombre_unidad", "NombreUnidad");
+                    string cleanTitulo = System.Text.RegularExpressions.Regex.Replace(
+                        rawTitulo.Trim(),
+                        @"^unidad\s*\d+\s*[:\.\-]?\s*",
+                        string.Empty,
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
                     string contenidos = TryGetString(item, "contenidos", "Contenidos", "descripcion_subtemas");
                     int cd = TryGetInt(item, "horas_cd", "horasCD", "HorasCD", "horas_docencia");
                     int ape = TryGetInt(item, "horas_ape", "horasAPE", "HorasAPE", "horas_practica");
                     int ta = TryGetInt(item, "horas_ta", "horasTA", "HorasTA", "horas_autonomo");
 
-                    if (!string.IsNullOrWhiteSpace(titulo) || !string.IsNullOrWhiteSpace(contenidos))
+                    if (!string.IsNullOrWhiteSpace(cleanTitulo) || !string.IsNullOrWhiteSpace(contenidos))
                     {
                         result.Unidades.Add(new PeaDraftUnidadDto
                         {
                             Num = idx++,
-                            Titulo = string.IsNullOrWhiteSpace(titulo) ? $"Unidad Temática {idx - 1}" : titulo,
+                            Titulo = string.IsNullOrWhiteSpace(cleanTitulo) ? $"Fundamentos y Aplicaciones {idx - 1}" : cleanTitulo,
                             Contenidos = contenidos,
                             HorasCD = Math.Max(0, cd),
                             HorasAPE = Math.Max(0, ape),
@@ -1203,6 +1603,19 @@ namespace dosier_infrastructure.Curriculum
                     if (prop.ValueKind == JsonValueKind.String) return prop.GetString()?.Trim() ?? string.Empty;
                     if (prop.ValueKind == JsonValueKind.Number || prop.ValueKind == JsonValueKind.True || prop.ValueKind == JsonValueKind.False)
                         return prop.GetRawText();
+                    if (prop.ValueKind == JsonValueKind.Array)
+                    {
+                        var lines = new List<string>();
+                        foreach (var item in prop.EnumerateArray())
+                        {
+                            if (item.ValueKind == JsonValueKind.String)
+                            {
+                                string s = item.GetString()?.Trim() ?? string.Empty;
+                                if (!string.IsNullOrWhiteSpace(s)) lines.Add(s);
+                            }
+                        }
+                        if (lines.Count > 0) return string.Join("\n", lines);
+                    }
                 }
             }
             return string.Empty;
@@ -1264,6 +1677,7 @@ namespace dosier_infrastructure.Curriculum
             public int HorasAPE { get; set; }
             public int HorasTA { get; set; }
             public int TotalHoras { get; set; }
+            public List<string> SigafiPrerequisites { get; set; } = new();
             public List<string> RdasPerfilEgreso { get; set; } = new();
             public string? ModeloEducativoResumen { get; set; }
             public List<PeaDraftUnidadDto> ExistingUnits { get; set; } = new();

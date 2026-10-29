@@ -105,6 +105,10 @@ export interface GeneratePeaDraftRequest {
     model?: string;
     baseUrlOverride?: string;
     apiKeyOverride?: string;
+    currentHorasCD?: number;
+    currentHorasAPE?: number;
+    currentHorasTA?: number;
+    currentTotalHoras?: number;
     currentUnidades?: Array<{
         num: number;
         titulo: string;
@@ -217,6 +221,7 @@ export const savePeaAiConfig = async (req: SavePeaAiConfigRequest): Promise<PeaA
     const res = await api.post('/pea/ai/config', {
         provider: req.provider,
         model: req.model,
+        base_url: req.baseUrl,
         api_key: req.apiKey,
         scope: req.scope ?? 'user'
     });
@@ -232,7 +237,12 @@ export const generatePeaAiDraft = async (
         custom_instructions: req.customInstructions,
         provider: req.provider,
         model: req.model,
+        base_url_override: req.baseUrlOverride,
         api_key_override: req.apiKeyOverride,
+        current_horas_cd: req.currentHorasCD,
+        current_horas_ape: req.currentHorasAPE,
+        current_horas_ta: req.currentHorasTA,
+        current_total_horas: req.currentTotalHoras,
         current_unidades: req.currentUnidades?.map(u => ({
             num: u.num,
             titulo: u.titulo,
@@ -241,6 +251,66 @@ export const generatePeaAiDraft = async (
             horas_ape: u.horasAPE,
             horas_ta: u.horasTA
         }))
+    });
+    return normalizeStructuredDraft(res.data);
+};
+
+export interface ImportPeaDocumentOptions {
+    customInstructions?: string;
+    provider?: PeaAiProvider;
+    model?: string;
+    baseUrlOverride?: string;
+    apiKeyOverride?: string;
+    currentHorasCD?: number;
+    currentHorasAPE?: number;
+    currentHorasTA?: number;
+    currentTotalHoras?: number;
+}
+
+export const importPeaFromDocument = async (
+    peaUuid: string,
+    file: File,
+    options: ImportPeaDocumentOptions = {}
+): Promise<PeaStructuredDraft> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (options.customInstructions?.trim()) {
+        formData.append('custom_instructions', options.customInstructions.trim());
+    }
+    if (options.provider) {
+        formData.append('provider', options.provider);
+    }
+    if (options.model?.trim()) {
+        formData.append('model', options.model.trim());
+    }
+    if (options.baseUrlOverride?.trim()) {
+        formData.append('base_url_override', options.baseUrlOverride.trim());
+    }
+    if (options.apiKeyOverride?.trim()) {
+        formData.append('api_key_override', options.apiKeyOverride.trim());
+    }
+    if (typeof options.currentHorasCD === 'number') {
+        formData.append('current_horas_cd', String(options.currentHorasCD));
+    }
+    if (typeof options.currentHorasAPE === 'number') {
+        formData.append('current_horas_ape', String(options.currentHorasAPE));
+    }
+    if (typeof options.currentHorasTA === 'number') {
+        formData.append('current_horas_ta', String(options.currentHorasTA));
+    }
+    if (typeof options.currentTotalHoras === 'number') {
+        formData.append('current_total_horas', String(options.currentTotalHoras));
+    }
+
+    const res = await api.post(`/pea/uuid/${peaUuid}/ai/importar-archivo`, formData, {
+        headers: { 'Content-Type': undefined },
+        transformRequest: [(data, headers) => {
+            if (data instanceof FormData) {
+                delete headers['Content-Type'];
+            }
+            return data;
+        }]
     });
     return normalizeStructuredDraft(res.data);
 };
@@ -267,6 +337,8 @@ export const convertDraftToEditorFields = (
             id: `ai_prerreq_${Date.now()}_${idx}`,
             Asignatura: p.asignatura,
             Observacion: p.observacion,
+            asignatura: p.asignatura,
+            observacion: p.observacion,
             '0': p.asignatura,
             '1': p.observacion
         }));
@@ -281,16 +353,37 @@ export const convertDraftToEditorFields = (
     }
 
     if (includeSection('pea_contents_section') && draft.unidades.length > 0) {
-        patch.Unidades = draft.unidades.map((u, idx) => ({
-            id: `ai_unit_${Date.now()}_${idx}`,
-            num: u.num || idx + 1,
-            titulo: u.titulo,
-            contenidos: u.contenidos,
-            horasCD: u.horasCD,
-            horasAPE: u.horasAPE,
-            horasTA: u.horasTA,
-            horasTotal: u.horasCD + u.horasAPE + u.horasTA
-        }));
+        patch.Unidades = draft.unidades.map((u, idx) => {
+            const num = u.num || idx + 1;
+            const cleanTitle = (u.titulo || '').replace(new RegExp(`^unidad\\s*${num}\\s*[:.\\-]?\\s*`, 'i'), '').trim();
+            const fullTitle = cleanTitle ? `UNIDAD ${num}: ${cleanTitle}` : `UNIDAD ${num}:`;
+            return {
+                id: `ai_unit_${Date.now()}_${idx}`,
+                num,
+                numero: num,
+                titulo: cleanTitle,
+                nombre: cleanTitle,
+                nombre_unidad: cleanTitle,
+                titulo_completo: fullTitle,
+                encabezado_unidad: fullTitle,
+                contenidos: u.contenidos,
+                horasCD: u.horasCD,
+                horasAPE: u.horasAPE,
+                horasTA: u.horasTA,
+                horasTotal: u.horasCD + u.horasAPE + u.horasTA
+            };
+        });
+
+        // Sincronizar también la Organización de Aprendizajes por Modalidad en la Sección 1
+        // para que el desglose de horas (CD, APE, TA) coincida con las unidades generadas
+        const sumCD = draft.unidades.reduce((acc, u) => acc + (Number(u.horasCD) || 0), 0);
+        const sumAPE = draft.unidades.reduce((acc, u) => acc + (Number(u.horasAPE) || 0), 0);
+        const sumTA = draft.unidades.reduce((acc, u) => acc + (Number(u.horasTA) || 0), 0);
+        if (sumCD + sumAPE + sumTA > 0) {
+            patch.HorasContactoDocente = sumCD;
+            patch.HorasPracticoExperimental = sumAPE;
+            patch.HorasAutonomo = sumTA;
+        }
     }
 
     if (includeSection('pea_methodology_section')) {
@@ -299,23 +392,40 @@ export const convertDraftToEditorFields = (
     }
 
     if (includeSection('pea_resources_section') && draft.actividadesPracticas.length > 0) {
-        patch.ActividadesPracticas = draft.actividadesPracticas.map((p, idx) => ({
-            id: `ai_prac_${Date.now()}_${idx}`,
-            unidad: p.unidad,
-            nombre: p.nombre,
-            horas: p.horas,
-            escenario: p.escenario,
-            producto: p.producto,
-            caracterizacion: p.caracterizacion
-        }));
+        patch.ActividadesPracticas = draft.actividadesPracticas.map((p, idx) => {
+            const unitNum = Number(p.unidad) || idx + 1;
+            const unitLabel = `Unidad ${unitNum}`;
+            const baseName = (p.nombre || '').trim();
+            const details = (p.caracterizacion || [p.escenario, p.producto].filter(Boolean).join(' | ')).trim();
+            const fullDescription = details && !baseName.toLowerCase().includes(details.toLowerCase())
+                ? `${baseName} — ${details}`
+                : baseName;
+
+            return {
+                id: `ai_prac_${Date.now()}_${idx}`,
+                unidad: unitLabel,
+                Unidad: unitLabel,
+                nombre: fullDescription,
+                Nombre: fullDescription,
+                nombre_caracterizacion: fullDescription,
+                NombreCaracterizacion: fullDescription,
+                horas: p.horas,
+                escenario: p.escenario,
+                producto: p.producto,
+                caracterizacion: details
+            };
+        });
     }
 
     if (includeSection('pea_evaluation_section') && draft.evaluaciones.length > 0) {
         patch.Evaluaciones = draft.evaluaciones.map((e, idx) => ({
             id: `ai_eval_${Date.now()}_${idx}`,
             nota: e.nota,
+            Nota: e.nota,
             tipo: e.tipo,
-            calificacion: e.calificacion
+            Tipo: e.tipo,
+            calificacion: e.calificacion,
+            Calificacion: e.calificacion
         }));
     }
 

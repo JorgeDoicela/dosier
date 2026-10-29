@@ -54,13 +54,21 @@ export const CoWorkEditor: React.FC<CoWorkEditorProps> = (props) => {
     
     // Evitar conflicto de constructor en Yjs si la clave ya fue registrada con un tipo diferente (ej. Y.Text)
     const ydoc = props.cowork.ydoc;
+    let rescuedTextValue: string | undefined;
     const sharedType = ydoc.share.get(field);
     if (sharedType && !(sharedType instanceof Y.XmlFragment)) {
-        if (sharedType instanceof Y.Text && sharedType.length === 0) {
-            console.warn(`[CoWorkEditor] Limpiando Y.Text vacío en conflicto para '${field}' para reemplazar con Y.XmlFragment.`);
-            ydoc.share.delete(field);
+        if (sharedType instanceof Y.Text && sharedType.length > 0) {
+            const rawStr = sharedType.toString();
+            if (rawStr && rawStr !== '[]' && rawStr !== 'undefined') {
+                rescuedTextValue = rawStr;
+            }
         }
+        ydoc.share.delete(field);
     }
+
+    const effectiveDbValue = typeof dbValue === 'string' && dbValue.trim().length > 0
+        ? dbValue
+        : rescuedTextValue;
     
     const xmlFragment = ydoc.getXmlFragment(field);
     const hasYjsContent = xmlFragment.length > 0;
@@ -71,7 +79,7 @@ export const CoWorkEditor: React.FC<CoWorkEditorProps> = (props) => {
         <InnerCoWorkEditor
             key={editorKey}
             useCollaboration={useCollaboration}
-            dbValue={dbValue}
+            dbValue={effectiveDbValue}
             {...props}
             readonly={isReadOnlyMode}
         />
@@ -268,11 +276,12 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
         if (editor) editor.setEditable(isEditable);
     }, [editor, isEditable]);
 
-    // Hidratación inicial desde dbValue cuando el Y.XmlFragment está vacío (ej: tras autocompletado IA en otra pestaña)
+    // Hidratación inicial desde dbValue cuando el Y.XmlFragment o el editor está vacío (ej: tras autocompletado IA en otra pestaña)
     React.useEffect(() => {
         if (!editor || seededRef.current) return;
         const fragment = ydoc.getXmlFragment(field);
-        if (fragment.length === 0 && typeof dbValue === 'string' && dbValue.trim().length > 0) {
+        const isEditorEmpty = fragment.length === 0 || editor.isEmpty || editor.getText().trim().length === 0;
+        if (isEditorEmpty && typeof dbValue === 'string' && dbValue.trim().length > 0 && dbValue !== '[]') {
             seededRef.current = true;
             editor.commands.setContent(dbValue);
             const json = JSON.stringify(editor.getJSON());

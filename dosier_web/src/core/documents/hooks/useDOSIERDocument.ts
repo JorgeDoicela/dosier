@@ -292,10 +292,32 @@ export function useDOSIERDocument<T extends Record<string, any>>(
                                 yarray.push(enrichedList);
                             }
                         }
+                        // Sincronizar también campos indexados tipo CoWorkField (ej: Prerrequisitos[0].Asignatura)
+                        enrichedList.forEach((item: any, idx: number) => {
+                            if (item && typeof item === 'object') {
+                                Object.entries(item).forEach(([propKey, propVal]) => {
+                                    if (propKey === 'id' || /^\d+$/.test(propKey)) return;
+                                    const indexedName = `${key}[${idx}].${propKey}`;
+                                    const existingType = ydoc.share.get(indexedName);
+                                    if (!existingType || existingType instanceof Y.Text) {
+                                        const ytext = ydoc.getText(indexedName);
+                                        const strVal = String(propVal ?? '');
+                                        ytext.delete(0, ytext.length);
+                                        if (strVal) {
+                                            ytext.insert(0, strVal);
+                                        }
+                                    }
+                                });
+                            }
+                        });
                     } else if (isRichText) {
                         const sharedType = ydoc.share.get(key);
-                        if (sharedType instanceof Y.XmlFragment && sharedType.length > 0) {
-                            sharedType.delete(0, sharedType.length);
+                        if (sharedType && !(sharedType instanceof Y.XmlFragment)) {
+                            ydoc.share.delete(key);
+                        }
+                        const xmlFrag = ydoc.getXmlFragment(key);
+                        if (xmlFrag.length > 0) {
+                            xmlFrag.delete(0, xmlFrag.length);
                         }
                         richTextHydrations.push({ field: key, html: String(val ?? '') });
                     } else if (

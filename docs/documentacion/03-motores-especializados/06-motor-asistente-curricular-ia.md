@@ -83,32 +83,44 @@ $$\text{Proporcional}_i = \text{round}\left( \frac{\text{HorasGeneradas}_i}{\sum
 El remanente acumulado se asigna a la ultima unidad tematica, asegurando que:
 $$\sum_{i=1}^{N} \text{HorasUnidad}_{i} \equiv \text{HorasMallaSIGAFI}$$
 
+### 2.5. Motor de Reconocimiento e Importacion Digital de PEAs (`.pdf` y `.docx`)
+El metodo `ImportFromDocumentAsync` expuesto en `POST /api/pea/uuid/{uuid}/ai/importar-archivo` permite importar Programas de Estudio de la Asignatura preexistentes en formato digital, estructurandolos automaticamente bajo el esquema `PEA_OFICIAL` y reconciliando sus cargas horarias con SIGAFI:
+
+- **Formatos Digitales Admitidos**:
+  1. **PDF con Texto Digital (`.pdf`)**: Extraccion nativa pagina por pagina mediante `iText 9` (`PdfTextExtractor` con `SimpleTextExtractionStrategy`).
+  2. **Microsoft Word OpenXML (`.docx`)**: Descompresion nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerarquico de `word/document.xml` con `XDocument`, extrayendo tanto parrafos (`<w:p>`) como celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
+- **Exclusion Estricta de Imagenes y Escaneos**:
+  - Tanto el frontend (`PeaAiAssistantModal.tsx`) como el backend (`ExtractDigitalDocumentText`) rechazan de forma determinista cualquier archivo de imagen (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.tiff`, `.svg` o MIME `image/*`).
+  - Si un archivo `.pdf` carece de capa de texto seleccionable (menos de 50 caracteres alfanumericos extraidos), la operacion se rechaza indicando que solo se admiten documentos digitales con texto seleccionable.
+- **Proteccion de Datos Generales Bloqueados**: El motor descarta cualquier cabecera administrativa obsoleta del archivo importado y preserva intactos los 9 campos oficiales de SIGAFI de la asignatura destino.
+
 ---
 
 ## 3. Integracion en el Frontend
 
 ### 3.1. Fachada de Servicios (`peaAiService.ts`)
-Encapsula las llamadas HTTP a `/api/pea/ai/config` y `/api/pea/uuid/{uuid}/ai/generar`, normalizando las respuestas con tipado estricto y proveyendo el mapeador `convertDraftToEditorFields` que traduce la propuesta generada a los identificadores nativos del esquema de la plantilla `PEA_OFICIAL`:
+Encapsula las llamadas HTTP a `/api/pea/ai/config`, `/api/pea/uuid/{uuid}/ai/generar` y `/api/pea/uuid/{uuid}/ai/importar-archivo` (`multipart/form-data`), normalizando las respuestas con tipado estricto y proveyendo el mapeador `convertDraftToEditorFields` que traduce la propuesta generada o importada a los identificadores nativos del esquema de la plantilla `PEA_OFICIAL`:
 - `ObjetivoAsignatura`
 - `RdaCarrera`
 - `ResultadosAprendizaje`
 - `Prerrequisitos`
-- `UnidadesTematicas`
+- `Unidades` (`HorasContactoDocente`, `HorasPracticoExperimental`, `HorasAutonomo`)
 - `MetodologiaEnsenanza`
 - `RecursosDidacticos`
 - `ActividadesPracticas`
 - `Evaluaciones`
-- `BibliografiaBasica` y `BibliografiaConsulta`
+- `Bibliografias`, `BibliografiaBasica` y `BibliografiaConsulta`
 
 ### 3.2. Modal Interactivo (`PeaAiAssistantModal.tsx`)
 - **Estilo Visual Modern Enterprise Docs**: Fondos 100% solidos sin transparencias (`bg-white` en modo claro, `bg-zinc-950` en modo oscuro).
-- **Riel Plano de Navegacion**: Pestañas *Generar contenido curricular* y *Configuracion de API Key*.
-- **Selector de Alcance**: Permite regenerar todo el documento o una seccion puntual seleccionada.
-- **Previsualizacion Granular con Checkboxes**: El docente inspecciona los contenidos generados antes de aplicarlos y puede desmarcar secciones individuales.
+- **Riel Plano de Navegacion**: Pestañas *Generar contenido curricular*, *Importar archivo (PDF / Word)* y *Configuracion de API Key*.
+- **Selector de Alcance e Importacion Digital**: Permite generar desde cero o arrastrar un archivo `.pdf` / `.docx` (bloqueando imagenes) con instrucciones adicionales de adaptacion.
+- **Previsualizacion Granular con Checkboxes**: El docente inspecciona las secciones extraidas o generadas antes de aplicarlas y puede desmarcar secciones individuales.
 - **Verificacion de Cuadre Horario**: Muestra una insignia de validacion confirmando el balance matematico con SIGAFI.
 
 ### 3.3. Hidratacion Atomica en Tiempo Real (`useDOSIERDocument.ts`)
-La inyeccion de los datos generados al editor concurrente se ejecuta en una sola transaccion `ydoc.transact()` sobre los tipos compartidos de Yjs:
-- Arreglos estructurados mediante `Y.Array` (Unidades, Prerrequisitos, Practicas, Evaluaciones).
+La inyeccion de los datos generados o importados al editor concurrente se ejecuta en una sola transaccion `ydoc.transact()` sobre los tipos compartidos de Yjs:
+- Arreglos estructurados mediante `Y.Array` (`Unidades`, `Prerrequisitos`, `ActividadesPracticas`, `Evaluaciones`, `Bibliografias`) y sincronizacion de claves indexadas en `Y.Text` (`Prerrequisitos[0].Asignatura`, etc.).
 - Textos planos mediante `Y.Text`.
-- Editores enriquecidos TipTap (`Y.XmlFragment`): se actualiza el estado local y se emite el evento global `dosier:hydrate-richtext` para que los editores montados consuman el contenido en caliente sin perdida de concurrencia.
+- Editores enriquecidos TipTap (`Y.XmlFragment`): se limpia el fragmento previo para habilitar re-hidratacion en pestañas aun no montadas y se emite el evento global `dosier:hydrate-richtext` para que los editores activos consuman el contenido en caliente.
+

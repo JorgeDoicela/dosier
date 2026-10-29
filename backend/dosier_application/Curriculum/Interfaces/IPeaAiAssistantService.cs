@@ -9,6 +9,7 @@ namespace dosier_application.Curriculum.Interfaces
         Task<PeaAiConfigStatusDto> GetConfigStatusAsync(int idUsuario, CancellationToken ct = default);
         Task<PeaAiConfigStatusDto> SaveConfigAsync(int idUsuario, bool isAdmin, SavePeaAiConfigRequestDto request, CancellationToken ct = default);
         Task<PeaStructuredDraftDto> GenerateDraftAsync(string peaUuid, int idUsuario, GeneratePeaDraftRequestDto request, CancellationToken ct = default);
+        Task<PeaStructuredDraftDto> ImportFromDocumentAsync(string peaUuid, int idUsuario, ImportPeaDocumentRequestDto request, CancellationToken ct = default);
     }
 }
 

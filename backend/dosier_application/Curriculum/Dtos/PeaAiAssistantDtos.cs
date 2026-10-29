@@ -30,7 +30,27 @@ namespace dosier_application.Curriculum.Dtos
         public string? Model { get; set; }
         public string? BaseUrlOverride { get; set; }
         public string? ApiKeyOverride { get; set; }
+        public int? CurrentHorasCD { get; set; }
+        public int? CurrentHorasAPE { get; set; }
+        public int? CurrentHorasTA { get; set; }
+        public int? CurrentTotalHoras { get; set; }
         public List<PeaDraftUnidadDto>? CurrentUnidades { get; set; }
+    }
+
+    public class ImportPeaDocumentRequestDto
+    {
+        public string FileName { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public byte[] FileBytes { get; set; } = System.Array.Empty<byte>();
+        public string? CustomInstructions { get; set; }
+        public string? Provider { get; set; }
+        public string? Model { get; set; }
+        public string? BaseUrlOverride { get; set; }
+        public string? ApiKeyOverride { get; set; }
+        public int? CurrentHorasCD { get; set; }
+        public int? CurrentHorasAPE { get; set; }
+        public int? CurrentHorasTA { get; set; }
+        public int? CurrentTotalHoras { get; set; }
     }
 
     public class PeaStructuredDraftDto

@@ -131,13 +131,19 @@ function applyMinimalDiff(ytext: Y.Text, oldVal: string, newVal: string): void {
 function resolveDbValue(parentFormData: any, name: string): any {
     if (!parentFormData) return undefined;
     
-    // Check if the name matches dot-separated path (e.g., HitosCompletados.0.Actividad)
-    if (name.includes('.')) {
-        const parts = name.split('.');
+    // Check if the name matches dot-separated or bracket-indexed path (e.g., HitosCompletados.0.Actividad or Prerrequisitos[0].Asignatura)
+    if (name.includes('.') || name.includes('[')) {
+        const parts = name.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
         let current = parentFormData;
         for (const part of parts) {
             if (current == null) return undefined;
-            current = current[part];
+            if (current[part] !== undefined) {
+                current = current[part];
+            } else {
+                const lowerKey = part.charAt(0).toLowerCase() + part.slice(1);
+                const upperKey = part.charAt(0).toUpperCase() + part.slice(1);
+                current = current[lowerKey] ?? current[upperKey];
+            }
         }
         return current;
     }
@@ -381,12 +387,13 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
         }
 
         const observer = (event: Y.YTextEvent) => {
-            if (event.transaction.origin !== 'remote') return;
+            const origin = event.transaction.origin;
+            if (origin !== 'remote' && origin !== 'ai-hydration') return;
             const raw = ytext.toString();
             const val = type === 'checkbox' ? raw === 'true' : raw;
             setDisplayValue(val);
             const cb = onValueChangeRef.current;
-            if (cb) setTimeout(() => cb(val, { source: 'remote' }), 0);
+            if (cb && origin === 'remote') setTimeout(() => cb(val, { source: 'remote' }), 0);
         };
 
         ytext.observe(observer);

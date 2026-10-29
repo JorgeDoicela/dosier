@@ -104,7 +104,16 @@ export const DocumentWorkspace: React.FC = () => {
             base.RecursosDidacticos = pea.recursos_didacticos || pea.recursosDidacticos || '';
             base.EvaluacionAprendizaje = pea.evaluacion_aprendizaje || pea.evaluacionAprendizaje || '';
             base.Unidades = pea.unidades || pea.Unidades || [];
-            base.ResultadosAprendizaje = pea.resultados_aprendizaje || pea.resultadosAprendizaje || pea.ResultadosAprendizaje || [];
+            const rawRdas = pea.resultados_aprendizaje || pea.resultadosAprendizaje || pea.ResultadosAprendizaje;
+            if (typeof rawRdas === 'string') {
+                base.ResultadosAprendizaje = rawRdas;
+            } else if (Array.isArray(rawRdas) && rawRdas.length > 0) {
+                base.ResultadosAprendizaje = rawRdas
+                    .map((r: any, idx: number) => `<p>${idx + 1}. ${r.descripcion_rda || r.descripcionRda || r.descripcion || r.Descripcion || ''}</p>`)
+                    .join('');
+            } else {
+                base.ResultadosAprendizaje = '';
+            }
             base.ActividadesPracticas = pea.actividades_practicas || pea.actividadesPracticas || pea.ActividadesPracticas || [];
             base.Bibliografias = pea.bibliografias || pea.Bibliografias || [];
             if (!base.BibliografiaBasica && !base.bibliografia_basica && Array.isArray(base.Bibliografias)) {

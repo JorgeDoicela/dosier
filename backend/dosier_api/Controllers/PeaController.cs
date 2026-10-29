@@ -308,8 +308,86 @@ namespace dosier_api.Controllers
                 ?? User.FindFirstValue("sub");
             int idUserInt = int.TryParse(userId, out int u) ? u : 0;
 
-            var draft = await _peaAiService.GenerateDraftAsync(uuid, idUserInt, req ?? new GeneratePeaDraftRequestDto(), ct);
-            return Ok(draft);
+            try
+            {
+                var draft = await _peaAiService.GenerateDraftAsync(uuid, idUserInt, req ?? new GeneratePeaDraftRequestDto(), ct);
+                return Ok(draft);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("uuid/{uuid}/ai/importar-archivo")]
+        [HttpPost("{uuid}/ai/importar-archivo")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(15 * 1024 * 1024)]
+        public async Task<IActionResult> ImportarArchivoAi(
+            string uuid,
+            IFormFile? file,
+            [FromForm(Name = "custom_instructions")] string? customInstructions,
+            [FromForm(Name = "provider")] string? provider,
+            [FromForm(Name = "model")] string? model,
+            [FromForm(Name = "base_url_override")] string? baseUrlOverride,
+            [FromForm(Name = "api_key_override")] string? apiKeyOverride,
+            [FromForm(Name = "current_horas_cd")] int? currentHorasCd,
+            [FromForm(Name = "current_horas_ape")] int? currentHorasApe,
+            [FromForm(Name = "current_horas_ta")] int? currentHorasTa,
+            [FromForm(Name = "current_total_horas")] int? currentTotalHoras,
+            CancellationToken ct)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "Debe seleccionar un archivo digital (.pdf o .docx) válido." });
+            }
+
+            if (file.Length > 15 * 1024 * 1024)
+            {
+                return BadRequest(new { message = "El archivo supera el tamaño máximo permitido de 15 MB." });
+            }
+
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+
+            try
+            {
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms, ct);
+
+                var importRequest = new ImportPeaDocumentRequestDto
+                {
+                    FileName = file.FileName,
+                    ContentType = file.ContentType ?? string.Empty,
+                    FileBytes = ms.ToArray(),
+                    CustomInstructions = customInstructions,
+                    Provider = provider,
+                    Model = model,
+                    BaseUrlOverride = baseUrlOverride,
+                    ApiKeyOverride = apiKeyOverride,
+                    CurrentHorasCD = currentHorasCd,
+                    CurrentHorasAPE = currentHorasApe,
+                    CurrentHorasTA = currentHorasTa,
+                    CurrentTotalHoras = currentTotalHoras
+                };
+
+                var draft = await _peaAiService.ImportFromDocumentAsync(uuid, idUserInt, importRequest, ct);
+                return Ok(draft);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 

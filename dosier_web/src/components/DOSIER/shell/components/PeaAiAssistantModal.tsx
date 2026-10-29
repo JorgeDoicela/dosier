@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Sparkles,
     Key,
@@ -10,12 +10,16 @@ import {
     CheckCircle2,
     AlertCircle,
     Layers,
-    RefreshCw
+    RefreshCw,
+    FileUp,
+    FileText,
+    Trash2
 } from 'lucide-react';
 import {
     getPeaAiConfig,
     savePeaAiConfig,
     generatePeaAiDraft,
+    importPeaFromDocument,
     convertDraftToEditorFields,
     type PeaAiConfigStatus,
     type PeaAiProvider,
@@ -158,7 +162,7 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
     onApplyDraft
 }) => {
     const { addToast } = useNotifications();
-    const [activeTab, setActiveTab] = useState<'generate' | 'config'>('generate');
+    const [activeTab, setActiveTab] = useState<'generate' | 'import' | 'config'>('generate');
     const [loadingConfig, setLoadingConfig] = useState(false);
     const [configStatus, setConfigStatus] = useState<PeaAiConfigStatus | null>(null);
 
@@ -172,12 +176,19 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
     const [scope, setScope] = useState<'user' | 'global'>('user');
     const [savingConfig, setSavingConfig] = useState(false);
 
-    // Estado de Generación Curricular
+    // Estado de Generación Curricular e Importación de Archivos (.pdf / .docx)
     const [targetSection, setTargetSection] = useState<string>(initialTargetSection || 'all');
     const [customInstructions, setCustomInstructions] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedDraft, setGeneratedDraft] = useState<PeaStructuredDraft | null>(null);
     const [selectedSections, setSelectedSections] = useState<string[]>([]);
+
+    // Estado de Importación Digital (exclusivamente .pdf y .docx, sin imágenes)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [importInstructions, setImportInstructions] = useState<string>('');
+    const [isImporting, setIsImporting] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -186,6 +197,7 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
             : 'all';
         setTargetSection(normalizedTarget);
         setGeneratedDraft(null);
+        setSelectedFile(null);
         loadConfiguration();
     }, [isOpen, initialTargetSection]);
 
@@ -216,10 +228,15 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
 
     const nombreAsignatura = formData?.NombreAsignatura || formData?.nombre_asignatura || 'Asignatura Curricular';
     const nombreCarrera = formData?.Carrera || formData?.carrera || 'Carrera Institucional';
-    const horasCD = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
-    const horasAPE = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
-    const horasTA = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
-    const totalHoras = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? (horasCD + horasAPE + horasTA));
+    const rawHorasCD = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
+    const rawHorasAPE = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
+    const rawHorasTA = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
+    const totalHoras = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? (rawHorasCD + rawHorasAPE + rawHorasTA));
+
+    const isUnconfiguredSplit = rawHorasCD <= 0 && rawHorasAPE <= 0 && totalHoras > 0;
+    const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
+    const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
+    const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
 
     const handleProviderChange = (newProv: PeaAiProvider) => {
         setProvider(newProv);
@@ -284,6 +301,11 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                 customInstructions: customInstructions.trim() || undefined,
                 provider,
                 model,
+                baseUrlOverride: baseUrl.trim() || undefined,
+                currentHorasCD: rawHorasCD,
+                currentHorasAPE: rawHorasAPE,
+                currentHorasTA: rawHorasTA,
+                currentTotalHoras: totalHoras,
                 currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined
             });
 
@@ -301,6 +323,84 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
             addToast('Error en Generación IA', typeof msg === 'string' ? msg : 'Verifique su API Key y conexión.', 'error');
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const validateAndSelectFile = (file: File | null | undefined) => {
+        if (!file) return;
+        const lowerName = file.name.toLowerCase();
+        const isImage =
+            file.type.startsWith('image/') ||
+            /\.(png|jpg|jpeg|webp|gif|bmp|tiff|svg)$/i.test(lowerName);
+
+        if (isImage) {
+            addToast(
+                'Formato de imagen no admitido',
+                'El importador acepta exclusivamente documentos digitales con texto seleccionable (.pdf y .docx). No se admiten imágenes.',
+                'error'
+            );
+            return;
+        }
+
+        const isAllowedDoc = lowerName.endsWith('.pdf') || lowerName.endsWith('.docx');
+        if (!isAllowedDoc) {
+            addToast(
+                'Formato no compatible',
+                'Seleccione únicamente un archivo PDF digital (.pdf) o Microsoft Word (.docx).',
+                'error'
+            );
+            return;
+        }
+
+        if (file.size > 15 * 1024 * 1024) {
+            addToast(
+                'Archivo demasiado grande',
+                'El archivo supera el límite máximo permitido de 15 MB.',
+                'error'
+            );
+            return;
+        }
+
+        setSelectedFile(file);
+        setGeneratedDraft(null);
+    };
+
+    const handleImportDocument = async () => {
+        if (!peaUuid) {
+            addToast('Identificador requerido', 'Guarde primero el documento para habilitar la importación.', 'warning');
+            return;
+        }
+        if (!selectedFile) {
+            addToast('Archivo requerido', 'Seleccione un archivo .pdf o .docx antes de iniciar el reconocimiento.', 'warning');
+            return;
+        }
+
+        setIsImporting(true);
+        setGeneratedDraft(null);
+        try {
+            const draft = await importPeaFromDocument(peaUuid, selectedFile, {
+                customInstructions: importInstructions.trim() || undefined,
+                provider,
+                model,
+                baseUrlOverride: baseUrl.trim() || undefined,
+                currentHorasCD: rawHorasCD,
+                currentHorasAPE: rawHorasAPE,
+                currentHorasTA: rawHorasTA,
+                currentTotalHoras: totalHoras
+            });
+
+            setGeneratedDraft(draft);
+            setSelectedSections(draft.validationSummary.generatedSections);
+            addToast(
+                'Documento reconocido y estructurado',
+                `Se extrajeron ${draft.validationSummary.generatedSections.length} secciones desde "${selectedFile.name}". Revise la previsualización y aplique los cambios.`,
+                'success'
+            );
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo procesar el documento digital.';
+            addToast('Error al importar documento', typeof msg === 'string' ? msg : 'Verifique que el archivo contenga texto digital seleccionable.', 'error');
+        } finally {
+            setIsImporting(false);
         }
     };
 
@@ -369,6 +469,19 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                         >
                             <Layers size={14} />
                             <span>Generar contenido curricular</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('import')}
+                            className={`py-3 border-b-2 text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                                activeTab === 'import'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                            }`}
+                        >
+                            <FileUp size={14} />
+                            <span>Importar archivo (PDF / Word)</span>
                         </button>
 
                         <button
@@ -608,71 +721,190 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                                 </div>
                             )}
 
-                            {/* Controles de Generación */}
-                            <div className="space-y-4">
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                                        Alcance del autocompletado
-                                    </label>
-                                    <select
-                                        value={targetSection}
-                                        onChange={e => setTargetSection(e.target.value)}
-                                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3]"
-                                    >
-                                        {TARGET_SECTION_OPTIONS.map(opt => (
-                                            <option key={opt.value} value={opt.value}>
-                                                {opt.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                            {activeTab === 'generate' ? (
+                                /* Controles de Generación */
+                                <div className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                            Alcance del autocompletado
+                                        </label>
+                                        <select
+                                            value={targetSection}
+                                            onChange={e => setTargetSection(e.target.value)}
+                                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3]"
+                                        >
+                                            {TARGET_SECTION_OPTIONS.map(opt => (
+                                                <option key={opt.value} value={opt.value}>
+                                                    {opt.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                <div className="space-y-1.5">
-                                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                                        Enfoque o lineamientos específicos del docente (opcional)
-                                    </label>
-                                    <textarea
-                                        rows={2}
-                                        value={customInstructions}
-                                        onChange={e => setCustomInstructions(e.target.value)}
-                                        placeholder="Ej. Estructurar en 4 unidades, priorizar prácticas con herramientas open-source, contenedores y proyectos aplicados..."
-                                        className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3] resize-none"
-                                    />
-                                </div>
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                            Enfoque o lineamientos específicos del docente (opcional)
+                                        </label>
+                                        <textarea
+                                            rows={2}
+                                            value={customInstructions}
+                                            onChange={e => setCustomInstructions(e.target.value)}
+                                            placeholder="Ej. Estructurar en 4 unidades, priorizar prácticas con herramientas open-source, contenedores y proyectos aplicados..."
+                                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3] resize-none"
+                                        />
+                                    </div>
 
-                                <div className="flex justify-end">
-                                    <button
-                                        type="button"
-                                        onClick={handleGenerate}
-                                        disabled={isGenerating || !configStatus?.isReady}
-                                        className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
-                                    >
-                                        {isGenerating ? (
-                                            <>
-                                                <Loader2 size={14} className="animate-spin" />
-                                                <span>Estructurando propuesta curricular...</span>
-                                            </>
-                                        ) : generatedDraft ? (
-                                            <>
-                                                <RefreshCw size={14} />
-                                                <span>Regenerar propuesta</span>
-                                            </>
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerate}
+                                            disabled={isGenerating || !configStatus?.isReady}
+                                            className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <Loader2 size={14} className="animate-spin" />
+                                                    <span>Estructurando propuesta curricular...</span>
+                                                </>
+                                            ) : generatedDraft ? (
+                                                <>
+                                                    <RefreshCw size={14} />
+                                                    <span>Regenerar propuesta</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles size={14} />
+                                                    <span>Generar propuesta curricular</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Controles de Importación de Archivo Digital (.pdf / .docx) */
+                                <div className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                                Documento PEA de origen (.pdf digital o .docx)
+                                            </label>
+                                            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                                                Solo texto digital (sin imágenes) · Máx. 15 MB
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                            onChange={e => {
+                                                const f = e.target.files?.[0];
+                                                validateAndSelectFile(f);
+                                                e.target.value = '';
+                                            }}
+                                            className="hidden"
+                                        />
+
+                                        {!selectedFile ? (
+                                            <div
+                                                onDragOver={e => {
+                                                    e.preventDefault();
+                                                    setIsDragOver(true);
+                                                }}
+                                                onDragLeave={() => setIsDragOver(false)}
+                                                onDrop={e => {
+                                                    e.preventDefault();
+                                                    setIsDragOver(false);
+                                                    const f = e.dataTransfer.files?.[0];
+                                                    validateAndSelectFile(f);
+                                                }}
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className={`p-6 rounded-xl border border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+                                                    isDragOver
+                                                        ? 'border-[#0070f3] bg-zinc-50 dark:bg-zinc-900'
+                                                        : 'border-slate-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 hover:border-[#0070f3]'
+                                                }`}
+                                            >
+                                                <FileUp size={22} className="text-[#0070f3]" strokeWidth={1.75} />
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                                                        Haga clic para seleccionar o arrastre su archivo aquí
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                                        Formatos admitidos: PDF con texto seleccionable (.pdf) y Microsoft Word (.docx). No se admiten imágenes.
+                                                    </p>
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <>
-                                                <Sparkles size={14} />
-                                                <span>Generar propuesta curricular</span>
-                                            </>
+                                            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <FileText size={18} className="text-[#0070f3] shrink-0" />
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                                            {selectedFile.name}
+                                                        </p>
+                                                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                                            {(selectedFile.size / 1024).toFixed(1)} KB · Documento digital listo para extracción
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedFile(null);
+                                                        setGeneratedDraft(null);
+                                                    }}
+                                                    className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                                                    title="Quitar archivo"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                            Indicaciones adicionales para la adaptación curricular (opcional)
+                                        </label>
+                                        <textarea
+                                            rows={2}
+                                            value={importInstructions}
+                                            onChange={e => setImportInstructions(e.target.value)}
+                                            placeholder="Ej. Conservar íntegramente los subtemas de las unidades del documento y actualizar la bibliografía a APA 7ma edición..."
+                                            className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3] resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleImportDocument}
+                                            disabled={isImporting || !selectedFile || !configStatus?.isReady}
+                                            className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                                        >
+                                            {isImporting ? (
+                                                <>
+                                                    <Loader2 size={14} className="animate-spin" />
+                                                    <span>Extrayendo y estructurando documento...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FileUp size={14} />
+                                                    <span>Analizar e importar documento</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Previsualización en Folio Continuo antes de aplicar */}
                             {generatedDraft && (
                                 <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-zinc-800">
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
-                                            Secciones generadas listas para aplicar ({selectedSections.length} seleccionadas)
+                                            Secciones estructuradas listas para aplicar ({selectedSections.length} seleccionadas)
                                         </span>
                                         {generatedDraft.validationSummary.isHoursExactMatch && (
                                             <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
@@ -742,7 +974,7 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                 </div>
 
                 {/* Pie Sólido de Confirmación */}
-                {activeTab === 'generate' && generatedDraft && (
+                {activeTab !== 'config' && generatedDraft && (
                     <div className="px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-4">
                         <span className="text-xs text-slate-500 dark:text-zinc-400">
                             Los datos generales de SIGAFI y firmas se mantienen intactos.

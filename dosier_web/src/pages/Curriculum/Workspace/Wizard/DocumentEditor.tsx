@@ -531,7 +531,20 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             list.push('Bibliografia');
         }
 
-        ['Antecedentes', 'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'ObjetivosEspecificos', 'MarcoTeorico', 'Metodologia', 'Evaluacion', 'Indice', 'sec_indice', 'Resumen', 'sec_resumen', 'resumen_ejecutivo', 'Introduccion', 'sec_introduccion', 'Objetivos', 'sec_objetivos', 'cumplimiento_objetivos', 'Fundamentos', 'sec_fundamentos', 'Metodos', 'sec_metodos', 'Resultados', 'sec_resultados', 'Impactos', 'sec_impactos', 'impacto_final', 'Transferencia', 'sec_transferencia', 'transferencia_conocimiento', 'InformeFinanciero', 'sec_informe_financiero', 'Conclusiones', 'sec_conclusiones', 'Recomendaciones', 'sec_recomendaciones', 'Bibliografia', 'sec_bibliografia', 'bibliografia_final', 'Anexos', 'sec_anexos'].forEach(k => {
+        [
+            'Antecedentes', 'DescripcionProyecto', 'Justificacion', 'ObjetivoGeneral', 'ObjetivosEspecificos',
+            'MarcoTeorico', 'Metodologia', 'Evaluacion', 'Indice', 'sec_indice', 'Resumen', 'sec_resumen',
+            'resumen_ejecutivo', 'Introduccion', 'sec_introduccion', 'Objetivos', 'sec_objetivos',
+            'cumplimiento_objetivos', 'Fundamentos', 'sec_fundamentos', 'Metodos', 'sec_metodos',
+            'Resultados', 'sec_resultados', 'Impactos', 'sec_impactos', 'impacto_final', 'Transferencia',
+            'sec_transferencia', 'transferencia_conocimiento', 'InformeFinanciero', 'sec_informe_financiero',
+            'Conclusiones', 'sec_conclusiones', 'Recomendaciones', 'sec_recomendaciones', 'Bibliografia',
+            'sec_bibliografia', 'bibliografia_final', 'Anexos', 'sec_anexos',
+            // Campos de texto enriquecido del PEA Oficial (CoWorkEditor)
+            'ObjetivoAsignatura', 'RdaCarrera', 'ResultadosAprendizaje', 'MetodologiaEnsenanza',
+            'RecursosDidacticos', 'BibliografiaBasica', 'BibliografiaConsulta',
+            'CaracterizacionAsignatura', 'CompetenciasAsignatura'
+        ].forEach(k => {
             if (!list.includes(k)) list.push(k);
         });
 
@@ -558,12 +571,18 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
 
     // ── 5. Hook Maestro con ydoc REACTIVO (V1.0 — corrección bug reconexión) ──
     const isHistoryLoaded = cowork.session.lastSyncedAt !== null;
+    const effectiveLists = React.useMemo(() => {
+        const cfgLists = Array.isArray(templateConfig?.lists) ? templateConfig.lists : [];
+        const regLists = Array.isArray(DocumentTemplateRegistry[templateCode]?.lists) ? DocumentTemplateRegistry[templateCode].lists : [];
+        return Array.from(new Set([...cfgLists, ...regLists]));
+    }, [templateConfig?.lists, templateCode]);
+
     const docOptions = React.useMemo(() => ({
-        lists: templateConfig?.lists || EMPTY_ARRAY,
+        lists: effectiveLists.length > 0 ? effectiveLists : EMPTY_ARRAY,
         richTexts,
         nonCollaborative: nonCollaborative || EMPTY_ARRAY,
         isHistoryLoaded
-    }), [templateConfig?.lists, richTexts, nonCollaborative, isHistoryLoaded]);
+    }), [effectiveLists, richTexts, nonCollaborative, isHistoryLoaded]);
 
     const {
         formData,
