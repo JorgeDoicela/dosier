@@ -1,23 +1,20 @@
 import React, { useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ObservationsSidebar } from './Revision/components/ObservationsSidebar';
 import { InteractiveSections } from './Revision/components/InteractiveSections';
 import { FullscreenLoader } from '../../components/Common/FullscreenLoader';
 import { useRevisionTecnica } from './Revision/hooks/useRevisionTecnica';
 import { RevisionHeader } from './Revision/components/RevisionHeader';
-import { FloatingSidebarButtons } from './Revision/components/FloatingSidebarButtons';
 import { FinalizeAuditModal } from './Revision/components/FinalizeAuditModal';
 import { AdminRevisionHistoryPanel } from './Revision/components/AdminRevisionHistoryPanel';
-import { FIELD_LABELS } from './Revision/types/revisionTecnicaTypes';
 import { useAuth } from '../../api/AuthContext';
 
 /**
  * ══════════════════════════════════════════════════════════════════════════════
  * DOSIER — Dominio Curricular: Revisión Disciplinar y Metodológica del PEA
  * ══════════════════════════════════════════════════════════════════════════════
- * Espacio interactivo de auditoría técnica y revisión de observaciones del PEA
- * diseñado bajo el estándar Modern Enterprise Docs (limpio, folio A4 unificado,
- * navegación por índice y panel de observaciones bajo demanda).
+ * Espacio de auditoría técnica del PEA con distribución integrada:
+ * - 2/3 para el documento curricular
+ * - 1/3 para el panel de observaciones estilo Word Office (sin selector de secciones)
  */
 export const RevisionCurricularPage: React.FC = () => {
     const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
@@ -77,17 +74,17 @@ export const RevisionCurricularPage: React.FC = () => {
                 onOpenFinalizeModal={() => layout.setIsFinalizeModalOpen(true)}
                 isReadonly={isReadonlyResult}
                 pdfUrl={data.pdfUrl}
-                isRightSidebarOpen={layout.isRightSidebarOpen}
-                onToggleRightSidebar={() => layout.setIsRightSidebarOpen()}
+                isRightSidebarOpen={true}
                 totalObservationsCount={totalObservationsCount}
                 pendingObservationsCount={pendingObservationsCount}
+                isVisible={layout.isHeaderVisible}
             />
 
             {/* Espacio de Trabajo Principal */}
             <div className="flex-1 flex overflow-hidden relative">
                 {layout.viewMode === 'history' ? (
                     /* ── VISTA DE HISTORIAL Y DICTAMEN OFICIAL ── */
-                    <div className="flex-1 h-full bg-white dark:bg-zinc-950 overflow-hidden">
+                    <div className="flex-1 h-full bg-white dark:bg-zinc-950 overflow-hidden pt-14">
                         <AdminRevisionHistoryPanel
                             projectUuid={projectUuid ?? ''}
                             pea={data.rawPea}
@@ -95,112 +92,68 @@ export const RevisionCurricularPage: React.FC = () => {
                         />
                     </div>
                 ) : (
-                    /* ── VISTA DE DOCUMENTO: FOLIO COMPLETO CONTINUO O VISOR PDF ── */
-                    <div className="flex-1 h-full flex overflow-hidden relative">
-                        {/* Lienzo Central: Folio del Documento o Visor PDF */}
-                        <main className="flex-1 h-full overflow-hidden bg-white dark:bg-zinc-950 relative">
-                            {layout.viewMode === 'interactive' ? (
-                                <InteractiveSections
-                                    activeSection={layout.activeSection}
-                                    setActiveSection={layout.setActiveSection}
-                                    project={data.project}
-                                    investigadores={data.investigadores}
-                                    docSnapshot={data.docSnapshot}
-                                    templateBlocks={data.templateBlocks}
-                                    isHoursOk={data.isHoursOk}
-                                    teachersWithExceedingHours={data.teachersWithExceedingHours}
-                                    getFieldCardClasses={getFieldCardClasses}
-                                    renderFieldStatusBadge={renderFieldStatusBadge}
-                                    setActiveCommentField={layout.setActiveCommentField}
-                                    setIsRightSidebarOpen={layout.setIsRightSidebarOpen}
-                                    getSafeArray={getSafeArray}
-                                    comments={commentsState.comments}
-                                    canAudit={isAuditActive}
-                                />
-                            ) : (
-                                <div className="h-full flex flex-col bg-white dark:bg-zinc-950">
-                                    {data.loadingPdf ? (
-                                        <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                                            <div className="w-6 h-6 border-2 border-slate-300 border-t-[#0070f3] rounded-full animate-spin" />
-                                            <p className="text-xs text-slate-500">Cargando visualización oficial del PDF...</p>
-                                        </div>
-                                    ) : data.pdfUrl ? (
-                                        <object
-                                            data={`${data.pdfUrl}#toolbar=1&navpanes=0`}
-                                            type="application/pdf"
+                    /* ── ESPACIO DE TRABAJO PRINCIPAL: REVISIÓN INTERACTIVA O VISTA OFICIAL PDF ── */
+                    <main className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-zinc-950 relative">
+                        {layout.viewMode === 'interactive' ? (
+                            <InteractiveSections
+                                onScroll={layout.handleHeaderScroll}
+                                activeSection={layout.activeSection}
+                                setActiveSection={layout.setActiveSection}
+                                activeCommentField={layout.activeCommentField}
+                                project={data.project}
+                                investigadores={data.investigadores}
+                                docSnapshot={data.docSnapshot}
+                                templateBlocks={data.templateBlocks}
+                                isHoursOk={data.isHoursOk}
+                                teachersWithExceedingHours={data.teachersWithExceedingHours}
+                                getFieldCardClasses={getFieldCardClasses}
+                                renderFieldStatusBadge={renderFieldStatusBadge}
+                                setActiveCommentField={layout.setActiveCommentField}
+                                setIsRightSidebarOpen={layout.setIsRightSidebarOpen}
+                                getSafeArray={getSafeArray}
+                                comments={commentsState.comments}
+                                canAudit={isAuditActive}
+                                readOnly={isReadonlyResult}
+                                submitting={data.submitting}
+                                isListening={commentsState.isListening}
+                                onSaveComment={commentsState.saveCommentForSection}
+                                onRemoveComment={commentsState.removeCommentLocal}
+                                onStartListening={commentsState.handleStartListening}
+                            />
+                        ) : (
+                            <div className="h-full flex flex-col bg-white dark:bg-zinc-950 pt-14">
+                                {data.loadingPdf ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                                        <div className="w-6 h-6 border-2 border-slate-300 border-t-[#0070f3] rounded-full animate-spin" />
+                                        <p className="text-xs text-slate-500">Cargando visualización oficial del PDF...</p>
+                                    </div>
+                                ) : data.pdfUrl ? (
+                                    <object
+                                        data={`${data.pdfUrl}#toolbar=1&navpanes=0`}
+                                        type="application/pdf"
+                                        className="w-full h-full border-none"
+                                        aria-label="Previsualización Oficial del PEA"
+                                    >
+                                        <iframe
+                                            src={`${data.pdfUrl}#toolbar=1&navpanes=0`}
                                             className="w-full h-full border-none"
-                                            aria-label="Previsualización Oficial del PEA"
+                                            title="Previsualización Oficial del PEA"
+                                        />
+                                    </object>
+                                ) : (
+                                    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-500">
+                                        <p className="text-xs">No se pudo cargar la vista previa del documento PDF.</p>
+                                        <button
+                                            onClick={() => layout.setViewMode('interactive')}
+                                            className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-zinc-700 text-xs font-semibold hover:bg-white dark:hover:bg-zinc-900 transition-colors"
                                         >
-                                            <iframe
-                                                src={`${data.pdfUrl}#toolbar=1&navpanes=0`}
-                                                className="w-full h-full border-none"
-                                                title="Previsualización Oficial del PEA"
-                                            />
-                                        </object>
-                                    ) : (
-                                        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-500">
-                                            <p className="text-xs">No se pudo cargar la vista previa del documento PDF.</p>
-                                            <button
-                                                onClick={() => layout.setViewMode('interactive')}
-                                                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-zinc-700 text-xs font-semibold hover:bg-white dark:hover:bg-zinc-900 transition-colors"
-                                            >
-                                                Volver a la revisión interactiva
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </main>
-
-                        {/* Drag Handle Derecho (Límite de colapso automático idéntico a DOSIERBuilderShell) */}
-                        {layout.viewMode === 'interactive' && layout.isRightSidebarOpen && (
-                            <div
-                                onMouseDown={layout.startDraggingRight}
-                                className="w-[6px] -mx-[3px] bg-transparent hover:bg-slate-300 dark:hover:bg-zinc-700 active:bg-[#0070f3] cursor-col-resize select-none shrink-0 transition-colors duration-150 z-50 h-full relative"
-                                title="Arrastra para cambiar ancho o haz clic para contraer"
-                            />
+                                            Volver a la revisión interactiva
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         )}
-
-                        {/* Panel Lateral Derecho: Observaciones Curriculares (Bajo Demanda) */}
-                        <ObservationsSidebar
-                            isOpen={layout.isRightSidebarOpen}
-                            width={layout.rightSidebarWidth}
-                            rightSidebarRef={layout.rightSidebarRef}
-                            toggleOpen={() => layout.setIsRightSidebarOpen(false)}
-                            activeCommentField={layout.activeCommentField}
-                            setActiveCommentField={layout.setActiveCommentField}
-                            activeSection={layout.activeSection}
-                            setActiveSection={layout.setActiveSection}
-                            projectUuid={projectUuid}
-                            comments={commentsState.comments}
-                            contextualInput={commentsState.contextualInput}
-                            setContextualInput={commentsState.setContextualInput}
-                            isListening={commentsState.isListening}
-                            submitting={data.submitting}
-                            editingCommentId={commentsState.editingCommentId}
-                            setEditingCommentId={commentsState.setEditingCommentId}
-                            saveContextualComment={commentsState.saveContextualComment}
-                            handleStartListening={commentsState.handleStartListening}
-                            removeCommentLocal={commentsState.removeCommentLocal}
-                            FIELD_LABELS={FIELD_LABELS}
-                            templateBlocks={data.templateBlocks}
-                            readOnly={isReadonlyResult}
-                        />
-
-                        {/* Pestaña flotante interactiva para re-abrir panel de observaciones cuando está escondido */}
-                        {layout.viewMode === 'interactive' && (
-                            <FloatingSidebarButtons
-                                isRightSidebarOpen={layout.isRightSidebarOpen}
-                                auditoriaButtonTop={layout.auditoriaButtonTop}
-                                auditoriaButtonLeft={layout.auditoriaButtonLeft}
-                                isDraggingButton={layout.isDraggingButton}
-                                handleButtonDragStart={layout.handleButtonDragStart}
-                                onOpenRightSidebar={() => layout.setIsRightSidebarOpen(true)}
-                                pendingCount={pendingObservationsCount}
-                                totalCount={totalObservationsCount}
-                            />
-                        )}
-                    </div>
+                    </main>
                 )}
             </div>
 

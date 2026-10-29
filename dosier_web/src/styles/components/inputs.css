@@ -90,3 +90,22 @@ input:autofill:focus {
 input:autofill::first-line {
     font-family: var(--font-sans) !important;
 }
+
+
+/* Regla absoluta para compositores de observaciones (cero outline, cero bordes nativos, cero resizer manual) */
+.composer-textarea,
+.composer-textarea:focus,
+.composer-textarea:focus-visible,
+.composer-textarea:active {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -webkit-appearance: none !important;
+    background: transparent !important;
+    resize: none !important;
+}
+
+.composer-textarea::-webkit-resizer {
+    display: none !important;
+}

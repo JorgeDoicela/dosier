@@ -92,8 +92,8 @@ export const useRevisionTecnicaComments = ({
         }
     };
 
-    const saveContextualComment = async () => {
-        if (!contextualInput.trim() || !projectUuid) return;
+    const saveCommentForSection = async (section: string, text: string) => {
+        if (!text.trim() || !projectUuid) return;
 
         const rolObservador = isVicerrector
             ? 'Vicerrector'
@@ -108,8 +108,8 @@ export const useRevisionTecnicaComments = ({
         try {
             const nuevaObs = await agregarObservacionPea(projectUuid, {
                 rolObservador,
-                seccionAfectada: activeCommentField,
-                texto: contextualInput.trim()
+                seccionAfectada: section,
+                texto: text.trim()
             });
 
             const newComment: SectionComment = {
@@ -125,27 +125,33 @@ export const useRevisionTecnicaComments = ({
             };
 
             setComments(prev => {
-                const current = prev[activeCommentField] || [];
+                const current = prev[section] || [];
                 return {
                     ...prev,
-                    [activeCommentField]: [...current, newComment]
+                    [section]: [...current, newComment]
                 };
             });
 
-            setContextualInput('');
-            setEditingCommentId(null);
             addToast(
                 "Observación Registrada",
-                `Se ha guardado la observación técnica en ${activeCommentField}. El PEA pasa a estado Observado.`,
+                `Se ha guardado la observación técnica en ${section}. El PEA pasa a estado Observado.`,
                 "success"
             );
         } catch (err: any) {
             console.error('[DOSIER] Error al registrar observación:', err);
             addToast("Error", err.response?.data?.message || "No se pudo guardar la observación en el servidor.", "error");
+            throw err;
         }
     };
 
-    const handleStartListening = () => {
+    const saveContextualComment = async () => {
+        if (!contextualInput.trim() || !projectUuid) return;
+        await saveCommentForSection(activeCommentField, contextualInput);
+        setContextualInput('');
+        setEditingCommentId(null);
+    };
+
+    const handleStartListening = (onTranscript?: (text: string) => void) => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
             addToast("Reconocimiento de voz no soportado", "Su navegador no es compatible con el dictado por voz.", "warning");
@@ -181,7 +187,11 @@ export const useRevisionTecnicaComments = ({
             recognition.onresult = (event: any) => {
                 const transcript = event.results[0][0].transcript;
                 if (transcript) {
-                    setContextualInput(prev => prev ? `${prev} ${transcript}` : transcript);
+                    if (onTranscript) {
+                        onTranscript(transcript);
+                    } else {
+                        setContextualInput(prev => prev ? `${prev} ${transcript}` : transcript);
+                    }
                     addToast("Audio transcrito", "Se ha insertado la nota de voz en las observaciones.", "success");
                 }
             };
@@ -204,6 +214,7 @@ export const useRevisionTecnicaComments = ({
         loadingComments,
         removeCommentLocal,
         saveContextualComment,
+        saveCommentForSection,
         handleStartListening,
         reloadObservations: loadObservations
     };

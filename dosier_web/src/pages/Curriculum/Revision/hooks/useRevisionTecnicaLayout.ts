@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSmartHeader } from './useSmartHeader';
 
 export const useRevisionTecnicaLayout = () => {
     const [viewMode, setViewMode] = useState<'interactive' | 'pdf' | 'history'>('interactive');
@@ -6,6 +7,13 @@ export const useRevisionTecnicaLayout = () => {
     const [activeCommentField, setActiveCommentField] = useState<string>('NombreAsignatura');
     const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
     const [generalFeedback, setGeneralFeedback] = useState('');
+
+    // Hook desacoplado de Smart Header
+    const smartHeader = useSmartHeader({ threshold: 10, topOffset: 60 });
+
+    useEffect(() => {
+        smartHeader.resetHeader();
+    }, [viewMode, isFinalizeModalOpen]);
 
     const [leftSidebarWidth, setLeftSidebarWidth] = useState<number>(() => {
         const saved = localStorage.getItem('rev_left_sidebar_width');
@@ -351,6 +359,10 @@ export const useRevisionTecnicaLayout = () => {
         startDraggingLeft,
         startDraggingRight,
         handleButtonDragStart,
-        handleSeccionesButtonDragStart
+        handleSeccionesButtonDragStart,
+        isHeaderVisible: smartHeader.isHeaderVisible,
+        setIsHeaderVisible: smartHeader.setIsHeaderVisible,
+        handleHeaderScroll: smartHeader.handleScroll,
+        resetHeader: smartHeader.resetHeader
     };
 };
