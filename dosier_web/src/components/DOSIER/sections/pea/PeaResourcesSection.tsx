@@ -63,18 +63,13 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
 
     const rawPracticas: any[] = Array.isArray(formData?.ActividadesPracticas) ? formData.ActividadesPracticas : [];
 
-    const practicas: PracticaItem[] = rawPracticas.length > 0 ? rawPracticas.map((p, idx) => ({
+    const practicas: PracticaItem[] = rawPracticas.map((p, idx) => ({
         unidad: p.unidad || p.Unidad || p['0'] || availableUnits[0]?.value || `Unidad ${idx + 1}`,
         nombre: p.nombre || p.Nombre || p.nombre_caracterizacion || p.NombreCaracterizacion || p.descripcion || p['1'] || '',
         horas: p.horas ?? p.Horas,
         escenario: p.escenario || p.Escenario,
         producto: p.producto || p.Producto
-    })) : [
-        {
-            unidad: availableUnits[0]?.value || 'Unidad 1',
-            nombre: ''
-        }
-    ];
+    }));
 
     // ── Sugerencia inteligente de Unidad basada en cobertura curricular ───────
     const getNextSmartUnit = (currentList: PracticaItem[]): string => {
@@ -194,47 +189,55 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-thin bg-surface">
-                        {practicas.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                <td className="p-3 border-r border-border-thin align-top">
-                                    <GeistSelect
-                                        value={item.unidad || availableUnits[0]?.value || 'Unidad 1'}
-                                        options={(() => {
-                                            const base = availableUnits.map(u => ({ value: u.value, label: u.display }));
-                                            if (item.unidad && !base.some(b => String(b.value).toLowerCase() === item.unidad.toLowerCase())) {
-                                                return [{ value: item.unidad, label: item.unidad }, ...base];
-                                            }
-                                            return base;
-                                        })()}
-                                        onChange={(val) => handleUpdatePractica(idx, 'unidad', String(val))}
-                                        disabled={readOnly}
-                                        className="w-full text-xs sm:text-sm font-semibold"
-                                    />
+                        {practicas.length === 0 ? (
+                            <tr>
+                                <td colSpan={readOnly ? 2 : 3} className="p-6 text-center text-xs text-text-dim italic">
+                                    No se registran actividades prácticas. {!readOnly && 'Haga clic en el botón inferior para añadir una.'}
                                 </td>
-                                <td className="p-3 align-top">
-                                    <textarea
-                                        value={item.nombre}
-                                        onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
-                                        disabled={readOnly}
-                                        rows={Math.max(2, (item.nombre || '').split('\n').length)}
-                                        placeholder="Nombre de la práctica y caracterización de la actividad..."
-                                        className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main outline-none focus:border-text-main resize-none transition-colors leading-relaxed placeholder:text-text-dim/40"
-                                    />
-                                </td>
-                                {!readOnly && (
-                                    <td className="p-3 text-center align-top border-l border-border-thin">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemovePractica(idx)}
-                                            className="p-2 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
-                                            title="Eliminar práctica"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
-                                )}
                             </tr>
-                        ))}
+                        ) : (
+                            practicas.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
+                                    <td className="p-3 border-r border-border-thin align-top">
+                                        <GeistSelect
+                                            value={item.unidad || availableUnits[0]?.value || 'Unidad 1'}
+                                            options={(() => {
+                                                const base = availableUnits.map(u => ({ value: u.value, label: u.display }));
+                                                if (item.unidad && !base.some(b => String(b.value).toLowerCase() === item.unidad.toLowerCase())) {
+                                                    return [{ value: item.unidad, label: item.unidad }, ...base];
+                                                }
+                                                return base;
+                                            })()}
+                                            onChange={(val) => handleUpdatePractica(idx, 'unidad', String(val))}
+                                            disabled={readOnly}
+                                            className="w-full text-xs sm:text-sm font-semibold"
+                                        />
+                                    </td>
+                                    <td className="p-3 align-top">
+                                        <textarea
+                                            value={item.nombre}
+                                            onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
+                                            disabled={readOnly}
+                                            rows={Math.max(2, (item.nombre || '').split('\n').length)}
+                                            placeholder="Nombre de la práctica y caracterización de la actividad..."
+                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main outline-none focus:border-text-main resize-none transition-colors leading-relaxed placeholder:text-text-dim/40"
+                                        />
+                                    </td>
+                                    {!readOnly && (
+                                        <td className="p-3 text-center align-top border-l border-border-thin">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemovePractica(idx)}
+                                                className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                                title="Eliminar práctica"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

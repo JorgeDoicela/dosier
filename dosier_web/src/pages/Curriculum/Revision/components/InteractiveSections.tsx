@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ProjectDetail, SectionComment } from '../types/revisionTecnicaTypes';
 import { Info } from 'lucide-react';
-import { isPeaBorrador } from '../../utils/peaStatusWorkflow';
+import { isPeaBorrador, getPeaStatusDescriptor } from '../../utils/peaStatusWorkflow';
 import { SectionObservationColumn } from './SectionObservationColumn';
 
 const stripHtml = (html: any): string => {
@@ -72,6 +72,8 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     const allComments = Object.values(comments).flat();
     const totalObsCount = allComments.length;
     const pendingObsCount = allComments.filter(c => c.status === 'Pendiente').length;
+    const statusDescriptor = getPeaStatusDescriptor(project.status);
+    const statusLabel = statusDescriptor.key === 'EnRevision' ? 'En Revisión' : statusDescriptor.label;
 
     const getFieldComments = (fieldKey: string): SectionComment[] => {
         const list = [...(comments[fieldKey] || [])];
@@ -128,7 +130,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
         return `group relative rounded-2xl p-6 sm:p-7 transition-colors duration-150 cursor-pointer select-text space-y-4 bg-white dark:bg-zinc-950 border-2 ${
             isSelected
                 ? 'border-[#0070f3] dark:border-blue-500 shadow-sm'
-                : 'border-slate-200/90 dark:border-zinc-800/90 hover:border-slate-300 dark:hover:border-zinc-700'
+                : 'border-slate-200/90 dark:border-zinc-800/90'
         }`;
     };
 
@@ -174,7 +176,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
         const fieldComments = getFieldComments(fieldKey);
 
         return (
-            <div key={fieldKey} className="relative flex flex-col lg:flex-row items-center w-full">
+            <div key={fieldKey} className="relative flex flex-col lg:flex-row items-center w-full min-w-0">
                 {/* Columna del Documento PEA */}
                 <div className="flex-1 min-w-0 w-full">
                     {children}
@@ -192,7 +194,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                 </div>
 
                 {/* Columna Contextual de Observaciones centrada verticalmente sin scroll sticky */}
-                <div className="w-full lg:w-[380px] xl:w-[440px] 2xl:w-[480px] shrink-0 self-center mt-3 lg:mt-0">
+                <div className="w-full lg:w-[380px] xl:w-[440px] 2xl:w-[480px] shrink-0 min-w-0 max-w-full self-center mt-3 lg:mt-0">
                     <SectionObservationColumn
                         fieldKey={fieldKey}
                         sectionTitle={title}
@@ -220,117 +222,96 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
             {/* ── LIENZO ESPACIOSO APROVECHANDO TODO EL ESPACIO HORIZONTAL ── */}
             <div className="w-full space-y-8">
 
-                {/* ── FILA SUPERIOR DELIMITADA ALINEADA CON LA COLUMNA DE DATOS DEL PEA ── */}
-                <div className="flex flex-col lg:flex-row items-stretch w-full">
-                    {/* Columna Izquierda: Cabecera exclusiva del Documento PEA */}
-                    <div className="flex-1 min-w-0 w-full space-y-6">
-                        {/* ── BANNER INFORMATIVO SI ESTÁ EN BORRADOR NO ENVIADO ── */}
-                        {isPeaBorrador(project.status) && (
-                            <div className="p-4 rounded-xl border border-blue-200/90 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-3 shadow-2xs">
-                                <Info size={17} className="text-[#0070f3] dark:text-blue-400 shrink-0 mt-0.5" />
-                                <div className="space-y-0.5">
-                                    <p className="font-semibold text-xs text-blue-950 dark:text-blue-100">
-                                        Instrumento Curricular en Formulación Docente (Borrador)
-                                    </p>
-                                    <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
-                                        Este Programa de Estudio de la Asignatura (PEA) está siendo redactado por el docente titular y aún no ha sido remitido formalmente a la Coordinación de Carrera. Esta vista es exclusiva para acompañamiento curricular en modo lectura; las observaciones formales y la emisión de aval se habilitarán tras el envío oficial.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ── CABECERA INSTITUCIONAL Y CÓMPUTO NORMATIVO (CES ART. 21) ── */}
-                        <div className="space-y-4">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-                                <div className="space-y-1">
-                                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                        Programa de Estudio de la Asignatura (PEA)
-                                    </h1>
-                                    <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-400">
-                                        Asignatura: <strong className="text-slate-900 dark:text-zinc-100 font-bold">{project.title}</strong>
-                                    </p>
-                                </div>
-
-                                {/* Ficha de Horas y Créditos */}
-                                <div className="flex flex-col sm:items-end space-y-1 sm:w-72 shrink-0">
-                                    {!isHoursOk && (
-                                        <span className="inline-flex items-center gap-1.5 font-semibold text-xs px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200 dark:border-amber-800 mb-1">
-                                            <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                            Descuadre de horas
-                                        </span>
-                                    )}
-                                    <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 font-mono">
-                                        {project.horas_totales || 0} horas <span className="text-xs sm:text-sm font-normal text-slate-500 font-sans">({project.creditos || 0} créditos)</span>
-                                    </div>
-                                    <div className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
-                                        {project.horas_docencia || 0}h docencia • {project.horas_practica || 0}h práctica • {project.horas_autonomo || 0}h autónomo
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Ficha Clave-Valor de Alta Densidad */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 pt-2">
-                                <div>
-                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
-                                        Carrera
-                                    </span>
-                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-1 block truncate" title={project.carrera}>
-                                        {project.carrera || 'No asignada'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
-                                        Nivel / Semestre
-                                    </span>
-                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-1 block">
-                                        Semestre {project.semestre_nivel || 'N/A'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
-                                        Modalidad
-                                    </span>
-                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-1 block">
-                                        {project.modalidad || 'Presencial'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
-                                        Docente Titular
-                                    </span>
-                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-1 block truncate" title={project.docente_elaborador}>
-                                        {project.docente_elaborador || 'No asignado'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
-                                        Período Lectivo
-                                    </span>
-                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-1 block truncate">
-                                        {project.periodo || 'Abril - Septiembre 2026'}
-                                    </span>
-                                </div>
+                {/* ── CABECERA INSTITUCIONAL COMPLETA A TODO LO ANCHO (HORIZONTAL) ── */}
+                <div className="w-full space-y-6">
+                    {/* ── BANNER INFORMATIVO SI ESTÁ EN BORRADOR NO ENVIADO ── */}
+                    {isPeaBorrador(project.status) && (
+                        <div className="p-4 rounded-xl border border-blue-200/90 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-3 shadow-2xs">
+                            <Info size={17} className="text-[#0070f3] dark:text-blue-400 shrink-0 mt-0.5" />
+                            <div className="space-y-0.5">
+                                <p className="font-semibold text-xs text-blue-950 dark:text-blue-100">
+                                    Instrumento Curricular en Formulación Docente (Borrador)
+                                </p>
+                                <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
+                                    Este Programa de Estudio de la Asignatura (PEA) está siendo redactado por el docente titular y aún no ha sido remitido formalmente a la Coordinación de Carrera. Esta vista es exclusiva para acompañamiento curricular en modo lectura; las observaciones formales y la emisión de aval se habilitarán tras el envío oficial.
+                                </p>
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Línea vertical de separación centrada exactamente en el carril de los conectores */}
-                    <div className="hidden lg:flex shrink-0 w-6 xl:w-8 items-stretch justify-center -mx-0.5" aria-hidden="true">
-                        <div className="w-px h-full bg-slate-200 dark:bg-zinc-800" />
-                    </div>
-
-                    {/* Columna Derecha: Cabecera de Observaciones */}
-                    <div className="hidden lg:flex flex-col justify-start w-[380px] xl:w-[440px] 2xl:w-[480px] shrink-0">
-                        <div className="flex items-center justify-between gap-3">
-                            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                Observaciones
-                            </h2>
-                            {pendingObsCount > 0 && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                    <span>{pendingObsCount} {pendingObsCount === 1 ? 'pendiente' : 'pendientes'}</span>
+                    {/* ── CABECERA INSTITUCIONAL TÉCNICA UNIFICADA ── */}
+                    <div className="space-y-6">
+                        {/* Eyebrow y Título Principal de la Asignatura */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-4">
+                                <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400 dark:text-zinc-500 font-semibold">
+                                    Programa de Estudio de la Asignatura (PEA)
                                 </span>
-                            )}
+                                {!isHoursOk && (
+                                    <span className="inline-flex items-center gap-1.5 font-semibold text-xs px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                        Descuadre de horas
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap items-baseline gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                                    {project.title}
+                                </h1>
+                                <span className={`text-xs font-semibold ${statusDescriptor.textClass}`}>
+                                    {statusLabel}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Metadatos Clave en Barra Horizontal Continua con Separadores Técnicos */}
+                        <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+                            <div>
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
+                                    Carrera
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block truncate" title={snap.Carrera || project.carrera}>
+                                    {snap.Carrera || project.carrera || 'No asignada'}
+                                </span>
+                            </div>
+                            <div className="h-8 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block shrink-0" />
+                            <div>
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
+                                    Nivel / Semestre
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block">
+                                    {(snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('semestre') || (snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('nivel')
+                                        ? (snap.Nivel || project.semestre_nivel)
+                                        : `Semestre ${snap.Nivel || project.semestre_nivel || 'N/A'}`}
+                                </span>
+                            </div>
+                            <div className="h-8 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block shrink-0" />
+                            <div>
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
+                                    Modalidad
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block">
+                                    {snap.Modalidad || project.modalidad || '-'}
+                                </span>
+                            </div>
+                            <div className="h-8 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block shrink-0" />
+                            <div>
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
+                                    Docente Titular
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block truncate" title={snap.DocenteElaborador || project.docente_elaborador}>
+                                    {snap.DocenteElaborador || project.docente_elaborador || 'No asignado'}
+                                </span>
+                            </div>
+                            <div className="h-8 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block shrink-0" />
+                            <div>
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">
+                                    Período Lectivo
+                                </span>
+                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 mt-0.5 block truncate" title={snap.Periodo || project.periodo}>
+                                    {snap.Periodo || project.periodo || '-'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -360,7 +341,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
                                     <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código Institucional</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.CodigoAsignatura || project.codigo_asignatura || 'Sin código institucional'}
+                                        {snap.CodigoAsignatura || project.codigo_asignatura || snap.CodigoCarrera || '-'}
                                     </dd>
                                 </div>
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
@@ -372,19 +353,21 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
                                     <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Modalidad</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.Modalidad || project.modalidad || 'Presencial'}
+                                        {snap.Modalidad || project.modalidad || '-'}
                                     </dd>
                                 </div>
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
                                     <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Unidad de Organización Curricular</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.UnidadOrganizacion || 'Unidad Profesional'}
+                                        {snap.UnidadOrganizacion || '-'}
                                     </dd>
                                 </div>
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
                                     <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Semestre / Nivel</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        Nivel {snap.Nivel || project.semestre_nivel || '-'}
+                                        {(snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('nivel') || (snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('semestre')
+                                            ? (snap.Nivel || project.semestre_nivel)
+                                            : `Nivel ${snap.Nivel || project.semestre_nivel || '-'}`}
                                     </dd>
                                 </div>
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
@@ -423,7 +406,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
                                     <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Docente Titular Elaborador</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
-                                        {snap.DocenteElaborador || project.docente_elaborador || project.directorProyecto || 'Docente Titular'}
+                                        {snap.DocenteElaborador || project.docente_elaborador || project.directorProyecto || '-'}
                                     </dd>
                                 </div>
                             </dl>
@@ -556,13 +539,13 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
 
                     {/* ── SECCIÓN 6: CONTENIDOS Y UNIDADES TEMÁTICAS ── */}
                     {renderSectionRow(
-                        'ContenidosCurriculares',
+                        'Unidades',
                         'Contenidos y Unidades',
-                        <section id="section-pea_contents_section" onClick={() => handleSelectSection('ContenidosCurriculares')} className={getSectionWrapperClasses('ContenidosCurriculares')}>
+                        <section id="section-pea_contents_section" onClick={() => handleSelectSection('Unidades')} className={getSectionWrapperClasses('Unidades')}>
                             {renderSectionHeader(
                                 '6. Contenidos de Enseñanza y Unidades Temáticas',
                                 'Desglose programático por unidades de estudio, horas pedagógicas y temas',
-                                'ContenidosCurriculares'
+                                'Unidades'
                             )}
                             <div className="divide-y divide-slate-200/80 dark:divide-zinc-800 space-y-6">
                                 {getSafeArray(snap.Unidades).length > 0 ? (
@@ -655,13 +638,13 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
 
                     {/* ── SECCIÓN 8: PRÁCTICAS APE ── */}
                     {renderSectionRow(
-                        'RecursosDidacticos',
+                        'ActividadesPracticas',
                         'Prácticas APE',
-                        <section id="section-pea_resources_section" onClick={() => handleSelectSection('RecursosDidacticos')} className={getSectionWrapperClasses('RecursosDidacticos')}>
+                        <section id="section-pea_resources_section" onClick={() => handleSelectSection('ActividadesPracticas')} className={getSectionWrapperClasses('ActividadesPracticas')}>
                             {renderSectionHeader(
                                 '8. Actividades Prácticas y Experimentales (APE)',
                                 'Talleres, caracterización de prácticas de laboratorio y trabajo de campo',
-                                'RecursosDidacticos'
+                                'ActividadesPracticas'
                             )}
                             <div className="overflow-x-auto py-1">
                                 {getSafeArray(snap.ActividadesPracticas).length > 0 ? (
@@ -679,7 +662,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                 const uVal = p.unidad || p.Unidad || p.numeroUnidad || p['0'] || '-';
                                                 const nom = p.nombre || p.Nombre || p.nombrePractica || p.NombrePractica || p.nombre_practica || p.descripcion || p['1'] || '-';
                                                 const car = p.caracterizacion || p.Caracterizacion || p.escenario || p.producto || '';
-                                                const hrs = p.horas || p.Horas || p.duracionHoras || p.DuracionHoras || p.duracion_horas || p['2'] || 2;
+                                                const hrs = p.horas ?? p.Horas ?? p.duracionHoras ?? p.DuracionHoras ?? p.duracion_horas ?? p['2'];
                                                 return (
                                                     <tr key={idx}>
                                                         <td className="py-3 pr-4 font-mono text-slate-400 font-medium">{idx + 1}</td>
@@ -691,7 +674,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                             {car && <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{car}</div>}
                                                         </td>
                                                         <td className="py-3 pl-4 text-right font-mono font-bold text-[#0070f3] dark:text-blue-400">
-                                                            {hrs}h
+                                                            {hrs !== undefined && hrs !== null && hrs !== '' ? `${hrs}h` : '-'}
                                                         </td>
                                                     </tr>
                                                 );
@@ -709,13 +692,13 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
 
                     {/* ── SECCIÓN 9: EVALUACIÓN DEL APRENDIZAJE ── */}
                     {renderSectionRow(
-                        'CriteriosEvaluacion',
+                        'Evaluaciones',
                         'Evaluación del Aprendizaje',
-                        <section id="section-pea_evaluation_section" onClick={() => handleSelectSection('CriteriosEvaluacion')} className={getSectionWrapperClasses('CriteriosEvaluacion')}>
+                        <section id="section-pea_evaluation_section" onClick={() => handleSelectSection('Evaluaciones')} className={getSectionWrapperClasses('Evaluaciones')}>
                             {renderSectionHeader(
                                 '9. Evaluación del Aprendizaje',
                                 'Matriz oficial de ponderaciones y criterios de calificación del ISTPET',
-                                'CriteriosEvaluacion'
+                                'Evaluaciones'
                             )}
                             <div className="overflow-x-auto py-1">
                                 {getSafeArray(snap.Evaluaciones).length > 0 ? (
@@ -729,9 +712,9 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
                                             {getSafeArray(snap.Evaluaciones).map((ev: any, idx: number) => {
-                                                const nota = ev.denominacion || ev.Denominacion || ev.nota || ev.Nota || ev['0'] || '-';
-                                                const tipo = ev.tipoEvaluacion || ev.TipoEvaluacion || ev.tipo || ev.Tipo || ev['1'] || '-';
-                                                const calif = ev.calificacionMaxima || ev.CalificacionMaxima || ev.calificacion || ev.Calificacion || ev['2'] || '10,00';
+                                                const nota = ev.nota || ev.Nota || ev['0'] || ev.denominacion || ev.Denominacion || '-';
+                                                const tipo = ev.tipo || ev.Tipo || ev['1'] || ev.tipoEvaluacion || ev.TipoEvaluacion || '-';
+                                                const calif = ev.calificacion ?? ev.Calificacion ?? ev['2'] ?? ev.calificacionMaxima ?? ev.CalificacionMaxima;
                                                 return (
                                                     <tr key={idx}>
                                                         <td className="py-3 pr-4 font-bold text-slate-900 dark:text-zinc-100">
@@ -741,7 +724,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                             {tipo}
                                                         </td>
                                                         <td className="py-3 pl-4 text-right font-mono font-bold text-base text-[#0070f3] dark:text-blue-400">
-                                                            {calif}
+                                                            {calif !== undefined && calif !== null && calif !== '' ? calif : '-'}
                                                         </td>
                                                     </tr>
                                                 );
@@ -826,7 +809,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 <div className="border-t-2 border-slate-300 dark:border-zinc-700 pt-3 text-center space-y-1">
                                     <span className="text-xs font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block font-medium">Elaborado por:</span>
                                     <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 truncate">
-                                        {snap.FirmasResponsabilidad?.DocenteNombre || snap.DocenteElaborador || project.directorProyecto || 'Docente'}
+                                        {snap.FirmasResponsabilidad?.DocenteNombre || snap.DocenteElaborador || project.directorProyecto || '-'}
                                     </p>
                                     <span className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 block">Docente Titular</span>
                                 </div>
@@ -834,7 +817,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 <div className="border-t-2 border-slate-300 dark:border-zinc-700 pt-3 text-center space-y-1">
                                     <span className="text-xs font-mono text-slate-400 dark:text-zinc-500 uppercase tracking-wider block font-medium">Revisado por:</span>
                                     <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 truncate">
-                                        {snap.FirmasResponsabilidad?.CoordinadorNombre || 'Coordinación Carrera'}
+                                        {snap.FirmasResponsabilidad?.CoordinadorNombre || '-'}
                                     </p>
                                     <span className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 block">Coordinador de Carrera</span>
                                 </div>

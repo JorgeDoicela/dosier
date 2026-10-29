@@ -48,17 +48,7 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
     // Normalizar lista de unidades
     const unidades: UnidadTematica[] = useMemo(() => {
         if (rawUnidades.length === 0) {
-            return [
-                {
-                    num: 1,
-                    titulo: 'Fundamentos y Conceptos Clave',
-                    horasCD: 16,
-                    horasAPE: 8,
-                    horasTA: 16,
-                    horasTotal: 40,
-                    contenidos: '1.1 Introducción y contextualización\n1.2 Principios teóricos y normativos\n1.3 Casos prácticos y aplicación inicial'
-                }
-            ];
+            return [];
         }
 
         return rawUnidades.map((u, idx) => {
@@ -194,47 +184,54 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
 
                 {/* LISTA DIRECTA DE TARJETAS DE UNIDAD (CERO CUADRO DENTRO DE CUADRO) */}
                 <div className="space-y-4 sm:space-y-5">
-                    {unidades.map((u, idx) => (
-                        <div
-                            key={idx}
-                            className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden transition-all"
-                        >
-                            {/* CABECERA DE LA UNIDAD: TÍTULO Y TOTAL DE HORAS */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-thin px-4 sm:px-5 py-3 sm:py-3.5 bg-bg-deep text-text-main">
-                                <div className="flex items-center gap-3 flex-1">
-                                    <span className="shrink-0 font-bold text-text-main text-xs sm:text-sm uppercase tracking-wide">
-                                        UNIDAD {u.num || idx + 1}:
-                                    </span>
-                                    <input
-                                        type="text"
-                                        value={u.titulo}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            const num = u.num || idx + 1;
-                                            const sanitized = val.replace(new RegExp(`^unidad\\s*${num}\\s*[:\\-]?\\s*`, 'i'), '');
-                                            handleUpdateUnit(idx, 'titulo', sanitized);
-                                        }}
-                                        disabled={readOnly}
-                                        placeholder={`Nombre o tema de la Unidad ${u.num || idx + 1}`}
-                                        className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2 text-sm sm:text-base font-semibold text-text-main outline-none focus:border-text-main transition-colors placeholder:text-text-dim/40 placeholder:font-normal"
-                                    />
+                    {unidades.length === 0 ? (
+                        <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
+                            <p className="text-sm font-semibold text-text-dim">
+                                No se han registrado unidades temáticas. {!readOnly && 'Haga clic en "+ Añadir Unidad de Estudio" para comenzar.'}
+                            </p>
+                        </div>
+                    ) : (
+                        unidades.map((u, idx) => (
+                            <div
+                                key={idx}
+                                className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden transition-all"
+                            >
+                                {/* CABECERA DE LA UNIDAD: TÍTULO Y TOTAL DE HORAS */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-thin px-4 sm:px-5 py-3 sm:py-3.5 bg-bg-deep text-text-main">
+                                    <div className="flex items-center gap-3 flex-1">
+                                        <span className="shrink-0 font-bold text-text-main text-xs sm:text-sm uppercase tracking-wide">
+                                            UNIDAD {u.num || idx + 1}:
+                                        </span>
+                                        <input
+                                            type="text"
+                                            value={u.titulo}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const num = u.num || idx + 1;
+                                                const sanitized = val.replace(new RegExp(`^unidad\\s*${num}\\s*[:\\-]?\\s*`, 'i'), '');
+                                                handleUpdateUnit(idx, 'titulo', sanitized);
+                                            }}
+                                            disabled={readOnly}
+                                            placeholder={`Nombre o tema de la Unidad ${u.num || idx + 1}`}
+                                            className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2 text-sm sm:text-base font-semibold text-text-main outline-none focus:border-text-main transition-colors placeholder:text-text-dim/40 placeholder:font-normal"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                                        <span className="text-xs sm:text-sm font-medium text-text-dim">
+                                            Total de horas por unidad: <strong className="font-mono text-text-main text-sm sm:text-base ml-1">{u.horasTotal || 0}</strong>
+                                        </span>
+                                        {!readOnly && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveUnit(idx)}
+                                                className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                                title="Eliminar esta unidad"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                                    <span className="text-xs sm:text-sm font-medium text-text-dim">
-                                        Total de horas por unidad: <strong className="font-mono text-text-main text-sm sm:text-base ml-1">{u.horasTotal || 0}</strong>
-                                    </span>
-                                    {!readOnly && unidades.length > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveUnit(idx)}
-                                            className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                                            title="Eliminar esta unidad"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
 
                             {/* DISTRIBUCIÓN HORARIA REGLAMENTARIA (3 COLUMNAS CON STEPPERS DISTINGUIDOS) */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 border-b border-border-thin divide-y sm:divide-y-0 sm:divide-x divide-border-thin bg-surface text-text-main">
@@ -427,7 +424,8 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                 />
                             </div>
                         </div>
-                    ))}
+                    ))
+                )}
 
                     {!readOnly && (
                         <button

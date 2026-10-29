@@ -208,11 +208,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             Unidades: [],
             ActividadesPracticas: [],
             Bibliografias: [],
-            Evaluaciones: [
-                { nota: 'NOTA PARCIAL 1', tipo: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', calificacion: 10 },
-                { nota: 'NOTA PARCIAL 2', tipo: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', calificacion: 10 },
-                { nota: 'EVALUACIÓN FINAL', tipo: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', calificacion: 10 }
-            ],
+            Evaluaciones: [],
             FirmasResponsabilidadDetalle: [],
 
             // Firmas de Responsabilidad Institucional
@@ -414,11 +410,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                                 columns: ['Notas', 'TIPO DE EVALUACIÓN', 'CALIFICACION'],
                                 allowDynamicRows: true,
                                 headerStyle: 'blue',
-                                defaultRows: [
-                                    { '0': 'NOTA PARCIAL 1', '1': 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', '2': '10,00' },
-                                    { '0': 'NOTA PARCIAL 2', '1': 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', '2': '10,00' },
-                                    { '0': 'EVALUACIÓN FINAL', '1': 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', '2': '10,00' }
-                                ]
+                                defaultRows: []
                             }
                         }
                     ]

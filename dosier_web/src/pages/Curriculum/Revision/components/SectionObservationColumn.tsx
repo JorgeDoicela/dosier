@@ -75,17 +75,17 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                 onSelect?.();
                 composerRef.current?.focus();
             }}
-            className="w-full flex flex-col gap-3 select-text"
+            className="w-full flex flex-col gap-3 select-text min-w-0"
         >
             {/* Listado de Observaciones Existentes si hay registradas */}
             {comments.length > 0 && (
-                <div className="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-0.5">
+                <div className="space-y-2.5 max-h-[380px] overflow-y-auto overflow-x-hidden custom-scrollbar pr-0.5 min-w-0">
                     {comments.map((obs) => {
                         const isPending = obs.status === 'Pendiente';
                         return (
                             <div
                                 key={obs.id || obs.uuid}
-                                className={`group/card rounded-xl p-3 border transition-all space-y-2 ${
+                                className={`group/card rounded-xl p-3 border transition-all space-y-2 min-w-0 ${
                                     isPending
                                         ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/60'
                                         : 'bg-white dark:bg-zinc-950 border-slate-200 dark:border-zinc-800'
@@ -126,7 +126,7 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                                     </div>
                                 </div>
 
-                                <p className="text-xs text-slate-700 dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-wrap select-text">
+                                <p className="text-xs text-slate-700 dark:text-zinc-300 font-sans leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] select-text">
                                     {obs.text}
                                 </p>
 
@@ -136,7 +136,7 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                                             <CheckCircle2 size={11} />
                                             Respuesta del docente
                                         </div>
-                                        <p className="text-[11px] text-slate-600 dark:text-zinc-400 italic bg-white dark:bg-zinc-950 p-2 rounded-lg border border-slate-100 dark:border-zinc-800">
+                                        <p className="text-[11px] text-slate-600 dark:text-zinc-400 italic bg-white dark:bg-zinc-950 p-2 rounded-lg border border-slate-100 dark:border-zinc-800 break-words [overflow-wrap:anywhere]">
                                             {obs.respuestaDocente}
                                         </p>
                                     </div>
@@ -164,7 +164,7 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                     className={`w-full bg-white dark:bg-zinc-950 rounded-2xl border-2 transition-colors duration-150 ${
                         isSelected
                             ? '!border-[#0070f3] dark:!border-blue-500 shadow-sm'
-                            : 'border-slate-200/90 dark:border-zinc-800/90 hover:border-slate-300 dark:hover:border-zinc-700'
+                            : 'border-slate-200/90 dark:border-zinc-800/90'
                     }`}
                 />
             )}

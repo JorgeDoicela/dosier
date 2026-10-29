@@ -196,6 +196,38 @@ export const useRevisionTecnicaData = ({
                 ? metadata.unidades
                 : (pea.unidades || []);
 
+            // Sumar horas directamente desde las unidades temáticas curriculares (CACES / CES RRA Art. 21)
+            let sumDocencia = 0;
+            let sumPractica = 0;
+            let sumAutonomo = 0;
+            let sumTotalUnidades = 0;
+
+            if (Array.isArray(unidadesFinal) && unidadesFinal.length > 0) {
+                unidadesFinal.forEach((u: any) => {
+                    const cd = Number(u.horasCD ?? u.HorasCD ?? u.horasDocencia ?? u.HorasDocencia ?? u.horas_docencia ?? u.horasDocente ?? u['2'] ?? 0);
+                    const ape = Number(u.horasAPE ?? u.HorasAPE ?? u.horasPracticoExp ?? u.HorasPracticoExp ?? u.horas_practico_exp ?? u.horas_practica ?? u['3'] ?? 0);
+                    const ta = Number(u.horasTA ?? u.HorasTA ?? u.horasAutonomo ?? u.HorasAutonomo ?? u.horas_autonomo ?? u['4'] ?? 0);
+                    sumDocencia += cd;
+                    sumPractica += ape;
+                    sumAutonomo += ta;
+                    sumTotalUnidades += (cd + ape + ta);
+                });
+            }
+
+            const rawHorasCD = Number(metadata.HorasContactoDocente ?? metadata.horas_docencia ?? metadata.horasContactoDocente ?? pea.horasContactoDocente ?? (pea as any).horas_contacto_docente ?? 0);
+            const rawHorasAPE = Number(metadata.HorasPracticoExperimental ?? metadata.horas_practica ?? metadata.horasPracticoExperimental ?? pea.horasPracticoExperimental ?? (pea as any).horas_practico_experimental ?? 0);
+            const rawHorasTA = Number(metadata.HorasAutonomo ?? metadata.horas_autonomo ?? metadata.horasAutonomo ?? pea.horasAutonomo ?? (pea as any).horas_autonomo ?? 0);
+
+            // Si las horas en cabecera están en 0 pero en las unidades el docente sí distribuyó la carga, usar la suma real de las unidades
+            const finalHorasCD = (rawHorasCD > 0) ? rawHorasCD : sumDocencia;
+            const finalHorasAPE = (rawHorasAPE > 0) ? rawHorasAPE : sumPractica;
+            const finalHorasTA = (rawHorasCD > 0 || rawHorasAPE > 0) ? rawHorasTA : (sumAutonomo > 0 ? sumAutonomo : rawHorasTA);
+            const finalTotalHoras = Number(metadata.TotalHorasAsignatura || metadata.total_horas || metadata.totalHorasAsignatura || pea.totalHorasAsignatura || (pea as any).total_horas_asignatura || sumTotalUnidades || 0);
+
+            const finalPeriodo = metadata.Periodo || metadata.nombre_periodo || (pea as any).nombrePeriodo || (pea as any).nombre_periodo || pea.idPeriodo || '';
+            const finalCodigoCarrera = metadata.CodigoCarrera || metadata.codigo_carrera || (pea as any).codigoCarrera || (pea as any).codigo_carrera || '';
+            const finalCodigoAsignatura = metadata.CodigoAsignatura || metadata.codigo_asignatura || pea.codigoAsignatura || (pea as any).codigo_asignatura || finalCodigoCarrera || '';
+
             const practicasFinal = (Array.isArray(metadata.ActividadesPracticas) && metadata.ActividadesPracticas.length > 0)
                 ? metadata.ActividadesPracticas
                 : (Array.isArray(metadata.actividades_practicas) && metadata.actividades_practicas.length > 0)
@@ -215,19 +247,21 @@ export const useRevisionTecnicaData = ({
                 : (pea.bibliografias || []);
 
             metadata = {
+                ...metadata,
                 // 1. Datos Generales
                 NombreAsignatura: metadata.NombreAsignatura || metadata.nombre_asignatura || metadata.nombreAsignatura || pea.nombreAsignatura || '',
-                CodigoAsignatura: metadata.CodigoAsignatura || metadata.codigo_asignatura || metadata.codigoAsignatura || pea.codigoAsignatura || '',
+                CodigoAsignatura: finalCodigoAsignatura,
+                CodigoCarrera: finalCodigoCarrera,
                 Carrera: metadata.Carrera || metadata.nombreCarrera || pea.nombreCarrera || '',
                 Modalidad: metadata.Modalidad || metadata.modalidad || pea.modalidad || 'Presencial',
                 UnidadOrganizacion: metadata.UnidadOrganizacion || metadata.unidad_organizacion || metadata.unidadOrganizacion || pea.unidadOrganizacion || 'Unidad Profesional',
-                Periodo: metadata.Periodo || metadata.idPeriodo || pea.idPeriodo || '',
+                Periodo: finalPeriodo,
                 Nivel: metadata.Nivel || metadata.semestre_nivel || metadata.semestreNivel || pea.semestreNivel || '',
-                TotalHorasAsignatura: metadata.TotalHorasAsignatura || metadata.total_horas || metadata.totalHorasAsignatura || pea.totalHorasAsignatura || 0,
+                TotalHorasAsignatura: finalTotalHoras,
                 Creditos: metadata.Creditos || metadata.creditos || pea.creditos || 0,
-                HorasContactoDocente: metadata.HorasContactoDocente || metadata.horas_docencia || metadata.horasContactoDocente || pea.horasContactoDocente || 0,
-                HorasPracticoExperimental: metadata.HorasPracticoExperimental || metadata.horas_practica || metadata.horasPracticoExperimental || pea.horasPracticoExperimental || 0,
-                HorasAutonomo: metadata.HorasAutonomo || metadata.horas_autonomo || metadata.horasAutonomo || pea.horasAutonomo || 0,
+                HorasContactoDocente: finalHorasCD,
+                HorasPracticoExperimental: finalHorasAPE,
+                HorasAutonomo: finalHorasTA,
                 DocenteElaborador: metadata.DocenteElaborador || metadata.docente_elaborador || pea.nombreDocenteElaborador || pea.idDocenteElaborador || '',
 
                 // 2. Objetivos
@@ -266,11 +300,24 @@ export const useRevisionTecnicaData = ({
                     CoordinadorCargo: 'Coordinador de Carrera',
                     CoordinadorAcadCargo: 'Coordinador Académico',
                     VicerrectorCargo: 'Vicerrectorado Académico'
-                },
-                ...metadata
+                }
             };
 
             setDocSnapshot(metadata);
+
+            // Sincronizar el modelo de proyecto para la cabecera y el cálculo normativo CES
+            setProject(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    horas_docencia: finalHorasCD,
+                    horas_practica: finalHorasAPE,
+                    horas_autonomo: finalHorasTA,
+                    horas_totales: finalTotalHoras,
+                    periodo: finalPeriodo,
+                    codigo_asignatura: finalCodigoAsignatura
+                };
+            });
         } catch (e) {
             console.error('[DOSIER] Error al calcular métricas colaborativas:', e);
         }
@@ -285,26 +332,26 @@ export const useRevisionTecnicaData = ({
 
             const projectDetail: ProjectDetail = {
                 uuid: pea.uuid,
-                title: pea.nombreAsignatura || '(Sin asignatura)',
+                title: pea.nombreAsignatura || (pea as any).nombre_asignatura || '(Sin asignatura)',
                 status: pea.estado || 'Borrador',
                 presupuesto: 0,
                 convocatoriaMontoMaximo: null,
-                convocatoria: pea.idPeriodo || '',
-                linea: pea.nombreCarrera || '',
-                carrera: pea.nombreCarrera || '',
-                dominio: pea.unidadOrganizacion || '',
-                descripcion: pea.objetivoAsignatura || '',
-                directorProyecto: pea.nombreDocenteElaborador || 'Docente Titular',
-                codigo_asignatura: pea.codigoAsignatura || '',
+                convocatoria: (pea as any).nombrePeriodo || (pea as any).nombre_periodo || pea.idPeriodo || '',
+                linea: pea.nombreCarrera || (pea as any).nombre_carrera || '',
+                carrera: pea.nombreCarrera || (pea as any).nombre_carrera || '',
+                dominio: pea.unidadOrganizacion || (pea as any).unidad_organizacion || '',
+                descripcion: pea.objetivoAsignatura || (pea as any).objetivo_asignatura || '',
+                directorProyecto: pea.nombreDocenteElaborador || (pea as any).nombre_docente_elaborador || 'Docente Titular',
+                codigo_asignatura: pea.codigoAsignatura || (pea as any).codigo_asignatura || '',
                 modalidad: pea.modalidad || 'Presencial',
-                semestre_nivel: pea.semestreNivel || '',
-                horas_totales: pea.totalHorasAsignatura || 0,
+                semestre_nivel: pea.semestreNivel || (pea as any).semestre_nivel || '',
+                horas_totales: pea.totalHorasAsignatura || (pea as any).total_horas_asignatura || 0,
                 creditos: pea.creditos || 0,
-                horas_docencia: pea.horasContactoDocente || 0,
-                horas_practica: pea.horasPracticoExperimental || 0,
-                horas_autonomo: pea.horasAutonomo || 0,
-                docente_elaborador: pea.nombreDocenteElaborador || pea.idDocenteElaborador || '',
-                periodo: pea.idPeriodo || '',
+                horas_docencia: pea.horasContactoDocente || (pea as any).horas_contacto_docente || 0,
+                horas_practica: pea.horasPracticoExperimental || (pea as any).horas_practico_experimental || 0,
+                horas_autonomo: pea.horasAutonomo || (pea as any).horas_autonomo || 0,
+                docente_elaborador: pea.nombreDocenteElaborador || (pea as any).nombre_docente_elaborador || pea.idDocenteElaborador || (pea as any).id_docente_elaborador || '',
+                periodo: (pea as any).nombrePeriodo || (pea as any).nombre_periodo || pea.idPeriodo || '',
                 peaData: pea
             };
 

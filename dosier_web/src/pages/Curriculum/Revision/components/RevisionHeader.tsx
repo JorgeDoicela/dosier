@@ -88,10 +88,10 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
     const getStatusBadge = () => {
         if (!projectStatus) return null;
         const descriptor = getPeaStatusDescriptor(projectStatus);
+        const label = descriptor.key === 'EnRevision' ? 'Revisión' : descriptor.label;
         return (
-            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${descriptor.textClass}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass}`} />
-                <span>{descriptor.label}</span>
+            <span className={`inline-flex items-center text-xs font-medium ${descriptor.textClass}`}>
+                <span>{label}</span>
             </span>
         );
     };
@@ -109,72 +109,62 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                 isVisible ? 'translate-y-0 opacity-100 shadow-xs' : '-translate-y-full opacity-0 pointer-events-none'
             }`}
         >
-            <div className="h-14 flex items-center justify-between gap-4">
-                {/* 1. Izquierda: Volver e Identidad de la Asignatura */}
-                <div className="flex items-center gap-3 min-w-0 shrink">
+            <div className="h-14 flex items-center justify-between gap-6">
+                {/* 1. Izquierda: Volver y Riel Plano de Pestañas */}
+                <div className="h-full flex items-center gap-5 min-w-0">
                     <button
                         onClick={onNavigateBack}
-                        className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors group cursor-pointer text-xs font-medium bg-white dark:bg-zinc-950 shadow-2xs shrink-0"
+                        className="flex items-center gap-1.5 py-1 px-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors group cursor-pointer text-xs font-medium shrink-0"
                         title="Volver a la lista de asignaturas"
                         aria-label="Volver"
                     >
-                        <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
+                        <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-0.5" />
                         <span>Volver</span>
                     </button>
 
-                    <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block shrink-0" />
+                    <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 shrink-0" />
 
-                    <div className="flex items-center gap-2 min-w-0">
-                        <h1 className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight leading-none truncate max-w-[180px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[420px]" title={projectTitle}>
-                            {projectTitle || 'Cargando asignatura...'}
-                        </h1>
-                        <div className="hidden sm:inline-flex shrink-0">
-                            {getStatusBadge()}
-                        </div>
-                    </div>
+                    <nav className="h-full -mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar shrink-0" aria-label="Vistas de revisión">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('interactive')}
+                            className={`h-full text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                                viewMode === 'interactive'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                            }`}
+                        >
+                            <Eye size={13} />
+                            <span>Revisión del PEA</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('pdf')}
+                            className={`h-full text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                                viewMode === 'pdf'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                            }`}
+                        >
+                            <FileText size={13} />
+                            <span>Documento oficial PDF</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('history')}
+                            className={`h-full text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                                viewMode === 'history'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                            }`}
+                        >
+                            <History size={13} />
+                            <span>Historial y firmas</span>
+                        </button>
+                    </nav>
                 </div>
-
-                {/* 2. Centro: Riel Plano de Pestañas al ras del borde inferior */}
-                <nav className="h-full -mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar shrink-0" aria-label="Vistas de revisión">
-                    <button
-                        type="button"
-                        onClick={() => setViewMode('interactive')}
-                        className={`h-full text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            viewMode === 'interactive'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <Eye size={13} />
-                        <span>Revisión del PEA</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setViewMode('pdf')}
-                        className={`h-full text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            viewMode === 'pdf'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <FileText size={13} />
-                        <span>Documento oficial PDF</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setViewMode('history')}
-                        className={`h-full text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            viewMode === 'history'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <History size={13} />
-                        <span>Historial y firmas</span>
-                    </button>
-                </nav>
 
                 {/* 3. Derecha: Acciones de Cabecera y Dictamen */}
                 <div className="flex items-center gap-2 shrink-0">
@@ -189,27 +179,16 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                         </span>
                     )}
 
-                    {pdfUrl && (
-                        <button
-                            onClick={handleDownloadPdf}
-                            className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer shadow-2xs"
-                            title="Descargar documento PDF"
-                            aria-label="Descargar PDF"
-                        >
-                            <Download size={13} />
-                        </button>
-                    )}
-
                     <button
                         onClick={toggleTheme}
-                        className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer shadow-2xs"
+                        className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                         title={isDarkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
                         aria-label="Alternar tema"
                     >
                         {isDarkMode ? (
-                            <Sun size={13} className="text-amber-400 hover:rotate-45 transition-transform" />
+                            <Sun size={14} className="text-amber-400 hover:rotate-45 transition-transform" />
                         ) : (
-                            <Moon size={13} className="text-slate-700 dark:text-zinc-300 hover:-rotate-12 transition-transform" />
+                            <Moon size={14} className="text-slate-700 dark:text-zinc-300 hover:-rotate-12 transition-transform" />
                         )}
                     </button>
 

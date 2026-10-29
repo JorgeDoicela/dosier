@@ -732,11 +732,11 @@ namespace Dosier.Infrastructure.Common.Documents
                     var initialDict = new Dictionary<string, object?>
                     {
                         ["CodigoAsignatura"] = asignatura?.Codigo ?? "",
-                        ["NombreAsignatura"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
+                        ["NombreAsignatura"] = asignatura?.Asignatura1 ?? "",
                         ["titulo"] = asignatura?.Asignatura1 ?? "Asignatura ISTPET",
                         ["CodigoCarrera"] = codigoCarrera,
                         ["codigo_carrera"] = codigoCarrera,
-                        ["Carrera"] = carrera?.Carrera1 ?? "Carrera ISTPET",
+                        ["Carrera"] = carrera?.Carrera1 ?? "",
                         ["Periodo"] = periodoNombre,
                         ["Modalidad"] = pea.Modalidad,
                         ["Nivel"] = pea.SemestreNivel ?? "",
@@ -747,7 +747,7 @@ namespace Dosier.Infrastructure.Common.Documents
                         ["HorasPracticoExperimental"] = pea.HorasPracticoExperimental,
                         ["HorasAutonomo"] = pea.HorasAutonomo,
                         ["DocenteElaborador"] = docenteNombre,
-                        ["ObjetivoAsignatura"] = string.IsNullOrWhiteSpace(pea.ObjetivoAsignatura) ? "<p>Desarrollar y consolidar las competencias técnicas y conocimientos fundamentales de la asignatura.</p>" : pea.ObjetivoAsignatura,
+                        ["ObjetivoAsignatura"] = pea.ObjetivoAsignatura ?? "",
                         ["MetodologiaEnsenanza"] = pea.MetodologiaEnsenanza ?? "",
                         ["RecursosDidacticos"] = pea.RecursosDidacticos ?? "",
                         ["EvaluacionAprendizaje"] = pea.EvaluacionAprendizaje ?? "",
@@ -800,12 +800,7 @@ namespace Dosier.Infrastructure.Common.Documents
                                 ["TipoEvaluacion"] = e.TipoEvaluacion ?? "",
                                 ["CalificacionMaxima"] = e.CalificacionMaxima.ToString()
                             }).ToList()
-                            : new List<Dictionary<string, string>>
-                            {
-                                new() { ["Denominacion"] = "Nota Parcial 1", ["TipoEvaluacion"] = "Actividades autónomas y práctico-experimentales (frecuentes)", ["CalificacionMaxima"] = "10" },
-                                new() { ["Denominacion"] = "Nota Parcial 2", ["TipoEvaluacion"] = "Evaluaciones sumativas de las unidades de estudio (parcial)", ["CalificacionMaxima"] = "10" },
-                                new() { ["Denominacion"] = "Evaluación Final", ["TipoEvaluacion"] = "Evaluación final de la asignatura (examen)", ["CalificacionMaxima"] = "10" }
-                            },
+                            : new List<Dictionary<string, string>>(),
                         ["FirmasResponsabilidad"] = new Dictionary<string, string>
                         {
                             ["DocenteNombre"] = docenteNombre,

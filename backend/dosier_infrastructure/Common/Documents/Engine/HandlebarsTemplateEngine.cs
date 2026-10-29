@@ -924,13 +924,13 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             ?? eDict.GetValueOrDefault("Nota")?.ToString()
                             ?? eDict.GetValueOrDefault("Denominacion")?.ToString()
                             ?? eDict.GetValueOrDefault("denominacion")?.ToString()
-                            ?? $"Evaluación {eIdx}";
+                            ?? "";
 
                         string tipo = eDict.GetValueOrDefault("tipo")?.ToString()
                             ?? eDict.GetValueOrDefault("Tipo")?.ToString()
                             ?? eDict.GetValueOrDefault("TipoEvaluacion")?.ToString()
                             ?? eDict.GetValueOrDefault("tipo_evaluacion")?.ToString()
-                            ?? "Actividades evaluativas";
+                            ?? "";
 
                         string calif = eDict.GetValueOrDefault("calificacion")?.ToString()
                             ?? eDict.GetValueOrDefault("Calificacion")?.ToString()

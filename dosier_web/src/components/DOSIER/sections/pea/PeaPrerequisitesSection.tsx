@@ -33,7 +33,7 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
         if (readOnly) return;
         const newItem = {
             Asignatura: '',
-            Observacion: 'Aprobación de ciclo previo'
+            Observacion: ''
         };
         if (onAdd) {
             onAdd('Prerrequisitos', newItem);

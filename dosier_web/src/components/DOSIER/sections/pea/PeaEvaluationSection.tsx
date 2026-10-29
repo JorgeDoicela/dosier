@@ -33,46 +33,15 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
     const colTipoLabel = c.colTipoLabel || 'TIPO DE EVALUACIÓN';
     const colCalifLabel = c.colCalifLabel || 'CALIFICACION';
 
-    const defaultEvaluaciones: EvaluacionItem[] = [
-        {
-            nota: 'NOTA PARCIAL 1',
-            tipo: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)',
-            calificacion: 10
-        },
-        {
-            nota: 'NOTA PARCIAL 2',
-            tipo: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)',
-            calificacion: 10
-        },
-        {
-            nota: 'EVALUACIÓN FINAL',
-            tipo: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)',
-            calificacion: 10
-        }
-    ];
-
     const rawEvaluaciones: any[] = Array.isArray(formData?.Evaluaciones)
         ? formData.Evaluaciones
         : (Array.isArray(formData?.evaluaciones) ? formData.evaluaciones : []);
 
-    const normalizeEvaluacion = (e: any, idx: number): EvaluacionItem => {
-        const defaultItem = defaultEvaluaciones[idx] || {
-            nota: `COMPONENTE ${idx + 1}`,
-            tipo: 'ACTIVIDAD EVALUATIVA',
-            calificacion: 10
-        };
-
-        let nota = String(e?.nota || e?.Nota || e?.denominacion || e?.Denominacion || e?.['0'] || '').trim();
-        let tipo = String(e?.tipo || e?.Tipo || e?.tipoEvaluacion || e?.TipoEvaluacion || e?.['1'] || '').trim();
-        const calificacion = Number(e?.calificacion ?? e?.Calificacion ?? e?.calificacionMaxima ?? e?.['2'] ?? 10);
-
-        // Sanear textos truncados o genéricos heredados para asegurar denominación oficial
-        if (!nota || nota.toUpperCase() === 'NOTA PARCIAL') {
-            nota = defaultItem.nota;
-        }
-        if (!tipo || tipo.toUpperCase() === 'EVALUACIÓN' || tipo.toUpperCase() === 'EVALUACION') {
-            tipo = defaultItem.tipo;
-        }
+    const normalizeEvaluacion = (e: any, _idx: number): EvaluacionItem => {
+        const nota = String(e?.nota ?? e?.Nota ?? e?.denominacion ?? e?.Denominacion ?? e?.['0'] ?? '').trim();
+        const tipo = String(e?.tipo ?? e?.Tipo ?? e?.tipoEvaluacion ?? e?.TipoEvaluacion ?? e?.['1'] ?? '').trim();
+        const rawCalif = e?.calificacion ?? e?.Calificacion ?? e?.calificacionMaxima ?? e?.CalificacionMaxima ?? e?.['2'];
+        const calificacion = rawCalif !== undefined && rawCalif !== null && rawCalif !== '' ? Number(rawCalif) : 10;
 
         return {
             nota,
@@ -81,9 +50,7 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
         };
     };
 
-    const evaluaciones: EvaluacionItem[] = rawEvaluaciones.length > 0
-        ? rawEvaluaciones.map((e, idx) => normalizeEvaluacion(e, idx))
-        : defaultEvaluaciones;
+    const evaluaciones: EvaluacionItem[] = rawEvaluaciones.map((e, idx) => normalizeEvaluacion(e, idx));
 
     const handleUpdateEvaluacion = (idx: number, field: keyof EvaluacionItem, value: any) => {
         if (readOnly) return;
@@ -98,8 +65,8 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
     const handleAddEvaluacion = () => {
         if (readOnly) return;
         const newItem: EvaluacionItem = {
-            nota: `COMPONENTE ${evaluaciones.length + 1}`,
-            tipo: 'EVALUACIÓN SUMATIVA O PROYECTO INTEGRADOR',
+            nota: '',
+            tipo: '',
             calificacion: 10
         };
 
@@ -143,7 +110,7 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                             <th className="p-3.5 sm:p-4 w-[120px] text-center border-l border-border-thin">
                                 {colCalifLabel}
                             </th>
-                            {!readOnly && evaluaciones.length > 3 && (
+                            {!readOnly && evaluaciones.length > 0 && (
                                 <th className="p-3.5 sm:p-4 w-[60px] text-center border-l border-border-thin">
                                     Acción
                                 </th>
@@ -151,56 +118,64 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-thin bg-surface">
-                        {evaluaciones.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
-                                <td className="p-3 border-r border-border-thin align-top">
-                                    <input
-                                        type="text"
-                                        value={item.nota}
-                                        onChange={(e) => handleUpdateEvaluacion(idx, 'nota', e.target.value)}
-                                        disabled={readOnly}
-                                        className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-text-main uppercase outline-none focus:border-text-main transition-colors"
-                                    />
+                        {evaluaciones.length === 0 ? (
+                            <tr>
+                                <td colSpan={readOnly ? 3 : 4} className="p-6 text-center text-xs text-text-dim italic">
+                                    No se registran componentes de evaluación. {!readOnly && 'Haga clic en "+ Añadir Componente de Evaluación" para agregar uno.'}
                                 </td>
-                                <td className="p-3 align-top">
-                                    <textarea
-                                        value={item.tipo}
-                                        onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
-                                        disabled={readOnly}
-                                        rows={Math.max(2, (item.tipo || '').split('\n').length)}
-                                        className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main uppercase outline-none focus:border-text-main resize-none transition-colors leading-relaxed"
-                                    />
-                                </td>
-                                <td className="p-3 text-center align-top border-l border-border-thin">
-                                    <input
-                                        type="text"
-                                        inputMode="decimal"
-                                        value={Number(item.calificacion || 10).toFixed(2).replace('.', ',')}
-                                        onChange={(e) => {
-                                            const rawVal = e.target.value.replace(',', '.');
-                                            const num = parseFloat(rawVal);
-                                            handleUpdateEvaluacion(idx, 'calificacion', isNaN(num) ? 0 : num);
-                                        }}
-                                        disabled={readOnly}
-                                        className="w-20 mx-auto text-center font-bold font-mono text-sm sm:text-base text-text-main bg-surface border border-border-thin rounded-xl py-2 outline-none focus:border-text-main transition-colors"
-                                    />
-                                </td>
-                                {!readOnly && evaluaciones.length > 3 && (
+                            </tr>
+                        ) : (
+                            evaluaciones.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-bg-deep/30 transition-colors">
+                                    <td className="p-3 border-r border-border-thin align-top">
+                                        <input
+                                            type="text"
+                                            value={item.nota}
+                                            onChange={(e) => handleUpdateEvaluacion(idx, 'nota', e.target.value)}
+                                            disabled={readOnly}
+                                            placeholder="Denominación..."
+                                            className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-text-main uppercase outline-none focus:border-text-main transition-colors"
+                                        />
+                                    </td>
+                                    <td className="p-3 align-top">
+                                        <textarea
+                                            value={item.tipo}
+                                            onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
+                                            disabled={readOnly}
+                                            rows={Math.max(2, (item.tipo || '').split('\n').length)}
+                                            placeholder="Tipo de evaluación o actividad..."
+                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main uppercase outline-none focus:border-text-main resize-none transition-colors leading-relaxed"
+                                        />
+                                    </td>
                                     <td className="p-3 text-center align-top border-l border-border-thin">
-                                        {idx >= 3 && (
+                                        <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={Number(item.calificacion ?? 10).toFixed(2).replace('.', ',')}
+                                            onChange={(e) => {
+                                                const rawVal = e.target.value.replace(',', '.');
+                                                const num = parseFloat(rawVal);
+                                                handleUpdateEvaluacion(idx, 'calificacion', isNaN(num) ? 0 : num);
+                                            }}
+                                            disabled={readOnly}
+                                            className="w-20 mx-auto text-center font-bold font-mono text-sm sm:text-base text-text-main bg-surface border border-border-thin rounded-xl py-2 outline-none focus:border-text-main transition-colors"
+                                        />
+                                    </td>
+                                    {!readOnly && (
+                                        <td className="p-3 text-center align-top border-l border-border-thin">
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveEvaluacion(idx)}
-                                                className="p-2 rounded-lg text-text-dim hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
-                                                title="Eliminar componente adicional"
+                                                className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                                title="Eliminar componente de evaluación"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
-                                        )}
-                                    </td>
-                                )}
-                            </tr>
-                        ))}
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
