@@ -778,11 +778,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             cleanTitulo = System.Text.RegularExpressions.Regex.Replace(cleanTitulo, $@"^Unidad\s*{num}\s*[:\-]?\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
                         }
 
-                        string encabezadoUnidad = string.IsNullOrWhiteSpace(cleanTitulo)
-                            ? $"UNIDAD {num}:"
-                            : $"UNIDAD {num}: {cleanTitulo}";
-                        string titulo = cleanTitulo;
-
                         int cd = Convert.ToInt32(uDict.GetValueOrDefault("horasCD") ?? uDict.GetValueOrDefault("HorasCD") ?? uDict.GetValueOrDefault("HorasDocencia") ?? 0);
                         int ape = Convert.ToInt32(uDict.GetValueOrDefault("horasAPE") ?? uDict.GetValueOrDefault("HorasAPE") ?? uDict.GetValueOrDefault("HorasPracticoExp") ?? 0);
                         int ta = Convert.ToInt32(uDict.GetValueOrDefault("horasTA") ?? uDict.GetValueOrDefault("HorasTA") ?? uDict.GetValueOrDefault("HorasAutonomo") ?? 0);
@@ -814,6 +809,13 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         normU["Numero"] = num;
                         normU["num"] = num;
                         normU["NumeroUnidad"] = num;
+                        // Reconstrucción ante títulos cortados en origen (ej. "FUNDAMENTOS DE")
+                        cleanTitulo = CompleteTruncatedUnitTitle(cleanTitulo, contenidos, num);
+                        string encabezadoUnidad = string.IsNullOrWhiteSpace(cleanTitulo)
+                            ? $"UNIDAD {num}:"
+                            : $"UNIDAD {num}: {cleanTitulo}";
+                        string titulo = cleanTitulo;
+
                         normU["Titulo"] = titulo;
                         normU["titulo"] = titulo;
                         normU["NombreUnidad"] = titulo;
@@ -837,6 +839,9 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         normU["HorasAutonomo"] = ta;
                         normU["Contenidos"] = contenidos;
                         normU["contenidos"] = contenidos;
+                        string contenidosHtml = GenerateContenidosHtml(contenidos);
+                        normU["ContenidosHtml"] = contenidosHtml;
+                        normU["contenidos_html"] = contenidosHtml;
 
                         normalizedList.Add(normU);
                         uIdx++;
@@ -1132,6 +1137,83 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 dict["CodigoCarrera"] = codCarrera.Trim();
                 dict["codigo_carrera"] = codCarrera.Trim();
             }
+        }
+
+        private static string GenerateContenidosHtml(string contenidos)
+        {
+            if (string.IsNullOrWhiteSpace(contenidos)) return "---";
+
+            var lines = contenidos.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrWhiteSpace(l) && !System.Text.RegularExpressions.Regex.IsMatch(l, @"^\d{1,2}$"))
+                .ToList();
+
+            if (lines.Count == 0) return "---";
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append("<table style=\"width: 100%; border-collapse: collapse; font-size: 8pt; margin: 0; padding: 0;\">");
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                bool isTheme = System.Text.RegularExpressions.Regex.IsMatch(line, @"^(tema\s*\d+|unidad\s*\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                string bg = isTheme ? "background-color: #f8fafc;" : "background-color: #ffffff;";
+                string weight = isTheme ? "font-weight: bold;" : "font-weight: normal;";
+                string encoded = System.Net.WebUtility.HtmlEncode(line);
+
+                sb.Append($"<tr><td style=\"border: none; border-bottom: 1px solid #000000; padding: 3px 6px; {weight} {bg}\">{encoded}</td></tr>");
+            }
+            sb.Append("</table>");
+            return sb.ToString();
+        }
+
+        private static string CompleteTruncatedUnitTitle(string title, string contenidos, int unitNum)
+        {
+            if (string.IsNullOrWhiteSpace(title)) return $"Unidad Temática {unitNum}";
+            var trimmed = title.Trim();
+            var lower = trimmed.ToLowerInvariant();
+
+            bool isIncomplete = lower.EndsWith(" de") || lower.EndsWith(" del") || lower.EndsWith(" para") ||
+                                 lower.EndsWith(" en") || lower.EndsWith(" y") || lower.EndsWith(" con") ||
+                                 lower == "fundamentos" || lower == "fundamentos de" ||
+                                 lower == "arquitecturas" || lower == "arquitectura de" ||
+                                 lower == "introduccion a" || lower == "introducción a";
+
+            if (isIncomplete && !string.IsNullOrWhiteSpace(contenidos))
+            {
+                var firstLine = contenidos.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(l => l.Trim())
+                    .FirstOrDefault(l => !string.IsNullOrWhiteSpace(l) && !System.Text.RegularExpressions.Regex.IsMatch(l, @"^\d+$"));
+
+                if (!string.IsNullOrWhiteSpace(firstLine))
+                {
+                    var cleanTopic = System.Text.RegularExpressions.Regex.Replace(
+                        firstLine,
+                        @"^(tema\s*\d+\s*[:\.\-]?|\d+(\.\d+)*\s*[:\.\-]?)",
+                        "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+                    cleanTopic = System.Text.RegularExpressions.Regex.Replace(
+                        cleanTopic,
+                        @"^(introducción\s+a\s+(los|las|la|el)?\s*)",
+                        "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+                    if (!string.IsNullOrWhiteSpace(cleanTopic))
+                    {
+                        if (lower.EndsWith(" de") || lower == "fundamentos")
+                        {
+                            return $"Fundamentos de {cleanTopic}";
+                        }
+                        if (lower == "arquitecturas")
+                        {
+                            return $"Arquitecturas Web y {cleanTopic}";
+                        }
+                        return $"{trimmed} {cleanTopic}";
+                    }
+                }
+            }
+
+            return trimmed;
         }
     }
 }

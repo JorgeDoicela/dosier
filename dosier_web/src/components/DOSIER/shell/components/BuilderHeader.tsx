@@ -63,19 +63,6 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
             </div>
 
             <div className="flex items-center gap-3 md:gap-4 flex-wrap md:flex-nowrap">
-                {/* 0. Botón Asistente Curricular IA */}
-                {!readOnly && onOpenAiAssistant && (
-                    <button
-                        type="button"
-                        onClick={onOpenAiAssistant}
-                        className="px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-[#0c192c] hover:bg-blue-100 dark:hover:bg-[#112440] text-[#0070f3] dark:text-blue-400 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
-                        title="Abrir Asistente Curricular IA"
-                    >
-                        <Sparkles size={13} strokeWidth={1.75} className="shrink-0" />
-                        <span>Asistente IA</span>
-                    </button>
-                )}
-
                 {/* 1. Único Indicador de Persistencia Inteligente */}
                 <div className="flex items-center">
                     {readOnly ? (

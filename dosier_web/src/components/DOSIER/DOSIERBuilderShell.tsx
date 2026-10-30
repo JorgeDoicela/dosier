@@ -76,7 +76,34 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     const [showUpdateModal, setShowUpdateModal] = useState<boolean>(hasTemplateUpdate);
     const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
     const [importDocModalOpen, setImportDocModalOpen] = useState<boolean>(false);
+    const [importInitialFile, setImportInitialFile] = useState<File | null>(null);
+    const [importInitialInstructions, setImportInitialInstructions] = useState<string>('');
+    const [importAutoExtract, setImportAutoExtract] = useState<boolean>(false);
     const [aiTargetSection, setAiTargetSection] = useState<string>('all');
+    const [aiCustomInstructions, setAiCustomInstructions] = useState<string>('');
+    const [aiAutoGenerate, setAiAutoGenerate] = useState<boolean>(false);
+    const [aiInitialTab, setAiInitialTab] = useState<'generate' | 'config'>('generate');
+
+    const handleTriggerDocExtraction = useCallback((file: File, instructions: string) => {
+        setImportInitialFile(file);
+        setImportInitialInstructions(instructions);
+        setImportAutoExtract(true);
+        setImportDocModalOpen(true);
+    }, []);
+
+    const handleTriggerAiGeneration = useCallback((targetSec: string, instructions: string) => {
+        setAiTargetSection(targetSec);
+        setAiCustomInstructions(instructions);
+        setAiAutoGenerate(true);
+        setAiInitialTab('generate');
+        setAiModalOpen(true);
+    }, []);
+
+    const handleOpenAiConfigModal = useCallback(() => {
+        setAiAutoGenerate(false);
+        setAiInitialTab('config');
+        setAiModalOpen(true);
+    }, []);
 
     const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
     const isAiSupportedSection = templateCode === 'PEA_OFICIAL' &&
@@ -145,10 +172,6 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 onClose={autoSave.handleClose}
                                 onSave={autoSave.handleSave}
                                 toggleTheme={layout.toggleTheme}
-                                onOpenAiAssistant={!readOnly && templateCode === 'PEA_OFICIAL' ? () => {
-                                    setAiTargetSection('all');
-                                    setAiModalOpen(true);
-                                } : undefined}
                             />
 
                             <div className="flex flex-1 overflow-hidden relative" ref={layout.bodyContainerRef}>
@@ -212,32 +235,6 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                     </div>
 
                                                     <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
-                                                        {!readOnly && templateCode === 'PEA_OFICIAL' && !layout.isSectionBlocked && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setImportDocModalOpen(true)}
-                                                                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-[#0070f3] dark:hover:border-blue-500 text-slate-700 dark:text-zinc-200 hover:text-[#0070f3] dark:hover:text-blue-400 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
-                                                                title="Importar y mapear contenido desde un archivo PDF o Word existente"
-                                                            >
-                                                                <FileUp size={13} strokeWidth={1.75} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
-                                                                <span>Importar PEA (PDF / Word)</span>
-                                                            </button>
-                                                        )}
-
-                                                        {!readOnly && isAiSupportedSection && !layout.isSectionBlocked && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setAiTargetSection(layout.activeTab);
-                                                                    setAiModalOpen(true);
-                                                                }}
-                                                                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-[#0070f3] dark:hover:border-blue-500 text-slate-700 dark:text-zinc-200 hover:text-[#0070f3] dark:hover:text-blue-400 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
-                                                            >
-                                                                <Sparkles size={13} strokeWidth={1.75} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
-                                                                <span>Autocompletar sección con IA</span>
-                                                            </button>
-                                                        )}
-
                                                         {/* Compact Section Lock Control — Gobernanza institucional y de equipo */}
                                                         {!readOnly && layout.activeTab !== 'output' && shouldShowLockControl && (
                                                             <div className="flex items-center gap-2 bg-surface border border-border-thin px-3 py-1.5 rounded-full animate-fade-in text-[9px] font-bold uppercase tracking-wider select-none">
@@ -403,6 +400,22 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 onClose={handleCloseSidebar}
                                                 sectionStatuses={layout.sectionStatuses}
                                                 onSectionStatusChange={layout.setSectionStatus}
+                                                onOpenImportModal={templateCode === 'PEA_OFICIAL' && !readOnly ? () => {
+                                                    setImportInitialFile(null);
+                                                    setImportInitialInstructions('');
+                                                    setImportAutoExtract(false);
+                                                    setImportDocModalOpen(true);
+                                                } : undefined}
+                                                onTriggerDocExtraction={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerDocExtraction : undefined}
+                                                onOpenAiModal={templateCode === 'PEA_OFICIAL' && !readOnly ? () => {
+                                                    setAiTargetSection(layout.activeTab);
+                                                    setAiCustomInstructions('');
+                                                    setAiAutoGenerate(false);
+                                                    setAiInitialTab('generate');
+                                                    setAiModalOpen(true);
+                                                } : undefined}
+                                                onTriggerAiGeneration={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerAiGeneration : undefined}
+                                                onOpenAiConfigModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
                                             />
                                         </div>
                                     </div>
@@ -482,10 +495,16 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                     {templateCode === 'PEA_OFICIAL' && (
                         <PeaAiAssistantModal
                             isOpen={aiModalOpen}
-                            onClose={() => setAiModalOpen(false)}
+                            onClose={() => {
+                                setAiModalOpen(false);
+                                setAiAutoGenerate(false);
+                            }}
                             peaUuid={resolvedPeaUuid}
                             formData={formData}
                             initialTargetSection={aiTargetSection}
+                            initialCustomInstructions={aiCustomInstructions}
+                            autoGenerateOnOpen={aiAutoGenerate}
+                            initialTab={aiInitialTab}
                             isAdmin={isAdmin}
                             onApplyDraft={(patch) => {
                                 if (onApplyStructuredDraft) {
@@ -501,9 +520,16 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                     {templateCode === 'PEA_OFICIAL' && (
                         <PeaDocumentImportModal
                             isOpen={importDocModalOpen}
-                            onClose={() => setImportDocModalOpen(false)}
+                            onClose={() => {
+                                setImportDocModalOpen(false);
+                                setImportAutoExtract(false);
+                                setImportInitialFile(null);
+                            }}
                             peaUuid={resolvedPeaUuid}
                             formData={formData}
+                            initialFile={importInitialFile}
+                            initialInstructions={importInitialInstructions}
+                            autoExtractOnOpen={importAutoExtract}
                             onApplyDraft={(patch) => {
                                 if (onApplyStructuredDraft) {
                                     onApplyStructuredDraft(patch);

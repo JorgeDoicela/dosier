@@ -20,11 +20,14 @@ import {
 } from '../../../../services/peaAiService';
 import { useNotifications } from '../../../../api/NotificationsContext';
 
-interface PeaDocumentImportModalProps {
+export interface PeaDocumentImportModalProps {
     isOpen: boolean;
     onClose: () => void;
     peaUuid: string;
     formData: any;
+    initialFile?: File | null;
+    initialInstructions?: string;
+    autoExtractOnOpen?: boolean;
     onApplyDraft: (patch: Record<string, any>) => void;
 }
 
@@ -54,36 +57,20 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
     onClose,
     peaUuid,
     formData,
+    initialFile = null,
+    initialInstructions = '',
+    autoExtractOnOpen = false,
     onApplyDraft
 }) => {
     const { addToast } = useNotifications();
     const [configStatus, setConfigStatus] = useState<PeaAiConfigStatus | null>(null);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [importInstructions, setImportInstructions] = useState<string>('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(initialFile || null);
+    const [importInstructions, setImportInstructions] = useState<string>(initialInstructions || '');
     const [isImporting, setIsImporting] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
     const [extractedDraft, setExtractedDraft] = useState<PeaStructuredDraft | null>(null);
     const [selectedSections, setSelectedSections] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        setSelectedFile(null);
-        setExtractedDraft(null);
-        setSelectedSections([]);
-        loadConfig();
-    }, [isOpen]);
-
-    const loadConfig = async () => {
-        try {
-            const status = await getPeaAiConfig();
-            setConfigStatus(status);
-        } catch (e) {
-            console.error('[DOSIER EXTRACTOR] Error cargando estado de config:', e);
-        }
-    };
-
-    if (!isOpen) return null;
 
     const nombreAsignatura = formData?.NombreAsignatura || formData?.nombre_asignatura || 'Asignatura Curricular';
     const nombreCarrera = formData?.Carrera || formData?.carrera || 'Carrera Institucional';
@@ -96,6 +83,62 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
     const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
     const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
     const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
+
+    const executeExtraction = async (fileToExtract: File, instructionsText: string) => {
+        if (!peaUuid) {
+            addToast('Documento no identificado', 'Guarde primero el documento para habilitar la importación.', 'warning');
+            return;
+        }
+        setIsImporting(true);
+        setExtractedDraft(null);
+        try {
+            const draft = await extractPeaFromDocument(peaUuid, fileToExtract, {
+                customInstructions: instructionsText.trim() || undefined,
+                currentHorasCD: horasCD,
+                currentHorasAPE: horasAPE,
+                currentHorasTA: horasTA,
+                currentTotalHoras: totalHoras
+            });
+
+            setExtractedDraft(draft);
+            setSelectedSections(draft.validationSummary.generatedSections);
+            addToast(
+                'Extracción completada',
+                `Se extrajeron con éxito ${draft.validationSummary.generatedSections.length} secciones desde "${fileToExtract.name}".`,
+                'success'
+            );
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo procesar el documento.';
+            addToast('Error en extracción de documento', typeof msg === 'string' ? msg : 'Verifique el archivo subido.', 'error');
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const file = initialFile || null;
+        setSelectedFile(file);
+        setImportInstructions(initialInstructions || '');
+        setExtractedDraft(null);
+        setSelectedSections([]);
+        loadConfig();
+
+        if (autoExtractOnOpen && file) {
+            executeExtraction(file, initialInstructions || '');
+        }
+    }, [isOpen, initialFile, initialInstructions, autoExtractOnOpen]);
+
+    const loadConfig = async () => {
+        try {
+            const status = await getPeaAiConfig();
+            setConfigStatus(status);
+        } catch (e) {
+            console.error('[DOSIER EXTRACTOR] Error cargando estado de config:', e);
+        }
+    };
+
+    if (!isOpen) return null;
 
     const validateAndSelectFile = (file: File | null | undefined) => {
         if (!file) return;
@@ -137,39 +180,11 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
     };
 
     const handleStartExtraction = async () => {
-        if (!peaUuid) {
-            addToast('Documento no identificado', 'Guarde primero el documento para habilitar la importación.', 'warning');
-            return;
-        }
         if (!selectedFile) {
             addToast('Archivo requerido', 'Seleccione un archivo digital (.pdf o .docx) para extraer sus datos.', 'warning');
             return;
         }
-
-        setIsImporting(true);
-        setExtractedDraft(null);
-        try {
-            const draft = await extractPeaFromDocument(peaUuid, selectedFile, {
-                customInstructions: importInstructions.trim() || undefined,
-                currentHorasCD: horasCD,
-                currentHorasAPE: horasAPE,
-                currentHorasTA: horasTA,
-                currentTotalHoras: totalHoras
-            });
-
-            setExtractedDraft(draft);
-            setSelectedSections(draft.validationSummary.generatedSections);
-            addToast(
-                'Extracción completada',
-                `Se extrajeron con éxito ${draft.validationSummary.generatedSections.length} secciones desde "${selectedFile.name}".`,
-                'success'
-            );
-        } catch (err: any) {
-            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo procesar el documento.';
-            addToast('Error en extracción de documento', typeof msg === 'string' ? msg : 'Verifique el archivo subido.', 'error');
-        } finally {
-            setIsImporting(false);
-        }
+        await executeExtraction(selectedFile, importInstructions);
     };
 
     const toggleSectionSelection = (secId: string) => {
@@ -391,9 +406,22 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                     {extractedDraft && (
                         <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-zinc-800">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
-                                    Secciones extraídas del documento ({selectedSections.length} seleccionadas)
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                                        Secciones extraídas ({selectedSections.length} de {extractedDraft.validationSummary.generatedSections.length})
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedSections(
+                                            selectedSections.length === extractedDraft.validationSummary.generatedSections.length
+                                                ? []
+                                                : [...extractedDraft.validationSummary.generatedSections]
+                                        )}
+                                        className="text-[11px] text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer ml-1.5"
+                                    >
+                                        {selectedSections.length === extractedDraft.validationSummary.generatedSections.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
+                                    </button>
+                                </div>
                                 {extractedDraft.validationSummary.isHoursExactMatch && (
                                     <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                                         <CheckCircle2 size={13} />

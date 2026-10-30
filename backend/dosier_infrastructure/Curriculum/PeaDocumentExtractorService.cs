@@ -432,7 +432,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("2. PROHIBIDO GENERAR, INVENTAR O SUSTITUIR LA MATERIA: Queda terminantemente PROHIBIDO inventar contenidos pedagógicos o sustituir la materia del archivo. Sea cual sea la materia redactada en el archivo (ej. Programación Web, Node.js, Cocina, etc.), extrae con fidelidad esa materia y sus temas. NUNCA sustituyas el contenido del documento por otra asignatura ni intentes adaptarlo o inventar temas que no estén en el texto.");
             sb.AppendLine("3. SECCIONES AUSENTES: Si alguna sección no aparece en el texto del documento, devuélvela como cadena vacía \"\" o arreglo vacío []. NUNCA inventes texto para rellenar secciones ausentes.");
             sb.AppendLine("4. PRERREQUISITOS: En 'prerrequisitos', extrae las filas exactas de materias previas que aparezcan en la tabla del archivo (ej. 'Programación Web II'). Si no hay tabla de prerrequisitos, devuelve un arreglo vacío [].");
-            sb.AppendLine("5. UNIDADES Y CONTENIDOS: Extrae cada unidad temática con su título real y sus subtemas tal como aparecen en el documento. Si el documento indica horas de contacto docente (CD), práctico-experimental (APE) y trabajo autónomo (TA), extrae esos valores numéricos exactos.");
+            sb.AppendLine("5. UNIDADES Y CONTENIDOS: Extrae cada unidad temática con su título real y sus subtemas tal como aparecen en el documento. Si el documento indica horas de contacto docente (CD), práctico-experimental (APE) y trabajo autónomo (TA), extrae esos valores numéricos exactos. Si un título en el documento original quedó cortado o fragmentado entre celdas (ej. 'UNIDAD 1: FUNDAMENTOS DE' o 'UNIDAD 3: MEJORES PRÁCTICAS Y ESTRATEGIAS DE' con 'SEGURIDAD' en la línea inferior), completa o une el título de manera integral y profesional (ej. 'Fundamentos de Sistemas Web', 'Mejores Prácticas y Estrategias de Seguridad'). NUNCA dejes títulos cortados que terminen en conectores como 'DE' o 'PARA'. En 'contenidos', extrae la lista de temas y subtemas ordenados línea por línea, omitiendo números de fila aislados de columnas adyacentes (como '1', '2', '3').");
             sb.AppendLine("6. FORMATO DE SALIDA: Devuelve exclusivamente un objeto JSON válido que cumpla la estructura solicitada, sin explicaciones ni bloques de texto fuera del JSON.");
             return sb.ToString();
         }
@@ -816,6 +816,9 @@ namespace dosier_infrastructure.Curriculum
                         System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
 
                     string contenidos = TryGetString(item, "contenidos", "Contenidos", "descripcion_subtemas");
+                    contenidos = CleanContenidosOrphanNumbers(contenidos);
+                    cleanTitulo = CompleteTruncatedUnitTitle(cleanTitulo, contenidos, idx);
+
                     int cd = TryGetInt(item, "horas_cd", "horasCD", "HorasCD", "horas_docencia");
                     int ape = TryGetInt(item, "horas_ape", "horasAPE", "HorasAPE", "horas_practica");
                     int ta = TryGetInt(item, "horas_ta", "horasTA", "HorasTA", "horas_autonomo");
@@ -980,6 +983,73 @@ namespace dosier_infrastructure.Curriculum
             };
 
             return result;
+        }
+
+        private static string CleanContenidosOrphanNumbers(string? contenidos)
+        {
+            if (string.IsNullOrWhiteSpace(contenidos)) return string.Empty;
+            var lines = contenidos.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var cleanLines = new List<string>();
+            foreach (var l in lines)
+            {
+                var trimmed = l.Trim();
+                if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^\d{1,2}$"))
+                {
+                    continue;
+                }
+                cleanLines.Add(l);
+            }
+            return string.Join("\n", cleanLines).Trim();
+        }
+
+        private static string CompleteTruncatedUnitTitle(string title, string contenidos, int unitNum)
+        {
+            if (string.IsNullOrWhiteSpace(title)) return $"Unidad Temática {unitNum}";
+            var trimmed = title.Trim();
+            var lower = trimmed.ToLowerInvariant();
+
+            bool isIncomplete = lower.EndsWith(" de") || lower.EndsWith(" del") || lower.EndsWith(" para") ||
+                                lower.EndsWith(" en") || lower.EndsWith(" y") || lower.EndsWith(" con") ||
+                                lower == "fundamentos" || lower == "fundamentos de" ||
+                                lower == "arquitecturas" || lower == "arquitectura de" ||
+                                lower == "introduccion a" || lower == "introducción a";
+
+            if (isIncomplete && !string.IsNullOrWhiteSpace(contenidos))
+            {
+                var firstLine = contenidos.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(l => l.Trim())
+                    .FirstOrDefault(l => !string.IsNullOrWhiteSpace(l) && !System.Text.RegularExpressions.Regex.IsMatch(l, @"^\d+$"));
+
+                if (!string.IsNullOrWhiteSpace(firstLine))
+                {
+                    var cleanTopic = System.Text.RegularExpressions.Regex.Replace(
+                        firstLine,
+                        @"^(tema\s*\d+\s*[:\.\-]?|\d+(\.\d+)*\s*[:\.\-]?)",
+                        "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+                    cleanTopic = System.Text.RegularExpressions.Regex.Replace(
+                        cleanTopic,
+                        @"^(introducción\s+a\s+(los|las|la|el)?\s*)",
+                        "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+                    if (!string.IsNullOrWhiteSpace(cleanTopic))
+                    {
+                        if (lower.EndsWith(" de") || lower == "fundamentos")
+                        {
+                            return $"Fundamentos de {cleanTopic}";
+                        }
+                        if (lower == "arquitecturas")
+                        {
+                            return $"Arquitecturas Web y {cleanTopic}";
+                        }
+                        return $"{trimmed} {cleanTopic}";
+                    }
+                }
+            }
+
+            return trimmed;
         }
 
         private static void ReconcileUnitHoursWithSigafi(

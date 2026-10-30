@@ -23,12 +23,15 @@ import {
 } from '../../../../services/peaAiService';
 import { useNotifications } from '../../../../api/NotificationsContext';
 
-interface PeaAiAssistantModalProps {
+export interface PeaAiAssistantModalProps {
     isOpen: boolean;
     onClose: () => void;
     peaUuid: string;
     formData: any;
     initialTargetSection?: string;
+    initialCustomInstructions?: string;
+    autoGenerateOnOpen?: boolean;
+    initialTab?: 'generate' | 'config';
     isAdmin?: boolean;
     onApplyDraft: (patch: Record<string, any>) => void;
 }
@@ -154,11 +157,14 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
     peaUuid,
     formData,
     initialTargetSection = 'all',
+    initialCustomInstructions = '',
+    autoGenerateOnOpen = false,
+    initialTab = 'generate',
     isAdmin = false,
     onApplyDraft
 }) => {
     const { addToast } = useNotifications();
-    const [activeTab, setActiveTab] = useState<'generate' | 'config'>('generate');
+    const [activeTab, setActiveTab] = useState<'generate' | 'config'>(initialTab || 'generate');
     const [loadingConfig, setLoadingConfig] = useState(false);
     const [configStatus, setConfigStatus] = useState<PeaAiConfigStatus | null>(null);
 
@@ -174,45 +180,10 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
 
     // Estado de Generación Curricular
     const [targetSection, setTargetSection] = useState<string>(initialTargetSection || 'all');
-    const [customInstructions, setCustomInstructions] = useState<string>('');
+    const [customInstructions, setCustomInstructions] = useState<string>(initialCustomInstructions || '');
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedDraft, setGeneratedDraft] = useState<PeaStructuredDraft | null>(null);
     const [selectedSections, setSelectedSections] = useState<string[]>([]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const normalizedTarget = TARGET_SECTION_OPTIONS.some(o => o.value === initialTargetSection)
-            ? initialTargetSection
-            : 'all';
-        setTargetSection(normalizedTarget);
-        setGeneratedDraft(null);
-        loadConfiguration();
-    }, [isOpen, initialTargetSection]);
-
-    const loadConfiguration = async () => {
-        setLoadingConfig(true);
-        try {
-            const status = await getPeaAiConfig();
-            setConfigStatus(status);
-            setProvider(status.activeProvider);
-            setModel(status.activeModel);
-            if (status.activeBaseUrl) {
-                setBaseUrl(status.activeBaseUrl);
-            } else {
-                setBaseUrl(PROVIDER_PRESETS[status.activeProvider]?.defaultBaseUrl || 'https://api.deepseek.com/chat/completions');
-            }
-            const presetModels = PROVIDER_PRESETS[status.activeProvider]?.models || [];
-            if (!presetModels.includes(status.activeModel) && status.activeModel) {
-                setIsCustomModelInput(true);
-            }
-        } catch (err) {
-            console.error('[DOSIER AI] Error cargando configuración:', err);
-        } finally {
-            setLoadingConfig(false);
-        }
-    };
-
-    if (!isOpen) return null;
 
     const nombreAsignatura = formData?.NombreAsignatura || formData?.nombre_asignatura || 'Asignatura Curricular';
     const nombreCarrera = formData?.Carrera || formData?.carrera || 'Carrera Institucional';
@@ -225,6 +196,109 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
     const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
     const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
     const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
+
+    const executeGeneration = async (
+        target: string,
+        instructions: string,
+        prov: PeaAiProvider,
+        mdl: string,
+        bUrl?: string
+    ) => {
+        if (!peaUuid) {
+            addToast('Identificador requerido', 'Guarde primero el documento para habilitar la generación.', 'warning');
+            return;
+        }
+        setIsGenerating(true);
+        setGeneratedDraft(null);
+        try {
+            const rawUnits: any[] = Array.isArray(formData?.Unidades) ? formData.Unidades : [];
+            const currentUnidades = rawUnits.map((u, idx) => ({
+                num: Number(u.num ?? u.Numero ?? idx + 1),
+                titulo: String(u.titulo ?? u.Titulo ?? u.NombreUnidad ?? ''),
+                contenidos: String(u.contenidos ?? u.Contenidos ?? ''),
+                horasCD: Number(u.horasCD ?? u.HorasCD ?? 0),
+                horasAPE: Number(u.horasAPE ?? u.HorasAPE ?? 0),
+                horasTA: Number(u.horasTA ?? u.HorasTA ?? 0)
+            })).filter(u => u.titulo || u.contenidos);
+
+            const draft = await generatePeaAiDraft(peaUuid, {
+                targetSection: target,
+                customInstructions: instructions.trim() || undefined,
+                provider: prov,
+                model: mdl,
+                baseUrlOverride: bUrl?.trim() || undefined,
+                currentHorasCD: horasCD,
+                currentHorasAPE: horasAPE,
+                currentHorasTA: horasTA,
+                currentTotalHoras: totalHoras,
+                currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined
+            });
+
+            setGeneratedDraft(draft);
+
+            const initialSelected = target === 'all'
+                ? draft.validationSummary.generatedSections
+                : draft.validationSummary.generatedSections.filter(s => s === target);
+
+            setSelectedSections(
+                initialSelected.length > 0 ? initialSelected : draft.validationSummary.generatedSections
+            );
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo generar el borrador curricular.';
+            addToast('Error en Generación IA', typeof msg === 'string' ? msg : 'Verifique su API Key y conexión.', 'error');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleGenerate = async () => {
+        await executeGeneration(targetSection, customInstructions, provider, model, baseUrl);
+    };
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const normalizedTarget = TARGET_SECTION_OPTIONS.some(o => o.value === initialTargetSection)
+            ? initialTargetSection
+            : 'all';
+        setTargetSection(normalizedTarget);
+        setCustomInstructions(initialCustomInstructions || '');
+        setActiveTab(initialTab || 'generate');
+        setGeneratedDraft(null);
+
+        const initConfig = async () => {
+            setLoadingConfig(true);
+            try {
+                const status = await getPeaAiConfig();
+                setConfigStatus(status);
+                setProvider(status.activeProvider);
+                setModel(status.activeModel);
+                const resolvedBaseUrl = status.activeBaseUrl || PROVIDER_PRESETS[status.activeProvider]?.defaultBaseUrl || 'https://api.deepseek.com/chat/completions';
+                setBaseUrl(resolvedBaseUrl);
+                const presetModels = PROVIDER_PRESETS[status.activeProvider]?.models || [];
+                if (!presetModels.includes(status.activeModel) && status.activeModel) {
+                    setIsCustomModelInput(true);
+                }
+
+                if (autoGenerateOnOpen && status.isReady) {
+                    await executeGeneration(
+                        normalizedTarget,
+                        initialCustomInstructions || '',
+                        status.activeProvider,
+                        status.activeModel,
+                        resolvedBaseUrl
+                    );
+                }
+            } catch (err) {
+                console.error('[DOSIER AI] Error cargando configuración:', err);
+            } finally {
+                setLoadingConfig(false);
+            }
+        };
+
+        initConfig();
+    }, [isOpen, initialTargetSection, initialCustomInstructions, autoGenerateOnOpen, initialTab]);
+
+    if (!isOpen) return null;
 
     const handleProviderChange = (newProv: PeaAiProvider) => {
         setProvider(newProv);
@@ -263,54 +337,6 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
             );
         } finally {
             setSavingConfig(false);
-        }
-    };
-
-    const handleGenerate = async () => {
-        if (!peaUuid) {
-            addToast('Identificador requerido', 'Guarde primero el documento para habilitar la generación.', 'warning');
-            return;
-        }
-        setIsGenerating(true);
-        setGeneratedDraft(null);
-        try {
-            const rawUnits: any[] = Array.isArray(formData?.Unidades) ? formData.Unidades : [];
-            const currentUnidades = rawUnits.map((u, idx) => ({
-                num: Number(u.num ?? u.Numero ?? idx + 1),
-                titulo: String(u.titulo ?? u.Titulo ?? u.NombreUnidad ?? ''),
-                contenidos: String(u.contenidos ?? u.Contenidos ?? ''),
-                horasCD: Number(u.horasCD ?? u.HorasCD ?? 0),
-                horasAPE: Number(u.horasAPE ?? u.HorasAPE ?? 0),
-                horasTA: Number(u.horasTA ?? u.HorasTA ?? 0)
-            })).filter(u => u.titulo || u.contenidos);
-
-            const draft = await generatePeaAiDraft(peaUuid, {
-                targetSection,
-                customInstructions: customInstructions.trim() || undefined,
-                provider,
-                model,
-                baseUrlOverride: baseUrl.trim() || undefined,
-                currentHorasCD: horasCD,
-                currentHorasAPE: horasAPE,
-                currentHorasTA: horasTA,
-                currentTotalHoras: totalHoras,
-                currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined
-            });
-
-            setGeneratedDraft(draft);
-
-            const initialSelected = targetSection === 'all'
-                ? draft.validationSummary.generatedSections
-                : draft.validationSummary.generatedSections.filter(s => s === targetSection);
-
-            setSelectedSections(
-                initialSelected.length > 0 ? initialSelected : draft.validationSummary.generatedSections
-            );
-        } catch (err: any) {
-            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo generar el borrador curricular.';
-            addToast('Error en Generación IA', typeof msg === 'string' ? msg : 'Verifique su API Key y conexión.', 'error');
-        } finally {
-            setIsGenerating(false);
         }
     };
 

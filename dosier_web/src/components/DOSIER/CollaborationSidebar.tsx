@@ -27,12 +27,20 @@ import {
     Check,
     CheckCheck,
     Reply,
-    X
+    X,
+    FileUp,
+    Sparkles,
+    Settings,
+    Key,
+    AlertCircle,
+    FileText,
+    Trash2
 } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
 import api from '../../api/axios_config';
 import { collaborationService } from '../../services/collaborationService';
 import { getPeaByUuid } from '../../services/peaService';
+import { getPeaAiConfig, type PeaAiConfigStatus } from '../../services/peaAiService';
 import { curriculumProjectService } from '../../services/curriculumProjectService';
 import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
@@ -87,6 +95,11 @@ export interface CollaborationSidebarProps {
     onClose: () => void;
     sectionStatuses?: Record<string, string>;
     onSectionStatusChange?: (sectionName: string, status: string) => void;
+    onOpenImportModal?: () => void;
+    onTriggerDocExtraction?: (file: File, instructions: string) => void;
+    onOpenAiModal?: () => void;
+    onTriggerAiGeneration?: (targetSection: string, customInstructions: string) => void;
+    onOpenAiConfigModal?: () => void;
 }
 
 const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
@@ -101,7 +114,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     peaData,
     onClose,
     sectionStatuses: sectionStatusesProp,
-    onSectionStatusChange
+    onSectionStatusChange,
+    onOpenImportModal,
+    onTriggerDocExtraction,
+    onOpenAiModal,
+    onTriggerAiGeneration,
+    onOpenAiConfigModal
 }) => {
     const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
@@ -141,7 +159,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         return !templateCode || templateCode === 'PEA_OFICIAL' || templateCode === 'GUIA_PRACTICA_LAB';
     }, [templateCode]);
 
-    const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision'>(() => {
+    const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import'>(() => {
         if (isProtocolDocument && isReviewer && ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(projectStatus || '')) {
             return 'revision';
         }
@@ -151,13 +169,110 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         const saved = localStorage.getItem('document_sidebar_tab') as any;
         if (saved === 'revision' && (!isProtocolDocument || !isReviewer)) return 'comments';
         if (saved === 'correcciones' && !isProtocolDocument) return 'comments';
-        return (saved === 'comments' || saved === 'status' || saved === 'activity' || saved === 'correcciones' || saved === 'revision') ? saved : 'comments';
+        return (saved === 'comments' || saved === 'status' || saved === 'activity' || saved === 'correcciones' || saved === 'revision' || saved === 'ai' || saved === 'import') ? saved : 'comments';
     });
 
-    const setActiveTab = useCallback((tab: 'comments' | 'status' | 'activity' | 'correcciones' | 'revision') => {
+    const setActiveTab = useCallback((tab: 'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import') => {
         localStorage.setItem('document_sidebar_tab', tab);
         setActiveTabState(tab);
     }, []);
+
+    // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
+    const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
+    const [sidebarImportInstructions, setSidebarImportInstructions] = useState<string>('');
+    const [sidebarIsDragOver, setSidebarIsDragOver] = useState<boolean>(false);
+    const sidebarFileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const validateAndSelectSidebarFile = (file: File | null | undefined) => {
+        if (!file) return;
+        const lowerName = file.name.toLowerCase();
+        const isImage = file.type.startsWith('image/') || /\.(png|jpg|jpeg|webp|gif|bmp|tiff|svg)$/i.test(lowerName);
+        if (isImage) {
+            alert('El extractor acepta exclusivamente documentos digitales de texto (.pdf o .docx). No se admiten imágenes.');
+            return;
+        }
+        const isAllowedDoc = lowerName.endsWith('.pdf') || lowerName.endsWith('.docx');
+        if (!isAllowedDoc) {
+            alert('Seleccione únicamente un archivo PDF digital (.pdf) o Microsoft Word (.docx).');
+            return;
+        }
+        if (file.size > 15 * 1024 * 1024) {
+            alert('El archivo supera el límite máximo permitido de 15 MB.');
+            return;
+        }
+        setSidebarImportFile(file);
+    };
+
+    const handleSidebarExtractDoc = () => {
+        if (!sidebarImportFile) {
+            if (onOpenImportModal) onOpenImportModal();
+            return;
+        }
+        if (onTriggerDocExtraction) {
+            onTriggerDocExtraction(sidebarImportFile, sidebarImportInstructions);
+        } else if (onOpenImportModal) {
+            onOpenImportModal();
+        }
+    };
+
+    // ── Estado del Asistente Curricular IA integrado en Barra Lateral ──
+    const [sidebarAiTargetSection, setSidebarAiTargetSection] = useState<string>('all');
+    const [sidebarAiPrompt, setSidebarAiPrompt] = useState<string>('');
+    const [aiConfigStatus, setAiConfigStatus] = useState<PeaAiConfigStatus | null>(null);
+    const [loadingAiConfig, setLoadingAiConfig] = useState<boolean>(false);
+
+    const rawHorasCD = Number(peaData?.HorasContactoDocente ?? peaData?.horas_contacto_docente ?? 0);
+    const rawHorasAPE = Number(peaData?.HorasPracticoExperimental ?? peaData?.horas_practico_experimental ?? 0);
+    const rawHorasTA = Number(peaData?.HorasAutonomo ?? peaData?.horas_autonomo ?? 0);
+    const totalHoras = Number(peaData?.TotalHorasAsignatura ?? peaData?.total_horas_asignatura ?? (rawHorasCD + rawHorasAPE + rawHorasTA));
+
+    const isUnconfiguredSplit = rawHorasCD <= 0 && rawHorasAPE <= 0 && totalHoras > 0;
+    const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
+    const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
+    const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
+
+    useEffect(() => {
+        const VALID_AI_SECTIONS = [
+            'pea_objectives_section',
+            'pea_prerequisites_section',
+            'pea_career_outcomes_section',
+            'pea_subject_outcomes_section',
+            'pea_contents_section',
+            'pea_methodology_section',
+            'pea_resources_section',
+            'pea_evaluation_section',
+            'pea_bibliography_section'
+        ];
+        if (sectionName && VALID_AI_SECTIONS.includes(sectionName)) {
+            setSidebarAiTargetSection(sectionName);
+        }
+    }, [sectionName]);
+
+    useEffect(() => {
+        if (activeTab === 'ai' && !aiConfigStatus && !loadingAiConfig) {
+            setLoadingAiConfig(true);
+            getPeaAiConfig()
+                .then(st => setAiConfigStatus(st))
+                .catch(err => console.error('[DOSIER AI Sidebar] Error cargando config:', err))
+                .finally(() => setLoadingAiConfig(false));
+        }
+    }, [activeTab, aiConfigStatus, loadingAiConfig]);
+
+    const handleSidebarGenerateAi = () => {
+        if (onTriggerAiGeneration) {
+            onTriggerAiGeneration(sidebarAiTargetSection, sidebarAiPrompt);
+        } else if (onOpenAiModal) {
+            onOpenAiModal();
+        }
+    };
+
+    const handleSidebarOpenAiConfig = () => {
+        if (onOpenAiConfigModal) {
+            onOpenAiConfigModal();
+        } else if (onOpenAiModal) {
+            onOpenAiModal();
+        }
+    };
 
     const [comment, setComment] = useState('');
     const [comments, setComments] = useState<any[]>([]);
@@ -646,69 +761,132 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     return (
         <aside className="w-full h-full flex flex-col bg-bg-deep border-l border-border-thin z-30 transition-all duration-300">
-            {/* Header Tabs */}
+            {/* Header Tabs: Iconos puros con tooltip nativo al pasar el cursor */}
             <div className="flex items-center justify-between border-b border-border-thin bg-bg-deep shrink-0 select-none">
-                {/* Tab de Revisión para Evaluadores / Coordinadores */}
-                {isProtocolDocument && isReviewer && (
-                    <button
-                        onClick={() => setActiveTab('revision')}
-                        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${
-                            activeTab === 'revision'
-                                ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
-                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                        }`}
-                        title="Auditoría Normativa CACES y Emisión de Avales"
-                    >
-                        <ShieldCheck size={14} className={activeTab === 'revision' ? 'text-[#0070f3]' : 'text-text-dim'} />
-                        <span>Revisión</span>
-                    </button>
-                )}
+                <div className="flex items-center flex-1 min-w-0">
+                    {/* Tab de Revisión para Evaluadores / Coordinadores */}
+                    {isProtocolDocument && isReviewer && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('revision')}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                                activeTab === 'revision'
+                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                    : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                            }`}
+                            title="Revisión y Auditoría CACES"
+                            aria-label="Revisión y Auditoría CACES"
+                        >
+                            <ShieldCheck size={20} strokeWidth={1.75} className={activeTab === 'revision' ? 'text-[#0070f3]' : 'text-text-dim'} />
+                        </button>
+                    )}
 
-                {/* Tab de Ajustes / Observaciones para Docentes cuando el PEA está observado */}
-                {isProtocolDocument && (projectStatus === 'En Corrección' || projectStatus === 'Observado') && !isReviewer && (
+                    {/* Tab de Ajustes / Observaciones para Docentes cuando el PEA está observado */}
+                    {isProtocolDocument && (projectStatus === 'En Corrección' || projectStatus === 'Observado') && !isReviewer && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('correcciones')}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                                activeTab === 'correcciones'
+                                    ? 'border-amber-500 text-amber-500 bg-amber-500/5'
+                                    : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                            }`}
+                            title="Ajustes y Observaciones"
+                            aria-label="Ajustes y Observaciones"
+                        >
+                            <Shield size={20} strokeWidth={1.75} className="text-amber-500" />
+                        </button>
+                    )}
+
+                    {/* 1. Chat */}
                     <button
-                        onClick={() => setActiveTab('correcciones')}
-                        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${
-                            activeTab === 'correcciones'
-                                ? 'border-amber-500 text-amber-500 bg-amber-500/5'
+                        type="button"
+                        onClick={() => setActiveTab('comments')}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                            activeTab === 'comments'
+                                ? 'border-text-main text-text-main bg-surface/50'
                                 : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
+                        title="Chat colegiado"
+                        aria-label="Chat colegiado"
                     >
-                        <Shield size={14} className="text-amber-500" />
-                        <span>Ajustes</span>
+                        <MessageSquare size={20} strokeWidth={1.75} />
                     </button>
-                )}
-                <button
-                    onClick={() => setActiveTab('comments')}
-                    className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'comments' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+
+                    {/* 2. Estado */}
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('status')}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                            activeTab === 'status'
+                                ? 'border-text-main text-text-main bg-surface/50'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
-                >
-                    <MessageSquare size={14} />
-                    <span>Chat</span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('status')}
-                    className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'status' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                        title="Estado de secciones"
+                        aria-label="Estado de secciones"
+                    >
+                        <CheckCircle size={20} strokeWidth={1.75} />
+                    </button>
+
+                    {/* 3. Actividad */}
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('activity')}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                            activeTab === 'activity'
+                                ? 'border-text-main text-text-main bg-surface/50'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
                         }`}
-                >
-                    <CheckCircle size={14} />
-                    <span>Estado</span>
-                </button>
+                        title="Actividad reciente"
+                        aria-label="Actividad reciente"
+                    >
+                        <Clock size={20} strokeWidth={1.75} />
+                    </button>
+
+                    {/* 4. Importar */}
+                    {(onOpenImportModal || onTriggerDocExtraction) && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('import')}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                                activeTab === 'import'
+                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                    : 'border-transparent text-text-dim hover:text-[#0070f3] dark:hover:text-blue-400 hover:bg-surface/30'
+                            }`}
+                            title="Importar y Extraer PEA (PDF / Word)"
+                            aria-label="Importar y Extraer PEA (PDF / Word)"
+                        >
+                            <FileUp size={20} strokeWidth={1.75} className={activeTab === 'import' ? 'text-[#0070f3] dark:text-blue-400' : 'text-text-dim'} />
+                        </button>
+                    )}
+
+                    {/* 5. Asistente IA */}
+                    {(onOpenAiModal || onTriggerAiGeneration) && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('ai')}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                                activeTab === 'ai'
+                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                    : 'border-transparent text-text-dim hover:text-[#0070f3] dark:hover:text-blue-400 hover:bg-surface/30'
+                            }`}
+                            title="Asistente de formulación con IA"
+                            aria-label="Asistente de formulación con IA"
+                        >
+                            <Sparkles size={20} strokeWidth={1.75} className={activeTab === 'ai' ? 'text-[#0070f3] dark:text-blue-400' : 'text-text-dim'} />
+                        </button>
+                    )}
+                </div>
+
+                {/* Botón Cerrar compacto */}
                 <button
-                    onClick={() => setActiveTab('activity')}
-                    className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 flex flex-col items-center gap-1 ${activeTab === 'activity' ? 'border-text-main text-text-main bg-surface/50' : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                        }`}
-                >
-                    <Clock size={14} />
-                    <span>Actividad</span>
-                </button>
-                <button
+                    type="button"
                     onClick={onClose}
-                    className="p-3 hover:bg-surface rounded-lg text-text-dim hover:text-text-main transition-colors mr-1 cursor-pointer"
+                    className="p-2 hover:bg-surface rounded-md text-text-dim hover:text-text-main transition-colors mr-1 shrink-0 cursor-pointer"
                     title="Cerrar panel"
                     aria-label="Cerrar panel"
                 >
-                    <ChevronRight size={18} />
+                    <ChevronRight size={16} />
                 </button>
             </div>
 
@@ -1389,6 +1567,277 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                             </div>
                                         );
                                     })()}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'import' && (
+                            <div className="flex flex-col h-full flex-1 space-y-4">
+                                {/* Encabezado del Extractor */}
+                                <div className="space-y-1 pb-3 border-b border-border-thin">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                                            <FileUp size={14} className="text-[#0070f3] dark:text-blue-400" />
+                                            Importar PEA Digital
+                                        </span>
+                                        <span className="text-[10px] font-mono font-medium text-text-dim">
+                                            PDF / Word
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-text-dim leading-snug">
+                                        Migración automática y estructuración de sílabos anteriores hacia el formato oficial ISTPET.
+                                    </p>
+                                </div>
+
+                                {/* Zona de Selección / Arrastre de Archivo */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-semibold text-text-main">
+                                        Documento fuente (.pdf o .docx)
+                                    </label>
+                                    <input
+                                        ref={sidebarFileInputRef}
+                                        type="file"
+                                        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                        className="hidden"
+                                        onChange={e => {
+                                            const file = e.target.files?.[0];
+                                            if (file) validateAndSelectSidebarFile(file);
+                                            e.target.value = '';
+                                        }}
+                                    />
+
+                                    {!sidebarImportFile ? (
+                                        <div
+                                            onClick={() => sidebarFileInputRef.current?.click()}
+                                            onDragOver={e => {
+                                                e.preventDefault();
+                                                setSidebarIsDragOver(true);
+                                            }}
+                                            onDragLeave={() => setSidebarIsDragOver(false)}
+                                            onDrop={e => {
+                                                e.preventDefault();
+                                                setSidebarIsDragOver(false);
+                                                const file = e.dataTransfer.files?.[0];
+                                                if (file) validateAndSelectSidebarFile(file);
+                                            }}
+                                            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
+                                                sidebarIsDragOver
+                                                    ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
+                                                    : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
+                                            }`}
+                                        >
+                                            <div className="w-10 h-10 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-2">
+                                                <FileUp size={20} />
+                                            </div>
+                                            <p className="text-xs font-semibold text-text-main">
+                                                Cargar documento digital
+                                            </p>
+                                            <p className="text-[10px] text-text-dim mt-0.5">
+                                                Haz clic o arrastra un archivo aquí
+                                            </p>
+                                            <span className="inline-block mt-2 text-[9px] font-mono px-2 py-0.5 rounded-md bg-surface border border-border-thin text-text-dim">
+                                                PDF o DOCX · Máx 15MB
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 rounded-xl border border-[#0070f3]/30 bg-[#0070f3]/5 space-y-2">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-start gap-2.5 min-w-0">
+                                                    <div className="p-2 rounded-lg bg-[#0070f3]/10 text-[#0070f3] shrink-0 mt-0.5">
+                                                        <FileText size={18} />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs font-semibold text-text-main truncate" title={sidebarImportFile.name}>
+                                                            {sidebarImportFile.name}
+                                                        </p>
+                                                        <p className="text-[10px] font-mono text-text-dim mt-0.5">
+                                                            {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSidebarImportFile(null)}
+                                                    className="p-1 rounded-md text-text-dim hover:text-red-500 hover:bg-surface transition-colors cursor-pointer shrink-0"
+                                                    title="Eliminar archivo"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Instrucciones opcionales */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-semibold text-text-main">
+                                        Instrucciones de extracción (opcional)
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={sidebarImportInstructions}
+                                        onChange={e => setSidebarImportInstructions(e.target.value)}
+                                        placeholder="Ej. Priorizar los contenidos de la unidad 2 y 3, omitir firmas antiguas..."
+                                        className="w-full p-2.5 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none"
+                                    />
+                                </div>
+
+                                {/* Nota de seguridad SIGAFI */}
+                                <div className="p-3 rounded-xl border border-border-thin bg-surface text-[10.5px] text-text-dim space-y-1 leading-relaxed">
+                                    <div className="flex items-center gap-1.5 font-semibold text-text-main">
+                                        <CheckCircle size={13} className="text-emerald-500" />
+                                        <span>Gobernanza SIGAFI protegida</span>
+                                    </div>
+                                    <p>
+                                        Las firmas y los datos administrativos oficiales de la institución permanecerán inalterados.
+                                    </p>
+                                </div>
+
+                                {/* Botón principal: Extraer y revisar en grande */}
+                                <div className="pt-2 space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleSidebarExtractDoc}
+                                        disabled={!sidebarImportFile}
+                                        className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                                    >
+                                        <FileUp size={15} />
+                                        <span>Extraer y revisar en grande</span>
+                                    </button>
+                                    <p className="text-[10px] text-text-dim text-center leading-tight">
+                                        Se abrirá en el centro en tamaño completo para seleccionar qué secciones aplicar.
+                                    </p>
+                                </div>
+
+                                {/* Enlace alternativo: abrir modal central directamente */}
+                                {onOpenImportModal && (
+                                    <div className="pt-2 text-center border-t border-border-thin">
+                                        <button
+                                            type="button"
+                                            onClick={onOpenImportModal}
+                                            className="text-[11px] text-text-dim hover:text-text-main transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                                        >
+                                            <FileText size={12} />
+                                            <span>Abrir importador completo en el centro</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'ai' && (
+                            <div className="flex flex-col h-full flex-1 space-y-4">
+                                {/* Encabezado del Asistente */}
+                                <div className="space-y-1 pb-3 border-b border-border-thin">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                                            <Sparkles size={14} className="text-[#0070f3] dark:text-blue-400" />
+                                            Asistente Curricular IA
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-[10px] font-medium text-text-dim">
+                                            <span className={`w-2 h-2 rounded-full ${aiConfigStatus?.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                                            {aiConfigStatus?.isReady ? (aiConfigStatus.activeProvider || 'Conectado') : 'Sin API Key'}
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-text-dim leading-snug">
+                                        Formulación automática de contenidos con cuadre estricto de horas CACES y SIGAFI.
+                                    </p>
+                                </div>
+
+                                {/* Alerta de configuración de API Key si no está configurada */}
+                                {!loadingAiConfig && !aiConfigStatus?.isReady && (
+                                    <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
+                                        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                            <AlertCircle size={14} className="shrink-0" />
+                                            <span>Se requiere configurar una clave de API (DeepSeek, Gemini u OpenAI).</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleSidebarOpenAiConfig}
+                                            className="w-full py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                                        >
+                                            <Key size={13} />
+                                            <span>Configurar API Key</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Selector de Alcance */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-semibold text-text-main">
+                                        Alcance de la propuesta
+                                    </label>
+                                    <select
+                                        value={sidebarAiTargetSection}
+                                        onChange={e => setSidebarAiTargetSection(e.target.value)}
+                                        className="w-full px-2.5 py-2 text-xs rounded-lg border border-border-thin bg-surface text-text-main focus:outline-hidden focus:border-[#0070f3]"
+                                    >
+                                        <option value="all">Todo el PEA completo (b — j)</option>
+                                        <option value="pea_objectives_section">b) Objetivo de la Asignatura</option>
+                                        <option value="pea_prerequisites_section">c) Prerrequisitos Curriculares</option>
+                                        <option value="pea_career_outcomes_section">d) Resultados de la Carrera</option>
+                                        <option value="pea_subject_outcomes_section">e) Resultados de la Asignatura</option>
+                                        <option value="pea_contents_section">f) Unidades y Contenidos Temáticos</option>
+                                        <option value="pea_methodology_section">g) Metodología y Recursos</option>
+                                        <option value="pea_resources_section">h) Prácticas Experimentales (APE)</option>
+                                        <option value="pea_evaluation_section">i) Evaluación del Aprendizaje</option>
+                                        <option value="pea_bibliography_section">j) Bibliografía Básica (APA 7)</option>
+                                    </select>
+                                </div>
+
+                                {/* Lineamientos o prompt del docente */}
+                                <div className="space-y-1.5">
+                                    <label className="block text-[11px] font-semibold text-text-main">
+                                        Lineamientos o enfoque específico
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={sidebarAiPrompt}
+                                        onChange={e => setSidebarAiPrompt(e.target.value)}
+                                        placeholder="Ej. Estructurar en 4 unidades temáticas, priorizar desarrollo de APIs con Node.js y microservicios..."
+                                        className="w-full p-2.5 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none"
+                                    />
+                                </div>
+
+                                {/* Ficha técnica de horas oficiales SIGAFI */}
+                                <div className="p-3 rounded-xl border border-border-thin bg-surface space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px]">
+                                        <span className="font-semibold text-text-main">Horas Oficiales SIGAFI</span>
+                                        <span className="font-mono font-bold text-[#0070f3] dark:text-blue-400">{totalHoras}h</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-1 pt-1 text-[10px] font-mono text-text-dim border-t border-border-thin/40">
+                                        <div>CD: <strong className="text-text-main">{horasCD}h</strong></div>
+                                        <div>APE: <strong className="text-text-main">{horasAPE}h</strong></div>
+                                        <div>TA: <strong className="text-text-main">{horasTA}h</strong></div>
+                                    </div>
+                                </div>
+
+                                {/* Botón de Generación y Lanzamiento al Modal Central */}
+                                <div className="pt-2 space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleSidebarGenerateAi}
+                                        disabled={loadingAiConfig || !aiConfigStatus?.isReady}
+                                        className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                                    >
+                                        <Sparkles size={15} />
+                                        <span>Generar y revisar en grande</span>
+                                    </button>
+                                    <p className="text-[10px] text-text-dim text-center leading-tight">
+                                        Se abrirá en el centro en tamaño completo para auditar el cuadre y aplicar al PEA.
+                                    </p>
+                                </div>
+
+                                {/* Enlace a configuración técnica */}
+                                <div className="pt-2 text-center border-t border-border-thin">
+                                    <button
+                                        type="button"
+                                        onClick={handleSidebarOpenAiConfig}
+                                        className="text-[11px] text-text-dim hover:text-text-main transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                        <Settings size={12} />
+                                        <span>Configurar proveedor ({aiConfigStatus?.activeModel || 'modelo'})</span>
+                                    </button>
                                 </div>
                             </div>
                         )}
