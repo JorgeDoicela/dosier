@@ -1572,129 +1572,123 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         )}
 
                         {activeTab === 'import' && (
-                            <div className="flex flex-col h-full flex-1 space-y-4">
-                                {/* Encabezado del Extractor */}
-                                <div className="space-y-1 pb-3 border-b border-border-thin">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-text-main flex items-center gap-1.5">
-                                            <FileUp size={14} className="text-[#0070f3] dark:text-blue-400" />
+                            <div className="flex flex-col min-h-full flex-1 justify-between">
+                                <div className="space-y-4">
+                                    {/* Encabezado del Extractor */}
+                                    <div className="pb-3 border-b border-border-thin">
+                                        <h3 className="text-xs font-bold text-text-main">
                                             Importar PEA Digital
-                                        </span>
-                                        <span className="text-[10px] font-mono font-medium text-text-dim">
-                                            PDF / Word
-                                        </span>
+                                        </h3>
                                     </div>
-                                    <p className="text-[11px] text-text-dim leading-snug">
-                                        Migración automática y estructuración de sílabos anteriores hacia el formato oficial ISTPET.
-                                    </p>
-                                </div>
 
-                                {/* Zona de Selección / Arrastre de Archivo */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-[11px] font-semibold text-text-main">
-                                        Documento fuente (.pdf o .docx)
-                                    </label>
-                                    <input
-                                        ref={sidebarFileInputRef}
-                                        type="file"
-                                        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                        className="hidden"
-                                        onChange={e => {
-                                            const file = e.target.files?.[0];
-                                            if (file) validateAndSelectSidebarFile(file);
-                                            e.target.value = '';
-                                        }}
-                                    />
-
-                                    {!sidebarImportFile ? (
-                                        <div
-                                            onClick={() => sidebarFileInputRef.current?.click()}
-                                            onDragOver={e => {
-                                                e.preventDefault();
-                                                setSidebarIsDragOver(true);
-                                            }}
-                                            onDragLeave={() => setSidebarIsDragOver(false)}
-                                            onDrop={e => {
-                                                e.preventDefault();
-                                                setSidebarIsDragOver(false);
-                                                const file = e.dataTransfer.files?.[0];
+                                    {/* Zona de Selección / Arrastre de Archivo */}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-[11px] font-semibold text-text-main">
+                                            Documento fuente (.pdf o .docx)
+                                        </label>
+                                        <input
+                                            ref={sidebarFileInputRef}
+                                            type="file"
+                                            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                            className="hidden"
+                                            onChange={e => {
+                                                const file = e.target.files?.[0];
                                                 if (file) validateAndSelectSidebarFile(file);
+                                                e.target.value = '';
                                             }}
-                                            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-                                                sidebarIsDragOver
-                                                    ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
-                                                    : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
-                                            }`}
-                                        >
-                                            <div className="w-10 h-10 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-2">
-                                                <FileUp size={20} />
-                                            </div>
-                                            <p className="text-xs font-semibold text-text-main">
-                                                Cargar documento digital
-                                            </p>
-                                            <p className="text-[10px] text-text-dim mt-0.5">
-                                                Haz clic o arrastra un archivo aquí
-                                            </p>
-                                            <span className="inline-block mt-2 text-[9px] font-mono px-2 py-0.5 rounded-md bg-surface border border-border-thin text-text-dim">
-                                                PDF o DOCX · Máx 15MB
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <div className="p-3 rounded-xl border border-[#0070f3]/30 bg-[#0070f3]/5 space-y-2">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div className="flex items-start gap-2.5 min-w-0">
-                                                    <div className="p-2 rounded-lg bg-[#0070f3]/10 text-[#0070f3] shrink-0 mt-0.5">
-                                                        <FileText size={18} />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-xs font-semibold text-text-main truncate" title={sidebarImportFile.name}>
-                                                            {sidebarImportFile.name}
-                                                        </p>
-                                                        <p className="text-[10px] font-mono text-text-dim mt-0.5">
-                                                            {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
-                                                        </p>
-                                                    </div>
+                                        />
+
+                                        {!sidebarImportFile ? (
+                                            <div
+                                                onClick={() => sidebarFileInputRef.current?.click()}
+                                                onDragOver={e => {
+                                                    e.preventDefault();
+                                                    setSidebarIsDragOver(true);
+                                                }}
+                                                onDragLeave={() => setSidebarIsDragOver(false)}
+                                                onDrop={e => {
+                                                    e.preventDefault();
+                                                    setSidebarIsDragOver(false);
+                                                    const file = e.dataTransfer.files?.[0];
+                                                    if (file) validateAndSelectSidebarFile(file);
+                                                }}
+                                                className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
+                                                    sidebarIsDragOver
+                                                        ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
+                                                        : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
+                                                }`}
+                                            >
+                                                <div className="w-11 h-11 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-2.5">
+                                                    <FileUp size={22} />
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSidebarImportFile(null)}
-                                                    className="p-1 rounded-md text-text-dim hover:text-red-500 hover:bg-surface transition-colors cursor-pointer shrink-0"
-                                                    title="Eliminar archivo"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
+                                                <p className="text-xs font-semibold text-text-main">
+                                                    Cargar documento digital
+                                                </p>
+                                                <p className="text-[11px] text-text-dim mt-1">
+                                                    Haz clic o arrastra un archivo aquí
+                                                </p>
+                                                <span className="inline-block mt-2.5 text-[9px] font-mono px-2.5 py-1 rounded-md bg-surface border border-border-thin text-text-dim">
+                                                    PDF o DOCX · Máx 15MB
+                                                </span>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Instrucciones opcionales */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-[11px] font-semibold text-text-main">
-                                        Instrucciones de extracción (opcional)
-                                    </label>
-                                    <textarea
-                                        rows={3}
-                                        value={sidebarImportInstructions}
-                                        onChange={e => setSidebarImportInstructions(e.target.value)}
-                                        placeholder="Ej. Priorizar los contenidos de la unidad 2 y 3, omitir firmas antiguas..."
-                                        className="w-full p-2.5 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none"
-                                    />
-                                </div>
-
-                                {/* Nota de seguridad SIGAFI */}
-                                <div className="p-3 rounded-xl border border-border-thin bg-surface text-[10.5px] text-text-dim space-y-1 leading-relaxed">
-                                    <div className="flex items-center gap-1.5 font-semibold text-text-main">
-                                        <CheckCircle size={13} className="text-emerald-500" />
-                                        <span>Gobernanza SIGAFI protegida</span>
+                                        ) : (
+                                            <div className="p-3.5 rounded-xl border border-[#0070f3]/30 bg-[#0070f3]/5 space-y-2">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex items-start gap-2.5 min-w-0">
+                                                        <div className="p-2 rounded-lg bg-[#0070f3]/10 text-[#0070f3] shrink-0 mt-0.5">
+                                                            <FileText size={18} />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-xs font-semibold text-text-main truncate" title={sidebarImportFile.name}>
+                                                                {sidebarImportFile.name}
+                                                            </p>
+                                                            <p className="text-[10px] font-mono text-text-dim mt-0.5">
+                                                                {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSidebarImportFile(null)}
+                                                        className="p-1 rounded-md text-text-dim hover:text-red-500 hover:bg-surface transition-colors cursor-pointer shrink-0"
+                                                        title="Eliminar archivo"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p>
-                                        Las firmas y los datos administrativos oficiales de la institución permanecerán inalterados.
-                                    </p>
+
+                                    {/* Instrucciones opcionales */}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-[11px] font-semibold text-text-main">
+                                            Instrucciones de extracción (opcional)
+                                        </label>
+                                        <textarea
+                                            rows={5}
+                                            value={sidebarImportInstructions}
+                                            onChange={e => setSidebarImportInstructions(e.target.value)}
+                                            placeholder="Ej. Priorizar los contenidos de la unidad 2 y 3, omitir firmas antiguas o adaptar la bibliografía a formato actual..."
+                                            className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none leading-relaxed"
+                                        />
+                                    </div>
+
+                                    {/* Pautas técnicas de extracción */}
+                                    <div className="p-3 rounded-xl border border-border-thin bg-surface/50 space-y-1.5 text-text-dim">
+                                        <p className="text-[11px] font-semibold text-text-main">
+                                            Pautas de extracción
+                                        </p>
+                                        <ul className="text-[10.5px] space-y-1 leading-relaxed list-disc list-inside">
+                                            <li>Estructura sílabos anteriores a los 11 bloques oficiales.</li>
+                                            <li>Preserva los metadatos y firmas institucionales vigentes.</li>
+                                            <li>Permite seleccionar qué secciones aplicar antes de guardar.</li>
+                                        </ul>
+                                    </div>
                                 </div>
 
-                                {/* Botón principal: Extraer y revisar en grande */}
-                                <div className="pt-2 space-y-2">
+                                {/* Dock de Acciones al fondo */}
+                                <div className="mt-auto pt-4 border-t border-border-thin space-y-2 shrink-0">
                                     <button
                                         type="button"
                                         onClick={handleSidebarExtractDoc}
@@ -1704,116 +1698,135 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         <FileUp size={15} />
                                         <span>Extraer y revisar en grande</span>
                                     </button>
-                                    <p className="text-[10px] text-text-dim text-center leading-tight">
-                                        Se abrirá en el centro en tamaño completo para seleccionar qué secciones aplicar.
-                                    </p>
-                                </div>
 
-                                {/* Enlace alternativo: abrir modal central directamente */}
-                                {onOpenImportModal && (
-                                    <div className="pt-2 text-center border-t border-border-thin">
-                                        <button
-                                            type="button"
-                                            onClick={onOpenImportModal}
-                                            className="text-[11px] text-text-dim hover:text-text-main transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                                        >
-                                            <FileText size={12} />
-                                            <span>Abrir importador completo en el centro</span>
-                                        </button>
-                                    </div>
-                                )}
+                                    {onOpenImportModal && (
+                                        <div className="text-center pt-1">
+                                            <button
+                                                type="button"
+                                                onClick={onOpenImportModal}
+                                                className="text-[11px] text-text-dim hover:text-text-main transition-colors cursor-pointer"
+                                            >
+                                                Abrir importador completo en el centro
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
                         {activeTab === 'ai' && (
-                            <div className="flex flex-col h-full flex-1 space-y-4">
-                                {/* Encabezado del Asistente */}
-                                <div className="space-y-1 pb-3 border-b border-border-thin">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-text-main flex items-center gap-1.5">
-                                            <Sparkles size={14} className="text-[#0070f3] dark:text-blue-400" />
+                            <div className="flex flex-col min-h-full flex-1 justify-between">
+                                <div className="space-y-4">
+                                    {/* Encabezado del Asistente */}
+                                    <div className="pb-3 border-b border-border-thin">
+                                        <h3 className="text-xs font-bold text-text-main">
                                             Asistente Curricular IA
-                                        </span>
-                                        <span className="flex items-center gap-1.5 text-[10px] font-medium text-text-dim">
-                                            <span className={`w-2 h-2 rounded-full ${aiConfigStatus?.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                                            {aiConfigStatus?.isReady ? (aiConfigStatus.activeProvider || 'Conectado') : 'Sin API Key'}
-                                        </span>
+                                        </h3>
                                     </div>
-                                    <p className="text-[11px] text-text-dim leading-snug">
-                                        Formulación automática de contenidos con cuadre estricto de horas CACES y SIGAFI.
-                                    </p>
-                                </div>
 
-                                {/* Alerta de configuración de API Key si no está configurada */}
-                                {!loadingAiConfig && !aiConfigStatus?.isReady && (
-                                    <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
-                                        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                                            <AlertCircle size={14} className="shrink-0" />
-                                            <span>Se requiere configurar una clave de API (DeepSeek, Gemini u OpenAI).</span>
+                                    {/* Alerta de configuración de API Key si no está configurada */}
+                                    {!loadingAiConfig && !aiConfigStatus?.isReady && (
+                                        <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
+                                            <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                                <AlertCircle size={14} className="shrink-0" />
+                                                <span>Se requiere configurar una clave de API (DeepSeek, Gemini u OpenAI).</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={handleSidebarOpenAiConfig}
+                                                className="w-full py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                                            >
+                                                <Key size={13} />
+                                                <span>Configurar API Key</span>
+                                            </button>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={handleSidebarOpenAiConfig}
-                                            className="w-full py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                                    )}
+
+                                    {/* Selector de Alcance */}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-[11px] font-semibold text-text-main">
+                                            Alcance de la propuesta
+                                        </label>
+                                        <select
+                                            value={sidebarAiTargetSection}
+                                            onChange={e => setSidebarAiTargetSection(e.target.value)}
+                                            className="w-full px-2.5 py-2 text-xs rounded-lg border border-border-thin bg-surface text-text-main focus:outline-hidden focus:border-[#0070f3]"
                                         >
-                                            <Key size={13} />
-                                            <span>Configurar API Key</span>
-                                        </button>
+                                            <option value="all">Todo el PEA completo (b — j)</option>
+                                            <option value="pea_objectives_section">b) Objetivo de la Asignatura</option>
+                                            <option value="pea_prerequisites_section">c) Prerrequisitos Curriculares</option>
+                                            <option value="pea_career_outcomes_section">d) Resultados de la Carrera</option>
+                                            <option value="pea_subject_outcomes_section">e) Resultados de la Asignatura</option>
+                                            <option value="pea_contents_section">f) Unidades y Contenidos Temáticos</option>
+                                            <option value="pea_methodology_section">g) Metodología y Recursos</option>
+                                            <option value="pea_resources_section">h) Prácticas Experimentales (APE)</option>
+                                            <option value="pea_evaluation_section">i) Evaluación del Aprendizaje</option>
+                                            <option value="pea_bibliography_section">j) Bibliografía Básica (APA 7)</option>
+                                        </select>
                                     </div>
-                                )}
 
-                                {/* Selector de Alcance */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-[11px] font-semibold text-text-main">
-                                        Alcance de la propuesta
-                                    </label>
-                                    <select
-                                        value={sidebarAiTargetSection}
-                                        onChange={e => setSidebarAiTargetSection(e.target.value)}
-                                        className="w-full px-2.5 py-2 text-xs rounded-lg border border-border-thin bg-surface text-text-main focus:outline-hidden focus:border-[#0070f3]"
-                                    >
-                                        <option value="all">Todo el PEA completo (b — j)</option>
-                                        <option value="pea_objectives_section">b) Objetivo de la Asignatura</option>
-                                        <option value="pea_prerequisites_section">c) Prerrequisitos Curriculares</option>
-                                        <option value="pea_career_outcomes_section">d) Resultados de la Carrera</option>
-                                        <option value="pea_subject_outcomes_section">e) Resultados de la Asignatura</option>
-                                        <option value="pea_contents_section">f) Unidades y Contenidos Temáticos</option>
-                                        <option value="pea_methodology_section">g) Metodología y Recursos</option>
-                                        <option value="pea_resources_section">h) Prácticas Experimentales (APE)</option>
-                                        <option value="pea_evaluation_section">i) Evaluación del Aprendizaje</option>
-                                        <option value="pea_bibliography_section">j) Bibliografía Básica (APA 7)</option>
-                                    </select>
+                                    {/* Lineamientos o prompt del docente */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="block text-[11px] font-semibold text-text-main">
+                                                Lineamientos o enfoque específico
+                                            </label>
+                                            {sidebarAiPrompt.length > 0 && (
+                                                <span className="text-[10px] text-text-dim font-mono">
+                                                    {sidebarAiPrompt.length} car.
+                                                </span>
+                                            )}
+                                        </div>
+                                        <textarea
+                                            rows={5}
+                                            value={sidebarAiPrompt}
+                                            onChange={e => setSidebarAiPrompt(e.target.value)}
+                                            placeholder="Ej. Estructurar en 4 unidades temáticas, priorizar desarrollo de APIs con Node.js y microservicios, incluir talleres prácticos..."
+                                            className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none leading-relaxed"
+                                        />
+
+                                        {/* Sugerencias rápidas de enfoque */}
+                                        <div className="flex flex-wrap gap-1.5 pt-1">
+                                            {[
+                                                'Enfoque por competencias',
+                                                '4 unidades temáticas',
+                                                'Talleres prácticos APE',
+                                                'Normativa CACES y RRA'
+                                            ].map((tag) => (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSidebarAiPrompt(prev => {
+                                                            if (!prev.trim()) return tag;
+                                                            if (prev.includes(tag)) return prev;
+                                                            return `${prev.trim()}, ${tag.toLowerCase()}`;
+                                                        });
+                                                    }}
+                                                    className="text-[10px] px-2 py-0.5 rounded-md border border-border-thin bg-surface text-text-dim hover:text-text-main hover:border-[#0070f3]/40 transition-colors cursor-pointer"
+                                                >
+                                                    + {tag}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Ficha técnica de horas oficiales SIGAFI */}
+                                    <div className="p-3 rounded-xl border border-border-thin bg-surface space-y-1.5">
+                                        <div className="flex items-center justify-between text-[11px]">
+                                            <span className="font-semibold text-text-main">Horas Oficiales SIGAFI</span>
+                                            <span className="font-mono font-bold text-[#0070f3] dark:text-blue-400">{totalHoras}h</span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-1 pt-1.5 text-[10px] font-mono text-text-dim border-t border-border-thin/40">
+                                            <div>CD: <strong className="text-text-main">{horasCD}h</strong></div>
+                                            <div>APE: <strong className="text-text-main">{horasAPE}h</strong></div>
+                                            <div>TA: <strong className="text-text-main">{horasTA}h</strong></div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Lineamientos o prompt del docente */}
-                                <div className="space-y-1.5">
-                                    <label className="block text-[11px] font-semibold text-text-main">
-                                        Lineamientos o enfoque específico
-                                    </label>
-                                    <textarea
-                                        rows={3}
-                                        value={sidebarAiPrompt}
-                                        onChange={e => setSidebarAiPrompt(e.target.value)}
-                                        placeholder="Ej. Estructurar en 4 unidades temáticas, priorizar desarrollo de APIs con Node.js y microservicios..."
-                                        className="w-full p-2.5 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none"
-                                    />
-                                </div>
-
-                                {/* Ficha técnica de horas oficiales SIGAFI */}
-                                <div className="p-3 rounded-xl border border-border-thin bg-surface space-y-1.5">
-                                    <div className="flex items-center justify-between text-[11px]">
-                                        <span className="font-semibold text-text-main">Horas Oficiales SIGAFI</span>
-                                        <span className="font-mono font-bold text-[#0070f3] dark:text-blue-400">{totalHoras}h</span>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-1 pt-1 text-[10px] font-mono text-text-dim border-t border-border-thin/40">
-                                        <div>CD: <strong className="text-text-main">{horasCD}h</strong></div>
-                                        <div>APE: <strong className="text-text-main">{horasAPE}h</strong></div>
-                                        <div>TA: <strong className="text-text-main">{horasTA}h</strong></div>
-                                    </div>
-                                </div>
-
-                                {/* Botón de Generación y Lanzamiento al Modal Central */}
-                                <div className="pt-2 space-y-2">
+                                {/* Dock de Acciones al fondo */}
+                                <div className="mt-auto pt-4 border-t border-border-thin space-y-2 shrink-0">
                                     <button
                                         type="button"
                                         onClick={handleSidebarGenerateAi}
@@ -1823,21 +1836,16 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         <Sparkles size={15} />
                                         <span>Generar y revisar en grande</span>
                                     </button>
-                                    <p className="text-[10px] text-text-dim text-center leading-tight">
-                                        Se abrirá en el centro en tamaño completo para auditar el cuadre y aplicar al PEA.
-                                    </p>
-                                </div>
 
-                                {/* Enlace a configuración técnica */}
-                                <div className="pt-2 text-center border-t border-border-thin">
-                                    <button
-                                        type="button"
-                                        onClick={handleSidebarOpenAiConfig}
-                                        className="text-[11px] text-text-dim hover:text-text-main transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                                    >
-                                        <Settings size={12} />
-                                        <span>Configurar proveedor ({aiConfigStatus?.activeModel || 'modelo'})</span>
-                                    </button>
+                                    <div className="text-center pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={handleSidebarOpenAiConfig}
+                                            className="text-[11px] text-text-dim hover:text-text-main transition-colors cursor-pointer"
+                                        >
+                                            Configurar proveedor
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
