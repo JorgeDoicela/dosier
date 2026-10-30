@@ -13,3 +13,4 @@ namespace dosier_application.Curriculum.Interfaces
             CancellationToken ct = default);
     }
 }
+

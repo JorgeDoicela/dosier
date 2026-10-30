@@ -208,7 +208,7 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                 Extractor e Importador de PEA (PDF / Word)
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-zinc-400 truncate">
-                                Migración automática de sílabo previo a la asignatura: {nombreAsignatura} ({nombreCarrera})
+                                Extracción y migración fiel de contenidos desde archivo digital (.pdf o .docx)
                             </p>
                         </div>
                     </div>
@@ -411,7 +411,7 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                     if (secId === 'pea_objectives_section') {
                                         previewText = stripHtmlPreview(extractedDraft.objetivoAsignatura);
                                     } else if (secId === 'pea_prerequisites_section') {
-                                        previewText = extractedDraft.prerrequisitos.map(p => p.asignatura).join(', ');
+                                        previewText = extractedDraft.prerrequisitos.map(p => `${p.asignatura}${p.observacion ? ` (${p.observacion})` : ''}`).join(', ');
                                     } else if (secId === 'pea_career_outcomes_section') {
                                         previewText = stripHtmlPreview(extractedDraft.rdaCarrera);
                                     } else if (secId === 'pea_subject_outcomes_section') {

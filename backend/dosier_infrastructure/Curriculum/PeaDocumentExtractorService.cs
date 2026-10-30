@@ -424,14 +424,16 @@ namespace dosier_infrastructure.Curriculum
         private static string BuildExtractionSystemPrompt(AcademicPromptContext ctx)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Eres el Motor Especializado de Extracción e Importación de Programas de Estudio de la Asignatura (PEA) del Instituto Superior Tecnológico Sucre / ISTPET (Ecuador).");
-            sb.AppendLine("Tu única tarea es analizar el texto y tablas extraídas de un archivo preexistente (PDF o Word) y mapear sus contenidos a la estructura JSON oficial del PEA institucional.");
-            sb.AppendLine("DIRECTRICES ESTRICTAS:");
-            sb.AppendLine("1. DATOS GENERALES DE SOLO CONTEXTO: La asignatura destino es '" + ctx.NombreAsignatura + "', carrera '" + ctx.NombreCarrera + "', nivel '" + ctx.SemestreNivel + "'. Los campos de la Sección 1 (datos generales) están BLOQUEADOS por SIGAFI. Úsalos exclusivamente como contexto pedagógico orientativo y NO generes contenido ni intentes sobreescribirlos.");
-            sb.AppendLine("2. Ignora cualquier cabecera administrativa del documento que contradiga a la asignatura destino (periodos viejos, nombres de docentes anteriores, etc.).");
-            sb.AppendLine("3. El cuadre de horas obligatorio es: CD = " + ctx.HorasCD + "h, APE = " + ctx.HorasAPE + "h, TA = " + ctx.HorasTA + "h. Total = " + ctx.TotalHoras + "h. Cada unidad temática debe tener > 0 horas en cada componente (CD, APE, TA). NUNCA asignes 0 horas a componentes de docencia o práctico.");
-            sb.AppendLine("4. En 'prerrequisitos', mapea únicamente materias previas normadas. Si no existen prerrequisitos en el documento, devuelve un arreglo vacío []. NUNCA generes elementos con campos vacíos.");
-            sb.AppendLine("5. Devuelve única y exclusivamente un objeto JSON válido, sin bloques explicativos adicionales.");
+            sb.AppendLine("Eres un motor determinista de extracción y análisis sintáctico (Parser) de documentos curriculares (PEA / Sílabo) del ISTPET.");
+            sb.AppendLine("Tu ÚNICA función es LEER Y EXTRAER con absoluta fidelidad textual los contenidos que están redactados en el texto y tablas del documento subido.");
+            sb.AppendLine();
+            sb.AppendLine("REGLAS INNEGOCIABLES DE FIDELIDAD DE EXTRACCIÓN:");
+            sb.AppendLine("1. FIDELIDAD TEXTUAL ABSOLUTA: Extrae el texto exacto que el autor redactó en el documento para cada sección curricular (objetivo de la asignatura, prerrequisitos, resultados de aprendizaje de la carrera, resultados de aprendizaje de la asignatura, unidades temáticas, contenidos temáticos, actividades prácticas, metodología, recursos y bibliografía).");
+            sb.AppendLine("2. PROHIBIDO GENERAR, INVENTAR O SUSTITUIR LA MATERIA: Queda terminantemente PROHIBIDO inventar contenidos pedagógicos o sustituir la materia del archivo. Sea cual sea la materia redactada en el archivo (ej. Programación Web, Node.js, Cocina, etc.), extrae con fidelidad esa materia y sus temas. NUNCA sustituyas el contenido del documento por otra asignatura ni intentes adaptarlo o inventar temas que no estén en el texto.");
+            sb.AppendLine("3. SECCIONES AUSENTES: Si alguna sección no aparece en el texto del documento, devuélvela como cadena vacía \"\" o arreglo vacío []. NUNCA inventes texto para rellenar secciones ausentes.");
+            sb.AppendLine("4. PRERREQUISITOS: En 'prerrequisitos', extrae las filas exactas de materias previas que aparezcan en la tabla del archivo (ej. 'Programación Web II'). Si no hay tabla de prerrequisitos, devuelve un arreglo vacío [].");
+            sb.AppendLine("5. UNIDADES Y CONTENIDOS: Extrae cada unidad temática con su título real y sus subtemas tal como aparecen en el documento. Si el documento indica horas de contacto docente (CD), práctico-experimental (APE) y trabajo autónomo (TA), extrae esos valores numéricos exactos.");
+            sb.AppendLine("6. FORMATO DE SALIDA: Devuelve exclusivamente un objeto JSON válido que cumpla la estructura solicitada, sin explicaciones ni bloques de texto fuera del JSON.");
             return sb.ToString();
         }
 
@@ -442,17 +444,17 @@ namespace dosier_infrastructure.Curriculum
             string? customInstructions)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"Se ha importado el archivo curricular '{fileName}' para poblar el Programa de Estudio de la Asignatura (PEA) de '{ctx.NombreAsignatura}' ({ctx.NombreCarrera}).");
-            sb.AppendLine("Analiza todo el texto y las tablas extraídas del documento subido y mapea cada sección al esquema JSON oficial del PEA.");
-            sb.AppendLine("IMPORTANTE:");
-            sb.AppendLine("- Ignora cualquier dato general antiguo del archivo (como periodos anteriores, códigos antiguos o nombres de docentes) ya que esos campos están bloqueados por SIGAFI.");
-            sb.AppendLine($"- Ajusta las horas de las unidades extraídas para que la suma cuadre exactamente con la carga oficial actual: Horas CD = {ctx.HorasCD}, Horas APE = {ctx.HorasAPE}, Horas TA = {ctx.HorasTA} (Total = {ctx.TotalHoras}).");
-            sb.AppendLine("- Si alguna sección no aparece explícitamente en el documento importado, complétala coherentemente con el contenido de las unidades del documento.");
+            sb.AppendLine($"Analiza el siguiente texto extraído del archivo '{fileName}' y mapea con estricta fidelidad textual sus secciones al esquema JSON del PEA.");
+            sb.AppendLine();
+            sb.AppendLine("REGLAS CLAVE DE EXTRACCIÓN:");
+            sb.AppendLine("- Extrae exactamente el texto y contenidos presentes en el documento, respetando fielmente la redacción original.");
+            sb.AppendLine("- NO alteres los temas, objetivos ni contenidos de las materias que están en el archivo.");
+            sb.AppendLine("- Si una sección no está presente en el archivo, déjala vacía (\"\").");
 
             if (!string.IsNullOrWhiteSpace(customInstructions))
             {
                 sb.AppendLine();
-                sb.AppendLine("INSTRUCCIONES ADICIONALES DEL DOCENTE:");
+                sb.AppendLine("INSTRUCCIONES ADICIONALES DEL USUARIO PARA LA EXTRACCIÓN:");
                 sb.AppendLine(customInstructions.Trim());
             }
 

@@ -101,6 +101,16 @@ El procesamiento de archivos preexistentes esta desacoplado del asistente genera
 - **Blindaje de Datos Generales Bloqueados**: Los campos de la Seccion 1 (nombre de asignatura, codigo, carrera, modalidad, unidad de organizacion, periodo, semestre, total de horas y creditos) son de **solo contexto**. Ni el asistente IA ni el extractor pueden sobreescribir estos campos en el PEA ni redactar encabezados redundantes de datos generales.
 - **Matriz de Prerrequisitos**: Se filtran filas vacias y se normalizan los nombres y observaciones tanto en snake_case (`nombre_asignatura`, `observaciones`) como en PascalCase (`Asignatura`, `Observacion`) garantizando que nunca se generen filas vacias en la tabla.
 
+### 2.6. Principio de Fidelidad Textual del Extractor vs Generacion Creativa del Asistente IA
+Es imperativo distinguir el rol operativo de cada subsistema:
+1. **Asistente Curricular IA ("Autocompletar seccion con IA")**:
+   - Actua como redactor pedagogico interactivo.
+   - Utiliza la asignatura activa (`ctx.NombreAsignatura`), carrera y perfil de egreso para redactar y sugerir objetivos, temas y practicas desde cero.
+2. **Extractor e Importador de PEA ("Importar PEA PDF/Word")**:
+   - Actua exclusivamente como un analizador sintactico (Parser) y extractor fidedigno de documentos digitales existentes.
+   - Extrae con estricta exactitud textual lo que el autor escribio en el archivo subido (objetivos, prerrequisitos, unidades, etc.), sin inventar, alucinar ni sustituir la materia del archivo por otra.
+   - Las cabeceras institucionales bloqueadas de SIGAFI del PEA en edicion se mantienen intactas; unicamente se importan y pueblan las secciones curriculares seleccionadas por el docente.
+
 ---
 
 ## 3. Integracion en el Frontend
