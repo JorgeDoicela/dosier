@@ -111,7 +111,15 @@ public class AcademicContextResolver : IAcademicContextResolver
         var totalHours = detail.Horas ?? 0;
         var teachingHours = (decimal)(detail.HorasDocente ?? 0);
         var practicalHours = detail.HorasPracticoExperimental ?? 0m;
-        var autonomousHours = Math.Max(0m, totalHours - teachingHours - practicalHours);
+
+        // Distribución equitativa y normativa CACES/CES cuando SIGAFI solo registra total de horas sin desglose
+        if (totalHours > 0 && teachingHours <= 0m && practicalHours <= 0m)
+        {
+            var third = Math.Floor((decimal)totalHours / 3m);
+            teachingHours = third;
+            practicalHours = third;
+        }
+        var autonomousHours = Math.Max(0m, (decimal)totalHours - teachingHours - practicalHours);
 
         var period = await _context.Periodos.AsNoTracking()
             .FirstOrDefaultAsync(p => p.IdPeriodo == assignment.IdPeriodo, cancellationToken);

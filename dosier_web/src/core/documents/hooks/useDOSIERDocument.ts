@@ -295,6 +295,12 @@ export function useDOSIERDocument<T extends Record<string, any>>(
                         // Sincronizar también campos indexados tipo CoWorkField (ej: Prerrequisitos[0].Asignatura)
                         enrichedList.forEach((item: any, idx: number) => {
                             if (item && typeof item === 'object') {
+                                if (key === 'Prerrequisitos') {
+                                    const asigVal = item.Asignatura || item.asignatura || item.NombreAsignatura || item.nombre_asignatura || '';
+                                    const obsVal = item.Observacion || item.observacion || item.Observaciones || item.observaciones || '';
+                                    item.Asignatura = asigVal;
+                                    item.Observacion = obsVal;
+                                }
                                 Object.entries(item).forEach(([propKey, propVal]) => {
                                     if (propKey === 'id' || /^\d+$/.test(propKey)) return;
                                     const indexedName = `${key}[${idx}].${propKey}`;

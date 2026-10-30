@@ -94,9 +94,21 @@ export const DocumentWorkspace: React.FC = () => {
             base.total_horas_asignatura = pea.total_horas_asignatura ?? pea.totalHorasAsignatura ?? 0;
             base.Creditos = pea.creditos ?? 0;
             base.creditos = pea.creditos ?? 0;
-            base.HorasContactoDocente = pea.horas_contacto_docente ?? pea.horasContactoDocente ?? 0;
-            base.HorasPracticoExperimental = pea.horas_practico_experimental ?? pea.horasPracticoExperimental ?? 0;
-            base.HorasAutonomo = pea.horas_autonomo ?? pea.horasAutonomo ?? 0;
+            const rawTotH = Number(pea.total_horas_asignatura ?? pea.totalHorasAsignatura ?? 0);
+            let rawCd = Number(pea.horas_contacto_docente ?? pea.horasContactoDocente ?? 0);
+            let rawApe = Number(pea.horas_practico_experimental ?? pea.horasPracticoExperimental ?? 0);
+            let rawTa = Number(pea.horas_autonomo ?? pea.horasAutonomo ?? 0);
+            if (rawTotH > 0 && rawCd <= 0 && rawApe <= 0) {
+                const third = Math.floor(rawTotH / 3);
+                rawCd = third;
+                rawApe = third;
+                rawTa = rawTotH - rawCd - rawApe;
+            } else if (rawTotH > 0 && rawCd + rawApe + rawTa !== rawTotH) {
+                rawTa = Math.max(0, rawTotH - rawCd - rawApe);
+            }
+            base.HorasContactoDocente = rawCd;
+            base.HorasPracticoExperimental = rawApe;
+            base.HorasAutonomo = rawTa;
             base.DocenteElaborador = docNombre;
             base.docente = docNombre;
             base.ObjetivoAsignatura = pea.objetivo_asignatura || pea.objetivoAsignatura || '';
@@ -144,7 +156,20 @@ export const DocumentWorkspace: React.FC = () => {
             base.Vicerrector = vicerrectorNombre;
             base.vicerrector = vicerrectorNombre;
 
-            base.Prerrequisitos = pea.prerrequisitos || pea.Prerrequisitos || [];
+            const rawPrereqs = pea.prerrequisitos || pea.Prerrequisitos || [];
+            base.Prerrequisitos = Array.isArray(rawPrereqs)
+                ? rawPrereqs.map((p: any, idx: number) => {
+                    const asigName = p.Asignatura || p.asignatura || p.NombreAsignatura || p.nombre_asignatura || p.nombreAsignatura || p.nombre || '';
+                    const obsText = p.Observacion || p.observacion || p.Observaciones || p.observaciones || p.CondicionCurricular || p.condicion_curricular || p.condicion || '';
+                    return {
+                        id: p.id || p.uuid || `prereq_${p.id_prerequisito || idx}_${Date.now()}`,
+                        Asignatura: asigName,
+                        Observacion: obsText,
+                        nombre_asignatura: asigName,
+                        observaciones: obsText
+                    };
+                }).filter((p: any) => p.Asignatura.trim() !== '' || p.Observacion.trim() !== '')
+                : [];
             base.Evaluaciones = pea.evaluaciones || pea.Evaluaciones || [];
             if (!base.FirmasResponsabilidad || typeof base.FirmasResponsabilidad !== 'object') {
                 base.FirmasResponsabilidad = {

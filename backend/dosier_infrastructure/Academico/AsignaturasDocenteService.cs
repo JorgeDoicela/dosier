@@ -199,6 +199,12 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             var horasTotales = detalle.Horas ?? 0;
             var horasDocencia = (decimal)(detalle.HorasDocente ?? 0);
             var horasApe = detalle.HorasPracticoExperimental ?? 0m;
+            if (horasTotales > 0 && horasDocencia <= 0m && horasApe <= 0m)
+            {
+                var third = Math.Floor((decimal)horasTotales / 3m);
+                horasDocencia = third;
+                horasApe = third;
+            }
             var prereqList = prerequisitos
                 .Where(p => p.IdDetalleMalla == detalle.IdDetalleMalla)
                 .Select(p => prerequisitoNombres.GetValueOrDefault(p.IdAsignatura))
@@ -314,6 +320,12 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
         var horasTotales = detalle?.Horas ?? 0;
         var horasDocencia = (decimal)(detalle?.HorasDocente ?? 0);
         var horasApe = detalle?.HorasPracticoExperimental ?? 0m;
+        if (horasTotales > 0 && horasDocencia <= 0m && horasApe <= 0m)
+        {
+            var third = Math.Floor((decimal)horasTotales / 3m);
+            horasDocencia = third;
+            horasApe = third;
+        }
         var horasAutonomo = Math.Max(0m, (decimal)horasTotales - (horasDocencia + horasApe));
 
         return new CurriculoAsignaturaDetalleDto

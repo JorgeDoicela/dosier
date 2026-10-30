@@ -137,7 +137,7 @@ const normalizeConfigStatus = (raw: any): PeaAiConfigStatus => {
     };
 };
 
-const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
+export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
     const rawPrerreq: any[] = raw?.prerrequisitos ?? raw?.Prerrequisitos ?? [];
     const rawUnidades: any[] = raw?.unidades ?? raw?.Unidades ?? [];
     const rawPracticas: any[] = raw?.actividades_practicas ?? raw?.actividadesPracticas ?? raw?.ActividadesPracticas ?? [];
@@ -255,65 +255,10 @@ export const generatePeaAiDraft = async (
     return normalizeStructuredDraft(res.data);
 };
 
-export interface ImportPeaDocumentOptions {
-    customInstructions?: string;
-    provider?: PeaAiProvider;
-    model?: string;
-    baseUrlOverride?: string;
-    apiKeyOverride?: string;
-    currentHorasCD?: number;
-    currentHorasAPE?: number;
-    currentHorasTA?: number;
-    currentTotalHoras?: number;
-}
-
-export const importPeaFromDocument = async (
-    peaUuid: string,
-    file: File,
-    options: ImportPeaDocumentOptions = {}
-): Promise<PeaStructuredDraft> => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    if (options.customInstructions?.trim()) {
-        formData.append('custom_instructions', options.customInstructions.trim());
-    }
-    if (options.provider) {
-        formData.append('provider', options.provider);
-    }
-    if (options.model?.trim()) {
-        formData.append('model', options.model.trim());
-    }
-    if (options.baseUrlOverride?.trim()) {
-        formData.append('base_url_override', options.baseUrlOverride.trim());
-    }
-    if (options.apiKeyOverride?.trim()) {
-        formData.append('api_key_override', options.apiKeyOverride.trim());
-    }
-    if (typeof options.currentHorasCD === 'number') {
-        formData.append('current_horas_cd', String(options.currentHorasCD));
-    }
-    if (typeof options.currentHorasAPE === 'number') {
-        formData.append('current_horas_ape', String(options.currentHorasAPE));
-    }
-    if (typeof options.currentHorasTA === 'number') {
-        formData.append('current_horas_ta', String(options.currentHorasTA));
-    }
-    if (typeof options.currentTotalHoras === 'number') {
-        formData.append('current_total_horas', String(options.currentTotalHoras));
-    }
-
-    const res = await api.post(`/pea/uuid/${peaUuid}/ai/importar-archivo`, formData, {
-        headers: { 'Content-Type': undefined },
-        transformRequest: [(data, headers) => {
-            if (data instanceof FormData) {
-                delete headers['Content-Type'];
-            }
-            return data;
-        }]
-    });
-    return normalizeStructuredDraft(res.data);
-};
+// ── Extractor e Importador de Documentos (.pdf / .docx) ──
+// Re-exportación para retrocompatibilidad con componentes existentes
+export { extractPeaFromDocument, type ImportPeaDocumentOptions } from './peaDocumentExtractorService';
+export { extractPeaFromDocument as importPeaFromDocument } from './peaDocumentExtractorService';
 
 /**
  * Convierte un PeaStructuredDraft al mapa exacto de campos del DocumentTemplateRegistry (PEA_OFICIAL),
@@ -333,15 +278,26 @@ export const convertDraftToEditorFields = (
     }
 
     if (includeSection('pea_prerequisites_section') && draft.prerrequisitos.length > 0) {
-        patch.Prerrequisitos = draft.prerrequisitos.map((p, idx) => ({
-            id: `ai_prerreq_${Date.now()}_${idx}`,
-            Asignatura: p.asignatura,
-            Observacion: p.observacion,
-            asignatura: p.asignatura,
-            observacion: p.observacion,
-            '0': p.asignatura,
-            '1': p.observacion
-        }));
+        const validPrereqs = draft.prerrequisitos
+            .filter(p => (p.asignatura || '').trim().length > 0)
+            .map((p, idx) => {
+                const asig = p.asignatura.trim();
+                const obs = (p.observacion || 'Haber cursado y aprobado la asignatura según malla curricular').trim();
+                return {
+                    id: `ai_prerreq_${Date.now()}_${idx}`,
+                    Asignatura: asig,
+                    Observacion: obs,
+                    asignatura: asig,
+                    observacion: obs,
+                    nombre_asignatura: asig,
+                    observaciones: obs,
+                    '0': asig,
+                    '1': obs
+                };
+            });
+        if (validPrereqs.length > 0) {
+            patch.Prerrequisitos = validPrereqs;
+        }
     }
 
     if (includeSection('pea_career_outcomes_section') && draft.rdaCarrera) {
@@ -376,9 +332,16 @@ export const convertDraftToEditorFields = (
 
         // Sincronizar también la Organización de Aprendizajes por Modalidad en la Sección 1
         // para que el desglose de horas (CD, APE, TA) coincida con las unidades generadas
-        const sumCD = draft.unidades.reduce((acc, u) => acc + (Number(u.horasCD) || 0), 0);
-        const sumAPE = draft.unidades.reduce((acc, u) => acc + (Number(u.horasAPE) || 0), 0);
-        const sumTA = draft.unidades.reduce((acc, u) => acc + (Number(u.horasTA) || 0), 0);
+        let sumCD = draft.unidades.reduce((acc, u) => acc + (Number(u.horasCD) || 0), 0);
+        let sumAPE = draft.unidades.reduce((acc, u) => acc + (Number(u.horasAPE) || 0), 0);
+        let sumTA = draft.unidades.reduce((acc, u) => acc + (Number(u.horasTA) || 0), 0);
+        const total = sumCD + sumAPE + sumTA;
+        if (total > 0 && sumCD <= 0 && sumAPE <= 0) {
+            const third = Math.floor(total / 3);
+            sumCD = third;
+            sumAPE = third;
+            sumTA = total - sumCD - sumAPE;
+        }
         if (sumCD + sumAPE + sumTA > 0) {
             patch.HorasContactoDocente = sumCD;
             patch.HorasPracticoExperimental = sumAPE;

@@ -55,10 +55,17 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
 
     const handleUpdatePrerrequisito = (idx: number, field: string, value: any) => {
         if (readOnly) return;
+        const aliasField = field === 'Asignatura' ? 'nombre_asignatura' : field === 'Observacion' ? 'observaciones' : undefined;
         if (onUpdateItem) {
             onUpdateItem('Prerrequisitos', idx, field, value);
+            if (aliasField) onUpdateItem('Prerrequisitos', idx, aliasField, value);
         } else {
-            const updated = prerrequisitos.map((item, i) => i === idx ? { ...item, [field]: value } : item);
+            const updated = prerrequisitos.map((item, i) => {
+                if (i !== idx) return item;
+                const nextItem = { ...item, [field]: value };
+                if (aliasField) nextItem[aliasField] = value;
+                return nextItem;
+            });
             onUpdate('Prerrequisitos', updated);
         }
     };

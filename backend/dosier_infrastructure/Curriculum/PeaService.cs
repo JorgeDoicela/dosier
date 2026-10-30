@@ -97,9 +97,15 @@ namespace dosier_infrastructure.Curriculum
                 SemestreNivel = academicContext.NombreNivel,
                 TotalHorasAsignatura = academicContext.HorasTotales,
                 Creditos = academicContext.Creditos,
-                HorasContactoDocente = decimal.ToInt32(academicContext.HorasDocencia),
-                HorasPracticoExperimental = decimal.ToInt32(academicContext.HorasPracticoExperimental),
-                HorasAutonomo = decimal.ToInt32(academicContext.HorasAutonomo),
+                HorasContactoDocente = (academicContext.HorasTotales > 0 && academicContext.HorasDocencia <= 0 && academicContext.HorasPracticoExperimental <= 0)
+                    ? academicContext.HorasTotales / 3
+                    : decimal.ToInt32(academicContext.HorasDocencia),
+                HorasPracticoExperimental = (academicContext.HorasTotales > 0 && academicContext.HorasDocencia <= 0 && academicContext.HorasPracticoExperimental <= 0)
+                    ? academicContext.HorasTotales / 3
+                    : decimal.ToInt32(academicContext.HorasPracticoExperimental),
+                HorasAutonomo = (academicContext.HorasTotales > 0 && academicContext.HorasDocencia <= 0 && academicContext.HorasPracticoExperimental <= 0)
+                    ? (academicContext.HorasTotales - (academicContext.HorasTotales / 3) * 2)
+                    : decimal.ToInt32(academicContext.HorasAutonomo),
                 Estado = "Borrador",
                 Version = 1,
                 Activo = true
@@ -1066,6 +1072,14 @@ namespace dosier_infrastructure.Curriculum
                         horasTa = Math.Max(0, totalHoras - horasCd - horasApe);
                     }
                 }
+            }
+
+            if (totalHoras > 0 && horasCd <= 0 && horasApe <= 0)
+            {
+                int third = totalHoras / 3;
+                horasCd = third;
+                horasApe = third;
+                horasTa = totalHoras - horasCd - horasApe;
             }
 
             return new PeaDto

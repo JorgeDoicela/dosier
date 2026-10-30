@@ -17,15 +17,18 @@ namespace dosier_api.Controllers
     {
         private readonly IPeaService _peaService;
         private readonly IPeaAiAssistantService _peaAiService;
+        private readonly IPeaDocumentExtractorService _peaExtractorService;
         private readonly ILogger<PeaController> _logger;
 
         public PeaController(
             IPeaService peaService,
             IPeaAiAssistantService peaAiService,
+            IPeaDocumentExtractorService peaExtractorService,
             ILogger<PeaController> logger)
         {
             _peaService = peaService;
             _peaAiService = peaAiService;
+            _peaExtractorService = peaExtractorService;
             _logger = logger;
         }
 
@@ -323,11 +326,13 @@ namespace dosier_api.Controllers
             }
         }
 
+        [HttpPost("uuid/{uuid}/importar-documento")]
+        [HttpPost("{uuid}/importar-documento")]
         [HttpPost("uuid/{uuid}/ai/importar-archivo")]
         [HttpPost("{uuid}/ai/importar-archivo")]
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(15 * 1024 * 1024)]
-        public async Task<IActionResult> ImportarArchivoAi(
+        public async Task<IActionResult> ImportarDocumentoPea(
             string uuid,
             IFormFile? file,
             [FromForm(Name = "custom_instructions")] string? customInstructions,
@@ -377,7 +382,7 @@ namespace dosier_api.Controllers
                     CurrentTotalHoras = currentTotalHoras
                 };
 
-                var draft = await _peaAiService.ImportFromDocumentAsync(uuid, idUserInt, importRequest, ct);
+                var draft = await _peaExtractorService.ExtractAndMapDocumentAsync(uuid, idUserInt, importRequest, ct);
                 return Ok(draft);
             }
             catch (KeyNotFoundException ex)

@@ -75,48 +75,44 @@ El servicio `PeaAiAssistantService` implementa adaptadores de protocolo para gar
 2. **Normalizacion de URLs**: Detecta si la URL base ingresada por el usuario carece de `/chat/completions` y la completa automaticamente, admitiendo rutas relativas `/v1`.
 3. **Manejo de Fallback ante Error HTTP 400/422**: Si un modelo (como OpenAI `o1`/`o3` o servidores locales estrictos) rechaza parametros como `temperature` o `response_format: json_object`, el cliente reintenta la solicitud automaticamente en modo de payload minimo.
 
-### 2.4. Reconciliacion Matematica de Horas SIGAFI
+### 2.4. Reconciliacion Matematica de Horas SIGAFI y Distribucion Balanceada
 La normativa institucional y de acreditacion del CACES exige que las horas por componente de aprendizaje (Contacto Docente - CD, Aprendizaje Practico Experimental - APE y Trabajo Autonomo - TA) cuadren de forma exacta con la malla curricular aprobada.
 
-La funcion `ReconcileUnitHoursWithSigafi` aplica un algoritmo proporcional con redondeo por residuo:
+Cuando una asignatura en `detallemallas` de SIGAFI solo registra el total de horas (ej. 144) con `horasDocente = 0` y `horasPracticoExperimental = 0`, el motor calcula de manera automatica una distribucion equitativa en tercios normativos:
+- $\text{Horas CD} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
+- $\text{Horas APE} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
+- $\text{Horas TA} = \text{Horas Totales} - \text{Horas CD} - \text{Horas APE}$
+
+Esto previene que una asignatura quede con 0 horas de docencia, 0 de practico y 144 de autonomo. Posteriormente, la funcion `ReconcileUnitHoursWithSigafi` distribuye estas horas entre las 4 unidades tematicas garantizando que cada unidad cuente con valores estrictamente positivos en sus 3 componentes:
 $$\text{Proporcional}_i = \text{round}\left( \frac{\text{HorasGeneradas}_i}{\sum \text{HorasGeneradas}} \times \text{HorasOficialesSIGAFI} \right)$$
 El remanente acumulado se asigna a la ultima unidad tematica, asegurando que:
 $$\sum_{i=1}^{N} \text{HorasUnidad}_{i} \equiv \text{HorasMallaSIGAFI}$$
 
-### 2.5. Motor de Reconocimiento e Importacion Digital de PEAs (`.pdf` y `.docx`)
-El metodo `ImportFromDocumentAsync` expuesto en `POST /api/pea/uuid/{uuid}/ai/importar-archivo` permite importar Programas de Estudio de la Asignatura preexistentes en formato digital, estructurandolos automaticamente bajo el esquema `PEA_OFICIAL` y reconciliando sus cargas horarias con SIGAFI:
-
+### 2.5. Desacoplamiento Arquitectonico: Motor Extractor de Documentos (`IPeaDocumentExtractorService`)
+El procesamiento de archivos preexistentes esta desacoplado del asistente generador en su propio servicio e interfaz especializada:
+- **Servicio Backend**: `PeaDocumentExtractorService.cs` implementando `IPeaDocumentExtractorService`.
+- **Ruta Oficial de Ingestion**: `POST /api/pea/uuid/{uuid}/importar-documento` (con alias `/ai/importar-archivo` para compatibilidad retroactiva).
 - **Formatos Digitales Admitidos**:
   1. **PDF con Texto Digital (`.pdf`)**: Extraccion nativa pagina por pagina mediante `iText 9` (`PdfTextExtractor` con `SimpleTextExtractionStrategy`).
-  2. **Microsoft Word OpenXML (`.docx`)**: Descompresion nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerarquico de `word/document.xml` con `XDocument`, extrayendo tanto parrafos (`<w:p>`) como celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
+  2. **Microsoft Word OpenXML (`.docx`)**: Descompresion nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerarquico de `word/document.xml` con `XDocument`, extrayendo parrafos (`<w:p>`) y celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
 - **Exclusion Estricta de Imagenes y Escaneos**:
-  - Tanto el frontend (`PeaAiAssistantModal.tsx`) como el backend (`ExtractDigitalDocumentText`) rechazan de forma determinista cualquier archivo de imagen (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.tiff`, `.svg` o MIME `image/*`).
+  - Tanto el frontend (`PeaDocumentImportModal.tsx`) como el backend (`ExtractDigitalDocumentText`) rechazan de forma determinista cualquier archivo de imagen (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.tiff`, `.svg` o MIME `image/*`).
   - Si un archivo `.pdf` carece de capa de texto seleccionable (menos de 50 caracteres alfanumericos extraidos), la operacion se rechaza indicando que solo se admiten documentos digitales con texto seleccionable.
-- **Proteccion de Datos Generales Bloqueados**: El motor descarta cualquier cabecera administrativa obsoleta del archivo importado y preserva intactos los 9 campos oficiales de SIGAFI de la asignatura destino.
+- **Blindaje de Datos Generales Bloqueados**: Los campos de la Seccion 1 (nombre de asignatura, codigo, carrera, modalidad, unidad de organizacion, periodo, semestre, total de horas y creditos) son de **solo contexto**. Ni el asistente IA ni el extractor pueden sobreescribir estos campos en el PEA ni redactar encabezados redundantes de datos generales.
+- **Matriz de Prerrequisitos**: Se filtran filas vacias y se normalizan los nombres y observaciones tanto en snake_case (`nombre_asignatura`, `observaciones`) como en PascalCase (`Asignatura`, `Observacion`) garantizando que nunca se generen filas vacias en la tabla.
 
 ---
 
 ## 3. Integracion en el Frontend
 
-### 3.1. Fachada de Servicios (`peaAiService.ts`)
-Encapsula las llamadas HTTP a `/api/pea/ai/config`, `/api/pea/uuid/{uuid}/ai/generar` y `/api/pea/uuid/{uuid}/ai/importar-archivo` (`multipart/form-data`), normalizando las respuestas con tipado estricto y proveyendo el mapeador `convertDraftToEditorFields` que traduce la propuesta generada o importada a los identificadores nativos del esquema de la plantilla `PEA_OFICIAL`:
-- `ObjetivoAsignatura`
-- `RdaCarrera`
-- `ResultadosAprendizaje`
-- `Prerrequisitos`
-- `Unidades` (`HorasContactoDocente`, `HorasPracticoExperimental`, `HorasAutonomo`)
-- `MetodologiaEnsenanza`
-- `RecursosDidacticos`
-- `ActividadesPracticas`
-- `Evaluaciones`
-- `Bibliografias`, `BibliografiaBasica` y `BibliografiaConsulta`
+### 3.1. Servicios Desacoplados (`peaAiService.ts` y `peaDocumentExtractorService.ts`)
+- **`peaAiService.ts`**: Fachada para configuracion de API Keys (`/api/pea/ai/config`) y generacion de borradores pedagogicos (`/api/pea/uuid/{uuid}/ai/generar`). Provee la funcion de mapeo `convertDraftToEditorFields`.
+- **`peaDocumentExtractorService.ts`**: Modulo dedicado exclusivamente a la extraccion y mapeo de documentos digitales (`/api/pea/uuid/{uuid}/importar-documento`).
 
-### 3.2. Modal Interactivo (`PeaAiAssistantModal.tsx`)
-- **Estilo Visual Modern Enterprise Docs**: Fondos 100% solidos sin transparencias (`bg-white` en modo claro, `bg-zinc-950` en modo oscuro).
-- **Riel Plano de Navegacion**: Pestañas *Generar contenido curricular*, *Importar archivo (PDF / Word)* y *Configuracion de API Key*.
-- **Selector de Alcance e Importacion Digital**: Permite generar desde cero o arrastrar un archivo `.pdf` / `.docx` (bloqueando imagenes) con instrucciones adicionales de adaptacion.
-- **Previsualizacion Granular con Checkboxes**: El docente inspecciona las secciones extraidas o generadas antes de aplicarlas y puede desmarcar secciones individuales.
-- **Verificacion de Cuadre Horario**: Muestra una insignia de validacion confirmando el balance matematico con SIGAFI.
+### 3.2. Experiencia de Usuario en el Editor (`DOSIERBuilderShell.tsx`)
+La barra de herramientas superior del editor del PEA expone dos acciones claramente diferenciadas:
+1. **"Importar PEA (PDF / Word)"** (icono `FileUp`): Abre `PeaDocumentImportModal.tsx` para docentes que desean migrar un silabo o PEA previo en PDF o Word.
+2. **"Autocompletar sección con IA"** (icono `Sparkles`): Abre `PeaAiAssistantModal.tsx` para redactar, proponer y pulir objetivos, unidades tematicas, actividades practicas y evaluaciones con soporte de modelos de lenguaje.
 
 ### 3.3. Hidratacion Atomica en Tiempo Real (`useDOSIERDocument.ts`)
 La inyeccion de los datos generados o importados al editor concurrente se ejecuta en una sola transaccion `ydoc.transact()` sobre los tipos compartidos de Yjs:

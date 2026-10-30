@@ -142,7 +142,9 @@ function resolveDbValue(parentFormData: any, name: string): any {
             } else {
                 const lowerKey = part.charAt(0).toLowerCase() + part.slice(1);
                 const upperKey = part.charAt(0).toUpperCase() + part.slice(1);
-                current = current[lowerKey] ?? current[upperKey];
+                current = current[lowerKey] ?? current[upperKey] ??
+                    (part.toLowerCase() === 'asignatura' ? (current.NombreAsignatura ?? current.nombre_asignatura ?? current.nombreAsignatura ?? current.materia ?? current.nombre) : undefined) ??
+                    (part.toLowerCase().startsWith('observacion') ? (current.Observaciones ?? current.observaciones ?? current.CondicionCurricular ?? current.condicion_curricular ?? current.condicion) : undefined);
             }
         }
         return current;

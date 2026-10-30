@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Lock, Unlock, Shield, Award, Loader2, RefreshCw, X, Sparkles } from 'lucide-react';
+import { Lock, Unlock, Shield, Award, Loader2, RefreshCw, X, Sparkles, FileUp } from 'lucide-react';
 import type { CoWorkHandle } from '../../core/cowork/types';
 import CollaborationSidebar from './CollaborationSidebar';
 import { DocumentDataContext, DocumentMetadataContext, SectionLockContext } from '../../core/documents/context/DocumentDataContext';
@@ -10,6 +10,7 @@ import { BuilderFloatingTab } from './shell/components/BuilderFloatingTab';
 import { BuilderSectionFooterNav } from './shell/components/BuilderSectionFooterNav';
 import { OutputSection } from './shell/components/OutputSection';
 import { PeaAiAssistantModal } from './shell/components/PeaAiAssistantModal';
+import { PeaDocumentImportModal } from './shell/components/PeaDocumentImportModal';
 import type { BuilderSection } from './shell/hooks/useBuilderLayout';
 
 import { useAuth } from '../../api/AuthContext';
@@ -74,6 +75,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     const { layout, autoSave, pdfAndSign, network } = useDOSIERBuilderShell(props);
     const [showUpdateModal, setShowUpdateModal] = useState<boolean>(hasTemplateUpdate);
     const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
+    const [importDocModalOpen, setImportDocModalOpen] = useState<boolean>(false);
     const [aiTargetSection, setAiTargetSection] = useState<string>('all');
 
     const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
@@ -210,6 +212,18 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                     </div>
 
                                                     <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center">
+                                                        {!readOnly && templateCode === 'PEA_OFICIAL' && !layout.isSectionBlocked && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setImportDocModalOpen(true)}
+                                                                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-[#0070f3] dark:hover:border-blue-500 text-slate-700 dark:text-zinc-200 hover:text-[#0070f3] dark:hover:text-blue-400 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                                                                title="Importar y mapear contenido desde un archivo PDF o Word existente"
+                                                            >
+                                                                <FileUp size={13} strokeWidth={1.75} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
+                                                                <span>Importar PEA (PDF / Word)</span>
+                                                            </button>
+                                                        )}
+
                                                         {!readOnly && isAiSupportedSection && !layout.isSectionBlocked && (
                                                             <button
                                                                 type="button"
@@ -473,6 +487,23 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                             formData={formData}
                             initialTargetSection={aiTargetSection}
                             isAdmin={isAdmin}
+                            onApplyDraft={(patch) => {
+                                if (onApplyStructuredDraft) {
+                                    onApplyStructuredDraft(patch);
+                                } else if (onUpdateField) {
+                                    Object.entries(patch).forEach(([key, val]) => onUpdateField(key, val));
+                                }
+                            }}
+                        />
+                    )}
+
+                    {/* ── Modal Independiente del Extractor e Importador de PEA (PDF / Word) ── */}
+                    {templateCode === 'PEA_OFICIAL' && (
+                        <PeaDocumentImportModal
+                            isOpen={importDocModalOpen}
+                            onClose={() => setImportDocModalOpen(false)}
+                            peaUuid={resolvedPeaUuid}
+                            formData={formData}
                             onApplyDraft={(patch) => {
                                 if (onApplyStructuredDraft) {
                                     onApplyStructuredDraft(patch);
