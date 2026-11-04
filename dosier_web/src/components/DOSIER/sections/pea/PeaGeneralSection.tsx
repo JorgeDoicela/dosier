@@ -156,7 +156,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                 { value: 'Unidad Profesional', label: 'Unidad Profesional' },
                                 { value: 'Unidad de Integración Curricular', label: 'Unidad de Integración Curricular' }
                             ]}
-                            readOnly={true}
+                            readOnly={readOnly}
                             className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                             onValueChange={(val) => onUpdate('UnidadOrganizacion', val)}
                         />
