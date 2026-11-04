@@ -21,8 +21,10 @@
   .page-break { page-break-after: always; height: 0; }
   .table-bordered { width: 100%; border-collapse: collapse; border: 1px solid #000000; font-size: 8pt; background: #ffffff; }
   .table-bordered td, .table-bordered th { border: 1px solid #000000; padding: 4px 6px; }
-  .header-primary { background-color: {{default theme.colors.primary "#1e2a4a"}}; color: #ffffff; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; border: 1px solid #000000; border-top: none; }
-  .header-sub { background-color: #bdd7ee; color: #000000; font-weight: bold; font-size: 8pt; }
+  .header-primary { background-color: {{default theme.colors.primary "#1e2a4a"}}; color: #ffffff; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; border: 1px solid #000000; border-top: none; page-break-after: avoid; break-after: avoid; }
+  .header-sub { background-color: #bdd7ee; color: #000000; font-weight: bold; font-size: 8pt; page-break-after: avoid; break-after: avoid; }
+  .pea-subhead { background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; page-break-after: avoid; break-after: avoid; }
+  .sub-block, .keep-together { page-break-inside: avoid; break-inside: avoid; }
 </style>
 
 <div class="doc-container">
@@ -217,17 +219,21 @@
     g) METODOLOGÍA DE ENSEÑANZA
   </div>
   <div style="border: 1px solid #000000; border-top: none; background: #ffffff;">
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
-      ESTRATEGIAS METODOLÓGICAS
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; page-break-after: avoid; break-after: avoid;">
+        ESTRATEGIAS METODOLÓGICAS
+      </div>
+      <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt; border-bottom: 1px solid #000000;">
+        {{{default MetodologiaEnsenanza (default metodologia "---")}}}
+      </div>
     </div>
-    <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{{default MetodologiaEnsenanza (default metodologia "---")}}}
-    </div>
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
-      RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE
-    </div>
-    <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt;">
-      {{{default RecursosDidacticos "---"}}}
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; page-break-after: avoid; break-after: avoid;">
+        RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE
+      </div>
+      <div style="padding: 6px 8px; min-height: 35px; font-size: 8pt;">
+        {{{default RecursosDidacticos "---"}}}
+      </div>
     </div>
   </div>
 
@@ -304,17 +310,21 @@
     j) BIBLIOGRAFÍA
   </div>
   <div style="border: 1px solid #000000; border-top: none; background: #ffffff;">
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
-      Bibliografía básica
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center; page-break-after: avoid; break-after: avoid;">
+        Bibliografía básica
+      </div>
+      <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt; border-bottom: 1px solid #000000;">
+        {{{default BibliografiaBasica "---"}}}
+      </div>
     </div>
-    <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{{default BibliografiaBasica "---"}}}
-    </div>
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
-      Bibliografía de consulta
-    </div>
-    <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt;">
-      {{{default BibliografiaConsulta "---"}}}
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center; page-break-after: avoid; break-after: avoid;">
+        Bibliografía de consulta
+      </div>
+      <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt;">
+        {{{default BibliografiaConsulta "---"}}}
+      </div>
     </div>
   </div>
 

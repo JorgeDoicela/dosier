@@ -141,3 +141,16 @@ Para permitir la inspección en tiempo real sin alterar la base de datos ni los 
   * `themeConfigJson`: Configuración visual del tema fusionado (colores institucionales, márgenes A4, tipografía).
 * **Propósito:** Renderiza un PDF en vivo a partir de las modificaciones no publicadas del diseñador visual. Permite al administrador validar visualmente la maqueta antes de comprometer una nueva versión de fábrica.
 
+---
+
+## 7. Paginación Inteligente y Prevención de Huérfanos (Anti-Orphan Pagination)
+
+Para evitar que encabezados o subtítulos de sección se impriman aislados al final de una página (separados de su contenido en la página siguiente), el motor documental inyecta directivas de paginación CSS a nivel de renderizado e impone encapsulación en sub-bloques:
+
+1. **Directivas Globales en `DocumentEngine`:**
+   * `.header-primary, .header-sub, .pea-subhead, th`: Configurados con `page-break-after: avoid !important; break-after: avoid !important;`. El motor prohíbe cortes de página inmediatos tras cualquier encabezado o barra de título.
+   * `.sub-block, .keep-together`: Configurados con `page-break-inside: avoid !important; break-inside: avoid !important;`. Todo sub-bloque (ej. Estrategias Metodológicas o Recursos Didácticos) se traslada íntegramente a la página siguiente si no cabe completo en la actual.
+   * Tablas institucionales: `thead` configurado con `display: table-header-group` y filas `tr` con `page-break-inside: avoid !important;`.
+2. **Sanitización de Títulos Redundantes:**
+   * En `HandlebarsTemplateEngine`, `PeaAiAssistantService` y `PeaDocumentExtractorService`, el sistema analiza mediante expresiones regulares los campos de texto enriquecido (`recursos_didacticos`, `metodologia_ensenanza`, `objetivo_asignatura`, `bibliografia_basica`). Si el contenido inicia con el nombre de la sección repetido (ej. *"RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE"*), este se remueve automáticamente antes de la compilación de la plantilla, evitando duplicaciones visuales con la barra de cabecera.
+

@@ -465,7 +465,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine();
             sb.AppendLine("REGLAS OBLIGATORIAS DE FORMATO Y CALIDAD:");
             sb.AppendLine("1. DATOS GENERALES DE SOLO CONTEXTO: Los campos de la Sección 1 (nombre de asignatura, código, carrera, modalidad, unidad de organización curricular, periodo académico, semestre, total de horas y créditos) están BLOQUEADOS en SIGAFI. Úsalos EXCLUSIVAMENTE como contexto pedagógico orientativo. Queda estrictamente PROHIBIDO generar contenido para estos campos, modificarlos, o redactar encabezados o tablas de datos generales dentro de las demás secciones.");
-            sb.AppendLine("2. Los campos 'objetivo_asignatura', 'rda_carrera', 'resultados_aprendizaje', 'metodologia_ensenanza', 'recursos_didacticos', 'bibliografia_basica' y 'bibliografia_consulta' deben entregarse en HTML semántico limpio (<p>, <ul>, <li>, <strong>).");
+            sb.AppendLine("2. Los campos 'objetivo_asignatura', 'rda_carrera', 'resultados_aprendizaje', 'metodologia_ensenanza', 'recursos_didacticos', 'bibliografia_basica' y 'bibliografia_consulta' deben entregarse en HTML semántico limpio (<p>, <ul>, <li>, <strong>). Queda estrictamente PROHIBIDO duplicar o incluir el encabezado/título de la sección dentro del texto (ej. en 'recursos_didacticos' no escribas 'RECURSOS DIDÁCTICOS:', en 'metodologia_ensenanza' no escribas 'ESTRATEGIAS METODOLÓGICAS:'); redacta directamente el contenido pedagógico.");
             sb.AppendLine("3. En 'prerrequisitos', si la asignatura requiere materias previas, genera cada elemento con 'asignatura' (nombre de la materia previa) y 'observacion' ('Haber cursado y aprobado la asignatura según malla curricular'). Si no requiere prerrequisitos, devuelve un arreglo vacío []. NUNCA generes elementos con cadenas vacías.");
             sb.AppendLine("4. En 'unidades', genera unidades temáticas coherentes (por defecto 4, a menos que el docente solicite expresamente otra cantidad en sus instrucciones). En 'titulo' escribe SOLO el nombre temático de la unidad (sin el prefijo 'Unidad 1:'). La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + " (> 0 en cada unidad). La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + " (> 0 en cada unidad). La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + " (> 0 en cada unidad). NUNCA dejes componentes de horas en cero.");
             sb.AppendLine("5. En cada unidad, el campo 'contenidos' debe listar los temas y subtemas numerados separados por saltos de línea (ej: '1.1 Conceptos fundamentales\\n1.2 Técnicas aplicadas\\n1.3 Procesos experimentales').");
@@ -811,13 +811,13 @@ namespace dosier_infrastructure.Curriculum
             });
             var root = doc.RootElement;
 
-            result.ObjetivoAsignatura = TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura");
+            result.ObjetivoAsignatura = SanitizeRedundantHeading(TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
             result.RdaCarrera = TryGetString(root, "rda_carrera", "RdaCarrera");
             result.ResultadosAprendizaje = TryGetString(root, "resultados_aprendizaje", "ResultadosAprendizaje");
-            result.MetodologiaEnsenanza = TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza");
-            result.RecursosDidacticos = TryGetString(root, "recursos_didacticos", "RecursosDidacticos");
-            result.BibliografiaBasica = TryGetString(root, "bibliografia_basica", "BibliografiaBasica");
-            result.BibliografiaConsulta = TryGetString(root, "bibliografia_consulta", "BibliografiaConsulta");
+            result.MetodologiaEnsenanza = SanitizeRedundantHeading(TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.RecursosDidacticos = SanitizeRedundantHeading(TryGetString(root, "recursos_didacticos", "RecursosDidacticos"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*recursos\s+did[aá]cticos(?:\s*[\/\-]\s*informatizaci[oó]n\s+del\s+aprendizaje)?\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.BibliografiaBasica = SanitizeRedundantHeading(TryGetString(root, "bibliografia_basica", "BibliografiaBasica"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+b[aá]sica\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.BibliografiaConsulta = SanitizeRedundantHeading(TryGetString(root, "bibliografia_consulta", "BibliografiaConsulta"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+de\s+consulta\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
 
             // Prerrequisitos
             if (TryGetArray(root, out var prerreqArr, "prerrequisitos", "Prerrequisitos"))
@@ -1047,6 +1047,26 @@ namespace dosier_infrastructure.Curriculum
             };
 
             return result;
+        }
+
+        private static string SanitizeRedundantHeading(string? text, string regexPattern)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+            string cleaned = System.Text.RegularExpressions.Regex.Replace(
+                text,
+                regexPattern,
+                "",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline
+            ).Trim();
+
+            cleaned = System.Text.RegularExpressions.Regex.Replace(
+                cleaned,
+                @"^\s*<p\b[^>]*>\s*(?:&nbsp;|\s)*<\/p>",
+                "",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            ).Trim();
+
+            return cleaned;
         }
 
         private static void ReconcileUnitHoursWithSigafi(

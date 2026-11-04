@@ -137,6 +137,14 @@ const normalizeConfigStatus = (raw: any): PeaAiConfigStatus => {
     };
 };
 
+const sanitizeHeading = (val: string, pattern: RegExp): string => {
+    if (!val) return '';
+    return val
+        .replace(pattern, '')
+        .replace(/^\s*<p\b[^>]*>\s*(?:&nbsp;|\s)*<\/p>/i, '')
+        .trim();
+};
+
 export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
     const rawPrerreq: any[] = raw?.prerrequisitos ?? raw?.Prerrequisitos ?? [];
     const rawUnidades: any[] = raw?.unidades ?? raw?.Unidades ?? [];
@@ -145,14 +153,20 @@ export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
     const rawBiblio: any[] = raw?.bibliografias ?? raw?.Bibliografias ?? [];
     const vs = raw?.validation_summary ?? raw?.validationSummary ?? {};
 
+    const rawObj = String(raw?.objetivo_asignatura ?? raw?.objetivoAsignatura ?? raw?.ObjetivoAsignatura ?? '');
+    const rawMet = String(raw?.metodologia_ensenanza ?? raw?.metodologiaEnsenanza ?? raw?.MetodologiaEnsenanza ?? '');
+    const rawRec = String(raw?.recursos_didacticos ?? raw?.recursosDidacticos ?? raw?.RecursosDidacticos ?? '');
+    const rawBibB = String(raw?.bibliografia_basica ?? raw?.bibliografiaBasica ?? raw?.BibliografiaBasica ?? '');
+    const rawBibC = String(raw?.bibliografia_consulta ?? raw?.bibliografiaConsulta ?? raw?.BibliografiaConsulta ?? '');
+
     return {
-        objetivoAsignatura: String(raw?.objetivo_asignatura ?? raw?.objetivoAsignatura ?? raw?.ObjetivoAsignatura ?? ''),
+        objetivoAsignatura: sanitizeHeading(rawObj, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i),
         rdaCarrera: String(raw?.rda_carrera ?? raw?.rdaCarrera ?? raw?.RdaCarrera ?? ''),
         resultadosAprendizaje: String(raw?.resultados_aprendizaje ?? raw?.resultadosAprendizaje ?? raw?.ResultadosAprendizaje ?? ''),
-        metodologiaEnsenanza: String(raw?.metodologia_ensenanza ?? raw?.metodologiaEnsenanza ?? raw?.MetodologiaEnsenanza ?? ''),
-        recursosDidacticos: String(raw?.recursos_didacticos ?? raw?.recursosDidacticos ?? raw?.RecursosDidacticos ?? ''),
-        bibliografiaBasica: String(raw?.bibliografia_basica ?? raw?.bibliografiaBasica ?? raw?.BibliografiaBasica ?? ''),
-        bibliografiaConsulta: String(raw?.bibliografia_consulta ?? raw?.bibliografiaConsulta ?? raw?.BibliografiaConsulta ?? ''),
+        metodologiaEnsenanza: sanitizeHeading(rawMet, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i),
+        recursosDidacticos: sanitizeHeading(rawRec, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*recursos\s+did[aá]cticos(?:\s*[\/\-]\s*informatizaci[oó]n\s+del\s+aprendizaje)?\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i),
+        bibliografiaBasica: sanitizeHeading(rawBibB, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+b[aá]sica\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i),
+        bibliografiaConsulta: sanitizeHeading(rawBibC, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+de\s+consulta\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i),
         prerrequisitos: rawPrerreq.map((p: any) => ({
             asignatura: String(p?.asignatura ?? p?.Asignatura ?? ''),
             observacion: String(p?.observacion ?? p?.Observacion ?? '')
@@ -350,8 +364,12 @@ export const convertDraftToEditorFields = (
     }
 
     if (includeSection('pea_methodology_section')) {
-        if (draft.metodologiaEnsenanza) patch.MetodologiaEnsenanza = draft.metodologiaEnsenanza;
-        if (draft.recursosDidacticos) patch.RecursosDidacticos = draft.recursosDidacticos;
+        if (draft.metodologiaEnsenanza) {
+            patch.MetodologiaEnsenanza = sanitizeHeading(draft.metodologiaEnsenanza, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i);
+        }
+        if (draft.recursosDidacticos) {
+            patch.RecursosDidacticos = sanitizeHeading(draft.recursosDidacticos, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*recursos\s+did[aá]cticos(?:\s*[\/\-]\s*informatizaci[oó]n\s+del\s+aprendizaje)?\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i);
+        }
     }
 
     if (includeSection('pea_resources_section') && draft.actividadesPracticas.length > 0) {

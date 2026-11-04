@@ -317,22 +317,26 @@ export const generatePeaMethodologyHtml = (block: DocumentBlock): string => {
     const borderCss = 'border: 1px solid #000000;';
 
     return `
-<div class="pea-section-methodology" style="margin-bottom: 0; font-family: inherit;">
-  <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
+<div class="pea-section-methodology keep-together" style="margin-bottom: 0; font-family: inherit;">
+  <div class="header-primary" style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none; page-break-after: avoid; break-after: avoid;">
     ${c.title || 'g) METODOLOGÍA DE ENSEÑANZA'}
   </div>
   <div style="${borderCss} border-top: none; background: #ffffff;">
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
-      ${c.estrategiasLabel || 'ESTRATEGIAS METODOLÓGICAS'}
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; page-break-after: avoid; break-after: avoid;">
+        ${c.estrategiasLabel || 'ESTRATEGIAS METODOLÓGICAS'}
+      </div>
+      <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt; border-bottom: 1px solid #000000;">
+        {{{default metodologia_propuesta metodologia}}}
+      </div>
     </div>
-    <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{{default metodologia_propuesta metodologia}}}
-    </div>
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
-      ${c.recursosLabel || 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE'}
-    </div>
-    <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt;">
-      {{{default recursos_didacticos ""}}}
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; page-break-after: avoid; break-after: avoid;">
+        ${c.recursosLabel || 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE'}
+      </div>
+      <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt;">
+        {{{default recursos_didacticos ""}}}
+      </div>
     </div>
   </div>
 </div>`;
@@ -419,22 +423,26 @@ export const generatePeaBibliographyHtml = (block: DocumentBlock): string => {
     const borderCss = 'border: 1px solid #000000;';
 
     return `
-<div class="pea-section-bibliography" style="margin-bottom: 0; font-family: inherit;">
-  <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
+<div class="pea-section-bibliography keep-together" style="margin-bottom: 0; font-family: inherit;">
+  <div class="header-primary" style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none; page-break-after: avoid; break-after: avoid;">
     ${c.title || 'j) BIBLIOGRAFÍA'}
   </div>
   <div style="${borderCss} border-top: none; background: #ffffff;">
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
-      ${c.basicaLabel || 'Bibliografía básica'}
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center; page-break-after: avoid; break-after: avoid;">
+        ${c.basicaLabel || 'Bibliografía básica'}
+      </div>
+      <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt; border-bottom: 1px solid #000000;">
+        {{{default bibliografia_basica ""}}}
+      </div>
     </div>
-    <div style="padding: 6px 8px; min-height: 40px; font-size: 8pt; border-bottom: 1px solid #000000;">
-      {{{default bibliografia_basica ""}}}
-    </div>
-    <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
-      ${c.consultaLabel || 'Bibliografía de consulta'}
-    </div>
-    <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt;">
-      {{{default bibliografia_consulta ""}}}
+    <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
+      <div class="pea-subhead" style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center; page-break-after: avoid; break-after: avoid;">
+        ${c.consultaLabel || 'Bibliografía de consulta'}
+      </div>
+      <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt;">
+        {{{default bibliografia_consulta ""}}}
+      </div>
     </div>
   </div>
 </div>`;

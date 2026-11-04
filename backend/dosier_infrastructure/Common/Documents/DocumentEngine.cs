@@ -1033,7 +1033,17 @@ namespace Dosier.Infrastructure.Common.Documents
             string globalStyles = @"<style>
                 img { max-width: 100% !important; height: auto !important; display: block; margin: 10px 0; }
                 table { width: 100% !important; border-collapse: collapse; }
-                tr { page-break-inside: avoid; }
+                tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
+                .header-primary, .header-sub, h1, h2, h3, h4, th, .pea-subhead {
+                    page-break-after: avoid !important;
+                    break-after: avoid !important;
+                }
+                .sub-block, .keep-together, .block-together, .pea-subblock {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
+                }
             </style>";
 
             // 2. Limitar tamaño de imágenes Base64 (Previene PDFs corruptos)

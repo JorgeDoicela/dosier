@@ -434,6 +434,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("4. PRERREQUISITOS: En 'prerrequisitos', extrae las filas exactas de materias previas que aparezcan en la tabla del archivo (ej. 'Programación Web II'). Si no hay tabla de prerrequisitos, devuelve un arreglo vacío [].");
             sb.AppendLine("5. UNIDADES Y CONTENIDOS: Extrae cada unidad temática con su título real y sus subtemas tal como aparecen en el documento. Si el documento indica horas de contacto docente (CD), práctico-experimental (APE) y trabajo autónomo (TA), extrae esos valores numéricos exactos. Si un título en el documento original quedó cortado o fragmentado entre celdas (ej. 'UNIDAD 1: FUNDAMENTOS DE' o 'UNIDAD 3: MEJORES PRÁCTICAS Y ESTRATEGIAS DE' con 'SEGURIDAD' en la línea inferior), completa o une el título de manera integral y profesional (ej. 'Fundamentos de Sistemas Web', 'Mejores Prácticas y Estrategias de Seguridad'). NUNCA dejes títulos cortados que terminen en conectores como 'DE' o 'PARA'. En 'contenidos', extrae la lista de temas y subtemas ordenados línea por línea, omitiendo números de fila aislados de columnas adyacentes (como '1', '2', '3').");
             sb.AppendLine("6. FORMATO DE SALIDA: Devuelve exclusivamente un objeto JSON válido que cumpla la estructura solicitada, sin explicaciones ni bloques de texto fuera del JSON.");
+            sb.AppendLine("7. CERO ENCABEZADOS REDUNDANTES: Al extraer el contenido de 'recursos_didacticos', 'metodologia_ensenanza', 'objetivo_asignatura', omite el título o etiqueta de la sección (ej. no incluyas 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE:'). Extrae exclusivamente los recursos, herramientas o texto sustantivo.");
             return sb.ToString();
         }
 
@@ -762,13 +763,13 @@ namespace dosier_infrastructure.Curriculum
             });
             var root = doc.RootElement;
 
-            result.ObjetivoAsignatura = TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura");
+            result.ObjetivoAsignatura = SanitizeRedundantHeading(TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
             result.RdaCarrera = TryGetString(root, "rda_carrera", "RdaCarrera");
             result.ResultadosAprendizaje = TryGetString(root, "resultados_aprendizaje", "ResultadosAprendizaje");
-            result.MetodologiaEnsenanza = TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza");
-            result.RecursosDidacticos = TryGetString(root, "recursos_didacticos", "RecursosDidacticos");
-            result.BibliografiaBasica = TryGetString(root, "bibliografia_basica", "BibliografiaBasica");
-            result.BibliografiaConsulta = TryGetString(root, "bibliografia_consulta", "BibliografiaConsulta");
+            result.MetodologiaEnsenanza = SanitizeRedundantHeading(TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.RecursosDidacticos = SanitizeRedundantHeading(TryGetString(root, "recursos_didacticos", "RecursosDidacticos"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*recursos\s+did[aá]cticos(?:\s*[\/\-]\s*informatizaci[oó]n\s+del\s+aprendizaje)?\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.BibliografiaBasica = SanitizeRedundantHeading(TryGetString(root, "bibliografia_basica", "BibliografiaBasica"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+b[aá]sica\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.BibliografiaConsulta = SanitizeRedundantHeading(TryGetString(root, "bibliografia_consulta", "BibliografiaConsulta"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+de\s+consulta\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
 
             // Prerrequisitos
             if (TryGetArray(root, out var prerreqArr, "prerrequisitos", "Prerrequisitos"))
@@ -983,6 +984,26 @@ namespace dosier_infrastructure.Curriculum
             };
 
             return result;
+        }
+
+        private static string SanitizeRedundantHeading(string? text, string regexPattern)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+            string cleaned = System.Text.RegularExpressions.Regex.Replace(
+                text,
+                regexPattern,
+                "",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline
+            ).Trim();
+
+            cleaned = System.Text.RegularExpressions.Regex.Replace(
+                cleaned,
+                @"^\s*<p\b[^>]*>\s*(?:&nbsp;|\s)*<\/p>",
+                "",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            ).Trim();
+
+            return cleaned;
         }
 
         private static string CleanContenidosOrphanNumbers(string? contenidos)

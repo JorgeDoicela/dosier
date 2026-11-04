@@ -1137,6 +1137,57 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 dict["CodigoCarrera"] = codCarrera.Trim();
                 dict["codigo_carrera"] = codCarrera.Trim();
             }
+
+            // 8. Sanitización inteligente de encabezados redundantes dentro del contenido
+            SanitizePeaFieldHeadings(dict);
+        }
+
+        private static void SanitizePeaFieldHeadings(Dictionary<string, object?> dict)
+        {
+            void CleanField(string pascalKey, string snakeKey, string pattern)
+            {
+                string? val = dict.GetValueOrDefault(pascalKey)?.ToString() ?? dict.GetValueOrDefault(snakeKey)?.ToString();
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    string cleaned = System.Text.RegularExpressions.Regex.Replace(
+                        val,
+                        pattern,
+                        "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline
+                    ).Trim();
+
+                    // Si tras remover el encabezado quedó un <p></p> vacío al inicio, limpiarlo
+                    cleaned = System.Text.RegularExpressions.Regex.Replace(
+                        cleaned,
+                        @"^\s*<p\b[^>]*>\s*(?:&nbsp;|\s)*<\/p>",
+                        "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                    ).Trim();
+
+                    dict[pascalKey] = cleaned;
+                    dict[snakeKey] = cleaned;
+                }
+            }
+
+            // Recursos didácticos: remover títulos duplicados como "RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE"
+            CleanField("RecursosDidacticos", "recursos_didacticos",
+                @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*recursos\s+did[aá]cticos(?:\s*[\/\-]\s*informatizaci[oó]n\s+del\s+aprendizaje)?\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+
+            // Metodología de enseñanza / Estrategias metodológicas
+            CleanField("MetodologiaEnsenanza", "metodologia_ensenanza",
+                @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+
+            // Objetivo de la asignatura
+            CleanField("ObjetivoAsignatura", "objetivo_asignatura",
+                @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+
+            // Bibliografía básica
+            CleanField("BibliografiaBasica", "bibliografia_basica",
+                @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+b[aá]sica\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+
+            // Bibliografía consulta
+            CleanField("BibliografiaConsulta", "bibliografia_consulta",
+                @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+de\s+consulta\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
         }
 
         private static string GenerateContenidosHtml(string contenidos)
