@@ -17,6 +17,7 @@ import {
     Activity,
     ChevronRight,
     Loader,
+    Loader2,
     Mic,
     Edit2,
     XCircle,
@@ -47,6 +48,8 @@ import { useConfirm } from '../../api/ConfirmContext';
 import { coworkLog } from '../../core/cowork/utils/log';
 import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlayer';
 import { PeaReviewPanel } from '../../pages/Curriculum/Workspace/components/PeaReviewPanel';
+import { formatDynamicSectionLabel } from '../../utils/sectionNumbering';
+import { GeistSelect } from '../Common/GeistSelect';
 
 const toSentenceCase = (text: string, fallbackIdx?: number): string => {
     if (!text) return '';
@@ -100,6 +103,8 @@ export interface CollaborationSidebarProps {
     onOpenAiModal?: () => void;
     onTriggerAiGeneration?: (targetSection: string, customInstructions: string) => void;
     onOpenAiConfigModal?: () => void;
+    isGeneratingAi?: boolean;
+    aiConfigVersion?: number;
 }
 
 const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
@@ -119,7 +124,9 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     onTriggerDocExtraction,
     onOpenAiModal,
     onTriggerAiGeneration,
-    onOpenAiConfigModal
+    onOpenAiConfigModal,
+    isGeneratingAi = false,
+    aiConfigVersion = 0
 }) => {
     const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
@@ -222,6 +229,29 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     // ── Estado del Asistente Curricular IA integrado en Barra Lateral ──
     const [sidebarAiTargetSection, setSidebarAiTargetSection] = useState<string>('all');
+
+    // Mapeo dinámico y numérico de secciones (1 a 11) para coherencia total con la Navegación del Documento
+    const aiAvailableSections = useMemo(() => {
+        if (sectionItems && sectionItems.length > 0) {
+            return sectionItems
+                .map((sec, idx) => ({
+                    id: sec.id,
+                    label: toSentenceCase(formatDynamicSectionLabel(sec.label, idx))
+                }))
+                .filter(sec => sec.id !== 'pea_general_section' && sec.id !== 'pea_signatures_section');
+        }
+        return [
+            { id: 'pea_objectives_section', label: '2. Objetivo de la asignatura' },
+            { id: 'pea_prerequisites_section', label: '3. Prerrequisitos curriculares' },
+            { id: 'pea_career_outcomes_section', label: '4. Resultados de aprendizaje de la carrera a los que la asignatura aporta' },
+            { id: 'pea_subject_outcomes_section', label: '5. Resultados de aprendizaje de la asignatura' },
+            { id: 'pea_contents_section', label: '6. Contenidos de enseñanza' },
+            { id: 'pea_methodology_section', label: '7. Metodología y recursos didácticos' },
+            { id: 'pea_resources_section', label: '8. Actividades prácticas' },
+            { id: 'pea_evaluation_section', label: '9. Evaluación del aprendizaje' },
+            { id: 'pea_bibliography_section', label: '10. Bibliografía' }
+        ];
+    }, [sectionItems]);
     const [sidebarAiPrompt, setSidebarAiPrompt] = useState<string>('');
     const [aiConfigStatus, setAiConfigStatus] = useState<PeaAiConfigStatus | null>(null);
     const [loadingAiConfig, setLoadingAiConfig] = useState<boolean>(false);
@@ -245,20 +275,18 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     }, [sectionName]);
 
     useEffect(() => {
-        if (activeTab === 'ai' && !aiConfigStatus && !loadingAiConfig) {
+        if (activeTab === 'ai') {
             setLoadingAiConfig(true);
             getPeaAiConfig()
                 .then(st => setAiConfigStatus(st))
                 .catch(err => console.error('[DOSIER AI Sidebar] Error cargando config:', err))
                 .finally(() => setLoadingAiConfig(false));
         }
-    }, [activeTab, aiConfigStatus, loadingAiConfig]);
+    }, [activeTab, aiConfigVersion]);
 
     const handleSidebarGenerateAi = () => {
         if (onTriggerAiGeneration) {
             onTriggerAiGeneration(sidebarAiTargetSection, sidebarAiPrompt);
-        } else if (onOpenAiModal) {
-            onOpenAiModal();
         }
     };
 
@@ -1711,42 +1739,31 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                         <label className="block text-[11px] font-semibold text-text-main">
                                             Alcance de la propuesta
                                         </label>
-                                        <select
+                                        <GeistSelect
                                             value={sidebarAiTargetSection}
-                                            onChange={e => setSidebarAiTargetSection(e.target.value)}
-                                            className="w-full px-2.5 py-2 text-xs rounded-lg border border-border-thin bg-surface text-text-main focus:outline-hidden focus:border-[#0070f3]"
-                                        >
-                                            <option value="all">Todo el PEA completo (b — j)</option>
-                                            <option value="pea_objectives_section">b) Objetivo de la Asignatura</option>
-                                            <option value="pea_prerequisites_section">c) Prerrequisitos Curriculares</option>
-                                            <option value="pea_career_outcomes_section">d) Resultados de la Carrera</option>
-                                            <option value="pea_subject_outcomes_section">e) Resultados de la Asignatura</option>
-                                            <option value="pea_contents_section">f) Unidades y Contenidos Temáticos</option>
-                                            <option value="pea_methodology_section">g) Metodología y Recursos</option>
-                                            <option value="pea_resources_section">h) Prácticas Experimentales (APE)</option>
-                                            <option value="pea_evaluation_section">i) Evaluación del Aprendizaje</option>
-                                            <option value="pea_bibliography_section">j) Bibliografía Básica (APA 7)</option>
-                                        </select>
+                                            onChange={val => setSidebarAiTargetSection(String(val))}
+                                            className="w-full text-xs font-medium"
+                                            options={[
+                                                { value: 'all', label: 'Todo el PEA completo (Secciones 2 — 10)' },
+                                                ...aiAvailableSections.map(sec => ({
+                                                    value: sec.id,
+                                                    label: sec.label
+                                                }))
+                                            ]}
+                                        />
                                     </div>
 
                                     {/* Lineamientos o prompt del docente */}
                                     <div className="space-y-1.5">
-                                        <div className="flex items-center justify-between">
-                                            <label className="block text-[11px] font-semibold text-text-main">
-                                                Lineamientos o enfoque específico
-                                            </label>
-                                            {sidebarAiPrompt.length > 0 && (
-                                                <span className="text-[10px] text-text-dim font-mono">
-                                                    {sidebarAiPrompt.length} car.
-                                                </span>
-                                            )}
-                                        </div>
+                                        <label className="block text-[11px] font-semibold text-text-main">
+                                            Lineamientos o enfoque específico
+                                        </label>
                                         <textarea
                                             rows={5}
                                             value={sidebarAiPrompt}
                                             onChange={e => setSidebarAiPrompt(e.target.value)}
                                             placeholder="Ej. Estructurar en 4 unidades temáticas, priorizar desarrollo de APIs con Node.js y microservicios, incluir talleres prácticos..."
-                                            className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none leading-relaxed"
+                                            className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/50 outline-none focus:outline-none focus:border-[#0070f3] focus:ring-2 focus:ring-[#0070f3]/20 transition-all resize-none leading-relaxed shadow-2xs"
                                         />
 
                                     </div>
@@ -1757,11 +1774,20 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     <button
                                         type="button"
                                         onClick={handleSidebarGenerateAi}
-                                        disabled={loadingAiConfig || !aiConfigStatus?.isReady}
+                                        disabled={isGeneratingAi || loadingAiConfig || !aiConfigStatus?.isReady || !onTriggerAiGeneration}
                                         className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                                     >
-                                        <Sparkles size={15} />
-                                        <span>Generar y revisar en grande</span>
+                                        {isGeneratingAi ? (
+                                            <>
+                                                <Loader2 size={15} className="animate-spin" />
+                                                <span>Generando con IA...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles size={15} />
+                                                <span>Generar con IA</span>
+                                            </>
+                                        )}
                                     </button>
 
                                     <div className="text-center pt-1">

@@ -243,10 +243,10 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                 )}
                             </div>
 
-                            {/* Sello de Firma si ya fue emitido */}
-                            {rol.firmado && (
-                                <div className="py-1 text-center">
-                                    <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-center space-y-1.5">
+                            {/* Espacio Ampliado para Firma y Sellos */}
+                            <div className="py-1">
+                                {rol.firmado ? (
+                                    <div className="min-h-[95px] p-3.5 sm:p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex flex-col items-center justify-center text-center space-y-1.5">
                                         <CheckCircle2 size={24} className="mx-auto text-emerald-500" />
                                         <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 block">
                                             Firma Electrónica Válida
@@ -257,8 +257,17 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                             </span>
                                         )}
                                     </div>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="min-h-[95px] p-3.5 sm:p-4 rounded-xl border border-dashed border-slate-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col items-center justify-center text-center space-y-1">
+                                        <span className="text-xs font-mono font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
+                                            Espacio para Firma y Sellos
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 dark:text-zinc-600 block">
+                                            Certificado Digital / FirmaEC
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Nombre del Responsable */}
                             <div className="space-y-1.5">

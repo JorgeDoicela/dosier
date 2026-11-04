@@ -19,6 +19,7 @@ export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
     const displayTitle = c.title || title || 'k) FIRMAS DE RESPONSABILIDAD';
+    const sigBoxHeight = Number(c.signatureBoxHeight) || 95;
 
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraft] = useState(displayTitle);
@@ -102,7 +103,7 @@ export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
                 </thead>
                 <tbody className="divide-y divide-black bg-white select-text">
                     {/* FILA 1: ESPACIO DE FIRMA DIGITAL / MANUSCRITA */}
-                    <tr className="h-14">
+                    <tr style={{ height: `${sigBoxHeight}px` }}>
                         <td className="p-1.5 border-r border-black font-bold uppercase text-slate-900 align-middle">
                             FIRMA
                         </td>

@@ -770,7 +770,7 @@ namespace Dosier.Infrastructure.Common.Documents
                                 dataDict["firma_elaborado_docente"] = pea.FirmaElaboradoDocente;
                                 if (!dataDict.ContainsKey("firma_docente_base64") || string.IsNullOrWhiteSpace(dataDict["firma_docente_base64"]?.ToString()))
                                 {
-                                    dataDict["firma_docente_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                    dataDict["firma_docente_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                                 }
                             }
                             if (!string.IsNullOrEmpty(pea.FirmaRevisadoCoord))
@@ -779,7 +779,7 @@ namespace Dosier.Infrastructure.Common.Documents
                                 dataDict["firma_revisado_coord"] = pea.FirmaRevisadoCoord;
                                 if (!dataDict.ContainsKey("firma_coordinador_carrera_base64") || string.IsNullOrWhiteSpace(dataDict["firma_coordinador_carrera_base64"]?.ToString()))
                                 {
-                                    dataDict["firma_coordinador_carrera_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                    dataDict["firma_coordinador_carrera_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                                 }
                             }
                             if (!string.IsNullOrEmpty(pea.FirmaRevisadoAcad))
@@ -788,7 +788,7 @@ namespace Dosier.Infrastructure.Common.Documents
                                 dataDict["firma_revisado_acad"] = pea.FirmaRevisadoAcad;
                                 if (!dataDict.ContainsKey("firma_coordinador_academico_base64") || string.IsNullOrWhiteSpace(dataDict["firma_coordinador_academico_base64"]?.ToString()))
                                 {
-                                    dataDict["firma_coordinador_academico_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                    dataDict["firma_coordinador_academico_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                                 }
                             }
                             if (!string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector))
@@ -797,7 +797,7 @@ namespace Dosier.Infrastructure.Common.Documents
                                 dataDict["firma_aprobado_vicerrector"] = pea.FirmaAprobadoVicerrector;
                                 if (!dataDict.ContainsKey("firma_vicerrector_base64") || string.IsNullOrWhiteSpace(dataDict["firma_vicerrector_base64"]?.ToString()))
                                 {
-                                    dataDict["firma_vicerrector_base64"] = @"<div style=""height: 42px; width: 100%;""></div>";
+                                    dataDict["firma_vicerrector_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                                 }
                             }
                         }

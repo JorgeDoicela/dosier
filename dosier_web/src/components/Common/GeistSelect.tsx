@@ -133,17 +133,17 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
 
             const isTop = (spaceBelow < popoverHeight && spaceAbove > spaceBelow);
 
-            // Ancho inteligente responsivo
+            // Ancho inteligente adaptado al contenedor con holgura para títulos largos
             const viewportWidth = window.innerWidth;
             const minResponsiveWidth = viewportWidth >= 1024 
-                ? 620 
+                ? 440 
                 : viewportWidth >= 640 
-                ? 480 
+                ? 380 
                 : viewportWidth - 32;
 
             const targetWidth = Math.min(
                 Math.max(rect.width, minResponsiveWidth),
-                Math.min(780, viewportWidth - 32)
+                Math.min(680, viewportWidth - 32)
             );
 
             let leftPos = rect.left;
@@ -219,23 +219,24 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
                 disabled={disabled || readOnly}
                 title={displayLabel}
                 className={`
-                    w-full flex items-center justify-between text-left transition-all duration-200 outline-none
+                    w-full min-h-[38px] px-3 py-2 text-xs rounded-lg border border-border-thin bg-surface text-text-main shadow-2xs
+                    flex items-center justify-between text-left transition-all duration-200 outline-none
+                    ${isInteractive ? 'cursor-pointer hover:border-text-main/40' : 'cursor-default select-none opacity-60'}
+                    ${isOpen ? 'ring-2 ring-[#0070f3]/20 border-[#0070f3]' : 'focus:border-[#0070f3]'}
+                    ${readOnly ? 'bg-surface/30 opacity-90 cursor-default' : ''}
                     ${className}
-                    ${isInteractive ? 'cursor-pointer hover:border-text-main/50' : 'cursor-default select-none'}
-                    ${isOpen ? 'ring-2 ring-text-main/20 border-text-main' : ''}
-                    ${readOnly ? 'bg-surface/30 opacity-90' : ''}
                 `}
             >
-                <span className={`truncate min-w-0 pr-2 ${isValueSelected ? 'text-text-main font-bold' : 'text-text-dim/60 font-medium'}`}>
+                <span className={`truncate min-w-0 pr-2 leading-snug ${isValueSelected ? 'text-text-main font-medium' : 'text-text-dim/60 font-normal'}`}>
                     {displayLabel}
                 </span>
 
-                <div className="shrink-0 flex items-center pointer-events-none ml-1.5">
+                <div className="shrink-0 flex items-center pointer-events-none ml-2">
                     {readOnly ? (
-                        <Lock className="w-4 h-4 text-text-dim/70" />
+                        <Lock className="w-3.5 h-3.5 text-text-dim/70" />
                     ) : (
                         <ChevronDown 
-                            className={`w-4 h-4 text-text-dim transition-transform duration-200 ${isOpen ? 'rotate-180 text-text-main' : ''}`} 
+                            className={`w-3.5 h-3.5 text-text-dim transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#0070f3]' : ''}`} 
                         />
                     )}
                 </div>

@@ -33,15 +33,15 @@ export interface PeaDocumentImportModalProps {
 }
 
 const SECTION_LABELS: Record<string, string> = {
-    pea_objectives_section: 'b) Objetivo de la Asignatura',
-    pea_prerequisites_section: 'c) Prerrequisitos Curriculares',
-    pea_career_outcomes_section: 'd) Resultados de Aprendizaje de la Carrera',
-    pea_subject_outcomes_section: 'e) Resultados de Aprendizaje de la Asignatura',
-    pea_contents_section: 'f) Contenidos de Enseñanza y Unidades Temáticas',
-    pea_methodology_section: 'g) Metodología y Recursos Didácticos',
-    pea_resources_section: 'h) Actividades Prácticas Experimentales',
-    pea_evaluation_section: 'i) Evaluación del Aprendizaje',
-    pea_bibliography_section: 'j) Bibliografía Básica y de Consulta'
+    pea_objectives_section: '2. Objetivo de la Asignatura',
+    pea_prerequisites_section: '3. Prerrequisitos Curriculares',
+    pea_career_outcomes_section: '4. Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta',
+    pea_subject_outcomes_section: '5. Resultados de Aprendizaje de la Asignatura',
+    pea_contents_section: '6. Contenidos de Enseñanza',
+    pea_methodology_section: '7. Metodología y Recursos Didácticos',
+    pea_resources_section: '8. Actividades Prácticas',
+    pea_evaluation_section: '9. Evaluación del Aprendizaje',
+    pea_bibliography_section: '10. Bibliografía'
 };
 
 const stripHtmlPreview = (html: string): string => {
@@ -284,11 +284,10 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                             validateAndSelectFile(f);
                                         }}
                                         onClick={() => fileInputRef.current?.click()}
-                                        className={`p-6 rounded-xl border border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
-                                            isDragOver
+                                        className={`p-6 rounded-xl border border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${isDragOver
                                                 ? 'border-[#0070f3] bg-zinc-50 dark:bg-zinc-900'
                                                 : 'border-slate-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 hover:border-[#0070f3]'
-                                        }`}
+                                            }`}
                                     >
                                         <FileUp size={22} className="text-[#0070f3]" strokeWidth={1.75} />
                                         <div className="space-y-0.5">
@@ -385,12 +384,6 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                         {selectedSections.length === extractedDraft.validationSummary.generatedSections.length ? 'Deseleccionar todo' : 'Seleccionar todo'}
                                     </button>
                                 </div>
-                                {extractedDraft.validationSummary.isHoursExactMatch && (
-                                    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                        <CheckCircle2 size={13} />
-                                        <span>Cuadre SIGAFI verificado ({extractedDraft.validationSummary.generatedTotalHoras}h)</span>
-                                    </span>
-                                )}
                             </div>
 
                             <div className="rounded-xl border border-slate-200 dark:border-zinc-800 divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-950">

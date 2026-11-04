@@ -22,6 +22,7 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
     const handleResetDefaults = () => {
         onUpdateConfig(block.id, 'title', 'k) FIRMAS DE RESPONSABILIDAD');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
+        onUpdateConfig(block.id, 'signatureBoxHeight', 95);
         onUpdateConfig(block.id, 'cargoElaborado', 'Docente');
         onUpdateConfig(block.id, 'nombreElaborado', '{{docente_elaborador}}');
         onUpdateConfig(block.id, 'cargoRevisado1', 'Coordinador de Carrera');
@@ -68,6 +69,52 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                     label=""
                     value={config.headerColor || '#1e2a4a'}
                     onChange={(val) => onUpdateConfig(block.id, 'headerColor', val)}
+                />
+            </div>
+
+            {/* ALTURA DEL CUADRO DE FIRMAS Y SELLOS */}
+            <div className="space-y-2 pb-3 border-b border-border-thin/20">
+                <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1">
+                        <Sliders className="w-3 h-3 text-indigo-500" />
+                        Altura del Cuadro de Firmas (Sellos y Rúbricas)
+                    </label>
+                    <span className="text-[10px] font-mono font-bold text-[#0070f3]">
+                        {config.signatureBoxHeight || 95}px
+                    </span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                        { label: '85px', desc: 'Estándar', value: 85 },
+                        { label: '95px', desc: 'Amplio', value: 95 },
+                        { label: '110px', desc: 'Sellos Extra', value: 110 }
+                    ].map(opt => {
+                        const isSelected = (config.signatureBoxHeight || 95) === opt.value;
+                        return (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => onUpdateConfig(block.id, 'signatureBoxHeight', opt.value)}
+                                className={`p-1.5 rounded border text-center transition-all cursor-pointer ${
+                                    isSelected
+                                        ? 'border-[#0070f3] bg-[#0070f3]/10 text-[#0070f3] font-bold'
+                                        : 'border-border-thin bg-surface text-text-dim hover:text-text-main hover:bg-surface-hover/40'
+                                }`}
+                            >
+                                <span className="text-[10px] block">{opt.label}</span>
+                                <span className="text-[8px] opacity-70 block">{opt.desc}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <input
+                    type="range"
+                    min={70}
+                    max={140}
+                    step={5}
+                    value={config.signatureBoxHeight || 95}
+                    onChange={(e) => onUpdateConfig(block.id, 'signatureBoxHeight', Number(e.target.value))}
+                    className="w-full accent-[#0070f3] cursor-pointer"
                 />
             </div>
 

@@ -446,6 +446,7 @@ export const generatePeaSignaturesHtml = (block: DocumentBlock): string => {
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
     const borderCss = 'border: 1px solid #000000;';
+    const sigHeight = Number(c.signatureBoxHeight) || 95;
 
     return `
 <div class="pea-section-signatures" style="margin-top: 0; margin-bottom: 0; font-family: inherit; page-break-inside: avoid;">
@@ -464,12 +465,12 @@ export const generatePeaSignaturesHtml = (block: DocumentBlock): string => {
     </thead>
     <tbody>
       <!-- FIRMA -->
-      <tr style="height: 46px;">
-        <td style="${borderCss} padding: 4px 6px; font-weight: bold; text-align: left; vertical-align: middle;">FIRMA</td>
-        <td style="${borderCss} padding: 4px 6px; vertical-align: bottom;">{{default firma_docente_base64 ""}}</td>
-        <td style="${borderCss} padding: 4px 6px; vertical-align: bottom;">{{default firma_coordinador_carrera_base64 ""}}</td>
-        <td style="${borderCss} padding: 4px 6px; vertical-align: bottom;">{{default firma_coordinador_academico_base64 ""}}</td>
-        <td style="${borderCss} padding: 4px 6px; vertical-align: bottom;">{{default firma_vicerrector_base64 ""}}</td>
+      <tr style="height: ${sigHeight}px;">
+        <td style="${borderCss} padding: 6px 8px; font-weight: bold; text-align: left; vertical-align: middle;">FIRMA</td>
+        <td style="${borderCss} padding: 6px 8px; vertical-align: middle; text-align: center; height: ${sigHeight}px;">{{default firma_docente_base64 ""}}</td>
+        <td style="${borderCss} padding: 6px 8px; vertical-align: middle; text-align: center; height: ${sigHeight}px;">{{default firma_coordinador_carrera_base64 ""}}</td>
+        <td style="${borderCss} padding: 6px 8px; vertical-align: middle; text-align: center; height: ${sigHeight}px;">{{default firma_coordinador_academico_base64 ""}}</td>
+        <td style="${borderCss} padding: 6px 8px; vertical-align: middle; text-align: center; height: ${sigHeight}px;">{{default firma_vicerrector_base64 ""}}</td>
       </tr>
       <!-- NOMBRE -->
       <tr>

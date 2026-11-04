@@ -10,9 +10,16 @@ import { BuilderFloatingTab } from './shell/components/BuilderFloatingTab';
 import { BuilderSectionFooterNav } from './shell/components/BuilderSectionFooterNav';
 import { OutputSection } from './shell/components/OutputSection';
 import { PeaAiAssistantModal } from './shell/components/PeaAiAssistantModal';
+import { PeaAiProposalModal } from './shell/components/PeaAiProposalModal';
 import { PeaDocumentImportModal } from './shell/components/PeaDocumentImportModal';
 import { extractPeaFromDocument } from '../../services/peaDocumentExtractorService';
-import type { PeaStructuredDraft } from '../../services/peaAiService';
+import {
+    generatePeaAiDraft,
+    getPeaAiConfig,
+    convertDraftToEditorFields,
+    type PeaStructuredDraft
+} from '../../services/peaAiService';
+import { useNotifications } from '../../api/NotificationsContext';
 import type { BuilderSection } from './shell/hooks/useBuilderLayout';
 
 import { useAuth } from '../../api/AuthContext';
@@ -74,19 +81,20 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     } = props;
 
     const { isAdmin } = useAuth();
+    const { addToast } = useNotifications();
     const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
     const { layout, autoSave, pdfAndSign, network } = useDOSIERBuilderShell(props);
     const [showUpdateModal, setShowUpdateModal] = useState<boolean>(hasTemplateUpdate);
     const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
+    const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
+    const [aiConfigVersion, setAiConfigVersion] = useState<number>(0);
+    const [aiGeneratedDraft, setAiGeneratedDraft] = useState<PeaStructuredDraft | null>(null);
+    const [isAiProposalModalOpen, setIsAiProposalModalOpen] = useState<boolean>(false);
     const [importDocModalOpen, setImportDocModalOpen] = useState<boolean>(false);
     const [importInitialFile, setImportInitialFile] = useState<File | null>(null);
     const [importInitialInstructions, setImportInitialInstructions] = useState<string>('');
     const [importExtractedDraft, setImportExtractedDraft] = useState<PeaStructuredDraft | null>(null);
     const [importAutoExtract, setImportAutoExtract] = useState<boolean>(false);
-    const [aiTargetSection, setAiTargetSection] = useState<string>('all');
-    const [aiCustomInstructions, setAiCustomInstructions] = useState<string>('');
-    const [aiAutoGenerate, setAiAutoGenerate] = useState<boolean>(false);
-    const [aiInitialTab, setAiInitialTab] = useState<'generate' | 'config'>('generate');
 
     const handleTriggerDocExtraction = useCallback(async (file: File) => {
         if (!resolvedPeaUuid) {
@@ -115,17 +123,80 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         }
     }, [resolvedPeaUuid, formData]);
 
-    const handleTriggerAiGeneration = useCallback((targetSec: string, instructions: string) => {
-        setAiTargetSection(targetSec);
-        setAiCustomInstructions(instructions);
-        setAiAutoGenerate(true);
-        setAiInitialTab('generate');
-        setAiModalOpen(true);
-    }, []);
+    const handleTriggerAiGeneration = useCallback(async (targetSec: string, instructions: string) => {
+        if (!resolvedPeaUuid) {
+            addToast('Identificador requerido', 'Guarde primero el documento para habilitar la generación.', 'warning');
+            return;
+        }
+        setIsGeneratingAi(true);
+        try {
+            const status = await getPeaAiConfig();
+            if (!status.isReady) {
+                addToast('API Key no configurada', 'Haga clic en "Configurar proveedor" para ingresar su credencial de IA.', 'warning');
+                return;
+            }
+
+            const rawUnits: any[] = Array.isArray(formData?.Unidades) ? formData.Unidades : [];
+            const currentUnidades = rawUnits.map((u, idx) => ({
+                num: Number(u.num ?? u.Numero ?? idx + 1),
+                titulo: String(u.titulo ?? u.Titulo ?? u.NombreUnidad ?? ''),
+                contenidos: String(u.contenidos ?? u.Contenidos ?? ''),
+                horasCD: Number(u.horasCD ?? u.HorasCD ?? 0),
+                horasAPE: Number(u.horasAPE ?? u.HorasAPE ?? 0),
+                horasTA: Number(u.horasTA ?? u.HorasTA ?? 0)
+            })).filter(u => u.titulo || u.contenidos);
+
+            const rawHorasCD = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
+            const rawHorasAPE = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
+            const rawHorasTA = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
+            const totalHoras = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? (rawHorasCD + rawHorasAPE + rawHorasTA));
+
+            const isUnconfiguredSplit = rawHorasCD <= 0 && rawHorasAPE <= 0 && totalHoras > 0;
+            const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
+            const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
+            const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
+
+            const draft = await generatePeaAiDraft(resolvedPeaUuid, {
+                targetSection: targetSec,
+                customInstructions: instructions.trim() || undefined,
+                provider: status.activeProvider,
+                model: status.activeModel,
+                baseUrlOverride: status.activeBaseUrl || undefined,
+                currentHorasCD: horasCD > 0 ? horasCD : undefined,
+                currentHorasAPE: horasAPE > 0 ? horasAPE : undefined,
+                currentHorasTA: horasTA > 0 ? horasTA : undefined,
+                currentTotalHoras: totalHoras > 0 ? totalHoras : undefined,
+                currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined
+            });
+
+            setAiGeneratedDraft(draft);
+            setIsAiProposalModalOpen(true);
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo generar el borrador curricular.';
+            addToast('Error en Generación IA', typeof msg === 'string' ? msg : 'Verifique su API Key y conexión.', 'error');
+        } finally {
+            setIsGeneratingAi(false);
+        }
+    }, [resolvedPeaUuid, formData, addToast]);
+
+    const handleApplyAiProposal = useCallback((selectedSections: string[]) => {
+        if (!aiGeneratedDraft || selectedSections.length === 0) return;
+        const patch = convertDraftToEditorFields(aiGeneratedDraft, selectedSections);
+        if (onApplyStructuredDraft) {
+            onApplyStructuredDraft(patch);
+        } else if (onUpdateField) {
+            Object.entries(patch).forEach(([key, val]) => onUpdateField(key, val));
+        }
+        addToast(
+            'Propuesta IA Aplicada',
+            `Se han completado ${selectedSections.length} sección(es) en el editor.`,
+            'success'
+        );
+        setIsAiProposalModalOpen(false);
+        setAiGeneratedDraft(null);
+    }, [aiGeneratedDraft, onApplyStructuredDraft, onUpdateField, addToast]);
 
     const handleOpenAiConfigModal = useCallback(() => {
-        setAiAutoGenerate(false);
-        setAiInitialTab('config');
         setAiModalOpen(true);
     }, []);
 
@@ -430,15 +501,11 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                     setImportDocModalOpen(true);
                                                 } : undefined}
                                                 onTriggerDocExtraction={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerDocExtraction : undefined}
-                                                onOpenAiModal={templateCode === 'PEA_OFICIAL' && !readOnly ? () => {
-                                                    setAiTargetSection(layout.activeTab);
-                                                    setAiCustomInstructions('');
-                                                    setAiAutoGenerate(false);
-                                                    setAiInitialTab('generate');
-                                                    setAiModalOpen(true);
-                                                } : undefined}
+                                                onOpenAiModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
                                                 onTriggerAiGeneration={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerAiGeneration : undefined}
                                                 onOpenAiConfigModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
+                                                isGeneratingAi={isGeneratingAi}
+                                                aiConfigVersion={aiConfigVersion}
                                             />
                                         </div>
                                     </div>
@@ -514,28 +581,28 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                             </div>
                         </div>
                     )}
-                    {/* ── Modal del Asistente Curricular IA ── */}
+                    {/* ── Modal de Previsualización de Propuesta IA ── */}
+                    {templateCode === 'PEA_OFICIAL' && (
+                        <PeaAiProposalModal
+                            isOpen={isAiProposalModalOpen}
+                            onClose={() => {
+                                setIsAiProposalModalOpen(false);
+                                setAiGeneratedDraft(null);
+                            }}
+                            draft={aiGeneratedDraft}
+                            onApply={handleApplyAiProposal}
+                        />
+                    )}
+
+                    {/* ── Modal de Configuración de API Key del Asistente Curricular IA ── */}
                     {templateCode === 'PEA_OFICIAL' && (
                         <PeaAiAssistantModal
                             isOpen={aiModalOpen}
-                            onClose={() => {
-                                setAiModalOpen(false);
-                                setAiAutoGenerate(false);
-                            }}
+                            onClose={() => setAiModalOpen(false)}
                             peaUuid={resolvedPeaUuid}
                             formData={formData}
-                            initialTargetSection={aiTargetSection}
-                            initialCustomInstructions={aiCustomInstructions}
-                            autoGenerateOnOpen={aiAutoGenerate}
-                            initialTab={aiInitialTab}
                             isAdmin={isAdmin}
-                            onApplyDraft={(patch) => {
-                                if (onApplyStructuredDraft) {
-                                    onApplyStructuredDraft(patch);
-                                } else if (onUpdateField) {
-                                    Object.entries(patch).forEach(([key, val]) => onUpdateField(key, val));
-                                }
-                            }}
+                            onConfigSaved={() => setAiConfigVersion(v => v + 1)}
                         />
                     )}
 

@@ -467,12 +467,17 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("1. DATOS GENERALES DE SOLO CONTEXTO: Los campos de la Sección 1 (nombre de asignatura, código, carrera, modalidad, unidad de organización curricular, periodo académico, semestre, total de horas y créditos) están BLOQUEADOS en SIGAFI. Úsalos EXCLUSIVAMENTE como contexto pedagógico orientativo. Queda estrictamente PROHIBIDO generar contenido para estos campos, modificarlos, o redactar encabezados o tablas de datos generales dentro de las demás secciones.");
             sb.AppendLine("2. Los campos 'objetivo_asignatura', 'rda_carrera', 'resultados_aprendizaje', 'metodologia_ensenanza', 'recursos_didacticos', 'bibliografia_basica' y 'bibliografia_consulta' deben entregarse en HTML semántico limpio (<p>, <ul>, <li>, <strong>).");
             sb.AppendLine("3. En 'prerrequisitos', si la asignatura requiere materias previas, genera cada elemento con 'asignatura' (nombre de la materia previa) y 'observacion' ('Haber cursado y aprobado la asignatura según malla curricular'). Si no requiere prerrequisitos, devuelve un arreglo vacío []. NUNCA generes elementos con cadenas vacías.");
-            sb.AppendLine("4. En 'unidades', genera exactamente 4 unidades temáticas coherentes. En 'titulo' escribe SOLO el nombre temático de la unidad (sin el prefijo 'Unidad 1:'). La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + " (> 0 en cada unidad). La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + " (> 0 en cada unidad). La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + " (> 0 en cada unidad). NUNCA dejes componentes de horas en cero.");
+            sb.AppendLine("4. En 'unidades', genera unidades temáticas coherentes (por defecto 4, a menos que el docente solicite expresamente otra cantidad en sus instrucciones). En 'titulo' escribe SOLO el nombre temático de la unidad (sin el prefijo 'Unidad 1:'). La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + " (> 0 en cada unidad). La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + " (> 0 en cada unidad). La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + " (> 0 en cada unidad). NUNCA dejes componentes de horas en cero.");
             sb.AppendLine("5. En cada unidad, el campo 'contenidos' debe listar los temas y subtemas numerados separados por saltos de línea (ej: '1.1 Conceptos fundamentales\\n1.2 Técnicas aplicadas\\n1.3 Procesos experimentales').");
             sb.AppendLine("6. En 'actividades_practicas', genera al menos 1 práctica experimental por cada unidad temática, especificando unidad (número), nombre descriptivo de la práctica, horas, escenario (taller/laboratorio/cocina experimental) y producto verificable.");
             sb.AppendLine("7. En 'evaluaciones', incluye los 4 componentes normativos sobre 10 puntos (Gestión Formativa / Docencia, Gestión Práctica y Experimental, Trabajo Autónomo, Evaluación Sumativa).");
             sb.AppendLine("8. En 'bibliografias', incluye al menos 3 obras de tipo 'Basica' y 3 de tipo 'Consulta' reales y vigentes en formato APA 7ma edición.");
             sb.AppendLine($"9. Sección objetivo solicitada: '{targetSection}'.");
+            if (!string.IsNullOrWhiteSpace(targetSection) && !string.Equals(targetSection, "all", StringComparison.OrdinalIgnoreCase))
+            {
+                sb.AppendLine($"ALCANCE ESTRICTO: El usuario solicitó formular ÚNICAMENTE la sección '{targetSection}'. Enfoca tu respuesta de forma especializada en esa sección. Para las claves JSON que no correspondan a '{targetSection}', devuelve null o arreglo vacío.");
+            }
+            sb.AppendLine("10. PRIORIDAD DE LAS DIRECTRICES DEL DOCENTE: Si se proporcionan 'INSTRUCCIONES ESPECÍFICAS DEL DOCENTE', debes priorizarlas obligatoriamente (tecnologías requeridas, enfoque pedagógico, temas clave o estructura deseada), adaptando coherentemente los objetivos, contenidos temáticos, actividades prácticas y bibliografía.");
 
             return sb.ToString();
         }
@@ -1017,6 +1022,12 @@ namespace dosier_infrastructure.Curriculum
             if (result.ActividadesPracticas.Count > 0) generatedSections.Add("pea_resources_section");
             if (result.Evaluaciones.Count > 0) generatedSections.Add("pea_evaluation_section");
             if (!string.IsNullOrWhiteSpace(result.BibliografiaBasica) || !string.IsNullOrWhiteSpace(result.BibliografiaConsulta)) generatedSections.Add("pea_bibliography_section");
+
+            // Si el docente solicitó una sección específica (targetSection != "all"), restringir estrictamente las secciones generadas
+            if (!string.IsNullOrWhiteSpace(targetSection) && !string.Equals(targetSection, "all", StringComparison.OrdinalIgnoreCase))
+            {
+                generatedSections = generatedSections.Where(s => string.Equals(s, targetSection, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
 
             result.ValidationSummary = new PeaDraftValidationSummaryDto
             {

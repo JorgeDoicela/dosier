@@ -74,9 +74,9 @@ public class SignatureStamper
                 // ── MODO MATRIZ PEA (4 NIVELES DE FIRMAS) ──────────────────────────
                 // En A4 con márgenes de 1.8cm (51.02pt), ancho útil = 493.24pt.
                 // 5 columnas de 20%: ancho de columna = 98.65pt.
-                // Sello compacto: ancho = 94.0pt, alto = 44.0pt.
+                // Sello oficial para celda ampliada (95px): ancho = 94.0pt, alto = 48.0pt.
                 float stampWidth = 94.0f;
-                float stampHeight = 44.0f;
+                float stampHeight = 48.0f;
 
                 // Determinar el índice de columna (1: Elaborado, 2: Revisado Carrera, 3: Revisado Académico, 4: Aprobado)
                 int colIndex = ResolvePeaColumnIndex(rolEnDocumento, cargo, layoutLocator.FirmanteX);
@@ -86,27 +86,27 @@ public class SignatureStamper
                 float colLeft = marginX + colIndex * colWidth;
                 float canvasX = colLeft + (colWidth - stampWidth) / 2.0f;
 
-                // Determinar coordenada Y centrada en la fila FIRMA
+                // Determinar coordenada Y centrada en la celda ampliada de la fila FIRMA
                 float canvasY;
                 if (layoutLocator.FirmaY.HasValue)
                 {
-                    // Centrado verticalmente dentro de la celda de la fila FIRMA
-                    canvasY = layoutLocator.FirmaY.Value - 14.0f;
+                    // Centrado perfecto con la línea media de la celda FIRMA
+                    canvasY = layoutLocator.FirmaY.Value - (stampHeight / 2.0f);
                 }
                 else if (layoutLocator.NombreY.HasValue)
                 {
-                    // La fila FIRMA está inmediatamente sobre la fila NOMBRE
-                    canvasY = layoutLocator.NombreY.Value + 10.0f;
+                    // La fila FIRMA ampliada está sobre la fila NOMBRE (+71pt de alto)
+                    canvasY = layoutLocator.NombreY.Value + 12.0f;
                 }
                 else if (layoutLocator.ResponsabilidadY.HasValue)
                 {
                     // Fallback anclado al encabezado de la sección de firmas
-                    canvasY = layoutLocator.ResponsabilidadY.Value - 68.0f;
+                    canvasY = layoutLocator.ResponsabilidadY.Value - 85.0f;
                 }
                 else
                 {
                     // Fallback absoluto estándar para la página 3 del PEA
-                    canvasY = 112.0f;
+                    canvasY = 110.0f;
                 }
 
                 var stampTable = BuildCompactPeaStamp(

@@ -282,7 +282,8 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
                 cargoElaborado: 'Docente',
                 cargoRevisado1: 'Coordinador de Carrera',
                 cargoRevisado2: 'Coordinador Académico',
-                cargoAprobado: 'Vicerrectorado'
+                cargoAprobado: 'Vicerrectorado',
+                signatureBoxHeight: 95
             }
         }
     ];
