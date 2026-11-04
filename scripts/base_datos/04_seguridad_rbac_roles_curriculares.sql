@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 --  SISTEMA DOSIER - GOBERNANZA CURRICULAR Y GESTIÓN DOCUMENTAL (ISTPET)
 --  Script 04: Configuración de Seguridad RBAC y Roles Curriculares Oficiales
 --  Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
@@ -237,6 +237,17 @@ WHERE m.id_sistema = @idSistemaDosier
   );
 
 -- F. Sincronizar roles de autoridades designadas hacia usuarios existentes
+-- F.1 Garantizar existencia de cuenta en 'usuarios' para las autoridades curriculares designadas
+INSERT INTO usuarios (idSigafi, tablaSigafi, nombre, contrasenia, activo, administrador, emailInstitucional)
+SELECT aut.idSigafi, 'profesor', aut.nombreCompleto, aut.idSigafi, 1, 0,
+       COALESCE((SELECT p.emailInstitucional FROM profesores p WHERE p.idProfesor = aut.idSigafi LIMIT 1), CONCAT(LOWER(REPLACE(aut.idSigafi, ' ', '')), '@istpet.edu.ec'))
+FROM doc_autoridades_curriculares aut
+WHERE aut.esActivo = 1
+  AND NOT EXISTS (
+      SELECT 1 FROM usuarios u WHERE CONVERT(u.idSigafi USING utf8mb4) = CONVERT(aut.idSigafi USING utf8mb4)
+  );
+
+-- F.2 Sincronizar asignación de roles curriculares oficiales
 INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
 SELECT u.idUsuario, 
        CASE CONVERT(aut.cargoCurricular USING utf8mb4)
@@ -257,7 +268,6 @@ WHERE aut.esActivo = 1
                            WHEN 'COORD_CARRERA' THEN @rolCoordCar
                        END
   );
-
 -- G. Asignar rol DOSIER_ADMIN a usuarios con administrador = 1
 INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
 SELECT u.idUsuario, @rolAdmin, CURDATE(), 1

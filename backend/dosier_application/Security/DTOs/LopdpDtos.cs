@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace dosier_application.Security.DTOs;
 
@@ -64,4 +64,11 @@ public class ConsentimientoResponse
     public string Estado { get; set; } = null!;
 }
 
-
+public class TerminoVigenteDto
+{
+    public int IdTermino { get; set; }
+    public string VersionTermino { get; set; } = string.Empty;
+    public string? Contenido { get; set; }
+    public DateOnly? FechaPublicacion { get; set; }
+    public bool EsVigente { get; set; }
+}

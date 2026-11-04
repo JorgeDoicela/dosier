@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using dosier_domain.Identity.Entities;
 using dosier_infrastructure.data.models.Cowork;
 
@@ -29,7 +29,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocEmailHistorial>    DocEmailHistorials     { get; set; }
     public virtual DbSet<AccessToken>           DocTokensAcceso        { get; set; }
     public virtual DbSet<DocUsuarioMetadata>    DocUsuariosMetadata    { get; set; }
-    public virtual DbSet<DocLopdpConsentimiento> DocLopdpConsentimientos { get; set; }
     public virtual DbSet<DocLopdpAuditoriaDatos> DocLopdpAuditoriaDatos  { get; set; }
     public virtual DbSet<DocAuditAdmin>       DocAuditAdmin          { get; set; }
     public virtual DbSet<DocDispositivoToken> DocDispositivosTokens   { get; set; }
@@ -151,6 +150,10 @@ public partial class DosierContext : DbContext
     // --- Datos institucionales (para actas y certificados) ---
     public virtual DbSet<InstitucionesInstituto>InstitucionesInstitutos{ get; set; } // instituciones_instituto (RUC, dirección)
     public virtual DbSet<Parametro>             Parametros            { get; set; } // parametros (rector, firma, sello)
+    // --- Protección de Datos Institucional SIGAFI (LOPDP) ---
+    public virtual DbSet<PdCategoriaTerminoCondicion> PdCategoriasTerminosCondiciones { get; set; }
+    public virtual DbSet<PdTerminoCondicion>          PdTerminosCondiciones          { get; set; }
+    public virtual DbSet<PdAceptacionUsuario>         PdAceptacionesUsuarios         { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

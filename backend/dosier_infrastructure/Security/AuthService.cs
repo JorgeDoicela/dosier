@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using dosier_domain.Identity.Entities;
@@ -391,12 +391,16 @@ public class AuthService : IAuthService
 
         var systemsClaim = string.Join(",", sistemas);
 
-        var lastConsent = await _context.DocLopdpConsentimientos
-            .Where(c => c.IdUsuario == user.IdUsuario && c.VersionPolitica == "LOPDP_GENERAL")
-            .OrderByDescending(c => c.FechaConsentimiento)
+        var idTerminoVigente = await _context.PdTerminosCondiciones
+            .AsNoTracking()
+            .Where(t => t.EsVigente == 1)
+            .Select(t => t.IdTermino)
             .FirstOrDefaultAsync();
+        if (idTerminoVigente <= 0) idTerminoVigente = 1;
 
-        var hasAcceptedLopdp = lastConsent != null && lastConsent.Estado == "Otorgado";
+        var hasAcceptedLopdp = await _context.PdAceptacionesUsuarios
+            .AsNoTracking()
+            .AnyAsync(a => a.IdUsuario == user.IdSigafi && a.IdTermino == idTerminoVigente);
 
         var response = new AuthResponse
         {
@@ -474,9 +478,17 @@ public class AuthService : IAuthService
         var dbUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == idReferencia);
         if (dbUser == null) return (null, false);
 
-        var aceptoLopdp = await _context.DocLopdpConsentimientos
+        // Verificación institucional centralizada de LOPDP en SIGAFI (pd_aceptaciones_usuarios)
+        var idTerminoVigente = await _context.PdTerminosCondiciones
             .AsNoTracking()
-            .AnyAsync(c => c.IdUsuario == dbUser.IdUsuario && c.VersionPolitica == "LOPDP_GENERAL" && c.Estado == "Otorgado");
+            .Where(t => t.EsVigente == 1)
+            .Select(t => t.IdTermino)
+            .FirstOrDefaultAsync();
+        if (idTerminoVigente <= 0) idTerminoVigente = 1;
+
+        var aceptoLopdp = await _context.PdAceptacionesUsuarios
+            .AsNoTracking()
+            .AnyAsync(a => (a.IdUsuario == dbUser.IdSigafi || a.IdUsuario == idReferencia) && a.IdTermino == idTerminoVigente);
 
         return (dbUser.IdUsuario, aceptoLopdp);
     }

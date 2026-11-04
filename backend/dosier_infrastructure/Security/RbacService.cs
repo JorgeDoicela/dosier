@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using dosier_domain.Identity.Entities;
 using dosier_infrastructure.data.models;
@@ -158,7 +158,7 @@ public class RbacService : IRbacService
                     new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
                     {
                         IdSigafi = "1802707511",
-                        NombreCompleto = "FREDDY BAÑO",
+                        NombreCompleto = "FREDDY PATRICIO BAÑO NARANJO",
                         CargoCurricular = "VICERRECTOR",
                         IdCarrera = null,
                         EsActivo = true,
@@ -166,8 +166,8 @@ public class RbacService : IRbacService
                     },
                     new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
                     {
-                        IdSigafi = "0502405889",
-                        NombreCompleto = "CRISTIAN COBOS",
+                        IdSigafi = "1003987763",
+                        NombreCompleto = "ELVA DAYANA TAPIA VELASQUEZ",
                         CargoCurricular = "COORD_ACADEMICO",
                         IdCarrera = null,
                         EsActivo = true,
@@ -175,8 +175,35 @@ public class RbacService : IRbacService
                     },
                     new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
                     {
+                        IdSigafi = "1720004793",
+                        NombreCompleto = "CHRISTIAN GIOVANNY CASTRO HERRERA",
+                        CargoCurricular = "COORD_ACADEMICO",
+                        IdCarrera = null,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1720000004",
+                        NombreCompleto = "DAVID ALEJANDRO GUAMAN PEREZ",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 1,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1721465431",
+                        NombreCompleto = "WILMER PATRICIO TOAPANTA TOCTAGUANO",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 7,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
                         IdSigafi = "1709890626",
-                        NombreCompleto = "WILFRIDO TRUJILLO",
+                        NombreCompleto = "WILFRIDO AMILCAR TRUJILLO QUINTO",
                         CargoCurricular = "COORD_CARRERA",
                         IdCarrera = 9,
                         EsActivo = true,
@@ -184,8 +211,8 @@ public class RbacService : IRbacService
                     },
                     new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
                     {
-                        IdSigafi = "1720004793",
-                        NombreCompleto = "CHRISTIAN CASTRO",
+                        IdSigafi = "1717774861",
+                        NombreCompleto = "RAMIRO ALEXANDER CAMACHO CEVALLOS",
                         CargoCurricular = "COORD_CARRERA",
                         IdCarrera = 10,
                         EsActivo = true,
@@ -193,18 +220,98 @@ public class RbacService : IRbacService
                     },
                     new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
                     {
-                        IdSigafi = "1721465431",
-                        NombreCompleto = "WILMER TOAPANTA",
+                        IdSigafi = "1726546763",
+                        NombreCompleto = "DANIELA ESTEFANIA GUILLEN ARAUZ",
                         CargoCurricular = "COORD_CARRERA",
-                        IdCarrera = 7,
+                        IdCarrera = 12,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1716750268",
+                        NombreCompleto = "ANDREA FABIOLA ACOSTA BELTRAN",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 13,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1720114600",
+                        NombreCompleto = "JULIO ESTEBAN ROBALINO COLCHA",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 14,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1719322149",
+                        NombreCompleto = "DIANA MAGALY SALDAÑA OBANDO",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 15,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "0503640997",
+                        NombreCompleto = "CARMEN NASHALI GALARZA VASQUEZ",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 16,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1722380969",
+                        NombreCompleto = "CHRISTIAN ALEXANDER FLORES ALVEAR",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 17,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1717591307",
+                        NombreCompleto = "OLGA MERIDA ALVEAR PRADO",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 18,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "1723151781",
+                        NombreCompleto = "DANIEL ISMAEL DURAN CALDERON",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 19,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "0802362574",
+                        NombreCompleto = "CRISTHIAN ALEX VALENCIA ASTUDILLO",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 20,
+                        EsActivo = true,
+                        FechaDesignacion = new DateOnly(2024, 1, 1)
+                    },
+                    new dosier_domain.Curriculum.Entities.DocAutoridadCurricular
+                    {
+                        IdSigafi = "0604114280",
+                        NombreCompleto = "EDISON ALBERTO AGREDA CUENCA",
+                        CargoCurricular = "COORD_CARRERA",
+                        IdCarrera = 21,
                         EsActivo = true,
                         FechaDesignacion = new DateOnly(2024, 1, 1)
                     }
                 });
                 await _context.SaveChangesAsync();
             }
-        }
-        catch
+        }        catch
         {
             // Ignorar de forma resiliente si la tabla aún no ha sido provisionada por los scripts iniciales
         }

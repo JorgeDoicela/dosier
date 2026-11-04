@@ -13,8 +13,6 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
     const [clickedIndex, setClickedIndex] = useState<number | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const isHoveringRef = useRef(false);
-    const lastAngleRef = useRef(0);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!containerRef.current) return;
@@ -26,41 +24,25 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
         const x = e.clientX - centerX;
         const y = e.clientY - centerY;
 
-        const normX = x / (rect.width / 2);
-        const normY = y / (rect.height / 2);
-        const dist = Math.min(Math.sqrt(normX * normX + normY * normY), 1.5);
-
-        let angle = Math.atan2(y, x) * (180 / Math.PI);
-
-        if (!isHoveringRef.current) {
-            isHoveringRef.current = true;
-            lastAngleRef.current = angle;
-        } else {
-            let diff = angle - lastAngleRef.current;
-            while (diff < -180) diff += 360;
-            while (diff > 180) diff -= 360;
-            angle = lastAngleRef.current + diff;
-            lastAngleRef.current = angle;
-        }
+        const normX = Math.max(-1, Math.min(1, x / (rect.width / 2)));
+        const normY = Math.max(-1, Math.min(1, y / (rect.height / 2)));
+        const dist = Math.min(Math.sqrt(normX * normX + normY * normY), 1.2);
 
         const el = containerRef.current;
         el.style.setProperty('--mouse-x', `${x}px`);
         el.style.setProperty('--mouse-y', `${y}px`);
         el.style.setProperty('--norm-x', `${normX}`);
         el.style.setProperty('--norm-y', `${normY}`);
-        el.style.setProperty('--angle', `${angle}deg`);
         el.style.setProperty('--dist', `${dist}`);
     };
 
     const handleMouseLeave = () => {
-        isHoveringRef.current = false;
         if (!containerRef.current) return;
         const el = containerRef.current;
         el.style.setProperty('--mouse-x', '0px');
         el.style.setProperty('--mouse-y', '0px');
         el.style.setProperty('--norm-x', '0');
         el.style.setProperty('--norm-y', '0');
-        el.style.setProperty('--angle', '0deg');
         el.style.setProperty('--dist', '0');
     };
 
@@ -189,7 +171,7 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                     {/* =========================================================================
                         [MODO 1: SIN COLORES] (isRainbow === false)
                         - Brillo de fondo monocromático/blanco centrado en el logo.
-                        - Sigue suavemente al cursor y reacciona al movimiento.
+                        - Sigue suavemente al cursor con aceleración por hardware.
                         ========================================================================= */}
                     {/* Capa 1: Brillo de fondo amplio y dinámico de colores */}
                     {currentTheme === 'dark' ? (
@@ -197,8 +179,8 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                             className="absolute inset-0 pointer-events-none"
                             style={{
                                 opacity: isRainbow ? 0 : 1,
-                                transform: isRainbow ? 'scale(0.3) rotate(-10deg)' : 'scale(1) rotate(0deg)',
-                                transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1)',
+                                transform: isRainbow ? 'scale(0.3)' : 'scale(1)',
+                                transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                                 zIndex: 0
                             }}
                         >
@@ -208,11 +190,11 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                                 style={{
                                     left: '30%',
                                     top: '30%',
-                                    width: '650px',
-                                    height: '650px',
-                                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.20) 0%, transparent 70%)',
-                                    transform: 'translate(calc(-50% + var(--mouse-x, 0px) * 0.15), calc(-50% + var(--mouse-y, 0px) * 0.15)) scale(calc(1 - var(--norm-x, 0) * 0.60 - var(--norm-y, 0) * 0.60))',
-                                    filter: 'blur(calc(90px - var(--dist, 0) * 15px))',
+                                    width: '620px',
+                                    height: '620px',
+                                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%)',
+                                    transform: 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.08), calc(-50% + var(--mouse-y, 0px) * 0.08), 0)',
+                                    filter: 'blur(75px)',
                                     borderRadius: '50%',
                                 }}
                             />
@@ -222,11 +204,11 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                                 style={{
                                     left: '70%',
                                     top: '70%',
-                                    width: '650px',
-                                    height: '650px',
-                                    background: 'radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%)',
-                                    transform: 'translate(calc(-50% + var(--mouse-x, 0px) * 0.15), calc(-50% + var(--mouse-y, 0px) * 0.15)) scale(calc(1 + var(--norm-x, 0) * 0.60 + var(--norm-y, 0) * 0.60))',
-                                    filter: 'blur(calc(90px - var(--dist, 0) * 15px))',
+                                    width: '620px',
+                                    height: '620px',
+                                    background: 'radial-gradient(circle, rgba(37, 99, 235, 0.20) 0%, transparent 70%)',
+                                    transform: 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.08), calc(-50% + var(--mouse-y, 0px) * 0.08), 0)',
+                                    filter: 'blur(75px)',
                                     borderRadius: '50%',
                                 }}
                             />
@@ -236,11 +218,11 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                                 style={{
                                     left: '50%',
                                     top: '80%',
-                                    width: '550px',
-                                    height: '550px',
+                                    width: '520px',
+                                    height: '520px',
                                     background: 'radial-gradient(circle, rgba(14, 116, 144, 0.14) 0%, transparent 70%)',
-                                    transform: 'translate(calc(-50% + var(--mouse-x, 0px) * 0.10), calc(-50% + var(--mouse-y, 0px) * 0.15)) scale(calc(1 + var(--norm-y, 0) * 0.70))',
-                                    filter: 'blur(calc(80px - var(--dist, 0) * 15px))',
+                                    transform: 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.06), calc(-50% + var(--mouse-y, 0px) * 0.08), 0)',
+                                    filter: 'blur(70px)',
                                     borderRadius: '50%',
                                 }}
                             />
@@ -251,13 +233,13 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                             style={{
                                 left: '50%',
                                 top: '50%',
-                                width: '700px',
-                                height: '700px',
+                                width: '650px',
+                                height: '650px',
                                 transform: isRainbow
-                                    ? 'translate(-50%, -50%) scale(0.25)'
-                                    : 'translate(calc(-50% + var(--mouse-x, 0px) * 0.12), calc(-50% + var(--mouse-y, 0px) * 0.12)) scale(calc(1 + var(--dist, 0) * 0.06))',
+                                    ? 'translate3d(-50%, -50%, 0) scale(0.25)'
+                                    : 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.08), calc(-50% + var(--mouse-y, 0px) * 0.08), 0) scale(calc(1 + var(--dist, 0) * 0.04))',
                                 background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, transparent 80%)',
-                                filter: 'blur(calc(70px - var(--dist, 0) * 10px))',
+                                filter: 'blur(60px)',
                                 borderRadius: '50%',
                                 opacity: isRainbow ? 0 : 1,
                                 zIndex: 0,
@@ -265,17 +247,17 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                         />
                     )}
 
-                    {/* Capa 2: Haces de luz monocromáticos */}
+                    {/* Capa 2: Haces de luz monocromáticos con rotación suave y continua */}
                     <div
                         className="absolute pointer-events-none glow-conic"
                         style={{
                             left: '50%',
                             top: '50%',
-                            width: currentTheme === 'dark' ? '700px' : '600px',
-                            height: currentTheme === 'dark' ? '700px' : '600px',
+                            width: currentTheme === 'dark' ? '650px' : '580px',
+                            height: currentTheme === 'dark' ? '650px' : '580px',
                             transform: isRainbow
-                                ? 'translate(-50%, -50%) scale(0.25)'
-                                : 'translate(calc(-50% + var(--mouse-x, 0px) * 0.08), calc(-50% + var(--mouse-y, 0px) * 0.08)) scale(calc(1 + var(--dist, 0) * 0.06)) rotate(var(--angle, 0deg))',
+                                ? 'translate3d(-50%, -50%, 0) scale(0.25)'
+                                : 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.05), calc(-50% + var(--mouse-y, 0px) * 0.05), 0) scale(calc(1 + var(--dist, 0) * 0.04))',
                             opacity: isRainbow ? 0 : 'calc(0.25 + var(--dist, 0) * 0.65)',
                             zIndex: 0,
                         }}
@@ -300,10 +282,10 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                                         rgba(255, 255, 255, 0.70) 130deg,
                                         transparent 165deg
                                     )`,
-                                filter: currentTheme === 'dark' ? 'blur(calc(30px - var(--dist, 0) * 10px))' : 'blur(calc(24px - var(--dist, 0) * 6px))',
+                                filter: currentTheme === 'dark' ? 'blur(28px)' : 'blur(20px)',
                                 maskImage: 'radial-gradient(circle, black 25%, transparent 60%)',
                                 WebkitMaskImage: 'radial-gradient(circle, black 25%, transparent 60%)',
-                                animation: isRainbow ? 'none' : 'glow-pulse 10s ease-in-out infinite',
+                                animation: isRainbow ? 'none' : 'spin-slow 40s linear infinite',
                             }}
                         />
                     </div>
@@ -314,15 +296,15 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                         style={{
                             left: '50%',
                             top: '50%',
-                            width: currentTheme === 'dark' ? '300px' : '240px',
-                            height: currentTheme === 'dark' ? '300px' : '240px',
+                            width: currentTheme === 'dark' ? '280px' : '220px',
+                            height: currentTheme === 'dark' ? '280px' : '220px',
                             transform: isRainbow
-                                ? 'translate(-50%, -50%) scale(0.25)'
-                                : 'translate(calc(-50% + var(--mouse-x, 0px) * 0.32), calc(-50% + var(--mouse-y, 0px) * 0.32)) scale(calc(1 + var(--dist, 0) * 0.15))',
+                                ? 'translate3d(-50%, -50%, 0) scale(0.25)'
+                                : 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.10), calc(-50% + var(--mouse-y, 0px) * 0.10), 0) scale(calc(1 + var(--dist, 0) * 0.08))',
                             background: currentTheme === 'dark'
                                 ? 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(99, 102, 241, 0.45) 25%, rgba(37, 99, 235, 0.20) 55%, transparent 75%)'
                                 : 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.90) 25%, transparent 60%)',
-                            filter: currentTheme === 'dark' ? 'blur(calc(24px - var(--dist, 0) * 8px))' : 'blur(calc(15px - var(--dist, 0) * 5px))',
+                            filter: currentTheme === 'dark' ? 'blur(20px)' : 'blur(14px)',
                             borderRadius: '50%',
                             opacity: isRainbow ? 0 : 'calc(0.85 + var(--dist, 0) * 0.15)',
                             zIndex: 0,
@@ -331,23 +313,21 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
 
                     {/* =========================================================================
                         [MODO 2: CON COLORES - MODO INNOVACIÓN] (isRainbow === true)
-                        - Efectos de brillo de ambiente con gradientes cónicos y dinámicos (arcoíris).
+                        - Efectos de brillo de ambiente con rotación continua suave y paralaje fluido.
                         ========================================================================= */}
-                    {/* Capa 1: Brillo de ambiente profundo */}
+                    {/* Capa 1: Brillo de ambiente profundo (rotación lenta horaria) */}
                     <div
                         className="absolute pointer-events-none rainbow-glow-1"
                         style={{
-                            width: '800px',
-                            height: '800px',
+                            width: '760px',
+                            height: '760px',
                             left: '50%',
                             top: '50%',
                             transform: isRainbow
-                                ? 'translate(calc(-50% + var(--mouse-x, 0px) * 0.015), calc(-50% + var(--mouse-y, 0px) * 0.015)) scale(calc(1.1 + var(--dist, 0) * 0.04)) rotate(calc(var(--angle, 0deg) * -0.06))'
-                                : 'translate(-50%, -50%) scale(0.25)',
+                                ? 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.04), calc(-50% + var(--mouse-y, 0px) * 0.04), 0) scale(calc(1.05 + var(--dist, 0) * 0.03))'
+                                : 'translate3d(-50%, -50%, 0) scale(0.25)',
                             opacity: isRainbow ? 0.85 : 0,
-                            filter: isRainbow
-                                ? 'brightness(1.1) saturate(1.15) hue-rotate(calc(var(--angle, 0deg) * -0.1))'
-                                : 'brightness(0.7) saturate(0.7) blur(15px)',
+                            filter: 'brightness(1.08) saturate(1.15)',
                             zIndex: 0,
                         }}
                     >
@@ -355,40 +335,38 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                             className="w-full h-full"
                             style={{
                                 background: `conic-gradient(
-                                    from -15deg at 50% 50%,
-                                    rgba(40, 100, 255, 1) 35deg,
+                                    from 0deg at 50% 50%,
+                                    rgba(40, 100, 255, 0.95) 35deg,
                                     transparent 75deg,
-                                    rgba(20, 230, 180, 1) 125deg,
+                                    rgba(20, 230, 180, 0.90) 125deg,
                                     transparent 165deg,
-                                    rgba(210, 250, 50, 1) 215deg,
+                                    rgba(210, 250, 50, 0.95) 215deg,
                                     transparent 255deg,
-                                    rgba(255, 50, 150, 1) 305deg,
+                                    rgba(255, 50, 150, 0.95) 305deg,
                                     transparent 345deg,
-                                    rgba(40, 100, 255, 1) 395deg
+                                    rgba(40, 100, 255, 0.95) 395deg
                                 )`,
                                 filter: 'blur(55px)',
-                                maskImage: 'radial-gradient(circle, black 15%, transparent 70%)',
-                                WebkitMaskImage: 'radial-gradient(circle, black 15%, transparent 70%)',
-                                animation: isRainbow ? 'glow-pulse 8s ease-in-out infinite' : 'none',
+                                maskImage: 'radial-gradient(circle, black 20%, transparent 68%)',
+                                WebkitMaskImage: 'radial-gradient(circle, black 20%, transparent 68%)',
+                                animation: isRainbow ? 'spin-slow 30s linear infinite' : 'none',
                             }}
                         />
                     </div>
 
-                    {/* Capa 2: Brillo de acento nítido */}
+                    {/* Capa 2: Brillo de acento nítido (rotación lenta antihoraria) */}
                     <div
                         className="absolute pointer-events-none rainbow-glow-2"
                         style={{
-                            width: '700px',
-                            height: '700px',
+                            width: '640px',
+                            height: '640px',
                             left: '50%',
                             top: '50%',
                             transform: isRainbow
-                                ? 'translate(calc(-50% + var(--mouse-x, 0px) * 0.03), calc(-50% + var(--mouse-y, 0px) * 0.03)) scale(calc(1 + var(--dist, 0) * 0.08)) rotate(calc(var(--angle, 0deg) * 0.12))'
-                                : 'translate(-50%, -50%) scale(0.25)',
-                            opacity: isRainbow ? 1 : 0,
-                            filter: isRainbow
-                                ? 'brightness(1.15) saturate(1.25) hue-rotate(calc(var(--angle, 0deg) * 0.15))'
-                                : 'brightness(0.8) saturate(0.8) blur(10px)',
+                                ? 'translate3d(calc(-50% + var(--mouse-x, 0px) * 0.07), calc(-50% + var(--mouse-y, 0px) * 0.07), 0) scale(calc(1 + var(--dist, 0) * 0.05))'
+                                : 'translate3d(-50%, -50%, 0) scale(0.25)',
+                            opacity: isRainbow ? 0.95 : 0,
+                            filter: 'brightness(1.12) saturate(1.20)',
                             zIndex: 0,
                         }}
                     >
@@ -396,21 +374,21 @@ const Hero: React.FC<HeroProps> = ({ currentTheme }) => {
                             className="w-full h-full"
                             style={{
                                 background: `conic-gradient(
-                                    from -15deg at 50% 50%,
-                                    rgba(40, 100, 255, 1) 35deg,
+                                    from 90deg at 50% 50%,
+                                    rgba(40, 100, 255, 0.95) 35deg,
                                     transparent 75deg,
-                                    rgba(20, 230, 180, 1) 125deg,
+                                    rgba(20, 230, 180, 0.90) 125deg,
                                     transparent 165deg,
-                                    rgba(210, 250, 50, 1) 215deg,
+                                    rgba(210, 250, 50, 0.95) 215deg,
                                     transparent 255deg,
-                                    rgba(255, 50, 150, 1) 305deg,
+                                    rgba(255, 50, 150, 0.95) 305deg,
                                     transparent 345deg,
-                                    rgba(40, 100, 255, 1) 395deg
+                                    rgba(40, 100, 255, 0.95) 395deg
                                 )`,
                                 filter: 'blur(35px)',
-                                maskImage: 'radial-gradient(circle, black 15%, transparent 70%)',
-                                WebkitMaskImage: 'radial-gradient(circle, black 15%, transparent 70%)',
-                                animation: isRainbow ? 'glow-pulse 6s ease-in-out infinite' : 'none',
+                                maskImage: 'radial-gradient(circle, black 25%, transparent 68%)',
+                                WebkitMaskImage: 'radial-gradient(circle, black 25%, transparent 68%)',
+                                animation: isRainbow ? 'spin-slow-reverse 22s linear infinite' : 'none',
                             }}
                         />
                     </div>

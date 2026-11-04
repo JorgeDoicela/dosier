@@ -277,7 +277,8 @@ Gestión de cumplimiento de la Ley Orgánica de Protección de Datos Personales.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `POST`| `/consentimiento` | Autenticado | Registro de consentimiento informado con versión de política, IP y agente. |
+| `GET` | `/termino-vigente` | Público | Obtención del documento HTML de la política y términos vigentes de SIGAFI (`pd_terminos_condiciones`). |
+| `POST`| `/consentimiento` | Autenticado | Registro de consentimiento informado unificado en `pd_aceptaciones_usuarios`. |
 | `GET` | `/consentimientos` | `DOSIER_ADMIN` | Auditoría de consentimientos otorgados por la comunidad institucional. |
 | `POST`| `/solicitud-arco` | Autenticado | Registro de solicitudes de derechos ARCO (Acceso, Rectificación, etc.). |
 | `GET` | `/solicitudes-arco` | `DOSIER_ADMIN` | Bandeja de seguimiento de solicitudes ARCO con alerta de plazos legales. |

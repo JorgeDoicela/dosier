@@ -81,8 +81,8 @@ erDiagram
   * Perfil de firma del usuario (trazo vectorial canvas, iniciales, cargo institucional y departamento).
 * **`doc_cowork_documentos` & `doc_cowork_updates`:**
   * Persistencia de sesiones colaborativas y deltas binarios Yjs para co-redacción en tiempo real.
-* **`doc_lopdp_consentimientos` & `doc_lopdp_auditoria_datos`:**
-  * Registro de consentimientos informados de privacidad y solicitudes ARCO.
+* **`pd_aceptaciones_usuarios` & `pd_terminos_condiciones` (SIGAFI) / `doc_lopdp_auditoria_datos`:**
+  * Consentimiento unificado institucional de privacidad en tablas nativas de SIGAFI y bitácora de auditoría de acceso a datos sensibles.
 * **`doc_notificaciones`, `doc_email_templates`, `doc_email_historial`:**
   * Mensajería interna, WebPush y plantillas HTML para alertas colegiadas.
 

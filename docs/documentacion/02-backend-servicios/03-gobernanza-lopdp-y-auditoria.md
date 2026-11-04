@@ -1,4 +1,4 @@
-# Gobernanza de Datos, Protección LOPDP y Bitácora de Auditoría
+﻿# Gobernanza de Datos, Protección LOPDP y Bitácora de Auditoría
 
 ## 1. Visión General y Marco Legal
 
@@ -26,13 +26,11 @@ graph TD
     AnonymizeHandler --> AuditTrail[Registro Inmutable en Tablas doc_lopdp_*]
 ```
 
-### 2.1. Gestión de Consentimientos Informados (`doc_lopdp_consentimientos`)
-Cada docente o directivo que firma o interactúa con el sistema acepta explícitamente los términos de tratamiento de datos personales y uso de certificados digitales. La tabla `doc_lopdp_consentimientos` almacena:
-* `idUsuario`: Identificador del usuario titular.
-* `versionPolitica`: Versión exacta del aviso de privacidad y política institucional aceptada.
-* `fechaConsentimiento`: Marca de tiempo UTC del consentimiento.
-* `ipAcceso` y `userAgent`: Dirección IP y dispositivo de origen.
-* `finalidadesAutorizadas`: Finalidades académicas y de acreditación CACES autorizadas.
+### 2.1. Gestión Centralizada de Consentimientos (`pd_aceptaciones_usuarios` y `pd_terminos_condiciones`)
+El consentimiento informado se encuentra unificado con el subsistema institucional de SIGAFI:
+* **Término Institucional Vigente (`pd_terminos_condiciones`):** Almacena el texto y versión oficial (HTML institucional) aprobado por las autoridades del ISTPET, consumido dinámicamente por DOSIER vía `GET /api/lopdp/termino-vigente`.
+* **Registro de Aceptación (`pd_aceptaciones_usuarios`):** Almacena la aceptación vinculada a la cédula (`idUsuario = idSigafi`) y al sistema emisor (`sistema = 'DOSIER'`), registrando `idTermino`, `fechaRegistro`, `ipOrigen` y `dispositivo`.
+* **Verificación Unificada:** Si el docente ya otorgó consentimiento en cualquier aplicativo del ecosistema institucional (SIGAFI o MIISTPET), DOSIER reconoce la validez inmediata del consentimiento sin obligar a duplicar la aceptación.
 
 ### 2.2. Atención a Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición)
 * **Derecho de Acceso:** Generación de un reporte estructurado con la totalidad de los datos personales, nombramientos docentes y asignaciones curriculares del titular.

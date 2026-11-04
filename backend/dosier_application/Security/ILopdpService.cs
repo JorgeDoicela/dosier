@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using dosier_application.Security.DTOs;
@@ -14,5 +14,6 @@ public interface ILopdpService
     Task UpdatePerfilAsync(int idUsuario, ActualizarPerfilRequest request);
     Task RevocarConsentimientoAsync(int idUsuario, string? ip, string? userAgent);
     Task<int?> ResolveUserIdBySigafiAsync(string idSigafi);
+    Task<TerminoVigenteDto?> GetTerminoVigenteAsync();
 }
 

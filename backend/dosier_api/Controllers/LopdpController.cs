@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +26,17 @@ public class LopdpController : ControllerBase
         return await _lopdpService.ResolveUserIdBySigafiAsync(idReferencia);
     }
 
+    /// <summary>
+    /// Devuelve el término y condiciones oficial vigente de SIGAFI (pd_terminos_condiciones).
+    /// </summary>
+    [HttpGet("termino-vigente")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetTerminoVigente()
+    {
+        var termino = await _lopdpService.GetTerminoVigenteAsync();
+        if (termino == null) return NotFound(new { error = "No hay un término vigente configurado en SIGAFI." });
+        return Ok(termino);
+    }
     /// <summary>
     /// Registra el consentimiento del usuario para una política de privacidad o firma digital.
     /// </summary>

@@ -25,13 +25,27 @@ export interface RegistrarConsentimientoDto {
     version_politica: string;
 }
 
+export interface TerminoVigenteDto {
+    id_termino: number;
+    version_termino: string;
+    contenido?: string;
+    fecha_publicacion?: string;
+    es_vigente: boolean;
+}
+
 // ─────────────────────────────────────────────────────────────
-//  Servicio de Cumplimiento LOPDP
+//  Servicio de Cumplimiento LOPDP (SIGAFI Institucional)
 // ─────────────────────────────────────────────────────────────
 
 export const lopdpService = {
     /**
-     * Registra la aceptación formal de una política o consentimiento de firma electrónica.
+     * Obtiene el término y condiciones oficial vigente de SIGAFI (pd_terminos_condiciones).
+     */
+    getTerminoVigente: (): Promise<TerminoVigenteDto> =>
+        api.get('/lopdp/termino-vigente').then(r => r.data),
+
+    /**
+     * Registra la aceptación formal de una política o consentimiento de firma electrónica en SIGAFI.
      */
     registrarConsentimiento: (versionPoliticaOrPayload: string | { version_politica: string; canal?: string }): Promise<{ message: string }> => {
         const payload = typeof versionPoliticaOrPayload === 'string'

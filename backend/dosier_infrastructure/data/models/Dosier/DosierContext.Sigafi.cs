@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace dosier_infrastructure.data.models;
 
@@ -648,6 +648,51 @@ public partial class DosierContext
             entity.Property(e => e.FechaInicio).HasColumnName("fechaInicio");
             entity.Property(e => e.FechaFin).HasColumnName("fechaFin");
             entity.Property(e => e.Activo).HasColumnType("tinyint(4)").HasColumnName("activo");
+        });
+        modelBuilder.Entity<PdCategoriaTerminoCondicion>(entity =>
+        {
+            entity.HasKey(e => e.IdCategoria).HasName("PRIMARY");
+            entity.ToTable("pd_categorias_terminos_condiciones");
+            entity.Property(e => e.IdCategoria).HasColumnName("idCategoria");
+            entity.Property(e => e.Categoria).HasMaxLength(50).HasColumnName("categoria");
+            entity.Property(e => e.EsAlumno).HasColumnType("tinyint(4)").HasColumnName("esAlumno");
+            entity.Property(e => e.EsDocente).HasColumnType("tinyint(4)").HasColumnName("esDocente");
+            entity.Property(e => e.EsAdministrativo).HasColumnType("tinyint(4)").HasColumnName("esAdministrativo");
+            entity.Property(e => e.EsExterno).HasColumnType("tinyint(4)").HasColumnName("esExterno");
+            entity.Property(e => e.FechaRegistro).HasColumnName("fechaRegistro");
+            entity.Property(e => e.Activo).HasColumnType("tinyint(4)").HasColumnName("activo");
+        });
+
+        modelBuilder.Entity<PdTerminoCondicion>(entity =>
+        {
+            entity.HasKey(e => e.IdTermino).HasName("PRIMARY");
+            entity.ToTable("pd_terminos_condiciones");
+            entity.Property(e => e.IdTermino).HasColumnName("idTermino");
+            entity.Property(e => e.IdCategoria).HasColumnName("idCategoria");
+            entity.Property(e => e.VersionTermino).HasMaxLength(20).HasColumnName("versionTermino");
+            entity.Property(e => e.Contenido).HasColumnType("text").HasColumnName("contenido");
+            entity.Property(e => e.FechaPublicacion).HasColumnName("fechaPublicacion");
+            entity.Property(e => e.FechaRegistro).HasColumnType("timestamp").HasColumnName("fechaRegistro");
+            entity.Property(e => e.ArchivoHtml).HasMaxLength(100).HasColumnName("archivoHtml");
+            entity.Property(e => e.EsVigente).HasColumnType("tinyint(4)").HasColumnName("esVigente");
+        });
+
+        modelBuilder.Entity<PdAceptacionUsuario>(entity =>
+        {
+            entity.HasKey(e => e.IdAceptacionUsuario).HasName("PRIMARY");
+            entity.ToTable("pd_aceptaciones_usuarios");
+            entity.Property(e => e.IdAceptacionUsuario).HasColumnName("idAceptacionUsuario");
+            entity.Property(e => e.IdUsuario).HasMaxLength(14).HasColumnName("idUsuario");
+            entity.Property(e => e.IdTermino).HasColumnName("idTermino");
+            entity.Property(e => e.Sistema).HasMaxLength(100).HasColumnName("sistema");
+            entity.Property(e => e.FechaRegistro).HasColumnType("datetime").HasColumnName("fechaRegistro");
+            entity.Property(e => e.IpOrigen).HasMaxLength(50).HasColumnName("ipOrigen");
+            entity.Property(e => e.Dispositivo).HasMaxLength(200).HasColumnName("dispositivo");
+
+            entity.HasOne(d => d.Termino)
+                .WithMany()
+                .HasForeignKey(d => d.IdTermino)
+                .HasConstraintName("fk_pd_aceptaciones_termino");
         });
     }
 }

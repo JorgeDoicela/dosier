@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using dosier_domain.Identity.Entities;
 
 namespace dosier_infrastructure.data.models;
@@ -185,27 +185,6 @@ public partial class DosierContext
                 .HasPrincipalKey<User>(u => u.IdUsuario)
                 .HasForeignKey<DocUsuarioMetadata>(d => d.IdUsuario)
                 .HasConstraintName("fk_usermeta_usuario");
-        });
-
-        modelBuilder.Entity<DocLopdpConsentimiento>(entity =>
-        {
-            entity.HasKey(e => e.IdConsentimiento).HasName("PRIMARY");
-            entity.ToTable("doc_lopdp_consentimientos");
-            entity.Property(e => e.IdConsentimiento).HasColumnName("idConsentimiento");
-            entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired().HasConversion<string>();
-            entity.HasIndex(e => e.Uuid).IsUnique();
-            entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
-            entity.Property(e => e.VersionPolitica).HasColumnName("versionPolitica").HasMaxLength(20).IsRequired();
-            entity.Property(e => e.Canal).HasColumnName("canal").HasColumnType("enum('Web','Movil','Presencial')").HasDefaultValue("Web");
-            entity.Property(e => e.FechaConsentimiento).HasColumnName("fechaConsentimiento").HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.IpDireccion).HasColumnName("ipDireccion").HasMaxLength(45);
-            entity.Property(e => e.UserAgent).HasColumnName("userAgent").HasMaxLength(255);
-            entity.Property(e => e.FirmaHash).HasColumnName("firmaHash").HasColumnType("text");
-            entity.Property(e => e.Estado).HasColumnName("estado").HasColumnType("enum('Otorgado','Revocado')").HasDefaultValue("Otorgado");
-            entity.Property(e => e.FechaRevocacion).HasColumnName("fechaRevocacion");
-
-            entity.HasOne(d => d.User).WithMany()
-                .HasForeignKey(d => d.IdUsuario).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_consentimiento_usuario");
         });
 
         modelBuilder.Entity<DocLopdpAuditoriaDatos>(entity =>

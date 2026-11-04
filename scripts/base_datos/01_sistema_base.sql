@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 --  SISTEMA DOSIER - MÓDULO DE DOCUMENTACIÓN Y GESTIÓN ACADÉMICA
 --  Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
 --  Diseñado para el despliegue del módulo de DOCUMENTACIÓN.
@@ -18,7 +18,6 @@ DROP VIEW IF EXISTS v_doc_calendario_eventos;
 DROP TRIGGER IF EXISTS trg_doc_notif_uuid;
 DROP TRIGGER IF EXISTS trg_doc_tokens_uuid;
 DROP TRIGGER IF EXISTS trg_doc_usermeta_uuid;
-DROP TRIGGER IF EXISTS trg_doc_lopdp_consentimientos_uuid;
 DROP TRIGGER IF EXISTS trg_doc_lopdp_auditoria_uuid;
 DROP TRIGGER IF EXISTS trg_doc_backup_logs_uuid;
 DROP TRIGGER IF EXISTS trg_doc_email_tpl_uuid;
@@ -31,7 +30,6 @@ DROP TABLE IF EXISTS
     -- Grupo K (Seguridad, Notificaciones y Feedback)
     doc_feedback_reportes,
     doc_backup_logs,
-    doc_lopdp_consentimientos,
     doc_lopdp_auditoria_datos,
     doc_notificaciones,
     doc_tokens_acceso,
@@ -169,20 +167,11 @@ CREATE TABLE doc_usuarios_metadata (
     FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Metadatos de Usuario y Firma Electrónica';
 
-CREATE TABLE doc_lopdp_consentimientos (
-    idConsentimiento     INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid                 VARCHAR(36)  NOT NULL UNIQUE,
-    idUsuario            INT(11)      NOT NULL,
-    versionPolitica      VARCHAR(20)  NOT NULL COMMENT 'Versión del documento de política de privacidad aceptado',
-    canal                ENUM('Web', 'Movil', 'Presencial') DEFAULT 'Web',
-    fechaConsentimiento  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    ipDireccion          VARCHAR(45)  NULL,
-    userAgent            VARCHAR(255) NULL,
-    firmaHash            TEXT         NULL COMMENT 'Hash SHA-256 de los términos aceptados + identificación del usuario',
-    estado               ENUM('Otorgado', 'Revocado') DEFAULT 'Otorgado',
-    fechaRevocacion      TIMESTAMP    NULL,
-    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[LOPDP] Registro histórico e irrevocable del consentimiento del titular';
+-- NOTA LOPDP INSTITUCIONAL (SIGAFI):
+-- El consentimiento informado y los términos de protección de datos se gestionan
+-- centralizadamente en las tablas institucionales de SIGAFI:
+-- pd_categorias_terminos_condiciones, pd_terminos_condiciones y pd_aceptaciones_usuarios.
+-- DOSIER no crea una tabla local redundante de consentimientos.
 
 CREATE TABLE doc_lopdp_auditoria_datos (
     idAuditoriaDatos     INT          AUTO_INCREMENT PRIMARY KEY,
@@ -216,9 +205,6 @@ CREATE TABLE doc_backup_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SEGURIDAD] Registro y trazabilidad de copias de seguridad (LOPDP Art. 47 & EGSI)';
 
 CREATE TRIGGER trg_doc_usermeta_uuid BEFORE INSERT ON doc_usuarios_metadata FOR EACH ROW
-SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
-
-CREATE TRIGGER trg_doc_lopdp_consentimientos_uuid BEFORE INSERT ON doc_lopdp_consentimientos FOR EACH ROW
 SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 CREATE TRIGGER trg_doc_lopdp_auditoria_uuid BEFORE INSERT ON doc_lopdp_auditoria_datos FOR EACH ROW

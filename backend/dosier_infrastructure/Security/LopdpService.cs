@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -26,25 +26,77 @@ public class LopdpService : ILopdpService
         _logger = logger;
     }
 
+    public async Task<TerminoVigenteDto?> GetTerminoVigenteAsync()
+    {
+        try
+        {
+            var termino = await _context.PdTerminosCondiciones
+                .AsNoTracking()
+                .Where(t => t.EsVigente == 1)
+                .OrderByDescending(t => t.IdTermino)
+                .FirstOrDefaultAsync();
+
+            if (termino == null)
+            {
+                termino = await _context.PdTerminosCondiciones
+                    .AsNoTracking()
+                    .OrderByDescending(t => t.IdTermino)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (termino == null) return null;
+
+            return new TerminoVigenteDto
+            {
+                IdTermino = termino.IdTermino,
+                VersionTermino = termino.VersionTermino ?? "1.0",
+                Contenido = termino.Contenido,
+                FechaPublicacion = termino.FechaPublicacion,
+                EsVigente = termino.EsVigente == 1
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener término vigente de LOPDP desde pd_terminos_condiciones");
+            return null;
+        }
+    }
+
     public async Task RegistrarConsentimientoAsync(int idUsuario, string versionPolitica, string? ip, string? userAgent)
     {
         await _semaphore.WaitAsync();
         try
         {
-            var consentimiento = new DocLopdpConsentimiento
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario);
+            var idSigafi = user?.IdSigafi ?? idUsuario.ToString();
+
+            // 1. Obtener término vigente de SIGAFI (pd_terminos_condiciones)
+            var termino = await _context.PdTerminosCondiciones
+                .AsNoTracking()
+                .Where(t => t.EsVigente == 1)
+                .OrderByDescending(t => t.IdTermino)
+                .FirstOrDefaultAsync();
+            var idTermino = termino?.IdTermino ?? 1;
+
+            // 2. Registrar en la tabla oficial unificada de SIGAFI (pd_aceptaciones_usuarios)
+            var yaAceptoEnSigafi = await _context.PdAceptacionesUsuarios
+                .AnyAsync(a => a.IdUsuario == idSigafi && a.IdTermino == idTermino && a.Sistema == "DOSIER");
+
+            if (!yaAceptoEnSigafi)
             {
-                IdUsuario = idUsuario,
-                VersionPolitica = versionPolitica,
-                Canal = "Web",
-                FechaConsentimiento = DateTime.Now,
-                IpDireccion = ip,
-                UserAgent = userAgent,
-                Estado = "Otorgado"
-            };
+                var aceptacionSigafi = new PdAceptacionUsuario
+                {
+                    IdUsuario = idSigafi,
+                    IdTermino = idTermino,
+                    Sistema = "DOSIER",
+                    FechaRegistro = DateTime.Now,
+                    IpOrigen = ip,
+                    Dispositivo = userAgent != null && userAgent.Length > 200 ? userAgent[..200] : userAgent
+                };
+                _context.PdAceptacionesUsuarios.Add(aceptacionSigafi);
+            }
 
-            _context.DocLopdpConsentimientos.Add(consentimiento);
-
-            // Si es consentimiento para LOPDP general o firma electrónica, actualizamos la tabla de metadata del usuario
+            // 3. Si es consentimiento general o firma, actualizar metadata de usuario
             if (versionPolitica.Equals("LOPDP_GENERAL", StringComparison.OrdinalIgnoreCase) ||
                 versionPolitica.Equals("FIRMA_ELECTRONICA", StringComparison.OrdinalIgnoreCase) ||
                 versionPolitica.Equals("FIRMA", StringComparison.OrdinalIgnoreCase))
@@ -67,6 +119,7 @@ public class LopdpService : ILopdpService
             }
 
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Consentimiento LOPDP registrado exitosamente para Usuario={IdUsuario} (Cédula={Cedula}) en pd_aceptaciones_usuarios", idUsuario, idSigafi);
         }
         catch (Exception ex)
         {
@@ -79,31 +132,40 @@ public class LopdpService : ILopdpService
         }
     }
 
-
     public async Task<List<ConsentimientoResponse>> GetAllConsentimientosAsync()
     {
         try
         {
-            return await _context.DocLopdpConsentimientos
-                .OrderByDescending(c => c.FechaConsentimiento)
-                .Select(c => new ConsentimientoResponse
-                {
-                    IdConsentimiento = c.IdConsentimiento,
-                    Uuid = c.Uuid,
-                    IdUsuario = c.IdUsuario,
-                    NombreUsuario = c.User != null ? (c.User.Nombre ?? "Usuario " + c.IdUsuario) : "Usuario " + c.IdUsuario,
-                    VersionPolitica = c.VersionPolitica,
-                    Canal = c.Canal,
-                    FechaConsentimiento = c.FechaConsentimiento,
-                    IpDireccion = c.IpDireccion,
-                    UserAgent = c.UserAgent,
-                    Estado = c.Estado
-                })
+            var usersMap = await _context.Users.AsNoTracking()
+                .Select(u => new { u.IdUsuario, u.IdSigafi, u.Nombre })
+                .ToDictionaryAsync(u => u.IdSigafi, u => new { u.IdUsuario, u.Nombre });
+
+            var query = await _context.PdAceptacionesUsuarios
+                .OrderByDescending(a => a.FechaRegistro)
+                .Take(500)
                 .ToListAsync();
+
+            return query.Select(a =>
+            {
+                var userInfo = a.IdUsuario != null && usersMap.TryGetValue(a.IdUsuario, out var u) ? u : null;
+                return new ConsentimientoResponse
+                {
+                    IdConsentimiento = a.IdAceptacionUsuario,
+                    Uuid = Guid.Empty,
+                    IdUsuario = userInfo?.IdUsuario ?? 0,
+                    NombreUsuario = userInfo?.Nombre ?? a.IdUsuario ?? "Sin identificar",
+                    VersionPolitica = a.Sistema ?? "SIGAFI",
+                    Canal = a.Sistema ?? "Web",
+                    FechaConsentimiento = a.FechaRegistro ?? DateTime.Now,
+                    IpDireccion = a.IpOrigen,
+                    UserAgent = a.Dispositivo,
+                    Estado = "Otorgado"
+                };
+            }).ToList();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener todos los consentimientos LOPDP");
+            _logger.LogError(ex, "Error al obtener consentimientos desde pd_aceptaciones_usuarios");
             throw;
         }
     }
@@ -133,7 +195,6 @@ public class LopdpService : ILopdpService
             _logger.LogCritical(ex, "CONTINGENCIA_LOPDP: Fallo en base de datos al registrar auditoría de datos sensibles. " +
                 "Actor={Actor}, Afectado={Afectado}, Tabla={Tabla}, Columna={Columna}, Operacion={Operacion}, Motivo={Motivo}, IP={IP}, UserAgent={UA}, Timestamp={Timestamp}",
                 idUsuarioActor, idUsuarioAfectado, tablaAfectada, columnaAfectada, operacion, motivo, ip, userAgent, DateTime.UtcNow.ToString("O"));
-            // No propagamos la excepción en auditoría para evitar interrumpir la operación principal
         }
     }
 
@@ -208,20 +269,14 @@ public class LopdpService : ILopdpService
         await _semaphore.WaitAsync();
         try
         {
-            var politicas = new[] { "LOPDP_GENERAL", "FIRMA_ELECTRONICA" };
-            foreach (var politica in politicas)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == idUsuario);
+            if (user != null && !string.IsNullOrEmpty(user.IdSigafi))
             {
-                var consentimientoRevocado = new DocLopdpConsentimiento
-                {
-                    IdUsuario = idUsuario,
-                    VersionPolitica = politica,
-                    Canal = "Web",
-                    FechaConsentimiento = DateTime.Now,
-                    IpDireccion = ip,
-                    UserAgent = userAgent,
-                    Estado = "Revocado"
-                };
-                _context.DocLopdpConsentimientos.Add(consentimientoRevocado);
+                // Remover aceptaciones de DOSIER en pd_aceptaciones_usuarios
+                var aceptaciones = await _context.PdAceptacionesUsuarios
+                    .Where(a => a.IdUsuario == user.IdSigafi && a.Sistema == "DOSIER")
+                    .ToListAsync();
+                _context.PdAceptacionesUsuarios.RemoveRange(aceptaciones);
             }
 
             var metadata = await _context.DocUsuariosMetadata.FirstOrDefaultAsync(m => m.IdUsuario == idUsuario);
@@ -252,4 +307,3 @@ public class LopdpService : ILopdpService
         return user?.IdUsuario;
     }
 }
-
