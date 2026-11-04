@@ -11,6 +11,8 @@ import { BuilderSectionFooterNav } from './shell/components/BuilderSectionFooter
 import { OutputSection } from './shell/components/OutputSection';
 import { PeaAiAssistantModal } from './shell/components/PeaAiAssistantModal';
 import { PeaDocumentImportModal } from './shell/components/PeaDocumentImportModal';
+import { extractPeaFromDocument } from '../../services/peaDocumentExtractorService';
+import type { PeaStructuredDraft } from '../../services/peaAiService';
 import type { BuilderSection } from './shell/hooks/useBuilderLayout';
 
 import { useAuth } from '../../api/AuthContext';
@@ -72,24 +74,46 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
     } = props;
 
     const { isAdmin } = useAuth();
+    const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
     const { layout, autoSave, pdfAndSign, network } = useDOSIERBuilderShell(props);
     const [showUpdateModal, setShowUpdateModal] = useState<boolean>(hasTemplateUpdate);
     const [aiModalOpen, setAiModalOpen] = useState<boolean>(false);
     const [importDocModalOpen, setImportDocModalOpen] = useState<boolean>(false);
     const [importInitialFile, setImportInitialFile] = useState<File | null>(null);
     const [importInitialInstructions, setImportInitialInstructions] = useState<string>('');
+    const [importExtractedDraft, setImportExtractedDraft] = useState<PeaStructuredDraft | null>(null);
     const [importAutoExtract, setImportAutoExtract] = useState<boolean>(false);
     const [aiTargetSection, setAiTargetSection] = useState<string>('all');
     const [aiCustomInstructions, setAiCustomInstructions] = useState<string>('');
     const [aiAutoGenerate, setAiAutoGenerate] = useState<boolean>(false);
     const [aiInitialTab, setAiInitialTab] = useState<'generate' | 'config'>('generate');
 
-    const handleTriggerDocExtraction = useCallback((file: File, instructions: string) => {
-        setImportInitialFile(file);
-        setImportInitialInstructions(instructions);
-        setImportAutoExtract(true);
-        setImportDocModalOpen(true);
-    }, []);
+    const handleTriggerDocExtraction = useCallback(async (file: File) => {
+        if (!resolvedPeaUuid) {
+            alert('Guarde primero el documento para habilitar la extracción.');
+            return;
+        }
+        try {
+            const rawHorasCD = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
+            const rawHorasAPE = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
+            const rawHorasTA = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
+            const totalHoras = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? (rawHorasCD + rawHorasAPE + rawHorasTA));
+
+            const draft = await extractPeaFromDocument(resolvedPeaUuid, file, {
+                currentHorasCD: rawHorasCD > 0 ? rawHorasCD : undefined,
+                currentHorasAPE: rawHorasAPE > 0 ? rawHorasAPE : undefined,
+                currentHorasTA: rawHorasTA > 0 ? rawHorasTA : undefined,
+                currentTotalHoras: totalHoras > 0 ? totalHoras : undefined
+            });
+
+            setImportInitialFile(file);
+            setImportExtractedDraft(draft);
+            setImportDocModalOpen(true);
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo procesar el documento.';
+            alert(typeof msg === 'string' ? msg : 'Error al extraer el documento.');
+        }
+    }, [resolvedPeaUuid, formData]);
 
     const handleTriggerAiGeneration = useCallback((targetSec: string, instructions: string) => {
         setAiTargetSection(targetSec);
@@ -105,7 +129,6 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         setAiModalOpen(true);
     }, []);
 
-    const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
     const isAiSupportedSection = templateCode === 'PEA_OFICIAL' &&
         layout.activeTab !== 'pea_general_section' &&
         layout.activeTab !== 'pea_signatures_section' &&
@@ -523,11 +546,13 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                             onClose={() => {
                                 setImportDocModalOpen(false);
                                 setImportAutoExtract(false);
+                                setImportExtractedDraft(null);
                                 setImportInitialFile(null);
                             }}
                             peaUuid={resolvedPeaUuid}
                             formData={formData}
                             initialFile={importInitialFile}
+                            initialDraft={importExtractedDraft}
                             initialInstructions={importInitialInstructions}
                             autoExtractOnOpen={importAutoExtract}
                             onApplyDraft={(patch) => {

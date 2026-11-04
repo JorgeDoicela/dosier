@@ -268,11 +268,11 @@ WHERE aut.esActivo = 1
                            WHEN 'COORD_CARRERA' THEN @rolCoordCar
                        END
   );
--- G. Asignar rol DOSIER_ADMIN a usuarios con administrador = 1
+-- G. Asignar rol DOSIER_ADMIN exclusivamente a los superadministradores y administradores maestros designados
 INSERT INTO rbac_usuario_rol (idUsuario, idRol, fecha_creacion, esActivo)
 SELECT u.idUsuario, @rolAdmin, CURDATE(), 1
 FROM usuarios u
-WHERE u.administrador = 1
+WHERE CONVERT(u.idSigafi USING utf8mb4) IN ('1725555377', '0302144159')
   AND NOT EXISTS (
       SELECT 1 FROM rbac_usuario_rol ur
       WHERE ur.idUsuario = u.idUsuario AND ur.idRol = @rolAdmin

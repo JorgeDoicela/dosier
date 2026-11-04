@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
@@ -13,11 +13,15 @@ public class AdminService : IAdminService
 {
     private readonly DosierContext _context;
     private readonly IAuditService _auditService;
+    private readonly string? _superAdminCedula;
+    private readonly string? _masterAdminId;
 
-    public AdminService(DosierContext context, IAuditService auditService)
+    public AdminService(DosierContext context, IAuditService auditService, Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _context = context;
         _auditService = auditService;
+        _superAdminCedula = configuration["Security:SuperAdminCedula"];
+        _masterAdminId = configuration["Security:MasterAdminId"];
     }
 
     public async Task<PagedResult<UserManagementDto>> GetUsersAsync(
@@ -73,12 +77,14 @@ public class AdminService : IAdminService
         {
             // Personal estrictamente administrativo o con funciones no docentes
             var query = _context.Profesores.AsNoTracking().Where(p => p.Activo == 1 &&
-                !(_context.Contratos.Any(c => c.IdProfesor == p.IdProfesor && (c.EsActivo == 1 || c.EsActivo == null) &&
-                    c.DepartamentoNavigation != null && c.DepartamentoNavigation.NombreDepartamento == "DOCENCIA" &&
-                    (c.CargoInstitutoNavigation == null || 
-                     c.CargoInstitutoNavigation.Nombre == null ||
-                     c.CargoInstitutoNavigation.Nombre.ToLower().Contains("profesor") || 
-                     c.CargoInstitutoNavigation.Nombre.ToLower().Contains("docente")))));
+                _context.Contratos.Any(c => c.IdProfesor == p.IdProfesor && (c.EsActivo == 1 || c.EsActivo == null) &&
+                    (c.DepartamentoNavigation == null || (c.DepartamentoNavigation.NombreDepartamento != "DOCENCIA" && c.DepartamentoNavigation.NombreDepartamento != "ACADEMIA")) &&
+                    (c.CargoInstitutoNavigation == null || (c.CargoInstitutoNavigation.Nombre != null && !c.CargoInstitutoNavigation.Nombre.ToLower().Contains("profesor") && !c.CargoInstitutoNavigation.Nombre.ToLower().Contains("docente")))) &&
+                !_context.Contratos.Any(c => c.IdProfesor == p.IdProfesor && (c.EsActivo == 1 || c.EsActivo == null) &&
+                    ((c.DepartamentoNavigation != null && (c.DepartamentoNavigation.NombreDepartamento == "DOCENCIA" || c.DepartamentoNavigation.NombreDepartamento == "ACADEMIA")) ||
+                     (c.CargoInstitutoNavigation != null && c.CargoInstitutoNavigation.Nombre != null && (c.CargoInstitutoNavigation.Nombre.ToLower().Contains("profesor") || c.CargoInstitutoNavigation.Nombre.ToLower().Contains("docente"))))) &&
+                !_context.AsignacionesProfesores.Any(ap => ap.IdProfesor == p.IdProfesor && ap.Activo == 1)
+            );
 
             if (!string.IsNullOrEmpty(departamento))
             {
@@ -135,6 +141,8 @@ public class AdminService : IAdminService
                 .Where(c => ids.Contains(c.IdProfesor.Trim()) && (c.EsActivo == 1 || c.EsActivo == null))
                 .Select(c => new {
                     IdProfesor = c.IdProfesor.Trim(),
+                    IdContrato = c.IdContrato,
+                    EsActivo = c.EsActivo,
                     Departamento = c.DepartamentoNavigation != null ? c.DepartamentoNavigation.NombreDepartamento : null,
                     CargoInstituto = c.CargoInstitutoNavigation != null ? c.CargoInstitutoNavigation.Nombre : null,
                     TipoContrato = c.TipoContratoNavigation != null ? c.TipoContratoNavigation.Nombre : null
@@ -169,7 +177,13 @@ public class AdminService : IAdminService
 
             result.Items = admins.Select(p => {
                 var pId = p.IdProfesor.Trim();
-                var contract = contracts.FirstOrDefault(c => c.IdProfesor == pId);
+                var profContracts = contracts
+                    .Where(c => c.IdProfesor == pId)
+                    .OrderByDescending(c => c.Departamento != "DOCENCIA" && c.Departamento != "ACADEMIA")
+                    .ThenByDescending(c => c.EsActivo == 1)
+                    .ThenByDescending(c => c.IdContrato)
+                    .ToList();
+                var contract = profContracts.FirstOrDefault();
                 var roleInfo = userRoles.Where(ur => ur.IdSigafi == pId).ToList();
                 var linkedUser = linkedUsers.FirstOrDefault(u => u.IdSigafi == pId);
                 var firstUserId = linkedUser?.IdUsuario ?? roleInfo.FirstOrDefault()?.IdUsuario;
@@ -196,13 +210,15 @@ public class AdminService : IAdminService
         }
         else // DOCENTE
         {
-            // Planta docente: vinculados a Docencia, Carreras o Actividades Académicas
+            // Planta docente: vinculados a Docencia, Academia, Carreras o Actividades Académicas
             var query = _context.Profesores.AsNoTracking().Where(p => p.Activo == 1 &&
                 (_context.Contratos.Any(c => c.IdProfesor == p.IdProfesor && (c.EsActivo == 1 || c.EsActivo == null) &&
-                    ((c.DepartamentoNavigation != null && c.DepartamentoNavigation.NombreDepartamento == "DOCENCIA") ||
+                    ((c.DepartamentoNavigation != null && (c.DepartamentoNavigation.NombreDepartamento == "DOCENCIA" || c.DepartamentoNavigation.NombreDepartamento == "ACADEMIA")) ||
                      (c.CargoInstitutoNavigation != null && c.CargoInstitutoNavigation.Nombre != null && (c.CargoInstitutoNavigation.Nombre.ToLower().Contains("profesor") || c.CargoInstitutoNavigation.Nombre.ToLower().Contains("docente")))))
+                 || _context.AsignacionesProfesores.Any(ap => ap.IdProfesor == p.IdProfesor && ap.Activo == 1)
                  || _context.ProfesoresCarrerasPeriodos.Any(pc => pc.IdProfesor == p.IdProfesor)
                  || _context.ProfesoresActividades.Any(pa => pa.IdProfesor == p.IdProfesor)
+                 || _context.DocAutoridadesCurriculares.Any(ac => ac.IdSigafi == p.IdProfesor && ac.EsActivo)
                 ));
 
             // Filtrar por docentes con carga docente en el periodo actual
@@ -261,6 +277,8 @@ public class AdminService : IAdminService
                 .Where(c => ids.Contains(c.IdProfesor.Trim()) && (c.EsActivo == 1 || c.EsActivo == null))
                 .Select(c => new {
                     IdProfesor = c.IdProfesor.Trim(),
+                    IdContrato = c.IdContrato,
+                    EsActivo = c.EsActivo,
                     Departamento = c.DepartamentoNavigation != null ? c.DepartamentoNavigation.NombreDepartamento : null,
                     CargoInstituto = c.CargoInstitutoNavigation != null ? c.CargoInstitutoNavigation.Nombre : null,
                     TipoContrato = c.TipoContratoNavigation != null ? c.TipoContratoNavigation.Nombre : null
@@ -318,7 +336,13 @@ public class AdminService : IAdminService
 
             result.Items = professors.Select(p => {
                 var pId = p.IdProfesor.Trim();
-                var contract = contracts.FirstOrDefault(c => c.IdProfesor == pId);
+                var profContracts = contracts
+                    .Where(c => c.IdProfesor == pId)
+                    .OrderByDescending(c => (c.Departamento == "DOCENCIA" || c.Departamento == "ACADEMIA" || (c.CargoInstituto != null && (c.CargoInstituto.ToLower().Contains("profesor") || c.CargoInstituto.ToLower().Contains("docente")))))
+                    .ThenByDescending(c => c.EsActivo == 1)
+                    .ThenByDescending(c => c.IdContrato)
+                    .ToList();
+                var contract = profContracts.FirstOrDefault();
 
                 // Cálculo de horas docentes y materias asignadas
                 var profActividades = teachingHoursData.Where(h => h.IdProfesor == pId).ToList();
@@ -328,6 +352,13 @@ public class AdminService : IAdminService
                 var numMaterias = activeAssignments.Count(a => a.IdProfesor == pId);
 
                 var roleInfo = userRoles.Where(ur => ur.IdSigafi == pId).ToList();
+                var roleNames = roleInfo.Select(ur => ur.RoleNombre).ToList();
+                var roleCodes = roleInfo.Select(ur => ur.RoleCodigo).ToList();
+                if (roleCodes.Count == 0)
+                {
+                    roleNames.Add("Docente");
+                    roleCodes.Add("DOSIER_DOCENTE");
+                }
                 var linkedUser = linkedUsers.FirstOrDefault(u => u.IdSigafi == pId);
                 var firstUserId = linkedUser?.IdUsuario ?? roleInfo.FirstOrDefault()?.IdUsuario;
                 var userMeta = firstUserId.HasValue ? metadatas.FirstOrDefault(m => m.IdUsuario == firstUserId.Value) : null;
@@ -347,8 +378,8 @@ public class AdminService : IAdminService
                     Email = ResolveContactEmail(p.EmailInstitucional, p.Email, linkedUser?.EmailInstitucional),
                     UserUuid = userMeta?.Uuid.ToString() ?? "",
                     Type = "DOCENTE",
-                    Roles = roleInfo.Select(ur => ur.RoleNombre).ToList(),
-                    RoleCodes = roleInfo.Select(ur => ur.RoleCodigo).ToList(),
+                    Roles = roleNames,
+                    RoleCodes = roleCodes,
                     FirmaHabilitada = userMeta?.AceptoTerminosFirma ?? false,
                     Carrera = carreraNom,
                     Nivel = "N/A",
@@ -567,6 +598,16 @@ public class AdminService : IAdminService
             string beforeJson = System.Text.Json.JsonSerializer.Serialize(new { RolesActivos = rolesBefore });
 
             existing.EsActivo = false;
+            if (role.CodigoRol == "DOSIER_ADMIN")
+            {
+                if ((!string.IsNullOrEmpty(_superAdminCedula) && existing.User.IdSigafi == _superAdminCedula) ||
+                    (!string.IsNullOrEmpty(_masterAdminId) && existing.User.IdSigafi == _masterAdminId))
+                {
+                    throw new InvalidOperationException("No se puede revocar el rol de administrador principal del sistema.");
+                }
+
+                existing.User.Administrador = false;
+            }
             existing.FechaModificacion = DateOnly.FromDateTime(DateTime.UtcNow);
             await _context.SaveChangesAsync();
 

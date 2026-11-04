@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from '../../api/axios_config';
 import { usersService } from '../usersService';
 import { auditService } from '../auditService';
@@ -147,7 +147,7 @@ describe('Sprint 3 Service Layer Tests', () => {
         it('transitionState debe enviar PATCH a /pea/:uuid/estado', async () => {
             (api.patch as any) = vi.fn().mockResolvedValueOnce({ data: { success: true } });
             await curriculumProjectService.transitionState('proj-1', 'Aprobado', 'Revisión exitosa');
-            expect(api.patch).toHaveBeenCalledWith('/pea/proj-1/estado', {
+            expect(api.patch).toHaveBeenCalledWith('/pea/uuid/proj-1/estado', {
                 nuevo_estado: 'Aprobado',
                 motivo: 'Revisión exitosa'
             });
@@ -156,7 +156,7 @@ describe('Sprint 3 Service Layer Tests', () => {
         it('getTraceability debe consultar /pea/:uuid/trazabilidad', async () => {
             (api.get as any).mockResolvedValueOnce({ data: [{ fase: 'Elaboracion', estado: 'Borrador' }] });
             const res = await curriculumProjectService.getTraceability('proj-1');
-            expect(api.get).toHaveBeenCalledWith('/pea/proj-1/trazabilidad');
+            expect(api.get).toHaveBeenCalledWith('/pea/uuid/proj-1/trazabilidad');
             expect(res).toHaveLength(1);
         });
     });

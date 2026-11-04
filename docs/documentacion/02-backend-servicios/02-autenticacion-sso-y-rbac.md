@@ -140,7 +140,17 @@ La clase `RbacService` asegura que al arrancar el sistema o registrarse un nuevo
 
 Asimismo, dado que la base de datos `sigafi_es` alberga roles compartidos de otros subsistemas institucionales (DIITRA, GRECUH, GACAD, Bienestar), `AuthService` en `GetAuthResponseAsync` aplica un filtro de aislamiento estricto que restringe los claims emitidos en el JWT y la sesión del usuario exclusivamente a los roles oficiales de DOSIER (`ur.Role.CodigoRol.StartsWith("DOSIER_")` o asociados al sistema ID 6), garantizando que ningún rol ajeno contamine la autorización curricular o la interfaz de usuario.
 
-### 3.4. Matriz de Autorización en el Ciclo de Vida y Firma del PEA
+### 3.4. Desacoplamiento de Banderas Legacy y Resolución de Contratos
+1. **Neutralización de Banderas Legacy (`usuarios.administrador`):**
+   * En la base de datos histórica `sigafi_es`, el campo `administrador = 1` en `usuarios` contenía asignaciones heredadas pertenecientes a otros contextos operativos (ej. personal de TICS o Bienestar).
+   * Se eliminó el bypass automático que concedía `DOSIER_ADMIN` por la simple presencia de dicho flag. En su lugar, el rol administrativo se reserva exclusivamente a las identidades designadas por configuración institucional (`Security:SuperAdminCedula` y `Security:MasterAdminId`) o a asignaciones manuales explícitas en `rbac_usuario_rol`.
+   * En `AdminService`, la asignación y revocación del rol `DOSIER_ADMIN` mantiene sincronía bidireccional sobre `user.Administrador`, protegiendo la cuenta del superadministrador raíz contra bloqueos o revocaciones accidentales.
+
+2. **Segregación de Personal y Resolución Curricular de Contratos:**
+   * En `AdminService.GetUsersAsync`, la partición entre personal `DOCENTE` y `ADMINISTRATIVO` evalúa de forma exhaustiva los departamentos institucionales (`DOCENCIA` y `ACADEMIA`), asignaciones en `asignaciones_profesores`, actividades curriculares y autoridades vigentes.
+   * Ante usuarios con relaciones contractuales mixtas (ej. analistas técnicos o coordinadores departamentales que además imparten cátedra), el sistema prioriza en `AdminService` y en `SignatureProfileSubservice` los contratos vigentes de `DOCENCIA` / `ACADEMIA` con cargo docente por sobre cargos técnicos o secundarios, asegurando la consistencia de sus credenciales pedagógicas y pies de firma.
+
+### 3.5. Matriz de Autorización en el Ciclo de Vida y Firma del PEA
 
 El backend en `PeaService.FirmarPeaAsync`, `AgregarObservacionAsync` y `SubsanarObservacionAsync` ejecuta una validación de autorización estricta consultando los roles activos en `rbac_usuario_rol` de la base de datos, imposibilitando la suplantación de identidad o salto no autorizado de etapas:
 

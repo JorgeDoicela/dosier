@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using dosier_application.Signatures;
 using dosier_domain.Signatures;
 using dosier_infrastructure.data.models;
@@ -57,7 +57,12 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
                     .Include(c => c.DepartamentoNavigation)
                     .Include(c => c.CargoInstitutoNavigation)
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.IdProfesor == user.IdSigafi && c.EsActivo == 1);
+                    .Where(c => c.IdProfesor == user.IdSigafi && (c.EsActivo == 1 || c.EsActivo == null))
+                    .OrderByDescending(c => c.DepartamentoNavigation != null && (c.DepartamentoNavigation.NombreDepartamento == "DOCENCIA" || c.DepartamentoNavigation.NombreDepartamento == "ACADEMIA"))
+                    .ThenByDescending(c => c.CargoInstitutoNavigation != null && c.CargoInstitutoNavigation.Nombre != null && (c.CargoInstitutoNavigation.Nombre.ToLower().Contains("profesor") || c.CargoInstitutoNavigation.Nombre.ToLower().Contains("docente")))
+                    .ThenByDescending(c => c.EsActivo == 1)
+                    .ThenByDescending(c => c.IdContrato)
+                    .FirstOrDefaultAsync();
 
                 if (contrato != null)
                 {

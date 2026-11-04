@@ -27,6 +27,7 @@ export interface PeaDocumentImportModalProps {
     formData: any;
     initialFile?: File | null;
     initialInstructions?: string;
+    initialDraft?: PeaStructuredDraft | null;
     autoExtractOnOpen?: boolean;
     onApplyDraft: (patch: Record<string, any>) => void;
 }
@@ -59,17 +60,17 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
     formData,
     initialFile = null,
     initialInstructions = '',
+    initialDraft = null,
     autoExtractOnOpen = false,
     onApplyDraft
 }) => {
     const { addToast } = useNotifications();
     const [configStatus, setConfigStatus] = useState<PeaAiConfigStatus | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(initialFile || null);
-    const [importInstructions, setImportInstructions] = useState<string>(initialInstructions || '');
     const [isImporting, setIsImporting] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
-    const [extractedDraft, setExtractedDraft] = useState<PeaStructuredDraft | null>(null);
-    const [selectedSections, setSelectedSections] = useState<string[]>([]);
+    const [extractedDraft, setExtractedDraft] = useState<PeaStructuredDraft | null>(initialDraft || null);
+    const [selectedSections, setSelectedSections] = useState<string[]>(initialDraft?.validationSummary?.generatedSections || []);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const nombreAsignatura = formData?.NombreAsignatura || formData?.nombre_asignatura || 'Asignatura Curricular';
@@ -78,11 +79,6 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
     const rawHorasAPE = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
     const rawHorasTA = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
     const totalHoras = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? (rawHorasCD + rawHorasAPE + rawHorasTA));
-
-    const isUnconfiguredSplit = rawHorasCD <= 0 && rawHorasAPE <= 0 && totalHoras > 0;
-    const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
-    const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
-    const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
 
     const executeExtraction = async (fileToExtract: File, instructionsText: string) => {
         if (!peaUuid) {
@@ -94,10 +90,10 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
         try {
             const draft = await extractPeaFromDocument(peaUuid, fileToExtract, {
                 customInstructions: instructionsText.trim() || undefined,
-                currentHorasCD: horasCD,
-                currentHorasAPE: horasAPE,
-                currentHorasTA: horasTA,
-                currentTotalHoras: totalHoras
+                currentHorasCD: rawHorasCD > 0 ? rawHorasCD : undefined,
+                currentHorasAPE: rawHorasAPE > 0 ? rawHorasAPE : undefined,
+                currentHorasTA: rawHorasTA > 0 ? rawHorasTA : undefined,
+                currentTotalHoras: totalHoras > 0 ? totalHoras : undefined
             });
 
             setExtractedDraft(draft);
@@ -119,15 +115,15 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
         if (!isOpen) return;
         const file = initialFile || null;
         setSelectedFile(file);
-        setImportInstructions(initialInstructions || '');
-        setExtractedDraft(null);
-        setSelectedSections([]);
-        loadConfig();
-
-        if (autoExtractOnOpen && file) {
-            executeExtraction(file, initialInstructions || '');
+        if (initialDraft) {
+            setExtractedDraft(initialDraft);
+            setSelectedSections(initialDraft.validationSummary?.generatedSections || []);
+        } else {
+            setExtractedDraft(null);
+            setSelectedSections([]);
         }
-    }, [isOpen, initialFile, initialInstructions, autoExtractOnOpen]);
+        loadConfig();
+    }, [isOpen, initialFile, initialDraft]);
 
     const loadConfig = async () => {
         try {
@@ -184,7 +180,7 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
             addToast('Archivo requerido', 'Seleccione un archivo digital (.pdf o .docx) para extraer sus datos.', 'warning');
             return;
         }
-        await executeExtraction(selectedFile, importInstructions);
+        await executeExtraction(selectedFile, '');
     };
 
     const toggleSectionSelection = (secId: string) => {
@@ -240,42 +236,6 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
 
                 {/* Cuerpo del Modal */}
                 <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5 bg-white dark:bg-zinc-950">
-                    {/* Ficha técnica de horas oficiales SIGAFI que blindan el cuadre */}
-                    <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
-                        <div>
-                            <dt className="font-mono text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                                Docencia (CD)
-                            </dt>
-                            <dd className="text-xs font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">
-                                {horasCD}h
-                            </dd>
-                        </div>
-                        <div>
-                            <dt className="font-mono text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                                Práctica (APE)
-                            </dt>
-                            <dd className="text-xs font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">
-                                {horasAPE}h
-                            </dd>
-                        </div>
-                        <div>
-                            <dt className="font-mono text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                                Autónomo (TA)
-                            </dt>
-                            <dd className="text-xs font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">
-                                {horasTA}h
-                            </dd>
-                        </div>
-                        <div>
-                            <dt className="font-mono text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                                Total Oficial
-                            </dt>
-                            <dd className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 mt-0.5">
-                                {totalHoras}h
-                            </dd>
-                        </div>
-                    </dl>
-
                     {configStatus && !configStatus.isReady && (
                         <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/80 bg-amber-50 dark:bg-[#1a1610] flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5 text-xs text-slate-800 dark:text-zinc-200">
@@ -285,122 +245,125 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                         </div>
                     )}
 
-                    {/* Selector de Archivo Digital */}
-                    <div className="space-y-4">
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between gap-2">
-                                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                                    Archivo original del PEA / Sílabo (.pdf digital o .docx)
-                                </label>
-                                <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                                    Texto digital · Sin imágenes · Máx. 15 MB
-                                </span>
-                            </div>
-
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                onChange={e => {
-                                    const f = e.target.files?.[0];
-                                    validateAndSelectFile(f);
-                                    e.target.value = '';
-                                }}
-                                className="hidden"
-                            />
-
-                            {!selectedFile ? (
-                                <div
-                                    onDragOver={e => {
-                                        e.preventDefault();
-                                        setIsDragOver(true);
-                                    }}
-                                    onDragLeave={() => setIsDragOver(false)}
-                                    onDrop={e => {
-                                        e.preventDefault();
-                                        setIsDragOver(false);
-                                        const f = e.dataTransfer.files?.[0];
-                                        validateAndSelectFile(f);
-                                    }}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className={`p-6 rounded-xl border border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
-                                        isDragOver
-                                            ? 'border-[#0070f3] bg-zinc-50 dark:bg-zinc-900'
-                                            : 'border-slate-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 hover:border-[#0070f3]'
-                                    }`}
-                                >
-                                    <FileUp size={22} className="text-[#0070f3]" strokeWidth={1.75} />
-                                    <div className="space-y-0.5">
-                                        <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
-                                            Haga clic para seleccionar o arrastre el archivo aquí
-                                        </p>
-                                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                                            Formatos admitidos: PDF digital con texto seleccionable (.pdf) y Word (.docx). No se admiten fotos o imágenes.
-                                        </p>
-                                    </div>
+                    {/* Selector de Archivo Digital o Ficha de Documento Procesado */}
+                    {!extractedDraft ? (
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                    <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                        Archivo original del PEA / Sílabo (.pdf digital o .docx)
+                                    </label>
+                                    <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                                        Texto digital · Sin imágenes · Máx. 15 MB
+                                    </span>
                                 </div>
-                            ) : (
-                                <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <FileText size={18} className="text-[#0070f3] shrink-0" strokeWidth={1.75} />
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
-                                                {selectedFile.name}
+
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                    onChange={e => {
+                                        const f = e.target.files?.[0];
+                                        validateAndSelectFile(f);
+                                        e.target.value = '';
+                                    }}
+                                    className="hidden"
+                                />
+
+                                {!selectedFile ? (
+                                    <div
+                                        onDragOver={e => {
+                                            e.preventDefault();
+                                            setIsDragOver(true);
+                                        }}
+                                        onDragLeave={() => setIsDragOver(false)}
+                                        onDrop={e => {
+                                            e.preventDefault();
+                                            setIsDragOver(false);
+                                            const f = e.dataTransfer.files?.[0];
+                                            validateAndSelectFile(f);
+                                        }}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className={`p-6 rounded-xl border border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+                                            isDragOver
+                                                ? 'border-[#0070f3] bg-zinc-50 dark:bg-zinc-900'
+                                                : 'border-slate-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 hover:border-[#0070f3]'
+                                        }`}
+                                    >
+                                        <FileUp size={22} className="text-[#0070f3]" strokeWidth={1.75} />
+                                        <div className="space-y-0.5">
+                                            <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                                                Haga clic para seleccionar o arrastre el archivo aquí
                                             </p>
                                             <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                                                {(selectedFile.size / 1024).toFixed(1)} KB · Documento cargado listo para extracción
+                                                Formatos admitidos: PDF digital con texto seleccionable (.pdf) y Word (.docx).
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedFile(null);
-                                            setExtractedDraft(null);
-                                        }}
-                                        className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors cursor-pointer"
-                                        title="Quitar archivo"
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                                Indicaciones para la adaptación al formato oficial (opcional)
-                            </label>
-                            <textarea
-                                rows={2}
-                                value={importInstructions}
-                                onChange={e => setImportInstructions(e.target.value)}
-                                placeholder="Ej. Respetar estrictamente los contenidos temáticos del archivo y actualizar las fuentes a APA 7ma edición..."
-                                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3] resize-none"
-                            />
-                        </div>
-
-                        <div className="flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleStartExtraction}
-                                disabled={isImporting || !selectedFile}
-                                className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
-                            >
-                                {isImporting ? (
-                                    <>
-                                        <Loader2 size={14} className="animate-spin" />
-                                        <span>Extrayendo y mapeando tablas...</span>
-                                    </>
                                 ) : (
-                                    <>
-                                        <FileUp size={14} />
-                                        <span>Extraer e importar documento</span>
-                                    </>
+                                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <FileText size={18} className="text-[#0070f3] shrink-0" strokeWidth={1.75} />
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                                    {selectedFile.name}
+                                                </p>
+                                                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                                    {(selectedFile.size / 1024).toFixed(1)} KB · Documento cargado listo para extracción
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedFile(null);
+                                                setExtractedDraft(null);
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                                            title="Quitar archivo"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
                                 )}
-                            </button>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={handleStartExtraction}
+                                    disabled={isImporting || !selectedFile}
+                                    className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                                >
+                                    {isImporting ? (
+                                        <>
+                                            <Loader2 size={14} className="animate-spin" />
+                                            <span>Extrayendo y mapeando tablas...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileUp size={14} />
+                                            <span>Extraer e importar documento</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <FileText size={18} className="text-[#0070f3] shrink-0" strokeWidth={1.75} />
+                                <div className="min-w-0">
+                                    <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                        {selectedFile?.name || initialFile?.name || 'Documento procesado'}
+                                    </p>
+                                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                        Contenido extraído y estructurado exitosamente
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Previsualización en Folio Continuo */}
                     {extractedDraft && (
@@ -489,28 +452,23 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
 
                 {/* Pie Sólido */}
                 {extractedDraft && (
-                    <div className="px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-4">
-                        <span className="text-xs text-slate-500 dark:text-zinc-400">
-                            Los datos generales y firmas de SIGAFI permanecen intactos.
-                        </span>
-                        <div className="flex items-center gap-3">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-3.5 py-2 text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleApplySelected}
-                                disabled={selectedSections.length === 0}
-                                className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
-                            >
-                                <Check size={14} />
-                                <span>Aplicar al PEA ({selectedSections.length})</span>
-                            </button>
-                        </div>
+                    <div className="px-6 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-3.5 py-2 text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 cursor-pointer"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleApplySelected}
+                            disabled={selectedSections.length === 0}
+                            className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                        >
+                            <Check size={14} />
+                            <span>Aplicar al PEA ({selectedSections.length})</span>
+                        </button>
                     </div>
                 )}
             </div>

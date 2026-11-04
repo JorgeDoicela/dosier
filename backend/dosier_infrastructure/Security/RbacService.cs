@@ -329,9 +329,9 @@ public class RbacService : IRbacService
         var requiredRoleCodes = new List<string>();
 
         // Reglas de negocio para roles automáticos (RBAC Declarativo)
+        // Aislamiento estricto: Únicamente son administradores automáticos las identidades maestras declaradas en configuración
         var isDesignatedAdmin = (!string.IsNullOrEmpty(_superAdminCedula) && user.IdSigafi == _superAdminCedula) ||
-                                (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId) ||
-                                user.Administrador;
+                                (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId);
 
         if (isDesignatedAdmin)
         {
@@ -345,6 +345,17 @@ public class RbacService : IRbacService
                 requiredRoleCodes.Add("DOSIER_ADMIN");
             }
         }
+        else
+        {
+            // Para cualquier otro usuario, su bandera Administrador debe coincidir estrictamente con tener el rol DOSIER_ADMIN asignado en rbac_usuario_rol
+            var hasActiveAdminRole = currentRoles.Any(r => r.Role.CodigoRol == "DOSIER_ADMIN");
+            if (user.Administrador != hasActiveAdminRole)
+            {
+                user.Administrador = hasActiveAdminRole;
+                await _context.SaveChangesAsync();
+            }
+        }
+
 
         if (user.TablaSigafi == "profesor")
         {

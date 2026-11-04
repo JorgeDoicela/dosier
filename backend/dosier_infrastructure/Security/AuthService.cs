@@ -414,7 +414,7 @@ public class AuthService : IAuthService
             RoleCodes = roleCodes,
             TipoUsuario = user.TablaSigafi,
             Permissions = permissions,
-            Administrador = roleCodes.Contains("DOSIER_ADMIN") || user.Administrador ||
+            Administrador = roleCodes.Contains("DOSIER_ADMIN") ||
                             (!string.IsNullOrEmpty(_superAdminCedula) && user.IdSigafi == _superAdminCedula) ||
                             (!string.IsNullOrEmpty(_masterAdminId) && user.IdSigafi == _masterAdminId),
             Email = user.EmailInstitucional ?? "",

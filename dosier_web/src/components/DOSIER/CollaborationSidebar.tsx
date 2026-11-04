@@ -96,7 +96,7 @@ export interface CollaborationSidebarProps {
     sectionStatuses?: Record<string, string>;
     onSectionStatusChange?: (sectionName: string, status: string) => void;
     onOpenImportModal?: () => void;
-    onTriggerDocExtraction?: (file: File, instructions: string) => void;
+    onTriggerDocExtraction?: (file: File, instructions?: string) => Promise<void> | void;
     onOpenAiModal?: () => void;
     onTriggerAiGeneration?: (targetSection: string, customInstructions: string) => void;
     onOpenAiConfigModal?: () => void;
@@ -179,7 +179,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
     const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
-    const [sidebarImportInstructions, setSidebarImportInstructions] = useState<string>('');
+    const [isExtractingInSidebar, setIsExtractingInSidebar] = useState<boolean>(false);
     const [sidebarIsDragOver, setSidebarIsDragOver] = useState<boolean>(false);
     const sidebarFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -203,13 +203,18 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         setSidebarImportFile(file);
     };
 
-    const handleSidebarExtractDoc = () => {
+    const handleSidebarExtractDoc = async () => {
         if (!sidebarImportFile) {
             if (onOpenImportModal) onOpenImportModal();
             return;
         }
         if (onTriggerDocExtraction) {
-            onTriggerDocExtraction(sidebarImportFile, sidebarImportInstructions);
+            try {
+                setIsExtractingInSidebar(true);
+                await onTriggerDocExtraction(sidebarImportFile, '');
+            } finally {
+                setIsExtractingInSidebar(false);
+            }
         } else if (onOpenImportModal) {
             onOpenImportModal();
         }
@@ -798,7 +803,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         </button>
                     )}
 
-                    {/* 1. Chat */}
+                    {/* 1. Chat / Mensajes */}
                     <button
                         type="button"
                         onClick={() => setActiveTab('comments')}
@@ -813,7 +818,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         <MessageSquare size={20} strokeWidth={1.75} />
                     </button>
 
-                    {/* 2. Estado */}
+                    {/* 2. Check / Estado de Secciones */}
                     <button
                         type="button"
                         onClick={() => setActiveTab('status')}
@@ -828,22 +833,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         <CheckCircle size={20} strokeWidth={1.75} />
                     </button>
 
-                    {/* 3. Actividad */}
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('activity')}
-                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                            activeTab === 'activity'
-                                ? 'border-text-main text-text-main bg-surface/50'
-                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                        }`}
-                        title="Actividad reciente"
-                        aria-label="Actividad reciente"
-                    >
-                        <Clock size={20} strokeWidth={1.75} />
-                    </button>
-
-                    {/* 4. Importar */}
+                    {/* 3. Subir Documento / Importar */}
                     {(onOpenImportModal || onTriggerDocExtraction) && (
                         <button
                             type="button"
@@ -860,7 +850,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         </button>
                     )}
 
-                    {/* 5. Asistente IA */}
+                    {/* 4. Asistente IA */}
                     {(onOpenAiModal || onTriggerAiGeneration) && (
                         <button
                             type="button"
@@ -876,6 +866,21 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             <Sparkles size={20} strokeWidth={1.75} className={activeTab === 'ai' ? 'text-[#0070f3] dark:text-blue-400' : 'text-text-dim'} />
                         </button>
                     )}
+
+                    {/* 5. Actividad / Eventos (Qué pasó) */}
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('activity')}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                            activeTab === 'activity'
+                                ? 'border-text-main text-text-main bg-surface/50'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                        }`}
+                        title="Actividad reciente"
+                        aria-label="Actividad reciente"
+                    >
+                        <Clock size={20} strokeWidth={1.75} />
+                    </button>
                 </div>
 
                 {/* Botón Cerrar compacto */}
@@ -1577,15 +1582,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     {/* Encabezado del Extractor */}
                                     <div className="pb-3 border-b border-border-thin">
                                         <h3 className="text-xs font-bold text-text-main">
-                                            Importar PEA Digital
+                                            Importar PEA
                                         </h3>
                                     </div>
 
                                     {/* Zona de Selección / Arrastre de Archivo */}
-                                    <div className="space-y-1.5">
-                                        <label className="block text-[11px] font-semibold text-text-main">
-                                            Documento fuente (.pdf o .docx)
-                                        </label>
+                                    <div>
                                         <input
                                             ref={sidebarFileInputRef}
                                             type="file"
@@ -1612,22 +1614,22 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                     const file = e.dataTransfer.files?.[0];
                                                     if (file) validateAndSelectSidebarFile(file);
                                                 }}
-                                                className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
+                                                className={`border-2 border-dashed rounded-2xl py-14 px-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] ${
                                                     sidebarIsDragOver
                                                         ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
                                                         : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
                                                 }`}
                                             >
-                                                <div className="w-11 h-11 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-2.5">
-                                                    <FileUp size={22} />
+                                                <div className="w-14 h-14 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-4">
+                                                    <FileUp size={26} strokeWidth={1.75} />
                                                 </div>
-                                                <p className="text-xs font-semibold text-text-main">
-                                                    Cargar documento digital
+                                                <p className="text-sm font-semibold text-text-main">
+                                                    Cargar documento
                                                 </p>
-                                                <p className="text-[11px] text-text-dim mt-1">
+                                                <p className="text-xs text-text-dim mt-1.5 max-w-[220px] leading-relaxed">
                                                     Haz clic o arrastra un archivo aquí
                                                 </p>
-                                                <span className="inline-block mt-2.5 text-[9px] font-mono px-2.5 py-1 rounded-md bg-surface border border-border-thin text-text-dim">
+                                                <span className="inline-block mt-4 text-[10px] font-mono px-3 py-1.5 rounded-lg bg-surface border border-border-thin text-text-dim">
                                                     PDF o DOCX · Máx 15MB
                                                 </span>
                                             </div>
@@ -1659,32 +1661,6 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Instrucciones opcionales */}
-                                    <div className="space-y-1.5">
-                                        <label className="block text-[11px] font-semibold text-text-main">
-                                            Instrucciones de extracción (opcional)
-                                        </label>
-                                        <textarea
-                                            rows={5}
-                                            value={sidebarImportInstructions}
-                                            onChange={e => setSidebarImportInstructions(e.target.value)}
-                                            placeholder="Ej. Priorizar los contenidos de la unidad 2 y 3, omitir firmas antiguas o adaptar la bibliografía a formato actual..."
-                                            className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none leading-relaxed"
-                                        />
-                                    </div>
-
-                                    {/* Pautas técnicas de extracción */}
-                                    <div className="p-3 rounded-xl border border-border-thin bg-surface/50 space-y-1.5 text-text-dim">
-                                        <p className="text-[11px] font-semibold text-text-main">
-                                            Pautas de extracción
-                                        </p>
-                                        <ul className="text-[10.5px] space-y-1 leading-relaxed list-disc list-inside">
-                                            <li>Estructura sílabos anteriores a los 11 bloques oficiales.</li>
-                                            <li>Preserva los metadatos y firmas institucionales vigentes.</li>
-                                            <li>Permite seleccionar qué secciones aplicar antes de guardar.</li>
-                                        </ul>
-                                    </div>
                                 </div>
 
                                 {/* Dock de Acciones al fondo */}
@@ -1692,24 +1668,21 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     <button
                                         type="button"
                                         onClick={handleSidebarExtractDoc}
-                                        disabled={!sidebarImportFile}
+                                        disabled={!sidebarImportFile || isExtractingInSidebar}
                                         className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                                     >
-                                        <FileUp size={15} />
-                                        <span>Extraer y revisar en grande</span>
+                                        {isExtractingInSidebar ? (
+                                            <>
+                                                <Loader size={15} className="animate-spin" />
+                                                <span>Extrayendo...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileUp size={15} />
+                                                <span>Extraer</span>
+                                            </>
+                                        )}
                                     </button>
-
-                                    {onOpenImportModal && (
-                                        <div className="text-center pt-1">
-                                            <button
-                                                type="button"
-                                                onClick={onOpenImportModal}
-                                                className="text-[11px] text-text-dim hover:text-text-main transition-colors cursor-pointer"
-                                            >
-                                                Abrir importador completo en el centro
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         )}

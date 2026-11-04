@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { CheckCircle2, ShieldAlert, Pencil } from 'lucide-react';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 import usersService from '../../../../services/usersService';
@@ -26,17 +26,6 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
     const firmas = formData?.FirmasResponsabilidad || {};
     const hasAutoSyncedRef = useRef(false);
     const isSyncingRef = useRef(false);
-    const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
-    const [confirmModal, setConfirmModal] = useState<{
-        open: boolean;
-        rolKey: string;
-        etiqueta: string;
-        cargo: string;
-        nombreField: string;
-        valorActual: string;
-        valorInstitucional: string;
-    } | null>(null);
-    const [modalNombreInput, setModalNombreInput] = useState('');
 
     // Sincronización continua de autoridades según datos oficiales de gobernanza institucional
     const sincronizarAutoridades = useCallback(async (forzar = false) => {
@@ -171,48 +160,6 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         };
     }, [sincronizarAutoridades, formData?.FirmasResponsabilidad]);
 
-    const handleRequestUnlock = (rolKey: string, etiqueta: string, cargo: string, nombreField: string, valorInstitucional = '') => {
-        if (readOnly) return;
-        const currentVal = firmas[nombreField] || '';
-        setModalNombreInput(currentVal || valorInstitucional);
-        setConfirmModal({
-            open: true,
-            rolKey,
-            etiqueta,
-            cargo,
-            nombreField,
-            valorActual: currentVal,
-            valorInstitucional
-        });
-    };
-
-    const handleSaveFromModal = () => {
-        if (!confirmModal) return;
-        const nuevoNombre = modalNombreInput.trim();
-        updateFirma(confirmModal.nombreField, nuevoNombre);
-
-        if (cowork?.ydoc) {
-            cowork.ydoc.transact(() => {
-                const ytext = cowork.ydoc.getText(`Firmas_${confirmModal.nombreField}`);
-                if (ytext.toString() !== nuevoNombre) {
-                    ytext.delete(0, ytext.length);
-                    ytext.insert(0, nuevoNombre);
-                }
-            }, 'manual-autoridad-modal');
-        }
-
-        setConfirmModal(null);
-    };
-
-    const handleResetToInstitucional = () => {
-        if (!confirmModal) return;
-        setModalNombreInput(confirmModal.valorInstitucional);
-    };
-
-    const handleLockField = (rolKey: string) => {
-        setUnlockedFields(prev => ({ ...prev, [rolKey]: false }));
-    };
-
     const updateFirma = (cargoKey: string, value: any) => {
         onUpdate('FirmasResponsabilidad', {
             ...(formData?.FirmasResponsabilidad || {}),
@@ -272,8 +219,6 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {rolesCircuito.map((rol) => {
                     const fechaFirma = firmas[rol.fechaField] || '';
-                    const isUnlocked = Boolean(unlockedFields[rol.key]);
-                    const isFieldReadOnly = readOnly || rol.firmado || !isUnlocked;
 
                     return (
                         <div
@@ -317,41 +262,18 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
                             {/* Nombre del Responsable */}
                             <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
-                                        Nombres y Título:
-                                    </label>
-                                    {!rol.firmado && !readOnly && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.nombreField, rol.placeholder)}
-                                            className="text-[11px] font-semibold text-[#0070f3] hover:text-[#005bb5] hover:underline inline-flex items-center gap-1 cursor-pointer"
-                                            title="Cambiar autoridad para este documento"
-                                        >
-                                            <Pencil size={11} strokeWidth={1.75} />
-                                            Modificar
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="relative">
-                                    <CoWorkField
-                                        name={`Firmas_${rol.nombreField}`}
-                                        cowork={cowork}
-                                        type="text"
-                                        placeholder={rol.placeholder}
-                                        readOnly={true}
-                                        className="w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none bg-bg-deep/70 border-border-thin cursor-pointer select-none transition-all"
-                                        onValueChange={(val) => updateFirma(rol.nombreField, val)}
-                                    />
-                                    {!rol.firmado && !readOnly && (
-                                        <div
-                                            onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.nombreField, rol.placeholder)}
-                                            className="absolute inset-0 cursor-pointer z-10"
-                                            title="Clic para modificar autoridad en este documento"
-                                        />
-                                    )}
-                                </div>
+                                <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
+                                    Nombres y Título:
+                                </label>
+                                <CoWorkField
+                                    name={`Firmas_${rol.nombreField}`}
+                                    cowork={cowork}
+                                    type="text"
+                                    placeholder={rol.placeholder}
+                                    readOnly={readOnly || rol.firmado}
+                                    className="w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none bg-surface border-border-thin focus:border-[#0070f3] transition-all"
+                                    onValueChange={(val) => updateFirma(rol.nombreField, val)}
+                                />
                             </div>
 
                             {/* Cargo Institucional */}
@@ -368,89 +290,6 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                 })}
             </div>
 
-            {/* MODAL DE EDICIÓN DE AUTORIDAD */}
-            {confirmModal && confirmModal.open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
-                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl p-6 space-y-4 animate-scale-in">
-                        <div className="flex items-start gap-3">
-                            <div className="p-2.5 rounded-lg bg-blue-500/10 text-[#0070f3] dark:text-blue-400 shrink-0">
-                                <ShieldAlert size={20} strokeWidth={1.75} />
-                            </div>
-                            <div className="space-y-0.5">
-                                <h3 className="text-sm font-bold text-text-main">
-                                    Modificar Autoridad
-                                </h3>
-                                <p className="text-xs text-text-dim">
-                                    {confirmModal.cargo}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="p-3.5 rounded-lg bg-bg-deep border border-border-thin text-xs text-text-main leading-relaxed space-y-1">
-                            <p className="font-medium">
-                                Este cambio <span className="font-bold text-[#0070f3]">solo afectará a este documento</span>.
-                            </p>
-                            <p className="text-[11px] text-text-dim leading-relaxed">
-                                No modificará la asignación central de la carrera en el sistema institucional.
-                            </p>
-                        </div>
-
-                        {/* Campo de edición */}
-                        <div className="space-y-1.5 pt-1">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs font-semibold text-text-main">
-                                    Nombre y Título del Responsable:
-                                </label>
-                                {confirmModal.valorInstitucional && modalNombreInput.trim() !== confirmModal.valorInstitucional.trim() && (
-                                    <button
-                                        type="button"
-                                        onClick={handleResetToInstitucional}
-                                        className="text-[11px] font-medium text-[#0070f3] hover:underline cursor-pointer"
-                                    >
-                                        Restablecer oficial
-                                    </button>
-                                )}
-                            </div>
-                            <input
-                                type="text"
-                                value={modalNombreInput}
-                                onChange={(e) => setModalNombreInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        handleSaveFromModal();
-                                    }
-                                }}
-                                autoFocus
-                                placeholder="Ingrese nombres y apellidos completos..."
-                                className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-text-main font-semibold outline-none focus:border-[#0070f3] focus:ring-2 focus:ring-[#0070f3]/20 transition-all"
-                            />
-                            {confirmModal.valorInstitucional && (
-                                <p className="text-[11px] text-text-dim">
-                                    Oficial institucional: <span className="font-medium text-text-main">{confirmModal.valorInstitucional}</span>
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="flex items-center justify-end gap-2.5 pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setConfirmModal(null)}
-                                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-dim hover:text-text-main hover:bg-bg-deep border border-border-thin transition-colors cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSaveFromModal}
-                                className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors shadow-xs cursor-pointer"
-                            >
-                                Guardar en este documento
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
