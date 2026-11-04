@@ -22,6 +22,7 @@ namespace dosier_infrastructure.Curriculum
         {
             var periodos = await _context.Periodos
                 .AsNoTracking()
+                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
                 .OrderByDescending(p => p.Periodoactivoinstituto == 1)
                 .ThenByDescending(p => p.Activo == true)
                 .ThenByDescending(p => p.FechaInicial)
@@ -77,7 +78,7 @@ namespace dosier_infrastructure.Curriculum
                     IdCarrera = c.IdCarrera,
                     NombreCarrera = c.Carrera1 ?? "Carrera sin nombre",
                     AliasCarrera = c.AliasCarrera,
-                    CodigoCarrera = !string.IsNullOrWhiteSpace(c.CodigoCases) ? c.CodigoCases : c.AliasCarrera,
+                    CodigoCarrera = !string.IsNullOrWhiteSpace(c.AliasCarrera) ? c.AliasCarrera : c.CodigoCases,
                     TotalAsignaturas = totalAsignaturas
                 });
             }
@@ -97,7 +98,7 @@ namespace dosier_infrastructure.Curriculum
 
             var mallaActiva = await _context.Mallas
                 .AsNoTracking()
-                .Where(m => m.IdCarrera == idCarrera && (m.Activa == true || m.Activa == null))
+                    .Where(m => m.IdCarrera == idCarrera && (m.Activa == true || m.Activa == null))
                 .OrderByDescending(m => m.IdMalla)
                 .FirstOrDefaultAsync();
 
@@ -142,7 +143,7 @@ namespace dosier_infrastructure.Curriculum
             // Cruzar con los 4 documentos existentes en DOSIER
             var peasExistentes = await _context.DocPeas
                 .AsNoTracking()
-                .Where(p => p.IdCarrera == idCarrera && p.IdPeriodo == periodoActivo && p.Activo)
+                    .Where(p => p.IdCarrera == idCarrera && p.IdPeriodo == periodoActivo && p.Activo)
                 .ToListAsync();
 
             var resultado = new List<DocenteAsignaturaMallaDto>();
@@ -177,12 +178,13 @@ namespace dosier_infrastructure.Curriculum
         {
             var periodo = await _context.Periodos
                 .AsNoTracking()
+                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
                 .OrderByDescending(p => p.Periodoactivoinstituto == 1)
                 .ThenByDescending(p => p.Activo == true)
                 .ThenByDescending(p => p.FechaInicial)
                 .FirstOrDefaultAsync();
 
-            return periodo?.IdPeriodo ?? "2026-1";
+            return periodo?.IdPeriodo ?? "OCT2026";
         }
     }
 }

@@ -159,7 +159,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
         }
 
         // Resolución defensiva de Código de Carrera institucional (ej. GAS para Gastronomía)
-        if (!merged.CodigoCarrera || merged.CodigoCarrera === '' || merged.CodigoCarrera === '---') {
+        if (!merged.CodigoCarrera || merged.CodigoCarrera === '' || merged.CodigoCarrera === '---' || String(merged.CodigoCarrera).includes('-')) {
             const carreraNombre = String(merged.Carrera || merged.carrera || initialData?.Carrera || initialData?.carrera || '').toUpperCase();
             if (carreraNombre.includes('GASTRONOM')) merged.CodigoCarrera = 'GAS';
             else if (carreraNombre.includes('SOFTWARE')) merged.CodigoCarrera = 'SOF';

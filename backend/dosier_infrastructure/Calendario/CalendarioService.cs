@@ -304,9 +304,9 @@ public class CalendarioService : ICalendarioService
             }
         }
 
-        // 2. HITOS DE PERÍODOS ACADÉMICOS INSTITUCIONALES
+        // 2. HITOS DE PERÍODOS ACADÉMICOS INSTITUCIONALES (Exclusivo Instituto ISTPET, descartando Conducción)
         var periodos = await _context.Periodos.AsNoTracking()
-            .Where(pr => pr.Activo == true || pr.Periodoactivoinstituto == 1)
+            .Where(pr => (pr.EsConduccion == 0 || pr.EsConduccion == null) && (pr.EsInstituto == 1 || pr.Periodoactivoinstituto == 1))
             .ToListAsync();
 
         foreach (var per in periodos)

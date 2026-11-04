@@ -38,7 +38,9 @@ public class AdminService : IAdminService
 
         // Obtener periodo académico (Lógica Resiliente de Descubrimiento con AsNoTracking y Proyección Directa)
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var periodos = await _context.Periodos.AsNoTracking().ToListAsync();
+        var periodos = await _context.Periodos.AsNoTracking()
+            .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
+            .ToListAsync();
         var periodId = periodos
             .OrderByDescending(p => p.Periodoactivoinstituto == 1) // 1. Marcado explícitamente para el sistema
             .ThenByDescending(p => p.Activo == true)             // 2. Marcado como activo genérico

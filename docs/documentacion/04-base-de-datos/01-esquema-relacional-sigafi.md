@@ -51,7 +51,7 @@ erDiagram
 | Tabla SIGAFI | Columnas Principales | Regla de Integración / Filtro DOSIER |
 | :--- | :--- | :--- |
 | `carreras` | `idCarrera`, `carrera`, `codigo`, `esInstituto` | Filtro estricto `WHERE esInstituto = 1` para aislar carreras técnicas del ISTPET y excluir escuelas de conducción. |
-| `periodos` | `idPeriodo`, `detalle`, `fechainicial`, `fechafinal`, `activo` | Delimita los períodos académicos activos y vigentes para formulación de PEAs. |
+| `periodos` | `idPeriodo`, `detalle`, `fecha_inicial`, `fecha_final`, `esInstituto`, `esConduccion`, `periodoactivoinstituto`, `activo` | Delimita los períodos académicos activos y vigentes del ISTPET. Se aplica filtro estricto `(esConduccion = 0 OR esConduccion IS NULL) AND (esInstituto = 1 OR periodoactivoinstituto = 1 OR asignaciones_profesores en carreras con esInstituto = 1)` para aislar el calendario y distributivo de la Escuela de Conducción. |
 | `profesores` | `idProfesor` (cédula), `nombres`, `apellidos`, `correo` | Registro oficial de la planta docente. Se utiliza para el JIT Provisioning en el sistema ID 6. |
 | `mallas` | `idMalla`, `idCarrera`, `descripcion`, `codigoResolucion` | Mallas curriculares aprobadas. |
 | `mallas_periodos` | `idMallaPeriodo`, `idMalla`, `idPeriodo` | Tabla pivote de resolución de cohorte curricular por período lectivo. |

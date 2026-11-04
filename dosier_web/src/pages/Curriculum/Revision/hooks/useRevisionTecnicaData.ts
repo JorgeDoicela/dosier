@@ -25,13 +25,13 @@ interface UseRevisionTecnicaDataParams {
 
 export const useRevisionTecnicaData = ({
     projectUuid,
-    navigate,
+    navigate: _navigate,
     addToast,
     confirm,
     comments,
     setComments: _setComments
 }: UseRevisionTecnicaDataParams) => {
-    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const { isCoordAcad, isVicerrector } = useAuth();
     const addToastRef = useRef(addToast);
     const confirmRef = useRef(confirm);
 
@@ -226,7 +226,7 @@ export const useRevisionTecnicaData = ({
 
             const finalPeriodo = metadata.Periodo || metadata.nombre_periodo || (pea as any).nombrePeriodo || (pea as any).nombre_periodo || pea.idPeriodo || '';
             const finalCodigoCarrera = metadata.CodigoCarrera || metadata.codigo_carrera || (pea as any).codigoCarrera || (pea as any).codigo_carrera || '';
-            const finalCodigoAsignatura = metadata.CodigoAsignatura || metadata.codigo_asignatura || pea.codigoAsignatura || (pea as any).codigo_asignatura || finalCodigoCarrera || '';
+            const finalCodigoAsignatura = metadata.CodigoAsignatura || metadata.codigo_asignatura || pea.codigoAsignatura || (pea as any).codigo_asignatura || '';
 
             const practicasFinal = (Array.isArray(metadata.ActividadesPracticas) && metadata.ActividadesPracticas.length > 0)
                 ? metadata.ActividadesPracticas

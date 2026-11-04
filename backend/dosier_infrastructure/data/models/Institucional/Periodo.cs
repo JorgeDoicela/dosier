@@ -22,6 +22,7 @@ public partial class Periodo
     public sbyte? Periodoactivoinstituto { get; set; }
     public sbyte? VisualizaPowerBi { get; set; }
     public sbyte? EsInstituto { get; set; }
+    public sbyte? EsConduccion { get; set; }
     public sbyte? PeriodoPlanificacion { get; set; }
     public virtual ICollection<Matricula> Matriculas { get; set; } = new List<Matricula>();
 

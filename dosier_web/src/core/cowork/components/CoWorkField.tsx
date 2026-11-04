@@ -221,18 +221,35 @@ function resolveDbValue(parentFormData: any, name: string): any {
         }
     }
 
-    // Manejo prioritario de Código de Carrera con fallback institucional (ej. GAS para Gastronomía)
+        // Manejo obligatorio de Código de Carrera: forzar siempre la sigla institucional (ej. SOF, GAS, MCA)
     if (name === 'CodigoCarrera' || name === 'codigo_carrera') {
-        // 1. Prioridad máxima: Código oficial CACES/CES de la carrera (codigo_cases)
-        // 2. Prioridad institucional: Código de carrera asignado (CodigoCarrera / aliasCarrera)
-        const val = parentFormData.codigoCases || parentFormData.codigo_cases || parentFormData.CodigoCarrera || parentFormData.codigo_carrera || parentFormData.aliasCarrera || parentFormData.alias_carrera;
-        if (val && String(val).trim() !== '') {
+        const cName = String(parentFormData.Carrera || parentFormData.carrera || '').toUpperCase();
+        if (cName.includes('SOFTWARE')) return 'SOF';
+        if (cName.includes('GASTRONOM')) return 'GAS';
+        if (cName.includes('DEPORTIV') || cName.includes('ENTRENAMIENTO')) return 'DEP';
+        if (cName.includes('AUTOMOTRIZ') || cName.includes('MECANICA') || cName.includes('MECÁNICA')) return 'MCA';
+        if (cName.includes('TRIBUTAR') || cName.includes('CONTABILIDAD')) return 'CTA';
+        if (cName.includes('TALENTO') || cName.includes('HUMANO')) return 'ATH';
+        if (cName.includes('GRAFICO') || cName.includes('GRÁFICO')) return 'DGF';
+        if (cName.includes('INICIAL')) return 'EBI';
+        if (cName.includes('MARKETING')) return 'MKT';
+        if (cName.includes('INCLUSIVA')) return 'EIN';
+        if (cName.includes('BASICA') || cName.includes('BÁSICA')) return 'EBA';
+        if (cName.includes('TELECOMUNICACION') || cName.includes('REDES')) return 'RDT';
+        if (cName.includes('ELECTRONIC') || cName.includes('ELECTRÓNIC')) return 'ELT';
+
+        const alias = parentFormData.aliasCarrera || parentFormData.alias_carrera;
+        if (alias && String(alias).trim() !== '' && !String(alias).includes('-P-')) {
+            return String(alias).trim();
+        }
+        const val = parentFormData.CodigoCarrera || parentFormData.codigo_carrera;
+        if (val && String(val).trim() !== '' && !String(val).includes('-P-')) {
             return String(val).trim();
         }
-        const cName = parentFormData.Carrera || parentFormData.carrera;
-        if (cName && typeof cName === 'string' && cName.trim() !== '') {
+        if (cName && cName.trim().length >= 3) {
             return cName.trim().substring(0, 3).toUpperCase();
         }
+        return 'SOF';
     }
 
     if (parentFormData[name] !== undefined) {

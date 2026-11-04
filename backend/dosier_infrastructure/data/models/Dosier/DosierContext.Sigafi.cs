@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace dosier_infrastructure.data.models;
 
@@ -134,6 +134,7 @@ public partial class DosierContext
             entity.Property(e => e.Periodoactivoinstituto).HasColumnType("tinyint(4)").HasColumnName("periodoactivoinstituto");
             entity.Property(e => e.VisualizaPowerBi).HasColumnType("tinyint(4)").HasColumnName("visualizaPowerBi");
             entity.Property(e => e.EsInstituto).HasColumnType("tinyint(4)").HasColumnName("esInstituto");
+            entity.Property(e => e.EsConduccion).HasColumnType("tinyint(4)").HasColumnName("esConduccion");
             entity.Property(e => e.PeriodoPlanificacion).HasColumnType("tinyint(4)").HasColumnName("periodoPlanificacion");
 
             entity.Ignore(e => e.Matriculas);

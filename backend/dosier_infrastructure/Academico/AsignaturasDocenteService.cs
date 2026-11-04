@@ -45,9 +45,10 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
         var periodos = await _context.Periodos
             .AsNoTracking()
             .Where(p => 
-                p.Periodoactivoinstituto == 1 ||
-                p.EsInstituto == 1 ||
-                periodosInstitutoQuery.Contains(p.IdPeriodo)
+                (p.EsConduccion == 0 || p.EsConduccion == null) &&
+                (p.Periodoactivoinstituto == 1 ||
+                 p.EsInstituto == 1 ||
+                 periodosInstitutoQuery.Contains(p.IdPeriodo))
             )
             .ToListAsync();
 
@@ -226,7 +227,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 NombreAsignatura = asignatura.Asignatura1,
 
                 IdCarrera = carrera.IdCarrera,
-                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera.CodigoCases) ? carrera.CodigoCases : carrera.AliasCarrera,
+                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera.AliasCarrera) ? carrera.AliasCarrera : carrera.CodigoCases,
                 NombreCarrera = carrera.Carrera1,
                 AliasCarrera = carrera.AliasCarrera,
 

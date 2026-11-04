@@ -69,9 +69,6 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     onScroll
 }) => {
     const snap = docSnapshot || {};
-    const allComments = Object.values(comments).flat();
-    const totalObsCount = allComments.length;
-    const pendingObsCount = allComments.filter(c => c.status === 'Pendiente').length;
     const statusDescriptor = getPeaStatusDescriptor(project.status);
     const statusLabel = statusDescriptor.key === 'EnRevision' ? 'En Revisión' : statusDescriptor.label;
 
@@ -322,11 +319,19 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                     </dd>
                                 </div>
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código Institucional</dt>
+                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Carrera</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.CodigoAsignatura || project.codigo_asignatura || snap.CodigoCarrera || '-'}
+                                        {snap.CodigoCarrera || project.codigo_carrera || '-'}
                                     </dd>
                                 </div>
+                                {(snap.CodigoAsignatura || project.codigo_asignatura) && (
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Asignatura</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
+                                            {snap.CodigoAsignatura || project.codigo_asignatura}
+                                        </dd>
+                                    </div>
+                                )}
                                 <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
                                     <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Carrera</dt>
                                     <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">

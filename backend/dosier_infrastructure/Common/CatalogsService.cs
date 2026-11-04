@@ -66,7 +66,7 @@ namespace dosier_infrastructure.Common
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var currentPeriod = await _context.Periodos
                 .AsNoTracking()
-                .Where(p => p.EsInstituto == 1)
+                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
                 .OrderByDescending(p => p.Periodoactivoinstituto == 1)
                 .ThenByDescending(p => p.Activo == true)
                 .ThenByDescending(p => p.FechaInicial <= today && p.FechaFinal >= today)
@@ -108,7 +108,7 @@ namespace dosier_infrastructure.Common
         {
             return await _context.Periodos
                 .AsNoTracking()
-                .Where(p => p.EsInstituto == 1)
+                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
                 .OrderByDescending(p => p.IdPeriodo)
                 .Select(p => new PeriodoCatalogoDto
                 {

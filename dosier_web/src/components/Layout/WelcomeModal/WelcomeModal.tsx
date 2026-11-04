@@ -130,7 +130,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                             {config.benefits.map((benefit, idx) => (
                                 <div 
                                     key={idx}
-                                    className="bento-card p-4 flex flex-col justify-between cursor-default hover:border-border-hover transition-colors"
+                                    className="bento-card static p-4 flex flex-col justify-between cursor-default"
                                 >
                                     <div className="flex items-center justify-between gap-3 mb-1.5">
                                         <div className="flex items-center gap-2.5 min-w-0">

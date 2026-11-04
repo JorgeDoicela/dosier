@@ -12,6 +12,8 @@ export interface ProjectDetail {
     convocatoria: string;
     linea: string;
     carrera: string;
+    codigo_carrera?: string;
+    alias_carrera?: string;
     dominio: string;
     descripcion: string;
     directorProyecto: string;

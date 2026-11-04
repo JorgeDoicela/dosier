@@ -1089,7 +1089,7 @@ namespace dosier_infrastructure.Curriculum
                 IdExpediente = pea.IdExpediente,
                 IdCarrera = pea.IdCarrera,
                 NombreCarrera = carrera?.Carrera1 ?? "Carrera ISTPET",
-                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera?.CodigoCases) ? carrera.CodigoCases : carrera?.AliasCarrera,
+                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera?.AliasCarrera) ? carrera?.AliasCarrera : carrera?.CodigoCases,
                 IdAsignatura = pea.IdAsignatura,
                 NombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura",
                 CodigoAsignatura = asignatura?.Codigo,
