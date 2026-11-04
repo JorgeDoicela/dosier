@@ -21,7 +21,7 @@
   .page-break { page-break-after: always; height: 0; }
   .table-bordered { width: 100%; border-collapse: collapse; border: 1px solid #000000; font-size: 8pt; background: #ffffff; }
   .table-bordered td, .table-bordered th { border: 1px solid #000000; padding: 4px 6px; }
-  .header-primary { background-color: {{default theme.colors.primary "#1e2a4a"}}; color: #ffffff; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; border: 1px solid #000000; }
+  .header-primary { background-color: {{default theme.colors.primary "#1e2a4a"}}; color: #ffffff; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; border: 1px solid #000000; border-top: none; }
   .header-sub { background-color: #bdd7ee; color: #000000; font-weight: bold; font-size: 8pt; }
 </style>
 
@@ -54,7 +54,7 @@
   </table>
 
   <!-- a) DATOS GENERALES DE LA ASIGNATURA -->
-  <div class="header-primary" style="border-top: none;">
+  <div class="header-primary">
     a) DATOS GENERALES DE LA ASIGNATURA:
   </div>
   <table class="table-bordered" style="border-top: none;">
@@ -117,10 +117,10 @@
   </table>
 
   <!-- b) OBJETIVO DE LA ASIGNATURA -->
-  <div class="header-primary" style="margin-top: 6px;">
+  <div class="header-primary">
     b) OBJETIVO DE LA ASIGNATURA
   </div>
-  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 6px;">
+  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
     {{{default ObjetivoAsignatura (default objetivo_asignatura "---")}}}
   </div>
 
@@ -146,10 +146,10 @@
   </table>
 
   <!-- d) RESULTADOS DE APRENDIZAJE DE LA CARRERA -->
-  <div class="header-primary" style="margin-top: 6px;">
+  <div class="header-primary">
     d)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA
   </div>
-  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 6px;">
+  <div style="border: 1px solid #000000; border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
     {{{default RdaCarrera (default rda_carrera "---")}}}
   </div>
 
@@ -169,7 +169,7 @@
   <!-- ═══════════════════════════════════════════════════════════════════ -->
 
   <!-- f) CONTENIDOS DE ENSEÑANZA -->
-  <div class="header-primary" style="margin-top: 6px;">
+  <div class="header-primary" style="border-top: 1px solid #000000;">
     f) CONTENIDOS DE ENSEÑANZA:
   </div>
   <table class="table-bordered" style="border-top: none;">
@@ -213,10 +213,10 @@
   </table>
 
   <!-- g) METODOLOGÍA DE ENSEÑANZA -->
-  <div class="header-primary" style="margin-top: 6px;">
+  <div class="header-primary">
     g) METODOLOGÍA DE ENSEÑANZA
   </div>
-  <div style="border: 1px solid #000000; border-top: none; background: #ffffff; margin-bottom: 6px;">
+  <div style="border: 1px solid #000000; border-top: none; background: #ffffff;">
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000;">
       ESTRATEGIAS METODOLÓGICAS
     </div>
@@ -235,7 +235,7 @@
   <div class="header-primary">
     h) ACTIVIDADES PRÁCTICAS
   </div>
-  <table class="table-bordered" style="border-top: none; margin-bottom: 6px;">
+  <table class="table-bordered" style="border-top: none;">
     <thead>
       <tr style="background: #f8fafc; font-weight: bold;">
         <th style="width: 20%; text-align: center;">Unidad</th>
@@ -293,28 +293,27 @@
     </tbody>
   </table>
 
-  <!-- SALTO A PÁGINA 3 -->
-  <div class="page-break"></div>
+
 
   <!-- ═══════════════════════════════════════════════════════════════════ -->
   <!-- PÁGINA 3: BIBLIOGRAFÍA Y FIRMAS DE RESPONSABILIDAD ─────────────── -->
   <!-- ═══════════════════════════════════════════════════════════════════ -->
 
   <!-- j) BIBLIOGRAFÍA -->
-  <div class="header-primary" style="margin-top: 6px;">
+  <div class="header-primary">
     j) BIBLIOGRAFÍA
   </div>
-  <div style="border: 1px solid #000000; border-top: none; background: #ffffff; margin-bottom: 12px;">
+  <div style="border: 1px solid #000000; border-top: none; background: #ffffff;">
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
       Bibliografía básica
     </div>
-    <div style="padding: 6px 8px; min-height: 45px; font-size: 8pt; border-bottom: 1px solid #000000;">
+    <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt; border-bottom: 1px solid #000000;">
       {{{default BibliografiaBasica "---"}}}
     </div>
     <div style="background: #e2e8f0; padding: 3px 8px; font-weight: bold; font-size: 8pt; border-bottom: 1px solid #000000; text-align: center;">
       Bibliografía de consulta
     </div>
-    <div style="padding: 6px 8px; min-height: 45px; font-size: 8pt;">
+    <div style="padding: 4px 8px; min-height: 32px; font-size: 8pt;">
       {{{default BibliografiaConsulta "---"}}}
     </div>
   </div>
@@ -334,7 +333,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr style="height: 55px;">
+      <tr style="height: 46px;">
         <td style="font-weight: bold; text-align: left; vertical-align: middle;">FIRMA</td>
         <td style="vertical-align: bottom;">{{{default firma_docente_base64 ""}}}</td>
         <td style="vertical-align: bottom;">{{{default firma_coordinador_carrera_base64 ""}}}</td>

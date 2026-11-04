@@ -38,9 +38,9 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             var lopdpText = customLopdpClause ?? DefaultLopdpClause;
 
             var footer = $@"
-            <div class=""legal-footer"">
+            <div class=""legal-footer"" style=""margin-top: 4px; padding: 0; line-height: 1.15; page-break-inside: avoid;"">
                 <div class=""traceability-block"">
-                    <table class=""trace-table"">
+                    <table class=""trace-table"" style=""width: 100%; border-collapse: collapse; font-size: 6.5pt; color: #334155; margin: 0;"">
                         <tr>
                             <td class=""trace-code"">
                                 Código de Verificación: <strong>{traceabilityCode}</strong>
@@ -59,7 +59,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             if (template.RequiresLopdpClause)
             {
                 footer += $@"
-                <div class=""lopdp-clause"">
+                <div class=""lopdp-clause"" style=""font-size: 6pt; color: #475569; line-height: 1.15; margin-top: 2px;"">
                     <strong>Protección de Datos:</strong> {lopdpText}
                 </div>";
             }
@@ -67,7 +67,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             if (template.RequiresElectronicSignature)
             {
                 footer += @"
-                <div class=""lopdp-clause"" style=""margin-top:4px"">
+                <div class=""lopdp-clause"" style=""font-size: 6pt; color: #475569; line-height: 1.15; margin-top: 2px;"">
                     Este documento admite firma electrónica reconocida conforme a la Ley de Comercio 
                     Electrónico, Firmas y Mensajes de Datos (R.O. N.° 557-S, 17/04/2002) y la normativa 
                     de Entidades de Certificación (BCE/SECURITY DATA/ANF Ecuador).
@@ -83,7 +83,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 result = legalSections.ToString() + result;
             }
 
-            return result + footer;
+            return result.TrimEnd() + footer;
         }
 
         /// <summary>

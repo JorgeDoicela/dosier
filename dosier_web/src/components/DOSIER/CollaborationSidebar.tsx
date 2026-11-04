@@ -226,15 +226,6 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     const [aiConfigStatus, setAiConfigStatus] = useState<PeaAiConfigStatus | null>(null);
     const [loadingAiConfig, setLoadingAiConfig] = useState<boolean>(false);
 
-    const rawHorasCD = Number(peaData?.HorasContactoDocente ?? peaData?.horas_contacto_docente ?? 0);
-    const rawHorasAPE = Number(peaData?.HorasPracticoExperimental ?? peaData?.horas_practico_experimental ?? 0);
-    const rawHorasTA = Number(peaData?.HorasAutonomo ?? peaData?.horas_autonomo ?? 0);
-    const totalHoras = Number(peaData?.TotalHorasAsignatura ?? peaData?.total_horas_asignatura ?? (rawHorasCD + rawHorasAPE + rawHorasTA));
-
-    const isUnconfiguredSplit = rawHorasCD <= 0 && rawHorasAPE <= 0 && totalHoras > 0;
-    const horasCD = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasCD;
-    const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
-    const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
 
     useEffect(() => {
         const VALID_AI_SECTIONS = [
@@ -1758,43 +1749,6 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                             className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/60 focus:outline-hidden focus:border-[#0070f3] resize-none leading-relaxed"
                                         />
 
-                                        {/* Sugerencias rápidas de enfoque */}
-                                        <div className="flex flex-wrap gap-1.5 pt-1">
-                                            {[
-                                                'Enfoque por competencias',
-                                                '4 unidades temáticas',
-                                                'Talleres prácticos APE',
-                                                'Normativa CACES y RRA'
-                                            ].map((tag) => (
-                                                <button
-                                                    key={tag}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSidebarAiPrompt(prev => {
-                                                            if (!prev.trim()) return tag;
-                                                            if (prev.includes(tag)) return prev;
-                                                            return `${prev.trim()}, ${tag.toLowerCase()}`;
-                                                        });
-                                                    }}
-                                                    className="text-[10px] px-2 py-0.5 rounded-md border border-border-thin bg-surface text-text-dim hover:text-text-main hover:border-[#0070f3]/40 transition-colors cursor-pointer"
-                                                >
-                                                    + {tag}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Ficha técnica de horas oficiales SIGAFI */}
-                                    <div className="p-3 rounded-xl border border-border-thin bg-surface space-y-1.5">
-                                        <div className="flex items-center justify-between text-[11px]">
-                                            <span className="font-semibold text-text-main">Horas Oficiales SIGAFI</span>
-                                            <span className="font-mono font-bold text-[#0070f3] dark:text-blue-400">{totalHoras}h</span>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-1 pt-1.5 text-[10px] font-mono text-text-dim border-t border-border-thin/40">
-                                            <div>CD: <strong className="text-text-main">{horasCD}h</strong></div>
-                                            <div>APE: <strong className="text-text-main">{horasAPE}h</strong></div>
-                                            <div>TA: <strong className="text-text-main">{horasTA}h</strong></div>
-                                        </div>
                                     </div>
                                 </div>
 

@@ -41,11 +41,7 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
     }
 
     if (signatures.length === 0) {
-        return (
-            <div className="sig-block-empty">
-                <p>Este documento no cuenta con firmas DOSIER registradas.</p>
-            </div>
-        );
+        return null;
     }
 
     return (

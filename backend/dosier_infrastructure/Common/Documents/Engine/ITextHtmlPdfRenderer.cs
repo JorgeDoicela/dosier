@@ -192,7 +192,12 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
 
             string mergedCss = (string.IsNullOrEmpty(customCss) ? "" : customCss + "\n") + extractedStyles.ToString();
 
-            int landscapeStartIndex = cleanedHtmlContent.IndexOf("<div class=\"landscape-section\"", StringComparison.OrdinalIgnoreCase);
+            // En PEA no existen hojas horizontales (todas las páginas son estrictamente verticales A4)
+            bool isPea = string.Equals(metadata.TemplateCode, "PEA_OFICIAL", StringComparison.OrdinalIgnoreCase)
+                || cleanedHtmlContent.Contains("PEA_OFICIAL")
+                || cleanedHtmlContent.Contains("PROGRAMA DE ESTUDIO DE LA ASIGNATURA");
+
+            int landscapeStartIndex = isPea ? -1 : cleanedHtmlContent.IndexOf("<div class=\"landscape-section\"", StringComparison.OrdinalIgnoreCase);
             int bibliographyIndex = -1;
             if (landscapeStartIndex != -1)
             {
@@ -203,7 +208,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 }
             }
 
-            if (landscapeStartIndex != -1 && bibliographyIndex > landscapeStartIndex)
+            if (!isPea && landscapeStartIndex != -1 && bibliographyIndex > landscapeStartIndex)
             {
                 try
                 {
@@ -245,10 +250,12 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             // --- FALLBACK (Original Standard Rendering) ---
             var fullHtml = WrapInFullHtmlDocument(cleanedHtmlContent, mergedCss);
 
-            // ── NUEVO: Detección dinámica de página del cronograma (Dry-run) ──
-            int cronogramaPage = 5; // Valor por defecto / fallback
-            try
+            // ── Detección dinámica de página del cronograma (Dry-run) ──
+            int cronogramaPage = -1; // -1: ninguna página rota a horizontal
+            if (!isPea)
             {
+                try
+                {
                 using (var tempStream = new MemoryStream())
                 {
                     using (var tempWriter = new PdfWriter(tempStream))
@@ -283,8 +290,9 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 }
             }
             catch (Exception ex)
-            {
-                Console.WriteLine($"[DOSIER Renderer dry-run error]: {ex.Message}");
+                {
+                    Console.WriteLine($"[DOSIER Renderer dry-run error]: {ex.Message}");
+                }
             }
 
             using var outputStream = new MemoryStream();
@@ -487,6 +495,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
 
     public class DocumentRenderingMetadata
     {
+        public string? TemplateCode { get; set; }
         public string TraceabilityCode { get; set; } = string.Empty;
         public bool IsDraft { get; set; } = false;
         public string? InstitutionName { get; set; }

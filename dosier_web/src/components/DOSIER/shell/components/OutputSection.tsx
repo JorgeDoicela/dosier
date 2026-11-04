@@ -152,28 +152,10 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 lg:overflow-hidden p-0.5">
                 {/* Panel de Controles Unificado de Emisión y Firma */}
                 <div className="col-span-1 lg:col-span-4 bg-bg-deep border border-border-thin rounded-2xl shadow-sm flex flex-col lg:overflow-hidden lg:h-full">
-                    {/* Cabecera Técnica */}
-                    <div className="px-5 py-3.5 border-b border-border-thin bg-surface/30 shrink-0 flex items-center justify-between select-none">
-                        <div className="flex items-center gap-2">
-                            <Shield size={15} className="text-[#0070f3]" />
-                            <span className="text-xs font-semibold uppercase tracking-wider text-text-main">
-                                Emisión y Firma Digital
-                            </span>
-                        </div>
-                        {isDocumentSigned && (
-                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                Firmado
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+                                        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
                         {/* Sección 1: Emisión y Vista Previa */}
                         <div className="p-5 sm:p-6 flex flex-col gap-4 shrink-0">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-text-dim flex items-center gap-2">
-                                <Settings size={16} className="text-text-dim" /> Emisión del Documento
-                            </h4>
-
+                            
                         {/* Switch Modo Borrador */}
                         <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border-thin">
                             <div className="flex flex-col gap-0.5">
@@ -366,12 +348,14 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                             )}
                         </div>
 
-                        <div className="mt-2 border-t border-border-thin pt-4">
+                        {signatures.length > 0 && (
+<div className="mt-2 border-t border-border-thin pt-4">
                             <SignatureBlock 
                                 documentoUuid={documentUuid || formData.Uuid || formData.uuid || ''} 
                                 refreshTrigger={signatureRefreshTrigger} 
                             />
                         </div>
+                        )}
                     </div>
                 </div>
             </div>

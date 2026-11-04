@@ -113,7 +113,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
 
             if (eventType == "StartPdfPage")
             {
-                if (logicalPageNumber == _cronogramaPage)
+                if (_cronogramaPage > 0 && logicalPageNumber == _cronogramaPage)
                 {
                     page.SetMediaBox(PageSize.A4.Rotate());
                     page.SetCropBox(PageSize.A4.Rotate());

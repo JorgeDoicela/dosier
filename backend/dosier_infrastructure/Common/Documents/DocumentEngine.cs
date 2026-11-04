@@ -896,6 +896,7 @@ namespace Dosier.Infrastructure.Common.Documents
 
                 var pdfBytes = await _pdfRenderer.RenderWithMetadataAsync(finalHtml, new DocumentRenderingMetadata
                 {
+                    TemplateCode = template.Code,
                     TraceabilityCode = traceabilityCode,
                     IsDraft = request.IsDraftMode,
                     StationaryImageData = stationaryImage,
