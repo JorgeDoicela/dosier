@@ -15,7 +15,7 @@ stateDiagram-v2
     [*] --> Borrador: Docente inicia PEA desde asignación SIGAFI
     Borrador --> EnRevision: Docente firma elaboración (Validación matemática OK)
     Corregido --> EnRevision: Docente subsana observaciones y reenvía
-    EnRevision --> Observado: Coordinación de Carrera formula observaciones
+    EnRevision --> Observado: Coordinación de Carrera formula observaciones y emite dictamen de devolución
     Observado --> Corregido: Docente responde observaciones en el editor
     EnRevision --> RevisadoCoord: Aval favorable de Coordinación de Carrera
     RevisadoCoord --> RevisadoAcad: Aval metodológico de Coordinación Académica
@@ -29,7 +29,7 @@ stateDiagram-v2
 | :--- | :--- | :--- |
 | `Borrador` | Redacción inicial del PEA por el docente titular y co-redactores mediante CoWork. | `DOSIER_DOCENTE` |
 | `EnRevision` | Documento enviado formalmente para revisión colegiada. Se bloquea la edición directa. | `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD` |
-| `Observado` | Se han emitido observaciones técnicas o metodológicas puntuales por sección. | `DOSIER_DOCENTE` |
+| `Observado` | Dictamen formal de devolución emitido por la autoridad. El docente recupera permisos de edición y visualiza las observaciones. | `DOSIER_DOCENTE` |
 | `Corregido` | El docente ha subsanado los requerimientos y prepara el reenvío a evaluación. | `DOSIER_DOCENTE` |
 | `RevisadoCoord` | Aval favorable del Coordinador de Carrera sobre pertinencia disciplinar y perfil de egreso. | `DOSIER_COORD_ACAD` |
 | `RevisadoAcad` | Aval favorable de la Coordinación Académica sobre estructura metodológica y horas. | `DOSIER_VICERRECTOR` |
@@ -54,10 +54,13 @@ Antes de permitir la transición a `EnRevision`, el `CurricularValidationEngine`
 
 Para evitar revisiones informales en hojas dispersas o correos electrónicos, DOSIER integra un flujo estructurado de observaciones:
 * **Observación por Sección (`doc_pea_observaciones`):** El Coordinador de Carrera o Coordinador Académico registra comentarios directamente asociados a una sección específica del PEA (ej. `Sección f: Contenidos`, `Sección i: Evaluación`).
+* **Desacoplamiento Estricto de Observaciones y Estado:** El acto de guardar observaciones preliminares en `doc_pea_observaciones` mantiene el documento en estado `EnRevision`. El cambio formal al estado `Observado` se produce de manera atómica únicamente cuando la autoridad emite el dictamen formal de devolución ("Devolver con Observaciones") en `FinalizeAuditModal.tsx` a través de `PATCH /api/pea/uuid/{uuid}/estado`.
+* **Privacidad de Observaciones Preliminares:** Las observaciones registradas durante la auditoría técnica permanecen reservadas para la autoridad evaluadora y no se exponen al docente mientras el documento permanezca en `EnRevision`. Únicamente se vuelven visibles para el docente una vez que el documento ha sido formalmente dictaminado en estado `Observado`.
 * **Subsanación Auditada:** El docente elaborador atiende cada observación registrando su respuesta formal y los ajustes realizados en el editor.
-* **Trazabilidad Inalterable (`doc_pea_trazabilidad`):** Cada observación formulada y cada respuesta registrada queda almacenada cronológicamente con usuario, rol, fecha UTC y hash del documento, constituyendo evidencia documental ante auditorías del CACES.
-
----
+* **Trazabilidad Inalterable e Integridad Referencial (`doc_pea_trazabilidad`):** Cada observación formulada, cada dictamen emitido y cada respuesta registrada queda almacenada cronológicamente con usuario, rol, fecha UTC y hash del documento, constituyendo evidencia documental ante auditorías del CACES.
+  * **Resolución de Identidad de Usuario:** La clave foránea hacia la tabla `usuarios(idUsuario)` requiere un identificador numérico interno. Dado que `ClaimTypes.NameIdentifier` en los tokens JWT institucionales transporta el `IdReferencia` alfanumérico de SIGAFI, el backend extrae específicamente el claim `"id_usuario"`. En caso de discrepancia, se aplica verificación previa de existencia relacional con fallback al usuario resuelto por `IdSigafi` antes de la persistencia, impidiendo errores de restricción de clave foránea (`errno 1452`).
+  * **Cálculo Robusto de Hash SHA-256 en Transiciones:** Al mutar de estado o registrar trazabilidad, el recálculo criptográfico del hash de contenido carga de manera completa el grafo microcurricular (`.Include(p => p.Unidades).ThenInclude(u => u.Temas)`), garantizando determinismo estricto y previniendo excepciones por desreferenciación nula (`NullReferenceException`).
+* **Navegación Inmediata y Bloqueo de Vista Devuelta:** Al confirmar el dictamen de devolución con observaciones, la interfaz redirige inmediatamente al usuario a la ruta institucional `/documentacion`. Si la autoridad curricular reingresa a consultar un PEA en estado `Observado`, el panel de revisión deshabilita los controles de emisión de avales, bloquea los campos de redacción preliminar y despliega un banner de notificación informando que el documento fue devuelto para subsanación docente.
 
 ---
 
@@ -87,5 +90,3 @@ Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COO
 Para evitar ambigüedad operativa en las autoridades curriculares:
 * **Bandeja de Tareas Operativas («Por revisar»):** Constituye la vista predeterminada de trabajo. Lista únicamente los instrumentos formalmente remitidos por los docentes con sellado de entrega (`EnRevision`, `Observado`, `Corregido`). Habilita de forma exclusiva el botón primario de «Revisión Técnica» y la emisión de avales.
 * **Monitoreo de Cumplimiento («En redacción docente»):** Permite verificar qué asignaturas continúan en formulación inicial (`Borrador`, `NoIniciado`). La interacción se restringe estrictamente a «Consultar avance (Lectura)», bloqueando la formulación de observaciones formales y la emisión de avales hasta la entrega formal. El botón de edición solo se habilita para el propio docente titular elaborador o administradores del sistema.
-
-

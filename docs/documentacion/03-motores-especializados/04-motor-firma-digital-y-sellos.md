@@ -46,7 +46,7 @@ graph TD
 
 ## 4. Estampado Visual y Código DFRM (`SignatureStamper`)
 
-El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para posicionar el sello institucional en la Sección k (Firmas de responsabilidad):
+El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para posicionar el sello institucional en la Sección K (Firmas de responsabilidad):
 
 * **Código Oficial DFRM:** Generación de un identificador institucional único de trazabilidad (ej. `DFRM-2026-D9F7C872`).
 * **Datos del Sello Visual:**
@@ -55,8 +55,16 @@ El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para 
   * Fecha y hora exacta de firmado en estándar UTC.
   * Código hash abreviado y algoritmo criptográfico utilizado.
 * **Geometría Adaptativa de Matriz Curricular:**
-  * En documentos con matriz normada de 4 firmas (PEA, Sección K), `SignatureStamper` detecta las columnas mediante `DocumentSignatureLayoutLocator` y genera un sello compacto de alta fidelidad (`94.0 pt` x `44.0 pt`) centrado en la fila `FIRMA` de la columna correspondiente (Elaborado, Revisado 1, Revisado 2, Aprobado).
+  * En documentos con matriz normada de 4 firmas (PEA, Sección K), `SignatureStamper` detecta las columnas mediante `DocumentSignatureLayoutLocator` y genera un sello compacto de alta fidelidad (`94.0 pt` x `44.0 pt`) centrado en la fila `FIRMA` de la columna correspondiente:
+    1. **Columna 1 (Elaborado):** Docente titular responsable de la asignatura.
+    2. **Columna 2 (Revisado 1):** Coordinador de Carrera (pertinencia técnica y disciplinar).
+    3. **Columna 3 (Revisado 2):** Coordinador Académico (alineación curricular transversal).
+    4. **Columna 4 (Aprobado):** Vicerrectorado (legalización institucional).
   * En plantillas de dos firmas (Proyectos de Investigación), emplea el bloque horizontal tradicional de `190.0 pt` x `55.0 pt`.
+* **Estampado Acumulativo y Autosanación de Archivos:**
+  * Cada firma sucesiva invalida la copia previa del archivo final mediante `docInstancia.SetFinalPdfPath(null)`.
+  * `DocumentInstanceService.ValidateStorageIntegrityAsync` regenera el documento base a partir del snapshot JSON y estampa de manera acumulativa todas las firmas válidas vigentes registradas en `doc_documentos_firmas`.
+  * Esto garantiza que el PDF siempre contenga todos los sellos oficiales sin degradación gráfica ni sobreescrituras corruptas.
 * **Código QR Dinámico:** Integrado dentro del sello oficial con enlace directo a la ruta pública de verificación `/verificacion/{firmaCode}`.
 
 ---

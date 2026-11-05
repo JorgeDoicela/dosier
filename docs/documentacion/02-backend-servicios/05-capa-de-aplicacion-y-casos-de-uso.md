@@ -20,6 +20,8 @@ graph TD
             ACR[IAcademicContextResolver]
             ADS[IAsignaturasDocenteService]
             IPS[IPeaService]
+            PAI[IPeaAiAssistantService]
+            PDE[IPeaDocumentExtractorService]
             ECS[IExpedienteCurricularService]
             NMS[INormativaService]
             PES[IPerfilEgresoService]
@@ -103,7 +105,19 @@ El servicio `IPeaService` coordina las 11 secciones pedagógicas oficiales del P
 | `SubsanarObservacionAsync(...)` | Respuesta formal del docente que marca la observación como `Subsanada`. |
 | `ListarBandejaAsync(...)` | Bandeja unificada de supervisión para coordinadores y vicerrectorado, con cálculo de firmas completadas (`TotalFirmasCompletadas`) y conteo de observaciones pendientes. |
 
-### 3.3. Servicios de Gobernanza Curricular y Antecedentes
+### 3.3. Asistente Curricular de Inteligencia Artificial (`IPeaAiAssistantService`)
+
+Proporciona soporte cognitivo automatizado para la redacción pedagógica y formulación de secciones del PEA:
+* **`GetConfigStatusAsync(int idUsuario)`:** Resuelve la configuración criptográfica del docente (proveedor, modelo, base URL y presencia de API Key protegida con AES-256).
+* **`SaveConfigAsync(int idUsuario, bool isAdmin, SavePeaAiConfigRequestDto request)`:** Almacena de forma segura las credenciales y configuración del proveedor a nivel de usuario o institucional global.
+* **`GenerateDraftAsync(string peaUuid, int idUsuario, GeneratePeaDraftRequestDto request)`:** Genera propuestas curriculares completas o por sección (objetivos, unidades, temas, actividades prácticas, evaluaciones y bibliografía APA), limpiando bloques `<think>` y ejecutando la reconciliación matemática estricta de horas (CD, APE, TA) contra SIGAFI.
+
+### 3.4. Motor Extractor de Documentos Digitales (`IPeaDocumentExtractorService`)
+
+Especializado en la ingestión y análisis sintáctico de sílabos o PEAs preexistentes en formatos Word y PDF:
+* **`ExtractAndMapDocumentAsync(string peaUuid, int idUsuario, ImportPeaDocumentRequestDto request)`:** Procesa archivos digitales (`.pdf` mediante iText 9 o `.docx` mediante OpenXML), analizando tablas y párrafos para mapear unidades, temas y horas con fidelidad textual estricta, bloqueando sobreescrituras en datos generales institucionales de SIGAFI.
+
+### 3.5. Servicios de Gobernanza Curricular y Antecedentes
 
 * **`IExpedienteCurricularService`:** Gestiona el expediente curricular maestro por asignatura y período, asociando el proyecto de carrera aprobado por el CES, el perfil de egreso y el modelo educativo vigente.
 * **`INormativaService`:** Provee el catálogo inalterable de resoluciones externas (CES, CACES, SENESCYT) y el checklist de artículos que los docentes deben certificar pedagógicamente en el PEA.

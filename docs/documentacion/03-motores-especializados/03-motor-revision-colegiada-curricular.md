@@ -61,12 +61,15 @@ sequenceDiagram
 
 ---
 
-## 4. Gestión de Observaciones y Subsanaciones (`doc_pea_observaciones`)
+## 4. Gestión de Observaciones, Dictamen Formal y Subsanaciones (`doc_pea_observaciones`)
 
 Para garantizar la máxima transparencia en el proceso de revisión:
-* **Observación Atómica por Sección:** El revisor selecciona la sección observada (`Objetivos`, `Unidades y Temas`, `Actividades Prácticas`, `Evaluación`, etc.) e introduce el requerimiento de ajuste en texto claro.
-* **Bloqueo y Devolución Controlada:** Al formular observaciones vía `POST /api/pea/uuid/{uuid}/observaciones`, el PEA transiciona a `Observado`. Las observaciones pueden ser retiradas por coordinadores vía `DELETE /api/pea/observaciones/{idObs}`.
-* **Espacio de Revisión Técnica (`/documentacion/revision-tecnica/:uuid`):** Interfaz especializada con semáforo normativo CES Art. 21, lectura en folio continuo de las 11 secciones oficiales y modal institucional de firma digital para emisión de avales colegiados.
+* **Observación Atómica por Sección:** El revisor redacta requerimientos específicos en la sección correspondiente (`Objetivos`, `Unidades y Temas`, `Actividades Prácticas`, `Evaluación`, etc.). Las notas se guardan en `doc_pea_observaciones` manteniendo el PEA en estado `EnRevision` de manera interna, sin alertar prematuramente al docente durante la sesión de análisis.
+* **Dictamen Formal y Devolución Controlada:** El cambio oficial de estado a `Observado` ocurre exclusivamente cuando la autoridad emite su dictamen formal a través del modal institucional (`FinalizeAuditModal.tsx`), pestaña *"Devolver con Observaciones"*, especificando plazo límite e instrucciones globales de subsanación. Al confirmarse, el sistema notifica al docente y redirige automáticamente a la autoridad a su bandeja de gestión.
+* **Espacio de Revisión Técnica (`/documentacion/revision-curricular/:uuid`):** Interfaz especializada con tres vistas integradas sobre riel plano:
+  1. **Revisión del PEA (Interactivo):** Lectura continua de las 11 secciones oficiales con controles de auditoría e indicadores de consistencia horaria CACES Art. 21.
+  2. **Documento oficial PDF:** Visualizador embebido del PDF institucional legalizado con estampado de sellos en tiempo real.
+  3. **Historial y firmas (`AdminRevisionHistoryPanel.tsx`):** Panel a ancho completo con bitácora forense cronológica, trazabilidad inmutable de transiciones de estado, hashes SHA-256 y auditoría de sellos oficiales DFRM.
 * **Bloqueo de Aprobación:** El sistema impide que un PEA sea avalado o aprobado si mantiene observaciones pendientes de atención (`estado = 'Pendiente'`).
 * **Respuesta del Docente:** El docente registra su justificación o detalle de corrección para marcar la observación como `Subsanada`.
 * **Auditoría Forense:** Cada observación y subsanación queda registrada permanentemente con usuario, cargo, fecha UTC y texto original en `doc_pea_observaciones`.

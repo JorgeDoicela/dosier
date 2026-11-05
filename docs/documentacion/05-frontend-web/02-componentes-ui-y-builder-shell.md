@@ -40,7 +40,7 @@ graph TD
 
 | Sección | Componente React | Ubicación | Funcionalidad y Validación |
 | :--- | :--- | :--- | :--- |
-| **Sección A: Datos Generales** | `PeaGeneralSection.tsx` | `src/components/DOSIER/sections/pea/` | Muestra código, nivel, modalidad, carrera, créditos y distribución de horas (CD, APE, TA). Sincronizado con SIGAFI e interactivo con CoWork. |
+| **Sección A: Datos Generales** | `PeaGeneralSection.tsx` | `src/components/DOSIER/sections/pea/` | Muestra código, nivel, modalidad, carrera, créditos y distribución de horas (CD, APE, TA). Sincronizado con SIGAFI. El campo **Unidad de Organización Curricular** se encuentra desbloqueado para selección interactiva (Unidad Básica, Unidad Profesional, Unidad de Integración Curricular). |
 | **Sección B: Objetivo de la Asignatura** | `PeaObjectivesSection.tsx` | `src/components/DOSIER/sections/pea/` | Objetivo formativo general de la asignatura en CoWorkEditor (`ObjetivoAsignatura`). |
 | **Sección C: Prerrequisitos Curriculares** | `PeaPrerequisitesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla dinámica de asignaturas prerrequisito y condiciones curriculares (`Prerrequisitos`). |
 | **Sección D: Resultados de Aprendizaje de la Carrera** | `PeaCareerOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la carrera a los que la asignatura aporta (`RdaCarrera`). |
@@ -50,7 +50,7 @@ graph TD
 | **Sección H: Recursos y Prácticas** | `PeaResourcesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla de prácticas de laboratorio, talleres y actividades de aprendizaje práctico-experimental (APE). |
 | **Sección I: Evaluación del Aprendizaje** | `PeaEvaluationSection.tsx` | `src/components/DOSIER/sections/pea/` | Criterios pedagógicos y matriz oficial de 3 componentes (Parcial 1: 10 pts, Parcial 2: 10 pts, Examen Final: 10 pts). |
 | **Sección J: Bibliografía** | `PeaBibliographySection.tsx` | `src/components/DOSIER/sections/pea/` | Bibliografía básica y de consulta en formato APA 7.ª edición articulada a la biblioteca virtual institucional. |
-| **Sección K: Firmas de Responsabilidad** | `PeaSignaturesSection.tsx` | `src/components/DOSIER/sections/pea/` | Circuito institucional de 4 firmas (Docente Elaborador, Coordinador de Carrera, Coordinador Académico, Vicerrectorado). |
+| **Sección K: Firmas de Responsabilidad** | `PeaSignaturesSection.tsx` | `src/components/DOSIER/sections/pea/` | Circuito institucional de 4 firmas. Edición directa en el lienzo sin modal ni candados de truncamiento, con inmutabilidad post-firma (Ley 67). |
 
 ---
 
@@ -74,17 +74,11 @@ graph TD
 * **`MemberSearchSelector.tsx`:** Buscador dinámico de co-docentes y revisores institucionales. Presenta una lista de resultados con fondo completamente opaco y navegación por teclado.
 * **`FirmaModal.tsx`:** Ventana modal de alta seguridad para la firma electrónica. Fondo modal 100% sólido, carga del archivo PKCS#12 (`.p12` o `.pfx`), campo de contraseña enmascarado y validación de certificado ante el backend.
 
-### 4.4. `PeaSignaturesSection.tsx`: Protección de Autoridades y Confirmación de Modificación Manual
+### 4.4. `PeaSignaturesSection.tsx`: Edición Directa en Firmas de Responsabilidad
 * **Ubicación:** `src/components/DOSIER/sections/pea/PeaSignaturesSection.tsx`
-* **Mecanismo de Salvaguarda:**
-  * **Protección Limpia:** Los nombres de las autoridades curriculares (Docente, Coordinador de Carrera, Coordinador Académico, Vicerrector) se hidratan desde la gobernanza institucional y se presentan en una interfaz despejada sin elementos visuales redundantes.
-  * **Sincronización Autónoma en Segundo Plano (Zero-Button):** Eliminación total de botones manuales de refresco. El sistema sincroniza las autoridades vigentes de forma transparente y reactiva:
-    1. *Al montar el documento:* Consulta defensiva de la gobernanza curricular oficial del periodo.
-    2. *Al recuperar el foco o visibilidad (`focus` / `visibilitychange`):* Reconciliación silenciosa si las autoridades fueron modificadas en otra pestaña.
-    3. *Por eventos en tiempo real (SignalR):* Escucha del evento `dosier-projects-changed` para actualizar las instancias abiertas sin recargar la página.
-  * **Confirmación Directa al Clic:** Al hacer clic sobre cualquier campo de autoridad protegida, se despliega de inmediato un modal sobrio con fondo sólido (`bg-white dark:bg-zinc-950`) que informa con total claridad que el cambio **solo afectará a este documento**, sin alterar la asignación central de la carrera en el sistema institucional.
-  * **Auto-Bloqueo al Salir (`onBlur` / `Enter`):** Una vez confirmada la edición, el campo toma el foco y se selecciona el texto automáticamente. Tan pronto el usuario da clic fuera (`onBlur`) o presiona `Enter`, el campo vuelve automáticamente a su estado bloqueado y protegido, sin requerir botones adicionales.
-  * **Inmutabilidad Post-Firma (Ley 67):** Si el rol registra firma electrónica válida (`rol.firmado === true`), el campo queda sellado de forma inmutable sin permitir desbloqueo alguno ni manipulación en cliente.
+* **Edición Directa en Lienzo:** Erradicación del modal de confirmación y de candados artificiales de truncamiento. La modificación del nombre o cargo de los responsables se realiza de forma directa en el lienzo mediante inputs integrados con CoWork.
+* **Sincronización Silenciosa:** Hidrata automáticamente los datos oficiales vigentes de gobernanza institucional al montar el componente, al detectar eventos en tiempo real (`dosier-projects-changed`) o al recuperar el foco (`visibilitychange`).
+* **Inmutabilidad Post-Firma (Ley 67):** Tan pronto un rol firma digitalmente (`rol.firmado === true`), el campo queda sellado de manera irreversible impidiendo modificaciones en cliente.
 
 ### 4.5. `<NormativaDrawer>`: Asistente Regulatorio y Checklist Curricular
 * **Ubicación:** `src/pages/Curriculum/Workspace/components/NormativaDrawer.tsx`
@@ -229,7 +223,11 @@ graph TD
     * *Trazabilidad de Firmas:* Integración de `<SignatureBlock>` para consultar las firmas electrónicas registradas y válidas.
   * **Columna Derecha (Visor PDF Oficial):** Iframe con renderizado en tiempo real del documento oficial del PEA compilado en backend.
 
+### 4.17. Columna de Observaciones Contextuales y Anclaje Visual en Revisión
+* **Ubicación:** `src/pages/Curriculum/Revision/components/` (`InteractiveSections.tsx`, `SectionObservationColumn.tsx`, `ObservationComposer.tsx`).
+* **Arquitectura de Interfaz:** En sustitución de paneles flotantes aislados, las observaciones colegiadas se renderizan en una columna lateral derecha anclada visualmente a la sección activa mediante líneas conectoras y focos de interacción (`border-[#0070f3]`).
+* **Compositor y Atajos:** Cada sección dispone de su propio compositor con soporte de conteo de caracteres, envío rápido (`Enter`) y guardado en tiempo real sin recargas.
 
-
-
-
+### 4.18. Tablero de Asignaturas Docentes (`MisAsignaturasPage.tsx`)
+* **Ubicación:** `src/pages/Curriculum/MisAsignaturasPage.tsx`.
+* **Funcionalidad:** Centraliza las materias asignadas al docente titular con badges cromáticos de estado (*Borrador*, *En Revisión*, *Observado*, *Aprobado*), atajos directos al editor interactivo, al visor PDF oficial y a las observaciones pendientes de subsanación formuladas por las autoridades.

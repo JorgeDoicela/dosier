@@ -31,7 +31,11 @@ graph TD
 Recopila los metadatos requeridos para la plantilla mediante el patrón Strategy (`IDocumentDataProvider`). Obtiene los datos oficiales de la asignatura, carrera, horas y créditos desde SIGAFI en modo solo lectura (`AsNoTracking`) y los combina con las secciones co-redactadas en el módulo CoWork (`doc_cowork_documentos`).
 
 ### 2.2. Evaluación de Plantillas (`HandlebarsTemplateEngine` / `Scriban`)
-Sustituye variables, procesa bucles de iteración (unidades temáticas, temas, actividades prácticas, bibliografía, matriz de evaluación) y evalúa expresiones condicionales en el marcado HTML de la plantilla seleccionada (`doc_document_templates`). Incorpora un paso de normalización canónica de colecciones (`NormalizePeaCollections`) que proyecta dinámicamente cada entidad en PascalCase, camelCase y snake_case, garantizando que ninguna tabla o bloque evaluativo dependa de filas estáticas o claves asimétricas entre el frontend y el motor de reportes.
+Sustituye variables, procesa bucles de iteración (unidades temáticas, temas, actividades prácticas, bibliografía, matriz de evaluación) y evalúa expresiones condicionales en el marcado HTML de la plantilla seleccionada (`doc_document_templates`). Incorpora un pipeline de normalización y sanitización editorial:
+1. **Normalización Canónica de Colecciones (`NormalizePeaCollections`):** Proyecta dinámicamente cada entidad en PascalCase, camelCase y snake_case, garantizando que ninguna tabla o bloque evaluativo dependa de filas estáticas o claves asimétricas entre el frontend y el motor de reportes.
+2. **Generación Editorial de Contenidos (`GenerateContenidosHtml`):** Transforma el texto plano o enriquecido de los contenidos en una tabla HTML optimizada para impresión (fuente de 8pt, padding de 3px), resaltando automáticamente las líneas que definen temas (`Tema X`, `Unidad X`) con fondo sutil `#f8fafc` y peso en negrita.
+3. **Reconstrucción de Títulos Truncados (`CompleteTruncatedUnitTitle`):** Detecta títulos de unidades incompletos que terminan en preposiciones cortadas en tablas de origen (ej. *"FUNDAMENTOS DE"*, *"ARQUITECTURA DE"*, *"INTRODUCCIÓN A"*) y los completa de forma inteligente a partir del primer concepto identificado en la lista de temas.
+4. **Sanitización de Títulos Redundantes (`SanitizePeaFieldHeadings`):** Limpia mediante expresiones regulares encabezados repetidos al inicio de campos de texto enriquecido (ej. *"RECURSOS DIDÁCTICOS"*, *"ESTRATEGIAS METODOLÓGICAS"*, *"OBJETIVO DE LA ASIGNATURA"* o *"BIBLIOGRAFÍA"*), eliminando párrafos vacíos `<p></p>` para evitar duplicidad visual con las barras de título oficiales.
 
 ### 2.3. Inyección de Cumplimiento Institucional (`LegalComplianceInjector`)
 Añade al HTML evaluado los elementos normativos requeridos por el ISTPET:
@@ -44,8 +48,9 @@ Añade al HTML evaluado los elementos normativos requeridos por el ISTPET:
 ### 2.4. Renderizado Vectorial a PDF (`ITextHtmlPdfRenderer`)
 Convierte el marcado HTML5 y estilos CSS con soporte tipográfico a un documento en formato PDF plano de alta fidelidad utilizando **iText 9** (`iText.Html2pdf` y `iText.Kernel`).
 
-### 2.5. Ensamblado y Registro Forense
-Calcula el Hash **SHA-256** sobre el archivo compilado y el contenido pedagógico, registrando la transacción en `doc_document_audit` y `doc_pea_trazabilidad`.
+### 2.5. Ensamblado, Estampado Dinámico de Firmas y Registro Forense
+1. **Estampado Acumulativo de Firmas en Caliente:** Al solicitar el renderizado del documento oficial (`isDraft == false`) en `DocumentsController` o `DocumentInstancesController`, el sistema consulta en `IDosierSignatureService` las firmas válidas registradas para el documento (`SignatureState.Valid`). Si existen firmas emitidas, invoca sucesivamente a `SignatureStamper.StampSignatureBlock` para incrustar los sellos vectoriales con sus códigos DFRM, nombres y URLs de verificación antes de devolver los bytes al usuario.
+2. **Registro Forense y Sellado:** Calcula el Hash **SHA-256** sobre el archivo compilado y el contenido pedagógico, registrando la transacción en `doc_document_audit` y `doc_pea_trazabilidad`.
 
 ---
 

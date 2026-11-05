@@ -97,6 +97,7 @@ Controlador central para la elaboración, edición, validación de horas, circui
 | `GET` | `/ai/config` | Autenticado | Consulta del estado de configuración, proveedor activo, modelo y endpoint del asistente de IA. |
 | `POST`| `/ai/config` | Autenticado / Admin | Almacenamiento cifrado con AES-256 de la API Key y configuración del motor IA (personal o global). |
 | `POST`| `/uuid/{uuid}/ai/generar` | Autenticado (Docente/Admin) | Generación asistida de propuesta curricular completa o por sección con cuadre matemático SIGAFI. |
+| POST| /uuid/{uuid}/importar-documento | Autenticado (Docente/Admin) | Ingestión y extracción sintáctica de PEA desde documentos digitales (.pdf y .docx) con mapeo estructurado a Yjs y protección de datos bloqueados de SIGAFI. |
 
 ---
 
@@ -169,6 +170,7 @@ Orquestación de instancias documentales generadas, snapshots forenses y manteni
 | :--- | :--- | :--- | :--- |
 | `POST`| `/` | Autenticado | Crea una nueva instancia documental para una entidad y plantilla. |
 | `GET` | `/{uuid}` | Autenticado | Consulta la instancia documental por UUID. |
+| `GET` | `/{uuid}/pdf` | Público (AllowAnonymous) | Retorna el archivo PDF oficial o firmado de la instancia; si no existe en disco, lo compila en caliente sin marca de borrador. |
 | `GET` | `/entity/{entityUuid}` | Autenticado | Lista instancias vinculadas a una entidad (ej. PEA o proyecto). |
 | `GET` | `/resolve` | Autenticado | Busca o crea atómicamente la instancia para `(entityUuid, templateCode)`. |
 | `PATCH`| `/{uuid}/metadata` | Autenticado | Guarda snapshots de metadatos colaborativos para renderizado. |
@@ -255,7 +257,7 @@ Panel de control administrativo institucional (`DOSIER_ADMIN`).
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/users` | `DOSIER_ADMIN` | Gestión paginada de docentes, directivos, administrativos y estudiantes con filtros de carga docente (`soloConHoras`) y departamento. |
-| `GET` | `/gobernanza-carreras` | `DOSIER_ADMIN` | Estructura jerárquica institucional completa: Vicerrectorado Académico, Coordinación Académica, catálogo de carreras activas con su Coordinador titular y claustro docente con horas y materias asignadas. |
+| `GET` | `/gobernanza-carreras` | Autenticado (Todos los roles) | Estructura jerárquica institucional completa: Vicerrectorado Académico, Coordinación Académica, catálogo de carreras activas con su Coordinador titular y claustro docente con horas y materias asignadas. |
 | `GET` | `/roles` | `DOSIER_ADMIN` | Catálogo de roles curriculares institucionales. |
 | `GET` | `/departments` | `DOSIER_ADMIN` | Departamentos y áreas académicas. |
 | `GET` | `/metadata/{uuid}` | `DOSIER_ADMIN` | Metadatos de perfil extendido de un usuario. |

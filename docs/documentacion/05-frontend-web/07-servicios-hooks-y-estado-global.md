@@ -189,6 +189,17 @@ Conecta con `/api/collaboration`:
 Conecta con `/api/reports`:
 * `downloadAnalyticsReport(period, carrera)`: Generación en streaming y descarga automatizada de informes analíticos y de cumplimiento institucional en formato PDF.
 
+### 2.23. `peaAiService.ts`: Asistente Curricular y Generación Pedagógica con IA
+Conecta con `/api/pea/ai` y `/api/pea/uuid/{uuid}/ai`:
+* `getPeaAiConfig()`: Consulta el estado de configuración de IA, modelo seleccionado, proveedor activo y presencia de API Key.
+* `savePeaAiConfig(req)`: Almacena la configuración y credenciales del proveedor (DeepSeek, Gemini, OpenAI, Claude, Groq, Ollama) cifradas con AES-256.
+* `generatePeaAiDraft(peaUuid, req)`: Solicita la generación asistida de una sección o del borrador completo del PEA con balanceo de horas normativo.
+* `convertDraftToEditorFields(draft)`: Mapea la estructura jerárquica de la IA a las claves indexadas requeridas por el editor reactivo Yjs.
+
+### 2.24. `peaDocumentExtractorService.ts`: Ingestión y Extracción de Documentos Digitales (PDF y Word)
+Conecta con `/api/pea/uuid/{uuid}/importar-documento`:
+* `extractPeaFromDocument(peaUuid, file, options)`: Realiza el envío multipart/form-data de archivos digitales (`.pdf` o `.docx`) de hasta 15 MB para extracción sintáctica de unidades temáticas, horas, actividades prácticas y bibliografía, preservando inmutables los datos generales institucionales.
+
 ---
 
 ## 3. Contextos Globales del Sistema (`src/api/` y `src/core/`)

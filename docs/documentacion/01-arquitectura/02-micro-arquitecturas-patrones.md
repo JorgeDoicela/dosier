@@ -172,3 +172,33 @@ Para cumplir con la Ley Orgánica de Protección de Datos Personales (LOPDP) de 
 
 1. **Aislamiento de Adaptaciones Curriculares:** La información de adaptaciones curriculares para estudiantes con necesidades educativas específicas se administra de forma segregada respecto al cuerpo general del PEA que se distribuye ampliamente.
 2. **Consentimientos y Bitácora (`LopdpService`):** Registro inalterable del consentimiento para tratamiento de firmas digitales y control de acceso granular auditado en `doc_lopdp_auditoria_datos`.
+
+---
+
+## 9. Agnostic AI Curriculum Engine & Textual Fidelity Extractor Architecture
+
+Para garantizar soporte cognitivo moderno en la formulación de microcurrículos sin atarse a un proveedor de inferencia exclusivo, DOSIER implementa una micro-arquitectura desacoplada en dos subsistemas:
+
+1. **Motor Asistente Curricular IA (`PeaAiAssistantService`):**
+   * **Agnosticismo de Protocolo:** Interfaz unificada sobre adaptadores HTTP que admiten DeepSeek, Claude, Gemini, OpenAI y modelos locales en Ollama/vLLM.
+   * **Bóveda Criptográfica en Dos Niveles:** Protección mediante `IDataProtectionProvider` para claves institucionales (`doc_config_general`) y personales (`doc_usuario_metadata`).
+   * **Control de Razonamiento (`ReasoningEffort`):** Inyección de esfuerzo de inferencia (`low`, `medium`, `high`) para modelos avanzados como DeepSeek R1 u OpenAI o1/o3.
+   * **Sanitización Cognitiva:** Remoción de trazas `<think>` mediante expresiones regulares y validación taxonómica de Bloom sobre verbos de acción en objetivos y resultados de aprendizaje.
+
+2. **Motor Extractor de Documentos Digitales (`PeaDocumentExtractorService`):**
+   * **Principio de Fidelidad Textual:** Opera exclusivamente como analizador sintáctico (Parser) de documentos preexistentes en Microsoft Word (`.docx` vía OpenXML) y Adobe PDF (`.pdf` vía iText 9).
+   * **Inmutabilidad de Cabeceras Institucionales:** Los datos del contexto oficial de SIGAFI (asignatura, código, carrera, horas y docente) permanecen blindados; el extractor puebla únicamente las secciones curriculares autorizadas por el docente sin inventar ni sustituir la asignatura.
+
+---
+
+## 10. Normative Tripartite Hour Reconciliation Architecture (CACES / CES Art. 21)
+
+La persistencia histórica de SIGAFI registra asignaturas en `detallemallas` con únicamente el total de horas (ej. 144) sin discriminación entre componentes. Para impedir que las asignaturas queden con horas nulas de docencia y prácticas en infracción del Art. 21 del Reglamento de Régimen Académico del CES:
+
+1. **Reconciliación Tripartita Inicial (`AcademicContextResolver` y `AsignaturasDocenteService`):**
+   * Si `TotalHoras > 0` y `HorasDocente == 0` y `HorasPractico == 0`:
+     $$\text{Horas CD} = \lfloor \text{TotalHoras} / 3 \rfloor$$
+     $$\text{Horas APE} = \lfloor \text{TotalHoras} / 3 \rfloor$$
+     $$\text{Horas TA} = \text{TotalHoras} - \text{Horas CD} - \text{Horas APE}$$
+2. **Distribución Exacta en Unidades Temáticas (`ReconcileUnitHoursWithSigafi`):**
+   * Las horas generadas o extraídas se escalan proporcionalmente entre las unidades temáticas asegurando que cada componente sume con exactitud matemática el total de la malla oficial, asignando el residuo de redondeo a la última unidad.
