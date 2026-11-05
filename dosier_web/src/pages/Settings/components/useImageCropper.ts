@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Crop, PixelCrop } from 'react-image-crop';
 import Compressor from 'compressorjs';
-import { createCanvas, applyAdaptiveThreshold, getCroppedImg } from './canvasUtils';
+import { createCanvas, applyAdaptiveThreshold, getCroppedImg, detectImageCharacteristics } from './canvasUtils';
 
 export interface ImageCropperState {
     imageSrc: string | null;
@@ -14,12 +14,15 @@ export interface ImageCropperState {
     aspectRatio: number | undefined;
     previewBase64: string;
     isDragging: boolean;
+    invert: boolean;
+    hasNativeTransparency: boolean;
     imgRef: React.RefObject<HTMLImageElement | null>;
     setCrop: (c: Crop) => void;
     setCompletedCrop: (c: PixelCrop | null) => void;
     setRotation: (v: number) => void;
     setThreshold: (v: number) => void;
     setInkMode: (v: 'blue' | 'black' | 'original') => void;
+    setInvert: (v: boolean) => void;
     setIsDragging: (v: boolean) => void;
     handleAspectChange: (aspect: number | undefined) => void;
     processFile: (file: File, onError: (msg: string) => void) => void;
@@ -53,6 +56,8 @@ export function useImageCropper(): ImageCropperState {
     const [aspectRatio, setAspectRatio]   = useState<number | undefined>(2);
     const [previewBase64, setPreviewBase64] = useState('');
     const [isDragging, setIsDragging]     = useState(false);
+    const [invert, setInvert]             = useState(false);
+    const [hasNativeTransparency, setHasNativeTransparency] = useState(false);
 
     // Preview en tiempo real con debounce
     useEffect(() => {
@@ -84,7 +89,11 @@ export function useImageCropper(): ImageCropperState {
                 await getCroppedImg(image, scaled, rotation, dCtx);
                 if (!active) return;
                 ctx.drawImage(draw, 0, 0, pw, ph);
-                applyAdaptiveThreshold(canvas, ctx, threshold, inkMode);
+
+                const info = detectImageCharacteristics(ctx, pw, ph);
+                setHasNativeTransparency(info.hasNativeTransparency);
+
+                applyAdaptiveThreshold(canvas, ctx, threshold, inkMode, invert);
                 if (!active) return;
                 setPreviewBase64(canvas.toDataURL('image/png'));
             } catch { /* falla silenciosa de preview */ }
@@ -92,17 +101,33 @@ export function useImageCropper(): ImageCropperState {
 
         const timer = setTimeout(generate, 150);
         return () => { active = false; clearTimeout(timer); };
-    }, [imageSrc, completedCrop, rotation, threshold, inkMode]);
+    }, [imageSrc, completedCrop, rotation, threshold, inkMode, invert]);
 
     const processFile = (file: File, onError: (msg: string) => void) => {
         if (!file.type.startsWith('image/')) {
-            onError('Por favor, seleccione un archivo de imagen válido (PNG, JPG).');
+            onError('Por favor, seleccione un archivo de imagen válido (PNG, JPG, WEBP).');
             return;
         }
+
+        // Si es un archivo PNG, conservar intacta la transparencia nativa sin conversión JPEG
+        if (file.type === 'image/png') {
+            setImageSrc(URL.createObjectURL(file));
+            setShowCropper(true);
+            return;
+        }
+
         new Compressor(file, {
-            quality: 0.8, maxWidth: 1200, maxHeight: 1200,
-            success(result) { setImageSrc(URL.createObjectURL(result as File)); setShowCropper(true); },
-            error() { setImageSrc(URL.createObjectURL(file)); setShowCropper(true); },
+            quality: 0.85,
+            maxWidth: 1600,
+            maxHeight: 1600,
+            success(result) {
+                setImageSrc(URL.createObjectURL(result as File));
+                setShowCropper(true);
+            },
+            error() {
+                setImageSrc(URL.createObjectURL(file));
+                setShowCropper(true);
+            },
         });
     };
 
@@ -161,7 +186,7 @@ export function useImageCropper(): ImageCropperState {
 
             await getCroppedImg(image, scaled, rotation, dCtx);
             ctx.drawImage(draw, 0, 0, targetW, targetH);
-            applyAdaptiveThreshold(canvas, ctx, threshold, inkMode);
+            applyAdaptiveThreshold(canvas, ctx, threshold, inkMode, invert);
 
             onSuccess(canvas.toDataURL('image/png'));
             setShowCropper(false);
@@ -175,8 +200,8 @@ export function useImageCropper(): ImageCropperState {
 
     return {
         imageSrc, crop, completedCrop, rotation, showCropper, threshold, inkMode,
-        aspectRatio, previewBase64, isDragging, imgRef,
-        setCrop, setCompletedCrop, setRotation, setThreshold, setInkMode, setIsDragging,
+        aspectRatio, previewBase64, isDragging, invert, hasNativeTransparency, imgRef,
+        setCrop, setCompletedCrop, setRotation, setThreshold, setInkMode, setInvert, setIsDragging,
         handleAspectChange, processFile, handleFileChange, handleDragOver, handleDragLeave,
         handleDrop, onImageLoad, applyCropAndFilters, cancelCrop,
     };

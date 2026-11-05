@@ -12,8 +12,8 @@ interface UploadSignatureTabProps extends ImageCropperState {
 
 export const UploadSignatureTab: React.FC<UploadSignatureTabProps> = ({
     imageSrc, crop, rotation, showCropper,
-    threshold, inkMode, aspectRatio, previewBase64, isDragging, imgRef,
-    setCrop, setCompletedCrop, setRotation, setThreshold, setInkMode,
+    threshold, inkMode, aspectRatio, previewBase64, isDragging, invert, hasNativeTransparency, imgRef,
+    setCrop, setCompletedCrop, setRotation, setThreshold, setInkMode, setInvert,
     handleAspectChange, handleFileChange, handleDragOver, handleDragLeave,
     handleDrop, onImageLoad, applyCropAndFilters, cancelCrop,
     firmaImagenB64, onSuccess, onError,
@@ -53,15 +53,43 @@ export const UploadSignatureTab: React.FC<UploadSignatureTabProps> = ({
                         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                             <span className="sig-control-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 Limpieza de Fondo (Filtro)
-                                <span className="sig-tooltip-trigger" data-tooltip="Borra sombras y suciedad del papel para dejar solo la firma transparente.">
+                                <span className="sig-tooltip-trigger" data-tooltip="Borra sombras y suciedad del papel. En 0 se conserva la imagen original.">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="sig-info-icon">
                                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
                                     </svg>
                                 </span>
                             </span>
-                            <span className="sig-value-indicator">{threshold}</span>
+                            <span className="sig-value-indicator">{threshold === 0 ? '0 (Sin filtro)' : threshold}</span>
                         </div>
-                        <input type="range" value={threshold} min={5} max={40} step={1} onChange={(e) => setThreshold(Number(e.target.value))} className="sig-zoom-range" />
+                        <input type="range" value={threshold} min={0} max={40} step={1} onChange={(e) => setThreshold(Number(e.target.value))} className="sig-zoom-range" />
+                    </div>
+
+                    {/* Modo de Fondo (Normal / Fondo Oscuro Invertido) */}
+                    <div className="sig-control-group sig-control-segmented-group" style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                            <span className="sig-control-label">Contraste de Fondo</span>
+                            {hasNativeTransparency && (
+                                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
+                                    ✓ PNG sin fondo
+                                </span>
+                            )}
+                        </div>
+                        <div className="sig-segmented-control" style={{ marginTop: '4px' }}>
+                            <button
+                                type="button"
+                                className={`sig-segment-btn ${!invert ? 'active' : ''}`}
+                                onClick={() => setInvert(false)}
+                            >
+                                Fondo Claro (Papel)
+                            </button>
+                            <button
+                                type="button"
+                                className={`sig-segment-btn ${invert ? 'active' : ''}`}
+                                onClick={() => setInvert(true)}
+                            >
+                                Invertir (Fondo Oscuro)
+                            </button>
+                        </div>
                     </div>
 
                     {/* Formato de caja */}
