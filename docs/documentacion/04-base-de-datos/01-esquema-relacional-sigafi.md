@@ -78,7 +78,7 @@ erDiagram
   * Registro de firmas aplicadas a documentos.
   * Campos: `idFirma`, `uuid`, `documentoUuid`, `idUsuario`, `rolFirmante`, `firmaCode` (DFRM-XXXX), `hmacHash`, `docHash`, `metodoFirma`, `estado`, `fechaFirma`.
 * **`doc_user_signature_profiles`:**
-  * Perfil de firma del usuario (trazo vectorial canvas, iniciales, cargo institucional y departamento).
+  * Perfil de firma del usuario (trazo vectorial canvas o imagen PNG, iniciales, cargo institucional, departamento y modalidad de estampado `tipo_sello`: `completo` vs `solo_firma`).
 * **`doc_cowork_documentos` & `doc_cowork_updates`:**
   * Persistencia de sesiones colaborativas y deltas binarios Yjs para co-redacción en tiempo real.
 * **`pd_aceptaciones_usuarios` & `pd_terminos_condiciones` (SIGAFI) / `doc_lopdp_auditoria_datos`:**

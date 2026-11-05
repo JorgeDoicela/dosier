@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, PenLine, ShieldCheck, CheckCircle2, User, Building, Clock, AlertCircle } from 'lucide-react';
+import { X, PenLine, ShieldCheck, CheckCircle2, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useSignatureProfile } from './useSignatureProfile';
 import { useImageCropper } from './useImageCropper';
 import { useAuth } from '../../../api/AuthContext';
@@ -44,163 +44,126 @@ export const SignatureProfileCard: React.FC = () => {
 
     if (sig.loading) {
         return (
-            <div className="bg-surface p-6 rounded-xl border border-border-thin shadow-2xs">
-                <div className="flex items-center justify-center py-12 gap-3 text-text-dim text-xs">
-                    <div className="w-4 h-4 border-2 border-[#0070f3] border-t-transparent rounded-full animate-spin" />
-                    <span>Cargando configuración de firma institucional...</span>
-                </div>
+            <div className="bg-surface p-6 rounded-lg border border-slate-200/90 dark:border-zinc-800 flex justify-center py-12">
+                <Loader2 className="animate-spin text-[#0070f3]" size={24} />
             </div>
         );
     }
 
     return (
-        <div className="signature-profile-container bg-surface rounded-xl border border-border-thin shadow-2xs overflow-hidden" id="perfil-firma">
-            <div className="p-5 sm:p-6 space-y-6">
-                {/* Cabecera de la Tarjeta */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border-thin">
-                    <div className="flex items-center gap-2.5">
-                        <ShieldCheck className="w-5 h-5 text-[#0070f3]" />
-                        <div>
-                            <h3 className="font-bold text-sm sm:text-base text-text-main uppercase tracking-tight">
-                                Firma Digital Institucional
-                            </h3>
-                            <p className="text-xs text-text-dim mt-0.5">
-                                Configure su perfil y trazo digital oficial para firmar programas de estudio y actas curriculares.
-                            </p>
-                        </div>
-                    </div>
-                    {!sig.isEditing && sig.profile?.esConfigurado && (
-                        <button
-                            type="button"
-                            onClick={() => sig.setIsEditing(true)}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface hover:bg-bg-deep border border-border-thin hover:border-[#0070f3] text-xs font-semibold text-text-main transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
-                        >
-                            <PenLine size={14} className="text-[#0070f3]" />
-                            <span>Editar Perfil de Firma</span>
-                        </button>
-                    )}
-                </div>
-
-                {sig.message && (
-                    <div className={`p-3.5 rounded-xl border text-xs flex items-center gap-2.5 ${
-                        sig.message.type === 'error'
-                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300'
-                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                    }`}>
-                        {sig.message.type === 'error' ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
-                        <span>{sig.message.text}</span>
-                    </div>
-                )}
-
-                {/* ── VISTA VACÍA (NO CONFIGURADO) ─────────────────────────── */}
-                {!sig.isEditing && !sig.profile?.esConfigurado && (
-                    <div
-                        onClick={() => sig.setIsEditing(true)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setIsEditing(true); } }}
-                        className="p-8 text-center border border-dashed border-border-thin rounded-xl bg-bg-deep/30 hover:border-[#0070f3] transition-colors cursor-pointer space-y-3"
-                    >
-                        <ShieldCheck size={32} className="mx-auto text-text-dim opacity-40" />
-                        <div>
-                            <h4 className="text-sm font-bold text-text-main">Su firma digital no está configurada</h4>
-                            <p className="text-xs text-text-dim max-w-md mx-auto mt-1 leading-relaxed">
-                                Para firmar los Programas de Estudio de la Asignatura (PEA) o actas institucionales, configure su trazo y cargo docente.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); sig.setIsEditing(true); }}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
-                        >
-                            <PenLine size={14} />
-                            <span>Configurar Firma Ahora</span>
-                        </button>
-                    </div>
-                )}
-
-                {/* ── VISTA DE DETALLE (READ-ONLY) CON PREVISUALIZACIÓN DUAL ─────────────────────────── */}
-                {!sig.isEditing && sig.profile?.esConfigurado && (
-                    <div className="space-y-6">
-                        {/* Fichas Clave-Valor */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="p-4 sm:p-5 rounded-xl bg-bg-deep border border-border-thin space-y-1.5">
-                                <span className="text-xs font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
-                                    <User size={15} className="text-[#0070f3]" />
-                                    Cargo Institucional
-                                </span>
-                                <span className="text-sm sm:text-base font-bold text-text-main block">
-                                    {sig.profile?.cargo || 'Docente Titular'}
-                                </span>
-                            </div>
-
-                            <div className="p-4 sm:p-5 rounded-xl bg-bg-deep border border-border-thin space-y-1.5">
-                                <span className="text-xs font-bold text-text-dim uppercase tracking-wider flex items-center gap-2">
-                                    <Building size={15} className="text-[#0070f3]" />
-                                    Departamento / Área
-                                </span>
-                                <span className="text-sm sm:text-base font-bold text-text-main block truncate" title={sig.profile?.departamento || 'ISTPET'}>
-                                    {sig.profile?.departamento || 'ISTPET'}
-                                </span>
-                            </div>
-
-                            <div className="p-4 sm:p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">
-                                <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
-                                <div>
-                                    <span className="font-bold text-sm block">Perfil Activo</span>
-                                    <span className="text-xs opacity-80">Listo para firmar PEA</span>
-                                </div>
-                            </div>
-
-                            <div className="p-4 sm:p-5 rounded-xl bg-bg-deep border border-border-thin flex items-center gap-3 text-xs sm:text-sm text-text-dim">
-                                <Clock size={18} className="text-text-dim shrink-0" />
-                                <div>
-                                    <span className="text-xs font-bold uppercase tracking-wider block">Última Actualización</span>
-                                    <span className="text-sm font-semibold text-text-main">
-                                        {sig.profile?.actualizadoEn ? new Date(sig.profile.actualizadoEn).toLocaleDateString() : 'Vigente'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Vista Previa Dual (Trazo Digital + Sello Institucional) */}
-                        <div className="space-y-3.5 pt-2">
-                            <span className="text-sm sm:text-base font-bold uppercase tracking-wide text-text-main block">
-                                Instrumentos Digitales Registrados
+        <div className="signature-profile-container bg-surface p-6 rounded-lg border border-slate-200/90 dark:border-zinc-800 space-y-6" id="perfil-firma">
+            {/* Cabecera de la Sección */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-4 border-b border-slate-200/90 dark:border-zinc-800">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-text-main flex items-center gap-2 font-mono">
+                            <ShieldCheck size={16} className="text-[#0070f3]" />
+                            Firma Digital Institucional
+                        </h2>
+                        {sig.profile?.esConfigurado && (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>Perfil Activo</span>
                             </span>
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-                                {/* Trazo Digital */}
-                                <div className="lg:col-span-4 flex flex-col gap-2">
-                                    <span className="text-xs sm:text-sm font-semibold text-text-dim">Trazo Digital Manuscrito</span>
-                                    <div className="p-5 rounded-xl border border-border-thin bg-surface flex items-center justify-center min-h-[160px] h-full shadow-2xs overflow-hidden">
-                                        {sig.profile?.firmaImagenB64 ? (
-                                            <img
-                                                src={sig.profile.firmaImagenB64}
-                                                alt="Firma registrada"
-                                                className="max-h-28 w-auto object-contain dark:invert transition-all"
-                                            />
-                                        ) : (
-                                            <span className="text-xs sm:text-sm text-text-dim italic">No hay trazo registrado</span>
-                                        )}
-                                    </div>
-                                </div>
+                        )}
+                    </div>
+                    <p className="text-xs text-text-dim leading-relaxed">
+                        Configure su perfil y trazo digital oficial para firmar programas de estudio y actas curriculares.
+                    </p>
+                </div>
+                {!sig.isEditing && sig.profile?.esConfigurado && (
+                    <button
+                        type="button"
+                        onClick={() => sig.setIsEditing(true)}
+                        className="btn-vercel-secondary text-xs inline-flex items-center gap-1.5 shrink-0"
+                    >
+                        <PenLine size={13} className="text-[#0070f3]" />
+                        <span>Editar Perfil</span>
+                    </button>
+                )}
+            </div>
 
-                                {/* Sello Institucional Oficial */}
-                                <div className="lg:col-span-8 flex flex-col gap-2">
-                                    <span className="text-xs sm:text-sm font-semibold text-text-dim">Sello Institucional Oficial (Idéntico al PDF)</span>
-                                    <DocumentStampPreview
-                                        nombreFirmante={userName}
-                                        cargo={sig.profile?.cargo || 'Docente'}
-                                        departamento={sig.profile?.departamento || 'Coordinación Académica'}
-                                        cedula={userCi}
-                                        firmaImagenB64={sig.profile?.firmaImagenB64}
-                                        firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
-                                    />
-                                </div>
-                            </div>
+            {sig.message && (
+                <div className={`p-3 rounded-lg border text-xs flex items-center gap-2.5 ${
+                    sig.message.type === 'error'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900'
+                }`}>
+                    {sig.message.type === 'error' ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
+                    <span>{sig.message.text}</span>
+                </div>
+            )}
+
+            {/* ── VISTA VACÍA (NO CONFIGURADO) ─────────────────────────── */}
+            {!sig.isEditing && !sig.profile?.esConfigurado && (
+                <div
+                    onClick={() => sig.setIsEditing(true)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setIsEditing(true); } }}
+                    className="p-8 text-center border border-dashed border-slate-200/90 dark:border-zinc-800 rounded-lg hover:border-[#0070f3] transition-colors cursor-pointer space-y-3"
+                >
+                    <ShieldCheck size={28} className="mx-auto text-text-dim opacity-40" />
+                    <div>
+                        <h4 className="text-xs font-semibold text-text-main">Firma digital no configurada</h4>
+                        <p className="text-xs text-text-dim max-w-md mx-auto mt-1 leading-relaxed">
+                            Para firmar los Programas de Estudio de la Asignatura (PEA) o actas institucionales, configure su trazo y cargo docente.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); sig.setIsEditing(true); }}
+                        className="btn-vercel-primary text-xs inline-flex items-center gap-1.5"
+                    >
+                        <PenLine size={13} />
+                        <span>Configurar Firma Ahora</span>
+                    </button>
+                </div>
+            )}
+
+            {/* ── VISTA DE DETALLE (READ-ONLY) CON PREVISUALIZACIÓN DUAL ─────────────────────────── */}
+            {!sig.isEditing && sig.profile?.esConfigurado && (
+                <div className="space-y-6">
+                    {/* Metadatos en línea sin cajas ni bordes */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="text-text-dim font-medium">Cargo Institucional:</span>
+                            <span className="font-semibold text-text-main">{sig.profile?.cargo || 'Docente Titular'}</span>
+                        </div>
+                        <span className="text-slate-300 dark:text-zinc-700 hidden sm:inline">•</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-text-dim font-medium">Departamento / Área:</span>
+                            <span className="font-semibold text-text-main">{sig.profile?.departamento || 'ISTPET'}</span>
                         </div>
                     </div>
-                )}
+
+                    {/* Instrumento Registrado Según Elección */}
+                    <div className="space-y-3 pt-1">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-xs font-semibold uppercase tracking-wider text-text-main font-mono">
+                                {(sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello) === 'solo_firma'
+                                    ? 'Firma Digital Registrada'
+                                    : 'Sello Institucional Registrado'}
+                            </h3>
+                            <span className="text-[11px] font-normal normal-case text-text-dim font-sans">
+                                Modo: <strong className="text-text-main font-semibold">{(sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello) === 'solo_firma' ? 'Solo Firma Digital' : 'Sello Institucional Completo'}</strong>
+                            </span>
+                        </div>
+
+                        <div className="w-full">
+                            <DocumentStampPreview
+                                nombreFirmante={userName}
+                                cargo={sig.profile?.cargo || 'Docente'}
+                                departamento={sig.profile?.departamento || 'Coordinación Académica'}
+                                cedula={userCi}
+                                firmaImagenB64={sig.profile?.firmaImagenB64}
+                                tipoPresentacion={(sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello) === 'solo_firma' ? 'solo_firma' : 'completo'}
+                                firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
                 {/* ── FORMULARIO DE EDICIÓN ─────────────────────────────────── */}
                 {sig.isEditing && (
@@ -246,11 +209,10 @@ export const SignatureProfileCard: React.FC = () => {
                                             key={mode}
                                             type="button"
                                             onClick={() => sig.selectMode(mode)}
-                                            className={`pb-2.5 border-b-2 font-semibold text-xs sm:text-sm tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
-                                                sig.activeMode === mode
+                                            className={`pb-2.5 border-b-2 font-semibold text-xs sm:text-sm tracking-tight transition-colors whitespace-nowrap cursor-pointer ${sig.activeMode === mode
                                                     ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400'
                                                     : 'border-transparent text-text-dim hover:text-text-main'
-                                            }`}
+                                                }`}
                                         >
                                             {mode === 'auto' ? 'Generación Automática' : mode === 'upload' ? 'Cargar Imagen (Foto)' : 'Dibujo Manual (Lienzo)'}
                                         </button>
@@ -287,13 +249,76 @@ export const SignatureProfileCard: React.FC = () => {
                             )}
                         </div>
 
+                        {/* Selector de Estilo de Firma */}
+                        <div className="space-y-2 pt-2">
+                            <label className="text-xs font-bold text-text-main uppercase tracking-wider block">
+                                Estilo de Firma en Documentos
+                            </label>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Opción A: Sello Institucional Completo */}
+                                <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => sig.setTipoSello('completo')}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('completo'); } }}
+                                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${sig.tipoSello === 'completo'
+                                            ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#0070f3] ring-1 ring-[#0070f3] shadow-xs'
+                                            : 'bg-bg-deep border-border-thin hover:border-slate-300 dark:hover:border-zinc-700'
+                                        }`}
+                                >
+                                    <div className="space-y-0.5">
+                                        <span className="text-xs sm:text-sm font-bold text-text-main block">
+                                            Sello Institucional Completo
+                                        </span>
+                                        <span className="text-xs text-text-dim block">
+                                            Cabecera azul, metadatos y código QR
+                                        </span>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'completo'
+                                            ? 'bg-[#0070f3] border-[#0070f3] text-white'
+                                            : 'border-border-thin bg-surface text-transparent'
+                                        }`}>
+                                        <Check size={12} strokeWidth={3} />
+                                    </div>
+                                </div>
+
+                                {/* Opción B: Solo Firma Digital */}
+                                <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => sig.setTipoSello('solo_firma')}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('solo_firma'); } }}
+                                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${sig.tipoSello === 'solo_firma'
+                                            ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#0070f3] ring-1 ring-[#0070f3] shadow-xs'
+                                            : 'bg-bg-deep border-border-thin hover:border-slate-300 dark:hover:border-zinc-700'
+                                        }`}
+                                >
+                                    <div className="space-y-0.5">
+                                        <span className="text-xs sm:text-sm font-bold text-text-main block">
+                                            Solo Firma Digital
+                                        </span>
+                                        <span className="text-xs text-text-dim block">
+                                            Únicamente el trazo manuscrito
+                                        </span>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'solo_firma'
+                                            ? 'bg-[#0070f3] border-[#0070f3] text-white'
+                                            : 'border-border-thin bg-surface text-transparent'
+                                        }`}>
+                                        <Check size={12} strokeWidth={3} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Previsualización en Tiempo Real del Sello Institucional */}
                         <div className="border-t border-border-thin pt-5 space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck size={16} className="text-[#0070f3]" />
                                     <span className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider">
-                                        Previsualización del Sello Institucional (En Tiempo Real)
+                                        Previsualización en Tiempo Real ({sig.tipoSello === 'solo_firma' ? 'Solo Firma Digital' : 'Sello Institucional Completo'})
                                     </span>
                                 </div>
                                 <button
@@ -312,22 +337,23 @@ export const SignatureProfileCard: React.FC = () => {
                                     departamento={sig.departamento.trim() || 'Coordinación Académica'}
                                     cedula={userCi}
                                     firmaImagenB64={sig.firmaImagenB64}
+                                    tipoPresentacion={sig.tipoSello}
                                 />
                             )}
                         </div>
 
-                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-thin">
+                        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/90 dark:border-zinc-800">
                             <button
                                 type="button"
                                 onClick={sig.cancelEdit}
-                                className="px-4 py-2.5 rounded-xl border border-border-thin hover:bg-bg-deep text-xs sm:text-sm font-semibold text-text-dim hover:text-text-main transition-all cursor-pointer shadow-2xs"
+                                className="btn-vercel-secondary text-xs"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
                                 disabled={sig.saving || !sig.firmaImagenB64}
-                                className="px-5 py-2.5 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl font-semibold text-xs sm:text-sm transition-all disabled:opacity-50 cursor-pointer shadow-2xs"
+                                className="btn-vercel-primary text-xs"
                             >
                                 {sig.saving ? 'Guardando...' : 'Guardar y Activar Firma'}
                             </button>
@@ -385,6 +411,7 @@ export const SignatureProfileCard: React.FC = () => {
                                     departamento={sig.departamento.trim()}
                                     cedula={userCi}
                                     firmaImagenB64={sig.firmaImagenB64}
+                                    tipoPresentacion={sig.tipoSello}
                                 />
                             </div>
 
@@ -393,14 +420,14 @@ export const SignatureProfileCard: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2.5 rounded-xl border border-border-thin bg-surface hover:bg-bg-deep text-xs sm:text-sm font-semibold text-text-dim hover:text-text-main transition-colors cursor-pointer shadow-2xs"
+                                    className="btn-vercel-secondary text-xs"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleConfirmSave}
-                                    className="px-5 py-2.5 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
+                                    className="btn-vercel-primary text-xs"
                                 >
                                     Confirmar y Activar
                                 </button>
@@ -409,7 +436,6 @@ export const SignatureProfileCard: React.FC = () => {
                     </div>,
                     document.body
                 )}
-            </div>
         </div>
     );
 };

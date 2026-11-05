@@ -33,6 +33,14 @@ public class DocUserSignaturePerfil
     [Column("departamento")]
     public string? Departamento { get; set; }
 
+    /// <summary>
+    /// Estilo de presentación del sello en documentos y previsualización:
+    /// 'completo' (sello institucional oficial con cabecera azul, QR y metadatos) o
+    /// 'solo_firma' (únicamente el trazo manuscrito digital).
+    /// </summary>
+    [Column("tipo_sello")]
+    public string TipoSello { get; set; } = "completo";
+
     [Column("es_configurado")]
     public bool EsConfigurado { get; set; } = false;
 

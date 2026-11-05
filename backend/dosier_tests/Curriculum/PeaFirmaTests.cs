@@ -545,5 +545,133 @@ namespace dosier_tests.Curriculum
 
             Assert.Contains("está legalmente cerrado", ex.Message);
         }
+
+        [Fact]
+        public async Task PeaFirma_EstiloSello_GuardaPerfilYRegistraEnMetadata()
+        {
+            var dbName = nameof(PeaFirma_EstiloSello_GuardaPerfilYRegistraEnMetadata);
+            await using var context = CreateInMemoryContext(dbName);
+            var config = CreateMockConfiguration();
+
+            // 1. Crear usuario con perfil en modo 'solo_firma'
+            string rawPassword = "TestPass123!";
+            var usuario = new User
+            {
+                IdUsuario = 101,
+                Nombre = "ING. CARLOS ENRIQUE VALENCIA",
+                IdSigafi = "1720477031",
+                Contrasenia = BCrypt.Net.BCrypt.HashPassword(rawPassword, 11),
+                Activo = true
+            };
+            context.Users.Add(usuario);
+            AssignRole(context, 101, "DOSIER_DOCENTE");
+
+            var perfil = new DocUserSignaturePerfil
+            {
+                IdUsuario = 101,
+                Cargo = "DOCENTE TITULAR",
+                Departamento = "SOFTWARE",
+                TipoSello = "solo_firma",
+                EsConfigurado = true
+            };
+            context.DocUserSignaturePerfiles.Add(perfil);
+
+            var pea = new DocPea
+            {
+                IdPea = 101,
+                Uuid = Guid.NewGuid().ToString(),
+                IdCarrera = 5,
+                IdAsignatura = 12,
+                IdPeriodo = "2026-1",
+                TotalHorasAsignatura = 160,
+                Creditos = 3.5m,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
+                ObjetivoAsignatura = "Objetivo Asignatura",
+                MetodologiaEnsenanza = "Metodología",
+                EvaluacionAprendizaje = "Evaluación",
+                Estado = "Borrador",
+                Version = 1,
+                Activo = true
+            };
+            context.DocPeas.Add(pea);
+            await context.SaveChangesAsync();
+
+            var service = CreatePeaService(context, config);
+
+            var firmarDto = new FirmarPeaDto
+            {
+                Password = rawPassword,
+                RolFirmante = "Docente",
+                TipoFirma = "DOSIER",
+                Motivo = "Firma con preferencia de solo trazo manuscrito"
+            };
+
+            var resultado = await service.FirmarPeaAsync(pea.IdPea, usuario.IdUsuario, firmarDto, "127.0.0.1", "TestRunner");
+
+            Assert.NotNull(resultado);
+            Assert.True(resultado.Exito);
+            Assert.NotEmpty(resultado.FirmaCode);
+
+            // Verificar que se guardó tipo_sello en la metadata
+            var firmaDb = await context.DocDocumentoFirmas.FirstOrDefaultAsync(f => f.FirmaCode == resultado.FirmaCode);
+            Assert.NotNull(firmaDb);
+            Assert.Contains("solo_firma", firmaDb.FirmaMetadata);
+        }
+
+        [Fact]
+        public void SignatureStamper_SoportaAmbosEstilos_CompletoYSoloFirma()
+        {
+            var stamper = new SignatureStamper();
+
+            // Generar PDF base en memoria
+            byte[] basePdfBytes;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                using (var writer = new iText.Kernel.Pdf.PdfWriter(ms))
+                using (var pdf = new iText.Kernel.Pdf.PdfDocument(writer))
+                {
+                    var doc = new iText.Layout.Document(pdf, iText.Kernel.Geom.PageSize.A4);
+                    doc.Add(new iText.Layout.Element.Paragraph("Documento de Prueba Curricular ISTPET"));
+                    doc.Close();
+                }
+                basePdfBytes = ms.ToArray();
+            }
+
+            // 1. Estampar en estilo completo
+            var pdfCompleto = stamper.StampSignatureBlock(
+                pdfBytes: basePdfBytes,
+                nombreFirmante: "Carlos Valencia",
+                cedula: "1720477031",
+                cargo: "Profesor",
+                departamento: "Academia",
+                rolEnDocumento: "Elaborador",
+                firmaCode: "DFRM-TEST-COMPLETO",
+                firmaImagenB64: null,
+                verificationUrl: "https://dosier.istpet.edu.ec/verificacion/DFRM-TEST-COMPLETO",
+                firmadoEn: DateTime.UtcNow,
+                estiloSello: "completo"
+            );
+            Assert.NotNull(pdfCompleto);
+            Assert.True(pdfCompleto.Length > basePdfBytes.Length);
+
+            // 2. Estampar en estilo solo_firma
+            var pdfSoloFirma = stamper.StampSignatureBlock(
+                pdfBytes: basePdfBytes,
+                nombreFirmante: "Carlos Valencia",
+                cedula: "1720477031",
+                cargo: "Profesor",
+                departamento: "Academia",
+                rolEnDocumento: "Elaborador",
+                firmaCode: "DFRM-TEST-SOLO-FIRMA",
+                firmaImagenB64: null,
+                verificationUrl: "https://dosier.istpet.edu.ec/verificacion/DFRM-TEST-SOLO-FIRMA",
+                firmadoEn: DateTime.UtcNow,
+                estiloSello: "solo_firma"
+            );
+            Assert.NotNull(pdfSoloFirma);
+            Assert.True(pdfSoloFirma.Length > basePdfBytes.Length);
+        }
     }
 }

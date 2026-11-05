@@ -17,6 +17,7 @@ public class UserSignatureProfileDto
     public string?  Iniciales       { get; init; }
     public string?  Cargo           { get; init; }
     public string?  Departamento    { get; init; }
+    public string   TipoSello       { get; init; } = "completo"; // 'completo' | 'solo_firma'
     public DateTime ActualizadoEn   { get; init; }
 }
 
@@ -32,6 +33,9 @@ public class UpdateSignatureProfileDto
     /// <summary>Cargo institucional que aparecerá en el bloque visual del PDF.</summary>
     public string? Cargo          { get; init; }
     public string? Departamento   { get; init; }
+
+    /// <summary>Estilo de presentación del sello: 'completo' (sello azul con QR) o 'solo_firma' (únicamente el trazo).</summary>
+    public string? TipoSello      { get; init; }
 }
 
 // ══════════════════════════════════════════════════════════════

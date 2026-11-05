@@ -222,6 +222,8 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
 
         var firmaImagenB64 = await GetFirmaBase64Async(perfil?.FirmaImagenB64);
 
+        var estiloSello = perfil?.TipoSello ?? "completo";
+
         // 9. Estampar el bloque visual en el PDF
         var verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");
 
@@ -235,7 +237,8 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
             firmaCode: firmaCode,
             firmaImagenB64: firmaImagenB64,
             verificationUrl: verificationUrl,
-            firmadoEn: firmadoEn);
+            firmadoEn: firmadoEn,
+            estiloSello: estiloSello);
 
         // 10. Iniciar transacción explícita de EF Core
         using var transaction = await _context.Database.BeginTransactionAsync();
@@ -258,6 +261,7 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
                 departamento = perfil?.Departamento,
                 rol = dto.RolFirmante,
                 metodo = "DOSIER_BASIC_V1",
+                tipo_sello = estiloSello
             });
 
             var registroFirma = new DocDocumentoFirma

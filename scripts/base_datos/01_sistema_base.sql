@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 --  SISTEMA DOSIER - MÓDULO DE DOCUMENTACIÓN Y GESTIÓN ACADÉMICA
 --  Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
 --  Diseñado para el despliegue del módulo de DOCUMENTACIÓN.
@@ -338,6 +338,7 @@ CREATE TABLE doc_user_signature_profiles (
     iniciales               VARCHAR(10)   NULL,
     cargo                   VARCHAR(200)  NULL     COMMENT 'Cargo institucional para estampar',
     departamento            VARCHAR(200)  NULL     COMMENT 'Departamento o área del firmante',
+    tipo_sello              VARCHAR(30)   NOT NULL DEFAULT 'completo' COMMENT 'Estilo del sello: completo o solo_firma',
     es_configurado          TINYINT(1)    NOT NULL DEFAULT 0,
     creado_en               TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

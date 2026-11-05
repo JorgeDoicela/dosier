@@ -9,6 +9,7 @@ export interface DocumentStampPreviewProps {
     firmaImagenB64?: string;
     firmaCode?: string;
     firmadoEn?: string;
+    tipoPresentacion?: 'completo' | 'solo_firma';
     className?: string;
 }
 
@@ -20,6 +21,7 @@ export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
     firmaImagenB64,
     firmaCode = 'DOSIER-ISTPET-2026-OFIC',
     firmadoEn,
+    tipoPresentacion = 'completo',
     className = '',
 }) => {
     // Formatear nombre a 2 líneas si es largo
@@ -43,6 +45,30 @@ export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
     const defaultDate = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())} UTC`;
     const formattedDate = firmadoEn || defaultDate;
 
+    // ── MODO 'SOLO FIRMA' (ÚNICAMENTE EL TRAZO MANUSCRITO) ────────────
+    if (tipoPresentacion === 'solo_firma') {
+        return (
+            <div className={`doc-stamp-preview-container ${className}`}>
+                <div className="doc-stamp-display-wrapper">
+                    <div className="dosier-solo-firma-stamp" role="region" aria-label="Trazo de Firma Digital">
+                        {firmaImagenB64 ? (
+                            <img
+                                src={firmaImagenB64}
+                                alt="Trazo de firma digital"
+                                className="solo-stroke-img"
+                            />
+                        ) : (
+                            <div className="stamp-initials-box w-28 h-16 text-2xl font-bold flex items-center justify-center">
+                                {getInitials(nombreFirmante)}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ── MODO 'COMPLETO' (SELLO INSTITUCIONAL CON CABECERA AZUL Y QR) ───
     return (
         <div className={`doc-stamp-preview-container ${className}`}>
             <div className="doc-stamp-display-wrapper">

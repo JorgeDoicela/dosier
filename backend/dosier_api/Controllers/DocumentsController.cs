@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Dosier.Application.Common.Documents;
 using Dosier.Domain.Common.Documents;
 using System.Text.Json;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
 
@@ -81,8 +83,42 @@ namespace dosier_api.Controllers
                             var firmas = await signatureService.GetByDocumentAsync(docUuid);
                             var firmasValidas = firmas.Where(f => f.Estado == dosier_domain.Signatures.SignatureState.Valid).OrderBy(f => f.FechaFirma).ToList();
 
+                            var sigProfileSub = HttpContext.RequestServices.GetService<dosier_infrastructure.Signatures.Subservices.ISignatureProfileSubservice>();
+                            var dbCtx = HttpContext.RequestServices.GetService<dosier_infrastructure.data.models.DosierContext>();
+
                             foreach (var firma in firmasValidas)
                             {
+                                string estiloSello = "completo";
+                                string? firmaImagenB64 = null;
+
+                                var dbFirma = dbCtx?.DocDocumentoFirmas.AsNoTracking().FirstOrDefault(df => df.FirmaCode == firma.FirmaCode);
+                                if (dbFirma != null && !string.IsNullOrEmpty(dbFirma.FirmaMetadata))
+                                {
+                                    try
+                                    {
+                                        using var mDoc = System.Text.Json.JsonDocument.Parse(dbFirma.FirmaMetadata);
+                                        if (mDoc.RootElement.TryGetProperty("tipo_sello", out var ts))
+                                            estiloSello = ts.GetString() ?? estiloSello;
+                                    }
+                                    catch { }
+                                }
+
+                                if (dbFirma?.FirmanteId?.StartsWith("USR-") == true && int.TryParse(dbFirma.FirmanteId.Substring(4), out int uid))
+                                {
+                                    if (sigProfileSub != null)
+                                    {
+                                        var pDto = await sigProfileSub.GetProfileAsync(uid);
+                                        if (pDto != null)
+                                        {
+                                            firmaImagenB64 = pDto.FirmaImagenB64;
+                                            if (string.IsNullOrEmpty(estiloSello) || estiloSello == "completo")
+                                            {
+                                                estiloSello = pDto.TipoSello ?? estiloSello;
+                                            }
+                                        }
+                                    }
+                                }
+
                                 var verificationUrl = appUrlService.BuildFrontendUrl($"/verificacion/{firma.FirmaCode}");
                                 currentBytes = stamper.StampSignatureBlock(
                                     pdfBytes: currentBytes,
@@ -92,9 +128,10 @@ namespace dosier_api.Controllers
                                     departamento: null,
                                     rolEnDocumento: firma.FirmanteRol,
                                     firmaCode: firma.FirmaCode,
-                                    firmaImagenB64: null,
+                                    firmaImagenB64: firmaImagenB64,
                                     verificationUrl: verificationUrl,
-                                    firmadoEn: firma.FechaFirma
+                                    firmadoEn: firma.FechaFirma,
+                                    estiloSello: estiloSello
                                 );
                             }
                         }

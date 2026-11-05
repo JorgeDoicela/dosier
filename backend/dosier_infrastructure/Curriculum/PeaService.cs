@@ -587,6 +587,7 @@ namespace dosier_infrastructure.Curriculum
                 cedula = user.IdSigafi,
                 cargo = perfil?.Cargo ?? rol,
                 departamento = perfil?.Departamento ?? "ISTPET",
+                tipo_sello = perfil?.TipoSello ?? "completo",
                 // NOTA TÉCNICA LEY 67: La firma PAdES completa con estampado en PDF se ejecuta en exportación documental.
                 // A nivel transaccional se valida la vigencia del certificado P12 del docente y se genera el sello HMAC institucional.
                 metodo = tipoFirmaNormalizado.Equals("FirmaEC", StringComparison.OrdinalIgnoreCase) ? "CERT_VALIDADO_HMAC_SRV" : "DOSIER_HMAC_SHA256",

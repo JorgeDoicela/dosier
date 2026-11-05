@@ -5,13 +5,19 @@ import api from '../api/axios_config';
 // ─────────────────────────────────────────────────────────────
 
 export interface UserSignatureProfileDto {
-    idUsuario: number;
-    esConfigurado: boolean;
+    idUsuario?: number;
+    id_usuario?: number;
+    esConfigurado?: boolean;
+    es_configurado?: boolean;
     firmaImagenB64?: string;
+    firma_imagen_b64?: string;
     iniciales?: string;
     cargo?: string;
     departamento?: string;
+    tipoSello?: 'completo' | 'solo_firma';
+    tipo_sello?: 'completo' | 'solo_firma';
     actualizadoEn?: string;
+    actualizado_en?: string;
 }
 
 export interface UpdateSignatureProfileDto {
@@ -19,6 +25,7 @@ export interface UpdateSignatureProfileDto {
     iniciales?: string;
     cargo?: string;
     departamento?: string;
+    tipoSello?: 'completo' | 'solo_firma';
 }
 
 export interface SignDocumentDto {
@@ -75,7 +82,9 @@ export const updateSignatureProfile = (dto: UpdateSignatureProfileDto): Promise<
         cargo: dto.cargo,
         departamento: dto.departamento,
         iniciales: dto.iniciales,
-        firma_imagen_b64: dto.firmaImagenB64
+        firma_imagen_b64: dto.firmaImagenB64,
+        tipo_sello: dto.tipoSello,
+        tipoSello: dto.tipoSello
     };
     return api.put('/signatures/profile', payload).then(r => r.data);
 };

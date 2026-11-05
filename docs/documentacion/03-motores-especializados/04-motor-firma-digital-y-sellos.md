@@ -46,7 +46,26 @@ graph TD
 
 ## 4. Estampado Visual y Código DFRM (`SignatureStamper`)
 
-El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para posicionar el sello institucional en la Sección K (Firmas de responsabilidad):
+El servicio de estampado gráfico sobre el archivo PDF utiliza **iText 9** para posicionar el sello institucional en la Sección K (Firmas de responsabilidad) o bloques de firma de plantillas generales.
+
+### 4.1. Modalidades de Presentación del Estampado (Preferencia de Usuario)
+
+El sistema provee dos modalidades configurables en el perfil de firma de cada usuario (`tipo_sello` en `doc_user_signature_profiles`):
+
+1. **Sello Institucional Completo (`completo` - Predeterminado):**
+   * **Diseño Visual:** Tarjeta estructurada con cabecera superior azul institucional (`#0A3264`) y texto blanco centrado *"FIRMA INSTITUCIONAL DOSIER"*.
+   * **Cuerpo de 3 Columnas:**
+     * Columna 1: Trazo manuscrito digitalizado del usuario o iniciales formateadas.
+     * Columna 2: Metadatos institucionales oficiales (Nombre completo, Cargo, Departamento/Área, C.I., Fecha/hora UTC y Código DFRM en azul eléctrico `#0070F3`).
+     * Columna 3: Código QR de alta resolución con enlace directo a la verificación pública criptográfica (`/verificacion/{firmaCode}`) y etiqueta inferior *"VERIFICAR"*.
+   * **Pie de Seguridad:** Franja inferior con leyenda normativa *"Certificado Digital DOSIER · CACES / LOPDP"*.
+
+2. **Solo Firma Digital (`solo_firma`):**
+   * **Diseño Visual:** Estampado limpio y directo que posiciona únicamente el trazo manuscrito digitalizado (imagen PNG transparente) centrado en el casillero de firma correspondiente.
+   * **Ausencia de Artefactos Gráficos:** No renderiza la cabecera azul institucional, ni los metadatos textuales ni el código QR en la celda del documento, preservando la estética tradicional de firma manuscrita sobre la línea documental.
+   * **Trazabilidad Preservada:** La validez jurídica, el hash SHA-256 del PDF y el registro criptográfico HMAC-SHA256 continúan almacenándose de forma inmutable en `doc_documentos_firmas` con el metadato `"tipo_sello": "solo_firma"`.
+
+### 4.2. Especificaciones de Geometría y Estampado iText 9
 
 * **Código Oficial DFRM:** Generación de un identificador institucional único de trazabilidad (ej. `DFRM-2026-D9F7C872`).
 * **Datos del Sello Visual:**

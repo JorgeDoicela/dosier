@@ -187,3 +187,47 @@
         max-width: 90px;
     }
 }
+
+/* Modo 'Solo Firma' (Trazo Manuscrito Limpio Sin Cabecera Azul ni Texto) */
+.dosier-solo-firma-stamp {
+    width: 100%;
+    max-width: 420px;
+    padding: 28px 24px;
+    background: #ffffff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dosier-solo-firma-stamp .solo-stroke-img {
+    max-width: 320px;
+    max-height: 110px;
+    object-fit: contain;
+    filter: none !important;
+}
+
+/* Modo 'Solo Firma' (Trazo Manuscrito Limpio Sin Cabecera Azul ni Texto) */
+.dosier-solo-firma-stamp {
+    width: 100%;
+    max-width: 420px;
+    padding: 28px 24px;
+    background: #ffffff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dosier-solo-firma-stamp .solo-stroke-img {
+    max-width: 320px;
+    max-height: 110px;
+    object-fit: contain;
+    filter: none !important;
+}

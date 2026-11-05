@@ -17,6 +17,7 @@ export interface SignatureProfileState {
     isEditing: boolean;
     cargo: string;
     departamento: string;
+    tipoSello: 'completo' | 'solo_firma';
     firmaImagenB64: string | undefined;
     firmaAutoB64: string | undefined;
     firmaUploadB64: string | undefined;
@@ -27,6 +28,7 @@ export interface SignatureProfileState {
     setIsEditing: (v: boolean) => void;
     setCargo: (v: string) => void;
     setDepartamento: (v: string) => void;
+    setTipoSello: (v: 'completo' | 'solo_firma') => void;
     setAutoText: (v: string) => void;
     setSelectedFont: (v: string) => void;
     setMessage: (v: { text: string; type: 'success' | 'error' } | null) => void;
@@ -50,6 +52,7 @@ export function useSignatureProfile(): SignatureProfileState {
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [cargo, setCargo] = useState('');
     const [departamento, setDepartamento] = useState('');
+    const [tipoSello, setTipoSello] = useState<'completo' | 'solo_firma'>('completo');
     const [firmaImagenB64, setFirmaImagenB64] = useState<string | undefined>(undefined);
     const [firmaAutoB64, setFirmaAutoB64] = useState<string | undefined>(undefined);
     const [firmaUploadB64, setFirmaUploadB64] = useState<string | undefined>(undefined);
@@ -68,9 +71,11 @@ export function useSignatureProfile(): SignatureProfileState {
                 setProfile(data);
                 setCargo(data.cargo || '');
                 setDepartamento(data.departamento || '');
-                setFirmaImagenB64(data.firmaImagenB64);
-                setFirmaUploadB64(data.firmaImagenB64);
-                setFirmaDrawB64(data.firmaImagenB64);
+                const rawTipo = data.tipoSello || data.tipo_sello;
+                setTipoSello(rawTipo === 'solo_firma' ? 'solo_firma' : 'completo');
+                setFirmaImagenB64(data.firmaImagenB64 || data.firma_imagen_b64);
+                setFirmaUploadB64(data.firmaImagenB64 || data.firma_imagen_b64);
+                setFirmaDrawB64(data.firmaImagenB64 || data.firma_imagen_b64);
                 setAutoText(toTitleCase(user?.nombre_completo || ''));
             } catch (err) {
                 console.error('Error al cargar perfil de firma:', err);
@@ -100,9 +105,11 @@ export function useSignatureProfile(): SignatureProfileState {
         setMessage(null);
         setCargo(profile?.cargo || '');
         setDepartamento(profile?.departamento || '');
-        setFirmaImagenB64(profile?.firmaImagenB64);
-        setFirmaUploadB64(profile?.firmaImagenB64);
-        setFirmaDrawB64(profile?.firmaImagenB64);
+        const rawTipo = profile?.tipoSello || profile?.tipo_sello;
+        setTipoSello(rawTipo === 'solo_firma' ? 'solo_firma' : 'completo');
+        setFirmaImagenB64(profile?.firmaImagenB64 || profile?.firma_imagen_b64);
+        setFirmaUploadB64(profile?.firmaImagenB64 || profile?.firma_imagen_b64);
+        setFirmaDrawB64(profile?.firmaImagenB64 || profile?.firma_imagen_b64);
         setActiveMode('auto');
     };
 
@@ -146,6 +153,7 @@ export function useSignatureProfile(): SignatureProfileState {
                 cargo: cargo.trim() || undefined,
                 departamento: departamento.trim() || undefined,
                 firmaImagenB64,
+                tipoSello,
             });
             setProfile(updated);
             setIsEditing(false);
@@ -159,9 +167,9 @@ export function useSignatureProfile(): SignatureProfileState {
 
     return {
         profile, loading, saving, message, isEditing,
-        cargo, departamento, firmaImagenB64, firmaAutoB64, firmaUploadB64, firmaDrawB64,
+        cargo, departamento, tipoSello, firmaImagenB64, firmaAutoB64, firmaUploadB64, firmaDrawB64,
         activeMode, autoText, selectedFont,
-        setIsEditing, setCargo, setDepartamento,
+        setIsEditing, setCargo, setDepartamento, setTipoSello,
         setAutoText, setSelectedFont, setMessage,
         cancelEdit, executeSaveProfile, toTitleCase,
         selectMode, updateFirmaAuto, updateFirmaUpload, updateFirmaDraw,

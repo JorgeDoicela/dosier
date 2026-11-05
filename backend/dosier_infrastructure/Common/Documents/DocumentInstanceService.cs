@@ -621,14 +621,34 @@ namespace Dosier.Infrastructure.Common.Documents
                             string nombreFirmante = firma.FirmanteId;
                             string? cargo = firma.FirmanteRol;
                             string? departamento = null;
+                            string estiloSello = "completo";
+                            string? firmaImagenB64 = null;
                             try
                             {
                                 using var doc = JsonDocument.Parse(firma.FirmaMetadata ?? "{}");
                                 if (doc.RootElement.TryGetProperty("nombre", out var n)) nombreFirmante = n.GetString() ?? nombreFirmante;
                                 if (doc.RootElement.TryGetProperty("cargo", out var c)) cargo = c.GetString() ?? cargo;
                                 if (doc.RootElement.TryGetProperty("departamento", out var d)) departamento = d.GetString() ?? departamento;
+                                if (doc.RootElement.TryGetProperty("tipo_sello", out var ts)) estiloSello = ts.GetString() ?? estiloSello;
                             }
                             catch { }
+
+                            if (firma.FirmanteId?.StartsWith("USR-") == true && int.TryParse(firma.FirmanteId.Substring(4), out int uid))
+                            {
+                                var sigProfileSub = _serviceProvider.GetService<dosier_infrastructure.Signatures.Subservices.ISignatureProfileSubservice>();
+                                if (sigProfileSub != null)
+                                {
+                                    var pDto = sigProfileSub.GetProfileAsync(uid).GetAwaiter().GetResult();
+                                    if (pDto != null)
+                                    {
+                                        firmaImagenB64 = pDto.FirmaImagenB64;
+                                        if (string.IsNullOrEmpty(estiloSello) || estiloSello == "completo")
+                                        {
+                                            estiloSello = pDto.TipoSello ?? estiloSello;
+                                        }
+                                    }
+                                }
+                            }
 
                             var verificationUrl = appUrlService.BuildFrontendUrl($"/verificacion/{firma.FirmaCode}");
                             currentBytes = stamper.StampSignatureBlock(
@@ -639,9 +659,10 @@ namespace Dosier.Infrastructure.Common.Documents
                                 departamento: departamento,
                                 rolEnDocumento: firma.FirmanteRol,
                                 firmaCode: firma.FirmaCode ?? "",
-                                firmaImagenB64: null,
+                                firmaImagenB64: firmaImagenB64,
                                 verificationUrl: verificationUrl,
-                                firmadoEn: firma.FechaFirma
+                                firmadoEn: firma.FechaFirma,
+                                estiloSello: estiloSello
                             );
                         }
 

@@ -315,42 +315,6 @@ const SettingsPage: React.FC = () => {
 
             {activeMainTab === 'perfil' ? (
                 <div className="max-w-6xl space-y-6">
-                {isLoadingProfile ? (
-                    <div className="py-12 flex justify-center">
-                        <Loader2 className="animate-spin text-[#0070f3]" size={24} />
-                    </div>
-                ) : (
-                    <div className="bg-surface p-6 rounded-lg border border-slate-200/90 dark:border-zinc-800 space-y-6">
-                        <h2 className="text-xs font-semibold uppercase tracking-wider text-text-main flex items-center gap-2 font-mono">
-                            <Shield size={16} className="text-[#0070f3]" />
-                            Firma Electrónica y Protección de Datos (LOPDP)
-                        </h2>
-
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-3 p-4 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg">
-                                <input
-                                    type="checkbox"
-                                    id="termsConsent"
-                                    className="mt-1 cursor-pointer accent-[#0070f3]"
-                                    checked={profile.acepto_terminos_firma}
-                                    disabled={isSavingConsent}
-                                    onChange={handleConsentToggle}
-                                />
-                                <label htmlFor="termsConsent" className="text-xs text-text-dim leading-relaxed cursor-pointer select-none">
-                                    Acepto los términos de la <strong>Ley Orgánica de Protección de Datos Personales (LOPDP)</strong> y autorizo el uso de mi firma digital en el sistema. Entiendo que: 1) si uso firma electrónica avanzada con certificado <code className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-xs text-[#0070f3] font-semibold">.p12</code>, el archivo y su clave se procesarán temporalmente en memoria RAM y <strong>nunca serán almacenados en el servidor</strong>; 2) si utilizo la firma institucional DOSIER, autorizo la <strong>persistencia segura del trazo de mi firma y cargo</strong> en el servidor para estampar los documentos oficiales de los cuales soy responsable.
-                                </label>
-                            </div>
-
-                            {profile.acepto_terminos_firma && (
-                                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 px-1 animate-fade-in">
-                                    <CheckCircle2 size={13} className="text-emerald-500" />
-                                    Consentimiento firmado electrónicamente y activo {profile.fecha_consentimiento_firma && `el ${new Date(profile.fecha_consentimiento_firma).toLocaleDateString()}`}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
                 <SignatureProfileCard />
 
                 {!isLoadingProfile && (
@@ -432,6 +396,42 @@ const SettingsPage: React.FC = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                )}
+
+                {isLoadingProfile ? (
+                    <div className="py-12 flex justify-center">
+                        <Loader2 className="animate-spin text-[#0070f3]" size={24} />
+                    </div>
+                ) : (
+                    <div className="bg-surface p-6 rounded-lg border border-slate-200/90 dark:border-zinc-800 space-y-6">
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-text-main flex items-center gap-2 font-mono">
+                            <Shield size={16} className="text-[#0070f3]" />
+                            Firma Electrónica y Protección de Datos (LOPDP)
+                        </h2>
+
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3 p-4 bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg">
+                                <input
+                                    type="checkbox"
+                                    id="termsConsent"
+                                    className="mt-1 cursor-pointer accent-[#0070f3]"
+                                    checked={profile.acepto_terminos_firma}
+                                    disabled={isSavingConsent}
+                                    onChange={handleConsentToggle}
+                                />
+                                <label htmlFor="termsConsent" className="text-xs text-text-dim leading-relaxed cursor-pointer select-none">
+                                    Acepto los términos de la <strong>Ley Orgánica de Protección de Datos Personales (LOPDP)</strong> y autorizo el uso de mi firma digital en el sistema. Entiendo que: 1) si uso firma electrónica avanzada con certificado <code className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-xs text-[#0070f3] font-semibold">.p12</code>, el archivo y su clave se procesarán temporalmente en memoria RAM y <strong>nunca serán almacenados en el servidor</strong>; 2) si utilizo la firma institucional DOSIER, autorizo la <strong>persistencia segura del trazo de mi firma y cargo</strong> en el servidor para estampar los documentos oficiales de los cuales soy responsable.
+                                </label>
+                            </div>
+
+                            {profile.acepto_terminos_firma && (
+                                <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 px-1 animate-fade-in">
+                                    <CheckCircle2 size={13} className="text-emerald-500" />
+                                    Consentimiento firmado electrónicamente y activo {profile.fecha_consentimiento_firma && `el ${new Date(profile.fecha_consentimiento_firma).toLocaleDateString()}`}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

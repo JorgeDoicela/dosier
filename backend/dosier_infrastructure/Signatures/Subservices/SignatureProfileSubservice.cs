@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using dosier_application.Signatures;
 using dosier_domain.Signatures;
 using dosier_infrastructure.data.models;
@@ -111,6 +111,7 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
             Iniciales = iniciales,
             Cargo = cargoAuto,
             Departamento = deptoAuto,
+            TipoSello = dto?.TipoSello ?? "completo",
             ActualizadoEn = dto?.ActualizadoEn ?? DateTime.UtcNow
         };
     }
@@ -177,6 +178,10 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
         perfil.Iniciales = dto.Iniciales?.Trim().ToUpper();
         perfil.Cargo = dto.Cargo?.Trim();
         perfil.Departamento = dto.Departamento?.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.TipoSello))
+        {
+            perfil.TipoSello = dto.TipoSello.Trim().ToLowerInvariant() == "solo_firma" ? "solo_firma" : "completo";
+        }
         perfil.EsConfigurado = !string.IsNullOrWhiteSpace(dto.Cargo)
                               && !string.IsNullOrWhiteSpace(dto.Departamento)
                               && !string.IsNullOrWhiteSpace(firmaPath);
@@ -209,6 +214,7 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
         Iniciales = p.Iniciales,
         Cargo = p.Cargo,
         Departamento = p.Departamento,
+        TipoSello = string.IsNullOrWhiteSpace(p.TipoSello) ? "completo" : p.TipoSello,
         ActualizadoEn = p.ActualizadoEn,
     };
 

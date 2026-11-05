@@ -45,7 +45,8 @@ public class SignatureStamper
         string   firmaCode,
         string?  firmaImagenB64,
         string   verificationUrl,
-        DateTime firmadoEn)
+        DateTime firmadoEn,
+        string   estiloSello = "completo")
     {
         using var outputStream = new MemoryStream();
 
@@ -68,6 +69,10 @@ public class SignatureStamper
             catch { }
 
             bool isPeaMatrix = layoutLocator.HasPeaMatrix;
+            bool esSoloFirma = !string.IsNullOrWhiteSpace(estiloSello) &&
+                               (estiloSello.Equals("solo_firma", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("firma", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("trazo", StringComparison.OrdinalIgnoreCase));
 
             if (isPeaMatrix)
             {
@@ -109,17 +114,30 @@ public class SignatureStamper
                     canvasY = 110.0f;
                 }
 
-                var stampTable = BuildCompactPeaStamp(
-                    nombreFirmante: nombreFirmante,
-                    cargo: cargo,
-                    rolEnDocumento: rolEnDocumento,
-                    firmaCode: firmaCode,
-                    firmaImagenB64: firmaImagenB64,
-                    verificationUrl: verificationUrl,
-                    firmadoEn: firmadoEn,
-                    pdf: pdf,
-                    fonts: fonts,
-                    stampWidth: stampWidth);
+                Table stampTable;
+                if (esSoloFirma)
+                {
+                    stampTable = BuildSoloFirmaPeaStamp(
+                        firmaImagenB64: firmaImagenB64,
+                        nombreFirmante: nombreFirmante,
+                        fonts: fonts,
+                        stampWidth: stampWidth,
+                        stampHeight: stampHeight);
+                }
+                else
+                {
+                    stampTable = BuildCompactPeaStamp(
+                        nombreFirmante: nombreFirmante,
+                        cargo: cargo,
+                        rolEnDocumento: rolEnDocumento,
+                        firmaCode: firmaCode,
+                        firmaImagenB64: firmaImagenB64,
+                        verificationUrl: verificationUrl,
+                        firmadoEn: firmadoEn,
+                        pdf: pdf,
+                        fonts: fonts,
+                        stampWidth: stampWidth);
+                }
 
                 var canvasArea = new iText.Kernel.Geom.Rectangle(canvasX, canvasY, stampWidth, stampHeight);
                 using (var canvas = new Canvas(page, canvasArea))
@@ -142,25 +160,43 @@ public class SignatureStamper
                     ? layoutLocator.FirmanteY.Value + 12.0f 
                     : 160.0f;
 
-                var (headerTable, bodyTable, footerTable) = BuildGeneralStamp(
-                    nombreFirmante: nombreFirmante,
-                    cedula: cedula,
-                    cargo: cargo,
-                    departamento: departamento,
-                    rolEnDocumento: rolEnDocumento,
-                    firmaCode: firmaCode,
-                    firmaImagenB64: firmaImagenB64,
-                    verificationUrl: verificationUrl,
-                    firmadoEn: firmadoEn,
-                    pdf: pdf,
-                    fonts: fonts);
-
-                var canvasArea = new iText.Kernel.Geom.Rectangle(canvasX, canvasY, canvasWidth, canvasHeight);
-                using (var canvas = new Canvas(page, canvasArea))
+                if (esSoloFirma)
                 {
-                    canvas.Add(headerTable);
-                    canvas.Add(bodyTable);
-                    canvas.Add(footerTable);
+                    var soloFirmaTable = BuildSoloFirmaGeneralStamp(
+                        firmaImagenB64: firmaImagenB64,
+                        nombreFirmante: nombreFirmante,
+                        fonts: fonts,
+                        canvasWidth: canvasWidth,
+                        canvasHeight: canvasHeight);
+
+                    var canvasArea = new iText.Kernel.Geom.Rectangle(canvasX, canvasY, canvasWidth, canvasHeight);
+                    using (var canvas = new Canvas(page, canvasArea))
+                    {
+                        canvas.Add(soloFirmaTable);
+                    }
+                }
+                else
+                {
+                    var (headerTable, bodyTable, footerTable) = BuildGeneralStamp(
+                        nombreFirmante: nombreFirmante,
+                        cedula: cedula,
+                        cargo: cargo,
+                        departamento: departamento,
+                        rolEnDocumento: rolEnDocumento,
+                        firmaCode: firmaCode,
+                        firmaImagenB64: firmaImagenB64,
+                        verificationUrl: verificationUrl,
+                        firmadoEn: firmadoEn,
+                        pdf: pdf,
+                        fonts: fonts);
+
+                    var canvasArea = new iText.Kernel.Geom.Rectangle(canvasX, canvasY, canvasWidth, canvasHeight);
+                    using (var canvas = new Canvas(page, canvasArea))
+                    {
+                        canvas.Add(headerTable);
+                        canvas.Add(bodyTable);
+                        canvas.Add(footerTable);
+                    }
                 }
             }
         }
@@ -169,6 +205,119 @@ public class SignatureStamper
     }
 
     // ── CONSTRUCTORES DE BLOQUES VISUALES ──────────────────────────────
+
+    /// <summary>
+    /// Construye el estampado limpio de 'Solo Firma' para la matriz curricular PEA,
+    /// renderizando únicamente el trazo manuscrito en alta definición sin bordes,
+    /// sin cabecera azul institucional y sin código QR.
+    /// </summary>
+    private static Table BuildSoloFirmaPeaStamp(
+        string? firmaImagenB64,
+        string nombreFirmante,
+        FontSet fonts,
+        float stampWidth,
+        float stampHeight)
+    {
+        var table = new Table(1)
+            .SetWidth(stampWidth)
+            .SetBorder(iText.Layout.Borders.Border.NO_BORDER);
+
+        var cell = new Cell()
+            .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+            .SetPadding(0)
+            .SetHeight(stampHeight)
+            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+            .SetTextAlignment(TextAlignment.CENTER);
+
+        bool imageAdded = false;
+        if (!string.IsNullOrWhiteSpace(firmaImagenB64))
+        {
+            try
+            {
+                byte[] imgBytes = Convert.FromBase64String(
+                    firmaImagenB64.Contains(',')
+                        ? firmaImagenB64.Split(',')[1]
+                        : firmaImagenB64);
+
+                var imgData = ImageDataFactory.Create(imgBytes);
+                var img = new iText.Layout.Element.Image(imgData)
+                    .ScaleToFit(stampWidth - 4.0f, stampHeight - 4.0f)
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                cell.Add(img);
+                imageAdded = true;
+            }
+            catch { }
+        }
+
+        if (!imageAdded)
+        {
+            cell.Add(new Paragraph(nombreFirmante)
+                .SetFont(fonts.bold)
+                .SetFontSize(6.5f)
+                .SetFontColor(PrimaryColor)
+                .SetTextAlignment(TextAlignment.CENTER));
+        }
+
+        table.AddCell(cell);
+        return table;
+    }
+
+    /// <summary>
+    /// Construye el estampado limpio de 'Solo Firma' para plantillas generales (2 firmas),
+    /// renderizando únicamente el trazo manuscrito sin recuadro ni QR.
+    /// </summary>
+    private static Table BuildSoloFirmaGeneralStamp(
+        string? firmaImagenB64,
+        string nombreFirmante,
+        FontSet fonts,
+        float canvasWidth,
+        float canvasHeight)
+    {
+        var table = new Table(1)
+            .SetWidth(canvasWidth)
+            .SetBorder(iText.Layout.Borders.Border.NO_BORDER);
+
+        var cell = new Cell()
+            .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+            .SetPadding(0)
+            .SetHeight(canvasHeight)
+            .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+            .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+            .SetTextAlignment(TextAlignment.CENTER);
+
+        bool imageAdded = false;
+        if (!string.IsNullOrWhiteSpace(firmaImagenB64))
+        {
+            try
+            {
+                byte[] imgBytes = Convert.FromBase64String(
+                    firmaImagenB64.Contains(',')
+                        ? firmaImagenB64.Split(',')[1]
+                        : firmaImagenB64);
+
+                var imgData = ImageDataFactory.Create(imgBytes);
+                var img = new iText.Layout.Element.Image(imgData)
+                    .ScaleToFit(canvasWidth - 10.0f, canvasHeight - 6.0f)
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                cell.Add(img);
+                imageAdded = true;
+            }
+            catch { }
+        }
+
+        if (!imageAdded)
+        {
+            cell.Add(new Paragraph(nombreFirmante)
+                .SetFont(fonts.bold)
+                .SetFontSize(8.5f)
+                .SetFontColor(PrimaryColor)
+                .SetTextAlignment(TextAlignment.CENTER));
+        }
+
+        table.AddCell(cell);
+        return table;
+    }
 
     /// <summary>
     /// Construye el sello compacto institucional que encaja con precisión en una celda

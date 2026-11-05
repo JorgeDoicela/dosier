@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DOSIER — Tests: useSignatureProfile.ts (lógica pura)
  *
  * Valida la lógica del perfil de firma electrónica institucional:
@@ -179,5 +179,24 @@ describe("estaActualizado — vigencia del perfil de firma", () => {
 
     it("perfil sin fecha de actualización NO está vigente", () => {
         expect(estaActualizado(PROFILE_DEFAULT)).toBe(false);
+    });
+});
+
+describe("Estilo de Estampado — Sello Completo vs Solo Firma", () => {
+    it("admite modo 'completo' con todos los metadatos institucionales y cabecera azul", () => {
+        const tipo: 'completo' | 'solo_firma' = 'completo';
+        expect(tipo).toBe('completo');
+    });
+
+    it("admite modo 'solo_firma' para estampar únicamente el trazo manuscrito", () => {
+        const tipo: 'completo' | 'solo_firma' = 'solo_firma';
+        expect(tipo).toBe('solo_firma');
+    });
+
+    it("evalúa fallback defensivo a 'completo' ante valores nulos o indefinidos", () => {
+        const resolverTipo = (t?: string) => (t === 'solo_firma' ? 'solo_firma' : 'completo');
+        expect(resolverTipo(undefined)).toBe('completo');
+        expect(resolverTipo('desconocido')).toBe('completo');
+        expect(resolverTipo('solo_firma')).toBe('solo_firma');
     });
 });

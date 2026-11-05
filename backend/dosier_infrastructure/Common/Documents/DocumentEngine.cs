@@ -1094,8 +1094,16 @@ namespace Dosier.Infrastructure.Common.Documents
             return $"DOSIER-{categoryPrefix}-{DateTime.Now.Year}-{guid}";
         }
         
-        private string BuildHtmlPeaSignatureStamp(string nombre, string cargo, string firmaCode, DateTime fecha)
+        private string BuildHtmlPeaSignatureStamp(string nombre, string cargo, string firmaCode, DateTime fecha, string estiloSello = "completo", string? firmaB64 = null)
         {
+            if (estiloSello.Equals("solo_firma", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(firmaB64))
+            {
+                var src = firmaB64.StartsWith("data:image/") ? firmaB64 : $"data:image/png;base64,{firmaB64}";
+                return $@"<div style=""width: 100%; height: 85px; display: flex; align-items: center; justify-content: center; text-align: center;"">
+  <img src=""{src}"" style=""max-height: 70px; max-width: 90pt; object-fit: contain; margin: 0 auto; display: block;"" />
+</div>";
+            }
+
             var verificationUrl = $"{_appUrlService.GetFrontendUrl()}/verificacion/{firmaCode}";
             var qrBase64 = GenerateQrPngBase64(verificationUrl);
             var fechaStr = fecha.ToString("dd/MM/yyyy HH:mm") + " UTC";
