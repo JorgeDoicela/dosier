@@ -59,7 +59,8 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
     const isAuthority = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
 
     const isReviewState = isPeaEnRevision(projectStatus) || isPeaAvalado(projectStatus);
-    const isAuditActive = isAuthority && !isReadonly && isPeaEnRevision(projectStatus);
+    const statusKey = normalizePeaStatus(projectStatus);
+    const isAuditActive = isAuthority && !isReadonly && (statusKey === 'EnRevision' || statusKey === 'Corregido');
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
         return document.documentElement.getAttribute('data-theme') !== 'light';
@@ -190,6 +191,11 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                             <Scale size={13} />
                             <span>{getActionButtonLabel()}</span>
                         </button>
+                    ) : statusKey === 'Observado' ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                            <Clock size={13} className="text-amber-600 dark:text-amber-400" />
+                            <span>Devuelto para subsanación</span>
+                        </span>
                     ) : normalizePeaStatus(projectStatus) === 'Aprobado' || normalizePeaStatus(projectStatus) === 'Publicado' ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
                             <CheckCircle2 size={13} />

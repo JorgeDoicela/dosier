@@ -60,8 +60,48 @@ namespace dosier_api.Controllers
                 };
 
                 var result = await _documentEngine.GenerateAsync(request);
+                var currentBytes = result.PdfBytes;
 
-                return File(result.PdfBytes, "application/pdf", result.FileName);
+                if (!isDraft)
+                {
+                    string? docUuid = null;
+                    if (rawData.TryGetProperty("uuid", out var u) || rawData.TryGetProperty("Uuid", out u))
+                        docUuid = u.GetString();
+                    if (string.IsNullOrEmpty(docUuid) && (rawData.TryGetProperty("entityUuid", out var eu) || rawData.TryGetProperty("EntityUuid", out eu)))
+                        docUuid = eu.GetString();
+
+                    if (!string.IsNullOrEmpty(docUuid))
+                    {
+                        var signatureService = HttpContext.RequestServices.GetService<dosier_application.Signatures.IDosierSignatureService>();
+                        var stamper = HttpContext.RequestServices.GetService<dosier_infrastructure.Signatures.SignatureStamper>();
+                        var appUrlService = HttpContext.RequestServices.GetService<dosier_application.Common.IAppUrlService>();
+
+                        if (signatureService != null && stamper != null && appUrlService != null)
+                        {
+                            var firmas = await signatureService.GetByDocumentAsync(docUuid);
+                            var firmasValidas = firmas.Where(f => f.Estado == dosier_domain.Signatures.SignatureState.Valid).OrderBy(f => f.FechaFirma).ToList();
+
+                            foreach (var firma in firmasValidas)
+                            {
+                                var verificationUrl = appUrlService.BuildFrontendUrl($"/verificacion/{firma.FirmaCode}");
+                                currentBytes = stamper.StampSignatureBlock(
+                                    pdfBytes: currentBytes,
+                                    nombreFirmante: firma.FirmanteNombre,
+                                    cedula: null,
+                                    cargo: firma.FirmanteRol,
+                                    departamento: null,
+                                    rolEnDocumento: firma.FirmanteRol,
+                                    firmaCode: firma.FirmaCode,
+                                    firmaImagenB64: null,
+                                    verificationUrl: verificationUrl,
+                                    firmadoEn: firma.FechaFirma
+                                );
+                            }
+                        }
+                    }
+                }
+
+                return File(currentBytes, "application/pdf", result.FileName);
             }
             catch (System.Exception ex)
             {

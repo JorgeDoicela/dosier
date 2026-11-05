@@ -89,7 +89,12 @@ export const useBuilderPdfAndSign = ({
             const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
             const isAlreadySubmitted = statusNormalized === 'enrevision' || statusNormalized === 'revisadocoord' || statusNormalized === 'revisadoacad' || statusNormalized === 'aprobado' || !!formData?.FirmaElaboradoDocente || !!formData?.firma_elaborado_docente;
             const draftMode = isDraftMode && !isAlreadySubmitted;
-            const blob = await documentInstanceService.renderDocumentPdf(templateCode, formData, draftMode, blind);
+            const payload = {
+                ...formData,
+                uuid: documentUuid || formData?.Uuid || formData?.uuid,
+                entityUuid: entityUuid || formData?.EntityUuid || formData?.entityUuid
+            };
+            const blob = await documentInstanceService.renderDocumentPdf(templateCode, payload, draftMode, blind);
             setPdfBlob(blob);
             addAudit('PDF Generado exitosamente', 'success');
         } catch (err: any) {
@@ -133,11 +138,14 @@ export const useBuilderPdfAndSign = ({
                 instanceData = instanceRes?.data || instanceRes;
             }
 
-            if (instanceData?.finalPdfPath || instanceData?.final_pdf_path) {
-                const pdfBlob = await documentInstanceService.getInstancePdf(instanceData.uuid);
-                setPdfBlob(pdfBlob);
-                setIsDraftMode(false);
-                return true;
+            const docInstanceUuid = instanceData?.uuid || instanceData?.Uuid;
+            if (docInstanceUuid) {
+                const pdfBlob = await documentInstanceService.getInstancePdf(docInstanceUuid);
+                if (pdfBlob && pdfBlob.size > 1000) {
+                    setPdfBlob(pdfBlob);
+                    setIsDraftMode(false);
+                    return true;
+                }
             }
             return false;
         } catch {

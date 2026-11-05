@@ -102,7 +102,9 @@ namespace dosier_api.Controllers
         [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR,DOSIER_DOCENTE")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] CambiarEstadoRequest req)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = User.FindFirstValue("id_usuario") 
+                      ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                      ?? User.FindFirstValue("sub");
             var ok = await _peaService.CambiarEstadoAsync(id, req.NuevoEstado, req.Firma, userId, req.Motivo);
             if (!ok) return NotFound("No se pudo actualizar el estado del PEA.");
             return Ok(new { success = true });
@@ -116,7 +118,9 @@ namespace dosier_api.Controllers
             var pea = await _peaService.GetByUuidAsync(uuid);
             if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var userId = User.FindFirstValue("id_usuario") 
+                      ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                      ?? User.FindFirstValue("sub");
             var ok = await _peaService.CambiarEstadoAsync(pea.IdPea, req.NuevoEstado, req.Firma, userId, req.Motivo);
             if (!ok) return NotFound("No se pudo actualizar el estado del PEA.");
             return Ok(new { success = true });
@@ -182,6 +186,21 @@ namespace dosier_api.Controllers
         [HttpGet("{id:int}/observaciones")]
         public async Task<IActionResult> GetObservaciones(int id)
         {
+            var pea = await _peaService.GetByIdAsync(id);
+            if (pea == null) return NotFound($"No se encontró el PEA con id {id}");
+
+            bool isReviewer = User.IsInRole("DOSIER_ADMIN") 
+                           || User.IsInRole("DOSIER_COORD_CARRERA") 
+                           || User.IsInRole("DOSIER_COORD_ACAD") 
+                           || User.IsInRole("DOSIER_VICERRECTOR")
+                           || User.FindFirst("es_admin")?.Value == "true"
+                           || User.HasClaim("es_admin", "true");
+
+            if (!isReviewer && pea.Estado != "Observado" && pea.Estado != "Corregido")
+            {
+                return Ok(new List<dosier_application.Curriculum.Dtos.PeaObservacionDto>());
+            }
+
             var list = await _peaService.GetObservacionesByPeaAsync(id);
             return Ok(list);
         }
@@ -192,6 +211,19 @@ namespace dosier_api.Controllers
         {
             var pea = await _peaService.GetByUuidAsync(uuid);
             if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+
+            bool isReviewer = User.IsInRole("DOSIER_ADMIN") 
+                           || User.IsInRole("DOSIER_COORD_CARRERA") 
+                           || User.IsInRole("DOSIER_COORD_ACAD") 
+                           || User.IsInRole("DOSIER_VICERRECTOR")
+                           || User.FindFirst("es_admin")?.Value == "true"
+                           || User.HasClaim("es_admin", "true");
+
+            if (!isReviewer && pea.Estado != "Observado" && pea.Estado != "Corregido")
+            {
+                return Ok(new List<dosier_application.Curriculum.Dtos.PeaObservacionDto>());
+            }
+
             var list = await _peaService.GetObservacionesByPeaAsync(pea.IdPea);
             return Ok(list);
         }
@@ -398,7 +430,18 @@ namespace dosier_api.Controllers
 
     public class CambiarEstadoRequest
     {
-        public string NuevoEstado { get; set; } = string.Empty;
+        private string _nuevoEstado = string.Empty;
+
+        [System.Text.Json.Serialization.JsonPropertyName("nuevoEstado")]
+        public string NuevoEstado
+        {
+            get => !string.IsNullOrWhiteSpace(_nuevoEstado) ? _nuevoEstado : (NuevoEstadoSnake ?? string.Empty);
+            set => _nuevoEstado = value;
+        }
+
+        [System.Text.Json.Serialization.JsonPropertyName("nuevo_estado")]
+        public string? NuevoEstadoSnake { get; set; }
+
         public string? Firma { get; set; }
         public string? Motivo { get; set; }
     }

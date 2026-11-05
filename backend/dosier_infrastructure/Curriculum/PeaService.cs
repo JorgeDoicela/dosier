@@ -27,7 +27,7 @@ namespace dosier_infrastructure.Curriculum
         private readonly SignatureHashService _hashService;
         private readonly dosier_application.Common.IAppUrlService _appUrlService;
         private readonly IFirmaElectronicaService _firmaElectronicaService;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider? _serviceProvider;
 
         public PeaService(
             DosierContext context,
@@ -36,7 +36,7 @@ namespace dosier_infrastructure.Curriculum
             SignatureHashService hashService,
             dosier_application.Common.IAppUrlService appUrlService,
             IFirmaElectronicaService firmaElectronicaService,
-            IServiceProvider serviceProvider)
+            IServiceProvider? serviceProvider = null)
         {
             _context = context;
             _academicContextResolver = academicContextResolver;
@@ -345,7 +345,7 @@ namespace dosier_infrastructure.Curriculum
         public async Task<bool> CambiarEstadoAsync(int idPea, string nuevoEstado, string? firmaDocente, string? idUsuario, string? motivo = null)
         {
             var entity = await _context.DocPeas
-                .Include(p => p.Unidades)
+                .Include(p => p.Unidades).ThenInclude(u => u.Temas)
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
                 .Include(p => p.Bibliografias)
@@ -384,7 +384,19 @@ namespace dosier_infrastructure.Curriculum
 
             // Calcular hash forense del contenido en la transición
             string hashSha256 = CalcularHashSha256(entity);
-            int? idUserInt = int.TryParse(idUsuario, out int u) ? u : null;
+            int? idUserInt = null;
+            if (!string.IsNullOrWhiteSpace(idUsuario))
+            {
+                if (int.TryParse(idUsuario, out int parsed))
+                {
+                    idUserInt = parsed;
+                }
+                else
+                {
+                    var uMatch = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == idUsuario || u.EmailInstitucional == idUsuario);
+                    if (uMatch != null) idUserInt = uMatch.IdUsuario;
+                }
+            }
 
             await RegistrarTrazabilidadAsync(idPea, estadoAnterior, nuevoEstado, motivo ?? $"Transición de estado a {nuevoEstado}", hashSha256, idUserInt);
 
@@ -648,7 +660,7 @@ namespace dosier_infrastructure.Curriculum
 
                 try
                 {
-                    var instanceService = (Dosier.Application.Common.Documents.IDocumentInstanceService?)_serviceProvider.GetService(typeof(Dosier.Application.Common.Documents.IDocumentInstanceService));
+                    var instanceService = (Dosier.Application.Common.Documents.IDocumentInstanceService?)_serviceProvider?.GetService(typeof(Dosier.Application.Common.Documents.IDocumentInstanceService));
                     if (instanceService != null)
                     {
                         await instanceService.ValidateStorageIntegrityAsync(docInstancia);
@@ -702,12 +714,17 @@ namespace dosier_infrastructure.Curriculum
                 throw new UnauthorizedAccessException("Se requiere una sesión autenticada para registrar observaciones al PEA.");
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == idUsuario.Value)
-                ?? throw new UnauthorizedAccessException("Usuario observador no encontrado.");
+                ?? await _context.Users.FirstOrDefaultAsync(u => u.IdSigafi == idUsuario.Value.ToString());
+
+            if (user == null)
+                throw new UnauthorizedAccessException("Usuario observador no encontrado.");
+
+            int effectiveUserId = user.IdUsuario;
 
             var userRoles = await _context.UserRoles
                 .AsNoTracking()
                 .Include(ur => ur.Role)
-                .Where(ur => ur.IdUsuario == idUsuario.Value && (ur.EsActivo ?? true))
+                .Where(ur => ur.IdUsuario == effectiveUserId && (ur.EsActivo ?? true))
                 .Select(ur => ur.Role.CodigoRol)
                 .ToListAsync();
 
@@ -732,7 +749,7 @@ namespace dosier_infrastructure.Curriculum
             {
                 Uuid = Guid.NewGuid().ToString(),
                 IdPea = idPea,
-                IdUsuarioObservador = idUsuario,
+                IdUsuarioObservador = effectiveUserId,
                 RolObservador = rolEfectivo,
                 SeccionAfectada = seccion,
                 TextoObservacion = texto,
@@ -741,15 +758,6 @@ namespace dosier_infrastructure.Curriculum
             };
 
             _context.DocPeaObservaciones.Add(obs);
-
-            // Si el PEA estaba en revisión (cualquiera de las etapas colegiadas), pasa a Observado
-            if (pea.Estado == "EnRevision" || pea.Estado == "RevisadoCoord" || pea.Estado == "RevisadoAcad")
-            {
-                var estadoPrevio = pea.Estado;
-                pea.Estado = "Observado";
-                await RegistrarTrazabilidadAsync(idPea, estadoPrevio, "Observado", $"Observación en sección {seccion}: {texto}", null, idUsuario);
-            }
-
             await _context.SaveChangesAsync();
 
             return new PeaObservacionDto
@@ -938,11 +946,31 @@ namespace dosier_infrastructure.Curriculum
 
         private async Task RegistrarTrazabilidadAsync(int idPea, string anterior, string nuevo, string? motivo, string? hashSha256, int? idUsuario)
         {
+            int? validUserId = null;
+            if (idUsuario.HasValue && idUsuario.Value > 0)
+            {
+                var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario.Value);
+                if (user != null)
+                {
+                    validUserId = user.IdUsuario;
+                }
+                else
+                {
+                    // Fallback defensivo: verificar si el valor numérico recibido correspondía a IdSigafi
+                    var stringRef = idUsuario.Value.ToString();
+                    var userByRef = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == stringRef);
+                    if (userByRef != null)
+                    {
+                        validUserId = userByRef.IdUsuario;
+                    }
+                }
+            }
+
             var traza = new DocPeaTrazabilidad
             {
                 Uuid = Guid.NewGuid().ToString(),
                 IdPea = idPea,
-                IdUsuario = idUsuario,
+                IdUsuario = validUserId,
                 EstadoAnterior = anterior,
                 EstadoNuevo = nuevo,
                 Motivo = motivo,
@@ -972,7 +1000,7 @@ namespace dosier_infrastructure.Curriculum
                 pea.RecursosDidacticos,
                 pea.EvaluacionAprendizaje,
                 // CONTENIDO REAL — orden determinístico por Orden
-                Unidades = pea.Unidades.OrderBy(u => u.Orden).Select(u => new
+                Unidades = (pea.Unidades ?? Enumerable.Empty<DocPeaUnidad>()).OrderBy(u => u.Orden).Select(u => new
                 {
                     u.NumeroUnidad,
                     u.NombreUnidad,
@@ -980,39 +1008,39 @@ namespace dosier_infrastructure.Curriculum
                     u.HorasDocencia,
                     u.HorasPracticoExp,
                     u.HorasAutonomo,
-                    Temas = u.Temas.OrderBy(t => t.Orden).Select(t => new
+                    Temas = (u.Temas ?? Enumerable.Empty<DocPeaTema>()).OrderBy(t => t.Orden).Select(t => new
                     {
                         t.NumeroTema,
                         t.TituloTema,
                         t.DescripcionSubtemas
                     })
                 }),
-                Rdas = pea.ResultadosAprendizaje.OrderBy(r => r.Orden).Select(r => new
+                Rdas = (pea.ResultadosAprendizaje ?? Enumerable.Empty<DocPeaResultadoAprendizaje>()).OrderBy(r => r.Orden).Select(r => new
                 {
                     r.TipoRda,
                     r.CodigoRda,
                     r.Descripcion,
                     r.NivelDesarrollo
                 }),
-                Bibliografias = pea.Bibliografias.OrderBy(b => b.Orden).Select(b => new
+                Bibliografias = (pea.Bibliografias ?? Enumerable.Empty<DocPeaBibliografia>()).OrderBy(b => b.Orden).Select(b => new
                 {
                     b.TipoBibliografia,
                     b.CitaCompletaApa
                 }),
-                Practicas = pea.ActividadesPracticas.OrderBy(p => p.Orden).Select(p => new
+                Practicas = (pea.ActividadesPracticas ?? Enumerable.Empty<DocPeaActividadPractica>()).OrderBy(p => p.Orden).Select(p => new
                 {
                     p.NumeroPractica,
                     p.NombrePractica,
                     p.Caracterizacion,
                     p.DuracionHoras
                 }),
-                Prerrequisitos = pea.Prerrequisitos.OrderBy(pr => pr.Orden).Select(pr => new
+                Prerrequisitos = (pea.Prerrequisitos ?? Enumerable.Empty<DocPeaPrerequisito>()).OrderBy(pr => pr.Orden).Select(pr => new
                 {
                     pr.CodigoAsignatura,
                     pr.NombreAsignatura,
                     pr.Observacion
                 }),
-                Evaluaciones = pea.Evaluaciones.OrderBy(ev => ev.Orden).Select(ev => new
+                Evaluaciones = (pea.Evaluaciones ?? Enumerable.Empty<DocPeaEvaluacion>()).OrderBy(ev => ev.Orden).Select(ev => new
                 {
                     ev.Denominacion,
                     ev.TipoEvaluacion,
@@ -1212,20 +1240,22 @@ namespace dosier_infrastructure.Curriculum
                     CitaCompletaApa = b.CitaCompletaApa,
                     Orden = b.Orden
                 }).ToList(),
-                Observaciones = pea.Observaciones.OrderByDescending(o => o.FechaObservacion).Select(o => new PeaObservacionDto
-                {
-                    IdObservacion = o.IdObservacion,
-                    Uuid = o.Uuid,
-                    IdPea = o.IdPea,
-                    IdUsuarioObservador = o.IdUsuarioObservador,
-                    RolObservador = o.RolObservador,
-                    SeccionAfectada = o.SeccionAfectada,
-                    TextoObservacion = o.TextoObservacion,
-                    Estado = o.Estado,
-                    RespuestaDocente = o.RespuestaDocente,
-                    FechaObservacion = o.FechaObservacion,
-                    FechaResolucion = o.FechaResolucion
-                }).ToList(),
+                Observaciones = (pea.Estado == "Observado" || pea.Estado == "Corregido" || pea.Estado == "Aprobado")
+                    ? pea.Observaciones.OrderByDescending(o => o.FechaObservacion).Select(o => new PeaObservacionDto
+                    {
+                        IdObservacion = o.IdObservacion,
+                        Uuid = o.Uuid,
+                        IdPea = o.IdPea,
+                        IdUsuarioObservador = o.IdUsuarioObservador,
+                        RolObservador = o.RolObservador,
+                        SeccionAfectada = o.SeccionAfectada,
+                        TextoObservacion = o.TextoObservacion,
+                        Estado = o.Estado,
+                        RespuestaDocente = o.RespuestaDocente,
+                        FechaObservacion = o.FechaObservacion,
+                        FechaResolucion = o.FechaResolucion
+                    }).ToList()
+                    : new List<PeaObservacionDto>(),
                 Trazabilidades = pea.Trazabilidades.OrderByDescending(t => t.FechaTransicion).Select(t => new PeaTrazabilidadDto
                 {
                     IdTrazabilidad = t.IdTrazabilidad,
@@ -1991,7 +2021,7 @@ namespace dosier_infrastructure.Curriculum
                     FechaRevisadoAcad = p.FechaRevisadoAcad,
                     FirmaVicerrector = !string.IsNullOrEmpty(p.FirmaAprobadoVicerrector),
                     FechaAprobado = p.FechaAprobado,
-                    TotalObservacionesPendientes = p.Observaciones?.Count(o => o.Estado == "Pendiente") ?? 0
+                    TotalObservacionesPendientes = (p.Estado == "Observado") ? (p.Observaciones?.Count(o => o.Estado == "Pendiente") ?? 0) : 0
                 };
             }).ToList();
         }

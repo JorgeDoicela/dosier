@@ -590,15 +590,17 @@ namespace Dosier.Infrastructure.Common.Documents
                 }
             }
 
+            var firmasDb = await _context.DocDocumentoFirmas
+                .Where(f => (f.DocumentoUuid == instance.Uuid || f.DocumentoUuid == instance.EntityUuid) && f.EsValida)
+                .OrderBy(f => f.FechaFirma)
+                .ToListAsync(ct);
+
+            var lastFirma = firmasDb.LastOrDefault();
             bool isFileMissing = string.IsNullOrWhiteSpace(instance.FinalPdfPath) || !_storageService.FileExists(instance.FinalPdfPath);
+            bool isOutdated = lastFirma != null && (!instance.FinalPdfPath?.Contains(lastFirma.FirmaCode ?? "") ?? true);
 
-            if (isFileMissing)
+            if (isFileMissing || isOutdated)
             {
-                var firmasDb = await _context.DocDocumentoFirmas
-                    .Where(f => (f.DocumentoUuid == instance.Uuid || f.DocumentoUuid == instance.EntityUuid) && f.EsValida)
-                    .OrderBy(f => f.FechaFirma)
-                    .ToListAsync(ct);
-
                 if (firmasDb.Any())
                 {
                     Console.WriteLine($"[DOSIER Autosanación] Firmas activas detectadas para documento '{instance.Uuid}' ({instance.TemplateCode}). Regenerando PDF oficial...");
@@ -643,7 +645,7 @@ namespace Dosier.Infrastructure.Common.Documents
                             );
                         }
 
-                        var lastFirma = firmasDb.Last();
+                        lastFirma = firmasDb.Last();
                         var lastFirmaCode = lastFirma.FirmaCode ?? Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
                         var docHash = lastFirma.DocHash ?? "HASH-RESTORED";
                         var fileName = $"{instance.Uuid}_{lastFirmaCode}.pdf";

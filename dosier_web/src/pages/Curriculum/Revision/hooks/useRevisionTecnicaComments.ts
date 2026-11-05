@@ -136,7 +136,7 @@ export const useRevisionTecnicaComments = ({
 
             addToast(
                 "Observación Registrada",
-                `Se ha guardado la observación técnica en ${section}. El PEA pasa a estado Observado.`,
+                `Se ha guardado la observación técnica para ${section}.`,
                 "success"
             );
         } catch (err: any) {
