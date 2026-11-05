@@ -75,7 +75,21 @@ export interface RevokeSignatureDto {
 // ─────────────────────────────────────────────────────────────
 
 export const getSignatureProfile = (): Promise<UserSignatureProfileDto> =>
-    api.get('/signatures/profile').then(r => r.data);
+    api.get('/signatures/profile').then(r => {
+        const d = r.data || {};
+        const tipo = d.tipo_sello || d.tipoSello || 'completo';
+        const img = d.firma_imagen_b64 || d.firmaImagenB64;
+        const conf = d.es_configurado ?? d.esConfigurado ?? false;
+        return {
+            ...d,
+            tipoSello: tipo,
+            tipo_sello: tipo,
+            firmaImagenB64: img,
+            firma_imagen_b64: img,
+            esConfigurado: conf,
+            es_configurado: conf,
+        };
+    });
 
 export const updateSignatureProfile = (dto: UpdateSignatureProfileDto): Promise<UserSignatureProfileDto> => {
     const payload = {
@@ -86,7 +100,21 @@ export const updateSignatureProfile = (dto: UpdateSignatureProfileDto): Promise<
         tipo_sello: dto.tipoSello,
         tipoSello: dto.tipoSello
     };
-    return api.put('/signatures/profile', payload).then(r => r.data);
+    return api.put('/signatures/profile', payload).then(r => {
+        const d = r.data || {};
+        const tipo = d.tipo_sello || d.tipoSello || dto.tipoSello || 'completo';
+        const img = d.firma_imagen_b64 || d.firmaImagenB64 || dto.firmaImagenB64;
+        const conf = d.es_configurado ?? d.esConfigurado ?? true;
+        return {
+            ...d,
+            tipoSello: tipo,
+            tipo_sello: tipo,
+            firmaImagenB64: img,
+            firma_imagen_b64: img,
+            esConfigurado: conf,
+            es_configurado: conf,
+        };
+    });
 };
 
 export const signDocumentWithDosier = (dto: SignDocumentDto): Promise<SignatureResultDto> =>

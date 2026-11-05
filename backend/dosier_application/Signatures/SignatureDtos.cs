@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using dosier_domain.Signatures;
 
 namespace dosier_application.Signatures;
@@ -11,13 +12,28 @@ namespace dosier_application.Signatures;
 /// </summary>
 public class UserSignatureProfileDto
 {
+    [JsonPropertyName("id_usuario")]
     public int      IdUsuario       { get; init; }
+
+    [JsonPropertyName("es_configurado")]
     public bool     EsConfigurado   { get; init; }
+
+    [JsonPropertyName("firma_imagen_b64")]
     public string?  FirmaImagenB64  { get; init; }   // PNG en Base64
+
+    [JsonPropertyName("iniciales")]
     public string?  Iniciales       { get; init; }
+
+    [JsonPropertyName("cargo")]
     public string?  Cargo           { get; init; }
+
+    [JsonPropertyName("departamento")]
     public string?  Departamento    { get; init; }
+
+    [JsonPropertyName("tipo_sello")]
     public string   TipoSello       { get; init; } = "completo"; // 'completo' | 'solo_firma'
+
+    [JsonPropertyName("actualizado_en")]
     public DateTime ActualizadoEn   { get; init; }
 }
 
@@ -27,14 +43,21 @@ public class UserSignatureProfileDto
 public class UpdateSignatureProfileDto
 {
     /// <summary>PNG en Base64 de la firma dibujada por el usuario en el canvas.</summary>
+    [JsonPropertyName("firma_imagen_b64")]
     public string? FirmaImagenB64 { get; init; }
+
+    [JsonPropertyName("iniciales")]
     public string? Iniciales      { get; init; }
 
     /// <summary>Cargo institucional que aparecerá en el bloque visual del PDF.</summary>
+    [JsonPropertyName("cargo")]
     public string? Cargo          { get; init; }
+
+    [JsonPropertyName("departamento")]
     public string? Departamento   { get; init; }
 
     /// <summary>Estilo de presentación del sello: 'completo' (sello azul con QR) o 'solo_firma' (únicamente el trazo).</summary>
+    [JsonPropertyName("tipo_sello")]
     public string? TipoSello      { get; init; }
 }
 

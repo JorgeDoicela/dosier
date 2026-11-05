@@ -156,7 +156,7 @@ export const SignatureProfileCard: React.FC = () => {
                                 cargo={sig.profile?.cargo || 'Docente'}
                                 departamento={sig.profile?.departamento || 'Coordinación Académica'}
                                 cedula={userCi}
-                                firmaImagenB64={sig.profile?.firmaImagenB64}
+                                firmaImagenB64={sig.profile?.firmaImagenB64 || (sig.profile as any)?.firma_imagen_b64 || sig.firmaImagenB64}
                                 tipoPresentacion={(sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello) === 'solo_firma' ? 'solo_firma' : 'completo'}
                                 firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
                             />
