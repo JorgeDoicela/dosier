@@ -27,6 +27,7 @@ namespace dosier_infrastructure.Curriculum
         private readonly SignatureHashService _hashService;
         private readonly dosier_application.Common.IAppUrlService _appUrlService;
         private readonly IFirmaElectronicaService _firmaElectronicaService;
+        private readonly IServiceProvider _serviceProvider;
 
         public PeaService(
             DosierContext context,
@@ -34,7 +35,8 @@ namespace dosier_infrastructure.Curriculum
             IExpedienteCurricularService expedienteService,
             SignatureHashService hashService,
             dosier_application.Common.IAppUrlService appUrlService,
-            IFirmaElectronicaService firmaElectronicaService)
+            IFirmaElectronicaService firmaElectronicaService,
+            IServiceProvider serviceProvider)
         {
             _context = context;
             _academicContextResolver = academicContextResolver;
@@ -42,6 +44,7 @@ namespace dosier_infrastructure.Curriculum
             _hashService = hashService;
             _appUrlService = appUrlService;
             _firmaElectronicaService = firmaElectronicaService;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)
@@ -636,14 +639,30 @@ namespace dosier_infrastructure.Curriculum
             };
             _context.DocPeaTrazabilidades.Add(traza);
 
-            // 8. Sincronizar instancia documental para autosanación de PDF oficial firmado
+            // 8. Sincronizar instancia documental para autosanación y estampado inmediato del PDF firmado
             var docInstancia = await _context.DocumentInstances.FirstOrDefaultAsync(d => d.EntityUuid == pea.Uuid);
             if (docInstancia != null)
             {
                 docInstancia.SetFinalPdfPath(null);
-            }
+                await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
+                try
+                {
+                    var instanceService = (Dosier.Application.Common.Documents.IDocumentInstanceService?)_serviceProvider.GetService(typeof(Dosier.Application.Common.Documents.IDocumentInstanceService));
+                    if (instanceService != null)
+                    {
+                        await instanceService.ValidateStorageIntegrityAsync(docInstancia);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DOSIER PEA] Advertencia al autosanar y estampar PDF de PEA tras firma: {ex.Message}");
+                }
+            }
+            else
+            {
+                await _context.SaveChangesAsync();
+            }
 
             string verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");
 

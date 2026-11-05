@@ -9,6 +9,7 @@ namespace dosier_application.Curriculum.Dtos
         public string ActiveProvider { get; set; } = "deepseek";
         public string ActiveModel { get; set; } = "deepseek-chat";
         public string? ActiveBaseUrl { get; set; }
+        public string? ActiveReasoningEffort { get; set; }
         public string? MaskedApiKey { get; set; }
         public bool IsReady { get; set; }
     }
@@ -19,15 +20,24 @@ namespace dosier_application.Curriculum.Dtos
         public string? Model { get; set; }
         public string? BaseUrl { get; set; }
         public string? ApiKey { get; set; }
+        public string? ReasoningEffort { get; set; } // "low" | "medium" | "high"
         public string Scope { get; set; } = "user"; // "user" | "global"
+    }
+
+    public class PeaAiChatMessageDto
+    {
+        public string Role { get; set; } = "user"; // "user" | "assistant"
+        public string Content { get; set; } = string.Empty;
     }
 
     public class GeneratePeaDraftRequestDto
     {
         public string TargetSection { get; set; } = "all";
+        public List<string> TargetSections { get; set; } = new();
         public string? CustomInstructions { get; set; }
         public string? Provider { get; set; }
         public string? Model { get; set; }
+        public string? ReasoningEffort { get; set; } // "low" | "medium" | "high"
         public string? BaseUrlOverride { get; set; }
         public string? ApiKeyOverride { get; set; }
         public int? CurrentHorasCD { get; set; }
@@ -35,6 +45,18 @@ namespace dosier_application.Curriculum.Dtos
         public int? CurrentHorasTA { get; set; }
         public int? CurrentTotalHoras { get; set; }
         public List<PeaDraftUnidadDto>? CurrentUnidades { get; set; }
+        public string? CurrentObjetivo { get; set; }
+        public List<PeaDraftPrerrequisitoDto>? CurrentPrerrequisitos { get; set; }
+        public string? CurrentRdaCarrera { get; set; }
+        public string? CurrentResultadosAprendizaje { get; set; }
+        public string? CurrentMetodologiaEnsenanza { get; set; }
+        public string? CurrentRecursosDidacticos { get; set; }
+        public List<PeaDraftActividadPracticaDto>? CurrentActividadesPracticas { get; set; }
+        public List<PeaDraftEvaluacionDto>? CurrentEvaluaciones { get; set; }
+        public List<PeaDraftBibliografiaDto>? CurrentBibliografias { get; set; }
+        public string? CurrentBibliografiaBasica { get; set; }
+        public string? CurrentBibliografiaConsulta { get; set; }
+        public List<PeaAiChatMessageDto> ConversationHistory { get; set; } = new();
     }
 
     public class ImportPeaDocumentRequestDto
@@ -129,6 +151,11 @@ namespace dosier_application.Curriculum.Dtos
         public int GeneratedHorasTA { get; set; }
         public int GeneratedTotalHoras { get; set; }
         public bool IsHoursExactMatch { get; set; }
+        public bool IsBloomVerbValid { get; set; } = true;
+        public string? BloomVerbDetected { get; set; }
+        public bool ArePracticesCompliant { get; set; } = true;
+        public bool IsBibliographyCompliant { get; set; } = true;
+        public List<string> ComplianceNotes { get; set; } = new();
         public List<string> GeneratedSections { get; set; } = new();
     }
 }

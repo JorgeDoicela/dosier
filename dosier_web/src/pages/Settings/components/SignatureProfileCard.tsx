@@ -344,92 +344,63 @@ export const SignatureProfileCard: React.FC = () => {
 
                 {/* ── MODAL CENTRADO DE CONFIRMACIÓN CON VISTA DE SELLO COMPLETO ─────────────────────────────────── */}
                 {showConfirmModal && createPortal(
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
                         <div
                             className="absolute inset-0 cursor-pointer"
                             onClick={() => setShowConfirmModal(false)}
                             aria-hidden="true"
                         />
 
-                        <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl flex flex-col z-10 animate-in zoom-in-95 duration-200 shadow-2xl overflow-hidden">
-                            {/* Cabecera */}
-                            <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                        <div
+                            className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl flex flex-col z-10 animate-in zoom-in-95 duration-200 shadow-2xl overflow-hidden"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* Cabecera Institucional Sobria */}
+                            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                                 <div className="flex items-center gap-3">
-                                    <span className="px-2.5 py-1 bg-surface text-text-dim border border-border-thin text-[10px] font-mono uppercase font-bold rounded-md">
-                                        FIRMA-DIGITAL
-                                    </span>
-                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#0070f3]">
-                                        <span className="w-2 h-2 rounded-full bg-[#0070f3] animate-pulse" />
-                                        <span>Verificación de Sello</span>
+                                    <ShieldCheck className="w-5 h-5 text-[#0070f3] dark:text-blue-400 shrink-0" />
+                                    <div>
+                                        <h2 className="text-sm font-bold text-zinc-900 dark:text-white">
+                                            Confirmar Firma y Sello Institucional
+                                        </h2>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                            Verifique el estampado oficial para la firma de PEA y actas del ISTPET
+                                        </p>
                                     </div>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors cursor-pointer"
+                                    className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                                 >
                                     <X size={18} />
                                 </button>
                             </div>
 
-                            {/* Contenido con Bento Cards */}
-                            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 bg-white dark:bg-zinc-950 text-left">
-                                <div className="space-y-2">
-                                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-main leading-tight font-sans">
-                                        Confirmar Firma y Sello Institucional
-                                    </h2>
-                                    <p className="text-xs sm:text-sm text-text-dim leading-relaxed font-medium">
-                                        A continuación se presenta cómo quedará estampado su sello oficial en los Programas de Estudio de la Asignatura (PEA) y actas del ISTPET. Verifique los datos antes de activar.
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="p-4 sm:p-5 rounded-xl border border-border-thin bg-bg-deep space-y-1.5">
-                                        <div className="text-xs font-bold text-text-dim uppercase tracking-wider">
-                                            Cargo Institucional
-                                        </div>
-                                        <div className="text-base sm:text-lg font-bold text-text-main font-sans">
-                                            {sig.cargo.trim()}
-                                        </div>
-                                    </div>
-                                    <div className="p-4 sm:p-5 rounded-xl border border-border-thin bg-bg-deep space-y-1.5">
-                                        <div className="text-xs font-bold text-text-dim uppercase tracking-wider">
-                                            Departamento / Unidad
-                                        </div>
-                                        <div className="text-base sm:text-lg font-bold text-text-main font-sans truncate" title={sig.departamento.trim()}>
-                                            {sig.departamento.trim()}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Previsualización del Sello Institucional */}
-                                <div className="space-y-3">
-                                    <div className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider">
-                                        Sello Institucional Oficial (Vista Previa en Vivo)
-                                    </div>
-                                    <DocumentStampPreview
-                                        nombreFirmante={sig.autoText || userName}
-                                        cargo={sig.cargo.trim()}
-                                        departamento={sig.departamento.trim()}
-                                        cedula={userCi}
-                                        firmaImagenB64={sig.firmaImagenB64}
-                                    />
-                                </div>
+                            {/* Contenido: Previsualización Directa y Fiel del Sello */}
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white dark:bg-zinc-950 text-left">
+                                <DocumentStampPreview
+                                    nombreFirmante={sig.autoText || userName}
+                                    cargo={sig.cargo.trim()}
+                                    departamento={sig.departamento.trim()}
+                                    cedula={userCi}
+                                    firmaImagenB64={sig.firmaImagenB64}
+                                />
                             </div>
 
                             {/* Pie de página con botones */}
-                            <div className="p-6 sm:p-8 border-t border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex gap-4">
+                            <div className="px-6 py-4 border-t border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-end gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="flex-1 px-5 py-3 rounded-xl border border-border-thin bg-surface hover:bg-bg-deep text-xs sm:text-sm font-semibold text-text-dim hover:text-text-main transition-colors cursor-pointer shadow-2xs"
+                                    className="px-4 py-2.5 rounded-xl border border-border-thin bg-surface hover:bg-bg-deep text-xs sm:text-sm font-semibold text-text-dim hover:text-text-main transition-colors cursor-pointer shadow-2xs"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleConfirmSave}
-                                    className="flex-1 px-5 py-3 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
+                                    className="px-5 py-2.5 bg-[#0070f3] hover:bg-[#005bb5] text-white rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-2xs"
                                 >
                                     Confirmar y Activar
                                 </button>

@@ -337,11 +337,7 @@ export const DocumentWorkspace: React.FC = () => {
 
     const handleCloseEditor = () => {
         if (templateCode === 'PEA_OFICIAL' || activeDocument === 'PEA_OFICIAL') {
-            if (window.history.state && window.history.state.idx > 0) {
-                navigate(-1);
-            } else {
-                navigate(urlPrefix ? `${urlPrefix}/proyectos?tab=supervision-pea` : '/documentacion/proyectos?tab=supervision-pea');
-            }
+            navigate(urlPrefix || '/documentacion/mis-proyectos');
             return;
         }
         setActiveDocument(null);

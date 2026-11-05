@@ -123,7 +123,12 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         }
     }, [resolvedPeaUuid, formData]);
 
-    const handleTriggerAiGeneration = useCallback(async (targetSec: string, instructions: string) => {
+    const handleTriggerAiGeneration = useCallback(async (
+        targetSec: string | string[] = 'all',
+        instructions: string = '',
+        customModel?: string,
+        history?: Array<{ role: 'user' | 'assistant'; content: string }>
+    ) => {
         if (!resolvedPeaUuid) {
             addToast('Identificador requerido', 'Guarde primero el documento para habilitar la generación.', 'warning');
             return;
@@ -146,6 +151,61 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                 horasTA: Number(u.horasTA ?? u.HorasTA ?? 0)
             })).filter(u => u.titulo || u.contenidos);
 
+            // Snapshot completo del estado actual del PEA en el editor
+            const cleanText = (val: any) => {
+                if (typeof val !== 'string') return undefined;
+                const trimmed = val.trim();
+                const stripped = trimmed.replace(/<[^>]+>/g, '').trim();
+                return stripped.length > 0 ? trimmed : undefined;
+            };
+
+            const currentObjetivo = cleanText(formData?.ObjetivoAsignatura ?? formData?.objetivo_asignatura);
+            const currentRdaCarrera = cleanText(formData?.RdaCarrera ?? formData?.rda_carrera);
+            const currentResultadosAprendizaje = cleanText(formData?.ResultadosAprendizaje ?? formData?.resultados_aprendizaje);
+            const currentMetodologiaEnsenanza = cleanText(formData?.MetodologiaEnsenanza ?? formData?.metodologia_ensenanza);
+            const currentRecursosDidacticos = cleanText(formData?.RecursosDidacticos ?? formData?.recursos_didacticos);
+            const currentBibliografiaBasica = cleanText(formData?.BibliografiaBasica ?? formData?.bibliografia_basica);
+            const currentBibliografiaConsulta = cleanText(formData?.BibliografiaConsulta ?? formData?.bibliografia_consulta);
+
+            const rawPrereqs: any[] = Array.isArray(formData?.Prerrequisitos) ? formData.Prerrequisitos : [];
+            const currentPrerrequisitos = rawPrereqs
+                .map((p: any) => ({
+                    asignatura: String(p.asignatura ?? p.nombre_asignatura ?? p.Asignatura ?? p[0] ?? '').trim(),
+                    observacion: String(p.observacion ?? p.observaciones ?? p.Observacion ?? p[1] ?? '').trim()
+                }))
+                .filter(p => p.asignatura);
+
+            const rawPracticas: any[] = Array.isArray(formData?.ActividadesPracticas) ? formData.ActividadesPracticas : [];
+            const currentActividadesPracticas = rawPracticas
+                .map((p: any, idx: number) => ({
+                    unidad: Number(p.unidad ?? p.Unidad ?? idx + 1),
+                    nombre: String(p.nombre ?? p.Nombre ?? p.nombre_practica ?? '').trim(),
+                    horas: Number(p.horas ?? p.Horas ?? 0),
+                    escenario: String(p.escenario ?? p.Escenario ?? '').trim(),
+                    producto: String(p.producto ?? p.Producto ?? '').trim()
+                }))
+                .filter(p => p.nombre);
+
+            const rawEvals: any[] = Array.isArray(formData?.Evaluaciones) ? formData.Evaluaciones : [];
+            const currentEvaluaciones = rawEvals
+                .map((e: any) => ({
+                    nota: String(e.nota ?? e.Nota ?? '').trim(),
+                    tipo: String(e.tipo ?? e.Tipo ?? '').trim(),
+                    calificacion: Number(e.calificacion ?? e.Calificacion ?? 10)
+                }))
+                .filter(e => e.nota || e.tipo);
+
+            const rawBibs: any[] = Array.isArray(formData?.Bibliografias) ? formData.Bibliografias : [];
+            const currentBibliografias = rawBibs
+                .map((b: any) => ({
+                    tipoBibliografia: (b.tipoBibliografia ?? b.tipo_bibliografia ?? 'Basica') as 'Basica' | 'Consulta',
+                    autor: String(b.autor ?? b.Autor ?? '').trim(),
+                    tituloLibro: String(b.tituloLibro ?? b.titulo_libro ?? b.titulo ?? '').trim(),
+                    editorialCiudad: String(b.editorialCiudad ?? b.editorial_ciudad ?? '').trim(),
+                    citaCompletaApa: String(b.citaCompletaApa ?? b.cita_completa_apa ?? '').trim()
+                }))
+                .filter(b => b.citaCompletaApa || b.tituloLibro);
+
             const rawHorasCD = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
             const rawHorasAPE = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
             const rawHorasTA = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
@@ -156,24 +216,42 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
             const horasAPE = isUnconfiguredSplit ? Math.floor(totalHoras / 3) : rawHorasAPE;
             const horasTA = isUnconfiguredSplit ? (totalHoras - horasCD - horasAPE) : rawHorasTA;
 
+            const targetSectionStr = Array.isArray(targetSec) ? (targetSec.length === 9 || targetSec.includes('all') ? 'all' : targetSec.join(',')) : targetSec;
+            const targetSectionsArr = Array.isArray(targetSec) ? targetSec : (targetSec === 'all' ? undefined : [targetSec]);
+
             const draft = await generatePeaAiDraft(resolvedPeaUuid, {
-                targetSection: targetSec,
+                targetSection: targetSectionStr,
+                targetSections: targetSectionsArr,
                 customInstructions: instructions.trim() || undefined,
                 provider: status.activeProvider,
-                model: status.activeModel,
+                model: customModel || status.activeModel,
+                reasoningEffort: status.activeReasoningEffort || undefined,
                 baseUrlOverride: status.activeBaseUrl || undefined,
                 currentHorasCD: horasCD > 0 ? horasCD : undefined,
                 currentHorasAPE: horasAPE > 0 ? horasAPE : undefined,
                 currentHorasTA: horasTA > 0 ? horasTA : undefined,
                 currentTotalHoras: totalHoras > 0 ? totalHoras : undefined,
-                currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined
+                currentUnidades: currentUnidades.length > 0 ? currentUnidades : undefined,
+                currentObjetivo,
+                currentPrerrequisitos: currentPrerrequisitos.length > 0 ? currentPrerrequisitos : undefined,
+                currentRdaCarrera,
+                currentResultadosAprendizaje,
+                currentMetodologiaEnsenanza,
+                currentRecursosDidacticos,
+                currentActividadesPracticas: currentActividadesPracticas.length > 0 ? currentActividadesPracticas : undefined,
+                currentEvaluaciones: currentEvaluaciones.length > 0 ? currentEvaluaciones : undefined,
+                currentBibliografias: currentBibliografias.length > 0 ? currentBibliografias : undefined,
+                currentBibliografiaBasica,
+                currentBibliografiaConsulta,
+                conversationHistory: history && history.length > 0 ? history : undefined
             });
 
             setAiGeneratedDraft(draft);
-            setIsAiProposalModalOpen(true);
+            return draft;
         } catch (err: any) {
             const msg = err?.response?.data?.message || err?.response?.data || err?.message || 'No se pudo generar el borrador curricular.';
             addToast('Error en Generación IA', typeof msg === 'string' ? msg : 'Verifique su API Key y conexión.', 'error');
+            throw err;
         } finally {
             setIsGeneratingAi(false);
         }
@@ -504,8 +582,23 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 onOpenAiModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
                                                 onTriggerAiGeneration={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerAiGeneration : undefined}
                                                 onOpenAiConfigModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
+                                                onApplyStructuredDraft={templateCode === 'PEA_OFICIAL' && !readOnly ? (patch) => {
+                                                    if (onApplyStructuredDraft) {
+                                                        onApplyStructuredDraft(patch);
+                                                    } else if (onUpdateField) {
+                                                        Object.entries(patch).forEach(([key, val]) => onUpdateField(key, val));
+                                                    }
+                                                    addToast(
+                                                        'Propuesta IA Aplicada',
+                                                        'Se han transferido los cambios generados al editor.',
+                                                        'success'
+                                                    );
+                                                } : undefined}
                                                 isGeneratingAi={isGeneratingAi}
                                                 aiConfigVersion={aiConfigVersion}
+                                                instanceUuid={documentUuid}
+                                                resolvedPeaUuid={resolvedPeaUuid}
+                                                formData={formData}
                                             />
                                         </div>
                                     </div>

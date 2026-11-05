@@ -72,6 +72,9 @@ namespace dosier_api.Controllers
             var instance = await _instanceService.GetByUuidAsync(uuid, ct);
             if (instance == null) return NotFound(new { message = $"Documento '{uuid}' no encontrado." });
 
+            // Autosanar y regenerar con sellos visuales si existen firmas registradas
+            await _instanceService.ValidateStorageIntegrityAsync(instance, ct);
+
             var storage = HttpContext.RequestServices.GetRequiredService<Dosier.Infrastructure.Common.Storage.IFileStorageService>();
 
             if (!string.IsNullOrEmpty(instance.FinalPdfPath) && storage.FileExists(instance.FinalPdfPath))

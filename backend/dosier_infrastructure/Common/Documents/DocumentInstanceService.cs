@@ -563,7 +563,7 @@ namespace Dosier.Infrastructure.Common.Documents
             return created;
         }
 
-        private async Task ValidateStorageIntegrityAsync(DocumentInstance instance, CancellationToken ct)
+        public async Task ValidateStorageIntegrityAsync(DocumentInstance instance, CancellationToken ct = default)
         {
             // 0. Detectar contaminación cruzada: Si otra instancia de diferente plantilla para la misma entidad tiene exactamente la misma ruta de PDF
             if (!string.IsNullOrWhiteSpace(instance.EntityUuid) && !string.IsNullOrWhiteSpace(instance.FinalPdfPath))
@@ -581,7 +581,7 @@ namespace Dosier.Infrastructure.Common.Documents
 
                     // Si no tiene firmas propias en DocDocumentoFirmas, la limpieza termina aquí
                     var tieneFirmasPropias = await _context.DocDocumentoFirmas
-                        .AnyAsync(f => f.DocumentoUuid == instance.Uuid && f.EsValida, ct);
+                        .AnyAsync(f => (f.DocumentoUuid == instance.Uuid || f.DocumentoUuid == instance.EntityUuid) && f.EsValida, ct);
 
                     if (!tieneFirmasPropias)
                     {

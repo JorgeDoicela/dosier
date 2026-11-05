@@ -54,7 +54,7 @@ export const useBuilderPdfAndSign = ({
         return { codigo: 'Docente', label: 'Docente Elaborador' };
     };
 
-    const resolvePeaId = async (): Promise<number | null> => {
+    const resolvePeaId = async (): Promise<number | string | null> => {
         const directId = Number(formData?.IdPea || formData?.id_pea || formData?.peaData?.id_pea || formData?.peaData?.IdPea || 0);
         if (directId > 0) return directId;
 
@@ -64,7 +64,9 @@ export const useBuilderPdfAndSign = ({
                 const res = await getPeaByUuid(targetUuid);
                 const foundId = Number(res?.id_pea || res?.idPea || 0);
                 if (foundId > 0) return foundId;
+                if (res?.uuid) return res.uuid;
             } catch {}
+            if (targetUuid.includes('-')) return targetUuid;
         }
         return null;
     };
@@ -173,24 +175,25 @@ export const useBuilderPdfAndSign = ({
 
             if (isPea) {
                 const idPea = await resolvePeaId();
-                if (idPea) {
-                    const base64Cert = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            const result = reader.result as string;
-                            resolve(result.includes(',') ? result.split(',')[1] : result);
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(signatureCertFile);
-                    });
-
-                    await firmarPea(idPea, {
-                        tipoFirma: 'FirmaEC',
-                        certificadoP12Base64: base64Cert,
-                        contraseniaP12: signaturePassword,
-                        rolFirmante: peaRoleInfo.codigo as any
-                    });
+                if (!idPea) {
+                    throw new Error('No se pudo resolver el identificador oficial del PEA para firmar.');
                 }
+                const base64Cert = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = reader.result as string;
+                        resolve(result.includes(',') ? result.split(',')[1] : result);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(signatureCertFile);
+                });
+
+                await firmarPea(idPea, {
+                    tipoFirma: 'FirmaEC',
+                    certificadoP12Base64: base64Cert,
+                    contraseniaP12: signaturePassword,
+                    rolFirmante: peaRoleInfo.codigo as any
+                });
             }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;
@@ -296,13 +299,14 @@ export const useBuilderPdfAndSign = ({
 
             if (isPea) {
                 const idPea = await resolvePeaId();
-                if (idPea) {
-                    await firmarPea(idPea, {
-                        tipoFirma: 'DOSIER',
-                        password: institutionalPassword,
-                        rolFirmante: peaRoleInfo.codigo as any
-                    });
+                if (!idPea) {
+                    throw new Error('No se pudo resolver el identificador oficial del PEA para firmar.');
                 }
+                await firmarPea(idPea, {
+                    tipoFirma: 'DOSIER',
+                    password: institutionalPassword,
+                    rolFirmante: peaRoleInfo.codigo as any
+                });
             }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;

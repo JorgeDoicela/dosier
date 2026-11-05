@@ -29,6 +29,7 @@ import type {
     PeriodoAcademicoDto
 } from '../../services/docenteAsignaturasService';
 import { crearPeaDesdeAsignacion } from '../../services/peaService';
+import { configuracionService } from '../../services/configuracionService';
 
 export const MisAsignaturasPage: React.FC = () => {
     const navigate = useNavigate();
@@ -45,7 +46,23 @@ export const MisAsignaturasPage: React.FC = () => {
     const [search, setSearch] = useState('');
     const [filterEstado, setFilterEstado] = useState<string>('todos');
     const [filterCarrera, setFilterCarrera] = useState<string>('todas');
+    const [filterModalidad, setFilterModalidad] = useState<string>('todas');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+    // Catálogo de estados dinámicos desde la BD (tabla doc_config_workflow)
+    const [workflowEstados, setWorkflowEstados] = useState<Array<{ estado: string; etiqueta?: string; color?: string }>>([]);
+
+    useEffect(() => {
+        configuracionService.getWorkflowEstados()
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setWorkflowEstados(data);
+                }
+            })
+            .catch(err => {
+                console.warn('[DOSIER] No se pudieron cargar estados del workflow desde BD:', err);
+            });
+    }, []);
 
     // Estado transaccional por asignación
     const [creatingPeaId, setCreatingPeaId] = useState<number | null>(null);
@@ -182,6 +199,32 @@ export const MisAsignaturasPage: React.FC = () => {
         navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
     };
 
+    // Diccionario dinámico de etiquetas institucionales con fallback a doc_config_workflow
+    const getEstadoLabel = useCallback((estado: string): string => {
+        if (!estado) return 'Desconocido';
+
+        // 1. Buscar coincidencia en la tabla doc_config_workflow de la BD
+        const dbMatch = workflowEstados.find(
+            w => w.estado?.toLowerCase() === estado.toLowerCase()
+        );
+        if (dbMatch?.etiqueta) return dbMatch.etiqueta;
+
+        // 2. Diccionario normativo institucional oficial
+        const labels: Record<string, string> = {
+            'NoIniciado': 'No Iniciado',
+            'Borrador': 'Borrador',
+            'EnRevision': 'En Revisión',
+            'Observado': 'Con Observaciones',
+            'Corregido': 'Corregido',
+            'RevisadoCoord': 'Aval de Carrera',
+            'RevisadoAcad': 'Aval Académico',
+            'Aprobado': 'Aprobado Oficial',
+            'Publicado': 'Publicado',
+            'Rechazado': 'Rechazado'
+        };
+        return labels[estado] || estado;
+    }, [workflowEstados]);
+
     // Lista única de carreras para filtro
     const carrerasDisponibles = useMemo(() => {
         const unique = new Set<string>();
@@ -191,90 +234,140 @@ export const MisAsignaturasPage: React.FC = () => {
         return Array.from(unique).sort();
     }, [materias]);
 
+    // Lista única de modalidades para filtro
+    const modalidadesDisponibles = useMemo(() => {
+        const unique = new Set<string>();
+        materias.forEach(m => {
+            const mod = m.nombre_modalidad?.trim() || 'Presencial';
+            unique.add(mod);
+        });
+        return Array.from(unique).sort();
+    }, [materias]);
+
+    // Lista única y dinámica de estados presentes en las asignaturas asignadas
+    const estadosDisponibles = useMemo(() => {
+        const unique = new Set<string>();
+        materias.forEach(m => {
+            if (m.estado_pea) unique.add(m.estado_pea);
+        });
+        return Array.from(unique)
+            .map(estado => ({
+                value: estado,
+                label: getEstadoLabel(estado)
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [materias, getEstadoLabel]);
+
+    // Resetear filtros si la selección previa ya no existe en el conjunto disponible
+    useEffect(() => {
+        if (filterCarrera !== 'todas' && !carrerasDisponibles.includes(filterCarrera)) {
+            setFilterCarrera('todas');
+        }
+    }, [carrerasDisponibles, filterCarrera]);
+
+    useEffect(() => {
+        if (filterModalidad !== 'todas' && !modalidadesDisponibles.includes(filterModalidad)) {
+            setFilterModalidad('todas');
+        }
+    }, [modalidadesDisponibles, filterModalidad]);
+
+    useEffect(() => {
+        if (filterEstado !== 'todos' && !estadosDisponibles.some(e => e.value.toLowerCase() === filterEstado.toLowerCase())) {
+            setFilterEstado('todos');
+        }
+    }, [estadosDisponibles, filterEstado]);
+
     // Filtrado en vivo
     const materiasFiltradas = useMemo(() => {
         return materias.filter(m => {
+            const modNombre = m.nombre_modalidad?.trim() || 'Presencial';
+            const estadoLabel = getEstadoLabel(m.estado_pea || '');
+
             const matchesSearch =
                 m.nombre_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
                 m.codigo_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
                 m.nombre_carrera?.toLowerCase().includes(search.toLowerCase()) ||
-                m.paralelo?.toLowerCase().includes(search.toLowerCase());
+                m.paralelo?.toLowerCase().includes(search.toLowerCase()) ||
+                modNombre.toLowerCase().includes(search.toLowerCase()) ||
+                estadoLabel.toLowerCase().includes(search.toLowerCase());
 
             const matchesEstado =
-                filterEstado === 'todos' ? true :
-                filterEstado === 'pendientes' ? ['NoIniciado', 'Borrador', 'Corregido'].includes(m.estado_pea) :
-                filterEstado === 'revision' ? ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(m.estado_pea) :
-                filterEstado === 'observados' ? m.estado_pea === 'Observado' :
-                filterEstado === 'aprobados' ? m.estado_pea === 'Aprobado' : true;
+                filterEstado === 'todos' ||
+                m.estado_pea?.toLowerCase() === filterEstado.toLowerCase();
 
             const matchesCarrera = filterCarrera === 'todas' || m.nombre_carrera === filterCarrera;
 
-            return matchesSearch && matchesEstado && matchesCarrera;
+            const matchesModalidad =
+                filterModalidad === 'todas' ||
+                modNombre.toLowerCase() === filterModalidad.toLowerCase();
+
+            return matchesSearch && matchesEstado && matchesCarrera && matchesModalidad;
         });
-    }, [materias, search, filterEstado, filterCarrera]);
+    }, [materias, search, filterEstado, filterCarrera, filterModalidad, getEstadoLabel]);
 
     const renderEstadoBadge = (estado: string) => {
+        const label = getEstadoLabel(estado);
         switch (estado) {
             case 'NoIniciado':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
                         <Clock className="w-3 h-3 text-zinc-400" />
-                        No Iniciado
+                        {label}
                     </span>
                 );
             case 'Borrador':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300">
                         <FileText className="w-3 h-3 text-blue-500" />
-                        Borrador
+                        {label}
                     </span>
                 );
             case 'EnRevision':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
                         <Clock className="w-3 h-3 text-amber-500" />
-                        En Revisión
+                        {label}
                     </span>
                 );
             case 'Observado':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300">
                         <AlertCircle className="w-3 h-3 text-red-500" />
-                        Con Observaciones
+                        {label}
                     </span>
                 );
             case 'Corregido':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
                         <CheckCircle2 className="w-3 h-3 text-purple-500" />
-                        Corregido
+                        {label}
                     </span>
                 );
             case 'RevisadoCoord':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
                         <Award className="w-3 h-3 text-cyan-500" />
-                        Aval de Carrera
+                        {label}
                     </span>
                 );
             case 'RevisadoAcad':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
                         <Shield className="w-3 h-3 text-indigo-500" />
-                        Aval Académico
+                        {label}
                     </span>
                 );
             case 'Aprobado':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
                         <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        Aprobado Oficial
+                        {label}
                     </span>
                 );
             default:
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-                        {estado}
+                        {label}
                     </span>
                 );
         }
@@ -328,44 +421,62 @@ export const MisAsignaturasPage: React.FC = () => {
 
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
                     {carrerasDisponibles.length > 1 && (
-                        <select
-                            value={filterCarrera}
-                            onChange={e => setFilterCarrera(e.target.value)}
-                            className="text-xs py-2 px-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 focus:outline-none"
-                        >
-                            <option value="todas">Todas las Carreras</option>
-                            {carrerasDisponibles.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
+                        <div className="w-48 shrink-0">
+                            <GeistSelect
+                                value={filterCarrera}
+                                onChange={val => setFilterCarrera(String(val))}
+                                options={[
+                                    { value: 'todas', label: 'Todas las Carreras' },
+                                    ...carrerasDisponibles.map(c => ({ value: c, label: c }))
+                                ]}
+                                placeholder="Carrera..."
+                            />
+                        </div>
                     )}
 
-                    <div className="inline-flex p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-xs font-medium">
+                    {modalidadesDisponibles.length > 1 && (
+                        <div className="w-44 shrink-0">
+                            <GeistSelect
+                                value={filterModalidad}
+                                onChange={val => setFilterModalidad(String(val))}
+                                options={[
+                                    { value: 'todas', label: 'Todas las Modalidades' },
+                                    ...modalidadesDisponibles.map(m => ({ value: m, label: m }))
+                                ]}
+                                placeholder="Modalidad..."
+                            />
+                        </div>
+                    )}
+
+                    {estadosDisponibles.length > 0 && (
+                        <div className="w-44 shrink-0">
+                            <GeistSelect
+                                value={filterEstado}
+                                onChange={val => setFilterEstado(String(val))}
+                                options={[
+                                    { value: 'todos', label: 'Todos los Estados' },
+                                    ...estadosDisponibles
+                                ]}
+                                placeholder="Estado del PEA..."
+                            />
+                        </div>
+                    )}
+
+                    {(search || filterCarrera !== 'todas' || filterModalidad !== 'todas' || filterEstado !== 'todos') && (
                         <button
-                            onClick={() => setFilterEstado('todos')}
-                            className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${filterEstado === 'todos' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
+                            type="button"
+                            onClick={() => {
+                                setSearch('');
+                                setFilterCarrera('todas');
+                                setFilterModalidad('todas');
+                                setFilterEstado('todos');
+                            }}
+                            className="text-xs px-2.5 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors cursor-pointer shrink-0"
+                            title="Restablecer filtros"
                         >
-                            Todos
+                            Limpiar
                         </button>
-                        <button
-                            onClick={() => setFilterEstado('pendientes')}
-                            className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${filterEstado === 'pendientes' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
-                        >
-                            Pendientes
-                        </button>
-                        <button
-                            onClick={() => setFilterEstado('revision')}
-                            className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${filterEstado === 'revision' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
-                        >
-                            Revisión
-                        </button>
-                        <button
-                            onClick={() => setFilterEstado('aprobados')}
-                            className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${filterEstado === 'aprobados' ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'}`}
-                        >
-                            Aprobados
-                        </button>
-                    </div>
+                    )}
 
                     {/* Selector de Modo: Cuadros vs Lista */}
                     <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
@@ -410,7 +521,7 @@ export const MisAsignaturasPage: React.FC = () => {
                         No se encontraron asignaturas
                     </h3>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
-                        {search || filterEstado !== 'todos' || filterCarrera !== 'todas'
+                        {search || filterEstado !== 'todos' || filterCarrera !== 'todas' || filterModalidad !== 'todas'
                             ? 'No hay materias que coincidan con los filtros aplicados en el período actual.'
                             : 'No existen materias asignadas para su perfil docente en este período lectivo.'}
                     </p>

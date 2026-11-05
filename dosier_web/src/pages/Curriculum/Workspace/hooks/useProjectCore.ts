@@ -175,6 +175,26 @@ export function useProjectCore() {
                     (isDocenteAutor && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección' || pea.estado === 'NoIniciado' || !pea.estado))
                 );
 
+                const peaState = pea.estado || 'Borrador';
+                const userRolesList = user?.roles || [];
+                const isCoordCarrera = userRolesList.includes('DOSIER_COORD_CARRERA') || user?.role === 'DOSIER_COORD_CARRERA';
+                const isCoordAcad = userRolesList.includes('DOSIER_COORD_ACAD') || user?.role === 'DOSIER_COORD_ACAD';
+                const isVicerrector = userRolesList.includes('DOSIER_VICERRECTOR') || user?.role === 'DOSIER_VICERRECTOR';
+                const isDocente = isDocenteAutor || isDocenteRole;
+
+                let canSignPea = false;
+                if (peaState === 'Borrador' || peaState === 'Observado' || peaState === 'Corregido' || peaState === 'En Corrección' || peaState === 'NoIniciado') {
+                    canSignPea = Boolean(isDocente || isAdmin);
+                } else if (peaState === 'EnRevision') {
+                    canSignPea = Boolean(isCoordCarrera || isAdmin);
+                } else if (peaState === 'RevisadoCoord') {
+                    canSignPea = Boolean(isCoordAcad || isAdmin);
+                } else if (peaState === 'RevisadoAcad') {
+                    canSignPea = Boolean(isVicerrector || isAdmin);
+                } else {
+                    canSignPea = false;
+                }
+
                 projectData = {
                     id: pea.codigo_asignatura || pea.codigoAsignatura || `PEA-${pea.id_pea || pea.idPea || '001'}`,
                     uuid: pea.uuid || resolvedProjectUuid,
@@ -186,7 +206,7 @@ export function useProjectCore() {
                     esParticipante: true,
                     puedeEditar: canEditPea,
                     puedeSolicitarCambioEquipo: false,
-                    puedeFirmar: true,
+                    puedeFirmar: canSignPea,
                     puntajeEvaluacion: null,
                     grupoInvestigacion: '',
                     grupoInvestigacionUuid: '',

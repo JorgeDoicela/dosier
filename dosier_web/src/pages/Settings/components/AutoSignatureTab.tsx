@@ -119,19 +119,28 @@ export const AutoSignatureTab: React.FC<AutoSignatureTabProps> = ({
             <div className="sig-form-group font-styles-panel">
                 <label>Estilo de Letra Manuscrita</label>
                 <div className="sig-fonts-grid">
-                    {FONTS.map((font) => (
-                        <button
-                            key={font.id}
-                            type="button"
-                            className={`sig-font-option-btn ${selectedFont === font.id ? 'active' : ''}`}
-                            onClick={() => onFontChange(font.id)}
-                        >
-                            <span className="sig-font-option-label">{font.label}</span>
-                            <span className={`sig-font-option-preview ${font.fontClass}`}>
-                                {autoText.split(' ')[0] || 'Firma'}
-                            </span>
-                        </button>
-                    ))}
+                    {FONTS.map((font) => {
+                        const words = autoText.trim().split(/\s+/).filter(Boolean);
+                        const previewText = words.length === 0
+                            ? 'Firma'
+                            : words.length === 1
+                                ? words[0]
+                                : `${words[0]} ${words[1]}`;
+
+                        return (
+                            <button
+                                key={font.id}
+                                type="button"
+                                className={`sig-font-option-btn ${selectedFont === font.id ? 'active' : ''}`}
+                                onClick={() => onFontChange(font.id)}
+                            >
+                                <span className="sig-font-option-label">{font.label}</span>
+                                <span className={`sig-font-option-preview ${font.fontClass}`}>
+                                    {previewText}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </div>

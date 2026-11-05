@@ -15,6 +15,7 @@ export interface GeistSelectProps {
     placeholder?: string;
     disabled?: boolean;
     readOnly?: boolean;
+    size?: 'sm' | 'md';
     className?: string;
     onChange?: (val: string | number) => void;
     onFocus?: () => void;
@@ -30,6 +31,7 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
     placeholder = 'Seleccione una opción...',
     disabled = false,
     readOnly = false,
+    size = 'md',
     className = '',
     onChange,
     onFocus,
@@ -219,24 +221,25 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
                 disabled={disabled || readOnly}
                 title={displayLabel}
                 className={`
-                    w-full min-h-[38px] px-3 py-2 text-xs rounded-lg border border-border-thin bg-surface text-text-main shadow-2xs
+                    w-full rounded-lg border border-border-thin bg-surface text-text-main shadow-2xs
                     flex items-center justify-between text-left transition-all duration-200 outline-none
+                    ${size === 'sm' ? 'min-h-[28px] h-7 px-2.5 py-0.5 text-[11px]' : 'min-h-[38px] px-3 py-2 text-xs'}
                     ${isInteractive ? 'cursor-pointer hover:border-text-main/40' : 'cursor-default select-none opacity-60'}
                     ${isOpen ? 'ring-2 ring-[#0070f3]/20 border-[#0070f3]' : 'focus:border-[#0070f3]'}
                     ${readOnly ? 'bg-surface/30 opacity-90 cursor-default' : ''}
                     ${className}
                 `}
             >
-                <span className={`truncate min-w-0 pr-2 leading-snug ${isValueSelected ? 'text-text-main font-medium' : 'text-text-dim/60 font-normal'}`}>
+                <span className={`truncate min-w-0 flex-1 pr-1.5 leading-snug ${isValueSelected ? 'text-text-main font-medium' : 'text-text-dim/60 font-normal'}`}>
                     {displayLabel}
                 </span>
 
-                <div className="shrink-0 flex items-center pointer-events-none ml-2">
+                <div className="shrink-0 flex items-center pointer-events-none ml-1.5">
                     {readOnly ? (
-                        <Lock className="w-3.5 h-3.5 text-text-dim/70" />
+                        <Lock className={size === 'sm' ? 'w-3 h-3 text-text-dim/70' : 'w-3.5 h-3.5 text-text-dim/70'} />
                     ) : (
                         <ChevronDown 
-                            className={`w-3.5 h-3.5 text-text-dim transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#0070f3]' : ''}`} 
+                            className={`${size === 'sm' ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-text-dim transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#0070f3]' : ''}`} 
                         />
                     )}
                 </div>

@@ -30,6 +30,7 @@ namespace dosier_infrastructure.Curriculum
         private const string GlobalProviderClave = "AI_ASSISTANT_PROVIDER";
         private const string GlobalModelClave = "AI_ASSISTANT_MODEL";
         private const string GlobalBaseUrlClave = "AI_ASSISTANT_BASE_URL";
+        private const string GlobalReasoningEffortClave = "AI_ASSISTANT_REASONING_EFFORT";
 
         private readonly DosierContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
@@ -53,8 +54,8 @@ namespace dosier_infrastructure.Curriculum
 
         public async Task<PeaAiConfigStatusDto> GetConfigStatusAsync(int idUsuario, CancellationToken ct = default)
         {
-            var (userKey, userProvider, userModel, userBaseUrl) = await GetUserConfigAsync(idUsuario, ct);
-            var (globalKey, globalProvider, globalModel, globalBaseUrl) = await GetGlobalConfigAsync(ct);
+            var (userKey, userProvider, userModel, userBaseUrl, userEffort) = await GetUserConfigAsync(idUsuario, ct);
+            var (globalKey, globalProvider, globalModel, globalBaseUrl, globalEffort) = await GetGlobalConfigAsync(ct);
 
             string? envKey = _configuration["AiAssistant:ApiKey"]
                 ?? _configuration["DeepSeek:ApiKey"]
@@ -79,6 +80,10 @@ namespace dosier_infrastructure.Curriculum
 
             string effectiveBaseUrl = ResolveEffectiveBaseUrl(normalizedProvider, candidateBaseUrl, defaultBaseUrl);
 
+            string effectiveEffort = !string.IsNullOrWhiteSpace(userEffort)
+                ? userEffort!
+                : (!string.IsNullOrWhiteSpace(globalEffort) ? globalEffort! : (_configuration["AiAssistant:ReasoningEffort"] ?? "medium"));
+
             bool isReady = !string.IsNullOrWhiteSpace(effectiveKey) || normalizedProvider.Equals("ollama", StringComparison.OrdinalIgnoreCase);
 
             return new PeaAiConfigStatusDto
@@ -88,6 +93,7 @@ namespace dosier_infrastructure.Curriculum
                 ActiveProvider = normalizedProvider,
                 ActiveModel = effectiveModel,
                 ActiveBaseUrl = effectiveBaseUrl,
+                ActiveReasoningEffort = effectiveEffort,
                 MaskedApiKey = MaskApiKey(effectiveKey),
                 IsReady = isReady
             };
@@ -118,6 +124,11 @@ namespace dosier_infrastructure.Curriculum
                 await UpsertGlobalConfigAsync(GlobalModelClave, model, "Modelo global de IA para asistencia curricular", ct);
                 await UpsertGlobalConfigAsync(GlobalBaseUrlClave, baseUrl, "URL base del endpoint global de IA", ct);
 
+                if (!string.IsNullOrWhiteSpace(request.ReasoningEffort))
+                {
+                    await UpsertGlobalConfigAsync(GlobalReasoningEffortClave, request.ReasoningEffort.Trim().ToLowerInvariant(), "Nivel de esfuerzo de razonamiento para modelos de IA compatibles (low, medium, high)", ct);
+                }
+
                 if (request.ApiKey != null)
                 {
                     string trimmed = request.ApiKey.Trim();
@@ -147,6 +158,11 @@ namespace dosier_infrastructure.Curriculum
                 dict["ai_provider"] = provider;
                 dict["ai_model"] = model;
                 dict["ai_base_url"] = baseUrl;
+
+                if (!string.IsNullOrWhiteSpace(request.ReasoningEffort))
+                {
+                    dict["ai_reasoning_effort"] = request.ReasoningEffort.Trim().ToLowerInvariant();
+                }
 
                 if (request.ApiKey != null)
                 {
@@ -189,9 +205,9 @@ namespace dosier_infrastructure.Curriculum
                 throw new ArgumentException("Se requiere el identificador UUID del PEA o de la instancia documental.");
             }
 
-            // 1. Resolver API Key, Proveedor, Modelo y BaseUrl
-            var (userKey, userProvider, userModel, userBaseUrl) = await GetUserConfigAsync(idUsuario, ct);
-            var (globalKey, globalProvider, globalModel, globalBaseUrl) = await GetGlobalConfigAsync(ct);
+            // 1. Resolver API Key, Proveedor, Modelo, BaseUrl y Esfuerzo de Razonamiento
+            var (userKey, userProvider, userModel, userBaseUrl, userEffort) = await GetUserConfigAsync(idUsuario, ct);
+            var (globalKey, globalProvider, globalModel, globalBaseUrl, globalEffort) = await GetGlobalConfigAsync(ct);
             string? envKey = _configuration["AiAssistant:ApiKey"]
                 ?? _configuration["DeepSeek:ApiKey"]
                 ?? _configuration["Gemini:ApiKey"]
@@ -225,31 +241,55 @@ namespace dosier_infrastructure.Curriculum
 
             string baseUrl = ResolveEffectiveBaseUrl(provider, candidateBaseUrl, defaultBaseUrl);
 
+            string effectiveEffort = !string.IsNullOrWhiteSpace(request.ReasoningEffort)
+                ? request.ReasoningEffort.Trim().ToLowerInvariant()
+                : (!string.IsNullOrWhiteSpace(userEffort) ? userEffort! : (!string.IsNullOrWhiteSpace(globalEffort) ? globalEffort! : (_configuration["AiAssistant:ReasoningEffort"] ?? "medium")));
+
             // 2. Resolver Entidad PEA y su Contexto Institucional SIGAFI + Gobernanza
             var contextData = await ResolveAcademicContextAsync(peaUuid, request, ct);
 
-            // 3. Construir System Prompt y User Prompt con esquema JSON estricto
-            string targetSection = string.IsNullOrWhiteSpace(request.TargetSection) ? "all" : request.TargetSection.Trim();
-            string systemPrompt = BuildSystemPrompt(contextData, targetSection);
-            string userPrompt = BuildUserPrompt(contextData, request, targetSection);
+            // 3. Resolver alcance de secciones solicitadas (única, múltiple o todo el PEA)
+            var requestedSections = new List<string>();
+            if (request.TargetSections != null && request.TargetSections.Count > 0)
+            {
+                requestedSections = request.TargetSections
+                    .Select(s => s.Trim().ToLowerInvariant())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct()
+                    .ToList();
+            }
+            else if (!string.IsNullOrWhiteSpace(request.TargetSection))
+            {
+                requestedSections = request.TargetSection
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(s => s.ToLowerInvariant())
+                    .Distinct()
+                    .ToList();
+            }
+
+            bool isAllSections = requestedSections.Count == 0 || requestedSections.Contains("all") || requestedSections.Count >= 9;
+            string effectiveTargetSection = isAllSections ? "all" : string.Join(",", requestedSections);
+
+            string systemPrompt = BuildSystemPrompt(contextData, requestedSections, isAllSections);
+            string userPrompt = BuildUserPrompt(contextData, request, requestedSections, isAllSections);
 
             // 4. Invocar al proveedor LLM con Structured JSON (Gemini nativo, Anthropic nativo u OpenAI-Compatible universal)
             string rawJson;
             if (provider == "gemini" && string.IsNullOrWhiteSpace(request.BaseUrlOverride))
             {
-                rawJson = await CallGeminiAsync(apiKey ?? string.Empty, model, systemPrompt, userPrompt, ct);
+                rawJson = await CallGeminiAsync(apiKey ?? string.Empty, model, systemPrompt, userPrompt, request.ConversationHistory, ct);
             }
             else if (provider == "anthropic" && (string.IsNullOrWhiteSpace(baseUrl) || baseUrl.Contains("api.anthropic.com/v1/messages", StringComparison.OrdinalIgnoreCase)))
             {
-                rawJson = await CallAnthropicAsync(apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
+                rawJson = await CallAnthropicAsync(apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, request.ConversationHistory, ct);
             }
             else
             {
-                rawJson = await CallOpenAiCompatibleAsync(provider, apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, ct);
+                rawJson = await CallOpenAiCompatibleAsync(provider, apiKey ?? string.Empty, model, baseUrl, systemPrompt, userPrompt, effectiveEffort, request.ConversationHistory, ct);
             }
 
             // 5. Parsear, normalizar y cuadrar horas contra SIGAFI
-            var draft = ParseAndNormalizeDraft(rawJson, contextData, provider, model, targetSection);
+            var draft = ParseAndNormalizeDraft(rawJson, contextData, provider, model, requestedSections, isAllSections, request);
             return draft;
         }
 
@@ -418,7 +458,21 @@ namespace dosier_infrastructure.Curriculum
             };
         }
 
-        private static string BuildSystemPrompt(AcademicPromptContext ctx, string targetSection)
+        private static string GetFriendlySectionName(string? secId) => (secId ?? string.Empty).Trim().ToLowerInvariant() switch
+        {
+            "pea_objectives_section" => "2. Objetivo de la Asignatura",
+            "pea_prerequisites_section" => "3. Prerrequisitos Curriculares",
+            "pea_career_outcomes_section" => "4. RDA de Carrera (Perfil de Egreso)",
+            "pea_subject_outcomes_section" => "5. RDA de la Asignatura",
+            "pea_contents_section" => "6. Contenidos de Enseñanza (Unidades)",
+            "pea_methodology_section" => "7. Metodología y Recursos Didácticos",
+            "pea_resources_section" => "8. Actividades Prácticas y Experimentales",
+            "pea_evaluation_section" => "9. Sistema de Evaluación Curricular",
+            "pea_bibliography_section" => "10. Bibliografía APA 7ma",
+            _ => secId ?? string.Empty
+        };
+
+        private static string BuildSystemPrompt(AcademicPromptContext ctx, List<string> requestedSections, bool isAllSections)
         {
             var sb = new StringBuilder();
             sb.AppendLine("Eres un especialista senior en diseño curricular de Educación Superior Tecnológica del Ecuador (normativa CES, CACES e ISTPET).");
@@ -466,45 +520,143 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("REGLAS OBLIGATORIAS DE FORMATO Y CALIDAD:");
             sb.AppendLine("1. DATOS GENERALES DE SOLO CONTEXTO: Los campos de la Sección 1 (nombre de asignatura, código, carrera, modalidad, unidad de organización curricular, periodo académico, semestre, total de horas y créditos) están BLOQUEADOS en SIGAFI. Úsalos EXCLUSIVAMENTE como contexto pedagógico orientativo. Queda estrictamente PROHIBIDO generar contenido para estos campos, modificarlos, o redactar encabezados o tablas de datos generales dentro de las demás secciones.");
             sb.AppendLine("2. Los campos 'objetivo_asignatura', 'rda_carrera', 'resultados_aprendizaje', 'metodologia_ensenanza', 'recursos_didacticos', 'bibliografia_basica' y 'bibliografia_consulta' deben entregarse en HTML semántico limpio (<p>, <ul>, <li>, <strong>). Queda estrictamente PROHIBIDO duplicar o incluir el encabezado/título de la sección dentro del texto (ej. en 'recursos_didacticos' no escribas 'RECURSOS DIDÁCTICOS:', en 'metodologia_ensenanza' no escribas 'ESTRATEGIAS METODOLÓGICAS:'); redacta directamente el contenido pedagógico.");
-            sb.AppendLine("3. En 'prerrequisitos', si la asignatura requiere materias previas, genera cada elemento con 'asignatura' (nombre de la materia previa) y 'observacion' ('Haber cursado y aprobado la asignatura según malla curricular'). Si no requiere prerrequisitos, devuelve un arreglo vacío []. NUNCA generes elementos con cadenas vacías.");
+            sb.AppendLine("3. En 'prerrequisitos':");
+            sb.AppendLine("   - PRIORIDAD DEL DOCENTE: Si el docente solicita o instruye sobre prerrequisitos (ej. 'si quiero un prerrequisito', 'agrega prerrequisito', o especifica una materia previa), estás OBLIGADO a formular de forma profesional la o las asignaturas formativas o propedéuticas idóneas y coherentes con la carrera (ej. para software: 'Lógica Computacional y Algoritmos', 'Fundamentos de Programación'; para gastronomía: 'Bases Culinarias y Bioseguridad', etc.) con su debida observación pedagógica. En este caso queda TERMINANTEMENTE PROHIBIDO responder con 'No registra prerrequisitos'.");
+            sb.AppendLine("   - MALLA OFICIAL: Si la asignatura tiene materias previas registradas en la malla SIGAFI, incorpóralas.");
+            sb.AppendLine("   - NIVEL INICIAL SIN SOLICITUD: ÚNICAMENTE cuando la asignatura sea de primer semestre, no tenga materias previas en la malla SIGAFI Y el docente NO haya solicitado ni mencionado prerrequisitos en sus instrucciones ni en la conversación, genera un único elemento con 'asignatura': 'No registra prerrequisitos (Nivel inicial)' y 'observacion': 'Asignatura correspondiente al primer período académico sin prerrequisito formal en malla'. NUNCA generes elementos con cadenas vacías.");
             sb.AppendLine("4. En 'unidades', genera unidades temáticas coherentes (por defecto 4, a menos que el docente solicite expresamente otra cantidad en sus instrucciones). En 'titulo' escribe SOLO el nombre temático de la unidad (sin el prefijo 'Unidad 1:'). La suma de 'horas_cd' de todas las unidades DEBE ser exactamente " + ctx.HorasCD + " (> 0 en cada unidad). La suma de 'horas_ape' DEBE ser exactamente " + ctx.HorasAPE + " (> 0 en cada unidad). La suma de 'horas_ta' DEBE ser exactamente " + ctx.HorasTA + " (> 0 en cada unidad). NUNCA dejes componentes de horas en cero.");
             sb.AppendLine("5. En cada unidad, el campo 'contenidos' debe listar los temas y subtemas numerados separados por saltos de línea (ej: '1.1 Conceptos fundamentales\\n1.2 Técnicas aplicadas\\n1.3 Procesos experimentales').");
             sb.AppendLine("6. En 'actividades_practicas', genera al menos 1 práctica experimental por cada unidad temática, especificando unidad (número), nombre descriptivo de la práctica, horas, escenario (taller/laboratorio/cocina experimental) y producto verificable.");
             sb.AppendLine("7. En 'evaluaciones', incluye los 4 componentes normativos sobre 10 puntos (Gestión Formativa / Docencia, Gestión Práctica y Experimental, Trabajo Autónomo, Evaluación Sumativa).");
             sb.AppendLine("8. En 'bibliografias', incluye al menos 3 obras de tipo 'Basica' y 3 de tipo 'Consulta' reales y vigentes en formato APA 7ma edición.");
-            sb.AppendLine($"9. Sección objetivo solicitada: '{targetSection}'.");
-            if (!string.IsNullOrWhiteSpace(targetSection) && !string.Equals(targetSection, "all", StringComparison.OrdinalIgnoreCase))
+            
+            if (isAllSections)
             {
-                sb.AppendLine($"ALCANCE ESTRICTO: El usuario solicitó formular ÚNICAMENTE la sección '{targetSection}'. Enfoca tu respuesta de forma especializada en esa sección. Para las claves JSON que no correspondan a '{targetSection}', devuelve null o arreglo vacío.");
+                sb.AppendLine("9. ALCANCE: Todo el PEA oficial (secciones 2 a 10 completas). Formula todas las secciones curriculares requeridas.");
             }
-            sb.AppendLine("10. PRIORIDAD DE LAS DIRECTRICES DEL DOCENTE: Si se proporcionan 'INSTRUCCIONES ESPECÍFICAS DEL DOCENTE', debes priorizarlas obligatoriamente (tecnologías requeridas, enfoque pedagógico, temas clave o estructura deseada), adaptando coherentemente los objetivos, contenidos temáticos, actividades prácticas y bibliografía.");
+            else
+            {
+                var sectionNames = requestedSections.Select(GetFriendlySectionName);
+                sb.AppendLine($"9. ALCANCE ESPECÍFICO SELECCIONADO: El docente solicitó formular ÚNICAMENTE las siguientes {requestedSections.Count} sección(es): {string.Join(", ", sectionNames)}.");
+                sb.AppendLine("Debes enfocar tu respuesta exclusivamente en estas secciones solicitadas. Para las claves JSON que no correspondan a estas secciones, devuelve null o un arreglo vacío [].");
+            }
+
+            sb.AppendLine("10. PRIORIDAD ABSOLUTA DE LAS DIRECTRICES DEL DOCENTE: Las instrucciones del docente ('INSTRUCCIONES ESPECÍFICAS DEL DOCENTE' y su conversación histórica) tienen máxima prioridad pedagógica y anulan cualquier valor por defecto o inferencia inicial. Si el docente solicita prerrequisitos, cambios de enfoque, tecnologías específicas, más o menos unidades, o cualquier ajuste particular, debes acatarlo con rigor profesional y diseñar el contenido curricular solicitado adaptando coherentemente cada sección.");
+            sb.AppendLine("11. ESTADO ACTUAL Y REFINAMIENTO ITERATIVO: Si se proporciona una sección 'ESTADO ACTUAL DEL DOCUMENTO EN EL EDITOR (TRABAJO PREVIO DEL DOCENTE)', contiene lo que el docente ya ha redactado o configurado en la interfaz. Cuando el docente solicite mejoras, ajustes, correcciones, adiciones o adaptaciones (ej. 'mejora el objetivo', 'añade una práctica', 'haz la bibliografía más reciente', 'ajusta las horas'), debes tomar dicho contenido previo como base obligatoria y refinarlo armónicamente, respetando y preservando el trabajo y decisiones ya tomadas por el docente, en lugar de descartarlo o sustituirlo con contenido no relacionado, salvo que el docente pida expresamente rehacerlo desde cero o cambiar de enfoque.");
 
             return sb.ToString();
         }
 
-        private static string BuildUserPrompt(AcademicPromptContext ctx, GeneratePeaDraftRequestDto request, string targetSection)
+        private static string BuildUserPrompt(AcademicPromptContext ctx, GeneratePeaDraftRequestDto request, List<string> requestedSections, bool isAllSections)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"Genera el contenido curricular estructurado para la asignatura '{ctx.NombreAsignatura}' de la carrera '{ctx.NombreCarrera}'.");
+            if (isAllSections)
+            {
+                sb.AppendLine($"Genera el contenido curricular estructurado para todo el PEA oficial de la asignatura '{ctx.NombreAsignatura}' de la carrera '{ctx.NombreCarrera}'.");
+            }
+            else
+            {
+                var names = requestedSections.Select(GetFriendlySectionName);
+                sb.AppendLine($"Genera el contenido curricular estructurado para las siguientes secciones seleccionadas ({string.Join(", ", names)}) de la asignatura '{ctx.NombreAsignatura}' de la carrera '{ctx.NombreCarrera}'.");
+            }
 
             var referenceUnits = (request.CurrentUnidades != null && request.CurrentUnidades.Count > 0)
                 ? request.CurrentUnidades
                 : ctx.ExistingUnits;
 
-            if (referenceUnits.Count > 0 && targetSection != "all" && targetSection != "pea_contents_section")
+            // ── Inyección del Estado Actual del Documento en el Editor (Editor State Awareness) ──
+            var editorState = new StringBuilder();
+
+            if (!string.IsNullOrWhiteSpace(request.CurrentObjetivo))
             {
-                sb.AppendLine("Toma como base las siguientes unidades temáticas ya definidas en la asignatura:");
+                editorState.AppendLine($"- Objetivo Actual: {request.CurrentObjetivo.Trim()}");
+            }
+
+            if (request.CurrentPrerrequisitos != null && request.CurrentPrerrequisitos.Count > 0)
+            {
+                editorState.AppendLine("- Prerrequisitos Actuales:");
+                foreach (var p in request.CurrentPrerrequisitos)
+                {
+                    editorState.AppendLine($"  * {p.Asignatura} ({p.Observacion})");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.CurrentRdaCarrera))
+            {
+                editorState.AppendLine($"- RDA Carrera Actuales: {request.CurrentRdaCarrera.Trim()}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.CurrentResultadosAprendizaje))
+            {
+                editorState.AppendLine($"- Resultados de Aprendizaje de la Asignatura Actuales: {request.CurrentResultadosAprendizaje.Trim()}");
+            }
+
+            if (referenceUnits.Count > 0)
+            {
+                editorState.AppendLine("- Unidades Temáticas Actuales:");
                 foreach (var u in referenceUnits)
                 {
-                    sb.AppendLine($"- Unidad {u.Num}: {u.Titulo} ({u.Contenidos})");
+                    editorState.AppendLine($"  * Unidad {u.Num}: {u.Titulo} | Horas CD:{u.HorasCD} APE:{u.HorasAPE} TA:{u.HorasTA} | Contenidos: {u.Contenidos}");
                 }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.CurrentMetodologiaEnsenanza))
+            {
+                editorState.AppendLine($"- Metodología Actual: {request.CurrentMetodologiaEnsenanza.Trim()}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.CurrentRecursosDidacticos))
+            {
+                editorState.AppendLine($"- Recursos Didácticos Actuales: {request.CurrentRecursosDidacticos.Trim()}");
+            }
+
+            if (request.CurrentActividadesPracticas != null && request.CurrentActividadesPracticas.Count > 0)
+            {
+                editorState.AppendLine("- Actividades Prácticas Actuales:");
+                foreach (var ap in request.CurrentActividadesPracticas)
+                {
+                    editorState.AppendLine($"  * Unidad {ap.Unidad}: {ap.Nombre} ({ap.Horas}h, Escenario: {ap.Escenario}, Producto: {ap.Producto})");
+                }
+            }
+
+            if (request.CurrentEvaluaciones != null && request.CurrentEvaluaciones.Count > 0)
+            {
+                editorState.AppendLine("- Evaluaciones Actuales:");
+                foreach (var ev in request.CurrentEvaluaciones)
+                {
+                    editorState.AppendLine($"  * {ev.Nota} | {ev.Tipo} ({ev.Calificacion} pts)");
+                }
+            }
+
+            if (request.CurrentBibliografias != null && request.CurrentBibliografias.Count > 0)
+            {
+                editorState.AppendLine("- Bibliografías Actuales:");
+                foreach (var b in request.CurrentBibliografias)
+                {
+                    editorState.AppendLine($"  * [{b.TipoBibliografia}] {(!string.IsNullOrWhiteSpace(b.CitaCompletaApa) ? b.CitaCompletaApa : $"{b.Autor}. {b.TituloLibro}.")}");
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(request.CurrentBibliografiaBasica) || !string.IsNullOrWhiteSpace(request.CurrentBibliografiaConsulta))
+            {
+                if (!string.IsNullOrWhiteSpace(request.CurrentBibliografiaBasica))
+                    editorState.AppendLine($"- Bibliografía Básica Actual: {request.CurrentBibliografiaBasica.Trim()}");
+                if (!string.IsNullOrWhiteSpace(request.CurrentBibliografiaConsulta))
+                    editorState.AppendLine($"- Bibliografía Consulta Actual: {request.CurrentBibliografiaConsulta.Trim()}");
+            }
+
+            if (editorState.Length > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("ESTADO ACTUAL DEL DOCUMENTO EN EL EDITOR (TRABAJO PREVIO DEL DOCENTE):");
+                sb.Append(editorState.ToString());
             }
 
             if (!string.IsNullOrWhiteSpace(request.CustomInstructions))
             {
                 sb.AppendLine();
-                sb.AppendLine("INSTRUCCIONES ESPECÍFICAS DEL DOCENTE:");
-                sb.AppendLine(request.CustomInstructions.Trim());
+                sb.AppendLine("INSTRUCCIONES Y REQUERIMIENTOS ESPECÍFICOS DEL DOCENTE (PRIORIDAD ABSOLUTA):");
+                sb.AppendLine($"> \"{request.CustomInstructions.Trim()}\"");
+                sb.AppendLine("Cumple estrictamente con los requerimientos, contenidos, enfoques o prerrequisitos indicados por el docente.");
             }
 
             sb.AppendLine();
@@ -568,6 +720,7 @@ namespace dosier_infrastructure.Curriculum
             string model,
             string systemPrompt,
             string userPrompt,
+            List<PeaAiChatMessageDto>? history,
             CancellationToken ct)
         {
             var client = _httpClientFactory.CreateClient();
@@ -579,20 +732,33 @@ namespace dosier_infrastructure.Curriculum
 
             string endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{cleanModel}:generateContent?key={Uri.EscapeDataString(apiKey)}";
 
+            var contentsList = new List<object>();
+            if (history != null && history.Count > 0)
+            {
+                foreach (var h in history.TakeLast(6))
+                {
+                    if (string.IsNullOrWhiteSpace(h.Content)) continue;
+                    string geminiRole = h.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? "model" : "user";
+                    contentsList.Add(new
+                    {
+                        role = geminiRole,
+                        parts = new[] { new { text = h.Content.Trim() } }
+                    });
+                }
+            }
+            contentsList.Add(new
+            {
+                role = "user",
+                parts = new[] { new { text = userPrompt } }
+            });
+
             var payload = new
             {
                 system_instruction = new
                 {
                     parts = new[] { new { text = systemPrompt } }
                 },
-                contents = new[]
-                {
-                    new
-                    {
-                        role = "user",
-                        parts = new[] { new { text = userPrompt } }
-                    }
-                },
+                contents = contentsList,
                 generationConfig = new
                 {
                     temperature = 0.35,
@@ -640,6 +806,7 @@ namespace dosier_infrastructure.Curriculum
             string baseUrl,
             string systemPrompt,
             string userPrompt,
+            List<PeaAiChatMessageDto>? history,
             CancellationToken ct)
         {
             var client = _httpClientFactory.CreateClient();
@@ -653,16 +820,25 @@ namespace dosier_infrastructure.Curriculum
             req.Headers.TryAddWithoutValidation("x-api-key", apiKey);
             req.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
 
+            var messagesList = new List<object>();
+            if (history != null && history.Count > 0)
+            {
+                foreach (var h in history.TakeLast(6))
+                {
+                    if (string.IsNullOrWhiteSpace(h.Content)) continue;
+                    string role = h.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? "assistant" : "user";
+                    messagesList.Add(new { role = role, content = h.Content.Trim() });
+                }
+            }
+            messagesList.Add(new { role = "user", content = userPrompt });
+
             var payload = new
             {
                 model = model,
                 max_tokens = 8192,
                 temperature = 0.35,
                 system = systemPrompt,
-                messages = new[]
-                {
-                    new { role = "user", content = userPrompt }
-                }
+                messages = messagesList
             };
 
             req.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
@@ -698,6 +874,8 @@ namespace dosier_infrastructure.Curriculum
             string baseUrl,
             string systemPrompt,
             string userPrompt,
+            string? reasoningEffort,
+            List<PeaAiChatMessageDto>? history,
             CancellationToken ct)
         {
             var client = _httpClientFactory.CreateClient();
@@ -714,6 +892,26 @@ namespace dosier_infrastructure.Curriculum
                 || model.StartsWith("o1", StringComparison.OrdinalIgnoreCase)
                 || model.StartsWith("o3", StringComparison.OrdinalIgnoreCase);
 
+            bool isOpenAiReasoningModel = model.StartsWith("o1", StringComparison.OrdinalIgnoreCase)
+                || model.StartsWith("o3", StringComparison.OrdinalIgnoreCase);
+
+            var messagesList = new List<object>
+            {
+                new { role = "system", content = systemPrompt }
+            };
+
+            if (history != null && history.Count > 0)
+            {
+                foreach (var h in history.TakeLast(6))
+                {
+                    if (string.IsNullOrWhiteSpace(h.Content)) continue;
+                    string role = h.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? "assistant" : "user";
+                    messagesList.Add(new { role = role, content = h.Content.Trim() });
+                }
+            }
+
+            messagesList.Add(new { role = "user", content = userPrompt });
+
             async Task<HttpResponseMessage> SendRequestAsync(bool minimalMode)
             {
                 var req = new HttpRequestMessage(HttpMethod.Post, effectiveUrl);
@@ -728,35 +926,32 @@ namespace dosier_infrastructure.Curriculum
                     req.Headers.TryAddWithoutValidation("X-Title", "DOSIER ISTPET Curriculum Assistant");
                 }
 
-                object payload;
+                var payloadDict = new Dictionary<string, object?>
+                {
+                    ["model"] = model,
+                    ["messages"] = messagesList
+                };
+
                 if (isReasoner || minimalMode)
                 {
-                    payload = new
+                    // Si es modelo OpenAI de razonamiento configurable (o1, o3-mini)
+                    if (isOpenAiReasoningModel)
                     {
-                        model = model,
-                        messages = new[]
+                        string effort = !string.IsNullOrWhiteSpace(reasoningEffort) ? reasoningEffort.Trim().ToLowerInvariant() : "medium";
+                        if (effort != "low" && effort != "medium" && effort != "high")
                         {
-                            new { role = "system", content = systemPrompt },
-                            new { role = "user", content = userPrompt }
+                            effort = "medium";
                         }
-                    };
+                        payloadDict["reasoning_effort"] = effort;
+                    }
                 }
                 else
                 {
-                    payload = new
-                    {
-                        model = model,
-                        temperature = 0.35,
-                        response_format = new { type = "json_object" },
-                        messages = new[]
-                        {
-                            new { role = "system", content = systemPrompt },
-                            new { role = "user", content = userPrompt }
-                        }
-                    };
+                    payloadDict["temperature"] = 0.35;
+                    payloadDict["response_format"] = new { type = "json_object" };
                 }
 
-                req.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                req.Content = new StringContent(JsonSerializer.Serialize(payloadDict), Encoding.UTF8, "application/json");
                 return await client.SendAsync(req, ct);
             }
 
@@ -801,7 +996,9 @@ namespace dosier_infrastructure.Curriculum
             AcademicPromptContext ctx,
             string provider,
             string model,
-            string targetSection)
+            List<string> requestedSections,
+            bool isAllSections,
+            GeneratePeaDraftRequestDto request)
         {
             var result = new PeaStructuredDraftDto();
             using var doc = JsonDocument.Parse(rawJson, new JsonDocumentOptions
@@ -811,7 +1008,8 @@ namespace dosier_infrastructure.Curriculum
             });
             var root = doc.RootElement;
 
-            result.ObjetivoAsignatura = SanitizeRedundantHeading(TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            string rawObj = SanitizeRedundantHeading(TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+            result.ObjetivoAsignatura = NormalizeAndValidateBloomObjective(rawObj, ctx.NombreCarrera, ctx.NombreAsignatura, out string? detectedBloomVerb, out bool isBloomValid);
             result.RdaCarrera = TryGetString(root, "rda_carrera", "RdaCarrera");
             result.ResultadosAprendizaje = TryGetString(root, "resultados_aprendizaje", "ResultadosAprendizaje");
             result.MetodologiaEnsenanza = SanitizeRedundantHeading(TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
@@ -851,15 +1049,45 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
-            if (result.Prerrequisitos.Count == 0 && ctx.SigafiPrerequisites.Count > 0)
+            bool userWantsPrereq = DoesUserRequestPrerequisites(request.CustomInstructions, request.ConversationHistory);
+
+            if (userWantsPrereq)
             {
-                foreach (var sigafiPrereq in ctx.SigafiPrerequisites)
+                // Si el docente solicitó expresamente prerrequisitos, depurar respuestas evasivas tipo "No registra prerrequisitos"
+                result.Prerrequisitos.RemoveAll(p =>
+                    p.Asignatura.Contains("no registra", StringComparison.OrdinalIgnoreCase) ||
+                    p.Asignatura.Contains("sin prerrequisito", StringComparison.OrdinalIgnoreCase) ||
+                    p.Asignatura.Contains("nivel inicial", StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (result.Prerrequisitos.Count == 0)
+            {
+                if (ctx.SigafiPrerequisites.Count > 0)
                 {
-                    result.Prerrequisitos.Add(new PeaDraftPrerrequisitoDto
+                    foreach (var sigafiPrereq in ctx.SigafiPrerequisites)
                     {
-                        Asignatura = sigafiPrereq,
-                        Observacion = "Haber cursado y aprobado la asignatura según malla curricular oficial"
-                    });
+                        result.Prerrequisitos.Add(new PeaDraftPrerrequisitoDto
+                        {
+                            Asignatura = sigafiPrereq,
+                            Observacion = "Haber cursado y aprobado la asignatura según malla curricular oficial"
+                        });
+                    }
+                }
+                else if (isAllSections || requestedSections.Contains("pea_prerequisites_section"))
+                {
+                    if (userWantsPrereq)
+                    {
+                        var contextualPrereqs = ResolveContextualPrerequisites(ctx.NombreCarrera, ctx.NombreAsignatura, request.CustomInstructions);
+                        result.Prerrequisitos.AddRange(contextualPrereqs);
+                    }
+                    else
+                    {
+                        result.Prerrequisitos.Add(new PeaDraftPrerrequisitoDto
+                        {
+                            Asignatura = "No registra prerrequisitos (Nivel inicial)",
+                            Observacion = "Asignatura correspondiente al primer período académico sin prerrequisito previo"
+                        });
+                    }
                 }
             }
 
@@ -989,8 +1217,14 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
-            // Sincronizar campos HTML BibliografiaBasica y BibliografiaConsulta desde la lista estructurada si vienen vacíos
-            if (string.IsNullOrWhiteSpace(result.BibliografiaBasica) && result.Bibliografias.Any(b => b.TipoBibliografia == "Basica"))
+            // Normalización determinista de prácticas experimentales (escenario y producto acreditable)
+            bool arePracticesCompliant = NormalizeAndValidatePractices(result.ActividadesPracticas, result.Unidades, ctx);
+
+            // Normalización determinista de referencias bibliográficas (APA 7ma, año, editorial, equilibrio 3/3)
+            bool isBibliographyCompliant = NormalizeAndValidateBibliography(result.Bibliografias, ctx);
+
+            // Sincronizar campos HTML BibliografiaBasica y BibliografiaConsulta desde la lista estructurada
+            if (result.Bibliografias.Any(b => b.TipoBibliografia == "Basica"))
             {
                 var items = result.Bibliografias
                     .Where(b => b.TipoBibliografia == "Basica")
@@ -998,7 +1232,7 @@ namespace dosier_infrastructure.Curriculum
                 result.BibliografiaBasica = string.Join("", items);
             }
 
-            if (string.IsNullOrWhiteSpace(result.BibliografiaConsulta) && result.Bibliografias.Any(b => b.TipoBibliografia == "Consulta"))
+            if (result.Bibliografias.Any(b => b.TipoBibliografia == "Consulta"))
             {
                 var items = result.Bibliografias
                     .Where(b => b.TipoBibliografia == "Consulta")
@@ -1023,17 +1257,35 @@ namespace dosier_infrastructure.Curriculum
             if (result.Evaluaciones.Count > 0) generatedSections.Add("pea_evaluation_section");
             if (!string.IsNullOrWhiteSpace(result.BibliografiaBasica) || !string.IsNullOrWhiteSpace(result.BibliografiaConsulta)) generatedSections.Add("pea_bibliography_section");
 
-            // Si el docente solicitó una sección específica (targetSection != "all"), restringir estrictamente las secciones generadas
-            if (!string.IsNullOrWhiteSpace(targetSection) && !string.Equals(targetSection, "all", StringComparison.OrdinalIgnoreCase))
+            // Si el docente solicitó secciones específicas (!isAllSections), restringir estrictamente las secciones generadas
+            if (!isAllSections && requestedSections.Count > 0)
             {
-                generatedSections = generatedSections.Where(s => string.Equals(s, targetSection, StringComparison.OrdinalIgnoreCase)).ToList();
+                generatedSections = generatedSections
+                    .Where(s => requestedSections.Contains(s.ToLowerInvariant()))
+                    .ToList();
+            }
+
+            string reportedTargetSection = isAllSections ? "all" : string.Join(",", requestedSections);
+
+            var complianceNotes = new List<string>();
+            if (isBloomValid && !string.IsNullOrWhiteSpace(detectedBloomVerb))
+            {
+                complianceNotes.Add($"Objetivo CACES validado con verbo de acción Bloom: '{detectedBloomVerb}'.");
+            }
+            if (arePracticesCompliant)
+            {
+                complianceNotes.Add($"Prácticas APE normalizadas con escenario físico y producto acreditable ({result.ActividadesPracticas.Count} prácticas).");
+            }
+            if (isBibliographyCompliant)
+            {
+                complianceNotes.Add($"Bibliografía balanceada bajo norma APA 7ma ({result.Bibliografias.Count} obras con año y editorial).");
             }
 
             result.ValidationSummary = new PeaDraftValidationSummaryDto
             {
                 ProviderUsed = provider,
                 ModelUsed = model,
-                TargetSection = targetSection,
+                TargetSection = reportedTargetSection,
                 SigafiHorasCD = ctx.HorasCD,
                 SigafiHorasAPE = ctx.HorasAPE,
                 SigafiHorasTA = ctx.HorasTA,
@@ -1043,6 +1295,11 @@ namespace dosier_infrastructure.Curriculum
                 GeneratedHorasTA = genTa,
                 GeneratedTotalHoras = genTotal,
                 IsHoursExactMatch = genCd == ctx.HorasCD && genApe == ctx.HorasAPE && genTa == ctx.HorasTA,
+                IsBloomVerbValid = isBloomValid,
+                BloomVerbDetected = detectedBloomVerb,
+                ArePracticesCompliant = arePracticesCompliant,
+                IsBibliographyCompliant = isBibliographyCompliant,
+                ComplianceNotes = complianceNotes,
                 GeneratedSections = generatedSections
             };
 
@@ -1134,15 +1391,15 @@ namespace dosier_infrastructure.Curriculum
             setter(unidades[count - 1], Math.Max(0, targetTotal - runningSum));
         }
 
-        private async Task<(string? ApiKey, string? Provider, string? Model, string? BaseUrl)> GetUserConfigAsync(int idUsuario, CancellationToken ct)
+        private async Task<(string? ApiKey, string? Provider, string? Model, string? BaseUrl, string? ReasoningEffort)> GetUserConfigAsync(int idUsuario, CancellationToken ct)
         {
-            if (idUsuario <= 0) return (null, null, null, null);
+            if (idUsuario <= 0) return (null, null, null, null, null);
             var meta = await _context.DocUsuariosMetadata
                 .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.IdUsuario == idUsuario, ct);
 
             if (meta == null || string.IsNullOrWhiteSpace(meta.Configuracion))
-                return (null, null, null, null);
+                return (null, null, null, null, null);
 
             try
             {
@@ -1160,19 +1417,22 @@ namespace dosier_infrastructure.Curriculum
                 string? baseUrl = root.TryGetProperty("ai_base_url", out var bEl) && bEl.ValueKind == JsonValueKind.String
                     ? bEl.GetString()
                     : null;
+                string? effort = root.TryGetProperty("ai_reasoning_effort", out var rEl) && rEl.ValueKind == JsonValueKind.String
+                    ? rEl.GetString()
+                    : null;
 
                 string? rawKey = TryUnprotect(protectedKey);
-                return (rawKey, provider, model, baseUrl);
+                return (rawKey, provider, model, baseUrl, effort);
             }
             catch
             {
-                return (null, null, null, null);
+                return (null, null, null, null, null);
             }
         }
 
-        private async Task<(string? ApiKey, string? Provider, string? Model, string? BaseUrl)> GetGlobalConfigAsync(CancellationToken ct)
+        private async Task<(string? ApiKey, string? Provider, string? Model, string? BaseUrl, string? ReasoningEffort)> GetGlobalConfigAsync(CancellationToken ct)
         {
-            var keys = new[] { GlobalKeyClave, GlobalProviderClave, GlobalModelClave, GlobalBaseUrlClave };
+            var keys = new[] { GlobalKeyClave, GlobalProviderClave, GlobalModelClave, GlobalBaseUrlClave, GlobalReasoningEffortClave };
             var configs = await _context.DocConfigsGenerales
                 .AsNoTracking()
                 .Where(c => keys.Contains(c.Clave))
@@ -1182,8 +1442,9 @@ namespace dosier_infrastructure.Curriculum
             string? provider = configs.FirstOrDefault(c => c.Clave == GlobalProviderClave)?.Valor;
             string? model = configs.FirstOrDefault(c => c.Clave == GlobalModelClave)?.Valor;
             string? baseUrl = configs.FirstOrDefault(c => c.Clave == GlobalBaseUrlClave)?.Valor;
+            string? effort = configs.FirstOrDefault(c => c.Clave == GlobalReasoningEffortClave)?.Valor;
 
-            return (TryUnprotect(protectedKey), provider, model, baseUrl);
+            return (TryUnprotect(protectedKey), provider, model, baseUrl, effort);
         }
 
         private async Task UpsertGlobalConfigAsync(string clave, string valor, string descripcion, CancellationToken ct)
@@ -1414,6 +1675,497 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
             return false;
+        }
+
+        private static bool DoesUserRequestPrerequisites(string? instructions, List<PeaAiChatMessageDto>? history)
+        {
+            var terms = new[] { "prerrequisito", "prerequisito", "pre-requisito", "requisito previo", "materia previa", "asignatura previa" };
+            if (!string.IsNullOrWhiteSpace(instructions))
+            {
+                var lower = instructions.ToLowerInvariant();
+                if (terms.Any(t => lower.Contains(t))) return true;
+            }
+
+            if (history != null && history.Count > 0)
+            {
+                foreach (var msg in history.Where(h => h.Role.Equals("user", StringComparison.OrdinalIgnoreCase)))
+                {
+                    if (string.IsNullOrWhiteSpace(msg.Content)) continue;
+                    var lower = msg.Content.ToLowerInvariant();
+                    if (terms.Any(t => lower.Contains(t))) return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static List<PeaDraftPrerrequisitoDto> ResolveContextualPrerequisites(string carrera, string asignatura, string? instructions)
+        {
+            var list = new List<PeaDraftPrerrequisitoDto>();
+            string c = (carrera ?? string.Empty).ToLowerInvariant();
+            string a = (asignatura ?? string.Empty).ToLowerInvariant();
+            string inst = (instructions ?? string.Empty).ToLowerInvariant();
+
+            if (inst.Contains("lógica") || inst.Contains("logica"))
+            {
+                list.Add(new PeaDraftPrerrequisitoDto
+                {
+                    Asignatura = "Lógica Computacional y Algoritmos",
+                    Observacion = "Fundamentación formativa en razonamiento lógico y estructuras algorítmicas previa requerida"
+                });
+                return list;
+            }
+
+            if (inst.Contains("matemátic") || inst.Contains("matematic"))
+            {
+                list.Add(new PeaDraftPrerrequisitoDto
+                {
+                    Asignatura = "Matemática Aplicada y Pensamiento Lógico",
+                    Observacion = "Fundamentación formativa en cálculo y análisis cuantitativo previa requerida"
+                });
+                return list;
+            }
+
+            if (c.Contains("software") || c.Contains("sistemas") || c.Contains("computaci") || c.Contains("tecnolog"))
+            {
+                if (a.Contains("programaci") || a.Contains("software") || a.Contains("web") || a.Contains("móvil") || a.Contains("movil") || a.Contains("datos"))
+                {
+                    list.Add(new PeaDraftPrerrequisitoDto
+                    {
+                        Asignatura = "Lógica Computacional y Algoritmos",
+                        Observacion = "Fundamentación formativa en diseño de algoritmos y estructuras lógicas requerida para la asignatura"
+                    });
+                }
+                else
+                {
+                    list.Add(new PeaDraftPrerrequisitoDto
+                    {
+                        Asignatura = "Fundamentos de Tecnologías de la Información",
+                        Observacion = "Fundamentación conceptual previa en principios tecnológicos y computacionales"
+                    });
+                }
+                return list;
+            }
+
+            if (c.Contains("gastronom") || c.Contains("alimento") || c.Contains("cocina"))
+            {
+                list.Add(new PeaDraftPrerrequisitoDto
+                {
+                    Asignatura = "Bases Culinarias y Manipulación Higiénica de Alimentos",
+                    Observacion = "Fundamentación formativa en bioseguridad alimentaria y técnicas preliminares de cocina"
+                });
+                return list;
+            }
+
+            if (c.Contains("administra") || c.Contains("contab") || c.Contains("finanz") || c.Contains("marketing") || c.Contains("gesti"))
+            {
+                list.Add(new PeaDraftPrerrequisitoDto
+                {
+                    Asignatura = "Fundamentos de Gestión y Contabilidad Básica",
+                    Observacion = "Fundamentación formativa en principios organizacionales y contables aplicados"
+                });
+                return list;
+            }
+
+            if (c.Contains("electric") || c.Contains("electr") || c.Contains("mecán") || c.Contains("mecan"))
+            {
+                list.Add(new PeaDraftPrerrequisitoDto
+                {
+                    Asignatura = "Física Aplicada y Circuitos Básicos",
+                    Observacion = "Fundamentación técnica formativa en magnitudes físicas y principios aplicados"
+                });
+                return list;
+            }
+
+            list.Add(new PeaDraftPrerrequisitoDto
+            {
+                Asignatura = "Fundamentos Formativos de la Especialidad",
+                Observacion = "Competencias formativas preliminares indispensables para el abordaje de la asignatura"
+            });
+            return list;
+        }
+
+        private static readonly HashSet<string> ValidBloomVerbs = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "diseñar", "disenar", "desarrollar", "implementar", "analizar", "evaluar", "aplicar", "elaborar",
+            "construir", "gestionar", "formular", "modelar", "integrar", "configurar", "programar", "optimizar",
+            "ejecutar", "estructurar", "determinar", "resolver", "demostrar", "examinar", "interpretar", "sintetizar",
+            "crear", "producir", "validar", "auditar", "diagnosticar", "planificar", "administrar", "coordinar"
+        };
+
+        private static string NormalizeAndValidateBloomObjective(
+            string? rawHtml,
+            string carrera,
+            string asignatura,
+            out string? detectedVerb,
+            out bool isCompliant)
+        {
+            detectedVerb = null;
+            isCompliant = false;
+
+            if (string.IsNullOrWhiteSpace(rawHtml))
+            {
+                string fallbackVerb = ResolveDefaultBloomVerb(carrera, asignatura);
+                detectedVerb = fallbackVerb;
+                isCompliant = true;
+                return $"<p>{fallbackVerb} las competencias fundamentales de {System.Net.WebUtility.HtmlEncode(asignatura)} mediante la aplicación de técnicas y herramientas especializadas en el contexto de {System.Net.WebUtility.HtmlEncode(carrera)}.</p>";
+            }
+
+            // 1. Limpiar tags HTML y espacios redundantes
+            string plainText = System.Text.RegularExpressions.Regex.Replace(rawHtml, @"<[^>]+>", " ").Trim();
+            plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ");
+
+            // 2. Eliminar prefijos comunes que no son verbos
+            string cleanedText = System.Text.RegularExpressions.Regex.Replace(
+                plainText,
+                @"^(?:el\s+objetivo\s+(?:de\s+la\s+asignatura\s+)?es|esta\s+asignatura\s+(?:tiene\s+como\s+objetivo|busca|pretende)|capacitar\s+al\s+estudiante\s+en|permitir\s+al\s+estudiante|lograr\s+que\s+el\s+estudiante|formar\s+al\s+estudiante\s+en|dotar\s+al\s+estudiante\s+de)\s*[:,\-]?\s*",
+                "",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+
+            // 3. Extraer la primera palabra
+            var matchFirstWord = System.Text.RegularExpressions.Regex.Match(cleanedText, @"^([a-záéíóúñ]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (matchFirstWord.Success)
+            {
+                string firstWord = matchFirstWord.Groups[1].Value;
+                if (ValidBloomVerbs.Contains(firstWord))
+                {
+                    detectedVerb = Capitalize(firstWord);
+                    isCompliant = true;
+                    string capitalizedBody = detectedVerb + cleanedText.Substring(firstWord.Length);
+                    return $"<p>{System.Net.WebUtility.HtmlEncode(capitalizedBody)}</p>";
+                }
+
+                if (firstWord.EndsWith("ar", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.EndsWith("er", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.EndsWith("ir", StringComparison.OrdinalIgnoreCase))
+                {
+                    detectedVerb = Capitalize(firstWord);
+                    isCompliant = true;
+                    string capitalizedBody = detectedVerb + cleanedText.Substring(firstWord.Length);
+                    return $"<p>{System.Net.WebUtility.HtmlEncode(capitalizedBody)}</p>";
+                }
+
+                if (firstWord.Equals("conocer", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.Equals("entender", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.Equals("aprender", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.Equals("saber", StringComparison.OrdinalIgnoreCase))
+                {
+                    string replacement = "Analizar y aplicar";
+                    detectedVerb = "Analizar";
+                    isCompliant = true;
+                    string adjustedBody = replacement + cleanedText.Substring(firstWord.Length);
+                    return $"<p>{System.Net.WebUtility.HtmlEncode(adjustedBody)}</p>";
+                }
+            }
+
+            string defaultVerb = ResolveDefaultBloomVerb(carrera, asignatura);
+            detectedVerb = defaultVerb;
+            isCompliant = true;
+            string finalObjective = $"{defaultVerb} {cleanedText.TrimStart()}";
+            return $"<p>{System.Net.WebUtility.HtmlEncode(finalObjective)}</p>";
+        }
+
+        private static string ResolveDefaultBloomVerb(string carrera, string asignatura)
+        {
+            string c = (carrera ?? string.Empty).ToLowerInvariant();
+            string a = (asignatura ?? string.Empty).ToLowerInvariant();
+
+            if (a.Contains("programaci") || a.Contains("software") || a.Contains("web") || a.Contains("sistema") || a.Contains("aplicaci"))
+                return "Desarrollar";
+            if (a.Contains("diseño") || a.Contains("diseno") || a.Contains("arquitectura") || a.Contains("redes") || a.Contains("base de datos"))
+                return "Diseñar";
+            if (a.Contains("gesti") || a.Contains("administra") || a.Contains("evalua") || a.Contains("auditor"))
+                return "Gestionar";
+            if (a.Contains("cocina") || a.Contains("gastronom") || a.Contains("alimento"))
+                return "Elaborar";
+            if (a.Contains("electr") || a.Contains("mecán") || a.Contains("mecan") || a.Contains("mantenimiento"))
+                return "Implementar";
+
+            return "Analizar y aplicar";
+        }
+
+        private static string Capitalize(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            return char.ToUpperInvariant(text[0]) + text.Substring(1).ToLowerInvariant();
+        }
+
+        private static bool NormalizeAndValidatePractices(
+            List<PeaDraftActividadPracticaDto> practicas,
+            List<PeaDraftUnidadDto> unidades,
+            AcademicPromptContext ctx)
+        {
+            string defaultEscenario = ResolveDefaultEscenario(ctx.NombreCarrera);
+            string defaultProducto = ResolveDefaultProducto(ctx.NombreCarrera);
+
+            if (practicas.Count == 0 && unidades.Count > 0 && ctx.HorasAPE > 0)
+            {
+                int horasPerUnit = Math.Max(2, ctx.HorasAPE / unidades.Count);
+                foreach (var u in unidades)
+                {
+                    practicas.Add(new PeaDraftActividadPracticaDto
+                    {
+                        Unidad = u.Num,
+                        Nombre = $"Práctica Experimental: Aplicación Práctica de {u.Titulo}",
+                        Horas = u.HorasAPE > 0 ? u.HorasAPE : horasPerUnit,
+                        Escenario = defaultEscenario,
+                        Producto = defaultProducto,
+                        Caracterizacion = $"{defaultEscenario} | {defaultProducto}"
+                    });
+                }
+            }
+
+            int pIdx = 1;
+            foreach (var p in practicas)
+            {
+                if (p.Unidad <= 0)
+                {
+                    p.Unidad = ((pIdx - 1) % Math.Max(1, unidades.Count)) + 1;
+                }
+
+                if (string.IsNullOrWhiteSpace(p.Escenario) ||
+                    p.Escenario.Equals("n/a", StringComparison.OrdinalIgnoreCase) ||
+                    p.Escenario.Equals("aula", StringComparison.OrdinalIgnoreCase))
+                {
+                    p.Escenario = defaultEscenario;
+                }
+
+                if (string.IsNullOrWhiteSpace(p.Producto) ||
+                    p.Producto.Equals("n/a", StringComparison.OrdinalIgnoreCase) ||
+                    p.Producto.Equals("tarea", StringComparison.OrdinalIgnoreCase))
+                {
+                    p.Producto = defaultProducto;
+                }
+
+                p.Caracterizacion = $"{p.Escenario.Trim()} | {p.Producto.Trim()}";
+                pIdx++;
+            }
+
+            return practicas.Count > 0 && practicas.All(p => !string.IsNullOrWhiteSpace(p.Escenario) && !string.IsNullOrWhiteSpace(p.Producto));
+        }
+
+        private static string ResolveDefaultEscenario(string carrera)
+        {
+            string c = (carrera ?? string.Empty).ToLowerInvariant();
+            if (c.Contains("software") || c.Contains("sistema") || c.Contains("computaci") || c.Contains("tecnolog"))
+                return "Laboratorio Especializado de Computación y Software";
+            if (c.Contains("gastronom") || c.Contains("cocina") || c.Contains("alimento"))
+                return "Taller de Gastronomía y Cocina Experimental";
+            if (c.Contains("administra") || c.Contains("contab") || c.Contains("finanz") || c.Contains("marketing") || c.Contains("gesti"))
+                return "Centro de Simulación de Negocios y Gestión Empresarial";
+            if (c.Contains("electric") || c.Contains("electr") || c.Contains("mecán") || c.Contains("mecan"))
+                return "Taller Especializado y Laboratorio Técnico";
+
+            return "Laboratorio Especializado / Entorno Tecnológico ISTPET";
+        }
+
+        private static string ResolveDefaultProducto(string carrera)
+        {
+            string c = (carrera ?? string.Empty).ToLowerInvariant();
+            if (c.Contains("software") || c.Contains("sistema") || c.Contains("computaci") || c.Contains("tecnolog"))
+                return "Informe técnico de laboratorio con código fuente y pruebas funcionales";
+            if (c.Contains("gastronom") || c.Contains("cocina") || c.Contains("alimento"))
+                return "Ficha técnica de preparación culinaria y rúbrica de degustación";
+            if (c.Contains("administra") || c.Contains("contab") || c.Contains("finanz") || c.Contains("marketing") || c.Contains("gesti"))
+                return "Informe de caso práctico con matrices de análisis y propuestas de gestión";
+            if (c.Contains("electric") || c.Contains("electr") || c.Contains("mecán") || c.Contains("mecan"))
+                return "Informe de prácticas técnicas con esquemas, mediciones y reporte operativo";
+
+            return "Informe técnico de experimentación con evidencias y conclusiones";
+        }
+
+        private static bool NormalizeAndValidateBibliography(
+            List<PeaDraftBibliografiaDto> bibliografias,
+            AcademicPromptContext ctx)
+        {
+            foreach (var b in bibliografias)
+            {
+                string cita = b.CitaCompletaApa ?? string.Empty;
+                string autor = b.Autor ?? string.Empty;
+                string titulo = b.TituloLibro ?? string.Empty;
+                string editorial = b.EditorialCiudad ?? string.Empty;
+
+                var yearMatch = System.Text.RegularExpressions.Regex.Match(cita, @"\b(20\d{2}|19\d{2})\b");
+                string year = yearMatch.Success ? yearMatch.Value : "2023";
+
+                if (string.IsNullOrWhiteSpace(autor))
+                {
+                    var autorMatch = System.Text.RegularExpressions.Regex.Match(cita, @"^([^\(]+)\s*\(");
+                    autor = autorMatch.Success ? autorMatch.Groups[1].Value.Trim() : "Autor Institucional";
+                    b.Autor = autor;
+                }
+
+                if (string.IsNullOrWhiteSpace(titulo))
+                {
+                    var tituloMatch = System.Text.RegularExpressions.Regex.Match(cita, @"\)\.\s*([^.]+)\.");
+                    titulo = tituloMatch.Success ? tituloMatch.Groups[1].Value.Trim() : ctx.NombreAsignatura;
+                    b.TituloLibro = titulo;
+                }
+
+                if (string.IsNullOrWhiteSpace(editorial))
+                {
+                    var edMatch = System.Text.RegularExpressions.Regex.Match(cita, @"\.\s*([^.]+)\s*$");
+                    editorial = edMatch.Success && !edMatch.Groups[1].Value.Contains("http")
+                        ? edMatch.Groups[1].Value.Trim()
+                        : ResolveDefaultEditorial(ctx.NombreCarrera);
+                    b.EditorialCiudad = editorial;
+                }
+
+                if (string.IsNullOrWhiteSpace(cita) || !cita.Contains("(") || !cita.Contains(")"))
+                {
+                    b.CitaCompletaApa = $"{autor} ({year}). {titulo}. {editorial}.";
+                }
+            }
+
+            var defaultBooks = GetDefaultCurriculumBibliography(ctx.NombreCarrera, ctx.NombreAsignatura);
+            int basicaCount = bibliografias.Count(b => b.TipoBibliografia.Equals("Basica", StringComparison.OrdinalIgnoreCase));
+            int consultaCount = bibliografias.Count(b => b.TipoBibliografia.Equals("Consulta", StringComparison.OrdinalIgnoreCase));
+
+            foreach (var def in defaultBooks)
+            {
+                if (def.TipoBibliografia == "Basica" && basicaCount < 3)
+                {
+                    if (!bibliografias.Any(b => b.TituloLibro.Contains(def.TituloLibro, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        bibliografias.Add(def);
+                        basicaCount++;
+                    }
+                }
+                else if (def.TipoBibliografia == "Consulta" && consultaCount < 3)
+                {
+                    if (!bibliografias.Any(b => b.TituloLibro.Contains(def.TituloLibro, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        bibliografias.Add(def);
+                        consultaCount++;
+                    }
+                }
+            }
+
+            return bibliografias.Count >= 6 &&
+                   bibliografias.All(b => b.CitaCompletaApa.Contains("(") && !string.IsNullOrWhiteSpace(b.EditorialCiudad));
+        }
+
+        private static string ResolveDefaultEditorial(string carrera)
+        {
+            string c = (carrera ?? string.Empty).ToLowerInvariant();
+            if (c.Contains("software") || c.Contains("sistema") || c.Contains("computaci") || c.Contains("tecnolog"))
+                return "Alfaomega / Marcombo";
+            if (c.Contains("gastronom") || c.Contains("cocina"))
+                return "Editorial Síntesis / Paraninfo";
+            if (c.Contains("administra") || c.Contains("contab") || c.Contains("finanz"))
+                return "McGraw-Hill Interamericana";
+
+            return "Pearson Educación";
+        }
+
+        private static List<PeaDraftBibliografiaDto> GetDefaultCurriculumBibliography(string carrera, string asignatura)
+        {
+            var list = new List<PeaDraftBibliografiaDto>();
+            string c = (carrera ?? string.Empty).ToLowerInvariant();
+
+            if (c.Contains("software") || c.Contains("sistema") || c.Contains("computaci"))
+            {
+                list.Add(new PeaDraftBibliografiaDto
+                {
+                    TipoBibliografia = "Basica",
+                    Autor = "Deitel, P. J., & Deitel, H. M.",
+                    TituloLibro = "Cómo programar: Fundamentos y Buenas Prácticas (10ma ed.)",
+                    EditorialCiudad = "Pearson Educación",
+                    CitaCompletaApa = "Deitel, P. J., & Deitel, H. M. (2020). Cómo programar: Fundamentos y Buenas Prácticas (10ma ed.). Pearson Educación."
+                });
+                list.Add(new PeaDraftBibliografiaDto
+                {
+                    TipoBibliografia = "Basica",
+                    Autor = "Pressman, R. S., & Maxim, B. R.",
+                    TituloLibro = "Ingeniería del Software: Un enfoque práctico (9na ed.)",
+                    EditorialCiudad = "McGraw-Hill Interamericana",
+                    CitaCompletaApa = "Pressman, R. S., & Maxim, B. R. (2021). Ingeniería del Software: Un enfoque práctico (9na ed.). McGraw-Hill Interamericana."
+                });
+                list.Add(new PeaDraftBibliografiaDto
+                {
+                    TipoBibliografia = "Basica",
+                    Autor = "Sommerville, I.",
+                    TituloLibro = "Ingeniería de Software (10ma ed.)",
+                    EditorialCiudad = "Pearson Educación",
+                    CitaCompletaApa = "Sommerville, I. (2022). Ingeniería de Software (10ma ed.). Pearson Educación."
+                });
+                list.Add(new PeaDraftBibliografiaDto
+                {
+                    TipoBibliografia = "Consulta",
+                    Autor = "Martin, R. C.",
+                    TituloLibro = "Código Limpio: Manual de estilo para el desarrollo ágil de software",
+                    EditorialCiudad = "Anaya Multimedia",
+                    CitaCompletaApa = "Martin, R. C. (2021). Código Limpio: Manual de estilo para el desarrollo ágil de software. Anaya Multimedia."
+                });
+                list.Add(new PeaDraftBibliografiaDto
+                {
+                    TipoBibliografia = "Consulta",
+                    Autor = "Gamma, E., Helm, R., Johnson, R., & Vlissides, J.",
+                    TituloLibro = "Patrones de Diseño: Elementos de software orientado a objetos reutilizable",
+                    EditorialCiudad = "Addison-Wesley",
+                    CitaCompletaApa = "Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (2020). Patrones de Diseño: Elementos de software orientado a objetos reutilizable. Addison-Wesley."
+                });
+                list.Add(new PeaDraftBibliografiaDto
+                {
+                    TipoBibliografia = "Consulta",
+                    Autor = "Sedgewick, R., & Wayne, K.",
+                    TituloLibro = "Algoritmos (4ta ed.)",
+                    EditorialCiudad = "Pearson Educación",
+                    CitaCompletaApa = "Sedgewick, R., & Wayne, K. (2021). Algoritmos (4ta ed.). Pearson Educación."
+                });
+                return list;
+            }
+
+            list.Add(new PeaDraftBibliografiaDto
+            {
+                TipoBibliografia = "Basica",
+                Autor = "Hernández Sampieri, R., & Mendoza Torres, C. P.",
+                TituloLibro = "Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta",
+                EditorialCiudad = "McGraw-Hill Interamericana",
+                CitaCompletaApa = "Hernández Sampieri, R., & Mendoza Torres, C. P. (2020). Metodología de la investigación: Las rutas cuantitativa, cualitativa y mixta. McGraw-Hill Interamericana."
+            });
+            list.Add(new PeaDraftBibliografiaDto
+            {
+                TipoBibliografia = "Basica",
+                Autor = "Chiavenato, I.",
+                TituloLibro = "Introducción a la teoría general de la administración (10ma ed.)",
+                EditorialCiudad = "McGraw-Hill Interamericana",
+                CitaCompletaApa = "Chiavenato, I. (2022). Introducción a la teoría general de la administración (10ma ed.). McGraw-Hill Interamericana."
+            });
+            list.Add(new PeaDraftBibliografiaDto
+            {
+                TipoBibliografia = "Basica",
+                Autor = "Koontz, H., Weihrich, H., & Cannice, M.",
+                TituloLibro = "Administración: Una perspectiva global, empresarial y de innovación (16ta ed.)",
+                EditorialCiudad = "McGraw-Hill",
+                CitaCompletaApa = "Koontz, H., Weihrich, H., & Cannice, M. (2021). Administración: Una perspectiva global, empresarial y de innovación (16ta ed.). McGraw-Hill."
+            });
+            list.Add(new PeaDraftBibliografiaDto
+            {
+                TipoBibliografia = "Consulta",
+                Autor = "Kotler, P., & Armstrong, G.",
+                TituloLibro = "Fundamentos de Marketing (14ta ed.)",
+                EditorialCiudad = "Pearson Educación",
+                CitaCompletaApa = "Kotler, P., & Armstrong, G. (2022). Fundamentos de Marketing (14ta ed.). Pearson Educación."
+            });
+            list.Add(new PeaDraftBibliografiaDto
+            {
+                TipoBibliografia = "Consulta",
+                Autor = "Gitman, L. J., & Zutter, C. J.",
+                TituloLibro = "Principios de Administración Financiera (15ta ed.)",
+                EditorialCiudad = "Pearson Educación",
+                CitaCompletaApa = "Gitman, L. J., & Zutter, C. J. (2020). Principios de Administración Financiera (15ta ed.). Pearson Educación."
+            });
+            list.Add(new PeaDraftBibliografiaDto
+            {
+                TipoBibliografia = "Consulta",
+                Autor = "Robbins, S. P., & Judge, T. A.",
+                TituloLibro = "Comportamiento Organizacional (18va ed.)",
+                EditorialCiudad = "Pearson Educación",
+                CitaCompletaApa = "Robbins, S. P., & Judge, T. A. (2021). Comportamiento Organizacional (18va ed.). Pearson Educación."
+            });
+
+            return list;
         }
 
         private sealed class AcademicPromptContext

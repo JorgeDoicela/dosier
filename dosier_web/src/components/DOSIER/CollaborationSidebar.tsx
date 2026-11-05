@@ -50,6 +50,7 @@ import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlaye
 import { PeaReviewPanel } from '../../pages/Curriculum/Workspace/components/PeaReviewPanel';
 import { formatDynamicSectionLabel } from '../../utils/sectionNumbering';
 import { GeistSelect } from '../Common/GeistSelect';
+import PeaAiChatSidebar from './shell/components/PeaAiChatSidebar';
 
 const toSentenceCase = (text: string, fallbackIdx?: number): string => {
     if (!text) return '';
@@ -101,10 +102,13 @@ export interface CollaborationSidebarProps {
     onOpenImportModal?: () => void;
     onTriggerDocExtraction?: (file: File, instructions?: string) => Promise<void> | void;
     onOpenAiModal?: () => void;
-    onTriggerAiGeneration?: (targetSection: string, customInstructions: string) => void;
+    onTriggerAiGeneration?: (targetSection: string, customInstructions: string, customModel?: string) => Promise<any> | void;
     onOpenAiConfigModal?: () => void;
+    onApplyStructuredDraft?: (patch: Record<string, any>) => void;
     isGeneratingAi?: boolean;
     aiConfigVersion?: number;
+    resolvedPeaUuid?: string;
+    formData?: any;
 }
 
 const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
@@ -125,8 +129,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     onOpenAiModal,
     onTriggerAiGeneration,
     onOpenAiConfigModal,
+    onApplyStructuredDraft,
     isGeneratingAi = false,
-    aiConfigVersion = 0
+    aiConfigVersion = 0,
+    resolvedPeaUuid,
+    formData
 }) => {
     const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
@@ -224,77 +231,6 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             }
         } else if (onOpenImportModal) {
             onOpenImportModal();
-        }
-    };
-
-    // ── Estado del Asistente Curricular IA integrado en Barra Lateral ──
-    const [sidebarAiTargetSection, setSidebarAiTargetSection] = useState<string>('all');
-
-    // Mapeo dinámico y numérico de secciones (1 a 11) para coherencia total con la Navegación del Documento
-    const aiAvailableSections = useMemo(() => {
-        if (sectionItems && sectionItems.length > 0) {
-            return sectionItems
-                .map((sec, idx) => ({
-                    id: sec.id,
-                    label: toSentenceCase(formatDynamicSectionLabel(sec.label, idx))
-                }))
-                .filter(sec => sec.id !== 'pea_general_section' && sec.id !== 'pea_signatures_section');
-        }
-        return [
-            { id: 'pea_objectives_section', label: '2. Objetivo de la asignatura' },
-            { id: 'pea_prerequisites_section', label: '3. Prerrequisitos curriculares' },
-            { id: 'pea_career_outcomes_section', label: '4. Resultados de aprendizaje de la carrera a los que la asignatura aporta' },
-            { id: 'pea_subject_outcomes_section', label: '5. Resultados de aprendizaje de la asignatura' },
-            { id: 'pea_contents_section', label: '6. Contenidos de enseñanza' },
-            { id: 'pea_methodology_section', label: '7. Metodología y recursos didácticos' },
-            { id: 'pea_resources_section', label: '8. Actividades prácticas' },
-            { id: 'pea_evaluation_section', label: '9. Evaluación del aprendizaje' },
-            { id: 'pea_bibliography_section', label: '10. Bibliografía' }
-        ];
-    }, [sectionItems]);
-    const [sidebarAiPrompt, setSidebarAiPrompt] = useState<string>('');
-    const [aiConfigStatus, setAiConfigStatus] = useState<PeaAiConfigStatus | null>(null);
-    const [loadingAiConfig, setLoadingAiConfig] = useState<boolean>(false);
-
-
-    useEffect(() => {
-        const VALID_AI_SECTIONS = [
-            'pea_objectives_section',
-            'pea_prerequisites_section',
-            'pea_career_outcomes_section',
-            'pea_subject_outcomes_section',
-            'pea_contents_section',
-            'pea_methodology_section',
-            'pea_resources_section',
-            'pea_evaluation_section',
-            'pea_bibliography_section'
-        ];
-        if (sectionName && VALID_AI_SECTIONS.includes(sectionName)) {
-            setSidebarAiTargetSection(sectionName);
-        }
-    }, [sectionName]);
-
-    useEffect(() => {
-        if (activeTab === 'ai') {
-            setLoadingAiConfig(true);
-            getPeaAiConfig()
-                .then(st => setAiConfigStatus(st))
-                .catch(err => console.error('[DOSIER AI Sidebar] Error cargando config:', err))
-                .finally(() => setLoadingAiConfig(false));
-        }
-    }, [activeTab, aiConfigVersion]);
-
-    const handleSidebarGenerateAi = () => {
-        if (onTriggerAiGeneration) {
-            onTriggerAiGeneration(sidebarAiTargetSection, sidebarAiPrompt);
-        }
-    };
-
-    const handleSidebarOpenAiConfig = () => {
-        if (onOpenAiConfigModal) {
-            onOpenAiConfigModal();
-        } else if (onOpenAiModal) {
-            onOpenAiModal();
         }
     };
 
@@ -915,7 +851,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             </div>
 
             {/* Content Container */}
-            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : activeTab === 'revision' ? 'overflow-y-auto p-2 sm:p-3' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col`}>
+            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : activeTab === 'revision' ? 'overflow-y-auto p-2 sm:p-3' : activeTab === 'ai' ? 'overflow-hidden p-0' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col`}>
                 {isLoadingPulse ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 py-10 opacity-70">
                         <Loader size={24} className="animate-spin text-text-main" />
@@ -1707,99 +1643,18 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         )}
 
                         {activeTab === 'ai' && (
-                            <div className="flex flex-col min-h-full flex-1 justify-between">
-                                <div className="space-y-4">
-                                    {/* Encabezado del Asistente */}
-                                    <div className="pb-3 border-b border-border-thin">
-                                        <h3 className="text-xs font-bold text-text-main">
-                                            Asistente Curricular IA
-                                        </h3>
-                                    </div>
-
-                                    {/* Alerta de configuración de API Key si no está configurada */}
-                                    {!loadingAiConfig && !aiConfigStatus?.isReady && (
-                                        <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
-                                            <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                                                <AlertCircle size={14} className="shrink-0" />
-                                                <span>Se requiere configurar una clave de API (DeepSeek, Gemini u OpenAI).</span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={handleSidebarOpenAiConfig}
-                                                className="w-full py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                                            >
-                                                <Key size={13} />
-                                                <span>Configurar API Key</span>
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Selector de Alcance */}
-                                    <div className="space-y-1.5">
-                                        <label className="block text-[11px] font-semibold text-text-main">
-                                            Alcance de la propuesta
-                                        </label>
-                                        <GeistSelect
-                                            value={sidebarAiTargetSection}
-                                            onChange={val => setSidebarAiTargetSection(String(val))}
-                                            className="w-full text-xs font-medium"
-                                            options={[
-                                                { value: 'all', label: 'Todo el PEA completo (Secciones 2 — 10)' },
-                                                ...aiAvailableSections.map(sec => ({
-                                                    value: sec.id,
-                                                    label: sec.label
-                                                }))
-                                            ]}
-                                        />
-                                    </div>
-
-                                    {/* Lineamientos o prompt del docente */}
-                                    <div className="space-y-1.5">
-                                        <label className="block text-[11px] font-semibold text-text-main">
-                                            Lineamientos o enfoque específico
-                                        </label>
-                                        <textarea
-                                            rows={5}
-                                            value={sidebarAiPrompt}
-                                            onChange={e => setSidebarAiPrompt(e.target.value)}
-                                            placeholder="Ej. Estructurar en 4 unidades temáticas, priorizar desarrollo de APIs con Node.js y microservicios, incluir talleres prácticos..."
-                                            className="w-full p-3 text-xs rounded-lg border border-border-thin bg-surface text-text-main placeholder:text-text-dim/50 outline-none focus:outline-none focus:border-[#0070f3] focus:ring-2 focus:ring-[#0070f3]/20 transition-all resize-none leading-relaxed shadow-2xs"
-                                        />
-
-                                    </div>
-                                </div>
-
-                                {/* Dock de Acciones al fondo */}
-                                <div className="mt-auto pt-4 border-t border-border-thin space-y-2 shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={handleSidebarGenerateAi}
-                                        disabled={isGeneratingAi || loadingAiConfig || !aiConfigStatus?.isReady || !onTriggerAiGeneration}
-                                        className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                                    >
-                                        {isGeneratingAi ? (
-                                            <>
-                                                <Loader2 size={15} className="animate-spin" />
-                                                <span>Generando con IA...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Sparkles size={15} />
-                                                <span>Generar con IA</span>
-                                            </>
-                                        )}
-                                    </button>
-
-                                    <div className="text-center pt-1">
-                                        <button
-                                            type="button"
-                                            onClick={handleSidebarOpenAiConfig}
-                                            className="text-[11px] text-text-dim hover:text-text-main transition-colors cursor-pointer"
-                                        >
-                                            Configurar proveedor
-                                        </button>
-                                    </div>
-                                </div>
+                            <div className="flex-1 flex flex-col h-full overflow-hidden">
+                                <PeaAiChatSidebar
+                                    instanceUuid={instanceUuid}
+                                    resolvedPeaUuid={resolvedPeaUuid || entityUuid}
+                                    formData={formData || peaData}
+                                    sectionItems={sectionItems}
+                                    onTriggerAiGeneration={onTriggerAiGeneration}
+                                    onApplyStructuredDraft={onApplyStructuredDraft}
+                                    onOpenAiConfigModal={onOpenAiConfigModal || onOpenAiModal}
+                                    isGeneratingAi={isGeneratingAi}
+                                    aiConfigVersion={aiConfigVersion}
+                                />
                             </div>
                         )}
                     </>

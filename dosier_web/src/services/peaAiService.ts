@@ -10,12 +10,252 @@ export type PeaAiProvider =
     | 'ollama'
     | 'custom';
 
+export type AiReasoningEffort = 'low' | 'medium' | 'high';
+
+export interface AiModelSpec {
+    id: string;
+    label: string;
+    mode: 'reasoning' | 'fast' | 'general' | 'balanced';
+    modeLabel: string;
+    description: string;
+    supportsEffort?: boolean;
+}
+
+export const AI_PROVIDER_MODELS: Record<PeaAiProvider, AiModelSpec[]> = {
+    deepseek: [
+        {
+            id: 'deepseek-reasoner',
+            label: 'DeepSeek-R1 (Razonamiento Lógico Profundo / CoT)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento R1',
+            description: 'Cadena de pensamiento analítico paso a paso para cuadrar horas y malla curricular.'
+        },
+        {
+            id: 'deepseek-chat',
+            label: 'DeepSeek-V3 (Generación Rápida y Fluida)',
+            mode: 'fast',
+            modeLabel: 'Chat V3 Rápido',
+            description: 'Redacción académica ágil y coherente sin latencia prolongada.'
+        }
+    ],
+    openai: [
+        {
+            id: 'o3-mini',
+            label: 'o3-mini (Razonamiento STEM y Curricular)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento o3-mini',
+            description: 'Razonamiento estructurado con nivel de esfuerzo configurable (Bajo, Medio, Alto).',
+            supportsEffort: true
+        },
+        {
+            id: 'o1',
+            label: 'o1 (Razonamiento Profundo Integral)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento o1',
+            description: 'Capacidad deductiva máxima para resolución pedagógica compleja.',
+            supportsEffort: true
+        },
+        {
+            id: 'gpt-4o',
+            label: 'GPT-4o (Multimodal Omni de Alta Capacidad)',
+            mode: 'general',
+            modeLabel: 'Multimodal GPT-4o',
+            description: 'Modelo insignia general para redacción y análisis curricular integral.'
+        },
+        {
+            id: 'gpt-4o-mini',
+            label: 'GPT-4o Mini (Rápido, Ligero y Eficiente)',
+            mode: 'fast',
+            modeLabel: 'Rápido GPT-4o-mini',
+            description: 'Baja latencia ideal para borradores y consultas frecuentes.'
+        }
+    ],
+    gemini: [
+        {
+            id: 'gemini-2.5-pro',
+            label: 'Gemini 2.5 Pro (Razonamiento y Análisis Complejo)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento 2.5 Pro',
+            description: 'Comprensión contextual profunda de competencias laborales y perfiles de egreso.'
+        },
+        {
+            id: 'gemini-2.5-flash',
+            label: 'Gemini 2.5 Flash (Velocidad y Precisión Ágil)',
+            mode: 'fast',
+            modeLabel: 'Flash 2.5 Ágil',
+            description: 'Respuesta balanceada ultrarrápida para diseño curricular estructurado.'
+        },
+        {
+            id: 'gemini-2.0-flash',
+            label: 'Gemini 2.0 Flash (Estándar Rápido)',
+            mode: 'fast',
+            modeLabel: 'Flash 2.0',
+            description: 'Generación directa y ágil para secciones curriculares.'
+        }
+    ],
+    anthropic: [
+        {
+            id: 'claude-3-5-sonnet-latest',
+            label: 'Claude 3.5 Sonnet (Rigor Pedagógico y Redacción)',
+            mode: 'balanced',
+            modeLabel: 'Análisis Sonnet',
+            description: 'Alta precisión en taxonomía de Bloom, redacción de objetivos y RDA.'
+        },
+        {
+            id: 'claude-3-5-haiku-latest',
+            label: 'Claude 3.5 Haiku (Respuesta Instantánea)',
+            mode: 'fast',
+            modeLabel: 'Haiku Instantáneo',
+            description: 'Velocidad máxima para generación concisa.'
+        }
+    ],
+    openrouter: [
+        {
+            id: 'deepseek/deepseek-r1',
+            label: 'DeepSeek-R1 (Razonamiento vía OpenRouter)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento R1',
+            description: 'Inferencia de razonamiento profundo CoT.'
+        },
+        {
+            id: 'deepseek/deepseek-chat',
+            label: 'DeepSeek-V3 (Chat Universal)',
+            mode: 'fast',
+            modeLabel: 'Chat V3',
+            description: 'Generación ágil y fluida.'
+        },
+        {
+            id: 'openai/o3-mini',
+            label: 'OpenAI o3-mini (Razonamiento Lógico)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento o3-mini',
+            description: 'Modelo de razonamiento estructurado.'
+        },
+        {
+            id: 'anthropic/claude-3.5-sonnet',
+            label: 'Claude 3.5 Sonnet (vía OpenRouter)',
+            mode: 'balanced',
+            modeLabel: 'Claude Sonnet',
+            description: 'Calidad superior en prosa pedagógica.'
+        },
+        {
+            id: 'google/gemini-2.5-flash',
+            label: 'Google Gemini 2.5 Flash',
+            mode: 'fast',
+            modeLabel: 'Gemini Flash',
+            description: 'Equilibrio de velocidad y precisión.'
+        }
+    ],
+    groq: [
+        {
+            id: 'deepseek-r1-distill-llama-70b',
+            label: 'DeepSeek R1 Distill Llama 70B (Razonamiento LPU)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento Ultra-rápido',
+            description: 'Inferencia de razonamiento a más de 300 tokens/seg en hardware Groq.'
+        },
+        {
+            id: 'llama-3.3-70b-versatile',
+            label: 'Llama 3.3 70B Versatile',
+            mode: 'balanced',
+            modeLabel: 'Llama 3.3 70B',
+            description: 'Modelo abierto versátil de alta precisión.'
+        },
+        {
+            id: 'llama-3.1-8b-instant',
+            label: 'Llama 3.1 8B Instant',
+            mode: 'fast',
+            modeLabel: 'Llama 8B Instant',
+            description: 'Latencia mínima.'
+        }
+    ],
+    ollama: [
+        {
+            id: 'deepseek-r1',
+            label: 'deepseek-r1 (Razonamiento Local)',
+            mode: 'reasoning',
+            modeLabel: 'Razonamiento Local',
+            description: 'Razonamiento local privado sin salida de datos a la nube.'
+        },
+        {
+            id: 'llama3',
+            label: 'llama3 (Estándar Local)',
+            mode: 'general',
+            modeLabel: 'Llama 3 Local',
+            description: 'Modelo local de propósito general.'
+        },
+        {
+            id: 'qwen2.5',
+            label: 'qwen2.5 (Estructurado y Técnico)',
+            mode: 'balanced',
+            modeLabel: 'Qwen 2.5',
+            description: 'Excelente apego a formatos curriculares JSON.'
+        }
+    ],
+    custom: []
+};
+
+export const resolveAiModelBadge = (
+    provider?: string,
+    model?: string,
+    effort?: string
+): { label: string; modeLabel: string; isReasoning: boolean } => {
+    const p = (provider || 'deepseek').toLowerCase() as PeaAiProvider;
+    const m = (model || '').toLowerCase();
+
+    const presetList = AI_PROVIDER_MODELS[p] || [];
+    const matched = presetList.find(spec => spec.id.toLowerCase() === m);
+
+    const isReasoning = Boolean(
+        matched?.mode === 'reasoning' ||
+        m.includes('reasoner') ||
+        m.includes('r1') ||
+        m.startsWith('o1') ||
+        m.startsWith('o3')
+    );
+
+    let modeText = matched?.modeLabel;
+    if (!modeText) {
+        if (isReasoning) modeText = 'Modo Razonamiento';
+        else modeText = 'Modo Estándar';
+    }
+
+    if (matched?.supportsEffort && effort) {
+        const effortMap: Record<string, string> = {
+            low: 'Bajo',
+            medium: 'Medio',
+            high: 'Alto'
+        };
+        const effLabel = effortMap[effort.toLowerCase()] || effort;
+        modeText = `${modeText} (${effLabel})`;
+    }
+
+    const providerNames: Record<string, string> = {
+        deepseek: 'DeepSeek',
+        openai: 'OpenAI',
+        gemini: 'Gemini',
+        anthropic: 'Claude',
+        openrouter: 'OpenRouter',
+        groq: 'Groq',
+        ollama: 'Ollama',
+        custom: 'IA'
+    };
+
+    const provName = providerNames[p] || p;
+    return {
+        label: `${provName} · ${modeText}`,
+        modeLabel: modeText,
+        isReasoning
+    };
+};
+
 export interface PeaAiConfigStatus {
     hasUserApiKey: boolean;
     hasGlobalApiKey: boolean;
     activeProvider: PeaAiProvider;
     activeModel: string;
     activeBaseUrl?: string | null;
+    activeReasoningEffort?: AiReasoningEffort | null;
     maskedApiKey?: string | null;
     isReady: boolean;
 }
@@ -25,6 +265,7 @@ export interface SavePeaAiConfigRequest {
     model?: string;
     baseUrl?: string;
     apiKey?: string;
+    reasoningEffort?: AiReasoningEffort;
     scope?: 'user' | 'global';
 }
 
@@ -79,6 +320,11 @@ export interface PeaDraftValidationSummary {
     generatedHorasTA: number;
     generatedTotalHoras: number;
     isHoursExactMatch: boolean;
+    isBloomVerbValid?: boolean;
+    bloomVerbDetected?: string;
+    arePracticesCompliant?: boolean;
+    isBibliographyCompliant?: boolean;
+    complianceNotes?: string[];
     generatedSections: string[];
 }
 
@@ -100,9 +346,11 @@ export interface PeaStructuredDraft {
 
 export interface GeneratePeaDraftRequest {
     targetSection?: string;
+    targetSections?: string[];
     customInstructions?: string;
     provider?: PeaAiProvider;
     model?: string;
+    reasoningEffort?: AiReasoningEffort;
     baseUrlOverride?: string;
     apiKeyOverride?: string;
     currentHorasCD?: number;
@@ -116,6 +364,21 @@ export interface GeneratePeaDraftRequest {
         horasCD: number;
         horasAPE: number;
         horasTA: number;
+    }>;
+    currentObjetivo?: string;
+    currentPrerrequisitos?: Array<{ asignatura: string; observacion?: string }>;
+    currentRdaCarrera?: string;
+    currentResultadosAprendizaje?: string;
+    currentMetodologiaEnsenanza?: string;
+    currentRecursosDidacticos?: string;
+    currentActividadesPracticas?: Array<{ unidad?: number; nombre: string; horas?: number; escenario?: string; producto?: string }>;
+    currentEvaluaciones?: Array<{ nota: string; tipo: string; calificacion: number }>;
+    currentBibliografias?: Array<{ tipo_bibliografia?: string; tipoBibliografia?: string; autor?: string; titulo_libro?: string; tituloLibro?: string; editorial_ciudad?: string; editorialCiudad?: string; cita_completa_apa?: string; citaCompletaApa?: string }>;
+    currentBibliografiaBasica?: string;
+    currentBibliografiaConsulta?: string;
+    conversationHistory?: Array<{
+        role: 'user' | 'assistant';
+        content: string;
     }>;
 }
 
@@ -132,6 +395,7 @@ const normalizeConfigStatus = (raw: any): PeaAiConfigStatus => {
         activeProvider,
         activeModel: String(raw?.active_model ?? raw?.activeModel ?? 'deepseek-chat'),
         activeBaseUrl: raw?.active_base_url ?? raw?.activeBaseUrl ?? null,
+        activeReasoningEffort: (raw?.active_reasoning_effort ?? raw?.activeReasoningEffort ?? null) as AiReasoningEffort | null,
         maskedApiKey: raw?.masked_api_key ?? raw?.maskedApiKey ?? null,
         isReady: Boolean(raw?.is_ready ?? raw?.isReady)
     };
@@ -247,7 +511,8 @@ export const generatePeaAiDraft = async (
     req: GeneratePeaDraftRequest = {}
 ): Promise<PeaStructuredDraft> => {
     const res = await api.post(`/pea/uuid/${peaUuid}/ai/generar`, {
-        target_section: req.targetSection ?? 'all',
+        target_section: req.targetSection ?? (req.targetSections && req.targetSections.length > 0 ? req.targetSections.join(',') : 'all'),
+        target_sections: req.targetSections,
         custom_instructions: req.customInstructions,
         provider: req.provider,
         model: req.model,
@@ -257,6 +522,10 @@ export const generatePeaAiDraft = async (
         current_horas_ape: req.currentHorasAPE,
         current_horas_ta: req.currentHorasTA,
         current_total_horas: req.currentTotalHoras,
+        conversation_history: req.conversationHistory?.map(h => ({
+            role: h.role,
+            content: h.content
+        })),
         current_unidades: req.currentUnidades?.map(u => ({
             num: u.num,
             titulo: u.titulo,

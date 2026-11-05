@@ -11,8 +11,10 @@ import {
 import {
     getPeaAiConfig,
     savePeaAiConfig,
+    AI_PROVIDER_MODELS,
     type PeaAiConfigStatus,
-    type PeaAiProvider
+    type PeaAiProvider,
+    type AiReasoningEffort
 } from '../../../../services/peaAiService';
 import { useNotifications } from '../../../../api/NotificationsContext';
 
@@ -124,6 +126,7 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
     // Estado de Configuración de Proveedor y Credenciales
     const [provider, setProvider] = useState<PeaAiProvider>('deepseek');
     const [model, setModel] = useState<string>('deepseek-chat');
+    const [reasoningEffort, setReasoningEffort] = useState<AiReasoningEffort>('medium');
     const [baseUrl, setBaseUrl] = useState<string>('https://api.deepseek.com/chat/completions');
     const [isCustomModelInput, setIsCustomModelInput] = useState<boolean>(false);
     const [apiKeyInput, setApiKeyInput] = useState<string>('');
@@ -141,10 +144,14 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                 setConfigStatus(status);
                 setProvider(status.activeProvider);
                 setModel(status.activeModel);
+                if (status.activeReasoningEffort) {
+                    setReasoningEffort(status.activeReasoningEffort);
+                }
                 const resolvedBaseUrl = status.activeBaseUrl || PROVIDER_PRESETS[status.activeProvider]?.defaultBaseUrl || 'https://api.deepseek.com/chat/completions';
                 setBaseUrl(resolvedBaseUrl);
-                const presetModels = PROVIDER_PRESETS[status.activeProvider]?.models || [];
-                if (!presetModels.includes(status.activeModel) && status.activeModel) {
+                const presetSpecs = AI_PROVIDER_MODELS[status.activeProvider] || [];
+                const presetModelIds = presetSpecs.map(s => s.id);
+                if (!presetModelIds.includes(status.activeModel) && status.activeModel) {
                     setIsCustomModelInput(true);
                 }
             } catch (err) {
@@ -158,6 +165,8 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
     }, [isOpen]);
 
     if (!isOpen) return null;
+
+    const currentModelSpec = (AI_PROVIDER_MODELS[provider] || []).find(s => s.id === model);
 
     const handleProviderChange = (newProv: PeaAiProvider) => {
         setProvider(newProv);
@@ -178,6 +187,7 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                 model,
                 baseUrl,
                 apiKey: apiKeyInput.trim() ? apiKeyInput.trim() : undefined,
+                reasoningEffort: currentModelSpec?.supportsEffort ? reasoningEffort : undefined,
                 scope: isAdmin ? scope : 'user'
             });
             setConfigStatus(status);
@@ -291,13 +301,13 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                                 </div>
                             )}
 
-                            {/* Modelo */}
+                            {/* Modelo y Modo de Inteligencia Artificial */}
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
                                     <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
-                                        Modelo de lenguaje
+                                        Modelo y Modo de Ejecución
                                     </label>
-                                    {PROVIDER_PRESETS[provider]?.models.length > 0 && (
+                                    {(AI_PROVIDER_MODELS[provider] || []).length > 0 && (
                                         <button
                                             type="button"
                                             onClick={() => setIsCustomModelInput(prev => !prev)}
@@ -308,12 +318,12 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                                     )}
                                 </div>
 
-                                {isCustomModelInput || PROVIDER_PRESETS[provider]?.models.length === 0 ? (
+                                {isCustomModelInput || (AI_PROVIDER_MODELS[provider] || []).length === 0 ? (
                                     <input
                                         type="text"
                                         value={model}
                                         onChange={e => setModel(e.target.value)}
-                                        placeholder="Ej. deepseek-chat, claude-3-5-sonnet-20241022, gpt-4o, etc."
+                                        placeholder="Ej. deepseek-reasoner, o3-mini, claude-3-5-sonnet-latest, etc."
                                         className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-hidden focus:border-[#0070f3]"
                                     />
                                 ) : (
@@ -321,13 +331,41 @@ export const PeaAiAssistantModal: React.FC<PeaAiAssistantModalProps> = ({
                                         value={model}
                                         onChange={val => setModel(String(val))}
                                         className="w-full text-xs font-medium"
-                                        options={PROVIDER_PRESETS[provider]?.models.map(m => ({
-                                            value: m,
-                                            label: m
-                                        })) || []}
+                                        options={(AI_PROVIDER_MODELS[provider] || []).map(spec => ({
+                                            value: spec.id,
+                                            label: spec.label
+                                        }))}
                                     />
                                 )}
+
+                                {currentModelSpec && (
+                                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-relaxed pt-0.5">
+                                        {currentModelSpec.description}
+                                    </p>
+                                )}
                             </div>
+
+                            {/* Esfuerzo de Razonamiento (Configurable para modelos OpenAI de razonamiento como o1, o3-mini) */}
+                            {currentModelSpec?.supportsEffort && (
+                                <div className="space-y-1.5 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/20">
+                                    <label className="block text-xs font-semibold text-blue-900 dark:text-blue-300">
+                                        Nivel de Esfuerzo de Razonamiento (OpenAI Reasoning Effort)
+                                    </label>
+                                    <p className="text-[11px] text-blue-800/80 dark:text-blue-300/80 mb-2">
+                                        Controla la cantidad de tokens que el modelo dedica a la cadena de pensamiento antes de emitir la propuesta curricular.
+                                    </p>
+                                    <GeistSelect
+                                        value={reasoningEffort}
+                                        onChange={val => setReasoningEffort(val as AiReasoningEffort)}
+                                        className="w-full text-xs font-medium bg-white dark:bg-zinc-900"
+                                        options={[
+                                            { value: 'low', label: 'Bajo — Menor tiempo de respuesta y razonamiento sintético' },
+                                            { value: 'medium', label: 'Medio (Recomendado) — Balance óptimo para horas CACES y malla' },
+                                            { value: 'high', label: 'Alto — Deducción analítica exhaustiva y máxima profundidad' }
+                                        ]}
+                                    />
+                                </div>
+                            )}
 
                             {/* API Key */}
                             <div className="space-y-1.5">
