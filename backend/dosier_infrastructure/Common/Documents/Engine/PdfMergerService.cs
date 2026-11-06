@@ -15,19 +15,25 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
         /// El primer PDF en la lista es el "Documento Principal" (el generado por DOSIER),
         /// los siguientes son los anexos.
         /// </summary>
-        public async Task<byte[]> MergeAsync(IEnumerable<byte[]> pdfDocuments)
+        public async Task<byte[]> MergeAsync(IEnumerable<byte[]> pdfDocuments, string? title = null)
         {
             var pdfList = pdfDocuments.ToList();
 
             if (!pdfList.Any())
                 throw new ArgumentException("No hay documentos para combinar.");
 
-            if (pdfList.Count == 1)
+            if (pdfList.Count == 1 && string.IsNullOrWhiteSpace(title))
                 return pdfList[0];
 
             using var outputStream = new MemoryStream();
             using var pdfWriter = new PdfWriter(outputStream);
             using var mergedPdf = new PdfDocument(pdfWriter);
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                mergedPdf.GetDocumentInfo().SetTitle(title);
+            }
+
             var merger = new PdfMerger(mergedPdf);
 
             foreach (var pdfBytes in pdfList)

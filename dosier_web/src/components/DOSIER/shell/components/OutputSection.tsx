@@ -194,7 +194,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                         {isOfficialDocument ? (
                             /* Vista Oficial Inmutable: Estado y Acciones Directas */
                             <div className="p-5 sm:p-6 flex flex-col gap-3 shrink-0">
-                                <span className={`text-xs font-bold uppercase tracking-wider ${isDocumentSigned ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-main'}`}>
+                                <span className={`text-xs font-bold uppercase tracking-wider text-center ${isDocumentSigned ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-main'}`}>
                                     {isDocumentSigned ? 'Documento Firmado' : 'Documento en Revisión'}
                                 </span>
 
@@ -224,7 +224,6 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                         }}
                                         className="w-full py-2.5 px-3 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                     >
-                                        <Settings size={15} />
                                         <span>Ver Asignatura</span>
                                     </button>
                                 </div>

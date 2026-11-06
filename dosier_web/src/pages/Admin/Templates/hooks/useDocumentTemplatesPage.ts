@@ -640,6 +640,28 @@ export const useDocumentTemplatesPage = () => {
         }
     };
 
+    const handleUpdateFilenamePattern = async (newPattern: string) => {
+        if (!selectedTemplate) return;
+        try {
+            await documentTemplateService.updateFilenamePattern(selectedTemplate.code, newPattern);
+            setSelectedTemplate(prev => prev ? {
+                ...prev,
+                filenamePattern: newPattern,
+                filename_pattern: newPattern
+            } : null);
+            setTemplates(prev => prev.map(t => t.code === selectedTemplate.code ? {
+                ...t,
+                filenamePattern: newPattern,
+                filename_pattern: newPattern
+            } : t));
+            addToast("Nomenclatura Actualizada", `El formato de nombre para '${selectedTemplate.name}' ha sido configurado con éxito.`, "success");
+        } catch (err: any) {
+            console.error('[DOSIER] Error al actualizar nomenclatura:', err);
+            addToast("Error al Actualizar", err.response?.data?.error ?? "No se pudo guardar la nomenclatura del formato.", "error");
+            throw err;
+        }
+    };
+
     const handleResetToDefault = async () => {
         if (!selectedTemplate) return;
         const ok = await confirm({
@@ -813,6 +835,7 @@ export const useDocumentTemplatesPage = () => {
         handleToggleActive,
         handleUpdateConfig,
         handleUpdateThemeConfig,
+        handleUpdateFilenamePattern,
         handleSaveTemplate,
         handleResetToDefault,
         handleCellChange,

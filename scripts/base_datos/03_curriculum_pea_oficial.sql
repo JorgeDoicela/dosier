@@ -307,6 +307,7 @@ INSERT INTO doc_document_templates (
     requires_traceability,
     requires_signature,
     signature_type,
+    filename_pattern,
     collaborative_fields_json,
     is_active
 ) VALUES (
@@ -321,6 +322,7 @@ INSERT INTO doc_document_templates (
     1, -- requires_traceability
     1, -- requires_signature
     'DOSIER',
+    'PEA_{carrera}_{asignatura}_{periodo}',
     '["objetivo_asignatura", "prerrequisitos", "rdas_carrera", "rdas_asignatura", "contenidos_unidades", "metodologia_propuesta", "recursos_didacticos", "actividades_practicas", "sistema_evaluacion", "bibliografia_basica", "bibliografia_consulta"]',
     1
 ) ON DUPLICATE KEY UPDATE
@@ -329,6 +331,7 @@ INSERT INTO doc_document_templates (
     category = VALUES(category),
     requires_lopdp = VALUES(requires_lopdp),
     requires_signature = VALUES(requires_signature),
+    filename_pattern = VALUES(filename_pattern),
     collaborative_fields_json = VALUES(collaborative_fields_json),
     is_active = 1;
 

@@ -10,7 +10,6 @@ import {
 } from '../../../services/docenteAsignaturasService';
 import { crearPeaDesdeAsignacion } from '../../../services/peaService';
 import {
-    AlertCircle,
     ArrowRight,
     Calendar
 } from 'lucide-react';
@@ -138,12 +137,6 @@ export const DocentePeaDashboard: React.FC = () => {
         navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
     };
 
-    // Alerta de observaciones de coordinación
-    const materiasObservadas = useMemo(
-        () => materias.filter(m => m.estado_pea === 'Observado'),
-        [materias]
-    );
-
     const periodoActivoNombre = useMemo(() => {
         const found = periodos.find(p => String(p.id_periodo) === String(selectedPeriodo));
         return found?.detalle || found?.id_periodo;
@@ -187,21 +180,6 @@ export const DocentePeaDashboard: React.FC = () => {
                     </button>
                 </div>
             </div>
-
-            {/* Alerta de Observaciones Pendientes de Subsanación */}
-            {materiasObservadas.length > 0 && (
-                <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 flex items-start gap-3 text-xs text-amber-800 dark:text-amber-200">
-                    <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                        <span className="font-semibold text-sm block">
-                            Atención Requerida: Tiene {materiasObservadas.length} PEA{materiasObservadas.length > 1 ? 's' : ''} con observaciones
-                        </span>
-                        <p className="text-amber-700 dark:text-amber-300">
-                            La Comisión Curricular o Coordinación ha registrado observaciones en: {materiasObservadas.map(m => m.nombre_asignatura).join(', ')}. Ingrese al PEA para subsanar los puntos señalados.
-                        </p>
-                    </div>
-                </div>
-            )}
 
             {/* Dashboard Ejecutivo y Operativo: Actividades con Avance vs Agenda de Calendario */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

@@ -48,6 +48,12 @@ namespace Dosier.Domain.Common.Documents
         public string SignatureType { get; private set; } = "DOSIER";
 
         /// <summary>
+        /// Patrón configurable de nomenclatura para el nombre de archivo y título del PDF.
+        /// Soporta variables: {code}, {carrera}, {asignatura}, {periodo}, {docente}, {fecha}, {version}.
+        /// </summary>
+        public string? FilenamePattern { get; private set; }
+
+        /// <summary>
         /// CSS personalizado adicional para la plantilla. El motor inyecta el CSS base institucional
         /// y luego aplica este override.
         /// </summary>
@@ -139,6 +145,17 @@ namespace Dosier.Domain.Common.Documents
             UpdatedBy = updatedBy;
         }
 
+        /// <summary>
+        /// Actualiza el patrón de nomenclatura para el archivo PDF y metadatos de título institucional.
+        /// </summary>
+        public void UpdateFilenamePattern(string? filenamePattern, string updatedBy)
+        {
+            FilenamePattern = string.IsNullOrWhiteSpace(filenamePattern) ? null : filenamePattern.Trim();
+            Version++;
+            UpdatedAt = DateTime.UtcNow;
+            UpdatedBy = updatedBy;
+        }
+
         public void UpdateHtmlContentOnly(string newHtmlContent)
         {
             HtmlContent = newHtmlContent;
@@ -165,6 +182,10 @@ namespace Dosier.Domain.Common.Documents
             SupportsBlindMode = seed.SupportsBlindMode;
             RequiresElectronicSignature = seed.RequiresElectronicSignature;
             SignatureType = seed.SignatureType;
+            if (seed.FilenamePattern != null && FilenamePattern == null)
+            {
+                FilenamePattern = seed.FilenamePattern;
+            }
             if (seed.ThemeConfigJson != null)
             {
                 ThemeConfigJson = seed.ThemeConfigJson;

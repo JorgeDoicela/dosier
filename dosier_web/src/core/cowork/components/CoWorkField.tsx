@@ -26,6 +26,7 @@ interface CoWorkFieldProps {
     minDate?: string;
     maxDate?: string;
     options?: { value: string | number; label: string; disabled?: boolean }[];
+    onBlur?: (e: React.FocusEvent<any>) => void;
 }
 
 function maskDate(value: string, deletedSlash: boolean = false): string {
@@ -302,6 +303,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
     minDate,
     maxDate,
     options,
+    onBlur,
 }) => {
     const parentFormData = useContext(DocumentDataContext);
     const guardContext = useContext(SectionGuardContext);
@@ -478,7 +480,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
         }
     };
 
-    const handleBlur = () => {
+    const handleBlur = (e: React.FocusEvent<any>) => {
         if (cowork.awareness) {
             const currentState = cowork.awareness.getLocalState();
             if (currentState?.focusedField === name) {
@@ -499,6 +501,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                 }
             }
         }
+        onBlur?.(e);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

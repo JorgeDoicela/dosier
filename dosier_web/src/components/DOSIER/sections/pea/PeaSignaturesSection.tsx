@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
@@ -297,7 +298,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                 <div
                                     className="relative"
                                     onKeyDown={(e) => {
-                                        if (e.key === 'Escape') {
+                                        if (e.key === 'Escape' || e.key === 'Enter') {
                                             handleLockField(rol.key);
                                             (e.target as HTMLElement)?.blur();
                                         }
@@ -315,6 +316,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                                 : 'bg-surface border-[#0070f3] ring-2 ring-[#0070f3]/15 shadow-xs'
                                         }`}
                                         onValueChange={(val) => updateFirma(rol.nombreField, val)}
+                                        onBlur={() => handleLockField(rol.key)}
                                     />
                                     {!isUnlocked && !rol.firmado && !readOnly && (
                                         <div
@@ -340,9 +342,9 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                 })}
             </div>
 
-            {/* MODAL DE CONFIRMACIÓN DE MODIFICACIÓN MANUAL */}
-            {confirmModal && confirmModal.open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
+            {/* MODAL DE CONFIRMACIÓN DE MODIFICACIÓN MANUAL (Teletransportado a body para oscurecer cabecera y barra lateral) */}
+            {confirmModal && confirmModal.open && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 animate-fade-in">
                     <div className="w-full max-w-md rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl p-6 space-y-5 animate-scale-in">
                         <div className="flex items-start gap-3">
                             <div className="p-2.5 rounded-lg bg-blue-500/10 text-[#0070f3] dark:text-blue-400 shrink-0">
@@ -384,7 +386,8 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -13,6 +13,7 @@ export interface PublishTemplateDto {
     customCss?: string | null;
     collaborativeFieldsJson?: string | null;
     themeConfigJson?: string | null;
+    filenamePattern?: string | null;
 }
 
 export interface TemplateUsageCountDto {
@@ -66,6 +67,12 @@ export const documentTemplateService = {
      */
     updateSignatureConfig: (code: string, payload: any): Promise<any> =>
         api.put(`/admin/templates/${encodeURIComponent(code)}/signature-config`, payload).then(r => r.data),
+
+    /**
+     * Actualiza el patrón de nomenclatura de archivo institucional para las descargas de esta plantilla.
+     */
+    updateFilenamePattern: (code: string, filenamePattern: string | null): Promise<any> =>
+        api.put(`/admin/templates/${encodeURIComponent(code)}/filename-pattern`, { filenamePattern }).then(r => r.data),
 
     /**
      * Restablece la estructura de la plantilla a sus bloques oficiales de fábrica.

@@ -882,9 +882,13 @@ namespace Dosier.Infrastructure.Common.Documents
                     );
                 }
 
+                var resolvedFileName = ResolveFilename(template.FilenamePattern, template.Code, template.Version, renderData);
+                var resolvedTitle = ResolveDocumentTitle(template.FilenamePattern, template.Code, renderData);
+
                 var pdfBytes = await _pdfRenderer.RenderWithMetadataAsync(finalHtml, new DocumentRenderingMetadata
                 {
                     TemplateCode = template.Code,
+                    DocumentTitle = resolvedTitle,
                     TraceabilityCode = traceabilityCode,
                     IsDraft = request.IsDraftMode,
                     StationaryImageData = stationaryImage,
@@ -896,7 +900,7 @@ namespace Dosier.Infrastructure.Common.Documents
                 var fileHash = CalculateHash(pdfBytes);
 
                 // 7. Auditoría Forense (Resiliencia CACES 2026)
-                var fileName = $"DOSIER_{template.Code}_v{template.Version}_{DateTime.Now:yyyyMMdd-HHmm}.pdf";
+                var fileName = resolvedFileName;
                 try 
                 {
                     string? snapshot = null;
@@ -1006,6 +1010,128 @@ namespace Dosier.Infrastructure.Common.Documents
             _logger.LogInformation(
                 "DOSIER DocumentEngine: Configuración de firma de plantilla [{Code}] actualizada por [{User}]: RequiresSignature={RequiresSignature}, Type={Type}.",
                 templateCode, updatedBy, requiresSignature, signatureType);
+        }
+
+        public async Task UpdateFilenamePatternAsync(
+            string templateCode, string? filenamePattern, string updatedBy,
+            CancellationToken cancellationToken = default)
+        {
+            var template = await _templateRepository.FindByCodeAsync(templateCode, cancellationToken)
+                ?? throw new KeyNotFoundException($"Plantilla '{templateCode}' no encontrada.");
+
+            template.UpdateFilenamePattern(filenamePattern, updatedBy);
+            await _templateRepository.SaveAsync(template, cancellationToken);
+
+            _logger.LogInformation(
+                "DOSIER DocumentEngine: Patrón de nomenclatura de plantilla [{Code}] actualizado por [{User}]: Pattern={Pattern}.",
+                templateCode, updatedBy, filenamePattern);
+        }
+
+        public static string ResolveDocumentTitle(
+            string? pattern, string templateCode, object? renderData, string? defaultTitle = null)
+        {
+            var fileName = ResolveFilename(pattern, templateCode, 1, renderData, defaultTitle);
+            if (fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = fileName[..^4];
+            }
+            return fileName.Replace("_", " ").Trim();
+        }
+
+        public static string ResolveFilename(
+            string? pattern, string templateCode, int version, object? renderData, string? defaultTitle = null)
+        {
+            var templatePattern = !string.IsNullOrWhiteSpace(pattern)
+                ? pattern.Trim()
+                : "{code}_{carrera}_{asignatura}_{periodo}";
+
+            var dict = ExtractDataDictionary(renderData);
+
+            string GetVal(params string[] keys)
+            {
+                if (dict == null) return string.Empty;
+                foreach (var k in keys)
+                {
+                    if (dict.TryGetValue(k, out var val) && val != null)
+                    {
+                        var str = val.ToString()?.Trim();
+                        if (!string.IsNullOrWhiteSpace(str) && str != "---" && str != "--" && str != "-")
+                        {
+                            return str;
+                        }
+                    }
+                }
+                return string.Empty;
+            }
+
+            var codeVal = templateCode.Replace("_OFICIAL", "");
+            var carreraVal = GetVal("carrera", "Carrera", "carrera_nombre", "nombre_carrera", "CarreraNombre", "NombreCarrera");
+            var asignaturaVal = GetVal("asignatura", "Asignatura", "asignatura_nombre", "nombre_asignatura", "NombreAsignatura", "titulo", "Titulo", "title", "Title");
+            if (string.IsNullOrWhiteSpace(asignaturaVal) && !string.IsNullOrWhiteSpace(defaultTitle))
+            {
+                asignaturaVal = defaultTitle;
+            }
+            var periodoVal = GetVal("periodo", "Periodo", "periodo_nombre", "periodo_academico", "PeriodoAcademico", "id_periodo", "IdPeriodo");
+            var docenteVal = GetVal("docente", "Docente", "docente_nombre", "nombre_docente", "NombreDocente", "DocenteNombre", "profesor", "Profesor");
+            var fechaVal = DateTime.Now.ToString("yyyyMMdd");
+            var versionVal = $"v{version}";
+            var institucionVal = "ISTPET";
+
+            static string SanitizeToken(string raw)
+            {
+                if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+                var clean = Regex.Replace(raw, @"[\\/:*?""<>|]", "_");
+                clean = Regex.Replace(clean, @"\s+", "_");
+                clean = Regex.Replace(clean, @"_+", "_");
+                return clean.Trim('_');
+            }
+
+            var result = templatePattern;
+            result = Regex.Replace(result, @"\{code\}|\{codigo\}", SanitizeToken(codeVal), RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{carrera\}", SanitizeToken(carreraVal), RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{asignatura\}|\{materia\}", SanitizeToken(asignaturaVal), RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{periodo\}", SanitizeToken(periodoVal), RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{docente\}|\{profesor\}", SanitizeToken(docenteVal), RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{fecha\}", fechaVal, RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{version\}", versionVal, RegexOptions.IgnoreCase);
+            result = Regex.Replace(result, @"\{institucion\}", institucionVal, RegexOptions.IgnoreCase);
+
+            result = Regex.Replace(result, @"\{[^}]+\}", "");
+            result = Regex.Replace(result, @"[\\/:*?""<>|]", "_");
+            result = Regex.Replace(result, @"_+", "_");
+            result = Regex.Replace(result, @"-+", "-");
+            result = result.Trim('_', '-', ' ', '.');
+
+            if (string.IsNullOrWhiteSpace(result))
+            {
+                result = $"DOSIER_{codeVal}_{DateTime.Now:yyyyMMdd}";
+            }
+
+            if (!result.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                result += ".pdf";
+            }
+
+            return result;
+        }
+
+        private static Dictionary<string, object?>? ExtractDataDictionary(object? renderData)
+        {
+            if (renderData == null) return null;
+            if (renderData is Dictionary<string, object?> directDict) return directDict;
+
+            try
+            {
+                var rawJson = renderData is JsonElement je
+                    ? je.GetRawText()
+                    : JsonSerializer.Serialize(renderData);
+
+                return JsonSerializer.Deserialize<Dictionary<string, object?>>(rawJson);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>

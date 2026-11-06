@@ -236,7 +236,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
 
                     // Merge PDFs
                     var merger = new PdfMergerService();
-                    var mergedPdfBytes = await merger.MergeAsync(new[] { pdfBytes1, pdfBytes2, pdfBytes3 });
+                    var mergedPdfBytes = await merger.MergeAsync(new[] { pdfBytes1, pdfBytes2, pdfBytes3 }, metadata.DocumentTitle);
                     
                     Console.WriteLine($"[DOSIER Renderer] Successfully merged split PDFs. Total pages: {pageCount1 + pageCount2 + pageCount3}");
                     return mergedPdfBytes;
@@ -299,6 +299,10 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             using var pdfWriter = new PdfWriter(outputStream);
             using var pdfDocument = new PdfDocument(pdfWriter);
             pdfDocument.SetDefaultPageSize(PageSize.A4);
+            if (!string.IsNullOrWhiteSpace(metadata.DocumentTitle))
+            {
+                pdfDocument.GetDocumentInfo().SetTitle(metadata.DocumentTitle);
+            }
 
             bool hasCoverPage = cleanedHtmlContent.Contains("class=\"cover-page\"") || cleanedHtmlContent.Contains("class='cover-page'") || cleanedHtmlContent.Contains("class=\"cover-page ");
 
@@ -356,6 +360,10 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             using var pdfWriter = new PdfWriter(outputStream);
             using var pdfDocument = new PdfDocument(pdfWriter);
             pdfDocument.SetDefaultPageSize(defaultPageSize);
+            if (!string.IsNullOrWhiteSpace(metadata.DocumentTitle))
+            {
+                pdfDocument.GetDocumentInfo().SetTitle(metadata.DocumentTitle);
+            }
 
             var handler = new DocumentEventHandler(
                 metadata.TraceabilityCode,
@@ -496,6 +504,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
     public class DocumentRenderingMetadata
     {
         public string? TemplateCode { get; set; }
+        public string? DocumentTitle { get; set; }
         public string TraceabilityCode { get; set; } = string.Empty;
         public bool IsDraft { get; set; } = false;
         public string? InstitutionName { get; set; }

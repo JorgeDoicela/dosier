@@ -87,6 +87,8 @@ namespace dosier_api.Controllers
                 t.SupportsBlindMode,
                 RequiresElectronicSignature = t.RequiresElectronicSignature,
                 SignatureType = t.SignatureType,
+                FilenamePattern = t.FilenamePattern,
+                filename_pattern = t.FilenamePattern,
                 t.ThemeConfigJson,
                 t.UpdatedAt,
                 t.UpdatedBy
@@ -130,6 +132,8 @@ namespace dosier_api.Controllers
                 template.SupportsBlindMode,
                 RequiresElectronicSignature = template.RequiresElectronicSignature,
                 SignatureType = template.SignatureType,
+                FilenamePattern = template.FilenamePattern,
+                filename_pattern = template.FilenamePattern,
                 template.CollaborativeFieldsJson,
                 template.ThemeConfigJson,
                 HtmlContent = effectiveHtml,
@@ -157,6 +161,11 @@ namespace dosier_api.Controllers
                     request.ThemeConfigJson,
                     updatedBy,
                     ct);
+
+                if (!string.IsNullOrWhiteSpace(request.FilenamePattern))
+                {
+                    await _documentEngine.UpdateFilenamePatternAsync(code, request.FilenamePattern, updatedBy, ct);
+                }
 
                 return Ok(new { message = $"Plantilla '{code}' actualizada correctamente." });
             }
@@ -212,6 +221,26 @@ namespace dosier_api.Controllers
                 var updatedBy = User.Identity?.Name ?? "admin";
                 await _documentEngine.UpdateSignatureConfigAsync(code, request.RequiresSignature, request.SignatureType, updatedBy, ct);
                 return Ok(new { message = $"Configuración de firmas para plantilla '{code}' actualizada correctamente." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el patrón de nomenclatura institucional del archivo exportado para una plantilla.
+        /// Exclusivo para DOSIER_ADMIN, DOSIER_COORD_ACAD y DOSIER_VICERRECTOR.
+        /// </summary>
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
+        [HttpPut("{code}/filename-pattern")]
+        public async Task<IActionResult> UpdateFilenamePattern(string code, [FromBody] UpdateFilenamePatternRequest request, CancellationToken ct)
+        {
+            try
+            {
+                var updatedBy = User.Identity?.Name ?? "admin";
+                await _documentEngine.UpdateFilenamePatternAsync(code, request.FilenamePattern, updatedBy, ct);
+                return Ok(new { message = $"Patrón de nomenclatura para plantilla '{code}' actualizado correctamente.", filenamePattern = request.FilenamePattern });
             }
             catch (KeyNotFoundException)
             {
@@ -564,6 +593,15 @@ namespace dosier_api.Controllers
 
         [JsonPropertyName("themeConfigJson")]
         public string? ThemeConfigJson { get; set; }
+
+        [JsonPropertyName("filenamePattern")]
+        public string? FilenamePattern { get; set; }
+    }
+
+    public class UpdateFilenamePatternRequest
+    {
+        [JsonPropertyName("filenamePattern")]
+        public string? FilenamePattern { get; set; }
     }
 
     public class UpdateSignatureConfigRequest

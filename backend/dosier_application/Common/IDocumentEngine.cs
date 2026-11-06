@@ -145,5 +145,10 @@ namespace Dosier.Application.Common.Documents
         /// Actualiza la configuración de firmas de una plantilla (panel de administración).
         /// </summary>
         Task UpdateSignatureConfigAsync(string templateCode, bool requiresSignature, string signatureType, string updatedBy, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Actualiza el patrón de nomenclatura institucional del archivo exportado para una plantilla (roles autorizados).
+        /// </summary>
+        Task UpdateFilenamePatternAsync(string templateCode, string? filenamePattern, string updatedBy, CancellationToken cancellationToken = default);
     }
 }

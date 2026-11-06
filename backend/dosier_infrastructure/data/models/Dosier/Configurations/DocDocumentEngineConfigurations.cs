@@ -51,6 +51,7 @@ public class DocumentTemplateConfiguration : IEntityTypeConfiguration<Dosier.Dom
         entity.Property(e => e.RequiresTraceabilityCode).HasColumnName("requires_traceability").IsRequired();
         entity.Property(e => e.RequiresElectronicSignature).HasColumnName("requires_signature").IsRequired();
         entity.Property(e => e.SignatureType).HasColumnName("signature_type").HasMaxLength(50).HasDefaultValue("DOSIER").IsRequired();
+        entity.Property(e => e.FilenamePattern).HasColumnName("filename_pattern").HasMaxLength(255);
         entity.Property(e => e.CollaborativeFieldsJson).HasColumnName("collaborative_fields_json");
         entity.Property(e => e.ThemeConfigJson).HasColumnName("theme_config_json");
         entity.Property(e => e.IsActive).HasColumnName("is_active").IsRequired();

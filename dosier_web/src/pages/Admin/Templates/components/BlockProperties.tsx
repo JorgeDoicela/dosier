@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Palette, Plus, Trash2 } from 'lucide-react';
+import { Settings, Palette, Plus, Trash2, Tag } from 'lucide-react';
 import { type DocumentBlock, type DocumentTemplateDto, BLOCK_METADATA } from '../types';
 import { ColorPickerField } from './properties/SharedColorPicker';
 import { RichTextEditor } from './properties/RichTextEditor';
@@ -25,6 +25,7 @@ import { PeaBibliographyProperties } from './properties/PeaBibliographyPropertie
 import { PeaSignaturesProperties } from './properties/PeaSignaturesProperties';
 import { ThemeEditorTab } from './ThemeEditorTab';
 import { CoverProperties } from './properties/CoverProperties';
+import { TemplateFormatProperties } from './properties/TemplateFormatProperties';
 
 interface BlockPropertiesProps {
     selectedTemplate?: DocumentTemplateDto | null;
@@ -36,6 +37,7 @@ interface BlockPropertiesProps {
     themeConfigJson: string | null | undefined;
     onUpdateThemeConfig: (newThemeJson: string) => void;
     headerCollapsed?: boolean;
+    onUpdateFilenamePattern?: (pattern: string) => Promise<void>;
 }
 
 const LabeledField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
@@ -58,8 +60,9 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
     themeConfigJson,
     onUpdateThemeConfig,
     headerCollapsed,
+    onUpdateFilenamePattern,
 }) => {
-    const [activeTab, setActiveTab] = React.useState<'properties' | 'theme'>('properties');
+    const [activeTab, setActiveTab] = React.useState<'properties' | 'format' | 'theme'>('properties');
 
     // Cambiar automáticamente a la pestaña de propiedades al seleccionar un bloque
     React.useEffect(() => {
@@ -76,7 +79,7 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                     <button
                         type="button"
                         onClick={() => setActiveTab('properties')}
-                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-6' : 'flex-1'} ${
+                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-4' : 'flex-1'} ${
                             activeTab === 'properties'
                                 ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
                                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
@@ -87,8 +90,20 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                     </button>
                     <button
                         type="button"
+                        onClick={() => setActiveTab('format')}
+                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-4' : 'flex-1'} ${
+                            activeTab === 'format'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <Tag className="w-3.5 h-3.5" />
+                        <span>Nomenclatura</span>
+                    </button>
+                    <button
+                        type="button"
                         onClick={() => setActiveTab('theme')}
-                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-6' : 'flex-1'} ${
+                        className={`h-full text-center text-xs transition-colors flex items-center justify-center gap-1.5 border-b-2 cursor-pointer ${headerCollapsed ? 'px-4' : 'flex-1'} ${
                             activeTab === 'theme'
                                 ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
                                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
@@ -98,9 +113,17 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                         <span>Estilos</span>
                     </button>
 
-                    {headerCollapsed && <div className="w-24 border-b-2 border-transparent" />}
+                    {headerCollapsed && <div className="w-12 border-b-2 border-transparent" />}
                 </nav>
             </div>
+
+            {/* CUERPO DEL PANEL: PESTAÑA NOMENCLATURA DEL FORMATO */}
+            {activeTab === 'format' && selectedTemplate && onUpdateFilenamePattern && (
+                <TemplateFormatProperties
+                    template={selectedTemplate}
+                    onSavePattern={onUpdateFilenamePattern}
+                />
+            )}
 
             {/* CUERPO DEL PANEL: PESTAÑA ESTILOS */}
             {activeTab === 'theme' && (
@@ -125,12 +148,22 @@ export const BlockProperties: React.FC<BlockPropertiesProps> = ({
                             </p>
                         </div>
                     ) : !activeBlock ? (
-                        <div className="flex flex-col items-center justify-start pt-[220px] flex-1 p-6 text-center select-none bg-surface-hover/5">
+                        <div className="flex flex-col items-center justify-start pt-[120px] flex-1 p-6 text-center select-none bg-surface-hover/5">
                             <Settings className="w-10 h-10 text-text-dim/30 mb-3" />
-                            <h4 className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Ningún bloque seleccionado</h4>
+                            <h4 className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Configuración del Formato</h4>
                             <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mt-1.5 leading-relaxed">
-                                Haz clic sobre cualquier bloque en el lienzo para configurar sus propiedades específicas.
+                                Haz clic sobre cualquier bloque en el lienzo para configurar sus propiedades específicas, o personaliza el nombre de salida en la pestaña <strong>Nomenclatura</strong>.
                             </p>
+                            {onUpdateFilenamePattern && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('format')}
+                                    className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#0070f3] hover:bg-blue-600 text-white text-xs font-medium transition-colors cursor-pointer shadow-sm"
+                                >
+                                    <Tag className="w-3.5 h-3.5" strokeWidth={1.5} />
+                                    <span>Configurar Nomenclatura Oficial</span>
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="flex-1 p-4 space-y-5">

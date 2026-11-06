@@ -300,6 +300,7 @@ CREATE TABLE doc_document_templates (
     requires_traceability   TINYINT(1)    NOT NULL DEFAULT 1,
     requires_signature      TINYINT(1)    NOT NULL DEFAULT 0,
     signature_type          VARCHAR(50)   NOT NULL DEFAULT 'DOSIER' COMMENT 'DOSIER, ECUADOR_P12, HIBRIDO',
+    filename_pattern        VARCHAR(255)  NULL DEFAULT '{code}_{carrera}_{asignatura}_{periodo}' COMMENT 'Patrón de nomenclatura para el nombre de archivo y título del PDF',
     is_active               TINYINT(1)    NOT NULL DEFAULT 1,
     created_at              TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

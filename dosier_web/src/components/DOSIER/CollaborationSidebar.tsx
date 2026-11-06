@@ -110,6 +110,7 @@ export interface CollaborationSidebarProps {
     aiConfigVersion?: number;
     resolvedPeaUuid?: string;
     formData?: any;
+    readOnly?: boolean;
 }
 
 const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
@@ -135,7 +136,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     isGeneratingAi = false,
     aiConfigVersion = 0,
     resolvedPeaUuid,
-    formData
+    formData,
+    readOnly = false
 }) => {
     const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
@@ -164,6 +166,24 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         return toSentenceCase(raw);
     }, [sectionItems, sectionName]);
 
+    const getFriendlySectionName = useCallback((rawName?: string): string => {
+        if (!rawName) return '';
+        const lower = rawName.toLowerCase().trim();
+        if (lower === 'output') return 'Vista y Emisión Oficial';
+        if (lower === 'pea_general_section') return '1. Datos Generales de la Asignatura';
+        if (lower === 'pea_objectives_section') return '2. Objetivo de la Asignatura';
+        if (lower === 'pea_prerequisites_section') return '3. Prerrequisitos Curriculares';
+        if (lower === 'pea_learning_results_section') return '4. Resultados de Aprendizaje';
+        if (lower === 'pea_contents_section') return '5. Contenidos de Enseñanza';
+        if (lower === 'pea_methodology_section') return '6. Metodología y Recursos';
+        if (lower === 'pea_evaluation_section') return '7. Criterios de Evaluación';
+        if (lower === 'pea_bibliography_section') return '8. Bibliografía';
+        if (lower === 'pea_signatures_section') return '9. Firmas de Responsabilidad';
+        const found = sectionItems?.find(s => s.id.toLowerCase() === lower || s.label.toLowerCase() === lower);
+        if (found?.label) return found.label;
+        return rawName.replace(/_/g, ' ');
+    }, [sectionItems]);
+
     const parseAuditComment = (contenido: string) => {
         const match = contenido.match(/^\[(.*?)\]\s*\((.*?)\):\s*(.*)$/);
         if (match) {
@@ -188,6 +208,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         return ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(projectStatus || '');
     }, [projectStatus]);
 
+    const isSignedOrFinal = useMemo(() => {
+        return ['Aprobado', 'En Ejecución', 'Finalizado', 'Firmado', 'Signed'].includes(projectStatus || '');
+    }, [projectStatus]);
+
+    // Desactivado temporalmente hasta madurez y diseño profesional según directriz
+    const isAiAvailable = false;
+    const isImportAvailable = !readOnly && !isEnRevision && !isSignedOrFinal && Boolean(onOpenImportModal || onTriggerDocExtraction);
+
     const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import'>(() => {
         if (isProtocolDocument && isReviewer && isEnRevision) {
             return 'revision';
@@ -196,6 +224,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             return isReviewer ? 'revision' : 'correcciones';
         }
         const saved = localStorage.getItem('document_sidebar_tab') as any;
+        if (saved === 'ai' && !isAiAvailable) {
+            return 'comments';
+        }
+        if (saved === 'import' && !isImportAvailable) {
+            return 'comments';
+        }
         const validGeneralTabs = ['comments', 'status', 'activity', 'ai', 'import'];
         if (validGeneralTabs.includes(saved)) {
             return saved;
@@ -221,12 +255,16 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     // Sincronizar activeTab cuando cambie el estado del documento o la pestaña activa ya no sea aplicable
     useEffect(() => {
-        if (activeTab === 'correcciones' && (!isProtocolDocument || !isObservado)) {
+        if (activeTab === 'ai' && !isAiAvailable) {
+            setActiveTab('comments');
+        } else if (activeTab === 'import' && !isImportAvailable) {
+            setActiveTab('comments');
+        } else if (activeTab === 'correcciones' && (!isProtocolDocument || !isObservado)) {
             setActiveTab('comments');
         } else if (activeTab === 'revision' && (!isProtocolDocument || !isReviewer || !isEnRevision)) {
             setActiveTab('comments');
         }
-    }, [isObservado, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
+    }, [isAiAvailable, isImportAvailable, isObservado, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
 
     // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
     const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
@@ -826,7 +864,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     </button>
 
                     {/* 3. Subir Documento / Importar */}
-                    {(onOpenImportModal || onTriggerDocExtraction) && (
+                    {isImportAvailable && (
                         <button
                             type="button"
                             onClick={() => setActiveTab('import')}
@@ -843,7 +881,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     )}
 
                     {/* 4. Asistente IA */}
-                    {(onOpenAiModal || onTriggerAiGeneration) && (
+                    {isAiAvailable && (
                         <button
                             type="button"
                             onClick={() => setActiveTab('ai')}
@@ -1482,7 +1520,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                         <span className="text-text-dim font-medium">{a.action}</span>
                                                     </p>
                                                     <p className="text-[9px] text-text-dim/80 font-bold uppercase tracking-wider mt-0.5">
-                                                        {(a.sectionName || '').replace(/_/g, ' ')}
+                                                        {getFriendlySectionName(a.sectionName)}
                                                     </p>
                                                     <p className="text-[8.5px] text-text-dim/60 font-mono mt-1">
                                                         {formatTime(a.timestamp)}
@@ -1577,7 +1615,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             </div>
                         )}
 
-                        {activeTab === 'import' && (
+                        {activeTab === 'import' && isImportAvailable && (
                             <div className="flex flex-col min-h-full flex-1 justify-between">
                                 <div className="space-y-4">
                                     {/* Encabezado del Extractor */}
@@ -1688,7 +1726,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             </div>
                         )}
 
-                        {activeTab === 'ai' && (
+                        {activeTab === 'ai' && isAiAvailable && (
                             <div className="flex-1 flex flex-col h-full overflow-hidden">
                                 <PeaAiChatSidebar
                                     instanceUuid={instanceUuid}

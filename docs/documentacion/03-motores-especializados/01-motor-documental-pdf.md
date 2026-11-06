@@ -50,7 +50,8 @@ Convierte el marcado HTML5 y estilos CSS con soporte tipográfico a un documento
 
 ### 2.5. Ensamblado, Estampado Dinámico de Firmas y Registro Forense
 1. **Estampado Acumulativo de Firmas en Caliente:** Al solicitar el renderizado del documento oficial (`isDraft == false`) en `DocumentsController` o `DocumentInstancesController`, el sistema consulta en `IDosierSignatureService` las firmas válidas registradas para el documento (`SignatureState.Valid`). Si existen firmas emitidas, invoca sucesivamente a `SignatureStamper.StampSignatureBlock` para incrustar los sellos vectoriales con sus códigos DFRM, nombres y URLs de verificación antes de devolver los bytes al usuario.
-2. **Registro Forense y Sellado:** Calcula el Hash **SHA-256** sobre el archivo compilado y el contenido pedagógico, registrando la transacción en `doc_document_audit` y `doc_pea_trazabilidad`.
+2. **Nomenclatura Institucional y Metadatos del Visor PDF:** Mediante la columna `filename_pattern` en `doc_document_templates`, las autoridades (`DOSIER_ADMIN`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`) configuran el patrón de salida sin tocar código. El motor resuelve dinámicamente los tokens (`{code}`, `{carrera}`, `{asignatura}`, `{periodo}`, `{docente}`, `{fecha}`, `{version}`) inyectando el título oficial en el diccionario de metadatos de iText (`pdfDocument.GetDocumentInfo().SetTitle(...)`) y en la cabecera HTTP `Content-Disposition: inline; filename="..."`. Esto asegura que el visor de PDF de Chrome/Edge y las descargas conserven siempre la nomenclatura oficial en lugar de identificadores hash temporales.
+3. **Registro Forense y Sellado:** Calcula el Hash **SHA-256** sobre el archivo compilado y el contenido pedagógico, registrando la transacción en `doc_document_audit` y `doc_pea_trazabilidad`.
 
 ---
 

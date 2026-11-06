@@ -283,6 +283,12 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         layout.activeTab !== 'pea_signatures_section' &&
         layout.activeTab !== 'output';
 
+    const isLockedOrOfficial = Boolean(
+        readOnly || 
+        pdfAndSign?.isAlreadySubmitted || 
+        ['EnRevision', 'RevisadoCoord', 'RevisadoAcad', 'Aprobado', 'En Ejecución', 'Finalizado', 'Firmado', 'Signed'].includes(projectStatus || '')
+    );
+
     const showRightSidebar = true;
 
 
@@ -575,17 +581,17 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 sectionStatuses={layout.sectionStatuses}
                                                 onSectionStatusChange={layout.setSectionStatus}
                                                 onSelectSection={layout.setActiveTab}
-                                                onOpenImportModal={templateCode === 'PEA_OFICIAL' && !readOnly ? () => {
+                                                onOpenImportModal={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? () => {
                                                     setImportInitialFile(null);
                                                     setImportInitialInstructions('');
                                                     setImportAutoExtract(false);
                                                     setImportDocModalOpen(true);
                                                 } : undefined}
-                                                onTriggerDocExtraction={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerDocExtraction : undefined}
-                                                onOpenAiModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
-                                                onTriggerAiGeneration={templateCode === 'PEA_OFICIAL' && !readOnly ? handleTriggerAiGeneration : undefined}
-                                                onOpenAiConfigModal={templateCode === 'PEA_OFICIAL' && !readOnly ? handleOpenAiConfigModal : undefined}
-                                                onApplyStructuredDraft={templateCode === 'PEA_OFICIAL' && !readOnly ? (patch) => {
+                                                onTriggerDocExtraction={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleTriggerDocExtraction : undefined}
+                                                onOpenAiModal={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleOpenAiConfigModal : undefined}
+                                                onTriggerAiGeneration={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleTriggerAiGeneration : undefined}
+                                                onOpenAiConfigModal={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleOpenAiConfigModal : undefined}
+                                                onApplyStructuredDraft={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? (patch) => {
                                                     if (onApplyStructuredDraft) {
                                                         onApplyStructuredDraft(patch);
                                                     } else if (onUpdateField) {
@@ -602,6 +608,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 instanceUuid={documentUuid}
                                                 resolvedPeaUuid={resolvedPeaUuid}
                                                 formData={formData}
+                                                readOnly={isLockedOrOfficial}
                                             />
                                         </div>
                                     </div>

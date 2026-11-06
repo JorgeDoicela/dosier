@@ -80,12 +80,22 @@ namespace dosier_api.Controllers
             if (!string.IsNullOrEmpty(instance.FinalPdfPath) && storage.FileExists(instance.FinalPdfPath))
             {
                 var bytes = await storage.GetFileAsync(instance.FinalPdfPath);
+                var resolvedName = System.IO.Path.GetFileName(instance.FinalPdfPath);
+                if (string.IsNullOrWhiteSpace(resolvedName) || !resolvedName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                {
+                    var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
+                    var tmpl = templates.FirstOrDefault(t => t.Code == instance.TemplateCode);
+                    resolvedName = Dosier.Infrastructure.Common.Documents.DocumentEngine.ResolveFilename(
+                        tmpl?.FilenamePattern, instance.TemplateCode, instance.TemplateVersion, instance.DataSnapshotJson, instance.Title);
+                }
+                Response.Headers["Content-Disposition"] = $"inline; filename=\"{resolvedName}\"; filename*=UTF-8''{Uri.EscapeDataString(resolvedName)}";
                 return File(bytes, "application/pdf");
             }
 
             var userUuid = User.Identity?.Name ?? "anon";
             var docRequest = await _orchestrator.PrepareRequestAsync(uuid, userUuid, forceDraftMode: false, ct: ct);
             var buildResult = await _documentEngine.GenerateAsync(docRequest, ct);
+            Response.Headers["Content-Disposition"] = $"inline; filename=\"{buildResult.FileName}\"; filename*=UTF-8''{Uri.EscapeDataString(buildResult.FileName)}";
             return File(buildResult.PdfBytes, "application/pdf");
         }
 

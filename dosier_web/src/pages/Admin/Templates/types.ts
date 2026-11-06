@@ -13,6 +13,8 @@ export interface DocumentTemplateDto {
     supportsBlindMode: boolean;
     requiresElectronicSignature: boolean;
     signatureType: string;
+    filenamePattern?: string | null;
+    filename_pattern?: string | null;
     collaborativeFieldsJson: string | null;
     updatedAt: string;
     updatedBy: string | null;

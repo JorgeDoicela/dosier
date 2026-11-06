@@ -95,6 +95,7 @@ export const DocumentTemplatesPage: React.FC = () => {
         handleToggleActive,
         handleUpdateConfig,
         handleUpdateThemeConfig,
+        handleUpdateFilenamePattern,
         handleSaveTemplate,
         handleResetToDefault,
         handleCellChange,
@@ -325,6 +326,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                             themeConfigJson={selectedTemplate?.themeConfigJson}
                             onUpdateThemeConfig={handleUpdateThemeConfig}
                             headerCollapsed={headerCollapsed}
+                            onUpdateFilenamePattern={handleUpdateFilenamePattern}
                         />
                     </div>
                 </DndContext>
