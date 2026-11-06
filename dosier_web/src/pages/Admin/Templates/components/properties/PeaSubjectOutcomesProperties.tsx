@@ -24,7 +24,7 @@ export const PeaSubjectOutcomesProperties: React.FC<PeaSubjectOutcomesProperties
                 <div className="flex items-center gap-2 mb-1">
                     <CheckSquare className="w-4 h-4 text-violet-500" />
                     <span className="text-xs font-bold text-text-main uppercase tracking-wider">
-                        Sección e) Resultados de Aprendizaje de la Asignatura
+                        Sección 5. Resultados de Aprendizaje de la Asignatura
                     </span>
                 </div>
                 <p className="text-[11px] text-text-dim leading-relaxed">
@@ -69,7 +69,7 @@ export const PeaSubjectOutcomesProperties: React.FC<PeaSubjectOutcomesProperties
                     <label className="text-[11px] font-medium text-text-dim">Título / Etiqueta de la Sección</label>
                     <input
                         type="text"
-                        value={c.rdaAsignaturaLabel ?? 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
+                        value={c.rdaAsignaturaLabel ?? '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA'}
                         onChange={(e) => handleConfigChange('rdaAsignaturaLabel', e.target.value)}
                         className="w-full bg-surface-subtle border border-border-thin rounded px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-violet-500"
                     />

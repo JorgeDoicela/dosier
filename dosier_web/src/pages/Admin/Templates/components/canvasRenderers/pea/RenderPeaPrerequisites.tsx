@@ -23,7 +23,7 @@ export const RenderPeaPrerequisitesSection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayLabel = c.prerrequisitosLabel || title || 'c) PRERREQUISITOS:';
+    const displayLabel = c.prerrequisitosLabel || title || '3. PRERREQUISITOS CURRICULARES';
 
     const [editingLabel, setEditingLabel] = useState(false);
     const [labelDraft, setLabelDraft] = useState(displayLabel);
@@ -39,7 +39,7 @@ export const RenderPeaPrerequisitesSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveLabel = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'prerrequisitosLabel', labelDraft.trim() || 'c) PRERREQUISITOS:');
+            onUpdateConfig(blockId, 'prerrequisitosLabel', labelDraft.trim() || '3. PRERREQUISITOS CURRICULARES');
         }
         setEditingLabel(false);
     };

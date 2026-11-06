@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, FileText, Shield, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { Settings, FileText, Shield, CheckCircle, Clock, ArrowRight, AlertCircle } from 'lucide-react';
 import { FullscreenLoader } from '../../../Common/FullscreenLoader';
 import { TimedSuccessModal } from '../../../Common/TimedSuccessModal';
-import { getDocumentSignatures } from '../../../../services/signaturesService';
+import { getDocumentSignatures, getSignatureProfile, type UserSignatureProfileDto } from '../../../../services/signaturesService';
 import { SignatureBlock } from '../../SignatureBlock';
 import { useAuth } from '../../../../api/AuthContext';
 import { documentInstanceService } from '../../../../services/documentInstanceService';
@@ -72,6 +72,8 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
     const navigate = useNavigate();
     const [signatures, setSignatures] = React.useState<any[]>([]);
     const [isProtocoloSigned, setIsProtocoloSigned] = React.useState<boolean | null>(null);
+    const [signatureProfile, setSignatureProfile] = React.useState<UserSignatureProfileDto | null>(null);
+    const [isLoadingProfile, setIsLoadingProfile] = React.useState<boolean>(true);
 
     const projectUuid = formData?.EntityUuid || formData?.entityUuid || formData?.Uuid || formData?.uuid;
     const directDocId = documentUuid || formData?.Uuid || formData?.uuid;
@@ -105,6 +107,22 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
         fetchSignatures();
         return () => { isMounted = false; };
     }, [directDocId, projectUuid, templateCode, signatureRefreshTrigger]);
+
+    React.useEffect(() => {
+        let isMounted = true;
+        setIsLoadingProfile(true);
+        getSignatureProfile()
+            .then(profile => {
+                if (isMounted) setSignatureProfile(profile);
+            })
+            .catch(() => {
+                if (isMounted) setSignatureProfile(null);
+            })
+            .finally(() => {
+                if (isMounted) setIsLoadingProfile(false);
+            });
+        return () => { isMounted = false; };
+    }, [signatureRefreshTrigger]);
 
     React.useEffect(() => {
         let isMounted = true;
@@ -254,34 +272,73 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                             ) : (
                                 <div className="flex flex-col gap-4">
                                     {(signatureType === 'DOSIER' || signatureType === 'HIBRIDO') && (
-                                        <div className="flex flex-col gap-3.5 p-5 border border-border-thin rounded-xl bg-surface">
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <Shield size={18} className="text-[#0070f3]" />
-                                                <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Institucional DOSIER</h4>
+                                        isLoadingProfile ? (
+                                            <div className="flex flex-col items-center justify-center gap-2 p-6 border border-border-thin rounded-xl bg-surface text-text-dim text-xs">
+                                                <Clock size={16} className="animate-spin text-[#0070f3]" />
+                                                <span>Verificando perfil de firma institucional...</span>
                                             </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-text-dim block">Contraseña Institucional</label>
-                                                <input
-                                                    type="password"
-                                                    placeholder="Ingresa la contraseña de tu cuenta"
-                                                    value={institutionalPassword}
-                                                    onChange={(e) => setInstitutionalPassword(e.target.value)}
-                                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all placeholder:text-text-dim/40"
-                                                />
-                                            </div>
+                                        ) : !signatureProfile?.esConfigurado ? (
+                                            <div className="flex flex-col gap-3.5 p-5 border border-amber-500/30 rounded-xl bg-amber-50/60 dark:bg-amber-950/20">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-9 h-9 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                                                        <AlertCircle size={20} />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <h4 className="text-xs sm:text-sm font-bold text-text-main">
+                                                            Perfil de firma no configurado
+                                                        </h4>
+                                                        <p className="text-xs text-text-dim leading-relaxed">
+                                                            Para aplicar su firma digital institucional debe configurar previamente su cargo institucional y trazo manuscrito en su perfil. No puede firmar este instrumento mientras no esté configurada.
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                            <button
-                                                type="button"
-                                                onClick={handleSignDosier}
-                                                disabled={isSigning || !institutionalPassword}
-                                                className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!institutionalPassword || isSigning)
-                                                        ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
-                                                        : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
-                                                    }`}
-                                            >
-                                                {isSigning ? <><Clock size={15} className="animate-spin" /> Firmando documento...</> : <><Shield size={15} /> Aplicar firma institucional</>}
-                                            </button>
-                                        </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => navigate('/configuracion?editFirma=true#perfil-firma')}
+                                                    className="w-full py-2.5 px-4 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                                                >
+                                                    <Settings size={14} />
+                                                    <span>Configurar Firma Institucional</span>
+                                                    <ArrowRight size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-3.5 p-5 border border-border-thin rounded-xl bg-surface">
+                                                <div className="flex items-center justify-between mb-0.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <Shield size={18} className="text-[#0070f3]" />
+                                                        <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Institucional DOSIER</h4>
+                                                    </div>
+                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                        <span>Perfil activo ({signatureProfile.cargo || 'Docente'})</span>
+                                                    </span>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-medium text-text-dim block">Contraseña Institucional</label>
+                                                    <input
+                                                        type="password"
+                                                        placeholder="Ingresa la contraseña de tu cuenta"
+                                                        value={institutionalPassword}
+                                                        onChange={(e) => setInstitutionalPassword(e.target.value)}
+                                                        className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all placeholder:text-text-dim/40"
+                                                    />
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSignDosier}
+                                                    disabled={isSigning || !institutionalPassword}
+                                                    className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!institutionalPassword || isSigning)
+                                                            ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
+                                                            : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
+                                                        }`}
+                                                >
+                                                    {isSigning ? <><Clock size={15} className="animate-spin" /> Firmando documento...</> : <><Shield size={15} /> Aplicar firma institucional</>}
+                                                </button>
+                                            </div>
+                                        )
                                     )}
 
                                     {(signatureType === 'ECUADOR_P12' || signatureType === 'HIBRIDO') && (

@@ -104,7 +104,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-general',
             type: 'pea_general_section' as BlockType,
-            title: 'a) DATOS GENERALES DE LA ASIGNATURA:',
+            title: '1. DATOS GENERALES DE LA ASIGNATURA',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
@@ -132,11 +132,11 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-objective',
             type: 'pea_objective_section' as BlockType,
-            title: 'b) OBJETIVO DE LA ASIGNATURA',
+            title: '2. OBJETIVO DE LA ASIGNATURA',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
-                objetivoLabel: 'b) OBJETIVO DE LA ASIGNATURA',
+                objetivoLabel: '2. OBJETIVO DE LA ASIGNATURA',
                 objetivoPlaceholder: 'Formular con Verbo en infinitivo + ¿Qué? + ¿Cómo? + ¿Para qué? articulado al nivel formativo de la carrera.',
                 lineCount: 4,
                 toolbarMode: 'none'
@@ -145,11 +145,11 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-prerequisites',
             type: 'pea_prerequisites_section' as BlockType,
-            title: 'c) PRERREQUISITOS:',
+            title: '3. PRERREQUISITOS CURRICULARES',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
-                prerrequisitosLabel: 'c) PRERREQUISITOS:',
+                prerrequisitosLabel: '3. PRERREQUISITOS CURRICULARES',
                 prerrequisitosColAsignatura: 'Asignatura',
                 prerrequisitosColObservacion: 'Observación',
                 filasVacias: 2
@@ -158,11 +158,11 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-career-outcomes',
             type: 'pea_career_outcomes_section' as BlockType,
-            title: 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
+            title: '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
-                rdaCarreraLabel: 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
+                rdaCarreraLabel: '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
                 rdaCarreraPlaceholder: 'Resultados de aprendizaje del perfil de egreso a los que tributa la asignatura.',
                 lineCount: 4
             }
@@ -170,11 +170,11 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-subject-outcomes',
             type: 'pea_subject_outcomes_section' as BlockType,
-            title: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
+            title: '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
-                rdaAsignaturaLabel: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
+                rdaAsignaturaLabel: '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA',
                 rdaAsignaturaPlaceholder: 'Resultados de aprendizaje específicos alcanzables por el estudiante al finalizar el curso.',
                 lineCount: 5
             }
@@ -193,7 +193,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-contents',
             type: 'pea_contents_section' as BlockType,
-            title: 'f) CONTENIDOS DE ENSEÑANZA:',
+            title: '6. CONTENIDOS DE ENSEÑANZA',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
@@ -208,7 +208,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-methodology',
             type: 'pea_methodology_section' as BlockType,
-            title: 'g) METODOLOGÍA DE ENSEÑANZA',
+            title: '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
@@ -221,7 +221,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-resources',
             type: 'pea_resources_section' as BlockType,
-            title: 'h) ACTIVIDADES PRÁCTICAS',
+            title: '8. ACTIVIDADES PRÁCTICAS',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
@@ -232,7 +232,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-evaluation',
             type: 'pea_evaluation_section' as BlockType,
-            title: 'i) EVALUACIÓN DEL APRENDIZAJE',
+            title: '9. EVALUACIÓN DEL APRENDIZAJE',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
@@ -262,7 +262,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-bibliography',
             type: 'pea_bibliography_section' as BlockType,
-            title: 'j) BIBLIOGRAFÍA',
+            title: '10. BIBLIOGRAFÍA',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',
@@ -275,7 +275,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
         {
             id: 'block-pea-signatures',
             type: 'pea_signatures_section' as BlockType,
-            title: 'k) FIRMAS DE RESPONSABILIDAD',
+            title: '11. FIRMAS DE RESPONSABILIDAD',
             isActive: true,
             config: {
                 headerColor: '#1e2a4a',

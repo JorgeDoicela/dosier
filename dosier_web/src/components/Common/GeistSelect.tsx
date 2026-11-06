@@ -65,9 +65,21 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
             if (!React.isValidElement(child)) return;
             if (child.type === 'option') {
                 const val = (child.props as any).value !== undefined ? (child.props as any).value : (child.props as any).children;
-                const lbl = typeof (child.props as any).children === 'string' 
-                    ? (child.props as any).children 
-                    : String(val);
+                const rawChildren = (child.props as any).children;
+                let lbl = '';
+                if (typeof rawChildren === 'string') {
+                    lbl = rawChildren;
+                } else if (typeof rawChildren === 'number') {
+                    lbl = String(rawChildren);
+                } else if (Array.isArray(rawChildren)) {
+                    lbl = rawChildren
+                        .map(c => (typeof c === 'string' || typeof c === 'number' ? String(c) : ''))
+                        .join('');
+                } else {
+                    lbl = String(val ?? '');
+                }
+                lbl = lbl.trim() || String(val ?? '');
+
                 extracted.push({
                     value: val,
                     label: lbl,

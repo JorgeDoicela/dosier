@@ -27,7 +27,7 @@ export const PeaGeneralProperties: React.FC<PeaGeneralPropertiesProps> = ({ bloc
     });
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'a) DATOS GENERALES DE LA ASIGNATURA:');
+        onUpdateConfig(block.id, 'title', '1. DATOS GENERALES DE LA ASIGNATURA');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'borderStyle', 'solid');
         onUpdateConfig(block.id, 'showHeader', true);
@@ -106,7 +106,7 @@ export const PeaGeneralProperties: React.FC<PeaGeneralPropertiesProps> = ({ bloc
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'a) DATOS GENERALES DE LA ASIGNATURA:'}
+                    value={config.title || '1. DATOS GENERALES DE LA ASIGNATURA'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

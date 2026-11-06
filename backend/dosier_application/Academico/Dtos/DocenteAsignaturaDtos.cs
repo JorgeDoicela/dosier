@@ -44,6 +44,8 @@ public class DocenteAsignaturaDto
     public decimal HorasPracticoExperimental { get; set; }
     public decimal HorasAutonomo { get; set; }
     public decimal Creditos { get; set; }
+    public decimal? HorasSemanales { get; set; }
+    public bool EsExtracurricular { get; set; }
     public string? UnidadOrganizacionCurricular { get; set; }
 
     // Prerrequisitos de la asignatura
@@ -75,6 +77,8 @@ public class CurriculoAsignaturaDetalleDto
     public decimal HorasPracticoExperimental { get; set; }
     public decimal HorasAutonomo { get; set; }
     public decimal Creditos { get; set; }
+    public decimal? HorasSemanales { get; set; }
+    public bool EsExtracurricular { get; set; }
     public string? UnidadOrganizacionCurricular { get; set; }
     public string? DescripcionMalla { get; set; }
 
@@ -119,6 +123,8 @@ public class AcademicContextDto
     public decimal HorasPracticoExperimental { get; set; }
     public decimal HorasAutonomo { get; set; }
     public decimal Creditos { get; set; }
+    public decimal? HorasSemanales { get; set; }
+    public bool EsExtracurricular { get; set; }
     public string? UnidadOrganizacionCurricular { get; set; }
     public bool ModalidadAutorizada { get; set; }
     public string FuenteMalla { get; set; } = null!;

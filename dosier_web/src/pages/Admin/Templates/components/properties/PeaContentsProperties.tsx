@@ -25,7 +25,7 @@ export const PeaContentsProperties: React.FC<PeaContentsPropertiesProps> = ({
     ];
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'f) CONTENIDOS DE ENSEÑANZA:');
+        onUpdateConfig(block.id, 'title', '6. CONTENIDOS DE ENSEÑANZA');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'subHeaderColor', '#bdd7ee');
         onUpdateConfig(block.id, 'numColWidth', '8%');
@@ -84,7 +84,7 @@ export const PeaContentsProperties: React.FC<PeaContentsPropertiesProps> = ({
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'f) CONTENIDOS DE ENSEÑANZA:'}
+                    value={config.title || '6. CONTENIDOS DE ENSEÑANZA'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

@@ -20,7 +20,7 @@ export const PeaBibliographyProperties: React.FC<PeaBibliographyPropertiesProps>
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'j) BIBLIOGRAFÍA');
+        onUpdateConfig(block.id, 'title', '10. BIBLIOGRAFÍA');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'basicaLabel', 'Bibliografía básica');
         onUpdateConfig(block.id, 'basicaPlaceholder', 'Libros de texto base, manuales oficiales o guías según normas APA 7ma edición.');
@@ -49,7 +49,7 @@ export const PeaBibliographyProperties: React.FC<PeaBibliographyPropertiesProps>
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'j) BIBLIOGRAFÍA'}
+                    value={config.title || '10. BIBLIOGRAFÍA'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

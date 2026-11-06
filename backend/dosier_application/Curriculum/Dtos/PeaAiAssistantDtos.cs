@@ -85,6 +85,12 @@ namespace dosier_application.Curriculum.Dtos
         public string BibliografiaBasica { get; set; } = string.Empty;
         public string BibliografiaConsulta { get; set; } = string.Empty;
 
+        public int TotalHorasAsignatura { get; set; }
+        public int HorasContactoDocente { get; set; }
+        public int HorasPracticoExperimental { get; set; }
+        public int HorasAutonomo { get; set; }
+        public string? CodigoCarrera { get; set; }
+
         public List<PeaDraftPrerrequisitoDto> Prerrequisitos { get; set; } = new();
         public List<PeaDraftUnidadDto> Unidades { get; set; } = new();
         public List<PeaDraftActividadPracticaDto> ActividadesPracticas { get; set; } = new();

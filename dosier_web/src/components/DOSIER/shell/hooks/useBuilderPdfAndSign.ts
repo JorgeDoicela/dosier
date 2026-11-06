@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { documentInstanceService } from '../../../../services/documentInstanceService';
 import { getPeaByUuid, firmarPea } from '../../../../services/peaService';
-import { signDocumentWithDosier, signDocumentWithP12 } from '../../../../services/signaturesService';
+import { signDocumentWithDosier, signDocumentWithP12, getSignatureProfile } from '../../../../services/signaturesService';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { useAuth } from '../../../../api/AuthContext';
 
@@ -302,6 +302,22 @@ export const useBuilderPdfAndSign = ({
         setIsSigning(true);
         addAudit('Iniciando proceso de firma institucional DOSIER...');
         try {
+            // Verificación defensiva previa de perfil de firma institucional
+            const profile = await getSignatureProfile().catch(() => null);
+            if (!profile?.esConfigurado) {
+                addToast(
+                    'Perfil de Firma Incompleto',
+                    'Debe configurar su cargo institucional y trazo de firma en su perfil antes de aplicar la firma oficial.',
+                    'warning',
+                    '/configuracion?editFirma=true#perfil-firma',
+                    undefined,
+                    'Configurar'
+                );
+                addAudit('Firma bloqueada: perfil de firma institucional no configurado.', 'warning');
+                setIsSigning(false);
+                return;
+            }
+
             const peaRoleInfo = getPeaRol();
             const calculatedRol = isPea ? peaRoleInfo.label : 'Director de Proyecto';
 

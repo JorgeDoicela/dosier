@@ -432,9 +432,10 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("2. PROHIBIDO GENERAR, INVENTAR O SUSTITUIR LA MATERIA: Queda terminantemente PROHIBIDO inventar contenidos pedagógicos o sustituir la materia del archivo. Sea cual sea la materia redactada en el archivo (ej. Programación Web, Node.js, Cocina, etc.), extrae con fidelidad esa materia y sus temas. NUNCA sustituyas el contenido del documento por otra asignatura ni intentes adaptarlo o inventar temas que no estén en el texto.");
             sb.AppendLine("3. SECCIONES AUSENTES: Si alguna sección no aparece en el texto del documento, devuélvela como cadena vacía \"\" o arreglo vacío []. NUNCA inventes texto para rellenar secciones ausentes.");
             sb.AppendLine("4. PRERREQUISITOS: En 'prerrequisitos', extrae las filas exactas de materias previas que aparezcan en la tabla del archivo (ej. 'Programación Web II'). Si no hay tabla de prerrequisitos, devuelve un arreglo vacío [].");
-            sb.AppendLine("5. UNIDADES Y CONTENIDOS: Extrae cada unidad temática con su título real y sus subtemas tal como aparecen en el documento. Si el documento indica horas de contacto docente (CD), práctico-experimental (APE) y trabajo autónomo (TA), extrae esos valores numéricos exactos. Si un título en el documento original quedó cortado o fragmentado entre celdas (ej. 'UNIDAD 1: FUNDAMENTOS DE' o 'UNIDAD 3: MEJORES PRÁCTICAS Y ESTRATEGIAS DE' con 'SEGURIDAD' en la línea inferior), completa o une el título de manera integral y profesional (ej. 'Fundamentos de Sistemas Web', 'Mejores Prácticas y Estrategias de Seguridad'). NUNCA dejes títulos cortados que terminen en conectores como 'DE' o 'PARA'. En 'contenidos', extrae la lista de temas y subtemas ordenados línea por línea, omitiendo números de fila aislados de columnas adyacentes (como '1', '2', '3').");
+            sb.AppendLine("5. UNIDADES Y CONTENIDOS: Extrae cada unidad temática con su título real y sus subtemas tal como aparecen en el documento. Si el documento indica horas de contacto docente (CD), práctico-experimental (APE) y trabajo autónomo (TA) por unidad (ej. 'Total de horas por unidad: 30', 'Horas contacto con el docente: 10', 'Horas Práctico-experimental: 10', 'Horas de aprendizaje autónomo: 10'), extrae esos valores numéricos exactos en 'horas_cd', 'horas_ape', 'horas_ta' y 'total_horas_unidad'. Si el documento solo indica el total de la unidad (ej. 30h) sin desglosar, distribúyelas equilibradamente entre los 3 componentes (ej. 10, 10, 10). Si un título en el documento original quedó cortado o fragmentado entre celdas (ej. 'UNIDAD 1: FUNDAMENTOS DE' o 'UNIDAD 3: MEJORES PRÁCTICAS Y ESTRATEGIAS DE' con 'SEGURIDAD' en la línea inferior), completa o une el título de manera integral y profesional (ej. 'Fundamentos de Sistemas Web', 'Mejores Prácticas y Estrategias de Seguridad'). NUNCA dejes títulos cortados que terminen en conectores como 'DE' o 'PARA'. En 'contenidos', extrae la lista de temas y subtemas ordenados línea por línea, omitiendo números de fila aislados de columnas adyacentes (como '1', '2', '3'). Si el documento no especifica horas por unidad pero sí indica horas globales de la asignatura (ej. 96 o 144 horas divididas en 32/32/32 o 48/48/48), distribuye esas horas proporcionalmente entre las unidades para que sumen exactamente el total.");
             sb.AppendLine("6. FORMATO DE SALIDA: Devuelve exclusivamente un objeto JSON válido que cumpla la estructura solicitada, sin explicaciones ni bloques de texto fuera del JSON.");
             sb.AppendLine("7. CERO ENCABEZADOS REDUNDANTES: Al extraer el contenido de 'recursos_didacticos', 'metodologia_ensenanza', 'objetivo_asignatura', omite el título o etiqueta de la sección (ej. no incluyas 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE:'). Extrae exclusivamente los recursos, herramientas o texto sustantivo.");
+            sb.AppendLine("8. HORAS TOTALES Y CÓDIGO DE CARRERA: Extrae en 'total_horas_asignatura' el número total de horas de la asignatura que figure en datos generales (ej. 96 o 144). Extrae en 'horas_contacto_docente', 'horas_practico_experimental' y 'horas_autonomo' el total por componente de la sección 'Organización de aprendizajes por modalidad' (ej. 32, 32, 32). Extrae en 'codigo_carrera' el código de carrera que aparezca en el encabezado (ej. 'DS' o 'SOF').");
             return sb.ToString();
         }
 
@@ -473,6 +474,11 @@ namespace dosier_infrastructure.Curriculum
         {
             return @"Devuelve un único objeto JSON con esta estructura exacta de claves:
 {
+  ""total_horas_asignatura"": 96,
+  ""horas_contacto_docente"": 32,
+  ""horas_practico_experimental"": 32,
+  ""horas_autonomo"": 32,
+  ""codigo_carrera"": ""DS"",
   ""objetivo_asignatura"": ""<p>Verbo en infinitivo + objeto + finalidad + contexto...</p>"",
   ""rda_carrera"": ""<ul><li>Resultado de aprendizaje de carrera...</li></ul>"",
   ""resultados_aprendizaje"": ""<ul><li><strong>RDA 1:</strong> ...</li></ul>"",
@@ -486,9 +492,10 @@ namespace dosier_infrastructure.Curriculum
       ""num"": 1,
       ""titulo"": ""Título de la Unidad 1"",
       ""contenidos"": ""1.1 Subtema A\n1.2 Subtema B\n1.3 Subtema C"",
-      ""horas_cd"": 16,
-      ""horas_ape"": 12,
-      ""horas_ta"": 16
+      ""horas_cd"": 10,
+      ""horas_ape"": 10,
+      ""horas_ta"": 10,
+      ""total_horas_unidad"": 30
     }
   ],
   ""actividades_practicas"": [
@@ -803,6 +810,13 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
+            // Horas Generales del Documento
+            result.TotalHorasAsignatura = TryGetInt(root, "total_horas_asignatura", "TotalHorasAsignatura", "total_horas", "TotalHoras", "numero_horas_asignatura");
+            result.HorasContactoDocente = TryGetInt(root, "horas_contacto_docente", "HorasContactoDocente", "horas_cd", "HorasCD", "total_horas_contacto_docente");
+            result.HorasPracticoExperimental = TryGetInt(root, "horas_practico_experimental", "HorasPracticoExperimental", "horas_ape", "HorasAPE", "total_horas_practico_experimental");
+            result.HorasAutonomo = TryGetInt(root, "horas_autonomo", "HorasAutonomo", "horas_ta", "HorasTA", "total_horas_aprendizaje_autonomo");
+            result.CodigoCarrera = TryGetString(root, "codigo_carrera", "CodigoCarrera", "codigoCarrera");
+
             // Unidades
             if (TryGetArray(root, out var unidadesArr, "unidades", "Unidades"))
             {
@@ -820,9 +834,19 @@ namespace dosier_infrastructure.Curriculum
                     contenidos = CleanContenidosOrphanNumbers(contenidos);
                     cleanTitulo = CompleteTruncatedUnitTitle(cleanTitulo, contenidos, idx);
 
-                    int cd = TryGetInt(item, "horas_cd", "horasCD", "HorasCD", "horas_docencia");
-                    int ape = TryGetInt(item, "horas_ape", "horasAPE", "HorasAPE", "horas_practica");
-                    int ta = TryGetInt(item, "horas_ta", "horasTA", "HorasTA", "horas_autonomo");
+                    int cd = TryGetInt(item, "horas_cd", "horasCD", "HorasCD", "horas_docencia", "horas_contacto_docente", "horas_contacto");
+                    int ape = TryGetInt(item, "horas_ape", "horasAPE", "HorasAPE", "horas_practica", "horas_practico_experimental", "horas_practico");
+                    int ta = TryGetInt(item, "horas_ta", "horasTA", "HorasTA", "horas_autonomo", "horas_aprendizaje_autonomo", "horas_autonomas", "horas_trabajo_autonomo");
+                    int totalUnidad = TryGetInt(item, "total_horas_unidad", "TotalHorasUnidad", "horas_total", "horasTotal", "total_horas", "TotalHoras");
+
+                    // Si la unidad extrajo total de horas pero los 3 componentes estaban en 0, dividir proporcionalmente
+                    if (cd == 0 && ape == 0 && ta == 0 && totalUnidad > 0)
+                    {
+                        int third = totalUnidad / 3;
+                        cd = third;
+                        ape = third;
+                        ta = totalUnidad - cd - ape;
+                    }
 
                     if (!string.IsNullOrWhiteSpace(cleanTitulo) || !string.IsNullOrWhiteSpace(contenidos))
                     {
@@ -839,10 +863,14 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
-            // Reconciliación matemática determinista de horas con SIGAFI
+            // Reconciliación matemática determinista de horas con SIGAFI o con datos generales del documento
             if (result.Unidades.Count > 0)
             {
-                ReconcileUnitHoursWithSigafi(result.Unidades, ctx.HorasCD, ctx.HorasAPE, ctx.HorasTA);
+                int targetCd = ctx.HorasCD > 0 ? ctx.HorasCD : result.HorasContactoDocente;
+                int targetApe = ctx.HorasAPE > 0 ? ctx.HorasAPE : result.HorasPracticoExperimental;
+                int targetTa = ctx.HorasTA > 0 ? ctx.HorasTA : result.HorasAutonomo;
+
+                ReconcileUnitHoursWithSigafi(result.Unidades, targetCd, targetApe, targetTa);
             }
 
             // Actividades Prácticas
@@ -1081,13 +1109,40 @@ namespace dosier_infrastructure.Curriculum
         {
             if (unidades.Count == 0) return;
 
-            int sum = targetCd + targetApe + targetTa;
-            if (sum > 0 && (targetCd <= 0 || targetApe <= 0))
+            int currentSumCd = unidades.Sum(u => u.HorasCD);
+            int currentSumApe = unidades.Sum(u => u.HorasAPE);
+            int currentSumTa = unidades.Sum(u => u.HorasTA);
+            int currentTotal = currentSumCd + currentSumApe + currentSumTa;
+
+            int targetSum = targetCd + targetApe + targetTa;
+
+            // Si el documento ya trajo horas válidas y consistentes por unidad:
+            if (currentTotal > 0)
             {
-                int third = sum / 3;
+                // Si el target oficial es 0 o coincide con el total extraído del documento, respetamos la fidelidad extraída
+                if (targetSum <= 0 || targetSum == currentTotal)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                // Las unidades vinieron sin horas desglosadas (todas en 0)
+                if (targetSum <= 0)
+                {
+                    targetSum = 96; // fallback reglamentario mínimo
+                    targetCd = 32;
+                    targetApe = 32;
+                    targetTa = 32;
+                }
+            }
+
+            if (targetSum > 0 && (targetCd <= 0 || targetApe <= 0))
+            {
+                int third = targetSum / 3;
                 targetCd = third;
                 targetApe = third;
-                targetTa = sum - targetCd - targetApe;
+                targetTa = targetSum - targetCd - targetApe;
             }
 
             DistributeExactBucket(unidades, u => u.HorasCD, (u, val) => u.HorasCD = val, targetCd);
@@ -1104,7 +1159,11 @@ namespace dosier_infrastructure.Curriculum
             int count = unidades.Count;
             if (targetTotal <= 0)
             {
-                foreach (var u in unidades) setter(u, 0);
+                int existing = unidades.Sum(getter);
+                if (existing <= 0)
+                {
+                    foreach (var u in unidades) setter(u, 0);
+                }
                 return;
             }
 

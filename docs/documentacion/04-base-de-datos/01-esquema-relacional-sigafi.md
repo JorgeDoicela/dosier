@@ -57,7 +57,29 @@ erDiagram
 | `mallas_periodos` | `idMallaPeriodo`, `idMalla`, `idPeriodo` | Tabla pivote de resolución de cohorte curricular por período lectivo. |
 | `detallemallas` | `idDetalleMalla`, `idMalla`, `idAsignatura`, `horasDocencia`, `horasApe`, `horasAutonomo`, `creditos` | Regla matemática inalterable de distribución horaria oficial. |
 | `asignaturas` | `idAsignatura`, `asignatura`, `codigo` | Catálogo de asignaturas del plan de estudios. |
-| `asignaciones_profesores` | `idAsignacion`, `idProfesor`, `idPeriodo`, `idAsignatura`, `idCarrera`, `paralelo` | Carga horaria docente asignada. Es el punto de partida para instanciar el PEA. |
+| `asignaciones_profesores` | `idAsignacion`, `idProfesor`, `idPeriodo`, `idAsignatura`, `idCarrera`, `paralelo`, `numeroHoras`, `horasPracticoExperimental`, `extraCurricular` | Carga horaria docente asignada. Es el punto de partida para instanciar el PEA. Mapea horas semanales de distributivo y discrimina actividades curriculares de cargas institucionales de acompañamiento (`extraCurricular = 1`). |
+
+---
+
+## 3.1. Resiliencia Curricular ante Inconsistencias o Ausencia de Datos en SIGAFI
+
+Debido a que la base de datos `sigafi_es` es de solo lectura y su administración operativa depende de Secretaría Académica y Sistemas del instituto, DOSIER implementa mecanismos de resiliencia en la capa anticorrupción (`AcademicContextResolver` y `AsignaturasDocenteService`):
+
+1. **Resolución Jerárquica de Mallas:**
+   * Cuando un período lectivo (ej. `OCT2026`) no cuenta aún con registros en `mallas_periodos`, el sistema recurre a la malla activa general de la carrera.
+   * Si una asignatura asignada pertenece a una versión previa (cohorte superior en malla no activa), el motor busca automáticamente en cualquier malla histórica de esa carrera que contenga la asignatura y nivel, previniendo la pérdida de asignaciones o fallos de creación del PEA.
+
+2. **Cálculo Normativo de Carga Horaria CACES:**
+   * Cuando el 95%+ de las materias en SIGAFI registran horas totales sin desglose (`horasDocente = 0` y `horasPracticoExperimental = 0`), DOSIER pre-carga una distribución equitativa (1/3 docencia, 1/3 prácticas y 1/3 autónomo).
+   * Si la asignatura no tiene registradas horas totales pero registra créditos, se calculan 48 horas normativas por crédito ($Total = Créditos \times 48$).
+
+3. **Discriminación de Actividades de Acompañamiento:**
+   * Cargas como PAIT, Clubes Deportivos, Actividad Física o Formación Complementaria (`extraCurricular = 1` o sin malla curricular) se clasifican con estado `NoAplica`, evitando que el docente intente generar innecesariamente un PEA microcurricular.
+
+4. **Gobernanza de Período Activo Único del Instituto:**
+   * En `sigafi_es.periodos`, registros históricos (como `OCT2022`, `ABR2022`, `OCT2021`, `ABR2021`) conservaban el flag legado `activo = 1`, lo que provocaba falsos positivos de múltiples períodos activos simultáneos.
+   * DOSIER establece como regla rectora la columna institucional `periodoactivoinstituto = 1` (con ordenamiento cronológico por `fecha_inicial`), garantizando que en todo el sistema exista estricta y matemáticamente **un solo período activo** a la vez (`OCT2026`).
+   * Se excluyen en todas las consultas del backend y frontend los períodos de la Escuela de Conducción (`esConduccion = 1`), restringiendo el universo operativo a las carreras del instituto (`carreras.esInstituto = 1`).
 
 ---
 

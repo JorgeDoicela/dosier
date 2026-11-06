@@ -24,7 +24,7 @@ export const PeaCareerOutcomesProperties: React.FC<PeaCareerOutcomesPropertiesPr
                 <div className="flex items-center gap-2 mb-1">
                     <Award className="w-4 h-4 text-violet-500" />
                     <span className="text-xs font-bold text-text-main uppercase tracking-wider">
-                        Sección d) Resultados de Aprendizaje de la Carrera
+                        Sección 4. Resultados de Aprendizaje de la Carrera
                     </span>
                 </div>
                 <p className="text-[11px] text-text-dim leading-relaxed">
@@ -69,7 +69,7 @@ export const PeaCareerOutcomesProperties: React.FC<PeaCareerOutcomesPropertiesPr
                     <label className="text-[11px] font-medium text-text-dim">Título / Etiqueta de la Sección</label>
                     <input
                         type="text"
-                        value={c.rdaCarreraLabel ?? 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
+                        value={c.rdaCarreraLabel ?? '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
                         onChange={(e) => handleConfigChange('rdaCarreraLabel', e.target.value)}
                         className="w-full bg-surface-subtle border border-border-thin rounded px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-violet-500"
                     />

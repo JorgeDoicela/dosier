@@ -39,6 +39,8 @@ export interface DocenteAsignaturaDto {
     horas_practico_experimental: number;
     horas_autonomo: number;
     creditos: number;
+    horas_semanales?: number;
+    es_extracurricular?: boolean;
     unidad_organizacion_curricular?: string;
 
     // Prerrequisitos de la asignatura
@@ -77,6 +79,8 @@ export interface AcademicContextDto {
     horas_practico_experimental: number;
     horas_autonomo: number;
     creditos: number;
+    horas_semanales?: number;
+    es_extracurricular?: boolean;
     unidad_organizacion_curricular?: string;
     modalidad_autorizada: boolean;
     fuente_malla: string;

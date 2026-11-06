@@ -20,11 +20,11 @@ export const PeaCompetenciesProperties: React.FC<PeaCompetenciesPropertiesProps>
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA Y e) DE LA ASIGNATURA');
+        onUpdateConfig(block.id, 'title', 'RESULTADOS DE APRENDIZAJE DE LA CARRERA Y DE LA ASIGNATURA');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
-        onUpdateConfig(block.id, 'rdaCarreraLabel', 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA:');
+        onUpdateConfig(block.id, 'rdaCarreraLabel', 'RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA:');
         onUpdateConfig(block.id, 'rdaCarreraPlaceholder', 'Indicar los resultados de aprendizaje del perfil de egreso a los que tributa la asignatura.');
-        onUpdateConfig(block.id, 'rdaAsignaturaLabel', 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:');
+        onUpdateConfig(block.id, 'rdaAsignaturaLabel', 'RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:');
         onUpdateConfig(block.id, 'rdaAsignaturaPlaceholder', 'Redactar los resultados de aprendizaje específicos alcanzables por el estudiante.');
     };
 
@@ -49,7 +49,7 @@ export const PeaCompetenciesProperties: React.FC<PeaCompetenciesPropertiesProps>
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA Y e) DE LA ASIGNATURA'}
+                    value={config.title || 'RESULTADOS DE APRENDIZAJE DE LA CARRERA Y DE LA ASIGNATURA'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />
@@ -71,13 +71,13 @@ export const PeaCompetenciesProperties: React.FC<PeaCompetenciesPropertiesProps>
             <div className="space-y-2 pb-3 border-b border-border-thin/20">
                 <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1">
                     <Sliders className="w-3 h-3 text-indigo-500" />
-                    d) Resultados de la Carrera (Perfil de Egreso)
+                    4. Resultados de Aprendizaje de la Carrera (Perfil de Egreso)
                 </span>
                 <div className="space-y-1.5">
                     <label className="text-[9.5px] font-semibold text-text-dim">Etiqueta de la subsección</label>
                     <input
                         type="text"
-                        value={config.rdaCarreraLabel || 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA:'}
+                        value={config.rdaCarreraLabel || 'RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA:'}
                         onChange={(e) => onUpdateConfig(block.id, 'rdaCarreraLabel', e.target.value)}
                         className="w-full bg-surface border border-border-thin rounded-md px-2 py-1 text-xs text-text-main focus:outline-hidden focus:border-indigo-500"
                     />
@@ -97,13 +97,13 @@ export const PeaCompetenciesProperties: React.FC<PeaCompetenciesPropertiesProps>
             <div className="space-y-2 pb-3 border-b border-border-thin/20">
                 <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1">
                     <Sliders className="w-3 h-3 text-indigo-500" />
-                    e) Resultados de Aprendizaje de la Asignatura (RDA)
+                    5. Resultados de Aprendizaje de la Asignatura (RDA)
                 </span>
                 <div className="space-y-1.5">
                     <label className="text-[9.5px] font-semibold text-text-dim">Etiqueta de la subsección</label>
                     <input
                         type="text"
-                        value={config.rdaAsignaturaLabel || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
+                        value={config.rdaAsignaturaLabel || 'RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
                         onChange={(e) => onUpdateConfig(block.id, 'rdaAsignaturaLabel', e.target.value)}
                         className="w-full bg-surface border border-border-thin rounded-md px-2 py-1 text-xs text-text-main focus:outline-hidden focus:border-indigo-500"
                     />

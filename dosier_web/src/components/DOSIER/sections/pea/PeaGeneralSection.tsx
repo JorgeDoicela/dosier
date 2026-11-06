@@ -70,6 +70,33 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
     const sumaHoras = horasCd + horasApe + horasTa;
     const diffHoras = sumaHoras - totalHoras;
     const isHorasBalanced = totalHoras > 0 && sumaHoras === totalHoras;
+    const horasSemanales = Number(formData?.HorasSemanales ?? formData?.horas_semanales ?? 0);
+
+    const aplicarDistribucionNormativa = () => {
+        const total = totalHoras > 0 ? totalHoras : (Number(formData?.Creditos) || 1) * 48;
+        let cd = 0;
+        let ape = 0;
+        let ta = 0;
+
+        // Si existen horas semanales asignadas en distributivo (ej. 2h/sem * 16 semanas = 32h docencia)
+        if (horasSemanales > 0 && (horasSemanales * 16) < total) {
+            cd = horasSemanales * 16;
+            const restante = total - cd;
+            ape = Math.floor(restante / 2);
+            ta = total - cd - ape;
+        } else {
+            cd = Math.floor(total / 3);
+            ape = Math.floor(total / 3);
+            ta = total - cd - ape;
+        }
+
+        if (totalHoras <= 0) {
+            onUpdate('TotalHorasAsignatura', total);
+        }
+        onUpdate('HorasContactoDocente', cd);
+        onUpdate('HorasPracticoExperimental', ape);
+        onUpdate('HorasAutonomo', ta);
+    };
 
     return (
         <div className="space-y-6 sm:space-y-8 animate-fade-in font-sans">
@@ -99,9 +126,9 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             cowork={cowork}
                             type="text"
                             label={labelCodigoCarrera}
-                            placeholder="Código institucional (ej. GAS)"
-                            readOnly={true}
-                            className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
+                            placeholder="Código institucional (ej. DS, GAS)"
+                            readOnly={readOnly}
+                            className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase cursor-pointer"
                             uppercase={true}
                             onValueChange={(val) => onUpdate('CodigoCarrera', val)}
                         />
@@ -204,7 +231,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         type="text"
                         label="Número de horas de la asignatura"
                         placeholder="0"
-                        readOnly={true}
+                        readOnly={readOnly || totalHoras > 0}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                         onValueChange={(val) => onUpdate('TotalHorasAsignatura', Number(val) || 0)}
                     />
@@ -243,7 +270,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
             })}
 
             {/* 10. Organización de aprendizajes por modalidad, número de horas destinadas a cada componente */}
-            <div>
+            <div className="space-y-3">
                 <div className="rounded-xl border border-border-thin overflow-hidden bg-surface shadow-xs">
                     {/* Encabezado compacto sin SVG */}
                     <div className="px-4 py-2.5 bg-bg-deep/40 border-b border-border-thin">
@@ -315,17 +342,17 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         </div>
                     </div>
 
-                    {/* Fila Inferior Concisa y Legible */}
-                    {totalHoras > 0 && (
-                        <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin bg-surface flex items-center gap-3 text-sm sm:text-base ${
-                                isHorasBalanced
-                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                    : diffHoras > 0
-                                    ? 'text-rose-600 dark:text-rose-400'
-                                    : 'text-amber-600 dark:text-amber-400'
-                            }`}>
+                    {/* Fila Inferior Concisa y Legible con Asistencia Normativa */}
+                    <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin bg-surface flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base ${
+                            isHorasBalanced
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : diffHoras > 0
+                                ? 'text-rose-600 dark:text-rose-400'
+                                : 'text-amber-600 dark:text-amber-400'
+                        }`}>
+                        <div className="flex items-center gap-3">
                             <span className="font-mono font-bold tracking-tight">
-                                Total: {sumaHoras} / {totalHoras} hrs
+                                Total: {sumaHoras} / {totalHoras > 0 ? totalHoras : 0} hrs
                             </span>
                             <span className="opacity-50">·</span>
                             <span className="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
@@ -337,13 +364,32 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                         : 'bg-amber-500'
                                 }`} />
                                 <span>
-                                    {isHorasBalanced && 'Conforme'}
-                                    {diffHoras > 0 && `Exceso de ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`}
-                                    {diffHoras < 0 && `Faltan ${Math.abs(diffHoras)} ${Math.abs(diffHoras) === 1 ? 'hora' : 'horas'}`}
+                                    {isHorasBalanced && 'Conforme normativa'}
+                                    {totalHoras > 0 && diffHoras > 0 && `Exceso de ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`}
+                                    {totalHoras > 0 && diffHoras < 0 && `Faltan ${Math.abs(diffHoras)} ${Math.abs(diffHoras) === 1 ? 'hora' : 'horas'}`}
+                                    {totalHoras <= 0 && 'Ingrese el total de horas'}
                                 </span>
                             </span>
                         </div>
-                    )}
+
+                        <div className="flex items-center gap-2">
+                            {horasSemanales > 0 && (
+                                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-border-thin">
+                                    Distributivo: {horasSemanales}h/sem
+                                </span>
+                            )}
+                            {!readOnly && (!isHorasBalanced || totalHoras <= 0) && (
+                                <button
+                                    type="button"
+                                    onClick={aplicarDistribucionNormativa}
+                                    className="text-xs font-medium px-2.5 py-1 rounded bg-[#0070f3] text-white hover:bg-blue-600 active:scale-95 transition-all cursor-pointer shadow-xs"
+                                    title="Aplica la distribución de horas según distributivo semanal o tercios"
+                                >
+                                    Distribuir horas
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

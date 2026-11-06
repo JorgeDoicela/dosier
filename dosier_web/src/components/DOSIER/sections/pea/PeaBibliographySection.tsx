@@ -18,12 +18,6 @@ export const PeaBibliographySection: React.FC<PeaBibliographySectionProps> = ({
 }) => {
     return (
         <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
-            <div className="flex items-center justify-between gap-4">
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    j) Bibliografía
-                </h4>
-            </div>
-
             {/* BIBLIOGRAFÍA BÁSICA */}
             <div className="space-y-3.5">
                 <h5 className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wide">

@@ -20,7 +20,7 @@ export const PeaMethodologyProperties: React.FC<PeaMethodologyPropertiesProps> =
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'g) METODOLOGÍA DE ENSEÑANZA');
+        onUpdateConfig(block.id, 'title', '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'estrategiasLabel', 'ESTRATEGIAS METODOLÓGICAS');
         onUpdateConfig(block.id, 'estrategiasPlaceholder', 'En la propuesta pedagógica establecida en el Modelo Educativo del ISTPET se contempla el aprendizaje basado en problemas, proyectos formativos, aula invertida y trabajo colaborativo.');
@@ -49,7 +49,7 @@ export const PeaMethodologyProperties: React.FC<PeaMethodologyPropertiesProps> =
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'g) METODOLOGÍA DE ENSEÑANZA'}
+                    value={config.title || '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

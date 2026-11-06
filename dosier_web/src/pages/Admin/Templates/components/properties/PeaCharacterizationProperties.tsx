@@ -20,11 +20,11 @@ export const PeaCharacterizationProperties: React.FC<PeaCharacterizationProperti
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'b) OBJETIVO DE LA ASIGNATURA Y c) PRERREQUISITOS');
+        onUpdateConfig(block.id, 'title', 'OBJETIVO DE LA ASIGNATURA Y PRERREQUISITOS');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
-        onUpdateConfig(block.id, 'objetivoLabel', 'b) OBJETIVO DE LA ASIGNATURA:');
+        onUpdateConfig(block.id, 'objetivoLabel', 'OBJETIVO DE LA ASIGNATURA:');
         onUpdateConfig(block.id, 'objetivoPlaceholder', 'Formular con Verbo en infinitivo + ¿Qué? + ¿Cómo? + ¿Para qué? articulado al nivel formativo de la carrera.');
-        onUpdateConfig(block.id, 'prerrequisitosLabel', 'c) PRERREQUISITOS:');
+        onUpdateConfig(block.id, 'prerrequisitosLabel', 'PRERREQUISITOS:');
         onUpdateConfig(block.id, 'prerrequisitosColAsignatura', 'Asignatura');
         onUpdateConfig(block.id, 'prerrequisitosColObservacion', 'Observación');
     };
@@ -50,7 +50,7 @@ export const PeaCharacterizationProperties: React.FC<PeaCharacterizationProperti
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'b) OBJETIVO DE LA ASIGNATURA Y c) PRERREQUISITOS'}
+                    value={config.title || 'OBJETIVO DE LA ASIGNATURA Y PRERREQUISITOS'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />
@@ -72,13 +72,13 @@ export const PeaCharacterizationProperties: React.FC<PeaCharacterizationProperti
             <div className="space-y-2 pb-3 border-b border-border-thin/20">
                 <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1">
                     <Sliders className="w-3 h-3 text-indigo-500" />
-                    b) Objetivo de la Asignatura
+                    2. Objetivo de la Asignatura
                 </span>
                 <div className="space-y-1.5">
                     <label className="text-[9.5px] font-semibold text-text-dim">Etiqueta de la subsección</label>
                     <input
                         type="text"
-                        value={config.objetivoLabel || 'b) OBJETIVO DE LA ASIGNATURA:'}
+                        value={config.objetivoLabel || 'OBJETIVO DE LA ASIGNATURA:'}
                         onChange={(e) => onUpdateConfig(block.id, 'objetivoLabel', e.target.value)}
                         className="w-full bg-surface border border-border-thin rounded-md px-2 py-1 text-xs text-text-main focus:outline-hidden focus:border-indigo-500"
                     />
@@ -98,13 +98,13 @@ export const PeaCharacterizationProperties: React.FC<PeaCharacterizationProperti
             <div className="space-y-2 pb-3 border-b border-border-thin/20">
                 <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider flex items-center gap-1">
                     <Sliders className="w-3 h-3 text-indigo-500" />
-                    c) Prerrequisitos de la Asignatura
+                    3. Prerrequisitos de la Asignatura
                 </span>
                 <div className="space-y-1.5">
                     <label className="text-[9.5px] font-semibold text-text-dim">Etiqueta de la subsección</label>
                     <input
                         type="text"
-                        value={config.prerrequisitosLabel || 'c) PRERREQUISITOS:'}
+                        value={config.prerrequisitosLabel || 'PRERREQUISITOS:'}
                         onChange={(e) => onUpdateConfig(block.id, 'prerrequisitosLabel', e.target.value)}
                         className="w-full bg-surface border border-border-thin rounded-md px-2 py-1 text-xs text-text-main focus:outline-hidden focus:border-indigo-500"
                     />

@@ -12,66 +12,29 @@ namespace dosier_infrastructure.Academico;
 public class AsignaturasDocenteService : IAsignaturasDocenteService
 {
     private readonly DosierContext _context;
+    private readonly IPeriodoInstitucionalResolver _periodoResolver;
 
-    public AsignaturasDocenteService(DosierContext context)
+    public AsignaturasDocenteService(DosierContext context, IPeriodoInstitucionalResolver periodoResolver)
     {
         _context = context;
+        _periodoResolver = periodoResolver;
     }
 
-    public async Task<PeriodoAcademicoDto?> GetPeriodoActivoAsync()
+    public Task<PeriodoAcademicoDto?> GetPeriodoActivoAsync()
     {
-        var periodos = await GetPeriodosDisponiblesAsync();
-        if (!periodos.Any()) return null;
-
-        // Prioridad 1: Periodo oficial activo del instituto (Periodoactivoinstituto == 1, ej. OCT2025)
-        // Prioridad 2: Periodo activo más reciente
-        var periodo = periodos.FirstOrDefault(p => p.EsActivo) ?? periodos.First();
-
-        return periodo;
+        return _periodoResolver.GetPeriodoActivoAsync();
     }
 
-    public async Task<List<PeriodoAcademicoDto>> GetPeriodosDisponiblesAsync()
+    public Task<List<PeriodoAcademicoDto>> GetPeriodosDisponiblesAsync()
     {
-        // 1. Obtener identificadores de periodos que cuentan con asignaciones reales en carreras del instituto (esInstituto = 1)
-        var periodosInstitutoQuery = await (
-            from a in _context.AsignacionesProfesores.AsNoTracking()
-            join cu in _context.Cursos.AsNoTracking() on a.IdNivel equals cu.IdNivel
-            join c in _context.Carreras.AsNoTracking() on cu.IdCarrera equals c.IdCarrera
-            where c.EsInstituto == 1
-            select a.IdPeriodo
-        ).Distinct().ToListAsync();
-
-        // 2. Filtrar únicamente los períodos oficiales del instituto (excluyendo Conducción y legados sin materias)
-        var periodos = await _context.Periodos
-            .AsNoTracking()
-            .Where(p => 
-                (p.EsConduccion == 0 || p.EsConduccion == null) &&
-                (p.Periodoactivoinstituto == 1 ||
-                 p.EsInstituto == 1 ||
-                 periodosInstitutoQuery.Contains(p.IdPeriodo))
-            )
-            .ToListAsync();
-
-        return periodos
-            .OrderByDescending(p => p.Periodoactivoinstituto == 1)
-            .ThenByDescending(p => p.FechaInicial)
-            .Select(p => new PeriodoAcademicoDto
-            {
-                IdPeriodo = p.IdPeriodo,
-                Detalle = p.Detalle,
-                FechaInicial = p.FechaInicial,
-                FechaFinal = p.FechaFinal,
-                EsActivo = (p.Periodoactivoinstituto == 1 || p.Activo == true)
-            })
-            .ToList();
+        return _periodoResolver.GetPeriodosInstitucionalesAsync();
     }
 
     public async Task<List<DocenteAsignaturaDto>> GetMisAsignaturasAsync(string idProfesor, string? idPeriodo = null)
     {
         if (string.IsNullOrWhiteSpace(idPeriodo))
         {
-            var periodoActivo = await GetPeriodoActivoAsync();
-            idPeriodo = periodoActivo?.IdPeriodo;
+            idPeriodo = await _periodoResolver.GetIdPeriodoActivoAsync();
         }
 
         if (string.IsNullOrWhiteSpace(idPeriodo))
@@ -127,16 +90,12 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                   && carreraIds.Contains(m.IdCarrera)
             select new { mp.IdNivel, mp.IdMalla, m.IdCarrera })
             .ToListAsync();
-        var mallasActivas = await _context.Mallas.AsNoTracking()
-            .Where(m => carreraIds.Contains(m.IdCarrera) && m.Activa == true)
+        var mallasDeCarreras = await _context.Mallas.AsNoTracking()
+            .Where(m => carreraIds.Contains(m.IdCarrera))
             .ToListAsync();
-        var mallaIds = mallasPeriodo.Select(m => m.IdMalla)
-            .Concat(mallasActivas.Select(m => m.IdMalla))
-            .Distinct()
-            .ToList();
-        var mallasRelevantes = await _context.Mallas.AsNoTracking()
-            .Where(m => mallaIds.Contains(m.IdMalla))
-            .ToListAsync();
+        var mallasActivas = mallasDeCarreras.Where(m => m.Activa == true).ToList();
+        var mallaIds = mallasDeCarreras.Select(m => m.IdMalla).Distinct().ToList();
+        var mallasRelevantes = mallasDeCarreras;
         var detallesMalla = await _context.DetalleMallas.AsNoTracking()
             .Where(d => mallaIds.Contains(d.IdMalla)
                         && asignaturaIds.Contains(d.IdAsignatura)
@@ -188,23 +147,108 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             var malla = mallaPeriodo == null
                 ? mallasActivas.FirstOrDefault(m => m.IdCarrera == carrera.IdCarrera)
                 : mallasRelevantes.FirstOrDefault(m => m.IdMalla == mallaPeriodo.IdMalla);
-            if (malla == null)
-                continue;
 
-            var detalle = detallesMalla.FirstOrDefault(d =>
-                d.IdMalla == malla.IdMalla && d.IdAsignatura == asig.IdAsignatura);
+            dosier_infrastructure.data.models.DetalleMalla? detalle = null;
+            if (malla != null)
+            {
+                detalle = detallesMalla.FirstOrDefault(d =>
+                    d.IdMalla == malla.IdMalla && d.IdAsignatura == asig.IdAsignatura);
+            }
+
+            // Fallback resiliente a cualquier malla histórica de la carrera que cubra la materia
             if (detalle == null)
+            {
+                var alternative = (from d in detallesMalla
+                                   join m in mallasDeCarreras on d.IdMalla equals m.IdMalla
+                                   where m.IdCarrera == carrera.IdCarrera
+                                         && d.IdAsignatura == asig.IdAsignatura
+                                   orderby (d.IdNivel == asig.IdNivel ? 1 : 0) descending, m.Activa descending, m.Vigencia descending, m.IdMalla descending
+                                   select new { Detail = d, Grid = m }).FirstOrDefault();
+
+                if (alternative != null)
+                {
+                    detalle = alternative.Detail;
+                    malla = alternative.Grid;
+                }
+            }
+
+            // Si es actividad de acompañamiento o extracurricular (ej. PAIT, Clubes), proveer contexto seguro sin descartar
+            var isExtra = (asignatura.ExtraCurricular == 1) || (asig.ExtraCurricular == 1) || (detalle == null);
+            if (isExtra && detalle == null)
+            {
+                result.Add(new DocenteAsignaturaDto
+                {
+                    IdAsignacion = asig.IdAsignacion,
+                    IdAsignatura = asignatura.IdAsignatura,
+                    CodigoAsignatura = asignatura.Codigo,
+                    NombreAsignatura = asignatura.Asignatura1,
+
+                    IdCarrera = carrera.IdCarrera,
+                    CodigoCarrera = !string.IsNullOrWhiteSpace(carrera.AliasCarrera) ? carrera.AliasCarrera : carrera.CodigoCases,
+                    NombreCarrera = carrera.Carrera1,
+                    AliasCarrera = carrera.AliasCarrera,
+
+                    IdPeriodo = asig.IdPeriodo,
+                    DetallePeriodo = periodo?.Detalle,
+
+                    IdModalidad = asig.IdModalidad,
+                    NombreModalidad = modalidad?.ModalidadImpresion ?? modalidad?.Modalidad1,
+
+                    IdNivel = asig.IdNivel,
+                    NombreNivel = curso.Nivel ?? $"Nivel {asig.IdNivel}",
+                    Paralelo = asig.Paralelo,
+
+                    IdMalla = 0,
+                    IdDetalleMalla = 0,
+                    FuenteMalla = "actividad_institucional",
+
+                    HorasTotales = (int)(asig.NumeroHoras ?? 0),
+                    HorasDocencia = asig.NumeroHoras ?? 0,
+                    HorasPracticoExperimental = asig.HorasPracticoExperimental ?? 0,
+                    HorasAutonomo = 0,
+                    Creditos = 0,
+                    HorasSemanales = asig.NumeroHoras,
+                    EsExtracurricular = true,
+                    UnidadOrganizacionCurricular = "Acompañamiento",
+
+                    Prerrequisitos = new List<string>(),
+                    AdvertenciasContexto = new List<string> { "Actividad de acompañamiento institucional; no requiere formulación de PEA microcurricular." },
+
+                    EstadoPea = "NoAplica",
+                    IdPea = null,
+                    UuidPea = null,
+                    VersionPea = null
+                });
+                continue;
+            }
+
+            if (malla == null || detalle == null)
                 continue;
 
             tiposAsignaturaMap.TryGetValue(detalle.IdTipoAsignatura, out var tipoAsignatura);
             var horasTotales = detalle.Horas ?? 0;
+            var creditos = detalle.Creditos ?? 0;
+            if (horasTotales <= 0 && creditos > 0)
+            {
+                horasTotales = creditos * 48;
+            }
             var horasDocencia = (decimal)(detalle.HorasDocente ?? 0);
             var horasApe = detalle.HorasPracticoExperimental ?? 0m;
             if (horasTotales > 0 && horasDocencia <= 0m && horasApe <= 0m)
             {
-                var third = Math.Floor((decimal)horasTotales / 3m);
-                horasDocencia = third;
-                horasApe = third;
+                var weeklyHours = asig.NumeroHoras ?? 0m;
+                if (weeklyHours > 0m && (weeklyHours * 16m) < horasTotales)
+                {
+                    horasDocencia = weeklyHours * 16m;
+                    var remaining = horasTotales - horasDocencia;
+                    horasApe = Math.Floor(remaining / 2m);
+                }
+                else
+                {
+                    var third = Math.Floor((decimal)horasTotales / 3m);
+                    horasDocencia = third;
+                    horasApe = third;
+                }
             }
             var prereqList = prerequisitos
                 .Where(p => p.IdDetalleMalla == detalle.IdDetalleMalla)
@@ -212,9 +256,9 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .Cast<string>()
                 .ToList();
-            var source = mallaPeriodo == null ? "malla_activa_fallback" : "mallas_periodos";
+            var source = mallaPeriodo == null ? (malla.Activa == true ? "malla_activa_fallback" : "malla_historica_fallback") : "mallas_periodos";
             var warnings = mallaPeriodo == null
-                ? new List<string> { "SIGAFI no tiene una malla asociada al periodo y nivel; se uso la malla activa de la carrera." }
+                ? new List<string> { $"SIGAFI no tiene una malla asociada al periodo y nivel; se vinculó a '{malla.Descripcion ?? malla.IdMalla.ToString()}'." }
                 : new List<string>();
 
             peasExistentes.TryGetValue(asig.IdAsignacion, out var peaExistente);
@@ -249,7 +293,9 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 HorasDocencia = horasDocencia,
                 HorasPracticoExperimental = horasApe,
                 HorasAutonomo = Math.Max(0m, horasTotales - horasDocencia - horasApe),
-                Creditos = detalle.Creditos ?? 0,
+                Creditos = creditos,
+                HorasSemanales = asig.NumeroHoras,
+                EsExtracurricular = (asignatura.ExtraCurricular == 1) || (asig.ExtraCurricular == 1),
                 UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsignatura?.TipoAsignatura1),
 
                 Prerrequisitos = prereqList,

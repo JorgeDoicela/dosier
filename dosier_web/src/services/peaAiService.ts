@@ -336,6 +336,11 @@ export interface PeaStructuredDraft {
     recursosDidacticos: string;
     bibliografiaBasica: string;
     bibliografiaConsulta: string;
+    totalHorasAsignatura?: number;
+    horasContactoDocente?: number;
+    horasPracticoExperimental?: number;
+    horasAutonomo?: number;
+    codigoCarrera?: string;
     prerrequisitos: PeaDraftPrerrequisito[];
     unidades: PeaDraftUnidad[];
     actividadesPracticas: PeaDraftActividadPractica[];
@@ -423,7 +428,18 @@ export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
     const rawBibB = String(raw?.bibliografia_basica ?? raw?.bibliografiaBasica ?? raw?.BibliografiaBasica ?? '');
     const rawBibC = String(raw?.bibliografia_consulta ?? raw?.bibliografiaConsulta ?? raw?.BibliografiaConsulta ?? '');
 
+    const totalHoras = Number(raw?.total_horas_asignatura ?? raw?.totalHorasAsignatura ?? raw?.TotalHorasAsignatura ?? 0);
+    const horasCD = Number(raw?.horas_contacto_docente ?? raw?.horasContactoDocente ?? raw?.HorasContactoDocente ?? 0);
+    const horasAPE = Number(raw?.horas_practico_experimental ?? raw?.horasPracticoExperimental ?? raw?.HorasPracticoExperimental ?? 0);
+    const horasTA = Number(raw?.horas_autonomo ?? raw?.horasAutonomo ?? raw?.HorasAutonomo ?? 0);
+    const codCarrera = String(raw?.codigo_carrera ?? raw?.codigoCarrera ?? raw?.CodigoCarrera ?? '').trim();
+
     return {
+        totalHorasAsignatura: totalHoras > 0 ? totalHoras : undefined,
+        horasContactoDocente: horasCD > 0 ? horasCD : undefined,
+        horasPracticoExperimental: horasAPE > 0 ? horasAPE : undefined,
+        horasAutonomo: horasTA > 0 ? horasTA : undefined,
+        codigoCarrera: codCarrera || undefined,
         objetivoAsignatura: sanitizeHeading(rawObj, /^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?/i),
         rdaCarrera: String(raw?.rda_carrera ?? raw?.rdaCarrera ?? raw?.RdaCarrera ?? ''),
         resultadosAprendizaje: String(raw?.resultados_aprendizaje ?? raw?.resultadosAprendizaje ?? raw?.ResultadosAprendizaje ?? ''),
@@ -592,7 +608,40 @@ export const convertDraftToEditorFields = (
     }
 
     if (includeSection('pea_contents_section') && draft.unidades.length > 0) {
-        patch.Unidades = draft.unidades.map((u, idx) => {
+        let workingUnits = [...draft.unidades];
+        const initialTotalHours = workingUnits.reduce((acc, u) => acc + (Number(u.horasCD) || 0) + (Number(u.horasAPE) || 0) + (Number(u.horasTA) || 0), 0);
+
+        // Si todas las unidades extraídas vinieron con 0 horas, distribuir inteligentemente las horas globales
+        if (initialTotalHours <= 0) {
+            const count = workingUnits.length;
+            const targetTotal = (draft.totalHorasAsignatura && draft.totalHorasAsignatura > 0)
+                ? draft.totalHorasAsignatura
+                : (draft.validationSummary?.sigafiTotalHoras && draft.validationSummary.sigafiTotalHoras > 0 ? draft.validationSummary.sigafiTotalHoras : 96);
+
+            let tCd = (draft.horasContactoDocente && draft.horasContactoDocente > 0) ? draft.horasContactoDocente : Math.floor(targetTotal / 3);
+            let tApe = (draft.horasPracticoExperimental && draft.horasPracticoExperimental > 0) ? draft.horasPracticoExperimental : Math.floor(targetTotal / 3);
+            let tTa = (draft.horasAutonomo && draft.horasAutonomo > 0) ? draft.horasAutonomo : (targetTotal - tCd - tApe);
+
+            const distribute = (totalBucket: number) => {
+                const baseVal = Math.floor(totalBucket / count);
+                const rem = totalBucket % count;
+                return Array.from({ length: count }, (_, i) => baseVal + (i < rem ? 1 : 0));
+            };
+
+            const cdDist = distribute(tCd);
+            const apeDist = distribute(tApe);
+            const taDist = distribute(tTa);
+
+            workingUnits = workingUnits.map((u, i) => ({
+                ...u,
+                horasCD: cdDist[i],
+                horasAPE: apeDist[i],
+                horasTA: taDist[i],
+                horasTotal: cdDist[i] + apeDist[i] + taDist[i]
+            }));
+        }
+
+        patch.Unidades = workingUnits.map((u, idx) => {
             const num = u.num || idx + 1;
             const cleanTitle = (u.titulo || '').replace(new RegExp(`^unidad\\s*${num}\\s*[:.\\-]?\\s*`, 'i'), '').trim();
             const fullTitle = cleanTitle ? `UNIDAD ${num}: ${cleanTitle}` : `UNIDAD ${num}:`;
@@ -615,9 +664,9 @@ export const convertDraftToEditorFields = (
 
         // Sincronizar también la Organización de Aprendizajes por Modalidad en la Sección 1
         // para que el desglose de horas (CD, APE, TA) coincida con las unidades generadas
-        let sumCD = draft.unidades.reduce((acc, u) => acc + (Number(u.horasCD) || 0), 0);
-        let sumAPE = draft.unidades.reduce((acc, u) => acc + (Number(u.horasAPE) || 0), 0);
-        let sumTA = draft.unidades.reduce((acc, u) => acc + (Number(u.horasTA) || 0), 0);
+        let sumCD = workingUnits.reduce((acc, u) => acc + (Number(u.horasCD) || 0), 0);
+        let sumAPE = workingUnits.reduce((acc, u) => acc + (Number(u.horasAPE) || 0), 0);
+        let sumTA = workingUnits.reduce((acc, u) => acc + (Number(u.horasTA) || 0), 0);
         const total = sumCD + sumAPE + sumTA;
         if (total > 0 && sumCD <= 0 && sumAPE <= 0) {
             const third = Math.floor(total / 3);
@@ -629,6 +678,13 @@ export const convertDraftToEditorFields = (
             patch.HorasContactoDocente = sumCD;
             patch.HorasPracticoExperimental = sumAPE;
             patch.HorasAutonomo = sumTA;
+            patch.TotalHorasAsignatura = total;
+            patch.total_horas_asignatura = total;
+        }
+
+        if (draft.codigoCarrera) {
+            patch.CodigoCarrera = draft.codigoCarrera;
+            patch.codigo_carrera = draft.codigoCarrera;
         }
     }
 

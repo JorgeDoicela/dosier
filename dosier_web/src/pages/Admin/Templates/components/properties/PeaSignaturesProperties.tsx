@@ -20,7 +20,7 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'k) FIRMAS DE RESPONSABILIDAD');
+        onUpdateConfig(block.id, 'title', '11. FIRMAS DE RESPONSABILIDAD');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'signatureBoxHeight', 95);
         onUpdateConfig(block.id, 'cargoElaborado', 'Docente');
@@ -54,7 +54,7 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'k) FIRMAS DE RESPONSABILIDAD'}
+                    value={config.title || '11. FIRMAS DE RESPONSABILIDAD'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

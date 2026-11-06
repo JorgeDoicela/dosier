@@ -9,7 +9,7 @@ import { resolveHeaderColor, getContrastFg } from '../../components/properties/S
 /** a) Datos Generales de la Asignatura + Cabecera Oficial */
 export const generatePeaGeneralHtml = (block: DocumentBlock): string => {
     const c: any = block.config || {};
-    const title = c.title || block.title || 'a) DATOS GENERALES DE LA ASIGNATURA:';
+    const title = c.title || block.title || '1. DATOS GENERALES DE LA ASIGNATURA';
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
     const borderCss = 'border: 1px solid #000000;';
@@ -112,7 +112,7 @@ export const generatePeaObjectiveHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-objective" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.objetivoLabel || 'b) OBJETIVO DE LA ASIGNATURA'}
+    ${c.objetivoLabel || '2. OBJETIVO DE LA ASIGNATURA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
     {{{default objetivo_asignatura ""}}}
@@ -130,7 +130,7 @@ export const generatePeaPrerequisitesHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-prerequisites" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.prerrequisitosLabel || 'c) PRERREQUISITOS:'}
+    ${c.prerrequisitosLabel || '3. PRERREQUISITOS CURRICULARES'}
   </div>
   <table style="width: 100%; border-collapse: collapse; ${borderCss} border-top: none; font-size: 8pt; background: #ffffff;">
     <thead>
@@ -167,7 +167,7 @@ export const generatePeaCareerOutcomesHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-career-outcomes" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.rdaCarreraLabel || 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
+    ${c.rdaCarreraLabel || '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
     {{{default resultados_carrera ""}}}
@@ -185,7 +185,7 @@ export const generatePeaSubjectOutcomesHtml = (block: DocumentBlock): string => 
     return `
 <div class="pea-section-subject-outcomes" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.rdaAsignaturaLabel || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
+    ${c.rdaAsignaturaLabel || '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
     {{{default resultados_asignatura ""}}}
@@ -204,7 +204,7 @@ export const generatePeaCharacterizationHtml = (block: DocumentBlock): string =>
 <div class="pea-section-characterization" style="margin-bottom: 0; font-family: inherit;">
   <!-- b) OBJETIVO -->
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss}">
-    ${c.objetivoLabel || 'b) OBJETIVO DE LA ASIGNATURA'}
+    ${c.objetivoLabel || '2. OBJETIVO DE LA ASIGNATURA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 0;">
     {{{default objetivo_asignatura ""}}}
@@ -212,7 +212,7 @@ export const generatePeaCharacterizationHtml = (block: DocumentBlock): string =>
 
   <!-- c) PRERREQUISITOS -->
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss}">
-    ${c.prerrequisitosLabel || 'c) PRERREQUISITOS:'}
+    ${c.prerrequisitosLabel || '3. PRERREQUISITOS CURRICULARES'}
   </div>
   <table style="width: 100%; border-collapse: collapse; ${borderCss} border-top: none; font-size: 8pt; background: #ffffff;">
     <thead>
@@ -244,7 +244,7 @@ export const generatePeaCompetenciesRdaHtml = (block: DocumentBlock): string => 
 <div class="pea-section-rdas" style="margin-bottom: 0; font-family: inherit;">
   <!-- d) RDAS CARRERA -->
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss}">
-    ${c.rdaCarreraLabel || 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
+    ${c.rdaCarreraLabel || '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt; margin-bottom: 0;">
     {{{default resultados_carrera ""}}}
@@ -252,7 +252,7 @@ export const generatePeaCompetenciesRdaHtml = (block: DocumentBlock): string => 
 
   <!-- e) RDAS ASIGNATURA -->
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss}">
-    ${c.rdaAsignaturaLabel || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:'}
+    ${c.rdaAsignaturaLabel || '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA'}
   </div>
   <div style="${borderCss} border-top: none; padding: 6px 8px; min-height: 48px; background: #ffffff; font-size: 8pt;">
     {{{default resultados_asignatura ""}}}
@@ -271,7 +271,7 @@ export const generatePeaContentsHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-contents" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.title || 'f) CONTENIDOS DE ENSEÑANZA:'}
+    ${c.title || '6. CONTENIDOS DE ENSEÑANZA'}
   </div>
   <table style="width: 100%; border-collapse: collapse; ${borderCss} border-top: none; font-size: 8pt; background: #ffffff;">
     <thead>
@@ -319,7 +319,7 @@ export const generatePeaMethodologyHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-methodology keep-together" style="margin-bottom: 0; font-family: inherit;">
   <div class="header-primary" style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none; page-break-after: avoid; break-after: avoid;">
-    ${c.title || 'g) METODOLOGÍA DE ENSEÑANZA'}
+    ${c.title || '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS'}
   </div>
   <div style="${borderCss} border-top: none; background: #ffffff;">
     <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
@@ -352,7 +352,7 @@ export const generatePeaResourcesHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-practicas" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.title || 'h) ACTIVIDADES PRÁCTICAS'}
+    ${c.title || '8. ACTIVIDADES PRÁCTICAS'}
   </div>
   <table style="width: 100%; border-collapse: collapse; ${borderCss} border-top: none; font-size: 8pt; background: #ffffff;">
     <thead>
@@ -384,7 +384,7 @@ export const generatePeaEvaluationHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-evaluation" style="margin-bottom: 0; font-family: inherit;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.title || 'i) EVALUACIÓN DEL APRENDIZAJE'}
+    ${c.title || '9. EVALUACIÓN DEL APRENDIZAJE'}
   </div>
   <table style="width: 100%; border-collapse: collapse; ${borderCss} border-top: none; font-size: 8pt; background: #ffffff;">
     <thead>
@@ -425,7 +425,7 @@ export const generatePeaBibliographyHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-bibliography keep-together" style="margin-bottom: 0; font-family: inherit;">
   <div class="header-primary" style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none; page-break-after: avoid; break-after: avoid;">
-    ${c.title || 'j) BIBLIOGRAFÍA'}
+    ${c.title || '10. BIBLIOGRAFÍA'}
   </div>
   <div style="${borderCss} border-top: none; background: #ffffff;">
     <div class="sub-block keep-together" style="page-break-inside: avoid; break-inside: avoid;">
@@ -459,7 +459,7 @@ export const generatePeaSignaturesHtml = (block: DocumentBlock): string => {
     return `
 <div class="pea-section-signatures" style="margin-top: 0; margin-bottom: 0; font-family: inherit; page-break-inside: avoid;">
   <div style="background-color: ${headerBg}; color: ${fg}; padding: 4px 8px; font-weight: bold; font-size: 8.5pt; text-transform: uppercase; ${borderCss} border-top: none;">
-    ${c.title || 'k) FIRMAS DE RESPONSABILIDAD'}
+    ${c.title || '11. FIRMAS DE RESPONSABILIDAD'}
   </div>
   <table style="width: 100%; border-collapse: collapse; ${borderCss} border-top: none; font-size: 8pt; background: #ffffff; text-align: center;">
     <thead>

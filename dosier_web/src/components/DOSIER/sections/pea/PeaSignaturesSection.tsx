@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useCallback } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { CheckCircle2, ShieldAlert } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 import usersService from '../../../../services/usersService';
@@ -17,15 +17,48 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
     formData,
     cowork,
     onUpdate,
-    readOnly = false,
-    config
+    readOnly = false
 }) => {
-    const c = config || {};
-    const displayTitle = c.title || 'k) Firmas de Responsabilidad';
-
     const firmas = formData?.FirmasResponsabilidad || {};
     const hasAutoSyncedRef = useRef(false);
     const isSyncingRef = useRef(false);
+    const [unlockedFields, setUnlockedFields] = useState<Record<string, boolean>>({});
+    const [confirmModal, setConfirmModal] = useState<{
+        open: boolean;
+        rolKey: string;
+        etiqueta: string;
+        cargo: string;
+        nombreField: string;
+    } | null>(null);
+
+    const handleRequestUnlock = (rolKey: string, etiqueta: string, cargo: string, nombreField: string) => {
+        if (readOnly) return;
+        setConfirmModal({
+            open: true,
+            rolKey,
+            etiqueta,
+            cargo,
+            nombreField
+        });
+    };
+
+    const handleConfirmUnlock = () => {
+        if (!confirmModal) return;
+        const { rolKey, nombreField } = confirmModal;
+        setUnlockedFields(prev => ({ ...prev, [rolKey]: true }));
+        setConfirmModal(null);
+        setTimeout(() => {
+            const input = document.querySelector<HTMLInputElement>(`input[name="Firmas_${nombreField}"]`);
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        }, 50);
+    };
+
+    const handleLockField = (rolKey: string) => {
+        setUnlockedFields(prev => ({ ...prev, [rolKey]: false }));
+    };
 
     // Sincronización continua de autoridades según datos oficiales de gobernanza institucional
     const sincronizarAutoridades = useCallback(async (forzar = false) => {
@@ -209,16 +242,12 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
     return (
         <div className="w-full space-y-6 sm:space-y-7 animate-fade-in font-sans">
-            <div>
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    {displayTitle}
-                </h4>
-            </div>
-
             {/* MATRIZ DE 4 FIRMAS */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {rolesCircuito.map((rol) => {
                     const fechaFirma = firmas[rol.fechaField] || '';
+                    const isUnlocked = Boolean(unlockedFields[rol.key]);
+                    const isFieldReadOnly = readOnly || rol.firmado || !isUnlocked;
 
                     return (
                         <div
@@ -265,15 +294,36 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                 <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
                                     Nombres y Título:
                                 </label>
-                                <CoWorkField
-                                    name={`Firmas_${rol.nombreField}`}
-                                    cowork={cowork}
-                                    type="text"
-                                    placeholder={rol.placeholder}
-                                    readOnly={readOnly || rol.firmado}
-                                    className="w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none bg-surface border-border-thin focus:border-[#0070f3] transition-all"
-                                    onValueChange={(val) => updateFirma(rol.nombreField, val)}
-                                />
+                                <div
+                                    className="relative"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Escape') {
+                                            handleLockField(rol.key);
+                                            (e.target as HTMLElement)?.blur();
+                                        }
+                                    }}
+                                >
+                                    <CoWorkField
+                                        name={`Firmas_${rol.nombreField}`}
+                                        cowork={cowork}
+                                        type="text"
+                                        placeholder={rol.placeholder}
+                                        readOnly={isFieldReadOnly}
+                                        className={`w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-semibold outline-none transition-all ${
+                                            isFieldReadOnly
+                                                ? 'bg-slate-50 dark:bg-zinc-900 border-border-thin cursor-pointer select-none'
+                                                : 'bg-surface border-[#0070f3] ring-2 ring-[#0070f3]/15 shadow-xs'
+                                        }`}
+                                        onValueChange={(val) => updateFirma(rol.nombreField, val)}
+                                    />
+                                    {!isUnlocked && !rol.firmado && !readOnly && (
+                                        <div
+                                            onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.nombreField)}
+                                            className="absolute inset-0 cursor-pointer z-10"
+                                            title="Clic para modificar en este documento"
+                                        />
+                                    )}
+                                </div>
                             </div>
 
                             {/* Cargo Institucional */}
@@ -290,6 +340,52 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                 })}
             </div>
 
+            {/* MODAL DE CONFIRMACIÓN DE MODIFICACIÓN MANUAL */}
+            {confirmModal && confirmModal.open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-fade-in">
+                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl p-6 space-y-5 animate-scale-in">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2.5 rounded-lg bg-blue-500/10 text-[#0070f3] dark:text-blue-400 shrink-0">
+                                <ShieldAlert size={20} strokeWidth={1.75} />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-sm font-bold text-text-main">
+                                    Modificar Autoridad
+                                </h3>
+                                <p className="text-xs text-text-dim">
+                                    {confirmModal.cargo}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs text-text-main leading-relaxed space-y-2">
+                            <p className="font-medium">
+                                Este cambio <span className="font-bold text-[#0070f3]">solo afectará a este documento</span>.
+                            </p>
+                            <p className="text-[11px] text-text-dim leading-relaxed">
+                                No modificará la asignación central de la carrera en el sistema institucional.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2.5 pt-1">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmModal(null)}
+                                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-text-dim hover:text-text-main hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmUnlock}
+                                className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors shadow-xs cursor-pointer"
+                            >
+                                Modificar solo en este documento
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -21,15 +21,9 @@ export const PeaSubjectOutcomesSection: React.FC<PeaSubjectOutcomesSectionProps>
 }) => {
     return (
         <div className="w-full space-y-4 animate-fade-in font-sans">
-            <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    e) Resultados de Aprendizaje de la Asignatura:
-                </h4>
-
-                <p className="text-xs text-text-dim leading-relaxed">
-                    Redacte los <strong className="text-text-main font-semibold">resultados de aprendizaje específicos (RDA)</strong> observables y medibles al culminar la asignatura (mínimo uno por unidad temática).
-                </p>
-            </div>
+            <p className="text-xs text-text-dim leading-relaxed">
+                Redacte los <strong className="text-text-main font-semibold">resultados de aprendizaje específicos (RDA)</strong> observables y medibles al culminar la asignatura (mínimo uno por unidad temática).
+            </p>
 
             <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                 <CoWorkEditor

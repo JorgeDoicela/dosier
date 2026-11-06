@@ -25,7 +25,7 @@ export const RenderPeaEvaluationSection: React.FC<PeaBlockProps> = ({
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const tableHeaderBg = c.tableHeaderBg || '#bdd7ee';
     const fg = getContrastFg(headerBg);
-    const displayTitle = c.title || title || 'i) EVALUACIÓN DEL APRENDIZAJE';
+    const displayTitle = c.title || title || '9. EVALUACIÓN DEL APRENDIZAJE';
 
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraft] = useState(displayTitle);
@@ -54,7 +54,7 @@ export const RenderPeaEvaluationSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveTitle = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'title', titleDraft.trim() || 'i) EVALUACIÓN DEL APRENDIZAJE');
+            onUpdateConfig(blockId, 'title', titleDraft.trim() || '9. EVALUACIÓN DEL APRENDIZAJE');
         }
         setEditingTitle(false);
     };

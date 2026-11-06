@@ -209,6 +209,7 @@ public partial class DosierContext
             entity.Property(e => e.NumeroHoras).HasPrecision(10, 2).HasColumnName("numeroHoras");
             entity.Property(e => e.ContabilizarHoraDocente).HasColumnType("tinyint(4)").HasColumnName("contabilizarHoraDocente");
             entity.Property(e => e.HorasPracticoExperimental).HasPrecision(10, 2).HasColumnName("horasPracticoExperimental");
+            entity.Property(e => e.ExtraCurricular).HasColumnType("tinyint(4)").HasColumnName("extraCurricular");
             entity.Ignore(e => e.HorarioDetalles);
         });
 
@@ -289,6 +290,7 @@ public partial class DosierContext
             entity.Property(e => e.IdAsignatura).HasColumnType("int(11)").HasColumnName("idAsignatura");
             entity.Property(e => e.Asignatura1).HasMaxLength(200).HasColumnName("asignatura");
             entity.Property(e => e.Codigo).HasMaxLength(30).HasColumnName("codigo");
+            entity.Property(e => e.ExtraCurricular).HasColumnType("tinyint(4)").HasColumnName("extraCurricular");
         });
 
         modelBuilder.Entity<Curso>(entity =>

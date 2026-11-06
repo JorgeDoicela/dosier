@@ -36,21 +36,23 @@ graph TD
 
 ---
 
-## 3. Desglose de Secciones Modulares del PEA Oficial (A - K)
+## 3. Desglose de Secciones Modulares del PEA Oficial (1 - 11)
+
+El visor y editor de PEA opera bajo una taxonomía unificada secuencial numérica (1 a 11), eliminando la duplicación de subcabeceras internas y prefijos mixtos (números y letras) para garantizar máxima claridad a los docentes en el lienzo y paneles laterales:
 
 | Sección | Componente React | Ubicación | Funcionalidad y Validación |
 | :--- | :--- | :--- | :--- |
-| **Sección A: Datos Generales** | `PeaGeneralSection.tsx` | `src/components/DOSIER/sections/pea/` | Muestra código, nivel, modalidad, carrera, créditos y distribución de horas (CD, APE, TA). Sincronizado con SIGAFI. El campo **Unidad de Organización Curricular** se encuentra desbloqueado para selección interactiva (Unidad Básica, Unidad Profesional, Unidad de Integración Curricular). |
-| **Sección B: Objetivo de la Asignatura** | `PeaObjectivesSection.tsx` | `src/components/DOSIER/sections/pea/` | Objetivo formativo general de la asignatura en CoWorkEditor (`ObjetivoAsignatura`). |
-| **Sección C: Prerrequisitos Curriculares** | `PeaPrerequisitesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla dinámica de asignaturas prerrequisito y condiciones curriculares (`Prerrequisitos`). |
-| **Sección D: Resultados de Aprendizaje de la Carrera** | `PeaCareerOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la carrera a los que la asignatura aporta (`RdaCarrera`). |
-| **Sección E: Resultados de Aprendizaje de la Asignatura:** | `PeaSubjectOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la asignatura específicos medibles y observables (`ResultadosAprendizaje`). |
-| **Sección F: Contenidos de Enseñanza:** | `PeaContentsSection.tsx` | `src/components/DOSIER/sections/pea/` | Matriz tabular oficial CACES/ISTPET (`No` \| `UNIDADES DE ESTUDIO Y SUS CONTENIDOS`) con subcabeceras celestes de horas (CD/APE/TA) y validador matemático en tiempo real (RRA Art. 21) contra SIGAFI. |
-| **Sección G: Metodología** | `PeaMethodologySection.tsx` | `src/components/DOSIER/sections/pea/` | Métodos didácticos activos basados en el Modelo Educativo Institucional ISTPET y recursos de informatización. |
-| **Sección H: Recursos y Prácticas** | `PeaResourcesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla de prácticas de laboratorio, talleres y actividades de aprendizaje práctico-experimental (APE). |
-| **Sección I: Evaluación del Aprendizaje** | `PeaEvaluationSection.tsx` | `src/components/DOSIER/sections/pea/` | Criterios pedagógicos y matriz oficial de 3 componentes (Parcial 1: 10 pts, Parcial 2: 10 pts, Examen Final: 10 pts). |
-| **Sección J: Bibliografía** | `PeaBibliographySection.tsx` | `src/components/DOSIER/sections/pea/` | Bibliografía básica y de consulta en formato APA 7.ª edición articulada a la biblioteca virtual institucional. |
-| **Sección K: Firmas de Responsabilidad** | `PeaSignaturesSection.tsx` | `src/components/DOSIER/sections/pea/` | Circuito institucional de 4 firmas. Edición directa en el lienzo sin modal ni candados de truncamiento, con inmutabilidad post-firma (Ley 67). |
+| **1. Datos Generales de la Asignatura** | `PeaGeneralSection.tsx` | `src/components/DOSIER/sections/pea/` | Muestra código, nivel, modalidad, carrera, créditos y distribución de horas (CD, APE, TA). Sincronizado con SIGAFI. El campo **Unidad de Organización Curricular** se encuentra desbloqueado para selección interactiva (Unidad Básica, Unidad Profesional, Unidad de Integración Curricular). |
+| **2. Objetivo de la Asignatura** | `PeaObjectivesSection.tsx` | `src/components/DOSIER/sections/pea/` | Objetivo formativo general de la asignatura en CoWorkEditor (`ObjetivoAsignatura`) con guía de estructura pedagógica. |
+| **3. Prerrequisitos Curriculares** | `PeaPrerequisitesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla dinámica de asignaturas prerrequisito y condiciones curriculares (`Prerrequisitos`). |
+| **4. Resultados de Aprendizaje de la Carrera (Perfil de Egreso)** | `PeaCareerOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la carrera a los que la asignatura aporta (`RdaCarrera`). |
+| **5. Resultados de Aprendizaje de la Asignatura** | `PeaSubjectOutcomesSection.tsx` | `src/components/DOSIER/sections/pea/` | Resultados de aprendizaje de la asignatura específicos medibles y observables (`ResultadosAprendizaje`). |
+| **6. Contenidos de Enseñanza (Unidades)** | `PeaContentsSection.tsx` | `src/components/DOSIER/sections/pea/` | Matriz tabular de unidades con subcabeceras de horas (CD/APE/TA), desglose de contenidos y panel de balance con botón interactivo de auto-distribución contra la carga oficial de la asignatura. |
+| **7. Metodología y Recursos Didácticos** | `PeaMethodologySection.tsx` | `src/components/DOSIER/sections/pea/` | Métodos didácticos activos basados en el Modelo Educativo Institucional ISTPET y recursos de informatización. |
+| **8. Actividades Prácticas (APE)** | `PeaResourcesSection.tsx` | `src/components/DOSIER/sections/pea/` | Tabla oficial de prácticas de laboratorio, talleres y actividades de aprendizaje práctico-experimental (APE). |
+| **9. Evaluación del Aprendizaje** | `PeaEvaluationSection.tsx` | `src/components/DOSIER/sections/pea/` | Criterios pedagógicos y matriz oficial de 3 componentes (Parcial 1: 10 pts, Parcial 2: 10 pts, Examen Final: 10 pts). |
+| **10. Bibliografía** | `PeaBibliographySection.tsx` | `src/components/DOSIER/sections/pea/` | Bibliografía básica y de consulta en formato APA 7.ª edición articulada a la biblioteca virtual institucional. |
+| **11. Firmas de Responsabilidad** | `PeaSignaturesSection.tsx` | `src/components/DOSIER/sections/pea/` | Circuito institucional de 4 firmas con confirmación para modificación de autoridades por documento e inmutabilidad post-firma. |
 
 ---
 
@@ -219,7 +221,7 @@ graph TD
   * **Columna Izquierda (Panel de Controles de Emisión y Firma):**
     * *Cabecera Técnica:* Título institucional con indicador de estado firmado.
     * *Emisión del Documento:* Alternador de modo borrador (marca de agua institucional) y botón de generación/actualización de vista previa PDF.
-    * *Firma Digital:* Formularios contextuales para Firma Institucional DOSIER (contraseña) o Firma Digital (.p12 / .pfx con contraseña) según el tipo de firma asignado, o banner de documento firmado con navegación a revisión técnica para autoridades.
+    * *Firma Digital:* Formularios contextuales para Firma Institucional DOSIER (contraseña) o Firma Digital (.p12 / .pfx con contraseña) según el tipo de firma asignado, o banner de documento firmado con navegación a revisión técnica para autoridades. Incorpora validación preventiva de perfil (`getSignatureProfile`): si el usuario no tiene su perfil de firma configurado (`esConfigurado: false`), bloquea de forma preventiva el formulario de firma y despliega una tarjeta de advertencia con botón directo a `/configuracion?editFirma=true#perfil-firma`.
     * *Trazabilidad de Firmas:* Integración de `<SignatureBlock>` para consultar las firmas electrónicas registradas y válidas.
   * **Columna Derecha (Visor PDF Oficial):** Iframe con renderizado en tiempo real del documento oficial del PEA compilado en backend.
 

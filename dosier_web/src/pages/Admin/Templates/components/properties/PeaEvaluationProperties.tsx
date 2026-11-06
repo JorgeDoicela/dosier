@@ -20,7 +20,7 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'i) EVALUACIÓN DEL APRENDIZAJE');
+        onUpdateConfig(block.id, 'title', '9. EVALUACIÓN DEL APRENDIZAJE');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'tableHeaderBg', '#bdd7ee');
         onUpdateConfig(block.id, 'colNotasLabel', 'Notas');
@@ -55,7 +55,7 @@ export const PeaEvaluationProperties: React.FC<PeaEvaluationPropertiesProps> = (
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'i) EVALUACIÓN DEL APRENDIZAJE'}
+                    value={config.title || '9. EVALUACIÓN DEL APRENDIZAJE'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

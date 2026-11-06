@@ -18,7 +18,7 @@ export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayTitle = c.title || title || 'k) FIRMAS DE RESPONSABILIDAD';
+    const displayTitle = c.title || title || '11. FIRMAS DE RESPONSABILIDAD';
     const sigBoxHeight = Number(c.signatureBoxHeight) || 95;
 
     const [editingTitle, setEditingTitle] = useState(false);
@@ -26,7 +26,7 @@ export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveTitle = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'title', titleDraft.trim() || 'k) FIRMAS DE RESPONSABILIDAD');
+            onUpdateConfig(blockId, 'title', titleDraft.trim() || '11. FIRMAS DE RESPONSABILIDAD');
         }
         setEditingTitle(false);
     };

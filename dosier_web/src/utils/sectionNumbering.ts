@@ -14,14 +14,21 @@
  */
 export const cleanSectionTitle = (rawTitle?: string | null): string => {
     if (!rawTitle || typeof rawTitle !== 'string') return '';
-    return rawTitle
-        // Limpiar prefijos de letras como "a)", "b)", "d) y e)", "a.-", etc.
-        .replace(/^([a-z]\s*\)\s*(?:y\s*[a-z]\s*\))?[\.\-\:\s]*)/i, '')
-        // Limpiar prefijos numéricos existentes como "1.", "1.-", "1)", "1.1", etc.
-        .replace(/^(\d+[\.\-\)\s]*)+\s*/i, '')
-        // Limpiar dos puntos al final o espacios
-        .replace(/[:\s]+$/, '')
-        .trim();
+    let result = rawTitle.trim();
+    let prev = '';
+    while (result !== prev) {
+        prev = result;
+        result = result
+            // Limpiar prefijos numéricos ("1.", "1.-", "1)", "1.1", etc.)
+            .replace(/^(\d+[\.\-\)\s]*)+\s*/i, '')
+            // Limpiar prefijos de letras individuales o combinadas ("a)", "b)", "d) y e)", "a.-", "A.")
+            .replace(/^([a-z]\s*[\)\.\-]\s*(?:y\s*[a-z]\s*[\)\.\-])?[\.\-\:\s]*)/i, '')
+            // Limpiar dos puntos iniciales o finales o guiones huérfanos
+            .replace(/^[:\-\s]+/, '')
+            .replace(/[:\s]+$/, '')
+            .trim();
+    }
+    return result;
 };
 
 /**

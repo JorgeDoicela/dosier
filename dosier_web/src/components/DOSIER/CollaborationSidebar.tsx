@@ -48,7 +48,7 @@ import { useConfirm } from '../../api/ConfirmContext';
 import { coworkLog } from '../../core/cowork/utils/log';
 import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlayer';
 import { PeaReviewPanel } from '../../pages/Curriculum/Workspace/components/PeaReviewPanel';
-import { formatDynamicSectionLabel } from '../../utils/sectionNumbering';
+import { formatDynamicSectionLabel, cleanSectionTitle } from '../../utils/sectionNumbering';
 import { GeistSelect } from '../Common/GeistSelect';
 import PeaAiChatSidebar from './shell/components/PeaAiChatSidebar';
 
@@ -99,6 +99,7 @@ export interface CollaborationSidebarProps {
     onClose: () => void;
     sectionStatuses?: Record<string, string>;
     onSectionStatusChange?: (sectionName: string, status: string) => void;
+    onSelectSection?: (sectionId: string) => void;
     onOpenImportModal?: () => void;
     onTriggerDocExtraction?: (file: File, instructions?: string) => Promise<void> | void;
     onOpenAiModal?: () => void;
@@ -124,6 +125,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     onClose,
     sectionStatuses: sectionStatusesProp,
     onSectionStatusChange,
+    onSelectSection,
     onOpenImportModal,
     onTriggerDocExtraction,
     onOpenAiModal,
@@ -142,7 +144,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     const currentSectionLabel = useMemo(() => {
         const found = sectionItems?.find(s => s.id === sectionName);
-        if (found?.label) return toSentenceCase(found.label);
+        if (found?.label) {
+            const cleaned = cleanSectionTitle(found.label);
+            const idx = sectionItems ? sectionItems.findIndex(s => s.id === sectionName) : -1;
+            const prefix = idx >= 0 ? `${idx + 1}. ` : '';
+            return `${prefix}${toSentenceCase(cleaned || found.label)}`;
+        }
         const FALLBACK_NAMES: Record<string, string> = {
             caracterizacion: 'Caracterización de la asignatura',
             competencias: 'Competencias y resultados de aprendizaje',
@@ -173,23 +180,53 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         return !templateCode || templateCode === 'PEA_OFICIAL' || templateCode === 'GUIA_PRACTICA_LAB';
     }, [templateCode]);
 
+    const isObservado = useMemo(() => {
+        return projectStatus === 'En Corrección' || projectStatus === 'Observado';
+    }, [projectStatus]);
+
+    const isEnRevision = useMemo(() => {
+        return ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(projectStatus || '');
+    }, [projectStatus]);
+
     const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import'>(() => {
-        if (isProtocolDocument && isReviewer && ['EnRevision', 'RevisadoCoord', 'RevisadoAcad'].includes(projectStatus || '')) {
+        if (isProtocolDocument && isReviewer && isEnRevision) {
             return 'revision';
         }
-        if (isProtocolDocument && (projectStatus === 'En Corrección' || projectStatus === 'Observado')) {
+        if (isProtocolDocument && isObservado) {
             return isReviewer ? 'revision' : 'correcciones';
         }
         const saved = localStorage.getItem('document_sidebar_tab') as any;
-        if (saved === 'revision' && (!isProtocolDocument || !isReviewer)) return 'comments';
-        if (saved === 'correcciones' && !isProtocolDocument) return 'comments';
-        return (saved === 'comments' || saved === 'status' || saved === 'activity' || saved === 'correcciones' || saved === 'revision' || saved === 'ai' || saved === 'import') ? saved : 'comments';
+        const validGeneralTabs = ['comments', 'status', 'activity', 'ai', 'import'];
+        if (validGeneralTabs.includes(saved)) {
+            return saved;
+        }
+        // Si había una pestaña contextual legada (correcciones/revisión) almacenada en localStorage, purgarla
+        if (saved === 'correcciones' || saved === 'revision') {
+            try {
+                localStorage.setItem('document_sidebar_tab', 'comments');
+            } catch {
+                // Ignore storage errors
+            }
+        }
+        return 'comments';
     });
 
     const setActiveTab = useCallback((tab: 'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import') => {
-        localStorage.setItem('document_sidebar_tab', tab);
+        // Solo persistir pestañas generales que apliquen a cualquier documento, no estados de ciclo de vida condicionales
+        if (tab !== 'correcciones' && tab !== 'revision') {
+            localStorage.setItem('document_sidebar_tab', tab);
+        }
         setActiveTabState(tab);
     }, []);
+
+    // Sincronizar activeTab cuando cambie el estado del documento o la pestaña activa ya no sea aplicable
+    useEffect(() => {
+        if (activeTab === 'correcciones' && (!isProtocolDocument || !isObservado)) {
+            setActiveTab('comments');
+        } else if (activeTab === 'revision' && (!isProtocolDocument || !isReviewer || !isEnRevision)) {
+            setActiveTab('comments');
+        }
+    }, [isObservado, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
 
     // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
     const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
@@ -1349,14 +1386,17 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
                                             {/* Desglose de Secciones del PEA */}
                                             {allSections.length > 0 && (
-                                                <div className="bg-bg-deep border border-border-thin rounded-2xl p-4 shadow-sm space-y-2.5">
-                                                    <div className="px-0.5">
+                                                <div className="bg-bg-deep border border-border-thin rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                                                    <div className="p-3.5 pb-2.5 border-b border-border-thin/40 flex items-center justify-between">
                                                         <h4 className="text-[9px] font-mono font-bold uppercase text-text-dim tracking-widest">
                                                             Estado por Sección
                                                         </h4>
+                                                        <span className="text-[8px] font-mono font-bold text-text-dim/60">
+                                                            {completedCount}/{allSections.length}
+                                                        </span>
                                                     </div>
 
-                                                    <div className="divide-y divide-border-thin/30 max-h-[320px] overflow-y-auto custom-scrollbar pr-0.5">
+                                                    <div className="divide-y divide-border-thin/30 max-h-[350px] overflow-y-auto custom-scrollbar">
                                                         {allSections.map((secKey, idx) => {
                                                             const st = normalizeSectionStatus(sectionStatuses[secKey]);
                                                             const isCurrent = secKey === sectionName;
@@ -1375,7 +1415,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                 };
                                                                 rawLabel = FALLBACK_NAMES[secKey] || secKey.replace(/_/g, ' ');
                                                             }
-                                                            const title = toSentenceCase(rawLabel, idx);
+                                                            const cleaned = cleanSectionTitle(rawLabel);
+                                                            const title = `${idx + 1}. ${toSentenceCase(cleaned || rawLabel)}`;
 
                                                             const badgeStyle = st === 'Completado'
                                                                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
@@ -1384,24 +1425,29 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                     : 'bg-surface text-text-dim border-border-thin';
 
                                                             return (
-                                                                <div
+                                                                <button
                                                                     key={secKey}
-                                                                    className={`flex items-center justify-between py-2.5 px-2 rounded-xl text-xs transition-colors ${
-                                                                        isCurrent ? 'bg-surface font-semibold shadow-2xs' : 'hover:bg-surface/50'
+                                                                    type="button"
+                                                                    onClick={() => onSelectSection?.(secKey)}
+                                                                    className={`w-full text-left flex items-center justify-between py-2.5 px-3.5 text-xs transition-all cursor-pointer group ${
+                                                                        isCurrent 
+                                                                            ? 'bg-surface font-semibold text-text-main shadow-2xs' 
+                                                                            : 'hover:bg-surface/60 text-text-dim hover:text-text-main'
                                                                     }`}
+                                                                    title={`Ir a ${title}`}
                                                                 >
-                                                                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                                                                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                                                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                                                             st === 'Completado' ? 'bg-emerald-500' : st === 'Por revisar' ? 'bg-amber-500' : 'bg-border-hover'
                                                                         }`} />
-                                                                        <span className="truncate text-[11px] text-text-main" title={title}>
+                                                                        <span className={`truncate text-[11px] ${isCurrent ? 'font-bold text-[#0070f3] dark:text-blue-400' : 'group-hover:text-text-main'}`}>
                                                                             {title}
                                                                         </span>
                                                                     </div>
                                                                     <span className={`text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 font-bold ${badgeStyle}`}>
                                                                         {st}
                                                                     </span>
-                                                                </div>
+                                                                </button>
                                                             );
                                                         })}
                                                     </div>

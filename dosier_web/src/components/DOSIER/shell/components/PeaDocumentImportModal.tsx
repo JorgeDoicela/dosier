@@ -401,9 +401,8 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                     } else if (secId === 'pea_subject_outcomes_section') {
                                         previewText = stripHtmlPreview(extractedDraft.resultadosAprendizaje);
                                     } else if (secId === 'pea_contents_section') {
-                                        previewText = extractedDraft.unidades
-                                            .map(u => `U${u.num}: ${u.titulo} (${u.horasCD}CD + ${u.horasAPE}APE + ${u.horasTA}TA = ${u.horasTotal}h)`)
-                                            .join(' · ');
+                                        const totalDoc = extractedDraft.totalHorasAsignatura || extractedDraft.unidades.reduce((acc, u) => acc + (u.horasTotal || 0), 0);
+                                        previewText = `${extractedDraft.unidades.map(u => `U${u.num}: ${u.titulo} (${u.horasCD}CD + ${u.horasAPE}APE + ${u.horasTA}TA = ${u.horasTotal}h)`).join(' · ')}${totalDoc > 0 ? ` · Total: ${totalDoc} hrs` : ''}`;
                                     } else if (secId === 'pea_methodology_section') {
                                         previewText = stripHtmlPreview(extractedDraft.metodologiaEnsenanza);
                                     } else if (secId === 'pea_resources_section') {

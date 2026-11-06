@@ -572,6 +572,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 onClose={handleCloseSidebar}
                                                 sectionStatuses={layout.sectionStatuses}
                                                 onSectionStatusChange={layout.setSectionStatus}
+                                                onSelectSection={layout.setActiveTab}
                                                 onOpenImportModal={templateCode === 'PEA_OFICIAL' && !readOnly ? () => {
                                                     setImportInitialFile(null);
                                                     setImportInitialInstructions('');

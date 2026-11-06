@@ -355,6 +355,21 @@ namespace dosier_infrastructure.Curriculum
 
             if (entity == null) return false;
 
+            // Blindaje de integridad CACES: No permitir transiciones hacia revisión o aprobación con horas desbalanceadas o en cero
+            if (nuevoEstado == "EnRevision" || nuevoEstado == "RevisadoCoord" || nuevoEstado == "RevisadoAcad" || nuevoEstado == "Aprobado")
+            {
+                var total = entity.TotalHorasAsignatura;
+                var suma = entity.HorasContactoDocente + entity.HorasPracticoExperimental + entity.HorasAutonomo;
+                if (total <= 0)
+                {
+                    throw new InvalidOperationException("Inconsistencia CACES: El total de horas de la asignatura no puede ser cero. Ingrese las horas reglamentarias en la Sección 1.");
+                }
+                if (suma != total)
+                {
+                    throw new InvalidOperationException($"Inconsistencia CACES: La suma de componentes ({suma}h: {entity.HorasContactoDocente}h Docencia, {entity.HorasPracticoExperimental}h APE, {entity.HorasAutonomo}h Autónomo) no coincide con el total de {total}h de la asignatura. Verifique y cuadre la Sección 1 antes de enviar a revisión.");
+                }
+            }
+
             string estadoAnterior = entity.Estado;
             entity.Estado = nuevoEstado;
             entity.FechaModificacion = DateTime.UtcNow;
@@ -567,6 +582,18 @@ namespace dosier_infrastructure.Curriculum
             else
             {
                 throw new ArgumentException($"Rol de firmante no reconocido: '{rol}'. Roles institucionales válidos: Docente, CoordinadorCarrera, CoordinadorAcademico, Vicerrector.");
+            }
+
+            // 2.1 Blindaje CACES: Ningún rol puede firmar o avanzar un PEA con horas inconsistentes o en cero
+            int totalHorasVal = pea.TotalHorasAsignatura;
+            int sumaComponentesVal = pea.HorasContactoDocente + pea.HorasPracticoExperimental + pea.HorasAutonomo;
+            if (totalHorasVal <= 0)
+            {
+                throw new InvalidOperationException("Inconsistencia CACES: El total de horas de la asignatura no puede ser cero. Ingrese las horas reglamentarias en la Sección 1 antes de firmar.");
+            }
+            if (sumaComponentesVal != totalHorasVal)
+            {
+                throw new InvalidOperationException($"Inconsistencia CACES: La suma de componentes ({sumaComponentesVal}h: {pea.HorasContactoDocente}h Docencia, {pea.HorasPracticoExperimental}h APE, {pea.HorasAutonomo}h Autónomo) no coincide con el total de {totalHorasVal}h de la asignatura. Verifique y cuadre la Sección 1 antes de firmar.");
             }
 
             // 3. Generación Forense del Hash SHA-256 del PEA

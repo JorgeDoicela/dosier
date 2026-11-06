@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using dosier_application.Academico;
 using dosier_application.Common.Dtos;
 using dosier_application.Common.Interfaces;
 using dosier_infrastructure.data.models;
@@ -12,10 +13,12 @@ namespace dosier_infrastructure.Common
     public class CatalogsService : ICatalogsService
     {
         private readonly DosierContext _context;
+        private readonly IPeriodoInstitucionalResolver _periodoResolver;
 
-        public CatalogsService(DosierContext context)
+        public CatalogsService(DosierContext context, IPeriodoInstitucionalResolver periodoResolver)
         {
             _context = context;
+            _periodoResolver = periodoResolver;
         }
 
         public async Task<List<ConfigGeneralDto>> GetConfigGeneralAsync(string? prefix = null)
@@ -63,15 +66,7 @@ namespace dosier_infrastructure.Common
             if (dbUser == null)
                 return new List<CarreraCatalogoDto>();
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var currentPeriod = await _context.Periodos
-                .AsNoTracking()
-                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
-                .OrderByDescending(p => p.Periodoactivoinstituto == 1)
-                .ThenByDescending(p => p.Activo == true)
-                .ThenByDescending(p => p.FechaInicial <= today && p.FechaFinal >= today)
-                .ThenByDescending(p => p.FechaInicial)
-                .FirstOrDefaultAsync();
+            var currentPeriod = await _periodoResolver.GetPeriodoActivoAsync();
 
             if (dbUser.TablaSigafi == "profesor")
             {
@@ -106,22 +101,19 @@ namespace dosier_infrastructure.Common
 
         public async Task<List<PeriodoCatalogoDto>> GetPeriodosAsync()
         {
-            return await _context.Periodos
-                .AsNoTracking()
-                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
-                .OrderByDescending(p => p.IdPeriodo)
-                .Select(p => new PeriodoCatalogoDto
-                {
-                    IdPeriodo = p.IdPeriodo,
-                    Detalle = p.Detalle,
-                    FechaInicial = p.FechaInicial,
-                    FechaFinal = p.FechaFinal,
-                    Activo = p.Activo,
-                    Cerrado = p.Cerrado,
-                    EsInstituto = p.EsInstituto,
-                    Periodoactivoinstituto = p.Periodoactivoinstituto
-                })
-                .ToListAsync();
+            var periodos = await _periodoResolver.GetPeriodosInstitucionalesAsync();
+
+            return periodos.Select(p => new PeriodoCatalogoDto
+            {
+                IdPeriodo = p.IdPeriodo,
+                Detalle = p.Detalle,
+                FechaInicial = p.FechaInicial,
+                FechaFinal = p.FechaFinal,
+                Activo = p.EsActivo,
+                Cerrado = false,
+                EsInstituto = 1,
+                Periodoactivoinstituto = p.EsActivo ? 1 : 0
+            }).ToList();
         }
 
         public async Task<PeriodoCatalogoDto> CreatePeriodoAsync(PeriodoMutationDto model)

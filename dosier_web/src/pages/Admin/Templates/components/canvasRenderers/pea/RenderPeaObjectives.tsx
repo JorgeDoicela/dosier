@@ -49,7 +49,7 @@ export const RenderPeaObjectiveSection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayLabel = c.objetivoLabel || title || 'b) OBJETIVO DE LA ASIGNATURA';
+    const displayLabel = c.objetivoLabel || title || '2. OBJETIVO DE LA ASIGNATURA';
 
     const [editingLabel, setEditingLabel] = useState(false);
     const [labelDraft, setLabelDraft] = useState(displayLabel);
@@ -59,7 +59,7 @@ export const RenderPeaObjectiveSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveLabel = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'objetivoLabel', labelDraft.trim() || 'b) OBJETIVO DE LA ASIGNATURA');
+            onUpdateConfig(blockId, 'objetivoLabel', labelDraft.trim() || '2. OBJETIVO DE LA ASIGNATURA');
         }
         setEditingLabel(false);
     };
@@ -137,7 +137,7 @@ export const RenderPeaCareerOutcomesSection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayLabel = c.rdaCarreraLabel || title || 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA';
+    const displayLabel = c.rdaCarreraLabel || title || '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA';
 
     const [editingLabel, setEditingLabel] = useState(false);
     const [labelDraft, setLabelDraft] = useState(displayLabel);
@@ -147,7 +147,7 @@ export const RenderPeaCareerOutcomesSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveLabel = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'rdaCarreraLabel', labelDraft.trim() || 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA');
+            onUpdateConfig(blockId, 'rdaCarreraLabel', labelDraft.trim() || '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA');
         }
         setEditingLabel(false);
     };
@@ -225,7 +225,7 @@ export const RenderPeaSubjectOutcomesSection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayLabel = c.rdaAsignaturaLabel || title || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:';
+    const displayLabel = c.rdaAsignaturaLabel || title || '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA';
 
     const [editingLabel, setEditingLabel] = useState(false);
     const [labelDraft, setLabelDraft] = useState(displayLabel);
@@ -235,7 +235,7 @@ export const RenderPeaSubjectOutcomesSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveLabel = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'rdaAsignaturaLabel', labelDraft.trim() || 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:');
+            onUpdateConfig(blockId, 'rdaAsignaturaLabel', labelDraft.trim() || '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA');
         }
         setEditingLabel(false);
     };

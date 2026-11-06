@@ -104,8 +104,9 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
                                             <Lock size={13} className={isActive ? 'text-bg-deep' : 'text-amber-500'} />
                                         )}
                                         {(() => {
-                                            const isCompleted = sectionStatus === 'Completado' || sectionStatus === 'Aprobado';
-                                            const isReview = sectionStatus === 'Por revisar' || sectionStatus === 'Revisión';
+                                            const normalized = (sectionStatus || '').toLowerCase().trim();
+                                            const isCompleted = normalized.includes('complet') || normalized.includes('aprob') || normalized.includes('finaliz');
+                                            const isReview = normalized.includes('revis') || normalized.includes('pend') || normalized.includes('observ');
 
                                             const dotColor = isCompleted
                                                 ? 'bg-emerald-500'

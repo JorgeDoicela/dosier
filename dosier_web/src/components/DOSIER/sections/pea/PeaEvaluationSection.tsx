@@ -90,12 +90,6 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
 
     return (
         <div className="w-full space-y-4 sm:space-y-5 animate-fade-in font-sans">
-            <div className="flex items-center justify-between gap-4">
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    i) Evaluación del Aprendizaje
-                </h4>
-            </div>
-
             {/* TABLA OFICIAL INSTITUCIONAL: MATRIZ DE CALIFICACIONES ISTPET */}
             <div className="overflow-x-auto rounded-xl border border-border-thin bg-surface shadow-2xs">
                 <table className="w-full text-left border-collapse text-xs sm:text-sm">

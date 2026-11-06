@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace dosier_infrastructure.data.models;
@@ -48,6 +48,8 @@ public partial class AsignacionesProfesore
     public sbyte? ContabilizarHoraDocente { get; set; }
 
     public decimal? HorasPracticoExperimental { get; set; }
+
+    public sbyte? ExtraCurricular { get; set; }
 
     public virtual ICollection<HorarioDetalle> HorarioDetalles { get; set; } = new List<HorarioDetalle>();
 }

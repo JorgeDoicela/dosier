@@ -16,7 +16,7 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
     onUpdateConfig
 }) => {
     const c = config || {};
-    const displayTitle = c.title || title || 'a) DATOS GENERALES DE LA ASIGNATURA:';
+    const displayTitle = c.title || title || '1. DATOS GENERALES DE LA ASIGNATURA';
     const defaultHeaderBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const borderStyle = c.borderStyle || 'solid';
     const isNoBorder = borderStyle === 'none';
@@ -38,7 +38,7 @@ export const RenderPeaGeneralSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveTitle = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'title', titleText.trim() || 'a) DATOS GENERALES DE LA ASIGNATURA:');
+            onUpdateConfig(blockId, 'title', titleText.trim() || '1. DATOS GENERALES DE LA ASIGNATURA');
         }
         setEditingTitle(false);
     };

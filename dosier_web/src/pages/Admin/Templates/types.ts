@@ -85,19 +85,19 @@ export const BLOCK_METADATA: Record<BlockType, BlockMetaInfo> = {
     project_technical_section: { label: 'Especificación Técnica', defaultTitle: '3. ESPECIFICACIÓN TÉCNICA', category: 'Base de Datos' },
     impacts: { label: 'Matriz de Impactos', defaultTitle: '6. MATRIZ DE IMPACTOS', category: 'Base de Datos' },
     signatures: { label: 'Firmas de Responsabilidad', defaultTitle: 'FIRMAS DE RESPONSABILIDAD', category: 'Base de Datos' },
-    pea_general_section: { label: 'a) Datos Generales de la Asignatura', defaultTitle: 'a) DATOS GENERALES DE LA ASIGNATURA:', category: 'Curricular (PEA)' },
-    pea_objective_section: { label: 'b) Objetivo de la Asignatura', defaultTitle: 'b) OBJETIVO DE LA ASIGNATURA', category: 'Curricular (PEA)' },
-    pea_prerequisites_section: { label: 'c) Prerrequisitos', defaultTitle: 'c) PRERREQUISITOS:', category: 'Curricular (PEA)' },
-    pea_career_outcomes_section: { label: 'd) Resultados de Aprendizaje de la Carrera', defaultTitle: 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA', category: 'Curricular (PEA)' },
-    pea_subject_outcomes_section: { label: 'e) Resultados de Aprendizaje de la Asignatura', defaultTitle: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:', category: 'Curricular (PEA)' },
-    pea_characterization_section: { label: '[Legacy] b) Objetivo y c) Prerrequisitos', defaultTitle: 'b) OBJETIVO DE LA ASIGNATURA Y c) PRERREQUISITOS', category: 'Curricular (PEA)' },
-    pea_competencies_rda_section: { label: '[Legacy] d) RDAs Carrera y e) RDAs Asignatura', defaultTitle: 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA Y e) DE LA ASIGNATURA', category: 'Curricular (PEA)' },
-    pea_contents_section: { label: 'f) Contenidos de Enseñanza (Unidades)', defaultTitle: 'f) CONTENIDOS DE ENSEÑANZA:', category: 'Curricular (PEA)' },
-    pea_methodology_section: { label: 'g) Metodología de Enseñanza', defaultTitle: 'g) METODOLOGÍA DE ENSEÑANZA', category: 'Curricular (PEA)' },
-    pea_resources_section: { label: 'h) Actividades Prácticas', defaultTitle: 'h) ACTIVIDADES PRÁCTICAS', category: 'Curricular (PEA)' },
-    pea_evaluation_section: { label: 'i) Evaluación del Aprendizaje', defaultTitle: 'i) EVALUACIÓN DEL APRENDIZAJE', category: 'Curricular (PEA)' },
-    pea_bibliography_section: { label: 'j) Bibliografía Básica y Consulta', defaultTitle: 'j) BIBLIOGRAFÍA', category: 'Curricular (PEA)' },
-    pea_signatures_section: { label: 'k) Firmas de Responsabilidad (4 Niveles)', defaultTitle: 'k) FIRMAS DE RESPONSABILIDAD', category: 'Curricular (PEA)' }
+    pea_general_section: { label: '1. Datos Generales de la Asignatura', defaultTitle: '1. DATOS GENERALES DE LA ASIGNATURA', category: 'Curricular (PEA)' },
+    pea_objective_section: { label: '2. Objetivo de la Asignatura', defaultTitle: '2. OBJETIVO DE LA ASIGNATURA', category: 'Curricular (PEA)' },
+    pea_prerequisites_section: { label: '3. Prerrequisitos Curriculares', defaultTitle: '3. PRERREQUISITOS CURRICULARES', category: 'Curricular (PEA)' },
+    pea_career_outcomes_section: { label: '4. Resultados de Aprendizaje de la Carrera', defaultTitle: '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA', category: 'Curricular (PEA)' },
+    pea_subject_outcomes_section: { label: '5. Resultados de Aprendizaje de la Asignatura', defaultTitle: '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA', category: 'Curricular (PEA)' },
+    pea_characterization_section: { label: '[Legacy] Objetivo y Prerrequisitos', defaultTitle: 'OBJETIVO DE LA ASIGNATURA Y PRERREQUISITOS', category: 'Curricular (PEA)' },
+    pea_competencies_rda_section: { label: '[Legacy] RDAs Carrera y Asignatura', defaultTitle: 'RESULTADOS DE APRENDIZAJE DE LA CARRERA Y DE LA ASIGNATURA', category: 'Curricular (PEA)' },
+    pea_contents_section: { label: '6. Contenidos de Enseñanza (Unidades)', defaultTitle: '6. CONTENIDOS DE ENSEÑANZA', category: 'Curricular (PEA)' },
+    pea_methodology_section: { label: '7. Metodología y Recursos Didácticos', defaultTitle: '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS', category: 'Curricular (PEA)' },
+    pea_resources_section: { label: '8. Actividades Prácticas (APE)', defaultTitle: '8. ACTIVIDADES PRÁCTICAS', category: 'Curricular (PEA)' },
+    pea_evaluation_section: { label: '9. Evaluación del Aprendizaje', defaultTitle: '9. EVALUACIÓN DEL APRENDIZAJE', category: 'Curricular (PEA)' },
+    pea_bibliography_section: { label: '10. Bibliografía', defaultTitle: '10. BIBLIOGRAFÍA', category: 'Curricular (PEA)' },
+    pea_signatures_section: { label: '11. Firmas de Responsabilidad', defaultTitle: '11. FIRMAS DE RESPONSABILIDAD', category: 'Curricular (PEA)' }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

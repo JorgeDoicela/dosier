@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Linq;
+using dosier_application.Academico;
 using dosier_application.Security;
 using dosier_application.Security.DTOs;
 using dosier_infrastructure.data.models;
@@ -13,15 +14,21 @@ public class AdminService : IAdminService
 {
     private readonly DosierContext _context;
     private readonly IAuditService _auditService;
+    private readonly IPeriodoInstitucionalResolver _periodoResolver;
     private readonly string? _superAdminCedula;
     private readonly string? _masterAdminId;
 
-    public AdminService(DosierContext context, IAuditService auditService, Microsoft.Extensions.Configuration.IConfiguration configuration)
+    public AdminService(
+        DosierContext context, 
+        IAuditService auditService, 
+        Microsoft.Extensions.Configuration.IConfiguration configuration,
+        IPeriodoInstitucionalResolver periodoResolver)
     {
         _context = context;
         _auditService = auditService;
         _superAdminCedula = configuration["Security:SuperAdminCedula"];
         _masterAdminId = configuration["Security:MasterAdminId"];
+        _periodoResolver = periodoResolver;
     }
 
     public async Task<PagedResult<UserManagementDto>> GetUsersAsync(
@@ -40,18 +47,8 @@ public class AdminService : IAdminService
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 10;
 
-        // Obtener periodo académico (Lógica Resiliente de Descubrimiento con AsNoTracking y Proyección Directa)
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var periodos = await _context.Periodos.AsNoTracking()
-            .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
-            .ToListAsync();
-        var periodId = periodos
-            .OrderByDescending(p => p.Periodoactivoinstituto == 1) // 1. Marcado explícitamente para el sistema
-            .ThenByDescending(p => p.Activo == true)             // 2. Marcado como activo genérico
-            .ThenByDescending(p => p.FechaInicial <= today && p.FechaFinal >= today) // 3. El que cubre la fecha de hoy
-            .ThenByDescending(p => p.FechaInicial)               // 4. El más reciente cronológicamente
-            .Select(p => p.IdPeriodo)
-            .FirstOrDefault();
+        // Obtener periodo académico desde la Fuente Única de Verdad (SSOT)
+        var periodId = await _periodoResolver.GetIdPeriodoActivoAsync();
 
         var docenciaSubcats = await _context.SubcategoriasActividades.AsNoTracking()
             .Where(s => s.Subcategoria == "HORAS CLASES" || s.IdCategoria == 1 || s.EsDocencia == 1)
@@ -710,11 +707,7 @@ public class AdminService : IAdminService
         var periodId = idPeriodo;
         if (string.IsNullOrEmpty(periodId))
         {
-            var activePeriod = await _context.Periodos.AsNoTracking()
-                .Where(p => p.Activo == true && p.EsInstituto == 1)
-                .OrderByDescending(p => p.IdPeriodo)
-                .FirstOrDefaultAsync();
-            periodId = activePeriod?.IdPeriodo ?? "";
+            periodId = await _periodoResolver.GetIdPeriodoActivoAsync();
         }
 
         var result = new GobernanzaCurricularDto

@@ -14,7 +14,8 @@ import {
     PlusCircle,
     GraduationCap,
     LayoutGrid,
-    List
+    List,
+    Info
 } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { GeistSelect } from '../../components/Common/GeistSelect';
@@ -47,6 +48,7 @@ export const MisAsignaturasPage: React.FC = () => {
     const [filterEstado, setFilterEstado] = useState<string>('todos');
     const [filterCarrera, setFilterCarrera] = useState<string>('todas');
     const [filterModalidad, setFilterModalidad] = useState<string>('todas');
+    const [filterTipo, setFilterTipo] = useState<'todas' | 'curriculares' | 'institucionales'>('todas');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Catálogo de estados dinámicos desde la BD (tabla doc_config_workflow)
@@ -282,6 +284,7 @@ export const MisAsignaturasPage: React.FC = () => {
         return materias.filter(m => {
             const modNombre = m.nombre_modalidad?.trim() || 'Presencial';
             const estadoLabel = getEstadoLabel(m.estado_pea || '');
+            const isExtra = Boolean(m.es_extracurricular || m.estado_pea === 'NoAplica');
 
             const matchesSearch =
                 m.nombre_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
@@ -301,13 +304,25 @@ export const MisAsignaturasPage: React.FC = () => {
                 filterModalidad === 'todas' ||
                 modNombre.toLowerCase() === filterModalidad.toLowerCase();
 
-            return matchesSearch && matchesEstado && matchesCarrera && matchesModalidad;
+            const matchesTipo =
+                filterTipo === 'todas' ||
+                (filterTipo === 'curriculares' && !isExtra) ||
+                (filterTipo === 'institucionales' && isExtra);
+
+            return matchesSearch && matchesEstado && matchesCarrera && matchesModalidad && matchesTipo;
         });
-    }, [materias, search, filterEstado, filterCarrera, filterModalidad, getEstadoLabel]);
+    }, [materias, search, filterEstado, filterCarrera, filterModalidad, filterTipo, getEstadoLabel]);
 
     const renderEstadoBadge = (estado: string) => {
         const label = getEstadoLabel(estado);
         switch (estado) {
+            case 'NoAplica':
+                return (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-500">
+                        <Info className="w-3 h-3 text-zinc-400" />
+                        Acompañamiento
+                    </span>
+                );
             case 'NoIniciado':
                 return (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
@@ -381,18 +396,24 @@ export const MisAsignaturasPage: React.FC = () => {
                 description="Gestión microcurricular y formulación de Programas de Estudio de la Asignatura según distributivo oficial SIGAFI."
             >
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="w-56">
+                    <div className="w-72 sm:w-80">
                         <GeistSelect
                             value={selectedPeriodo}
                             onChange={handlePeriodoChange}
                             placeholder="Seleccione período..."
                             disabled={loading || periodos.length === 0}
                         >
-                            {periodos.map(p => (
-                                <option key={p.id_periodo} value={p.id_periodo}>
-                                    {p.detalle || p.id_periodo} {p.es_activo ? '(Activo)' : ''}
-                                </option>
-                            ))}
+                            {periodos.map(p => {
+                                const nombreLimpio = p.detalle?.trim();
+                                const etiqueta = nombreLimpio 
+                                    ? `${nombreLimpio}${p.es_activo ? ' (Activo)' : ''}`
+                                    : `${p.id_periodo}${p.es_activo ? ' (Activo)' : ''}`;
+                                return (
+                                    <option key={p.id_periodo} value={p.id_periodo}>
+                                        {etiqueta}
+                                    </option>
+                                );
+                            })}
                         </GeistSelect>
                     </div>
                 </div>
@@ -462,7 +483,20 @@ export const MisAsignaturasPage: React.FC = () => {
                         </div>
                     )}
 
-                    {(search || filterCarrera !== 'todas' || filterModalidad !== 'todas' || filterEstado !== 'todos') && (
+                    <div className="w-48 shrink-0">
+                        <GeistSelect
+                            value={filterTipo}
+                            onChange={val => setFilterTipo(val as 'todas' | 'curriculares' | 'institucionales')}
+                            options={[
+                                { value: 'todas', label: 'Toda la Carga' },
+                                { value: 'curriculares', label: 'Curriculares (con PEA)' },
+                                { value: 'institucionales', label: 'Acompañamiento' }
+                            ]}
+                            placeholder="Tipo de carga..."
+                        />
+                    </div>
+
+                    {(search || filterCarrera !== 'todas' || filterModalidad !== 'todas' || filterEstado !== 'todos' || filterTipo !== 'todas') && (
                         <button
                             type="button"
                             onClick={() => {
@@ -470,6 +504,7 @@ export const MisAsignaturasPage: React.FC = () => {
                                 setFilterCarrera('todas');
                                 setFilterModalidad('todas');
                                 setFilterEstado('todos');
+                                setFilterTipo('todas');
                             }}
                             className="text-xs px-2.5 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors cursor-pointer shrink-0"
                             title="Restablecer filtros"
@@ -532,9 +567,18 @@ export const MisAsignaturasPage: React.FC = () => {
                     {materiasFiltradas.map((materia) => {
                         const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
                         const isCreating = creatingPeaId === materia.id_asignacion;
+                        const isExtra = Boolean(materia.es_extracurricular || materia.estado_pea === 'NoAplica');
 
                         const handleCardClick = () => {
                             if (isCreating) return;
+                            if (isExtra) {
+                                addToast(
+                                    'Actividad Institucional',
+                                    `"${materia.nombre_asignatura}" es una carga de acompañamiento que no requiere formulación de PEA microcurricular.`,
+                                    'info'
+                                );
+                                return;
+                            }
                             if (tienePea) {
                                 handleContinuarPea(materia);
                             } else {
@@ -581,6 +625,11 @@ export const MisAsignaturasPage: React.FC = () => {
                                         <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
                                             {materia.horas_totales}h ({materia.creditos || Math.round(materia.horas_totales / 48)} Créd.)
                                         </span>
+                                        {materia.horas_semanales ? (
+                                            <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-mono text-[11px] font-semibold border border-blue-200/50 dark:border-blue-900/50">
+                                                {materia.horas_semanales}h/sem
+                                            </span>
+                                        ) : null}
                                         <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
                                             {materia.nombre_nivel}
                                         </span>
@@ -595,7 +644,12 @@ export const MisAsignaturasPage: React.FC = () => {
 
                                 {/* Botón de Acción Principal */}
                                 <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-zinc-900">
-                                    {tienePea ? (
+                                    {isExtra ? (
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
+                                            <Info className="w-3.5 h-3.5 text-zinc-400" />
+                                            No requiere PEA
+                                        </span>
+                                    ) : tienePea ? (
                                         <button
                                             type="button"
                                             onClick={(e) => {
@@ -652,9 +706,18 @@ export const MisAsignaturasPage: React.FC = () => {
                             {materiasFiltradas.map(m => {
                                 const tienePea = Boolean(m.id_pea && m.id_pea > 0);
                                 const isCreating = creatingPeaId === m.id_asignacion;
+                                const isExtra = Boolean(m.es_extracurricular || m.estado_pea === 'NoAplica');
 
                                 const handleRowClick = () => {
                                     if (isCreating) return;
+                                    if (isExtra) {
+                                        addToast(
+                                            'Actividad Institucional',
+                                            `"${m.nombre_asignatura}" es una carga de acompañamiento que no requiere formulación de PEA microcurricular.`,
+                                            'info'
+                                        );
+                                        return;
+                                    }
                                     if (tienePea) {
                                         handleContinuarPea(m);
                                     } else {
@@ -673,7 +736,7 @@ export const MisAsignaturasPage: React.FC = () => {
                                                 <div className="flex items-center gap-1.5">
                                                     {m.codigo_asignatura && (
                                                         <span className="font-mono text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                                                            {m.codigo_asignatura}
+                                                             {m.codigo_asignatura}
                                                         </span>
                                                     )}
                                                     <span className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
@@ -687,8 +750,13 @@ export const MisAsignaturasPage: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="py-3 px-3 font-mono">
-                                            <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-                                                {m.horas_totales}h Total
+                                            <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                                                <span>{m.horas_totales}h Total</span>
+                                                {m.horas_semanales ? (
+                                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200/50 dark:border-blue-900/50">
+                                                        {m.horas_semanales}h/sem
+                                                    </span>
+                                                ) : null}
                                             </div>
                                             <div className="text-[10px] text-zinc-500">
                                                 {m.horas_docencia}D / {m.horas_practico_experimental}P / {m.horas_autonomo}A
@@ -707,7 +775,12 @@ export const MisAsignaturasPage: React.FC = () => {
                                         </td>
                                         <td className="py-3 px-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                                                {tienePea ? (
+                                                {isExtra ? (
+                                                    <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-slate-200 dark:border-zinc-800 inline-flex items-center gap-1">
+                                                        <Info className="w-3 h-3 text-zinc-400" />
+                                                        No requiere PEA
+                                                    </span>
+                                                ) : tienePea ? (
                                                     <button
                                                         onClick={() => handleContinuarPea(m)}
                                                         className="px-3 py-1.5 text-xs font-semibold rounded-md bg-[#0070f3] hover:bg-[#005bb5] text-white transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"

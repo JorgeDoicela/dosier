@@ -92,17 +92,17 @@ El servicio `PeaAiAssistantService` implementa adaptadores de protocolo para gar
 3. **Manejo de Fallback ante Error HTTP 400/422**: Si un modelo estricto rechaza parámetros auxiliares como `temperature` o `response_format`, el cliente reintenta de inmediato la solicitud en modo de payload mínimo garantizando continuidad operativa.
 
 ### 2.4. Reconciliación Matemática de Horas SIGAFI (CD, APE, TA)
-La normativa institucional y de acreditación del CACES exige que las horas por componente de aprendizaje (Contacto Docente - CD, Aprendizaje Práctico Experimental - APE y Trabajo Autónomo - TA) cuadren de forma exacta con la malla curricular aprobada.
+La normativa institucional y de acreditación exige que las horas por componente de aprendizaje (Contacto Docente - CD, Aprendizaje Práctico Experimental - APE y Trabajo Autónomo - TA) cuadren de forma exacta con la malla curricular aprobada.
 
-Cuando una asignatura en `detallemallas` de SIGAFI solo registra el total de horas (ej. 144) con componentes en cero, el motor calcula de manera automática una distribución equitativa en tercios normativos:
+Cuando una asignatura en `detallemallas` de SIGAFI solo registra el total de horas (ej. 96 o 144) con componentes en cero, el motor calcula de manera automática una distribución equitativa en tercios normativos enteros:
 - $\text{Horas CD} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
 - $\text{Horas APE} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
 - $\text{Horas TA} = \text{Horas Totales} - \text{Horas CD} - \text{Horas APE}$
 
-Posteriormente, la función `ReconcileUnitHoursWithSigafi` distribuye estas horas entre las 4 unidades temáticas mediante redondeo proporcional:
-$$\text{Proporcional}_i = \text{round}\left( \frac{\text{HorasGeneradas}_i}{\sum \text{HorasGeneradas}} \times \text{HorasOficialesSIGAFI} \right)$$
-El remanente acumulado se asigna a la última unidad temática, garantizando que:
-$$\sum_{i=1}^{N} \text{HorasUnidad}_{i} \equiv \text{HorasMallaSIGAFI}$$
+Posteriormente, la función `ReconcileUnitHoursWithSigafi` ajusta las horas entre las unidades temáticas bajo un principio no destructivo:
+1. **Preservación de Horas Extraídas**: Si no existe contexto horario estricto en la base de datos (`targetTotal <= 0`), el conciliador respeta íntegramente las horas extraídas del documento original sin forzarlas a cero.
+2. **Distribución Proporcional Entera**: Cuando existe un total objetivo oficial mayor a cero, distribuye el valor equitativamente entre las unidades y asigna el residuo entero a las unidades iniciales mediante `DistributeExactBucket`, asegurando sumas discretas exactas:
+$$\sum_{i=1}^{N} \text{HorasUnidad}_{i} \equiv \text{HorasOficialesSIGAFI}$$
 
 ### 2.5. Evaluador de Taxonomía de Bloom y Criterios CACES
 El motor analiza la validez pedagógica del borrador generado antes de retornarlo al cliente:
@@ -122,6 +122,7 @@ El procesamiento de archivos preexistentes está desacoplado del asistente gener
   - `CleanContenidosOrphanNumbers`: Remueve numeraciones flotantes huérfanas derivadas de saltos de página en tablas curriculares.
   - `CompleteTruncatedUnitTitle`: Reconstruye títulos de unidades temáticas interrumpidos por celdas combinadas.
   - `SanitizeRedundantHeading`: Elimina encabezados duplicados redundantes mediante expresiones regulares.
+- **Extracción de Carga Horaria y Código de Carrera**: El esquema JSON de extracción y normalización captura de forma explícita tanto los totales de la asignatura (`total_horas_asignatura`, `horas_contacto_docente`, `horas_practico_experimental`, `horas_autonomo`) como el desglose por unidad (`horas_cd`, `horas_ape`, `horas_ta`, `total_horas_unidad`) y el código de carrera institucional (`codigo_carrera`, ej. `DS` o `SOF`), contemplando sinónimos textuales frecuentes en documentos históricos. Si una unidad solo especifica el total de horas acumuladas, se dividen inteligentemente en tres tercios enteros entre CD, APE y TA.
 - **Exclusión Determinista de Imágenes**: Rechaza cualquier archivo `.png`, `.jpg`, `.jpeg`, `.webp` o PDF escaneado sin texto seleccionable (menos de 50 caracteres alfanuméricos extraídos).
 - **Principio de Fidelidad Textual:** El extractor opera estrictamente como analizador sintáctico (Parser) del texto subido. Las cabeceras institucionales de SIGAFI (nombre oficial de materia, código, horas, carrera) se mantienen inmutables y nunca son sobreescritas por el contenido del archivo.
 
@@ -130,15 +131,16 @@ El procesamiento de archivos preexistentes está desacoplado del asistente gener
 ## 3. Integración en el Frontend
 
 ### 3.1. Servicios Desacoplados (`peaAiService.ts` y `peaDocumentExtractorService.ts`)
-- **`peaAiService.ts`**: Fachada para configuración de API Keys (`/api/pea/ai/config`), generación de borradores pedagógicos (`/api/pea/uuid/{uuid}/ai/generar`) y chat interactivo (`/api/pea/uuid/{uuid}/ai/chat`). Incluye la función de mapeo reactivo `convertDraftToEditorFields`.
+- **`peaAiService.ts`**: Fachada para configuración de API Keys (`/api/pea/ai/config`), generación de borradores pedagógicos (`/api/pea/uuid/{uuid}/ai/generar`) y chat interactivo (`/api/pea/uuid/{uuid}/ai/chat`). Incluye la función de mapeo reactivo `convertDraftToEditorFields`, la cual sincroniza los totales de horas (`TotalHorasAsignatura`, componentes CD/APE/TA), el código de carrera y aplica distribución equitativa automática sobre las unidades si estas carecen de horas asignadas en el documento de origen.
 - **`peaDocumentExtractorService.ts`**: Módulo especializado para la carga de archivos `multipart/form-data` y extracción de PEAs digitales (`/api/pea/uuid/{uuid}/importar-documento`).
 
 ### 3.2. Experiencia de Usuario en el Editor (`DOSIERBuilderShell.tsx`)
-1. **"Importar PEA (PDF / Word)"** (icono `FileUp`): Abre `PeaDocumentImportModal.tsx` para docentes que desean migrar un sílabo preexistente con selección granular de secciones a poblar.
+1. **"Importar PEA (PDF / Word)"** (icono `FileUp`): Abre `PeaDocumentImportModal.tsx` para docentes que desean migrar un sílabo preexistente con previsualización granular de secciones y desglose analítico de unidades.
 2. **"Autocompletar sección con IA"** (icono `Sparkles`): Abre `PeaAiAssistantModal.tsx` para redactar, proponer y pulir objetivos, unidades temáticas, actividades prácticas y evaluaciones.
 3. **Modal de Propuesta Curricular (`PeaAiProposalModal.tsx`)**: Despliega una comparativa visual clara entre la propuesta de la IA y el estado actual del documento, permitiendo aceptar secciones individuales o el borrador integral.
 4. **Chat Pedagógico en Barra Lateral (`PeaAiChatSidebar.tsx`)**: Asistente conversacional interactivo integrado en el menú derecho con historial contextual sobre la asignatura activa.
 5. **Dropzone Rápido en `CollaborationSidebar.tsx`**: Zona de arrastre ampliada para cargar archivos `.pdf` o `.docx` directamente desde el panel lateral sin salir del lienzo.
+6. **Balance Dinámico y Botón "Distribuir horas" en Sección 6 (`PeaContentsSection.tsx`)**: Panel de verificación horaria con cálculo de desfase en tiempo real. Si existe descuadre entre las horas de las unidades y el total oficial de la asignatura, se presenta el botón interactivo "Distribuir horas", el cual calcula y distribuye la carga horaria exacta entre las unidades registradas y desaparece automáticamente al alcanzar el equilibrio.
 
 ### 3.3. Hidratación Atómica en Tiempo Real (`useDOSIERDocument.ts`)
 La inyección de los datos generados o importados al editor concurrente se ejecuta en una sola transacción `ydoc.transact()` sobre los tipos compartidos de Yjs:

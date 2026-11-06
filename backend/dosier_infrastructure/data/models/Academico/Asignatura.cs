@@ -10,4 +10,6 @@ public partial class Asignatura
     public string? Asignatura1 { get; set; }
 
     public string? Codigo { get; set; }
+
+    public sbyte? ExtraCurricular { get; set; }
 }

@@ -374,7 +374,7 @@ export const useDocumentTemplatesPage = () => {
                     id: newId, type, title: BLOCK_METADATA.pea_objective_section.defaultTitle, isActive: true,
                     config: {
                         headerColor: '#1e2a4a',
-                        objetivoLabel: 'b) OBJETIVO DE LA ASIGNATURA',
+                        objetivoLabel: '2. OBJETIVO DE LA ASIGNATURA',
                         objetivoPlaceholder: 'Formular con Verbo en infinitivo + ¿Qué? + ¿Cómo? + ¿Para qué? articulado al nivel formativo de la carrera.',
                         lineCount: 4
                     }
@@ -385,7 +385,7 @@ export const useDocumentTemplatesPage = () => {
                     id: newId, type, title: BLOCK_METADATA.pea_prerequisites_section.defaultTitle, isActive: true,
                     config: {
                         headerColor: '#1e2a4a',
-                        prerrequisitosLabel: 'c) PRERREQUISITOS:',
+                        prerrequisitosLabel: '3. PRERREQUISITOS CURRICULARES',
                         prerrequisitosColAsignatura: 'Asignatura',
                         prerrequisitosColObservacion: 'Observación',
                         filasVacias: 2
@@ -397,7 +397,7 @@ export const useDocumentTemplatesPage = () => {
                     id: newId, type, title: BLOCK_METADATA.pea_career_outcomes_section.defaultTitle, isActive: true,
                     config: {
                         headerColor: '#1e2a4a',
-                        rdaCarreraLabel: 'd)RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
+                        rdaCarreraLabel: '4. RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
                         rdaCarreraPlaceholder: 'Resultados de aprendizaje del perfil de egreso a los que tributa la asignatura.',
                         lineCount: 4
                     }
@@ -408,7 +408,7 @@ export const useDocumentTemplatesPage = () => {
                     id: newId, type, title: BLOCK_METADATA.pea_subject_outcomes_section.defaultTitle, isActive: true,
                     config: {
                         headerColor: '#1e2a4a',
-                        rdaAsignaturaLabel: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
+                        rdaAsignaturaLabel: '5. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA',
                         rdaAsignaturaPlaceholder: 'Resultados de aprendizaje específicos alcanzables por el estudiante al finalizar el curso.',
                         lineCount: 5
                     }

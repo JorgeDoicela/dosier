@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using dosier_application.Academico;
 using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
 using dosier_infrastructure.data.models;
@@ -12,28 +13,23 @@ namespace dosier_infrastructure.Curriculum
     public class CurriculumCatalogService : ICurriculumCatalogService
     {
         private readonly DosierContext _context;
+        private readonly IPeriodoInstitucionalResolver _periodoResolver;
 
-        public CurriculumCatalogService(DosierContext context)
+        public CurriculumCatalogService(DosierContext context, IPeriodoInstitucionalResolver periodoResolver)
         {
             _context = context;
+            _periodoResolver = periodoResolver;
         }
 
         public async Task<List<PeriodoAcademicoDto>> GetPeriodosAcademicosAsync()
         {
-            var periodos = await _context.Periodos
-                .AsNoTracking()
-                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
-                .OrderByDescending(p => p.Periodoactivoinstituto == 1)
-                .ThenByDescending(p => p.Activo == true)
-                .ThenByDescending(p => p.FechaInicial)
-                .Take(10)
-                .ToListAsync();
+            var periodos = await _periodoResolver.GetPeriodosInstitucionalesAsync(limite: 12);
 
             return periodos.Select(p => new PeriodoAcademicoDto
             {
                 IdPeriodo = p.IdPeriodo,
                 Detalle = p.Detalle ?? p.IdPeriodo,
-                Activo = p.Periodoactivoinstituto == 1 || p.Activo == true,
+                Activo = p.EsActivo,
                 FechaInicial = p.FechaInicial?.ToString("yyyy-MM-dd"),
                 FechaFinal = p.FechaFinal?.ToString("yyyy-MM-dd")
             }).ToList();
@@ -174,17 +170,9 @@ namespace dosier_infrastructure.Curriculum
             return resultado.OrderBy(r => r.Semestre).ThenBy(r => r.NombreAsignatura).ToList();
         }
 
-        private async Task<string> ObtenerPeriodoActivoAsync()
+        private Task<string> ObtenerPeriodoActivoAsync()
         {
-            var periodo = await _context.Periodos
-                .AsNoTracking()
-                .Where(p => (p.EsConduccion == 0 || p.EsConduccion == null) && (p.EsInstituto == 1 || p.Periodoactivoinstituto == 1))
-                .OrderByDescending(p => p.Periodoactivoinstituto == 1)
-                .ThenByDescending(p => p.Activo == true)
-                .ThenByDescending(p => p.FechaInicial)
-                .FirstOrDefaultAsync();
-
-            return periodo?.IdPeriodo ?? "OCT2026";
+            return _periodoResolver.GetIdPeriodoActivoAsync();
         }
     }
 }

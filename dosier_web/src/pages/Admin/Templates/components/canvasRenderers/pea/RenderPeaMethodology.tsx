@@ -18,7 +18,7 @@ export const RenderPeaMethodologySection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayTitle = c.title || title || 'g) METODOLOGÍA DE ENSEÑANZA';
+    const displayTitle = c.title || title || '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS';
 
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraft] = useState(displayTitle);
@@ -31,7 +31,7 @@ export const RenderPeaMethodologySection: React.FC<PeaBlockProps> = ({
 
     const handleSaveTitle = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'title', titleDraft.trim() || 'g) METODOLOGÍA DE ENSEÑANZA');
+            onUpdateConfig(blockId, 'title', titleDraft.trim() || '7. METODOLOGÍA Y RECURSOS DIDÁCTICOS');
         }
         setEditingTitle(false);
     };

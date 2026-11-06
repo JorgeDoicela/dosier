@@ -21,15 +21,9 @@ export const PeaCareerOutcomesSection: React.FC<PeaCareerOutcomesSectionProps> =
 }) => {
     return (
         <div className="w-full space-y-4 animate-fade-in font-sans">
-            <div className="space-y-2">
-                <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
-                    d) Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta
-                </h4>
-
-                <p className="text-xs text-text-dim leading-relaxed">
-                    Especifique los resultados de aprendizaje del <strong className="text-text-main font-semibold">perfil de egreso</strong> de la carrera a los cuales tributa directamente la asignatura.
-                </p>
-            </div>
+            <p className="text-xs text-text-dim leading-relaxed">
+                Especifique los resultados de aprendizaje del <strong className="text-text-main font-semibold">perfil de egreso</strong> de la carrera a los cuales tributa directamente la asignatura.
+            </p>
 
             <div className="rounded-xl border border-border-thin bg-surface shadow-2xs overflow-hidden">
                 <CoWorkEditor

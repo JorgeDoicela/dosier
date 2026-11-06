@@ -25,7 +25,7 @@ export const PeaPrerequisitesSection: React.FC<PeaPrerequisitesSectionProps> = (
     onUpdateItem
 }) => {
     const c = config || {};
-    const displayTitle = c.title || 'c) PRERREQUISITOS CURRICULARES';
+    const displayTitle = c.title || '3. PRERREQUISITOS CURRICULARES';
 
     const prerrequisitos: any[] = Array.isArray(formData?.Prerrequisitos) ? formData.Prerrequisitos : [];
 

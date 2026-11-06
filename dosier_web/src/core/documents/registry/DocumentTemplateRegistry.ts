@@ -227,7 +227,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
         sections: [
             {
                 id: 'pea_general_section',
-                label: 'a) DATOS GENERALES DE LA ASIGNATURA:',
+                label: 'Datos Generales de la Asignatura',
                 iconName: 'FileText',
                 componentName: 'PeaGeneralSection',
                 config: {
@@ -251,7 +251,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_objectives_section',
-                label: 'b) Objetivo de la Asignatura',
+                label: 'Objetivo de la Asignatura',
                 iconName: 'Target',
                 componentName: 'PeaObjectivesSection',
                 config: {
@@ -259,7 +259,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                     fields: [
                         {
                             name: 'ObjetivoAsignatura',
-                            label: 'b) Objetivo de la Asignatura',
+                            label: 'Objetivo de la Asignatura',
                             type: 'rich-text',
                             collaborative: true,
                             toolbarMode: 'none',
@@ -271,14 +271,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_prerequisites_section',
-                label: 'c) Prerrequisitos Curriculares',
+                label: 'Prerrequisitos Curriculares',
                 iconName: 'CheckSquare',
                 componentName: 'PeaPrerequisitesSection',
                 config: {
                     fields: [
                         {
                             name: 'Prerrequisitos',
-                            label: 'c) Prerrequisitos Curriculares',
+                            label: 'Prerrequisitos Curriculares',
                             type: 'table',
                             collaborative: true,
                             config: {
@@ -292,14 +292,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_career_outcomes_section',
-                label: 'd) Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta',
+                label: 'Resultados de Aprendizaje de la Carrera (Perfil de Egreso)',
                 iconName: 'Award',
                 componentName: 'PeaCareerOutcomesSection',
                 config: {
                     fields: [
                         {
                             name: 'RdaCarrera',
-                            label: 'd) RESULTADOS DE APRENDIZAJE DE LA CARRERA A LOS QUE LA ASIGNATURA APORTA',
+                            label: 'Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta',
                             type: 'rich-text',
                             collaborative: true,
                             headerStyle: 'blue',
@@ -310,14 +310,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_subject_outcomes_section',
-                label: 'e) Resultados de Aprendizaje de la Asignatura:',
+                label: 'Resultados de Aprendizaje de la Asignatura',
                 iconName: 'CheckSquare',
                 componentName: 'PeaSubjectOutcomesSection',
                 config: {
                     fields: [
                         {
                             name: 'ResultadosAprendizaje',
-                            label: 'e) RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA:',
+                            label: 'Resultados de Aprendizaje de la Asignatura',
                             type: 'rich-text',
                             collaborative: true,
                             headerStyle: 'blue',
@@ -328,14 +328,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_contents_section',
-                label: 'f) Contenidos de Enseñanza',
+                label: 'Contenidos de Enseñanza (Unidades)',
                 iconName: 'Layers',
                 componentName: 'PeaContentsSection',
                 config: {
                     fields: [
                         {
                             name: 'Unidades',
-                            label: 'f) Unidades de Estudio, Horas y Contenidos Temáticos',
+                            label: 'Unidades de Estudio, Horas y Contenidos Temáticos',
                             type: 'table',
                             collaborative: true,
                             config: {
@@ -349,7 +349,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_methodology_section',
-                label: 'g) Metodología y Recursos Didácticos',
+                label: 'Metodología y Recursos Didácticos',
                 iconName: 'BookOpen',
                 componentName: 'PeaMethodologySection',
                 config: {
@@ -375,14 +375,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_resources_section',
-                label: 'h) Actividades Prácticas',
+                label: 'Actividades Prácticas (APE)',
                 iconName: 'CheckSquare',
                 componentName: 'PeaResourcesSection',
                 config: {
                     fields: [
                         {
                             name: 'ActividadesPracticas',
-                            label: 'h) Actividades Prácticas',
+                            label: 'Actividades Prácticas y Experimentales',
                             type: 'table',
                             collaborative: true,
                             config: {
@@ -396,14 +396,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_evaluation_section',
-                label: 'i) Evaluación del Aprendizaje',
+                label: 'Evaluación del Aprendizaje',
                 iconName: 'BarChart',
                 componentName: 'PeaEvaluationSection',
                 config: {
                     fields: [
                         {
                             name: 'Evaluaciones',
-                            label: 'i) EVALUACIÓN DEL APRENDIZAJE',
+                            label: 'Evaluación del Aprendizaje',
                             type: 'table',
                             collaborative: true,
                             config: {
@@ -418,7 +418,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_bibliography_section',
-                label: 'j) BIBLIOGRAFÍA',
+                label: 'Bibliografía',
                 iconName: 'Library',
                 componentName: 'PeaBibliographySection',
                 config: {
@@ -444,14 +444,14 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
             },
             {
                 id: 'pea_signatures_section',
-                label: 'k) FIRMAS DE RESPONSABILIDAD',
+                label: 'Firmas de Responsabilidad',
                 iconName: 'Shield',
                 componentName: 'PeaSignaturesSection',
                 config: {
                     fields: [
                         {
                             name: 'FirmasResponsabilidadDetalle',
-                            label: 'k) FIRMAS DE RESPONSABILIDAD',
+                            label: 'Firmas de Responsabilidad',
                             type: 'table',
                             collaborative: true,
                             config: {

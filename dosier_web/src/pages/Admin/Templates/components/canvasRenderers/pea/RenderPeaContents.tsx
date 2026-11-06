@@ -30,7 +30,7 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const subHeaderBg = c.subHeaderColor || '#bdd7ee';
     const fg = getContrastFg(headerBg);
-    const displayTitle = c.title || title || 'f) CONTENIDOS DE ENSEÑANZA:';
+    const displayTitle = c.title || title || '6. CONTENIDOS DE ENSEÑANZA';
 
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraft] = useState(displayTitle);
@@ -71,7 +71,7 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
 
     const handleSaveTitle = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'title', titleDraft.trim() || 'f) CONTENIDOS DE ENSEÑANZA:');
+            onUpdateConfig(blockId, 'title', titleDraft.trim() || '6. CONTENIDOS DE ENSEÑANZA');
         }
         setEditingTitle(false);
     };

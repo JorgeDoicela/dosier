@@ -73,7 +73,84 @@ public class AcademicContextResolver : IAcademicContextResolver
                                       && d.IdAsignatura == assignment.IdAsignatura
                                       && d.Anulada != true,
                 cancellationToken);
-        if (detail == null) return null;
+
+        // Fallback resiliente: Si la asignatura no se encuentra en la malla activa/seleccionada,
+        // buscarla en cualquier malla histórica de la carrera que cubra la materia
+        if (detail == null)
+        {
+            var alternativeGridDetail = await (
+                from d in _context.DetalleMallas.AsNoTracking()
+                join m in _context.Mallas.AsNoTracking() on d.IdMalla equals m.IdMalla
+                where m.IdCarrera == career.IdCarrera
+                      && d.IdAsignatura == assignment.IdAsignatura
+                      && d.Anulada != true
+                orderby (d.IdNivel == assignment.IdNivel ? 1 : 0) descending, m.Activa descending, m.Vigencia descending, m.IdMalla descending
+                select new { Detail = d, Grid = m })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (alternativeGridDetail != null)
+            {
+                detail = alternativeGridDetail.Detail;
+                grid = alternativeGridDetail.Grid;
+                gridId = grid.IdMalla;
+                source = "malla_historica_fallback";
+                warnings.Add($"SIGAFI no tiene esta asignatura en la malla activa actual. Se vinculó automáticamente a la versión de malla '{grid.Descripcion ?? grid.IdMalla.ToString()}'.");
+            }
+        }
+
+        if (detail == null)
+        {
+            // Si es actividad de acompañamiento o extracurricular (ej. PAIT, Clubes), proveer contexto seguro
+            var isExtra = (assignment.ExtraCurricular == 1);
+            if (isExtra)
+            {
+                var extraSubject = await _context.Asignaturas.AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.IdAsignatura == assignment.IdAsignatura, cancellationToken);
+                var extraModality = await _context.Modalidades.AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.IdModalidad == assignment.IdModalidad, cancellationToken);
+                var extraSection = await _context.Secciones.AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.IdSeccion == assignment.IdSeccion, cancellationToken);
+                var extraPeriod = await _context.Periodos.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.IdPeriodo == assignment.IdPeriodo, cancellationToken);
+
+                return new AcademicContextDto
+                {
+                    IdAsignacion = assignment.IdAsignacion,
+                    IdProfesor = assignment.IdProfesor,
+                    IdPeriodo = assignment.IdPeriodo,
+                    NombrePeriodo = !string.IsNullOrWhiteSpace(extraPeriod?.Detalle) ? extraPeriod.Detalle : assignment.IdPeriodo,
+                    IdCarrera = career.IdCarrera,
+                    NombreCarrera = career.Carrera1,
+                    CodigoCarrera = !string.IsNullOrWhiteSpace(career.AliasCarrera) ? career.AliasCarrera : career.CodigoCases,
+                    IdMalla = 0,
+                    DescripcionMalla = "Actividad Institucional",
+                    IdDetalleMalla = 0,
+                    IdAsignatura = extraSubject?.IdAsignatura ?? assignment.IdAsignatura,
+                    CodigoAsignatura = extraSubject?.Codigo,
+                    NombreAsignatura = extraSubject?.Asignatura1 ?? "Actividad Institucional",
+                    IdNivel = assignment.IdNivel,
+                    NombreNivel = course.Nivel,
+                    IdModalidad = assignment.IdModalidad,
+                    NombreModalidad = extraModality?.ModalidadImpresion ?? extraModality?.Modalidad1,
+                    IdSeccion = assignment.IdSeccion,
+                    NombreSeccion = extraSection?.Nombre,
+                    Paralelo = assignment.Paralelo,
+                    HorasTotales = (int)(assignment.NumeroHoras ?? 0),
+                    HorasDocencia = assignment.NumeroHoras ?? 0,
+                    HorasPracticoExperimental = assignment.HorasPracticoExperimental ?? 0,
+                    HorasAutonomo = 0,
+                    Creditos = 0,
+                    HorasSemanales = assignment.NumeroHoras,
+                    EsExtracurricular = true,
+                    UnidadOrganizacionCurricular = "Acompañamiento",
+                    ModalidadAutorizada = true,
+                    FuenteMalla = "actividad_extracurricular",
+                    Advertencias = new List<string> { "Actividad de acompañamiento institucional; no requiere formulación de PEA microcurricular." }
+                };
+            }
+
+            return null;
+        }
 
         var subject = await _context.Asignaturas.AsNoTracking()
             .FirstOrDefaultAsync(a => a.IdAsignatura == assignment.IdAsignatura, cancellationToken);
@@ -109,15 +186,32 @@ public class AcademicContextResolver : IAcademicContextResolver
             .ToListAsync(cancellationToken);
 
         var totalHours = detail.Horas ?? 0;
+        var credits = detail.Creditos ?? 0;
+        if (totalHours <= 0 && credits > 0)
+        {
+            totalHours = credits * 48;
+            warnings.Add($"SIGAFI no registraba horas totales; se pre-cargaron {totalHours} horas normativas según {credits} créditos (48h/crédito).");
+        }
+
         var teachingHours = (decimal)(detail.HorasDocente ?? 0);
         var practicalHours = detail.HorasPracticoExperimental ?? 0m;
 
-        // Distribución equitativa y normativa CACES/CES cuando SIGAFI solo registra total de horas sin desglose
+        // Distribución inteligente y normativa CACES/CES alineada con la carga semanal del distributivo institucional (16 semanas de clase)
         if (totalHours > 0 && teachingHours <= 0m && practicalHours <= 0m)
         {
-            var third = Math.Floor((decimal)totalHours / 3m);
-            teachingHours = third;
-            practicalHours = third;
+            var weeklyHours = assignment.NumeroHoras ?? 0m;
+            if (weeklyHours > 0m && (weeklyHours * 16m) < totalHours)
+            {
+                teachingHours = weeklyHours * 16m;
+                var remaining = totalHours - teachingHours;
+                practicalHours = Math.Floor(remaining / 2m);
+            }
+            else
+            {
+                var third = Math.Floor((decimal)totalHours / 3m);
+                teachingHours = third;
+                practicalHours = third;
+            }
         }
         var autonomousHours = Math.Max(0m, (decimal)totalHours - teachingHours - practicalHours);
 
@@ -155,7 +249,9 @@ public class AcademicContextResolver : IAcademicContextResolver
             HorasDocencia = teachingHours,
             HorasPracticoExperimental = practicalHours,
             HorasAutonomo = autonomousHours,
-            Creditos = detail.Creditos ?? 0,
+            Creditos = credits,
+            HorasSemanales = assignment.NumeroHoras,
+            EsExtracurricular = (subject.ExtraCurricular == 1) || (assignment.ExtraCurricular == 1),
             UnidadOrganizacionCurricular = NormalizarUnidadOrganizacion(subjectType?.TipoAsignatura1),
             ModalidadAutorizada = modalityAuthorized,
             FuenteMalla = source,

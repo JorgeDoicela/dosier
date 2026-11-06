@@ -20,7 +20,7 @@ export const PeaResourcesProperties: React.FC<PeaResourcesPropertiesProps> = ({
     const config = block.config || {};
 
     const handleResetDefaults = () => {
-        onUpdateConfig(block.id, 'title', 'h) ACTIVIDADES PRÁCTICAS');
+        onUpdateConfig(block.id, 'title', '8. ACTIVIDADES PRÁCTICAS');
         onUpdateConfig(block.id, 'headerColor', '#1e2a4a');
         onUpdateConfig(block.id, 'colUnidadLabel', 'Unidad');
         onUpdateConfig(block.id, 'colPracticaLabel', 'Nombre de la práctica y caracterización de la actividad');
@@ -47,7 +47,7 @@ export const PeaResourcesProperties: React.FC<PeaResourcesPropertiesProps> = ({
                 </div>
                 <input
                     type="text"
-                    value={config.title || 'h) ACTIVIDADES PRÁCTICAS'}
+                    value={config.title || '8. ACTIVIDADES PRÁCTICAS'}
                     onChange={(e) => onUpdateConfig(block.id, 'title', e.target.value)}
                     className="w-full bg-surface border border-border-thin rounded-md px-2.5 py-1.5 text-xs text-text-main font-semibold focus:outline-hidden focus:border-indigo-500"
                 />

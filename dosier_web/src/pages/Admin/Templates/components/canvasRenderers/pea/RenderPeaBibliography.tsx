@@ -18,7 +18,7 @@ export const RenderPeaBibliographySection: React.FC<PeaBlockProps> = ({
     const c = config || {};
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
-    const displayTitle = c.title || title || 'j) BIBLIOGRAFÍA';
+    const displayTitle = c.title || title || '10. BIBLIOGRAFÍA';
 
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraft] = useState(displayTitle);
@@ -31,7 +31,7 @@ export const RenderPeaBibliographySection: React.FC<PeaBlockProps> = ({
 
     const handleSaveTitle = () => {
         if (onUpdateConfig && blockId) {
-            onUpdateConfig(blockId, 'title', titleDraft.trim() || 'j) BIBLIOGRAFÍA');
+            onUpdateConfig(blockId, 'title', titleDraft.trim() || '10. BIBLIOGRAFÍA');
         }
         setEditingTitle(false);
     };

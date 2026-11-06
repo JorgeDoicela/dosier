@@ -260,6 +260,10 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 3,
                 Uuid = Guid.NewGuid().ToString(),
+                TotalHorasAsignatura = 160,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
                 Estado = "EnRevision", // Ya enviado por el docente
                 FirmaElaboradoDocente = "DFRM-2026-DOC001",
                 Activo = true
@@ -327,6 +331,10 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 4,
                 Uuid = Guid.NewGuid().ToString(),
+                TotalHorasAsignatura = 160,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
                 Estado = "Borrador",
                 Activo = true
             };
@@ -380,6 +388,10 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 10,
                 Uuid = Guid.NewGuid().ToString(),
+                TotalHorasAsignatura = 160,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
                 Estado = "Borrador",
                 Activo = true,
                 Unidades = new List<DocPeaUnidad>
@@ -413,6 +425,10 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 11,
                 Uuid = Guid.NewGuid().ToString(),
+                TotalHorasAsignatura = 160,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
                 Estado = "Borrador",
                 Activo = true,
                 Unidades = new List<DocPeaUnidad>
@@ -466,6 +482,10 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 20,
                 Uuid = Guid.NewGuid().ToString(),
+                TotalHorasAsignatura = 160,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
                 Estado = "Borrador",
                 Activo = true,
                 Prerrequisitos = new List<DocPeaPrerequisito>

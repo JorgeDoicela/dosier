@@ -33,7 +33,7 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
     onUpdateItem
 }) => {
     const c = config || {};
-    const displayTitle = c.title || 'f) CONTENIDOS DE ENSEÑANZA:';
+    const displayTitle = c.title || '6. CONTENIDOS DE LA ASIGNATURA';
 
     // Horas normadas oficiales de la asignatura en SIGAFI / Malla
     const totalHorasOficial = Number(
@@ -170,6 +170,55 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
         } else {
             onUpdate('Unidades', payload);
         }
+    };
+
+    const handleAutoDistributeUnidadesHoras = () => {
+        if (readOnly || unidades.length === 0) return;
+        const count = unidades.length;
+
+        const rawCd = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
+        const rawApe = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
+        const rawTa = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
+        const baseTotal = totalHorasOficial > 0 ? totalHorasOficial : (rawCd + rawApe + rawTa > 0 ? rawCd + rawApe + rawTa : 96);
+
+        let targetCd = rawCd > 0 ? rawCd : Math.floor(baseTotal / 3);
+        let targetApe = rawApe > 0 ? rawApe : Math.floor(baseTotal / 3);
+        let targetTa = rawTa > 0 ? rawTa : (baseTotal - targetCd - targetApe);
+
+        const distribute = (totalBucket: number) => {
+            const baseVal = Math.floor(totalBucket / count);
+            const rem = totalBucket % count;
+            return Array.from({ length: count }, (_, i) => baseVal + (i < rem ? 1 : 0));
+        };
+
+        const cdDist = distribute(targetCd);
+        const apeDist = distribute(targetApe);
+        const taDist = distribute(targetTa);
+
+        const updated = unidades.map((u, i) => {
+            const cd = cdDist[i];
+            const ape = apeDist[i];
+            const ta = taDist[i];
+            const num = u.num || i + 1;
+            const cleanTitle = (u.titulo || '').trim();
+            const fullTitle = cleanTitle ? `UNIDAD ${num}: ${cleanTitle}` : `UNIDAD ${num}:`;
+            return {
+                ...u,
+                num,
+                numero: num,
+                titulo: cleanTitle,
+                nombre: cleanTitle,
+                nombre_unidad: cleanTitle,
+                titulo_completo: fullTitle,
+                encabezado_unidad: fullTitle,
+                horasCD: cd,
+                horasAPE: ape,
+                horasTA: ta,
+                horasTotal: cd + ape + ta
+            };
+        });
+
+        onUpdate('Unidades', updated);
     };
 
     return (
@@ -486,38 +535,50 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                 </div>
 
                 {/* Fila Inferior Concisa y Legible */}
-                {totalHorasOficial > 0 ? (
-                    <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin bg-bg-deep flex items-center gap-3 text-sm sm:text-base ${
-                        mathSummary.isMatched
+                <div className={`px-4 py-3 sm:px-5 sm:py-3.5 border-t border-border-thin bg-bg-deep flex flex-wrap items-center justify-between gap-3 text-sm sm:text-base ${
+                    totalHorasOficial > 0
+                        ? mathSummary.isMatched
                             ? 'text-emerald-600 dark:text-emerald-400'
                             : mathSummary.diff > 0
                             ? 'text-rose-600 dark:text-rose-400'
                             : 'text-amber-600 dark:text-amber-400'
-                    }`}>
+                        : 'text-text-main'
+                }`}>
+                    <div className="flex items-center gap-3">
                         <span className="font-mono font-bold tracking-tight">
-                            Total: {mathSummary.grandTotal} / {totalHorasOficial} hrs
+                            Total: {mathSummary.grandTotal} / {totalHorasOficial > 0 ? `${totalHorasOficial} hrs` : `${mathSummary.grandTotal} hrs`}
                         </span>
-                        <span className="opacity-50">·</span>
-                        <span className="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${
-                                mathSummary.isMatched
-                                    ? 'bg-emerald-500'
-                                    : mathSummary.diff > 0
-                                    ? 'bg-rose-500'
-                                    : 'bg-amber-500'
-                            }`} />
-                            <span>
-                                {mathSummary.isMatched && 'Conforme'}
-                                {mathSummary.diff > 0 && `Exceso de ${mathSummary.diff} ${mathSummary.diff === 1 ? 'hora' : 'horas'}`}
-                                {mathSummary.diff < 0 && `Faltan ${Math.abs(mathSummary.diff)} ${Math.abs(mathSummary.diff) === 1 ? 'hora' : 'horas'} por asignar`}
-                            </span>
-                        </span>
+                        {totalHorasOficial > 0 && (
+                            <>
+                                <span className="opacity-50">·</span>
+                                <span className="text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                        mathSummary.isMatched
+                                            ? 'bg-emerald-500'
+                                            : mathSummary.diff > 0
+                                            ? 'bg-rose-500'
+                                            : 'bg-amber-500'
+                                    }`} />
+                                    <span>
+                                        {mathSummary.isMatched && 'Conforme'}
+                                        {mathSummary.diff > 0 && `Exceso de ${mathSummary.diff} ${mathSummary.diff === 1 ? 'hora' : 'horas'}`}
+                                        {mathSummary.diff < 0 && `Faltan ${Math.abs(mathSummary.diff)} ${Math.abs(mathSummary.diff) === 1 ? 'hora' : 'horas'} por asignar`}
+                                    </span>
+                                </span>
+                            </>
+                        )}
                     </div>
-                ) : (
-                    <div className="px-4 py-2.5 border-t border-border-thin bg-bg-deep text-xs text-text-dim">
-                        Total acumulado: {mathSummary.grandTotal} hrs
-                    </div>
-                )}
+
+                    {!readOnly && !mathSummary.isMatched && unidades.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleAutoDistributeUnidadesHoras}
+                            className="px-3 py-1.5 bg-surface hover:bg-bg-deep border border-border-thin hover:border-[#0070f3] text-text-main text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-2xs"
+                        >
+                            Distribuir horas
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

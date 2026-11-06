@@ -76,6 +76,8 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
   * Vista matriz de supervisión curricular que despliega directamente el componente `<PeaSupervisionTray>`, permitiendo a coordinadores de carrera, coordinadores académicos y vicerrectorado supervisar en tiempo real el avance institucional de los PEAs, filtrar por período y carrera, y acceder al espacio de trabajo documental con las firmas y validaciones normativas vigentes.
 * **`MisAsignaturasPage.tsx` (`/documentacion/mis-proyectos`):**
   * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI y el estado de formulación de cada PEA.
+  * Incorpora discriminación inteligente entre asignaturas curriculares (conducentes a PEA) y actividades institucionales de acompañamiento (PAIT, Clubes, Actividad Física), indicando horas semanales de distributivo y badge *"No requiere PEA"*. Incluye filtro tripartito (`Toda la Carga`, `Curriculares`, `Acompañamiento`) y alternancia de vistas en Cuadros y Lista.
+  * Integra en la Sección 1 del PEA (`PeaGeneralSection.tsx`) la distribución horaria asistida con botón de un clic para cuadre normativo CACES (1/3 docencia, 1/3 prácticas y 1/3 autónomo), permitiendo desbloqueo seguro de edición cuando la base institucional carece de horas desglosadas.
 * **`RevisionCurricularPage.tsx` (`/documentacion/revision-tecnica/:projectUuid`):**
   * Entorno de revisión colegiada y disciplinar para coordinadores y comisiones. Permite contrastar el contenido contra el checklist de normativas.
 * **`MonitoreoCurricularPage.tsx` (`/documentacion/monitoreo/:projectUuid`):**
