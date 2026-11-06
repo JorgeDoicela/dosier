@@ -618,7 +618,7 @@ namespace Dosier.Infrastructure.Common.Documents
 
                         foreach (var firma in firmasDb)
                         {
-                            string nombreFirmante = firma.FirmanteId;
+                            string nombreFirmante = firma.FirmanteId ?? "Firmante";
                             string? cargo = firma.FirmanteRol;
                             string? departamento = null;
                             string estiloSello = "completo";
@@ -626,10 +626,14 @@ namespace Dosier.Infrastructure.Common.Documents
                             try
                             {
                                 using var doc = JsonDocument.Parse(firma.FirmaMetadata ?? "{}");
-                                if (doc.RootElement.TryGetProperty("nombre", out var n)) nombreFirmante = n.GetString() ?? nombreFirmante;
-                                if (doc.RootElement.TryGetProperty("cargo", out var c)) cargo = c.GetString() ?? cargo;
-                                if (doc.RootElement.TryGetProperty("departamento", out var d)) departamento = d.GetString() ?? departamento;
-                                if (doc.RootElement.TryGetProperty("tipo_sello", out var ts)) estiloSello = ts.GetString() ?? estiloSello;
+                                if (doc.RootElement.TryGetProperty("nombre", out var n) && !string.IsNullOrWhiteSpace(n.GetString()))
+                                    nombreFirmante = n.GetString()!;
+                                if (doc.RootElement.TryGetProperty("cargo", out var c))
+                                    cargo = c.GetString() ?? cargo;
+                                if (doc.RootElement.TryGetProperty("departamento", out var d))
+                                    departamento = d.GetString() ?? departamento;
+                                if (doc.RootElement.TryGetProperty("tipo_sello", out var ts))
+                                    estiloSello = ts.GetString() ?? estiloSello;
                             }
                             catch { }
 
