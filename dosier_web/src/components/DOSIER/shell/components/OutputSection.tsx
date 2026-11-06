@@ -305,15 +305,9 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                             </div>
                                         ) : (
                                             <div className="flex flex-col gap-3.5 p-5 border border-border-thin rounded-xl bg-surface">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <Shield size={18} className="text-[#0070f3]" />
-                                                        <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Institucional DOSIER</h4>
-                                                    </div>
-                                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                        <span>Perfil activo ({signatureProfile.cargo || 'Docente'})</span>
-                                                    </span>
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <Shield size={18} className="text-[#0070f3]" />
+                                                    <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Institucional DOSIER</h4>
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <label className="text-xs font-medium text-text-dim block">Contraseña Institucional</label>

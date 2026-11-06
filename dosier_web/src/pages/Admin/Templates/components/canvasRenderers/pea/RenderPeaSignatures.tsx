@@ -15,7 +15,7 @@ export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
     blockId,
     onUpdateConfig
 }) => {
-    const c = config || {};
+    const c = (config || {}) as Record<string, any>;
     const headerBg = resolveHeaderColor(c.headerColor || '#1e2a4a');
     const fg = getContrastFg(headerBg);
     const displayTitle = c.title || title || '11. FIRMAS DE RESPONSABILIDAD';
