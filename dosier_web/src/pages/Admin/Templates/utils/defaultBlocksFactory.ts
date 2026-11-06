@@ -185,7 +185,7 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
             id: 'block-pea-break-1',
             type: 'page_break' as BlockType,
             title: 'Salto de Página A4 (Página 1 → Página 2)',
-            isActive: true,
+            isActive: false,
             config: {}
         },
 
