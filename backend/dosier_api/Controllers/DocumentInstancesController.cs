@@ -67,13 +67,13 @@ namespace dosier_api.Controllers
         /// </summary>
         [HttpGet("{uuid}/pdf")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetPdf(string uuid, CancellationToken ct)
+        public async Task<IActionResult> GetPdf(string uuid, [FromQuery] bool force = false, CancellationToken ct = default)
         {
             var instance = await _instanceService.GetByUuidAsync(uuid, ct);
             if (instance == null) return NotFound(new { message = $"Documento '{uuid}' no encontrado." });
 
-            // Autosanar y regenerar con sellos visuales si existen firmas registradas
-            await _instanceService.ValidateStorageIntegrityAsync(instance, ct);
+            // Autosanar y regenerar con sellos visuales si existen firmas registradas (o si se solicita forzar)
+            await _instanceService.ValidateStorageIntegrityAsync(instance, force, ct);
 
             var storage = HttpContext.RequestServices.GetRequiredService<Dosier.Infrastructure.Common.Storage.IFileStorageService>();
 

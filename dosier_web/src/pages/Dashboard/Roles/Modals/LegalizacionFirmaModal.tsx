@@ -31,7 +31,6 @@ export const LegalizacionFirmaModal: React.FC<Props> = ({
     const { user } = useAuth();
     const [pinSeguridad, setPinSeguridad] = useState('');
     const [isSigning, setIsSigning] = useState(false);
-    const [shaHash] = useState(uuidPea ? `ISTPET-PEA-SHA256-${uuidPea.substring(0, 16).toUpperCase()}` : '0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069');
 
     if (!isOpen) return null;
 
@@ -121,21 +120,18 @@ export const LegalizacionFirmaModal: React.FC<Props> = ({
                         </p>
                     </div>
 
-                    {/* Previsualización Criptográfica */}
-                    <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-2">
+                    {/* Resumen de Certificación Institucional */}
+                    <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 space-y-2">
                         <div className="flex items-center justify-between text-xs font-semibold text-zinc-900 dark:text-white">
                             <span className="flex items-center gap-2">
                                 <QrCode className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
-                                Estampado Criptográfico y Código QR
+                                Estampado Institucional y Código QR
                             </span>
                             <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">
-                                SHA-256 VALIDADO
+                                FIRMA AUTORIZADA
                             </span>
                         </div>
-                        <div className="p-2 rounded bg-zinc-100 dark:bg-zinc-900 font-mono text-[10px] text-zinc-500 break-all">
-                            {shaHash}
-                        </div>
-                        <p className="text-[11px] text-zinc-500">
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400">
                             Certificado emitido a nombre de: <strong>{user?.nombre_completo || 'Vicerrector Académico'}</strong>
                         </p>
                     </div>

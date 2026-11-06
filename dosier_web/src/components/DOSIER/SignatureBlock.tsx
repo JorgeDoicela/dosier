@@ -55,7 +55,6 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
                     const fechaFirma = sig.fechaFirma ?? sig.fecha_firma;
                     const firmaCode = sig.firmaCode ?? sig.firma_code ?? '';
                     const estado = sig.estado ?? 1;
-                    const docHash = sig.docHash ?? sig.doc_hash;
                     const motivoRevocacion = sig.motivoRevocacion ?? sig.motivo_revocacion;
 
                     return (
@@ -87,14 +86,6 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
                                     <span className="meta-label">Código:</span>
                                     <span className="meta-val code-text">{firmaCode}</span>
                                 </div>
-                                {docHash && (
-                                    <div className="sig-meta-row flex-column">
-                                        <span className="meta-label">SHA-256 (Integridad):</span>
-                                        <span className="meta-val hash-text" title={docHash}>
-                                            {docHash}
-                                        </span>
-                                    </div>
-                                )}
                                 {estado === 2 && motivoRevocacion && (
                                     <div className="sig-meta-row flex-column revocation-reason">
                                         <span className="meta-label text-error">Motivo de Anulación:</span>

@@ -281,7 +281,7 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                             </h2>
                         </div>
                         <span className="text-xs font-mono text-slate-400 dark:text-zinc-500">
-                            Registro Inmutable SHA-256
+                            Registro Inmutable
                         </span>
                     </div>
 
@@ -297,7 +297,6 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                                 const estadoNue = item.estadoNuevo || item.estado_nuevo || 'Borrador';
                                 const fecha = item.fechaTransicion || item.fecha_transicion || item.created_at;
                                 const motivo = item.motivo || item.observacion || '';
-                                const hash = item.hashIntegridadSha256 || item.hash_integridad_sha256 || item.hashActual;
                                 const usuario = item.nombreUsuario || item.nombre_usuario || item.usuario_nombre || 'Sistema Curricular';
 
                                 const metaNuevo = ESTADOS_MAP[estadoNue] || ESTADOS_MAP['Borrador'];
@@ -333,14 +332,6 @@ export const AdminRevisionHistoryPanel: React.FC<AdminRevisionHistoryPanelProps>
                                         {motivo && (
                                             <div className="mt-3 text-xs sm:text-sm text-slate-800 dark:text-zinc-200 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 rounded-lg p-3.5 leading-relaxed whitespace-pre-wrap font-sans">
                                                 {motivo}
-                                            </div>
-                                        )}
-
-                                        {hash && (
-                                            <div className="mt-2.5 flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
-                                                <ShieldCheck size={13} className="text-emerald-500 shrink-0" />
-                                                <span className="font-semibold text-slate-600 dark:text-zinc-400">Hash SHA-256:</span>
-                                                <span className="truncate select-all">{hash}</span>
                                             </div>
                                         )}
                                     </div>

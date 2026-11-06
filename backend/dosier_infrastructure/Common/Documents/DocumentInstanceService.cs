@@ -563,7 +563,10 @@ namespace Dosier.Infrastructure.Common.Documents
             return created;
         }
 
-        public async Task ValidateStorageIntegrityAsync(DocumentInstance instance, CancellationToken ct = default)
+        public Task ValidateStorageIntegrityAsync(DocumentInstance instance, CancellationToken ct = default)
+            => ValidateStorageIntegrityAsync(instance, force: false, ct);
+
+        public async Task ValidateStorageIntegrityAsync(DocumentInstance instance, bool force, CancellationToken ct = default)
         {
             // 0. Detectar contaminación cruzada: Si otra instancia de diferente plantilla para la misma entidad tiene exactamente la misma ruta de PDF
             if (!string.IsNullOrWhiteSpace(instance.EntityUuid) && !string.IsNullOrWhiteSpace(instance.FinalPdfPath))
@@ -599,7 +602,7 @@ namespace Dosier.Infrastructure.Common.Documents
             bool isFileMissing = string.IsNullOrWhiteSpace(instance.FinalPdfPath) || !_storageService.FileExists(instance.FinalPdfPath);
             bool isOutdated = lastFirma != null && (!instance.FinalPdfPath?.Contains(lastFirma.FirmaCode ?? "") ?? true);
 
-            if (isFileMissing || isOutdated)
+            if (force || isFileMissing || isOutdated)
             {
                 if (firmasDb.Any())
                 {

@@ -506,6 +506,8 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                             isDraftMode={pdfAndSign.isDraftMode}
                                             setIsDraftMode={pdfAndSign.setIsDraftMode}
                                             handleGeneratePdf={pdfAndSign.handleGeneratePdf}
+                                            fetchSignedPdf={pdfAndSign.fetchSignedPdf}
+                                            isAlreadySubmitted={pdfAndSign.isAlreadySubmitted}
                                             isSigning={pdfAndSign.isSigning}
                                             institutionalPassword={pdfAndSign.institutionalPassword}
                                             setInstitutionalPassword={pdfAndSign.setInstitutionalPassword}

@@ -42,6 +42,18 @@ export const useBuilderPdfAndSign = ({
         fechaFirma?: string;
     } | null>(null);
 
+    const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
+    const isAlreadySubmitted = statusNormalized === 'enrevision' ||
+        statusNormalized === 'en revisión' ||
+        statusNormalized === 'en_revision' ||
+        statusNormalized === 'revisadocoord' ||
+        statusNormalized === 'revisadoacad' ||
+        statusNormalized === 'aprobado' ||
+        statusNormalized === 'finalizado' ||
+        statusNormalized === 'signed' ||
+        !!formData?.FirmaElaboradoDocente ||
+        !!formData?.firma_elaborado_docente;
+
     const isPea = templateCode === 'PEA_OFICIAL';
 
     const getPeaRol = (): { codigo: string; label: string } => {
@@ -86,8 +98,6 @@ export const useBuilderPdfAndSign = ({
         setIsGenerating(true);
         addAudit(blind ? 'Generando vista previa sin identidades...' : 'Generando vista previa del documento...');
         try {
-            const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
-            const isAlreadySubmitted = statusNormalized === 'enrevision' || statusNormalized === 'revisadocoord' || statusNormalized === 'revisadoacad' || statusNormalized === 'aprobado' || !!formData?.FirmaElaboradoDocente || !!formData?.firma_elaborado_docente;
             const draftMode = isDraftMode && !isAlreadySubmitted;
             const payload = {
                 ...formData,
@@ -110,13 +120,14 @@ export const useBuilderPdfAndSign = ({
         } finally {
             setIsGenerating(false);
         }
-    }, [templateCode, isDraftMode, formData, projectStatus, addAudit]);
+    }, [templateCode, isDraftMode, isAlreadySubmitted, formData, documentUuid, entityUuid, addAudit]);
 
     // ── Cargar PDF firmado u oficial ──
     const fetchSignedPdf = useCallback(async (): Promise<boolean> => {
         const targetUuid = entityUuid || documentUuid || formData?.Uuid || formData?.uuid;
         if (!targetUuid || targetUuid.startsWith('temp_')) return false;
 
+        setIsGenerating(true);
         try {
             let instanceData: any = null;
             const currentDocId = documentUuid || formData?.Uuid || formData?.uuid;
@@ -150,6 +161,8 @@ export const useBuilderPdfAndSign = ({
             return false;
         } catch {
             return false;
+        } finally {
+            setIsGenerating(false);
         }
     }, [entityUuid, documentUuid, formData, templateCode]);
 
@@ -159,14 +172,17 @@ export const useBuilderPdfAndSign = ({
         const initPdf = async () => {
             const hasSigned = await fetchSignedPdf();
             if (!hasSigned && isMounted) {
-                const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
-                const isAlreadySubmitted = statusNormalized === 'enrevision' || statusNormalized === 'revisadocoord' || statusNormalized === 'revisadoacad' || statusNormalized === 'aprobado' || !!formData?.FirmaElaboradoDocente || !!formData?.firma_elaborado_docente;
-                setIsDraftMode(!isAlreadySubmitted);
+                if (isAlreadySubmitted) {
+                    setIsDraftMode(false);
+                    await handleGeneratePdf(false);
+                } else {
+                    setIsDraftMode(true);
+                }
             }
         };
         initPdf();
         return () => { isMounted = false; };
-    }, [entityUuid, documentUuid, projectStatus, signatureRefreshTrigger, fetchSignedPdf]);
+    }, [entityUuid, documentUuid, projectStatus, signatureRefreshTrigger, fetchSignedPdf, isAlreadySubmitted, handleGeneratePdf]);
 
     // ── Firma Electrónica PAdES — Upload-on-Demand ──
     const handleSign = async () => {
@@ -450,6 +466,8 @@ export const useBuilderPdfAndSign = ({
         setIsSignedModalOpen,
         signedModalData,
         handleGeneratePdf,
+        fetchSignedPdf,
+        isAlreadySubmitted,
         handleSign,
         handleSignDosier
     };
