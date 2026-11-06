@@ -471,16 +471,16 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
         };
     }, [cowork.awareness, name]);
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleFocus = (e?: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (cowork.awareness) {
             cowork.awareness.setLocalStateField('focusedField', name);
         }
-        if (type === 'number' || mask === 'number') {
+        if ((type === 'number' || mask === 'number') && e?.currentTarget) {
             e.currentTarget.select();
         }
     };
 
-    const handleBlur = (e: React.FocusEvent<any>) => {
+    const handleBlur = (e?: React.FocusEvent<any>) => {
         if (cowork.awareness) {
             const currentState = cowork.awareness.getLocalState();
             if (currentState?.focusedField === name) {
@@ -733,8 +733,8 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                                 }
                             }
                         }}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
+                        onFocus={() => handleFocus()}
+                        onBlur={() => handleBlur()}
                     >
                         {children}
                     </GeistSelect>
