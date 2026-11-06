@@ -39,7 +39,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
         public DocumentEventHandler(
             string traceabilityCode,
             string institutionName = "DOSIER - Departamento de Investigación e Innovación",
-            string lopdpClause = "Tratamiento de datos conforme a LOPDP (R.O. 459, 2021).",
+            string lopdpClause = "",
             bool isDraft = false,
             string? stationaryImageBase64 = null,
             ImageData? stationaryImageData = null,
@@ -216,11 +216,14 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 // ...
 
                 // 3. Pie de Página Global + QR de Verificación
-                Paragraph pLopdp = new Paragraph(_lopdpClause)
-                    .SetFontSize(7.5f)
-                    .SetFontColor(new iText.Kernel.Colors.DeviceRgb(50, 50, 50));
-                canvas.ShowTextAligned(pLopdp,
-                    36, 12, TextAlignment.LEFT);
+                if (!string.IsNullOrWhiteSpace(_lopdpClause))
+                {
+                    Paragraph pLopdp = new Paragraph(_lopdpClause)
+                        .SetFontSize(7.5f)
+                        .SetFontColor(new iText.Kernel.Colors.DeviceRgb(50, 50, 50));
+                    canvas.ShowTextAligned(pLopdp,
+                        36, 12, TextAlignment.LEFT);
+                }
 
                 Paragraph pPage = new Paragraph($"Página {logicalPageNumber}")
                     .SetFontSize(7.5f)

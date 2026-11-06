@@ -34,8 +34,6 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
         {
             var legalSections = new System.Text.StringBuilder();
 
-            // 2. Pie de página legal
-            var lopdpText = customLopdpClause ?? DefaultLopdpClause;
 
             var footer = $@"
             <div class=""legal-footer"" style=""margin-top: 4px; padding: 0; line-height: 1.15; page-break-inside: avoid;"">
@@ -44,37 +42,14 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         <tr>
                             <td class=""trace-code"">
                                 Código de Verificación: <strong>{traceabilityCode}</strong>
-                                &nbsp;|&nbsp;
-                                Versión de Plantilla: v{template.Version}
-                                &nbsp;|&nbsp;
-                                Categoría: {GetCategoryLabel(template.Category)}
                             </td>
                             <td class=""trace-code"" style=""text-align:right"">
-                                Generado por DOSIER · {DateTime.Now:dd/MM/yyyy HH:mm} UTC-5
+                                Generado por DOSIER · {DateTime.Now:dd/MM/yyyy HH:mm}
                             </td>
                         </tr>
                     </table>
-                </div>";
-
-            if (template.RequiresLopdpClause)
-            {
-                footer += $@"
-                <div class=""lopdp-clause"" style=""font-size: 6pt; color: #475569; line-height: 1.15; margin-top: 2px;"">
-                    <strong>Protección de Datos:</strong> {lopdpText}
-                </div>";
-            }
-
-            if (template.RequiresElectronicSignature)
-            {
-                footer += @"
-                <div class=""lopdp-clause"" style=""font-size: 6pt; color: #475569; line-height: 1.15; margin-top: 2px;"">
-                    Este documento admite firma electrónica reconocida conforme a la Ley de Comercio 
-                    Electrónico, Firmas y Mensajes de Datos (R.O. N.° 557-S, 17/04/2002) y la normativa 
-                    de Entidades de Certificación (BCE/SECURITY DATA/ANF Ecuador).
-                </div>";
-            }
-
-            footer += "</div>"; // cierra legal-footer
+                </div>
+            </div>";
 
             // 3. Inyectar el aviso de doble ciego al inicio y el footer al final del body
             var result = renderedHtml;
