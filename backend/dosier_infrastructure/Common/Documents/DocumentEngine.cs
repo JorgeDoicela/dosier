@@ -1047,6 +1047,32 @@ namespace Dosier.Infrastructure.Common.Documents
 
             var dict = ExtractDataDictionary(renderData);
 
+            static string ExtractString(object? val)
+            {
+                if (val == null) return string.Empty;
+                if (val is string s) return s.Trim();
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.String)
+                        return je.GetString()?.Trim() ?? string.Empty;
+                    if (je.ValueKind == JsonValueKind.Number)
+                        return je.ToString();
+                    if (je.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (var sub in new[] { "nombre", "Nombre", "name", "Name", "titulo", "Titulo", "descripcion", "Descripcion", "code", "codigo" })
+                        {
+                            if (je.TryGetProperty(sub, out var sp) && sp.ValueKind == JsonValueKind.String)
+                            {
+                                var text = sp.GetString()?.Trim();
+                                if (!string.IsNullOrWhiteSpace(text)) return text;
+                            }
+                        }
+                    }
+                }
+                var raw = val.ToString()?.Trim();
+                return raw ?? string.Empty;
+            }
+
             string GetVal(params string[] keys)
             {
                 if (dict == null) return string.Empty;
@@ -1054,13 +1080,34 @@ namespace Dosier.Infrastructure.Common.Documents
                 {
                     if (dict.TryGetValue(k, out var val) && val != null)
                     {
-                        var str = val.ToString()?.Trim();
+                        var str = ExtractString(val);
                         if (!string.IsNullOrWhiteSpace(str) && str != "---" && str != "--" && str != "-")
                         {
                             return str;
                         }
                     }
                 }
+
+                // Búsqueda en contenedores anidados del PEA ("peaData", "pea_data", "asignacion", "malla")
+                foreach (var parentKey in new[] { "peaData", "pea_data", "asignacion", "malla" })
+                {
+                    if (dict.TryGetValue(parentKey, out var pVal) && pVal != null)
+                    {
+                        if (pVal is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                        {
+                            foreach (var k in keys)
+                            {
+                                if (je.TryGetProperty(k, out var subProp))
+                                {
+                                    var str = ExtractString(subProp);
+                                    if (!string.IsNullOrWhiteSpace(str) && str != "---" && str != "--" && str != "-")
+                                        return str;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 return string.Empty;
             }
 
@@ -1122,6 +1169,12 @@ namespace Dosier.Infrastructure.Common.Documents
 
             try
             {
+                if (renderData is string strJson)
+                {
+                    if (string.IsNullOrWhiteSpace(strJson) || strJson == "{}" || strJson == "null") return null;
+                    return JsonSerializer.Deserialize<Dictionary<string, object?>>(strJson);
+                }
+
                 var rawJson = renderData is JsonElement je
                     ? je.GetRawText()
                     : JsonSerializer.Serialize(renderData);

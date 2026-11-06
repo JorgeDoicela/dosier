@@ -160,3 +160,18 @@ Para evitar que encabezados o subtítulos de sección se impriman aislados al fi
 2. **Sanitización de Títulos Redundantes:**
    * En `HandlebarsTemplateEngine`, `PeaAiAssistantService` y `PeaDocumentExtractorService`, el sistema analiza mediante expresiones regulares los campos de texto enriquecido (`recursos_didacticos`, `metodologia_ensenanza`, `objetivo_asignatura`, `bibliografia_basica`). Si el contenido inicia con el nombre de la sección repetido (ej. *"RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE"*), este se remueve automáticamente antes de la compilación de la plantilla, evitando duplicaciones visuales con la barra de cabecera.
 
+---
+
+## 8. Nomenclatura Institucional de Descarga y Streaming PDF
+
+Para garantizar que los archivos PDF exportados por docentes y revisores mantengan la convención institucional y no identidades UUID internas, el motor opera bajo las siguientes directivas:
+
+1. **Resolución de Nombres en Caliente (`DocumentEngine.ResolveFilename`):**
+   * Resuelve dinámicamente el patrón configurado en la plantilla (ej. `{code}_{carrera}_{asignatura}_{periodo}.pdf`).
+   * Deserializa los datos de `DataSnapshotJson` extrayendo tokens directos o anidados (`carrera`, `asignatura`, `periodo`, `docente`).
+2. **Endpoints en `DocumentInstancesController`:**
+   * `GET /api/documents/instances/{uuid}/pdf/{filename?}`: Devuelve el archivo en modo `inline` con cabecera `Content-Disposition` codificada en UTF-8 y ruta enriquecida para visores Chromium.
+   * `GET /api/documents/instances/{uuid}/download`: Devuelve el archivo como adjunto binario forzado (`Content-Disposition: attachment`).
+3. **CORS:** Política institucional configurada con `WithExposedHeaders("Content-Disposition")` para permitir lectura programática del nombre de archivo desde el cliente web.
+
+

@@ -66,8 +66,9 @@ namespace dosier_api.Controllers
         /// Si el archivo aún no ha sido escrito a disco, lo genera en caliente sin marca de borrador.
         /// </summary>
         [HttpGet("{uuid}/pdf")]
+        [HttpGet("{uuid}/pdf/{filename}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetPdf(string uuid, [FromQuery] bool force = false, CancellationToken ct = default)
+        public async Task<IActionResult> GetPdf(string uuid, [FromRoute] string? filename = null, [FromQuery] bool force = false, CancellationToken ct = default)
         {
             var instance = await _instanceService.GetByUuidAsync(uuid, ct);
             if (instance == null) return NotFound(new { message = $"Documento '{uuid}' no encontrado." });
@@ -75,28 +76,80 @@ namespace dosier_api.Controllers
             // Autosanar y regenerar con sellos visuales si existen firmas registradas (o si se solicita forzar)
             await _instanceService.ValidateStorageIntegrityAsync(instance, force, ct);
 
+            var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
+            var tmpl = templates.FirstOrDefault(t => t.Code == instance.TemplateCode);
+
+            object? renderData = instance.DataSnapshotJson;
+            if (string.IsNullOrWhiteSpace(instance.DataSnapshotJson) || instance.DataSnapshotJson == "{}" || instance.DataSnapshotJson == "null")
+            {
+                try
+                {
+                    var docRequest = await _orchestrator.PrepareRequestAsync(uuid, "sistema", forceDraftMode: false, ct: ct);
+                    renderData = docRequest.Data;
+                }
+                catch { }
+            }
+
+            var resolvedName = Dosier.Infrastructure.Common.Documents.DocumentEngine.ResolveFilename(
+                tmpl?.FilenamePattern, instance.TemplateCode, instance.TemplateVersion, renderData, instance.Title);
+
             var storage = HttpContext.RequestServices.GetRequiredService<Dosier.Infrastructure.Common.Storage.IFileStorageService>();
 
             if (!string.IsNullOrEmpty(instance.FinalPdfPath) && storage.FileExists(instance.FinalPdfPath))
             {
                 var bytes = await storage.GetFileAsync(instance.FinalPdfPath);
-                var resolvedName = System.IO.Path.GetFileName(instance.FinalPdfPath);
-                if (string.IsNullOrWhiteSpace(resolvedName) || !resolvedName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-                {
-                    var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
-                    var tmpl = templates.FirstOrDefault(t => t.Code == instance.TemplateCode);
-                    resolvedName = Dosier.Infrastructure.Common.Documents.DocumentEngine.ResolveFilename(
-                        tmpl?.FilenamePattern, instance.TemplateCode, instance.TemplateVersion, instance.DataSnapshotJson, instance.Title);
-                }
                 Response.Headers["Content-Disposition"] = $"inline; filename=\"{resolvedName}\"; filename*=UTF-8''{Uri.EscapeDataString(resolvedName)}";
                 return File(bytes, "application/pdf");
             }
 
             var userUuid = User.Identity?.Name ?? "anon";
-            var docRequest = await _orchestrator.PrepareRequestAsync(uuid, userUuid, forceDraftMode: false, ct: ct);
-            var buildResult = await _documentEngine.GenerateAsync(docRequest, ct);
-            Response.Headers["Content-Disposition"] = $"inline; filename=\"{buildResult.FileName}\"; filename*=UTF-8''{Uri.EscapeDataString(buildResult.FileName)}";
+            var orchestratorRequest = await _orchestrator.PrepareRequestAsync(uuid, userUuid, forceDraftMode: false, ct: ct);
+            var buildResult = await _documentEngine.GenerateAsync(orchestratorRequest, ct);
+            Response.Headers["Content-Disposition"] = $"inline; filename=\"{resolvedName}\"; filename*=UTF-8''{Uri.EscapeDataString(resolvedName)}";
             return File(buildResult.PdfBytes, "application/pdf");
+        }
+
+        /// <summary>
+        /// Descarga directa como archivo adjunto (Content-Disposition: attachment) con el nombre institucional configurado.
+        /// </summary>
+        [HttpGet("{uuid}/download")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadPdf(string uuid, [FromQuery] bool force = false, CancellationToken ct = default)
+        {
+            var instance = await _instanceService.GetByUuidAsync(uuid, ct);
+            if (instance == null) return NotFound(new { message = $"Documento '{uuid}' no encontrado." });
+
+            await _instanceService.ValidateStorageIntegrityAsync(instance, force, ct);
+
+            var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
+            var tmpl = templates.FirstOrDefault(t => t.Code == instance.TemplateCode);
+
+            object? renderData = instance.DataSnapshotJson;
+            if (string.IsNullOrWhiteSpace(instance.DataSnapshotJson) || instance.DataSnapshotJson == "{}" || instance.DataSnapshotJson == "null")
+            {
+                try
+                {
+                    var docRequest = await _orchestrator.PrepareRequestAsync(uuid, "sistema", forceDraftMode: false, ct: ct);
+                    renderData = docRequest.Data;
+                }
+                catch { }
+            }
+
+            var resolvedName = Dosier.Infrastructure.Common.Documents.DocumentEngine.ResolveFilename(
+                tmpl?.FilenamePattern, instance.TemplateCode, instance.TemplateVersion, renderData, instance.Title);
+
+            var storage = HttpContext.RequestServices.GetRequiredService<Dosier.Infrastructure.Common.Storage.IFileStorageService>();
+
+            if (!string.IsNullOrEmpty(instance.FinalPdfPath) && storage.FileExists(instance.FinalPdfPath))
+            {
+                var bytes = await storage.GetFileAsync(instance.FinalPdfPath);
+                return File(bytes, "application/pdf", resolvedName);
+            }
+
+            var userUuid = User.Identity?.Name ?? "anon";
+            var orchestratorRequest = await _orchestrator.PrepareRequestAsync(uuid, userUuid, forceDraftMode: false, ct: ct);
+            var buildResult = await _documentEngine.GenerateAsync(orchestratorRequest, ct);
+            return File(buildResult.PdfBytes, "application/pdf", resolvedName);
         }
 
         /// <summary>

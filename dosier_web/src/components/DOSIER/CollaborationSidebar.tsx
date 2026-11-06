@@ -17,7 +17,6 @@ import {
     Activity,
     ChevronRight,
     Loader,
-    Loader2,
     Mic,
     Edit2,
     XCircle,
@@ -31,9 +30,6 @@ import {
     X,
     FileUp,
     Sparkles,
-    Settings,
-    Key,
-    AlertCircle,
     FileText,
     Trash2
 } from 'lucide-react';
@@ -41,15 +37,13 @@ import type { CoWorkHandle } from '../../core/cowork/types';
 import api from '../../api/axios_config';
 import { collaborationService } from '../../services/collaborationService';
 import { getPeaByUuid } from '../../services/peaService';
-import { getPeaAiConfig, type PeaAiConfigStatus } from '../../services/peaAiService';
 import { curriculumProjectService } from '../../services/curriculumProjectService';
 import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
 import { coworkLog } from '../../core/cowork/utils/log';
 import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlayer';
 import { PeaReviewPanel } from '../../pages/Curriculum/Workspace/components/PeaReviewPanel';
-import { formatDynamicSectionLabel, cleanSectionTitle } from '../../utils/sectionNumbering';
-import { GeistSelect } from '../Common/GeistSelect';
+import { cleanSectionTitle } from '../../utils/sectionNumbering';
 import PeaAiChatSidebar from './shell/components/PeaAiChatSidebar';
 
 const toSentenceCase = (text: string, fallbackIdx?: number): string => {
@@ -212,8 +206,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         return ['Aprobado', 'En Ejecución', 'Finalizado', 'Firmado', 'Signed'].includes(projectStatus || '');
     }, [projectStatus]);
 
-    // Desactivado temporalmente hasta madurez y diseño profesional según directriz
-    const isAiAvailable = false;
+    // Disponible en fase de redacción activa; se oculta formalmente en revisión, firmado o solo lectura
+    const isAiAvailable = !readOnly && !isEnRevision && !isSignedOrFinal;
     const isImportAvailable = !readOnly && !isEnRevision && !isSignedOrFinal && Boolean(onOpenImportModal || onTriggerDocExtraction);
 
     const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import'>(() => {

@@ -15,6 +15,18 @@ export interface UseBuilderPdfAndSignProps {
     addAudit: (msg: string, type?: string) => void;
 }
 
+export const computeInstitutionalFilename = (tmplCode: string, data: any, defaultTitle?: string): string => {
+    const code = (tmplCode || 'PEA').replace('_OFICIAL', '');
+    const carrera = data?.carrera || data?.Carrera || data?.peaData?.carrera?.nombre || data?.carrera_nombre || '';
+    const asignatura = data?.asignatura || data?.Asignatura || data?.peaData?.asignatura?.nombre || data?.asignatura_nombre || defaultTitle || '';
+    const periodo = data?.periodo || data?.Periodo || data?.peaData?.periodo?.codigo || data?.periodo_academico || '';
+
+    const sanitize = (raw: string) => (raw || '').replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').trim();
+    const parts = [code, sanitize(carrera), sanitize(asignatura), sanitize(periodo)].filter(Boolean);
+    const base = parts.length > 0 ? parts.join('_') : `DOSIER_${code}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+    return base.endsWith('.pdf') ? base : `${base}.pdf`;
+};
+
 export const useBuilderPdfAndSign = ({
     templateCode,
     formData,
@@ -28,6 +40,9 @@ export const useBuilderPdfAndSign = ({
 
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const [resolvedFilename, setResolvedFilename] = useState<string>(() =>
+        computeInstitutionalFilename(templateCode, formData)
+    );
     const [isDraftMode, setIsDraftMode] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [signaturePassword, setSignaturePassword] = useState('');
@@ -85,7 +100,16 @@ export const useBuilderPdfAndSign = ({
 
     // ── Gestión de URL del PDF (revocación de ObjectURL para evitar memory leaks) ──
     useEffect(() => {
-        if (!pdfBlob) { setPdfUrl(null); return; }
+        if (!pdfBlob) {
+            setPdfUrl(null);
+            return;
+        }
+
+        // Si pdfUrl ya es una ruta API directa con nomenclatura institucional, preservarla para visor
+        if (pdfUrl && !pdfUrl.startsWith('blob:')) {
+            return;
+        }
+
         const url = URL.createObjectURL(pdfBlob);
         setPdfUrl(url);
         return () => {
@@ -104,8 +128,14 @@ export const useBuilderPdfAndSign = ({
                 uuid: documentUuid || formData?.Uuid || formData?.uuid,
                 entityUuid: entityUuid || formData?.EntityUuid || formData?.entityUuid
             };
-            const blob = await documentInstanceService.renderDocumentPdf(templateCode, payload, draftMode, blind);
+            const { blob, filename } = await documentInstanceService.renderDocumentPdfWithFilename(templateCode, payload, draftMode, blind);
+            const finalFilename = filename && filename !== `${templateCode}.pdf`
+                ? filename
+                : computeInstitutionalFilename(templateCode, payload);
+            setResolvedFilename(finalFilename);
             setPdfBlob(blob);
+            const blobUrl = URL.createObjectURL(blob);
+            setPdfUrl(blobUrl);
             addAudit('PDF Generado exitosamente', 'success');
         } catch (err: any) {
             let errorMsg = err;
@@ -151,10 +181,19 @@ export const useBuilderPdfAndSign = ({
 
             const docInstanceUuid = instanceData?.uuid || instanceData?.Uuid;
             if (docInstanceUuid) {
-                const pdfBlob = await documentInstanceService.getInstancePdf(docInstanceUuid);
-                if (pdfBlob && pdfBlob.size > 1000) {
-                    setPdfBlob(pdfBlob);
+                const { blob, filename } = await documentInstanceService.getInstancePdfWithFilename(docInstanceUuid);
+                if (blob && blob.size > 1000) {
+                    const finalFilename = filename && filename !== 'documento.pdf' && !filename.startsWith('documento_')
+                        ? filename
+                        : computeInstitutionalFilename(templateCode, formData, instanceData?.title);
+
+                    setResolvedFilename(finalFilename);
+                    setPdfBlob(blob);
                     setIsDraftMode(false);
+
+                    // Establecer URL directa al endpoint oficial para que el visor PDF del navegador use el nombre institucional
+                    const directUrl = documentInstanceService.getInstancePdfUrl(docInstanceUuid, finalFilename);
+                    setPdfUrl(directUrl);
                     return true;
                 }
             }
@@ -448,9 +487,32 @@ export const useBuilderPdfAndSign = ({
         }
     };
 
+    const handleDownloadPdf = useCallback(() => {
+        const finalName = resolvedFilename || computeInstitutionalFilename(templateCode, formData);
+
+        if (pdfBlob) {
+            const link = document.createElement('a');
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            link.href = blobUrl;
+            link.download = finalName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+            return;
+        }
+
+        const targetUuid = entityUuid || documentUuid || formData?.Uuid || formData?.uuid;
+        if (targetUuid && !targetUuid.startsWith('temp_')) {
+            window.location.href = `/api/documents/instances/${encodeURIComponent(targetUuid)}/download`;
+        }
+    }, [pdfBlob, resolvedFilename, templateCode, formData, entityUuid, documentUuid]);
+
     return {
         pdfBlob,
         pdfUrl,
+        resolvedFilename,
+        handleDownloadPdf,
         isDraftMode,
         setIsDraftMode,
         isGenerating,

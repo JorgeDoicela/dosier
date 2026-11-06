@@ -98,6 +98,7 @@ builder.Services.AddCors(options =>
         })
         .AllowAnyHeader()
         .AllowAnyMethod()
+        .WithExposedHeaders("Content-Disposition")
         .AllowCredentials(); // Obligatorio para SignalR
     });
 });

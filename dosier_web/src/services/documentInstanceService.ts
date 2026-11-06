@@ -28,6 +28,21 @@ export interface ResolveInstanceParamsDto {
     autoCreate?: boolean;
 }
 
+export const parseFilenameFromDisposition = (dispositionHeader?: string, fallback = 'documento.pdf'): string => {
+    if (!dispositionHeader) return fallback;
+    const utf8Match = dispositionHeader.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match && utf8Match[1]) {
+        try {
+            return decodeURIComponent(utf8Match[1].trim().replace(/^["']|["']$/g, ''));
+        } catch { }
+    }
+    const standardMatch = dispositionHeader.match(/filename="?([^";]+)"?/i);
+    if (standardMatch && standardMatch[1]) {
+        return standardMatch[1].trim().replace(/^["']|["']$/g, '');
+    }
+    return fallback;
+};
+
 // ─────────────────────────────────────────────────────────────
 //  Servicio de Instancias Documentales
 // ─────────────────────────────────────────────────────────────
@@ -121,11 +136,43 @@ export const documentInstanceService = {
             .then(r => new Blob([r.data], { type: 'application/pdf' })),
 
     /**
+     * Renderiza un PDF preliminar o definitivo obteniendo también el nombre resuelto de archivo.
+     */
+    renderDocumentPdfWithFilename: async (templateCode: string, formData: any, isDraft = true, isBlind = false): Promise<{ blob: Blob; filename: string }> => {
+        const response = await api.post(`/documents/render?templateCode=${encodeURIComponent(templateCode)}&isDraft=${isDraft}&isBlind=${isBlind}`, formData, { responseType: 'blob' });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const filename = parseFilenameFromDisposition(response.headers?.['content-disposition'], `${templateCode}.pdf`);
+        return { blob, filename };
+    },
+
+    /**
      * Obtiene el PDF firmado o consolidado de una instancia documental existente.
      */
     getInstancePdf: (instanceUuid: string): Promise<Blob> =>
         api.get(`/documents/instances/${encodeURIComponent(instanceUuid)}/pdf`, { responseType: 'blob' })
             .then(r => new Blob([r.data], { type: 'application/pdf' })),
+
+    /**
+     * Obtiene el PDF firmado o consolidado obteniendo también el nombre institucional resuelto.
+     */
+    getInstancePdfWithFilename: async (instanceUuid: string): Promise<{ blob: Blob; filename: string }> => {
+        const response = await api.get(`/documents/instances/${encodeURIComponent(instanceUuid)}/pdf`, { responseType: 'blob' });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const filename = parseFilenameFromDisposition(response.headers?.['content-disposition'], `documento_${instanceUuid}.pdf`);
+        return { blob, filename };
+    },
+
+    /**
+     * Retorna la URL de streaming directo para visores PDF e iframes con nombre amigable.
+     */
+    getInstancePdfUrl: (instanceUuid: string, filename?: string): string => {
+        const baseUrl = api.defaults.baseURL || '/api';
+        const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        if (filename) {
+            return `${cleanBase}/documents/instances/${encodeURIComponent(instanceUuid)}/pdf/${encodeURIComponent(filename)}`;
+        }
+        return `${cleanBase}/documents/instances/${encodeURIComponent(instanceUuid)}/pdf`;
+    },
 };
 
 export default documentInstanceService;
