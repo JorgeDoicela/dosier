@@ -633,7 +633,17 @@ namespace Dosier.Infrastructure.Common.Documents
                             }
                             catch { }
 
-                            if (firma.FirmanteId?.StartsWith("USR-") == true && int.TryParse(firma.FirmanteId.Substring(4), out int uid))
+                            int uid = 0;
+                            if (firma.FirmanteId?.StartsWith("USR-") == true)
+                            {
+                                int.TryParse(firma.FirmanteId.Substring(4), out uid);
+                            }
+                            else if (!string.IsNullOrEmpty(firma.FirmanteId))
+                            {
+                                int.TryParse(firma.FirmanteId, out uid);
+                            }
+
+                            if (uid > 0)
                             {
                                 var sigProfileSub = _serviceProvider.GetService<dosier_infrastructure.Signatures.Subservices.ISignatureProfileSubservice>();
                                 if (sigProfileSub != null)

@@ -768,44 +768,25 @@ namespace Dosier.Infrastructure.Common.Documents
                             {
                                 dataDict["FirmaElaboradoDocente"] = pea.FirmaElaboradoDocente;
                                 dataDict["firma_elaborado_docente"] = pea.FirmaElaboradoDocente;
-                                if (!dataDict.ContainsKey("firma_docente_base64") || string.IsNullOrWhiteSpace(dataDict["firma_docente_base64"]?.ToString()) || dataDict["firma_docente_base64"]?.ToString()?.Contains("<div") == true)
-                                {
-                                    var fecha = pea.FechaElaborado ?? DateTime.UtcNow;
-                                    dataDict["firma_docente_base64"] = BuildHtmlPeaSignatureStamp(docenteNombre, "Docente", pea.FirmaElaboradoDocente, fecha);
-                                }
+                                dataDict["firma_docente_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                             }
                             if (!string.IsNullOrEmpty(pea.FirmaRevisadoCoord))
                             {
                                 dataDict["FirmaRevisadoCoord"] = pea.FirmaRevisadoCoord;
                                 dataDict["firma_revisado_coord"] = pea.FirmaRevisadoCoord;
-                                if (!dataDict.ContainsKey("firma_coordinador_carrera_base64") || string.IsNullOrWhiteSpace(dataDict["firma_coordinador_carrera_base64"]?.ToString()) || dataDict["firma_coordinador_carrera_base64"]?.ToString()?.Contains("<div") == true)
-                                {
-                                    var nomCoord = dataDict.GetValueOrDefault("CoordinadorCarrera")?.ToString() ?? dataDict.GetValueOrDefault("coordinador_carrera")?.ToString() ?? "Coordinador de Carrera";
-                                    var fecha = pea.FechaRevisadoCoord ?? DateTime.UtcNow;
-                                    dataDict["firma_coordinador_carrera_base64"] = BuildHtmlPeaSignatureStamp(nomCoord, "Coordinador de Carrera", pea.FirmaRevisadoCoord, fecha);
-                                }
+                                dataDict["firma_coordinador_carrera_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                             }
                             if (!string.IsNullOrEmpty(pea.FirmaRevisadoAcad))
                             {
                                 dataDict["FirmaRevisadoAcad"] = pea.FirmaRevisadoAcad;
                                 dataDict["firma_revisado_acad"] = pea.FirmaRevisadoAcad;
-                                if (!dataDict.ContainsKey("firma_coordinador_academico_base64") || string.IsNullOrWhiteSpace(dataDict["firma_coordinador_academico_base64"]?.ToString()) || dataDict["firma_coordinador_academico_base64"]?.ToString()?.Contains("<div") == true)
-                                {
-                                    var nomAcad = dataDict.GetValueOrDefault("CoordinadorAcademico")?.ToString() ?? dataDict.GetValueOrDefault("coordinador_academico")?.ToString() ?? "Coordinador Académico";
-                                    var fecha = pea.FechaRevisadoAcad ?? DateTime.UtcNow;
-                                    dataDict["firma_coordinador_academico_base64"] = BuildHtmlPeaSignatureStamp(nomAcad, "Coordinador Académico", pea.FirmaRevisadoAcad, fecha);
-                                }
+                                dataDict["firma_coordinador_academico_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                             }
                             if (!string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector))
                             {
                                 dataDict["FirmaAprobadoVicerrector"] = pea.FirmaAprobadoVicerrector;
                                 dataDict["firma_aprobado_vicerrector"] = pea.FirmaAprobadoVicerrector;
-                                if (!dataDict.ContainsKey("firma_vicerrector_base64") || string.IsNullOrWhiteSpace(dataDict["firma_vicerrector_base64"]?.ToString()) || dataDict["firma_vicerrector_base64"]?.ToString()?.Contains("<div") == true)
-                                {
-                                    var nomVic = dataDict.GetValueOrDefault("Vicerrector")?.ToString() ?? dataDict.GetValueOrDefault("vicerrector")?.ToString() ?? "Vicerrectorado";
-                                    var fecha = pea.FechaAprobado ?? DateTime.UtcNow;
-                                    dataDict["firma_vicerrector_base64"] = BuildHtmlPeaSignatureStamp(nomVic, "Vicerrectorado", pea.FirmaAprobadoVicerrector, fecha);
-                                }
+                                dataDict["firma_vicerrector_base64"] = @"<div style=""height: 85px; width: 100%;""></div>";
                             }
                         }
 
@@ -1092,62 +1073,6 @@ namespace Dosier.Infrastructure.Common.Documents
 
             var guid = Guid.NewGuid().ToString("N")[..8].ToUpper();
             return $"DOSIER-{categoryPrefix}-{DateTime.Now.Year}-{guid}";
-        }
-        
-        private string BuildHtmlPeaSignatureStamp(string nombre, string cargo, string firmaCode, DateTime fecha, string estiloSello = "completo", string? firmaB64 = null)
-        {
-            if (estiloSello.Equals("solo_firma", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(firmaB64))
-            {
-                var src = firmaB64.StartsWith("data:image/") ? firmaB64 : $"data:image/png;base64,{firmaB64}";
-                return $@"<div style=""width: 100%; height: 85px; display: flex; align-items: center; justify-content: center; text-align: center;"">
-  <img src=""{src}"" style=""max-height: 70px; max-width: 90pt; object-fit: contain; margin: 0 auto; display: block;"" />
-</div>";
-            }
-
-            var verificationUrl = $"{_appUrlService.GetFrontendUrl()}/verificacion/{firmaCode}";
-            var qrBase64 = GenerateQrPngBase64(verificationUrl);
-            var fechaStr = fecha.ToString("dd/MM/yyyy HH:mm") + " UTC";
-
-            return $@"<table style=""width: 98%; max-width: 94pt; margin: 2px auto; border: 0.5pt solid #cbd5e1; background: #f8fafc; font-family: Helvetica, Arial, sans-serif; border-collapse: collapse; text-align: left;"">
-  <tr>
-    <td colspan=""2"" style=""background: #0A3264; color: #ffffff; font-weight: bold; font-size: 3.8pt; text-align: center; padding: 1.5pt 0; letter-spacing: 0.2pt; border: none; line-height: 1;"">
-      FIRMA INSTITUCIONAL DOSIER
-    </td>
-  </tr>
-  <tr>
-    <td style=""width: 26pt; text-align: center; vertical-align: middle; padding: 2pt 1pt; border: none;"">
-      <img src=""data:image/png;base64,{qrBase64}"" style=""width: 20pt; height: 20pt; display: block; margin: 0 auto;"" />
-      <div style=""font-size: 2.6pt; color: #64748b; font-weight: bold; text-align: center; margin-top: 1pt; line-height: 1;"">VERIFICAR</div>
-    </td>
-    <td style=""vertical-align: middle; padding: 1.5pt 2pt 1.5pt 2.5pt; border-left: 0.5pt solid #cbd5e1; border-top: none; border-bottom: none; border-right: none;"">
-      <div style=""font-weight: bold; color: #0A3264; font-size: 4pt; line-height: 1.1; margin-bottom: 1pt;"">{System.Net.WebUtility.HtmlEncode(nombre)}</div>
-      <div style=""font-size: 3.2pt; color: #1e293b; line-height: 1.1;"">{System.Net.WebUtility.HtmlEncode(cargo)}</div>
-      <div style=""font-size: 3.2pt; color: #64748b; line-height: 1.1;""><strong>Cód:</strong> <span style=""color: #0070f3; font-weight: bold;"">{firmaCode}</span></div>
-      <div style=""font-size: 2.8pt; color: #64748b; line-height: 1.1;"">{fechaStr}</div>
-    </td>
-  </tr>
-  <tr>
-    <td colspan=""2"" style=""background: #e2e8f0; color: #334155; font-size: 2.6pt; text-align: center; padding: 0.8pt 0; border: none; line-height: 1;"">
-      Certificado Digital · CACES / LOPDP
-    </td>
-  </tr>
-</table>";
-        }
-
-        private static string GenerateQrPngBase64(string payload)
-        {
-            try
-            {
-                using var qrGenerator = new QRCoder.QRCodeGenerator();
-                using var qrCodeData = qrGenerator.CreateQrCode(payload, QRCoder.QRCodeGenerator.ECCLevel.M);
-                using var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
-                byte[] qrCodeBytes = qrCode.GetGraphic(10);
-                return Convert.ToBase64String(qrCodeBytes);
-            }
-            catch
-            {
-                return "";
-            }
         }
 
         private static string CalculateHash(byte[] content)

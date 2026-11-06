@@ -69,8 +69,18 @@ namespace dosier_api.Controllers
                     string? docUuid = null;
                     if (rawData.TryGetProperty("uuid", out var u) || rawData.TryGetProperty("Uuid", out u))
                         docUuid = u.GetString();
-                    if (string.IsNullOrEmpty(docUuid) && (rawData.TryGetProperty("entityUuid", out var eu) || rawData.TryGetProperty("EntityUuid", out eu)))
+                    if (string.IsNullOrEmpty(docUuid) && (rawData.TryGetProperty("entityUuid", out var eu) || rawData.TryGetProperty("EntityUuid", out eu) || rawData.TryGetProperty("entity_uuid", out eu)))
                         docUuid = eu.GetString();
+
+                    if (string.IsNullOrEmpty(docUuid) && (rawData.TryGetProperty("id_pea", out var ip) || rawData.TryGetProperty("IdPea", out ip)))
+                    {
+                        if (ip.TryGetInt32(out int idPea) && idPea > 0)
+                        {
+                            var dbCtx = HttpContext.RequestServices.GetService<dosier_infrastructure.data.models.DosierContext>();
+                            var p = dbCtx?.DocPeas.AsNoTracking().FirstOrDefault(x => x.IdPea == idPea);
+                            if (p != null) docUuid = p.Uuid;
+                        }
+                    }
 
                     if (!string.IsNullOrEmpty(docUuid))
                     {
@@ -103,18 +113,25 @@ namespace dosier_api.Controllers
                                     catch { }
                                 }
 
-                                if (dbFirma?.FirmanteId?.StartsWith("USR-") == true && int.TryParse(dbFirma.FirmanteId.Substring(4), out int uid))
+                                int uid = 0;
+                                if (dbFirma?.FirmanteId?.StartsWith("USR-") == true)
                                 {
-                                    if (sigProfileSub != null)
+                                    int.TryParse(dbFirma.FirmanteId.Substring(4), out uid);
+                                }
+                                else if (!string.IsNullOrEmpty(dbFirma?.FirmanteId))
+                                {
+                                    int.TryParse(dbFirma.FirmanteId, out uid);
+                                }
+
+                                if (uid > 0 && sigProfileSub != null)
+                                {
+                                    var pDto = await sigProfileSub.GetProfileAsync(uid);
+                                    if (pDto != null)
                                     {
-                                        var pDto = await sigProfileSub.GetProfileAsync(uid);
-                                        if (pDto != null)
+                                        firmaImagenB64 = pDto.FirmaImagenB64;
+                                        if (string.IsNullOrEmpty(estiloSello) || estiloSello == "completo")
                                         {
-                                            firmaImagenB64 = pDto.FirmaImagenB64;
-                                            if (string.IsNullOrEmpty(estiloSello) || estiloSello == "completo")
-                                            {
-                                                estiloSello = pDto.TipoSello ?? estiloSello;
-                                            }
+                                            estiloSello = pDto.TipoSello ?? estiloSello;
                                         }
                                     }
                                 }
