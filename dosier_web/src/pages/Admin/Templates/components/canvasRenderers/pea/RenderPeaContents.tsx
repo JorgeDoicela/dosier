@@ -84,7 +84,10 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
 
         // Si se actualizan horas individuales, recalcular horasTotal
         if ('horasCD' in patch || 'horasAPE' in patch || 'horasTA' in patch) {
-            updated.horasTotal = (updated.horasCD || 0) + (updated.horasAPE || 0) + (updated.horasTA || 0);
+            const cd = patch.horasCD !== undefined ? patch.horasCD : (current.horasCD || 0);
+            const ape = patch.horasAPE !== undefined ? patch.horasAPE : (current.horasAPE || 0);
+            const ta = patch.horasTA !== undefined ? patch.horasTA : (current.horasTA || 0);
+            updated.horasTotal = Math.round((cd + ape + ta) * 100) / 100;
         }
 
         newUnidades[index] = updated;
@@ -216,10 +219,11 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
                                             <span className="font-medium">Horas contacto con el docente:</span>
                                             <input
                                                 type="number"
+                                                step="any"
                                                 min={0}
                                                 max={160}
                                                 value={u.horasCD}
-                                                onChange={e => updateUnidad(idx, { horasCD: Number(e.target.value) || 0 })}
+                                                onChange={e => updateUnidad(idx, { horasCD: parseFloat(e.target.value) || 0 })}
                                                 className="w-12 text-center bg-white/70 border border-black/30 rounded-xs font-bold text-[8px] py-0.5 outline-none focus:bg-white"
                                             />
                                         </div>
@@ -227,10 +231,11 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
                                             <span className="font-medium">Horas Práctico-experimental:</span>
                                             <input
                                                 type="number"
+                                                step="any"
                                                 min={0}
                                                 max={160}
                                                 value={u.horasAPE}
-                                                onChange={e => updateUnidad(idx, { horasAPE: Number(e.target.value) || 0 })}
+                                                onChange={e => updateUnidad(idx, { horasAPE: parseFloat(e.target.value) || 0 })}
                                                 className="w-12 text-center bg-white/70 border border-black/30 rounded-xs font-bold text-[8px] py-0.5 outline-none focus:bg-white"
                                             />
                                         </div>
@@ -238,10 +243,11 @@ export const RenderPeaContentsSection: React.FC<PeaBlockProps> = ({
                                             <span className="font-medium">Horas de aprendizaje autónomo:</span>
                                             <input
                                                 type="number"
+                                                step="any"
                                                 min={0}
                                                 max={160}
                                                 value={u.horasTA}
-                                                onChange={e => updateUnidad(idx, { horasTA: Number(e.target.value) || 0 })}
+                                                onChange={e => updateUnidad(idx, { horasTA: parseFloat(e.target.value) || 0 })}
                                                 className="w-12 text-center bg-white/70 border border-black/30 rounded-xs font-bold text-[8px] py-0.5 outline-none focus:bg-white"
                                             />
                                         </div>

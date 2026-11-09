@@ -30,11 +30,11 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.Modalidad).HasColumnName("modalidad").IsRequired().HasMaxLength(50);
             builder.Property(e => e.UnidadOrganizacion).HasColumnName("unidadOrganizacion").HasMaxLength(100);
             builder.Property(e => e.SemestreNivel).HasColumnName("semestreNivel").HasMaxLength(20);
-            builder.Property(e => e.TotalHorasAsignatura).HasColumnName("totalHorasAsignatura");
+            builder.Property(e => e.TotalHorasAsignatura).HasPrecision(6, 2).HasColumnName("totalHorasAsignatura");
             builder.Property(e => e.Creditos).HasColumnName("creditos").HasColumnType("decimal(4,2)");
-            builder.Property(e => e.HorasContactoDocente).HasColumnName("horasContactoDocente");
-            builder.Property(e => e.HorasPracticoExperimental).HasColumnName("horasPracticoExperimental");
-            builder.Property(e => e.HorasAutonomo).HasColumnName("horasAutonomo");
+            builder.Property(e => e.HorasContactoDocente).HasPrecision(6, 2).HasColumnName("horasContactoDocente");
+            builder.Property(e => e.HorasPracticoExperimental).HasPrecision(6, 2).HasColumnName("horasPracticoExperimental");
+            builder.Property(e => e.HorasAutonomo).HasPrecision(6, 2).HasColumnName("horasAutonomo");
             builder.Property(e => e.ObjetivoAsignatura).HasColumnName("objetivoAsignatura").HasColumnType("text");
             builder.Property(e => e.MetodologiaEnsenanza).HasColumnName("metodologiaEnsenanza").HasColumnType("text");
             builder.Property(e => e.RecursosDidacticos).HasColumnName("recursosDidacticos").HasColumnType("text");
@@ -113,10 +113,10 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.IdPea).HasColumnName("idPea");
             builder.Property(e => e.NumeroUnidad).HasColumnName("numeroUnidad");
             builder.Property(e => e.NombreUnidad).HasColumnName("nombreUnidad").IsRequired().HasMaxLength(255);
-            builder.Property(e => e.TotalHorasUnidad).HasColumnName("totalHorasUnidad");
-            builder.Property(e => e.HorasDocencia).HasColumnName("horasDocencia");
-            builder.Property(e => e.HorasPracticoExp).HasColumnName("horasPracticoExp");
-            builder.Property(e => e.HorasAutonomo).HasColumnName("horasAutonomo");
+            builder.Property(e => e.TotalHorasUnidad).HasPrecision(6, 2).HasColumnName("totalHorasUnidad");
+            builder.Property(e => e.HorasDocencia).HasPrecision(6, 2).HasColumnName("horasDocencia");
+            builder.Property(e => e.HorasPracticoExp).HasPrecision(6, 2).HasColumnName("horasPracticoExp");
+            builder.Property(e => e.HorasAutonomo).HasPrecision(6, 2).HasColumnName("horasAutonomo");
             builder.Property(e => e.Orden).HasColumnName("orden");
 
             builder.HasMany(e => e.Temas)
@@ -183,7 +183,7 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.NumeroPractica).HasColumnName("numeroPractica");
             builder.Property(e => e.NombrePractica).HasColumnName("nombrePractica").IsRequired().HasMaxLength(255);
             builder.Property(e => e.Caracterizacion).HasColumnName("caracterizacion").HasColumnType("text");
-            builder.Property(e => e.DuracionHoras).HasColumnName("duracionHoras");
+            builder.Property(e => e.DuracionHoras).HasPrecision(6, 2).HasColumnName("duracionHoras");
             builder.Property(e => e.Orden).HasColumnName("orden");
 
             builder.HasOne(e => e.Unidad)

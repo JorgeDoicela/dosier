@@ -5,9 +5,9 @@ import type { CoWorkHandle } from '../../../../core/cowork/types';
 interface UnidadTematica {
     num?: number;
     titulo: string;
-    horasCD: number;
-    horasAPE: number;
-    horasTA: number;
+    horasCD: number | string;
+    horasAPE: number | string;
+    horasTA: number | string;
     horasTotal?: number;
     contenidos: string;
 }
@@ -52,10 +52,18 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
         }
 
         return rawUnidades.map((u, idx) => {
-            const cd = Number(u.horasCD ?? u.HorasCD ?? u.HorasDocencia ?? u['2'] ?? 0);
-            const ape = Number(u.horasAPE ?? u.HorasAPE ?? u.HorasPractica ?? u['3'] ?? 0);
-            const ta = Number(u.horasTA ?? u.HorasTA ?? u.HorasAutonomo ?? u['4'] ?? 0);
-            const total = cd + ape + ta;
+            const rawCd = u.horasCD ?? u.HorasCD ?? u.HorasDocencia ?? u['2'] ?? 0;
+            const rawApe = u.horasAPE ?? u.HorasAPE ?? u.HorasPractica ?? u['3'] ?? 0;
+            const rawTa = u.horasTA ?? u.HorasTA ?? u.HorasAutonomo ?? u['4'] ?? 0;
+
+            const cd = typeof rawCd === 'string' ? rawCd : Number(rawCd) || 0;
+            const ape = typeof rawApe === 'string' ? rawApe : Number(rawApe) || 0;
+            const ta = typeof rawTa === 'string' ? rawTa : Number(rawTa) || 0;
+
+            const numCd = parseFloat(String(cd)) || 0;
+            const numApe = parseFloat(String(ape)) || 0;
+            const numTa = parseFloat(String(ta)) || 0;
+            const total = Math.round((numCd + numApe + numTa) * 100) / 100;
 
             let conts = u.contenidos ?? u.Contenidos ?? u['1'] ?? '';
             if (Array.isArray(conts)) {
@@ -86,12 +94,12 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
 
     // Sumatorias matemáticas en tiempo real
     const mathSummary = useMemo(() => {
-        const sumCD = unidades.reduce((acc, u) => acc + (Number(u.horasCD) || 0), 0);
-        const sumAPE = unidades.reduce((acc, u) => acc + (Number(u.horasAPE) || 0), 0);
-        const sumTA = unidades.reduce((acc, u) => acc + (Number(u.horasTA) || 0), 0);
-        const grandTotal = sumCD + sumAPE + sumTA;
-        const diff = totalHorasOficial > 0 ? grandTotal - totalHorasOficial : 0;
-        const isMatched = totalHorasOficial > 0 && grandTotal === totalHorasOficial;
+        const sumCD = Math.round(unidades.reduce((acc, u) => acc + (parseFloat(String(u.horasCD)) || 0), 0) * 100) / 100;
+        const sumAPE = Math.round(unidades.reduce((acc, u) => acc + (parseFloat(String(u.horasAPE)) || 0), 0) * 100) / 100;
+        const sumTA = Math.round(unidades.reduce((acc, u) => acc + (parseFloat(String(u.horasTA)) || 0), 0) * 100) / 100;
+        const grandTotal = Math.round((sumCD + sumAPE + sumTA) * 100) / 100;
+        const diff = totalHorasOficial > 0 ? Math.round((grandTotal - totalHorasOficial) * 100) / 100 : 0;
+        const isMatched = totalHorasOficial > 0 && Math.abs(grandTotal - totalHorasOficial) < 0.01;
 
         return {
             sumCD,
@@ -140,10 +148,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
             if (i !== idx) return u;
             const next = { ...u, [field]: value };
             if (field === 'horasCD' || field === 'horasAPE' || field === 'horasTA') {
-                const cd = field === 'horasCD' ? Number(value) || 0 : u.horasCD;
-                const ape = field === 'horasAPE' ? Number(value) || 0 : u.horasAPE;
-                const ta = field === 'horasTA' ? Number(value) || 0 : u.horasTA;
-                next.horasTotal = cd + ape + ta;
+                const cd = field === 'horasCD' ? (parseFloat(value) || 0) : (parseFloat(String(u.horasCD)) || 0);
+                const ape = field === 'horasAPE' ? (parseFloat(value) || 0) : (parseFloat(String(u.horasAPE)) || 0);
+                const ta = field === 'horasTA' ? (parseFloat(value) || 0) : (parseFloat(String(u.horasTA)) || 0);
+                next.horasTotal = Math.round((cd + ape + ta) * 100) / 100;
             }
             return next;
         });
@@ -153,6 +161,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
             const num = u.num || i + 1;
             const cleanTitle = (u.titulo || '').trim();
             const fullTitle = cleanTitle ? `UNIDAD ${num}: ${cleanTitle}` : `UNIDAD ${num}:`;
+            const cdNum = parseFloat(String(u.horasCD)) || 0;
+            const apeNum = parseFloat(String(u.horasAPE)) || 0;
+            const taNum = parseFloat(String(u.horasTA)) || 0;
+            const totalNum = Math.round((cdNum + apeNum + taNum) * 100) / 100;
             return {
                 ...u,
                 num,
@@ -161,7 +173,11 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                 nombre: cleanTitle,
                 nombre_unidad: cleanTitle,
                 titulo_completo: fullTitle,
-                encabezado_unidad: fullTitle
+                encabezado_unidad: fullTitle,
+                horasCD: cdNum,
+                horasAPE: apeNum,
+                horasTA: taNum,
+                horasTotal: totalNum
             };
         });
 
@@ -293,24 +309,35 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                         <div className="flex items-stretch bg-bg-deep border border-border-thin rounded-xl overflow-hidden focus-within:border-text-main transition-colors">
                                             <input
                                                 type="text"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
+                                                inputMode="decimal"
+                                                pattern="[0-9]*[.,]?[0-9]*"
                                                 value={u.horasCD}
                                                 onFocus={(e) => e.currentTarget.select()}
                                                 onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
                                                 onKeyDown={(e) => {
+                                                    const cur = parseFloat(String(u.horasCD)) || 0;
                                                     if (e.key === 'ArrowUp') {
                                                         e.preventDefault();
-                                                        handleUpdateUnit(idx, 'horasCD', (u.horasCD || 0) + 1);
+                                                        handleUpdateUnit(idx, 'horasCD', Math.round((cur + 1) * 100) / 100);
                                                     } else if (e.key === 'ArrowDown') {
                                                         e.preventDefault();
-                                                        handleUpdateUnit(idx, 'horasCD', Math.max(0, (u.horasCD || 0) - 1));
+                                                        handleUpdateUnit(idx, 'horasCD', Math.max(0, Math.round((cur - 1) * 100) / 100));
                                                     }
                                                 }}
                                                 onChange={(e) => {
-                                                    const raw = e.target.value.replace(/\D/g, '');
-                                                    const clean = raw.length > 1 && raw.startsWith('0') ? raw.replace(/^0+/, '') || '0' : raw;
-                                                    handleUpdateUnit(idx, 'horasCD', Math.max(0, parseInt(clean, 10) || 0));
+                                                    let clean = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                                                    const parts = clean.split('.');
+                                                    if (parts.length > 2) {
+                                                        clean = parts[0] + '.' + parts.slice(1).join('');
+                                                    }
+                                                    if (parts.length === 2 && parts[1].length > 2) {
+                                                        clean = `${parts[0]}.${parts[1].slice(0, 2)}`;
+                                                    }
+                                                    handleUpdateUnit(idx, 'horasCD', clean);
+                                                }}
+                                                onBlur={() => {
+                                                    const parsed = Math.round((parseFloat(String(u.horasCD)) || 0) * 100) / 100;
+                                                    handleUpdateUnit(idx, 'horasCD', parsed);
                                                 }}
                                                 disabled={readOnly}
                                                 className="w-14 sm:w-16 py-2 px-2 text-center font-bold font-mono text-sm sm:text-base text-text-main bg-transparent outline-none cursor-pointer"
@@ -320,7 +347,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                                     <button
                                                         type="button"
                                                         tabIndex={-1}
-                                                        onClick={() => handleUpdateUnit(idx, 'horasCD', (u.horasCD || 0) + 1)}
+                                                        onClick={() => {
+                                                            const cur = parseFloat(String(u.horasCD)) || 0;
+                                                            handleUpdateUnit(idx, 'horasCD', Math.round((cur + 1) * 100) / 100);
+                                                        }}
                                                         className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
                                                         title="Aumentar hora"
                                                     >
@@ -329,7 +359,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                                     <button
                                                         type="button"
                                                         tabIndex={-1}
-                                                        onClick={() => handleUpdateUnit(idx, 'horasCD', Math.max(0, (u.horasCD || 0) - 1))}
+                                                        onClick={() => {
+                                                            const cur = parseFloat(String(u.horasCD)) || 0;
+                                                            handleUpdateUnit(idx, 'horasCD', Math.max(0, Math.round((cur - 1) * 100) / 100));
+                                                        }}
                                                         className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
                                                         title="Disminuir hora"
                                                     >
@@ -350,24 +383,35 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                         <div className="flex items-stretch bg-bg-deep border border-border-thin rounded-xl overflow-hidden focus-within:border-text-main transition-colors">
                                             <input
                                                 type="text"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
+                                                inputMode="decimal"
+                                                pattern="[0-9]*[.,]?[0-9]*"
                                                 value={u.horasAPE}
                                                 onFocus={(e) => e.currentTarget.select()}
                                                 onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
                                                 onKeyDown={(e) => {
+                                                    const cur = parseFloat(String(u.horasAPE)) || 0;
                                                     if (e.key === 'ArrowUp') {
                                                         e.preventDefault();
-                                                        handleUpdateUnit(idx, 'horasAPE', (u.horasAPE || 0) + 1);
+                                                        handleUpdateUnit(idx, 'horasAPE', Math.round((cur + 1) * 100) / 100);
                                                     } else if (e.key === 'ArrowDown') {
                                                         e.preventDefault();
-                                                        handleUpdateUnit(idx, 'horasAPE', Math.max(0, (u.horasAPE || 0) - 1));
+                                                        handleUpdateUnit(idx, 'horasAPE', Math.max(0, Math.round((cur - 1) * 100) / 100));
                                                     }
                                                 }}
                                                 onChange={(e) => {
-                                                    const raw = e.target.value.replace(/\D/g, '');
-                                                    const clean = raw.length > 1 && raw.startsWith('0') ? raw.replace(/^0+/, '') || '0' : raw;
-                                                    handleUpdateUnit(idx, 'horasAPE', Math.max(0, parseInt(clean, 10) || 0));
+                                                    let clean = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                                                    const parts = clean.split('.');
+                                                    if (parts.length > 2) {
+                                                        clean = parts[0] + '.' + parts.slice(1).join('');
+                                                    }
+                                                    if (parts.length === 2 && parts[1].length > 2) {
+                                                        clean = `${parts[0]}.${parts[1].slice(0, 2)}`;
+                                                    }
+                                                    handleUpdateUnit(idx, 'horasAPE', clean);
+                                                }}
+                                                onBlur={() => {
+                                                    const parsed = Math.round((parseFloat(String(u.horasAPE)) || 0) * 100) / 100;
+                                                    handleUpdateUnit(idx, 'horasAPE', parsed);
                                                 }}
                                                 disabled={readOnly}
                                                 className="w-14 sm:w-16 py-2 px-2 text-center font-bold font-mono text-sm sm:text-base text-text-main bg-transparent outline-none cursor-pointer"
@@ -377,7 +421,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                                     <button
                                                         type="button"
                                                         tabIndex={-1}
-                                                        onClick={() => handleUpdateUnit(idx, 'horasAPE', (u.horasAPE || 0) + 1)}
+                                                        onClick={() => {
+                                                            const cur = parseFloat(String(u.horasAPE)) || 0;
+                                                            handleUpdateUnit(idx, 'horasAPE', Math.round((cur + 1) * 100) / 100);
+                                                        }}
                                                         className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
                                                         title="Aumentar hora"
                                                     >
@@ -386,7 +433,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                                     <button
                                                         type="button"
                                                         tabIndex={-1}
-                                                        onClick={() => handleUpdateUnit(idx, 'horasAPE', Math.max(0, (u.horasAPE || 0) - 1))}
+                                                        onClick={() => {
+                                                            const cur = parseFloat(String(u.horasAPE)) || 0;
+                                                            handleUpdateUnit(idx, 'horasAPE', Math.max(0, Math.round((cur - 1) * 100) / 100));
+                                                        }}
                                                         className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
                                                         title="Disminuir hora"
                                                     >
@@ -407,24 +457,35 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                         <div className="flex items-stretch bg-bg-deep border border-border-thin rounded-xl overflow-hidden focus-within:border-text-main transition-colors">
                                             <input
                                                 type="text"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
+                                                inputMode="decimal"
+                                                pattern="[0-9]*[.,]?[0-9]*"
                                                 value={u.horasTA}
                                                 onFocus={(e) => e.currentTarget.select()}
                                                 onClick={(e) => (e.currentTarget as HTMLInputElement).select()}
                                                 onKeyDown={(e) => {
+                                                    const cur = parseFloat(String(u.horasTA)) || 0;
                                                     if (e.key === 'ArrowUp') {
                                                         e.preventDefault();
-                                                        handleUpdateUnit(idx, 'horasTA', (u.horasTA || 0) + 1);
+                                                        handleUpdateUnit(idx, 'horasTA', Math.round((cur + 1) * 100) / 100);
                                                     } else if (e.key === 'ArrowDown') {
                                                         e.preventDefault();
-                                                        handleUpdateUnit(idx, 'horasTA', Math.max(0, (u.horasTA || 0) - 1));
+                                                        handleUpdateUnit(idx, 'horasTA', Math.max(0, Math.round((cur - 1) * 100) / 100));
                                                     }
                                                 }}
                                                 onChange={(e) => {
-                                                    const raw = e.target.value.replace(/\D/g, '');
-                                                    const clean = raw.length > 1 && raw.startsWith('0') ? raw.replace(/^0+/, '') || '0' : raw;
-                                                    handleUpdateUnit(idx, 'horasTA', Math.max(0, parseInt(clean, 10) || 0));
+                                                    let clean = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                                                    const parts = clean.split('.');
+                                                    if (parts.length > 2) {
+                                                        clean = parts[0] + '.' + parts.slice(1).join('');
+                                                    }
+                                                    if (parts.length === 2 && parts[1].length > 2) {
+                                                        clean = `${parts[0]}.${parts[1].slice(0, 2)}`;
+                                                    }
+                                                    handleUpdateUnit(idx, 'horasTA', clean);
+                                                }}
+                                                onBlur={() => {
+                                                    const parsed = Math.round((parseFloat(String(u.horasTA)) || 0) * 100) / 100;
+                                                    handleUpdateUnit(idx, 'horasTA', parsed);
                                                 }}
                                                 disabled={readOnly}
                                                 className="w-14 sm:w-16 py-2 px-2 text-center font-bold font-mono text-sm sm:text-base text-text-main bg-transparent outline-none cursor-pointer"
@@ -434,7 +495,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                                     <button
                                                         type="button"
                                                         tabIndex={-1}
-                                                        onClick={() => handleUpdateUnit(idx, 'horasTA', (u.horasTA || 0) + 1)}
+                                                        onClick={() => {
+                                                            const cur = parseFloat(String(u.horasTA)) || 0;
+                                                            handleUpdateUnit(idx, 'horasTA', Math.round((cur + 1) * 100) / 100);
+                                                        }}
                                                         className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
                                                         title="Aumentar hora"
                                                     >
@@ -443,7 +507,10 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                                     <button
                                                         type="button"
                                                         tabIndex={-1}
-                                                        onClick={() => handleUpdateUnit(idx, 'horasTA', Math.max(0, (u.horasTA || 0) - 1))}
+                                                        onClick={() => {
+                                                            const cur = parseFloat(String(u.horasTA)) || 0;
+                                                            handleUpdateUnit(idx, 'horasTA', Math.max(0, Math.round((cur - 1) * 100) / 100));
+                                                        }}
                                                         className="px-1.5 py-0.5 hover:bg-bg-deep text-text-dim hover:text-text-main transition-colors cursor-pointer flex items-center justify-center h-1/2"
                                                         title="Disminuir hora"
                                                     >

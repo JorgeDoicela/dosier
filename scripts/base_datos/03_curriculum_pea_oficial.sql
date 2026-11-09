@@ -59,13 +59,13 @@ CREATE TABLE doc_pea (
     modalidad               VARCHAR(50)     NOT NULL DEFAULT 'Presencial',
     unidadOrganizacion      VARCHAR(100)    NULL,
     semestreNivel           VARCHAR(20)     NULL,
-    totalHorasAsignatura    INT             NOT NULL DEFAULT 0,
+    totalHorasAsignatura    DECIMAL(6,2)    NOT NULL DEFAULT 0.00,
     creditos                DECIMAL(4,2)    NOT NULL DEFAULT 0.00,
     
     -- Componentes pedagógicos globales (Sección a)
-    horasContactoDocente    INT             NOT NULL DEFAULT 0 COMMENT 'CD - Contacto Docente',
-    horasPracticoExperimental INT           NOT NULL DEFAULT 0 COMMENT 'APE - Práctico Experimental',
-    horasAutonomo           INT             NOT NULL DEFAULT 0 COMMENT 'AA - Aprendizaje Autónomo',
+    horasContactoDocente    DECIMAL(6,2)    NOT NULL DEFAULT 0.00 COMMENT 'CD - Contacto Docente',
+    horasPracticoExperimental DECIMAL(6,2)  NOT NULL DEFAULT 0.00 COMMENT 'APE - Práctico Experimental',
+    horasAutonomo           DECIMAL(6,2)    NOT NULL DEFAULT 0.00 COMMENT 'AA - Aprendizaje Autónomo',
     
     -- Secciones descriptivas pedagógicas
     objetivoAsignatura      TEXT            NULL COMMENT 'Sección b) Objetivo de la asignatura',
@@ -131,10 +131,10 @@ CREATE TABLE doc_pea_unidades (
     idPea                   INT             NOT NULL,
     numeroUnidad            INT             NOT NULL,
     nombreUnidad            VARCHAR(255)    NOT NULL,
-    totalHorasUnidad        INT             NOT NULL DEFAULT 0,
-    horasDocencia           INT             NOT NULL DEFAULT 0,
-    horasPracticoExp        INT             NOT NULL DEFAULT 0,
-    horasAutonomo           INT             NOT NULL DEFAULT 0,
+    totalHorasUnidad        DECIMAL(6,2)    NOT NULL DEFAULT 0.00,
+    horasDocencia           DECIMAL(6,2)    NOT NULL DEFAULT 0.00,
+    horasPracticoExp        DECIMAL(6,2)    NOT NULL DEFAULT 0.00,
+    horasAutonomo           DECIMAL(6,2)    NOT NULL DEFAULT 0.00,
     orden                   INT             NOT NULL DEFAULT 1,
     INDEX idx_unidad_pea (idPea),
     FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE
@@ -194,7 +194,7 @@ CREATE TABLE doc_pea_actividades_practicas (
     numeroPractica          INT             NOT NULL,
     nombrePractica          VARCHAR(255)    NOT NULL,
     caracterizacion         TEXT            NULL,
-    duracionHoras           INT             NOT NULL DEFAULT 2,
+    duracionHoras           DECIMAL(6,2)    NOT NULL DEFAULT 2.00,
     orden                   INT             NOT NULL DEFAULT 1,
     INDEX idx_practica_pea (idPea),
     FOREIGN KEY (idPea) REFERENCES doc_pea(idPea) ON DELETE CASCADE,

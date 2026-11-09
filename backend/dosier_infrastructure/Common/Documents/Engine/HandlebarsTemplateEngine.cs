@@ -778,13 +778,25 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             cleanTitulo = System.Text.RegularExpressions.Regex.Replace(cleanTitulo, $@"^Unidad\s*{num}\s*[:\-]?\s*", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
                         }
 
-                        int cd = Convert.ToInt32(uDict.GetValueOrDefault("horasCD") ?? uDict.GetValueOrDefault("HorasCD") ?? uDict.GetValueOrDefault("HorasDocencia") ?? 0);
-                        int ape = Convert.ToInt32(uDict.GetValueOrDefault("horasAPE") ?? uDict.GetValueOrDefault("HorasAPE") ?? uDict.GetValueOrDefault("HorasPracticoExp") ?? 0);
-                        int ta = Convert.ToInt32(uDict.GetValueOrDefault("horasTA") ?? uDict.GetValueOrDefault("HorasTA") ?? uDict.GetValueOrDefault("HorasAutonomo") ?? 0);
-                        int total = cd + ape + ta;
-                        if (uDict.TryGetValue("horasTotal", out var ht) && int.TryParse(ht?.ToString(), out var htVal) && htVal > 0) total = htVal;
-                        else if (uDict.TryGetValue("TotalHoras", out var th) && int.TryParse(th?.ToString(), out var thVal) && thVal > 0) total = thVal;
-                        else if (uDict.TryGetValue("TotalHorasUnidad", out var thu) && int.TryParse(thu?.ToString(), out var thuVal) && thuVal > 0) total = thuVal;
+                        decimal cd = ParseDecimalDefensive(uDict.GetValueOrDefault("horasCD") ?? uDict.GetValueOrDefault("HorasCD") ?? uDict.GetValueOrDefault("HorasDocencia") ?? 0);
+                        decimal ape = ParseDecimalDefensive(uDict.GetValueOrDefault("horasAPE") ?? uDict.GetValueOrDefault("HorasAPE") ?? uDict.GetValueOrDefault("HorasPracticoExp") ?? 0);
+                        decimal ta = ParseDecimalDefensive(uDict.GetValueOrDefault("horasTA") ?? uDict.GetValueOrDefault("HorasTA") ?? uDict.GetValueOrDefault("HorasAutonomo") ?? 0);
+                        decimal total = cd + ape + ta;
+                        if (uDict.TryGetValue("horasTotal", out var ht))
+                        {
+                            var htVal = ParseDecimalDefensive(ht);
+                            if (htVal > 0m) total = htVal;
+                        }
+                        else if (uDict.TryGetValue("TotalHoras", out var th))
+                        {
+                            var thVal = ParseDecimalDefensive(th);
+                            if (thVal > 0m) total = thVal;
+                        }
+                        else if (uDict.TryGetValue("TotalHorasUnidad", out var thu))
+                        {
+                            var thuVal = ParseDecimalDefensive(thu);
+                            if (thuVal > 0m) total = thuVal;
+                        }
 
                         string contenidos = uDict.GetValueOrDefault("contenidos")?.ToString()
                             ?? uDict.GetValueOrDefault("Contenidos")?.ToString()
@@ -1265,6 +1277,18 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             }
 
             return trimmed;
+        }
+
+        private static decimal ParseDecimalDefensive(object? val)
+        {
+            if (val == null) return 0m;
+            if (val is decimal d) return d;
+            if (val is int i) return i;
+            if (val is long l) return l;
+            if (val is double db) return (decimal)db;
+            if (val is float f) return (decimal)f;
+            var s = val.ToString()?.Trim().Replace(',', '.');
+            return decimal.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsed) ? parsed : 0m;
         }
     }
 }

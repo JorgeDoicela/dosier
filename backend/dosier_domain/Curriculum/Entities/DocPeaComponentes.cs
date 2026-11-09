@@ -27,7 +27,7 @@ namespace dosier_domain.Curriculum.Entities
         public int NumeroPractica { get; set; }
         public string NombrePractica { get; set; } = string.Empty;
         public string? Caracterizacion { get; set; }
-        public int DuracionHoras { get; set; } = 2;
+        public decimal DuracionHoras { get; set; } = 2m;
         public int Orden { get; set; } = 1;
 
         public virtual DocPea? Pea { get; set; }

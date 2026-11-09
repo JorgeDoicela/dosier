@@ -40,10 +40,10 @@ namespace dosier_application.Curriculum.Dtos
         public string? ReasoningEffort { get; set; } // "low" | "medium" | "high"
         public string? BaseUrlOverride { get; set; }
         public string? ApiKeyOverride { get; set; }
-        public int? CurrentHorasCD { get; set; }
-        public int? CurrentHorasAPE { get; set; }
-        public int? CurrentHorasTA { get; set; }
-        public int? CurrentTotalHoras { get; set; }
+        public decimal? CurrentHorasCD { get; set; }
+        public decimal? CurrentHorasAPE { get; set; }
+        public decimal? CurrentHorasTA { get; set; }
+        public decimal? CurrentTotalHoras { get; set; }
         public List<PeaDraftUnidadDto>? CurrentUnidades { get; set; }
         public string? CurrentObjetivo { get; set; }
         public List<PeaDraftPrerrequisitoDto>? CurrentPrerrequisitos { get; set; }
@@ -69,10 +69,10 @@ namespace dosier_application.Curriculum.Dtos
         public string? Model { get; set; }
         public string? BaseUrlOverride { get; set; }
         public string? ApiKeyOverride { get; set; }
-        public int? CurrentHorasCD { get; set; }
-        public int? CurrentHorasAPE { get; set; }
-        public int? CurrentHorasTA { get; set; }
-        public int? CurrentTotalHoras { get; set; }
+        public decimal? CurrentHorasCD { get; set; }
+        public decimal? CurrentHorasAPE { get; set; }
+        public decimal? CurrentHorasTA { get; set; }
+        public decimal? CurrentTotalHoras { get; set; }
     }
 
     public class PeaStructuredDraftDto
@@ -85,10 +85,10 @@ namespace dosier_application.Curriculum.Dtos
         public string BibliografiaBasica { get; set; } = string.Empty;
         public string BibliografiaConsulta { get; set; } = string.Empty;
 
-        public int TotalHorasAsignatura { get; set; }
-        public int HorasContactoDocente { get; set; }
-        public int HorasPracticoExperimental { get; set; }
-        public int HorasAutonomo { get; set; }
+        public decimal TotalHorasAsignatura { get; set; }
+        public decimal HorasContactoDocente { get; set; }
+        public decimal HorasPracticoExperimental { get; set; }
+        public decimal HorasAutonomo { get; set; }
         public string? CodigoCarrera { get; set; }
 
         public List<PeaDraftPrerrequisitoDto> Prerrequisitos { get; set; } = new();
@@ -111,17 +111,17 @@ namespace dosier_application.Curriculum.Dtos
         public int Num { get; set; }
         public string Titulo { get; set; } = string.Empty;
         public string Contenidos { get; set; } = string.Empty;
-        public int HorasCD { get; set; }
-        public int HorasAPE { get; set; }
-        public int HorasTA { get; set; }
-        public int HorasTotal => HorasCD + HorasAPE + HorasTA;
+        public decimal HorasCD { get; set; }
+        public decimal HorasAPE { get; set; }
+        public decimal HorasTA { get; set; }
+        public decimal HorasTotal => HorasCD + HorasAPE + HorasTA;
     }
 
     public class PeaDraftActividadPracticaDto
     {
         public int Unidad { get; set; }
         public string Nombre { get; set; } = string.Empty;
-        public int Horas { get; set; } = 2;
+        public decimal Horas { get; set; } = 2m;
         public string Escenario { get; set; } = string.Empty;
         public string Producto { get; set; } = string.Empty;
         public string Caracterizacion { get; set; } = string.Empty;
@@ -148,14 +148,14 @@ namespace dosier_application.Curriculum.Dtos
         public string ProviderUsed { get; set; } = string.Empty;
         public string ModelUsed { get; set; } = string.Empty;
         public string TargetSection { get; set; } = "all";
-        public int SigafiHorasCD { get; set; }
-        public int SigafiHorasAPE { get; set; }
-        public int SigafiHorasTA { get; set; }
-        public int SigafiTotalHoras { get; set; }
-        public int GeneratedHorasCD { get; set; }
-        public int GeneratedHorasAPE { get; set; }
-        public int GeneratedHorasTA { get; set; }
-        public int GeneratedTotalHoras { get; set; }
+        public decimal SigafiHorasCD { get; set; }
+        public decimal SigafiHorasAPE { get; set; }
+        public decimal SigafiHorasTA { get; set; }
+        public decimal SigafiTotalHoras { get; set; }
+        public decimal GeneratedHorasCD { get; set; }
+        public decimal GeneratedHorasAPE { get; set; }
+        public decimal GeneratedHorasTA { get; set; }
+        public decimal GeneratedTotalHoras { get; set; }
         public bool IsHoursExactMatch { get; set; }
         public bool IsBloomVerbValid { get; set; } = true;
         public string? BloomVerbDetected { get; set; }

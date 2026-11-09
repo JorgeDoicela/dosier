@@ -28,11 +28,11 @@ namespace dosier_application.Curriculum.Dtos
         public string Modalidad { get; set; } = "Presencial";
         public string? UnidadOrganizacion { get; set; }
         public string? SemestreNivel { get; set; }
-        public int TotalHorasAsignatura { get; set; }
+        public decimal TotalHorasAsignatura { get; set; }
         public decimal Creditos { get; set; }
-        public int HorasContactoDocente { get; set; }
-        public int HorasPracticoExperimental { get; set; }
-        public int HorasAutonomo { get; set; }
+        public decimal HorasContactoDocente { get; set; }
+        public decimal HorasPracticoExperimental { get; set; }
+        public decimal HorasAutonomo { get; set; }
         public string? ObjetivoAsignatura { get; set; }
         public string? MetodologiaEnsenanza { get; set; }
         public string? RecursosDidacticos { get; set; }
@@ -71,10 +71,10 @@ namespace dosier_application.Curriculum.Dtos
         public int IdPea { get; set; }
         public int NumeroUnidad { get; set; }
         public string NombreUnidad { get; set; } = string.Empty;
-        public int TotalHorasUnidad { get; set; }
-        public int HorasDocencia { get; set; }
-        public int HorasPracticoExp { get; set; }
-        public int HorasAutonomo { get; set; }
+        public decimal TotalHorasUnidad { get; set; }
+        public decimal HorasDocencia { get; set; }
+        public decimal HorasPracticoExp { get; set; }
+        public decimal HorasAutonomo { get; set; }
         public int Orden { get; set; }
         public List<PeaTemaDto> Temas { get; set; } = new List<PeaTemaDto>();
     }
@@ -112,7 +112,7 @@ namespace dosier_application.Curriculum.Dtos
         public int NumeroPractica { get; set; }
         public string NombrePractica { get; set; } = string.Empty;
         public string? Caracterizacion { get; set; }
-        public int DuracionHoras { get; set; } = 2;
+        public decimal DuracionHoras { get; set; } = 2m;
         public int Orden { get; set; }
     }
 
@@ -200,7 +200,7 @@ namespace dosier_application.Curriculum.Dtos
         public string Modalidad { get; set; } = "Presencial";
         public string? SemestreNivel { get; set; }
         public string? Paralelo { get; set; }
-        public int TotalHorasAsignatura { get; set; }
+        public decimal TotalHorasAsignatura { get; set; }
         public decimal Creditos { get; set; }
         public string Estado { get; set; } = "Borrador";
         public int Version { get; set; } = 1;

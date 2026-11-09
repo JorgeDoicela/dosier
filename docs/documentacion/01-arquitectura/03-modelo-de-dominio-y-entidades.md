@@ -62,11 +62,11 @@ classDiagram
         class DocPea {
             +int IdPea
             +string Uuid
-            +int TotalHorasAsignatura
+            +decimal TotalHorasAsignatura
             +decimal Creditos
-            +int HorasContactoDocente
-            +int HorasPracticoExperimental
-            +int HorasAutonomo
+            +decimal HorasContactoDocente
+            +decimal HorasPracticoExperimental
+            +decimal HorasAutonomo
             +string Estado
             +int Version
         }
@@ -74,10 +74,10 @@ classDiagram
             +int IdUnidad
             +int NumeroUnidad
             +string NombreUnidad
-            +int TotalHorasUnidad
-            +int HorasDocencia
-            +int HorasPracticoExp
-            +int HorasAutonomo
+            +decimal TotalHorasUnidad
+            +decimal HorasDocencia
+            +decimal HorasPracticoExp
+            +decimal HorasAutonomo
         }
         class DocPeaTema {
             +int IdTema
@@ -225,13 +225,13 @@ public class DocPea
     public string Modalidad { get; set; }
     public string? UnidadOrganizacion { get; set; }
     public string? SemestreNivel { get; set; }
-    public int TotalHorasAsignatura { get; set; }
+    public decimal TotalHorasAsignatura { get; set; }
     public decimal Creditos { get; set; }
 
     // Distribución Horaria Obligatoria
-    public int HorasContactoDocente { get; set; }
-    public int HorasPracticoExperimental { get; set; }
-    public int HorasAutonomo { get; set; }
+    public decimal HorasContactoDocente { get; set; }
+    public decimal HorasPracticoExperimental { get; set; }
+    public decimal HorasAutonomo { get; set; }
 
     // Secciones Didácticas y Pedagógicas
     public string? ObjetivoAsignatura { get; set; }

@@ -336,20 +336,20 @@ namespace dosier_infrastructure.Curriculum
             string modalidad = !string.IsNullOrWhiteSpace(pea.Modalidad) ? pea.Modalidad : "Presencial";
             string unidadOrg = !string.IsNullOrWhiteSpace(pea.UnidadOrganizacion) ? pea.UnidadOrganizacion : "Unidad Profesional";
 
-            int totalHoras = pea.TotalHorasAsignatura;
-            int horasCd = pea.HorasContactoDocente;
-            int horasApe = pea.HorasPracticoExperimental;
-            int horasTa = pea.HorasAutonomo;
+            decimal totalHoras = pea.TotalHorasAsignatura;
+            decimal horasCd = pea.HorasContactoDocente;
+            decimal horasApe = pea.HorasPracticoExperimental;
+            decimal horasTa = pea.HorasAutonomo;
 
             if (totalHoras <= 0 && pea.IdDetalleMalla.HasValue)
             {
                 var detalle = await _context.DetalleMallas.AsNoTracking().FirstOrDefaultAsync(d => d.IdDetalleMalla == pea.IdDetalleMalla, ct);
                 if (detalle != null)
                 {
-                    totalHoras = detalle.Horas ?? 0;
-                    horasCd = detalle.HorasDocente ?? 0;
-                    horasApe = decimal.ToInt32(detalle.HorasPracticoExperimental ?? 0m);
-                    horasTa = Math.Max(0, totalHoras - horasCd - horasApe);
+                    totalHoras = detalle.Horas ?? 0m;
+                    horasCd = detalle.HorasDocente ?? 0m;
+                    horasApe = detalle.HorasPracticoExperimental ?? 0m;
+                    horasTa = Math.Max(0m, totalHoras - horasCd - horasApe);
                 }
             }
 
@@ -361,10 +361,10 @@ namespace dosier_infrastructure.Curriculum
             // Si el docente ya configuró en el editor una distribución explícita (CD > 0 o APE > 0) que cuadra con el total, respetarla
             if (request.CurrentHorasCD.HasValue && request.CurrentHorasAPE.HasValue && request.CurrentHorasTA.HasValue)
             {
-                int reqCd = Math.Max(0, request.CurrentHorasCD.Value);
-                int reqApe = Math.Max(0, request.CurrentHorasAPE.Value);
-                int reqTa = Math.Max(0, request.CurrentHorasTA.Value);
-                if ((reqCd > 0 || reqApe > 0) && totalHoras > 0 && (reqCd + reqApe + reqTa == totalHoras))
+                decimal reqCd = Math.Max(0m, request.CurrentHorasCD.Value);
+                decimal reqApe = Math.Max(0m, request.CurrentHorasAPE.Value);
+                decimal reqTa = Math.Max(0m, request.CurrentHorasTA.Value);
+                if ((reqCd > 0 || reqApe > 0) && totalHoras > 0 && Math.Abs((reqCd + reqApe + reqTa) - totalHoras) < 0.01m)
                 {
                     horasCd = reqCd;
                     horasApe = reqApe;
@@ -374,23 +374,23 @@ namespace dosier_infrastructure.Curriculum
 
             if (totalHoras <= 0)
             {
-                horasCd = horasCd > 0 ? horasCd : 48;
-                horasApe = horasApe > 0 ? horasApe : 48;
-                horasTa = horasTa > 0 ? horasTa : 48;
+                horasCd = horasCd > 0 ? horasCd : 48m;
+                horasApe = horasApe > 0 ? horasApe : 48m;
+                horasTa = horasTa > 0 ? horasTa : 48m;
                 totalHoras = horasCd + horasApe + horasTa;
             }
             else if (horasCd <= 0 || horasApe <= 0)
             {
                 // En SIGAFI detallemallas muchas asignaturas solo registran el Total de Horas (ej. 144) con HorasDocente=0 y HorasAPE=0,
                 // lo que dejaba 0 CD / 0 APE / 144 TA. Distribuimos equitativamente en los 3 componentes normativos (CD, APE, TA).
-                int baseThird = totalHoras / 3;
+                decimal baseThird = Math.Floor((totalHoras / 3m) * 100m) / 100m;
                 horasCd = baseThird;
                 horasApe = baseThird;
                 horasTa = totalHoras - horasCd - horasApe;
             }
-            else if (horasCd + horasApe + horasTa != totalHoras)
+            else if (Math.Abs((horasCd + horasApe + horasTa) - totalHoras) >= 0.01m)
             {
-                horasTa = Math.Max(0, totalHoras - horasCd - horasApe);
+                horasTa = Math.Max(0m, totalHoras - horasCd - horasApe);
             }
 
             // Cargar prerrequisitos oficiales de la malla curricular en SIGAFI si existen
@@ -1105,9 +1105,9 @@ namespace dosier_infrastructure.Curriculum
                         System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
 
                     string contenidos = TryGetString(item, "contenidos", "Contenidos", "descripcion_subtemas");
-                    int cd = TryGetInt(item, "horas_cd", "horasCD", "HorasCD", "horas_docencia");
-                    int ape = TryGetInt(item, "horas_ape", "horasAPE", "HorasAPE", "horas_practica");
-                    int ta = TryGetInt(item, "horas_ta", "horasTA", "HorasTA", "horas_autonomo");
+                    decimal cd = TryGetDecimal(item, 0m, "horas_cd", "horasCD", "HorasCD", "horas_docencia");
+                    decimal ape = TryGetDecimal(item, 0m, "horas_ape", "horasAPE", "HorasAPE", "horas_practica");
+                    decimal ta = TryGetDecimal(item, 0m, "horas_ta", "horasTA", "HorasTA", "horas_autonomo");
 
                     if (!string.IsNullOrWhiteSpace(cleanTitulo) || !string.IsNullOrWhiteSpace(contenidos))
                     {
@@ -1116,9 +1116,9 @@ namespace dosier_infrastructure.Curriculum
                             Num = idx++,
                             Titulo = string.IsNullOrWhiteSpace(cleanTitulo) ? $"Fundamentos y Aplicaciones {idx - 1}" : cleanTitulo,
                             Contenidos = contenidos,
-                            HorasCD = Math.Max(0, cd),
-                            HorasAPE = Math.Max(0, ape),
-                            HorasTA = Math.Max(0, ta)
+                            HorasCD = Math.Max(0m, cd),
+                            HorasAPE = Math.Max(0m, ape),
+                            HorasTA = Math.Max(0m, ta)
                         });
                     }
                 }
@@ -1140,7 +1140,7 @@ namespace dosier_infrastructure.Curriculum
                     if (unidadNum <= 0) unidadNum = ((pIdx - 1) % Math.Max(1, result.Unidades.Count)) + 1;
 
                     string nombre = TryGetString(item, "nombre", "Nombre", "nombre_practica", "NombrePractica");
-                    int horas = TryGetInt(item, "horas", "Horas", "duracion_horas");
+                    decimal horas = TryGetDecimal(item, 0m, "horas", "Horas", "duracion_horas");
                     string escenario = TryGetString(item, "escenario", "Escenario");
                     string producto = TryGetString(item, "producto", "Producto");
                     string caract = TryGetString(item, "caracterizacion", "Caracterizacion");
@@ -1156,7 +1156,7 @@ namespace dosier_infrastructure.Curriculum
                         {
                             Unidad = unidadNum,
                             Nombre = nombre,
-                            Horas = horas > 0 ? horas : 2,
+                            Horas = horas > 0 ? horas : 2m,
                             Escenario = escenario,
                             Producto = producto,
                             Caracterizacion = caract
@@ -1241,10 +1241,10 @@ namespace dosier_infrastructure.Curriculum
             }
 
             // Resumen de validación matemática y secciones pobladas
-            int genCd = result.Unidades.Sum(u => u.HorasCD);
-            int genApe = result.Unidades.Sum(u => u.HorasAPE);
-            int genTa = result.Unidades.Sum(u => u.HorasTA);
-            int genTotal = genCd + genApe + genTa;
+            decimal genCd = result.Unidades.Sum(u => u.HorasCD);
+            decimal genApe = result.Unidades.Sum(u => u.HorasAPE);
+            decimal genTa = result.Unidades.Sum(u => u.HorasTA);
+            decimal genTotal = genCd + genApe + genTa;
 
             var generatedSections = new List<string>();
             if (!string.IsNullOrWhiteSpace(result.ObjetivoAsignatura)) generatedSections.Add("pea_objectives_section");
@@ -1294,7 +1294,7 @@ namespace dosier_infrastructure.Curriculum
                 GeneratedHorasAPE = genApe,
                 GeneratedHorasTA = genTa,
                 GeneratedTotalHoras = genTotal,
-                IsHoursExactMatch = genCd == ctx.HorasCD && genApe == ctx.HorasAPE && genTa == ctx.HorasTA,
+                IsHoursExactMatch = Math.Abs(genCd - ctx.HorasCD) < 0.01m && Math.Abs(genApe - ctx.HorasAPE) < 0.01m && Math.Abs(genTa - ctx.HorasTA) < 0.01m,
                 IsBloomVerbValid = isBloomValid,
                 BloomVerbDetected = detectedBloomVerb,
                 ArePracticesCompliant = arePracticesCompliant,
@@ -1328,16 +1328,16 @@ namespace dosier_infrastructure.Curriculum
 
         private static void ReconcileUnitHoursWithSigafi(
             List<PeaDraftUnidadDto> unidades,
-            int targetCd,
-            int targetApe,
-            int targetTa)
+            decimal targetCd,
+            decimal targetApe,
+            decimal targetTa)
         {
             if (unidades.Count == 0) return;
 
-            int sum = targetCd + targetApe + targetTa;
+            decimal sum = targetCd + targetApe + targetTa;
             if (sum > 0 && (targetCd <= 0 || targetApe <= 0))
             {
-                int third = sum / 3;
+                decimal third = Math.Floor((sum / 3m) * 100m) / 100m;
                 targetCd = third;
                 targetApe = third;
                 targetTa = sum - targetCd - targetApe;
@@ -1350,45 +1350,47 @@ namespace dosier_infrastructure.Curriculum
 
         private static void DistributeExactBucket(
             List<PeaDraftUnidadDto> unidades,
-            Func<PeaDraftUnidadDto, int> getter,
-            Action<PeaDraftUnidadDto, int> setter,
-            int targetTotal)
+            Func<PeaDraftUnidadDto, decimal> getter,
+            Action<PeaDraftUnidadDto, decimal> setter,
+            decimal targetTotal)
         {
             int count = unidades.Count;
             if (targetTotal <= 0)
             {
-                foreach (var u in unidades) setter(u, 0);
+                foreach (var u in unidades) setter(u, 0m);
                 return;
             }
 
-            int currentSum = unidades.Sum(getter);
-            if (currentSum == targetTotal) return;
+            decimal currentSum = unidades.Sum(getter);
+            if (Math.Abs(currentSum - targetTotal) < 0.001m) return;
 
             if (currentSum <= 0)
             {
-                int baseVal = targetTotal / count;
-                int rem = targetTotal % count;
-                for (int i = 0; i < count; i++)
+                decimal baseVal = Math.Floor((targetTotal / count) * 100m) / 100m;
+                decimal running = 0m;
+                for (int i = 0; i < count - 1; i++)
                 {
-                    setter(unidades[i], baseVal + (i < rem ? 1 : 0));
+                    setter(unidades[i], baseVal);
+                    running += baseVal;
                 }
+                setter(unidades[count - 1], Math.Max(0m, targetTotal - running));
                 return;
             }
 
-            int runningSum = 0;
+            decimal runningSum = 0m;
             for (int i = 0; i < count - 1; i++)
             {
-                double ratio = (double)getter(unidades[i]) / currentSum;
-                int proportional = (int)Math.Round(ratio * targetTotal);
+                decimal ratio = getter(unidades[i]) / currentSum;
+                decimal proportional = Math.Round(ratio * targetTotal, 2);
                 if (runningSum + proportional > targetTotal)
                 {
-                    proportional = Math.Max(0, targetTotal - runningSum);
+                    proportional = Math.Max(0m, targetTotal - runningSum);
                 }
                 setter(unidades[i], proportional);
                 runningSum += proportional;
             }
 
-            setter(unidades[count - 1], Math.Max(0, targetTotal - runningSum));
+            setter(unidades[count - 1], Math.Max(0m, targetTotal - runningSum));
         }
 
         private async Task<(string? ApiKey, string? Provider, string? Model, string? BaseUrl, string? ReasoningEffort)> GetUserConfigAsync(int idUsuario, CancellationToken ct)
@@ -1900,7 +1902,7 @@ namespace dosier_infrastructure.Curriculum
 
             if (practicas.Count == 0 && unidades.Count > 0 && ctx.HorasAPE > 0)
             {
-                int horasPerUnit = Math.Max(2, ctx.HorasAPE / unidades.Count);
+                decimal horasPerUnit = Math.Max(2m, Math.Round(ctx.HorasAPE / Math.Max(1, unidades.Count), 2));
                 foreach (var u in unidades)
                 {
                     practicas.Add(new PeaDraftActividadPracticaDto
@@ -2177,10 +2179,10 @@ namespace dosier_infrastructure.Curriculum
             public string SemestreNivel { get; set; } = string.Empty;
             public string Modalidad { get; set; } = "Presencial";
             public string UnidadOrganizacion { get; set; } = "Unidad Profesional";
-            public int HorasCD { get; set; }
-            public int HorasAPE { get; set; }
-            public int HorasTA { get; set; }
-            public int TotalHoras { get; set; }
+            public decimal HorasCD { get; set; }
+            public decimal HorasAPE { get; set; }
+            public decimal HorasTA { get; set; }
+            public decimal TotalHoras { get; set; }
             public List<string> SigafiPrerequisites { get; set; } = new();
             public List<string> RdasPerfilEgreso { get; set; } = new();
             public string? ModeloEducativoResumen { get; set; }

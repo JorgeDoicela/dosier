@@ -360,11 +360,11 @@ namespace dosier_infrastructure.Curriculum
             {
                 var total = entity.TotalHorasAsignatura;
                 var suma = entity.HorasContactoDocente + entity.HorasPracticoExperimental + entity.HorasAutonomo;
-                if (total <= 0)
+                if (total <= 0m)
                 {
                     throw new InvalidOperationException("Inconsistencia CACES: El total de horas de la asignatura no puede ser cero. Ingrese las horas reglamentarias en la Sección 1.");
                 }
-                if (suma != total)
+                if (Math.Abs(suma - total) > 0.05m)
                 {
                     throw new InvalidOperationException($"Inconsistencia CACES: La suma de componentes ({suma}h: {entity.HorasContactoDocente}h Docencia, {entity.HorasPracticoExperimental}h APE, {entity.HorasAutonomo}h Autónomo) no coincide con el total de {total}h de la asignatura. Verifique y cuadre la Sección 1 antes de enviar a revisión.");
                 }
@@ -585,13 +585,13 @@ namespace dosier_infrastructure.Curriculum
             }
 
             // 2.1 Blindaje CACES: Ningún rol puede firmar o avanzar un PEA con horas inconsistentes o en cero
-            int totalHorasVal = pea.TotalHorasAsignatura;
-            int sumaComponentesVal = pea.HorasContactoDocente + pea.HorasPracticoExperimental + pea.HorasAutonomo;
-            if (totalHorasVal <= 0)
+            decimal totalHorasVal = pea.TotalHorasAsignatura;
+            decimal sumaComponentesVal = pea.HorasContactoDocente + pea.HorasPracticoExperimental + pea.HorasAutonomo;
+            if (totalHorasVal <= 0m)
             {
                 throw new InvalidOperationException("Inconsistencia CACES: El total de horas de la asignatura no puede ser cero. Ingrese las horas reglamentarias en la Sección 1 antes de firmar.");
             }
-            if (sumaComponentesVal != totalHorasVal)
+            if (Math.Abs(sumaComponentesVal - totalHorasVal) > 0.05m)
             {
                 throw new InvalidOperationException($"Inconsistencia CACES: La suma de componentes ({sumaComponentesVal}h: {pea.HorasContactoDocente}h Docencia, {pea.HorasPracticoExperimental}h APE, {pea.HorasAutonomo}h Autónomo) no coincide con el total de {totalHorasVal}h de la asignatura. Verifique y cuadre la Sección 1 antes de firmar.");
             }
@@ -1122,11 +1122,11 @@ namespace dosier_infrastructure.Curriculum
             }
 
             string? unidadOrg = pea.UnidadOrganizacion;
-            int totalHoras = pea.TotalHorasAsignatura;
+            decimal totalHoras = pea.TotalHorasAsignatura;
             decimal creditos = pea.Creditos;
-            int horasCd = pea.HorasContactoDocente;
-            int horasApe = pea.HorasPracticoExperimental;
-            int horasTa = pea.HorasAutonomo;
+            decimal horasCd = pea.HorasContactoDocente;
+            decimal horasApe = pea.HorasPracticoExperimental;
+            decimal horasTa = pea.HorasAutonomo;
 
             if ((string.IsNullOrEmpty(unidadOrg) || totalHoras == 0) && pea.IdDetalleMalla.HasValue)
             {
@@ -1140,18 +1140,18 @@ namespace dosier_infrastructure.Curriculum
                     }
                     if (totalHoras == 0)
                     {
-                        totalHoras = detalle.Horas ?? 0;
-                        creditos = detalle.Creditos ?? 0;
-                        horasCd = detalle.HorasDocente ?? 0;
-                        horasApe = decimal.ToInt32(detalle.HorasPracticoExperimental ?? 0m);
-                        horasTa = Math.Max(0, totalHoras - horasCd - horasApe);
+                        totalHoras = detalle.Horas ?? 0m;
+                        creditos = detalle.Creditos ?? 0m;
+                        horasCd = detalle.HorasDocente ?? 0m;
+                        horasApe = detalle.HorasPracticoExperimental ?? 0m;
+                        horasTa = Math.Max(0m, totalHoras - horasCd - horasApe);
                     }
                 }
             }
 
             if (totalHoras > 0 && horasCd <= 0 && horasApe <= 0)
             {
-                int third = totalHoras / 3;
+                decimal third = Math.Floor((totalHoras / 3m) * 100m) / 100m;
                 horasCd = third;
                 horasApe = third;
                 horasTa = totalHoras - horasCd - horasApe;
@@ -1460,17 +1460,17 @@ namespace dosier_infrastructure.Curriculum
 
                 if (SafeTryGetProperty(root, new[] { "HorasContactoDocente", "horas_docencia", "horasContactoDocente", "horasDocencia", "horasCD" }, out var hcdProp))
                 {
-                    entity.HorasContactoDocente = SafeParseInt(hcdProp, entity.HorasContactoDocente);
+                    entity.HorasContactoDocente = SafeParseDecimal(hcdProp, entity.HorasContactoDocente);
                 }
 
                 if (SafeTryGetProperty(root, new[] { "HorasPracticoExperimental", "horas_practica", "horasPracticoExperimental", "horasPractica", "horasAPE" }, out var hpeProp))
                 {
-                    entity.HorasPracticoExperimental = SafeParseInt(hpeProp, entity.HorasPracticoExperimental);
+                    entity.HorasPracticoExperimental = SafeParseDecimal(hpeProp, entity.HorasPracticoExperimental);
                 }
 
                 if (SafeTryGetProperty(root, new[] { "HorasAutonomo", "horas_autonomo", "horasAutonomo", "horasTA" }, out var haProp))
                 {
-                    entity.HorasAutonomo = SafeParseInt(haProp, entity.HorasAutonomo);
+                    entity.HorasAutonomo = SafeParseDecimal(haProp, entity.HorasAutonomo);
                 }
 
                 // â”€â”€ 3. SincronizaciÃ³n Relacional: Unidades TemÃ¡ticas y Subtemas â”€â”€
@@ -1491,19 +1491,19 @@ namespace dosier_infrastructure.Curriculum
                         if (SafeTryGetProperty(uEl, new[] { "titulo", "Titulo", "NombreUnidad", "nombre_unidad", "nombreUnidad", "0" }, out var tP))
                             titulo = SafeParseString(tP);
 
-                        int cd = 0, ape = 0, ta = 0;
+                        decimal cd = 0m, ape = 0m, ta = 0m;
                         if (SafeTryGetProperty(uEl, new[] { "horasCD", "HorasCD", "horasDocencia", "horas_docencia", "horasDocente", "2" }, out var cdP))
-                            cd = SafeParseInt(cdP);
+                            cd = SafeParseDecimal(cdP);
                         if (SafeTryGetProperty(uEl, new[] { "horasAPE", "HorasAPE", "horasPracticoExp", "horas_practica", "horasPractica", "3" }, out var apeP))
-                            ape = SafeParseInt(apeP);
+                            ape = SafeParseDecimal(apeP);
                         if (SafeTryGetProperty(uEl, new[] { "horasTA", "HorasTA", "horasAutonomo", "horas_autonomo", "4" }, out var taP))
-                            ta = SafeParseInt(taP);
+                            ta = SafeParseDecimal(taP);
 
-                        int totalH = cd + ape + ta;
+                        decimal totalH = cd + ape + ta;
                         if (SafeTryGetProperty(uEl, new[] { "TotalHorasUnidad", "total_horas", "horasTotal", "HorasTotal", "totalHoras", "5" }, out var thuP))
                         {
-                            int thuV = SafeParseInt(thuP);
-                            if (thuV > 0) totalH = thuV;
+                            decimal thuV = SafeParseDecimal(thuP);
+                            if (thuV > 0m) totalH = thuV;
                         }
 
                         var temasList = new List<DocPeaTema>();
@@ -1613,9 +1613,9 @@ namespace dosier_infrastructure.Curriculum
                         if (SafeTryGetProperty(prEl, new[] { "nombre", "Nombre", "NombrePractica", "nombre_practica", "nombrePractica", "descripcion", "1" }, out var nmP))
                             nombre = SafeParseString(nmP);
 
-                        int horas = 2;
+                        decimal horas = 2m;
                         if (SafeTryGetProperty(prEl, new[] { "horas", "Horas", "DuracionHoras", "duracion_horas", "duracionHoras", "2" }, out var hP))
-                            horas = SafeParseInt(hP, 2);
+                            horas = SafeParseDecimal(hP, 2m);
 
                         string esc = "";
                         if (SafeTryGetProperty(prEl, new[] { "escenario", "Escenario" }, out var escP))

@@ -21,6 +21,7 @@ interface CoWorkFieldProps {
     readOnly?: boolean;
     mask?: 'date' | 'number';
     uppercase?: boolean;
+    allowDecimal?: boolean;
     min?: number;
     max?: number;
     minDate?: string;
@@ -298,6 +299,7 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
     readOnly,
     mask,
     uppercase,
+    allowDecimal,
     min,
     max,
     minDate,
@@ -512,15 +514,29 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
             newValue = maskDate(newValue, deletedSlash);
         }
         if ((type === 'number' || mask === 'number') && typeof newValue === 'string') {
-            // Solo permitir números enteros no negativos
-            newValue = newValue.replace(/\D/g, '');
-            if (newValue.length > 1 && newValue.startsWith('0')) {
-                newValue = newValue.replace(/^0+/, '') || '0';
-            }
-            if (max !== undefined && newValue !== '') {
-                const parsed = parseInt(newValue, 10);
-                if (parsed > max) {
-                    newValue = String(max);
+            if (allowDecimal) {
+                newValue = newValue.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                const parts = newValue.split('.');
+                if (parts.length > 2) {
+                    newValue = parts[0] + '.' + parts.slice(1).join('');
+                }
+                if (max !== undefined && newValue !== '' && !newValue.endsWith('.')) {
+                    const parsed = parseFloat(newValue);
+                    if (!isNaN(parsed) && parsed > max) {
+                        newValue = String(max);
+                    }
+                }
+            } else {
+                // Solo permitir números enteros no negativos
+                newValue = newValue.replace(/\D/g, '');
+                if (newValue.length > 1 && newValue.startsWith('0')) {
+                    newValue = newValue.replace(/^0+/, '') || '0';
+                }
+                if (max !== undefined && newValue !== '') {
+                    const parsed = parseInt(newValue, 10);
+                    if (parsed > max) {
+                        newValue = String(max);
+                    }
                 }
             }
         }
@@ -674,8 +690,8 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                     <input
                         {...commonProps}
                         type="text"
-                        inputMode={type === 'number' || mask === 'number' ? 'numeric' : undefined}
-                        pattern={type === 'number' || mask === 'number' ? '[0-9]*' : undefined}
+                        inputMode={type === 'number' || mask === 'number' ? (allowDecimal ? 'decimal' : 'numeric') : undefined}
+                        pattern={type === 'number' || mask === 'number' ? (allowDecimal ? '[0-9]*[.,]?[0-9]*' : '[0-9]*') : undefined}
                         value={displayValue}
                         onChange={handleChange}
                         onFocus={(e) => {
@@ -698,6 +714,9 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                                     'Delete', 'Home', 'End'
                                 ];
                                 if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+                                    return;
+                                }
+                                if (allowDecimal && (e.key === '.' || e.key === ',')) {
                                     return;
                                 }
                                 if (!/^[0-9]$/.test(e.key)) {

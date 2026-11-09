@@ -191,19 +191,13 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 ### 2.8. Módulo Centro de Solicitudes (`src/pages/Solicitudes/` - `/solicitudes`)
 
-Portal unificado de gobernanza y canal institucional para la tramitación de incidencias y soporte técnico:
+Portal unificado y canal institucional para la tramitación de requerimientos, soporte técnico e incidencias:
 
 * **Arquitectura de Maquetación (Modern Enterprise Docs):**
-  * **Encabezado Institucional (`SolicitudesHeader.tsx`):** Título directo con descripción operativa y accesos directos al portafolio y buzón de incidencias.
-  * **Pestañas sobre Riel Plano Continuo (`SolicitudesTabs.tsx`):** Conmutación sin cajas encapsuladas entre *Canales y trámites* e *Historial y resoluciones*.
+  * **Encabezado Institucional (`SolicitudesHeader.tsx`):** Título directo con descripción operativa y accesos directos al portafolio y al buzón de incidencias.
   * **Tarjetas Bento de Trámites (`SolicitudBentoCard.tsx`):** Superficies 100% sólidas sin transparencias, iconografía vectorial desnuda de Lucide, especificación técnica clave-valor (`<dl>`) con SLA de resolución e instancia responsable (cero KPIs gigantes), y botón de ejecución directa.
-  * **Tabla de Historial y Resoluciones (`SolicitudesHistoryTable.tsx`):** Registro de solicitudes e incidencias reales consumidas desde el backend (`/api/feedback/my` o `/api/feedback`), con puntos discretos de estado (`w-1.5 h-1.5 rounded-full`), divisores tenues y buscador reactivo.
 * **Canales Operativos:**
-  * **Buzón de Incidencias Curriculares:** Acceso directo a `/incidencias` para tramitar novedades en el distributivo SIGAFI, errores de acreditación CACES o fallas en firmas digitales mediante tickets formales (`INC-XXXX`).
-    * *Apertura de Convocatoria Extraordinaria:* Activación de calendarios excepcionales.
-  * **Administrador (`DOSIER_ADMIN`):**
-    * *Parámetros Normativos de Solicitudes:* Enlace directo a `/configuracion?tab=parametros` para fijar límites de días y políticas de clonación.
-    * *Administración Global:* Auditoría de peticiones y consola de soporte técnico.
+  * **Buzón de Incidencias Curriculares:** Acceso directo a `/incidencias` para tramitar novedades en el distributivo SIGAFI, errores de acreditación CACES o fallas en firmas digitales mediante tickets formales (`INC-XXXX`). El seguimiento completo, el chat bidireccional y las evidencias se gestionan en su vista dedicada.
 
 ---
 

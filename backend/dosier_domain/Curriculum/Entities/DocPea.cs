@@ -24,12 +24,12 @@ namespace dosier_domain.Curriculum.Entities
         public string Modalidad { get; set; } = "Presencial";
         public string? UnidadOrganizacion { get; set; }
         public string? SemestreNivel { get; set; }
-        public int TotalHorasAsignatura { get; set; }
+        public decimal TotalHorasAsignatura { get; set; }
         public decimal Creditos { get; set; }
 
-        public int HorasContactoDocente { get; set; }
-        public int HorasPracticoExperimental { get; set; }
-        public int HorasAutonomo { get; set; }
+        public decimal HorasContactoDocente { get; set; }
+        public decimal HorasPracticoExperimental { get; set; }
+        public decimal HorasAutonomo { get; set; }
 
         public string? ObjetivoAsignatura { get; set; }
         public string? MetodologiaEnsenanza { get; set; }

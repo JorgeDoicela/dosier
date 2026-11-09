@@ -63,13 +63,13 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
     const labelCarrera = c.customLabel_showCarrera || 'Carrera';
 
     // Balance de carga horaria CACES / RRA Art. 21
-    const totalHoras = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? 0);
-    const horasCd = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
-    const horasApe = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
-    const horasTa = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
-    const sumaHoras = horasCd + horasApe + horasTa;
-    const diffHoras = sumaHoras - totalHoras;
-    const isHorasBalanced = totalHoras > 0 && sumaHoras === totalHoras;
+    const totalHoras = parseFloat(String(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? 0)) || 0;
+    const horasCd = parseFloat(String(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0)) || 0;
+    const horasApe = parseFloat(String(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0)) || 0;
+    const horasTa = parseFloat(String(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0)) || 0;
+    const sumaHoras = Math.round((horasCd + horasApe + horasTa) * 100) / 100;
+    const diffHoras = Math.round((sumaHoras - totalHoras) * 100) / 100;
+    const isHorasBalanced = totalHoras > 0 && Math.abs(diffHoras) < 0.01;
     const horasSemanales = Number(formData?.HorasSemanales ?? formData?.horas_semanales ?? 0);
 
     const aplicarDistribucionNormativa = () => {
@@ -229,11 +229,12 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         name="TotalHorasAsignatura"
                         cowork={cowork}
                         type="text"
+                        allowDecimal={true}
                         label="Número de horas de la asignatura"
                         placeholder="0"
                         readOnly={readOnly || totalHoras > 0}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
-                        onValueChange={(val) => onUpdate('TotalHorasAsignatura', Number(val) || 0)}
+                        onValueChange={(val) => onUpdate('TotalHorasAsignatura', parseFloat(val) || 0)}
                     />
                 </div>
                 <div>
@@ -291,12 +292,13 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                     name="HorasContactoDocente"
                                     cowork={cowork}
                                     type="number"
+                                    allowDecimal={true}
                                     min={0}
                                     max={totalHoras > 0 ? totalHoras : 999}
                                     placeholder="0"
                                     readOnly={readOnly}
                                     className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3] select-all cursor-pointer"
-                                    onValueChange={(val) => onUpdate('HorasContactoDocente', Math.max(0, parseInt(val, 10) || 0))}
+                                    onValueChange={(val) => onUpdate('HorasContactoDocente', Math.max(0, parseFloat(val) || 0))}
                                 />
                             </div>
                         </div>
@@ -311,12 +313,13 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                     name="HorasPracticoExperimental"
                                     cowork={cowork}
                                     type="number"
+                                    allowDecimal={true}
                                     min={0}
                                     max={totalHoras > 0 ? totalHoras : 999}
                                     placeholder="0"
                                     readOnly={readOnly}
                                     className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3] select-all cursor-pointer"
-                                    onValueChange={(val) => onUpdate('HorasPracticoExperimental', Math.max(0, parseInt(val, 10) || 0))}
+                                    onValueChange={(val) => onUpdate('HorasPracticoExperimental', Math.max(0, parseFloat(val) || 0))}
                                 />
                             </div>
                         </div>
@@ -331,12 +334,13 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                     name="HorasAutonomo"
                                     cowork={cowork}
                                     type="number"
+                                    allowDecimal={true}
                                     min={0}
                                     max={totalHoras > 0 ? totalHoras : 999}
                                     placeholder="0"
                                     readOnly={readOnly}
                                     className="w-full text-center font-bold font-mono text-xs sm:text-sm text-text-main bg-bg-deep border border-border-thin rounded-lg py-2 outline-none focus:border-[#0070f3] select-all cursor-pointer"
-                                    onValueChange={(val) => onUpdate('HorasAutonomo', Math.max(0, parseInt(val, 10) || 0))}
+                                    onValueChange={(val) => onUpdate('HorasAutonomo', Math.max(0, parseFloat(val) || 0))}
                                 />
                             </div>
                         </div>

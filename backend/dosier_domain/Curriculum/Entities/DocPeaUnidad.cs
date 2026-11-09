@@ -10,10 +10,10 @@ namespace dosier_domain.Curriculum.Entities
         public int IdPea { get; set; }
         public int NumeroUnidad { get; set; }
         public string NombreUnidad { get; set; } = string.Empty;
-        public int TotalHorasUnidad { get; set; }
-        public int HorasDocencia { get; set; }
-        public int HorasPracticoExp { get; set; }
-        public int HorasAutonomo { get; set; }
+        public decimal TotalHorasUnidad { get; set; }
+        public decimal HorasDocencia { get; set; }
+        public decimal HorasPracticoExp { get; set; }
+        public decimal HorasAutonomo { get; set; }
         public int Orden { get; set; } = 1;
 
         public virtual DocPea? Pea { get; set; }

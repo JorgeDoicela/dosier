@@ -372,10 +372,10 @@ namespace dosier_api.Controllers
             [FromForm(Name = "model")] string? model,
             [FromForm(Name = "base_url_override")] string? baseUrlOverride,
             [FromForm(Name = "api_key_override")] string? apiKeyOverride,
-            [FromForm(Name = "current_horas_cd")] int? currentHorasCd,
-            [FromForm(Name = "current_horas_ape")] int? currentHorasApe,
-            [FromForm(Name = "current_horas_ta")] int? currentHorasTa,
-            [FromForm(Name = "current_total_horas")] int? currentTotalHoras,
+            [FromForm(Name = "current_horas_cd")] decimal? currentHorasCd,
+            [FromForm(Name = "current_horas_ape")] decimal? currentHorasApe,
+            [FromForm(Name = "current_horas_ta")] decimal? currentHorasTa,
+            [FromForm(Name = "current_total_horas")] decimal? currentTotalHoras,
             CancellationToken ct)
         {
             if (file == null || file.Length == 0)
