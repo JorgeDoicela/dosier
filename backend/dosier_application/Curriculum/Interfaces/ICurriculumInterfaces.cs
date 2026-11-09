@@ -34,6 +34,14 @@ namespace dosier_application.Curriculum.Interfaces
         Task<ExpedienteCurricularDto?> GetByAsignaturaPeriodoAsync(int idAsignatura, string idPeriodo);
         Task<ExpedienteCurricularDto> ObtenerOCrearExpedienteAsync(int idAsignacion, string? idProfesor);
         Task<List<ExpedienteCurricularDto>> ListarExpedientesPeriodoAsync(string idPeriodo, int? idCarrera = null);
+
+        // Salas Curriculares de Carrera en Tiempo Real y Pre-PEA
+        Task<SalaCarreraEstadoDto> GetEstadoSalaCarreraAsync(int idCarrera, string idPeriodo, string? idUsuario);
+        Task<bool> ConmutarEstadoSalaCarreraAsync(int idCarrera, string idPeriodo, bool activar, string? tema, string idUsuario);
+        Task<BorradorPrePeaDto?> GetBorradorPrePeaAsync(int idExpediente);
+        Task<BorradorPrePeaDto> GuardarBorradorPrePeaAsync(int idExpediente, BorradorPrePeaDto dto, string idUsuario);
+        Task<PeaDto> AplicarBorradorASalaPeaAsync(int idExpediente, int? idPea, string idUsuario);
+        Task<(byte[] PdfBytes, string FileName, string TraceabilityCode)> GenerarActaAcuerdosCarreraAsync(int idCarrera, string idPeriodo, string idUsuario);
     }
 
     public interface IPeaService

@@ -15,7 +15,9 @@ import {
     GraduationCap,
     LayoutGrid,
     List,
-    Info
+    Info,
+    Radio,
+    Users
 } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { GeistSelect } from '../../components/Common/GeistSelect';
@@ -643,47 +645,63 @@ export const MisAsignaturasPage: React.FC = () => {
                                 </div>
 
                                 {/* Botón de Acción Principal */}
-                                <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-zinc-900">
-                                    {isExtra ? (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-                                            <Info className="w-3.5 h-3.5 text-zinc-400" />
-                                            No requiere PEA
-                                        </span>
-                                    ) : tienePea ? (
+                                <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-zinc-900">
+                                    {materia.id_carrera ? (
                                         <button
                                             type="button"
+                                            title="Ingresar a la Sala Curricular de la carrera para co-diseñar borradores y planes"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleContinuarPea(materia);
+                                                navigate(`/documentacion/carrera/${materia.id_carrera}/sala-curricular?periodo=${selectedPeriodo}`);
                                             }}
-                                            className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                            className="text-xs text-zinc-500 hover:text-[#0070f3] dark:text-zinc-400 dark:hover:text-blue-400 inline-flex items-center gap-1.5 px-2 py-1 rounded transition-colors cursor-pointer"
                                         >
-                                            <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
-                                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                            <Users className="w-3.5 h-3.5" />
+                                            <span className="font-medium">Sala Curricular</span>
                                         </button>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleCrearPea(materia);
-                                            }}
-                                            disabled={isCreating}
-                                            className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
-                                        >
-                                            {isCreating ? (
-                                                <>
-                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                    <span>Inicializando...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <PlusCircle className="w-3.5 h-3.5" />
-                                                    <span>Elaborar PEA</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    )}
+                                    ) : <div />}
+                                    <div className="flex items-center gap-2">
+                                        {isExtra ? (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
+                                                <Info className="w-3.5 h-3.5 text-zinc-400" />
+                                                No requiere PEA
+                                            </span>
+                                        ) : tienePea ? (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleContinuarPea(materia);
+                                                }}
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                            >
+                                                <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
+                                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCrearPea(materia);
+                                                }}
+                                                disabled={isCreating}
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                                            >
+                                                {isCreating ? (
+                                                    <>
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        <span>Inicializando...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <PlusCircle className="w-3.5 h-3.5" />
+                                                        <span>Elaborar PEA</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -775,6 +793,17 @@ export const MisAsignaturasPage: React.FC = () => {
                                         </td>
                                         <td className="py-3 px-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                                                {m.id_carrera ? (
+                                                    <button
+                                                        type="button"
+                                                        title="Ingresar a la Sala Curricular de la Carrera"
+                                                        onClick={() => navigate(`/documentacion/carrera/${m.id_carrera}/sala-curricular?periodo=${selectedPeriodo}`)}
+                                                        className="px-2.5 py-1.5 text-xs font-medium rounded-md text-zinc-600 dark:text-zinc-300 hover:text-[#0070f3] dark:hover:text-blue-400 bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                                                    >
+                                                        <Users className="w-3.5 h-3.5" />
+                                                        <span>Sala</span>
+                                                    </button>
+                                                ) : null}
                                                 {isExtra ? (
                                                     <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-slate-200 dark:border-zinc-800 inline-flex items-center gap-1">
                                                         <Info className="w-3 h-3 text-zinc-400" />

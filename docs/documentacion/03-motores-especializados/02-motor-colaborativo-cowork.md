@@ -55,7 +55,7 @@ El estado del documento colaborativo se almacena periódicamente en la tabla `do
 ```sql
 CREATE TABLE doc_cowork_documentos (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    entidad_uuid VARCHAR(36) NOT NULL,    -- Identificador de la DocumentInstance / PEA
+    entidad_uuid VARCHAR(36) NOT NULL,    -- Identificador de la DocumentInstance / PEA o Room Carrera
     campo_nombre VARCHAR(100) NOT NULL,   -- Nombre de la sección (ej. 'resultados_aprendizaje', 'contenidos')
     content_html LONGTEXT NULL,           -- Marcado HTML resultante de la co-redacción
     updated_at_utc DATETIME NOT NULL,
@@ -64,3 +64,16 @@ CREATE TABLE doc_cowork_documentos (
 ```
 
 Cuando se solicita la emisión o compilación oficial en PDF, `DocumentDataOrchestrator` lee las secciones almacenadas en `doc_cowork_documentos` y las inyecta en el payload de datos maestro que consume `DocumentEngine`.
+
+---
+
+## 5. Salas Curriculares por Carrera y Sincronización Pre-PEA
+
+### 5.1. Ámbito de Sala Curricular (`carrera_{idCarrera}_{idPeriodo}`)
+El motor colaborativo amplía su alcance de la asignatura individual a la **Sala Curricular de Carrera**:
+* **Topología de Grupo:** Los docentes de la carrera y el Coordinador se conectan en una sala única con clave polimórfica `carrera_{idCarrera}_{idPeriodo}`.
+* **Control de Sesión:** El Coordinador modera la sala abriendo o pausando la sesión colaborativa (`sala_colaborativa_activa` en `doc_expedientes_curriculares`).
+* **Co-diseño Pre-PEA:** Permite estructurar de forma previa y conjunta la justificación curricular, articulación de asignaturas con el Perfil de Egreso CES, unidades curriculares y metodologías sugeridas.
+* **Inyección de Borrador al PEA:** Con un solo clic (`POST /api/expedientes-curriculares/carrera/{id}/periodo/{p}/asignatura/{m}/aplicar-pea`), el borrador acordado en la sala se mapea e inyecta directamente como versión base en las secciones correspondientes del PEA oficial (`doc_peas`), preservando auditoría y trazabilidad completa.
+* **Acta de Armonización Curricular:** Al concluir las sesiones de trabajo, el motor documental genera automáticamente el acta formal en PDF (`ACTA_ARMONIZACION_CARRERA`) con los acuerdos y modificaciones consensuadas por el cuerpo docente.
+

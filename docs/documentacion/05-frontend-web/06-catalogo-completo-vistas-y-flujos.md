@@ -74,6 +74,12 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 * **`SupervisionCurricularPage.tsx` (`/documentacion`):**
   * Vista matriz de supervisión curricular que despliega directamente el componente `<PeaSupervisionTray>`, permitiendo a coordinadores de carrera, coordinadores académicos y vicerrectorado supervisar en tiempo real el avance institucional de los PEAs, filtrar por período y carrera, y acceder al espacio de trabajo documental con las firmas y validaciones normativas vigentes.
+* **`SalaCarreraPage.tsx` (`/documentacion/carrera/:idCarrera/sala-curricular` y `/salas-curriculares/:idCarrera`):**
+  * Entorno de armonización curricular colegiada y co-diseño para el claustro docente y la Coordinación de Carrera.
+  * **Estructura y Componentes:**
+    * *Columna Izquierda (`CareerProfileSidebar`):* Inspección del Perfil de Egreso CES de la carrera, resultados de aprendizaje del egresado (RDA) y matriz de tributación al perfil.
+    * *Espacio Central Amplio:* Matriz y catálogo de asignaturas de la malla organizadas por nivel/semestre con badges normativos de estado. Cada tarjeta ofrece acceso directo mediante el botón "Abrir en Pantalla Completa" que transiciona fluidamente al editor maestro (`DocumentWorkspace` con `DOSIERBuilderShell`), garantizando espacio holgado, las 11 secciones oficiales del PEA, motor colaborativo y retorno limpio a la sala curricular.
+    * *Columna Derecha (`LivePresenceSidebar`):* Panel de moderación y presencia en vivo con control de apertura/pausa de sesión (`Conmutar Sala`), lista de docentes en línea vía Awareness CRDT, hilo de debate colaborativo y compilación automática del Acta de Armonización Curricular en PDF.
 * **`MisAsignaturasPage.tsx` (`/documentacion/mis-proyectos`):**
   * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI y el estado de formulación de cada PEA.
   * Incorpora discriminación inteligente entre asignaturas curriculares (conducentes a PEA) y actividades institucionales de acompañamiento (PAIT, Clubes, Actividad Física), indicando horas semanales de distributivo y badge *"No requiere PEA"*. Incluye filtro tripartito (`Toda la Carga`, `Curriculares`, `Acompañamiento`) y alternancia de vistas en Cuadros y Lista.
@@ -211,4 +217,20 @@ Portal unificado de gobernanza y ventanilla única para la tramitación de petic
   * **Administrador (`DOSIER_ADMIN`):**
     * *Parámetros Normativos de Solicitudes:* Enlace directo a `/configuracion?tab=parametros` para fijar límites de días y políticas de clonación.
     * *Administración Global:* Auditoría de peticiones y consola de soporte técnico.
+
+---
+
+### 2.9. Módulo de Salas Curriculares Colegiadas por Carrera (`/salas-curriculares` y `/salas-curriculares/:idCarrera`)
+
+Módulo de trabajo cooperativo y armonización curricular colegiada por carrera antes de la formulación individual del PEA institucional:
+
+* **Acceso Directo a Pantalla Completa (`SalaCarreraPage.tsx` - `/salas-curriculares`):**
+  * Sin pantallas intermedias: al ingresar a "Salas Curriculares" se carga inmediatamente el espacio de trabajo colegiado a pantalla completa sobre **`DOSIERBuilderShell`**.
+  * Selector superior integrado para alternar de asignatura de la malla en tiempo real y selector de carrera/período.
+* **Estructura Operativa de Co-Diseño (`AsignaturaCoDesignWorkspace.tsx`):**
+  * **Navegación Izquierda (`BuilderNavigationSidebar`):** Se pliega con `<` y se expande mediante la pestaña flotante inteligente (`BuilderFloatingTab`) con las 6 secciones de armonización (Propuesta y Malla, Objetivo, Unidades, RDAs, Metodología y Perfil CES).
+  * **Lienzo Central de Co-Creación:** Espacio amplio de redacción colegiada sin scrolls comprimidos.
+  * **Colaboración Derecha (`CollaborationSidebar`):** Se oculta con `>` y permite debatir en vivo mediante el motor CRDT y sockets de CoWork.
+  * **Gobernanza:** Botón para generar y descargar el **Acta de Armonización Curricular en PDF** y botón para **Aplicar al PEA Oficial** con un solo clic.
+
 

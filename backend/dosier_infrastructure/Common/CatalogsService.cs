@@ -60,43 +60,61 @@ namespace dosier_infrastructure.Common
             if (string.IsNullOrWhiteSpace(idReferencia))
                 return new List<CarreraCatalogoDto>();
 
+            var trimmedRef = idReferencia.Trim();
             var dbUser = await _context.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.IdSigafi.Trim() == idReferencia.Trim());
+                .FirstOrDefaultAsync(u => u.IdSigafi.Trim() == trimmedRef);
             if (dbUser == null)
                 return new List<CarreraCatalogoDto>();
 
             var currentPeriod = await _periodoResolver.GetPeriodoActivoAsync();
+            var careerIds = new HashSet<int>();
 
+            // 1. Carreras como profesor asignado en el período
             if (dbUser.TablaSigafi == "profesor")
             {
                 var profCareersQuery = _context.ProfesoresCarrerasPeriodos
                     .AsNoTracking()
-                    .Include(pc => pc.IdCarreraNavigation)
-                    .Where(pc => pc.IdProfesor.Trim() == idReferencia.Trim()
-                                 && pc.EsActivo == 1
-                                 && pc.IdCarreraNavigation != null);
+                    .Where(pc => pc.IdProfesor.Trim() == trimmedRef && pc.EsActivo == 1);
 
                 if (currentPeriod != null)
                     profCareersQuery = profCareersQuery.Where(pc => pc.IdPeriodo == currentPeriod.IdPeriodo);
 
-                return await profCareersQuery
-                    .Select(pc => pc.IdCarreraNavigation!)
-                    .Distinct()
-                    .OrderBy(c => c.Carrera1)
-                    .Select(c => new CarreraCatalogoDto
-                    {
-                        IdCarrera = c.IdCarrera,
-                        Carrera1 = c.Carrera1 ?? string.Empty,
-                        AliasCarrera = c.AliasCarrera,
-                        CodigoCases = c.CodigoCases,
-                        EsInstituto = c.EsInstituto,
-                        Activa = c.Activa
-                    })
+                var profIds = await profCareersQuery
+                    .Where(pc => pc.IdCarrera != null)
+                    .Select(pc => pc.IdCarrera!.Value)
                     .ToListAsync();
+                foreach (var id in profIds)
+                    careerIds.Add(id);
             }
 
-            return new List<CarreraCatalogoDto>();
+            // 2. Carreras como Coordinador de Carrera en doc_autoridades_curriculares
+            var coordCareers = await _context.DocAutoridadesCurriculares
+                .AsNoTracking()
+                .Where(a => a.IdSigafi.Trim() == trimmedRef && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                .Select(a => a.IdCarrera!.Value)
+                .ToListAsync();
+
+            foreach (var id in coordCareers)
+                careerIds.Add(id);
+
+            if (!careerIds.Any())
+                return new List<CarreraCatalogoDto>();
+
+            return await _context.Carreras
+                .AsNoTracking()
+                .Where(c => careerIds.Contains(c.IdCarrera))
+                .OrderBy(c => c.Carrera1)
+                .Select(c => new CarreraCatalogoDto
+                {
+                    IdCarrera = c.IdCarrera,
+                    Carrera1 = c.Carrera1 ?? string.Empty,
+                    AliasCarrera = c.AliasCarrera,
+                    CodigoCases = c.CodigoCases,
+                    EsInstituto = c.EsInstituto,
+                    Activa = c.Activa
+                })
+                .ToListAsync();
         }
 
         public async Task<List<PeriodoCatalogoDto>> GetPeriodosAsync()

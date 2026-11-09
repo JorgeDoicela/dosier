@@ -105,6 +105,38 @@ namespace dosier_infrastructure.Collaboration
                 }
             }
 
+            // Validación de acceso a Salas Curriculares de Carrera en tiempo real
+            bool isCareerRoom = documentId.StartsWith("carrera_") || documentId.StartsWith("sala_carrera_");
+            if (isCareerRoom)
+            {
+                var parts = documentId.Split('_');
+                if (parts.Length >= 2 && int.TryParse(parts[1], out int idCarrera))
+                {
+                    var mallasCarrera = await _db.Mallas
+                        .AsNoTracking()
+                        .Where(m => m.IdCarrera == idCarrera)
+                        .Select(m => m.IdMalla)
+                        .ToListAsync();
+
+                    var asigIdsCarrera = await _db.DetalleMallas
+                        .AsNoTracking()
+                        .Where(dm => mallasCarrera.Contains(dm.IdMalla))
+                        .Select(dm => dm.IdAsignatura)
+                        .Distinct()
+                        .ToListAsync();
+
+                    bool isAssignedDocente = await _db.AsignacionesProfesores
+                        .AsNoTracking()
+                        .AnyAsync(ap => ap.IdProfesor == user.IdSigafi && asigIdsCarrera.Contains(ap.IdAsignatura));
+
+                    if (!isCurricularAuthority && !isAssignedDocente)
+                    {
+                        _logger.LogWarning("[HUB] Access Denied: User {User} no tiene asignación docente ni rol en Carrera {IdCarrera}", username, idCarrera);
+                        throw new HubException("No tienes permisos para unirte a la sala curricular de esta carrera.");
+                    }
+                }
+            }
+
             var instanceToCheck = await _db.DocumentInstances
                 .AsNoTracking()
                 .FirstOrDefaultAsync(i => i.Uuid == instanceUuid);

@@ -22,17 +22,11 @@ import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import {
     isPeaBorrador,
     isPeaEnRevision,
-    isPeaAvalado,
     getPeaStatusDescriptor
 } from '../../Curriculum/utils/peaStatusWorkflow';
 import { 
     Search, 
-    Filter, 
-    BookOpen, 
-    Clock, 
     CheckCircle2, 
-    AlertTriangle, 
-    ShieldCheck, 
     RefreshCw,
     LayoutGrid,
     List,
@@ -64,19 +58,33 @@ export const CoordCarreraDashboard: React.FC = () => {
     const [isRecordatorioOpen, setIsRecordatorioOpen] = useState(false);
     const [auditoriaPea, setAuditoriaPea] = useState<PeaBandejaItemDto | null>(null);
 
+    const esSuperAutoridad = useMemo(() => {
+        return !!(user?.administrador || 
+            user?.roles?.includes('DOSIER_ADMIN') || 
+            user?.roles?.includes('DOSIER_VICERRECTOR') || 
+            user?.roles?.includes('DOSIER_COORD_ACAD'));
+    }, [user]);
+
     // Cargar catálogos iniciales
     useEffect(() => {
         let isMounted = true;
         Promise.all([
+            curriculumProjectService.getDocenteCarreras().catch(() => []),
             curriculumProjectService.getCarrerasInstitucionales().catch(() => []),
             docenteAsignaturasService.getPeriodosAcademicos().catch(() => [])
-        ]).then(([carrerasList, periodosList]) => {
+        ]).then(([misCarrerasList, todasCarrerasList, periodosList]) => {
             if (!isMounted) return;
-            setCarreras(carrerasList);
+
+            // Para coordinadores de carrera, limitar estrictamente a sus carreras asignadas
+            const carrerasDisponibles = (!esSuperAutoridad && misCarrerasList.length > 0)
+                ? misCarrerasList
+                : (todasCarrerasList.length > 0 ? todasCarrerasList : misCarrerasList);
+
+            setCarreras(carrerasDisponibles);
             setPeriodos(periodosList);
 
-            if (carrerasList.length > 0) {
-                const primerId = carrerasList[0].id_carrera ?? carrerasList[0].idCarrera;
+            if (carrerasDisponibles.length > 0) {
+                const primerId = carrerasDisponibles[0].id_carrera ?? carrerasDisponibles[0].idCarrera;
                 if (primerId) setSelectedCarreraId(primerId);
             }
 
@@ -86,7 +94,7 @@ export const CoordCarreraDashboard: React.FC = () => {
             }
         });
         return () => { isMounted = false; };
-    }, []);
+    }, [esSuperAutoridad]);
 
     // Cargar PEAs de la bandeja según filtros
     const fetchPeas = useCallback(async () => {
@@ -197,25 +205,31 @@ export const CoordCarreraDashboard: React.FC = () => {
 
                 <div className="flex flex-wrap items-center gap-2">
                     {/* Selector de Carrera Real de SIGAFI */}
-                    <select
-                        value={selectedCarreraId}
-                        onChange={e => {
-                            const val = e.target.value;
-                            setSelectedCarreraId(val === 'todas' ? 'todas' : Number(val));
-                        }}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                    >
-                        <option value="todas">Todas las Carreras</option>
-                        {carreras.map(c => {
-                            const id = c.id_carrera ?? c.idCarrera ?? 0;
-                            const nombre = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${id}`;
-                            return (
-                                <option key={id} value={id}>
-                                    {nombre}
-                                </option>
-                            );
-                        })}
-                    </select>
+                    {carreras.length > 1 ? (
+                        <select
+                            value={selectedCarreraId}
+                            onChange={e => {
+                                const val = e.target.value;
+                                setSelectedCarreraId(val === 'todas' ? 'todas' : Number(val));
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
+                        >
+                            {esSuperAutoridad && <option value="todas">Todas las Carreras</option>}
+                            {carreras.map(c => {
+                                const id = c.id_carrera ?? c.idCarrera ?? 0;
+                                const nombre = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${id}`;
+                                return (
+                                    <option key={id} value={id}>
+                                        {nombre}
+                                    </option>
+                                );
+                            })}
+                        </select>
+                    ) : carreras.length === 1 ? (
+                        <div className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-200">
+                            {carreras[0].carrera1 || carreras[0].nombre_carrera || carreras[0].carrera}
+                        </div>
+                    ) : null}
 
                     {/* Selector de Período Académico */}
                     {periodos.length > 0 && (
@@ -452,6 +466,9 @@ export const CoordCarreraDashboard: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                                 {peasFiltrados.map(p => {
+                                    const descriptor = getPeaStatusDescriptor(p.estado);
+                                    const esBorrador = isPeaBorrador(p.estado);
+                                    const esEnRevision = isPeaEnRevision(p.estado);
                                     const puedeEmitirAval = (p.estado === 'EnRevision' || p.firma_docente) && !p.firma_coord;
                                     return (
                                         <tr key={p.uuid} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50 transition-colors">

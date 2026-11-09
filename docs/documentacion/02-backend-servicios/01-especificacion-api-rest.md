@@ -124,6 +124,12 @@ Gestión del Expediente Curricular Maestro por Asignatura y Período.
 | `GET` | `/asignacion/{idAsignacion:int}` | Autenticado | Obtiene el expediente vinculado a una asignación docente. |
 | `GET` | `/periodo/{idPeriodo}` | Autenticado | Lista expedientes curriculares por período y carrera opcional. |
 | `POST`| `/asegurar/asignacion/{idAsignacion:int}` | Autenticado | Obtiene o crea automáticamente el expediente curricular maestro para la asignatura. |
+| `GET` | `/carrera/{idCarrera:int}/periodo/{idPeriodo}/sala-estado` | Autenticado | Obtiene estado de la Sala Curricular por carrera, asignaturas del período y borrador pre-PEA activo. |
+| `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/conmutar-sala` | Coordinador / Vicerrector | Abre o cierra formalmente la sala de armonización curricular por carrera en tiempo real. |
+| `GET` | `/carrera/{idCarrera:int}/periodo/{idPeriodo}/asignatura/{idMateria:int}/borrador` | Autenticado | Recupera el borrador colaborativo pre-PEA para una asignatura específica. |
+| `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/asignatura/{idMateria:int}/borrador` | Autenticado | Guarda y versiona acuerdos curriculares del borrador pre-PEA con trazabilidad de autor. |
+| `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/asignatura/{idMateria:int}/aplicar-pea` | Autenticado | Aplica e inyecta el borrador pre-PEA directamente en las secciones del PEA oficial. |
+| `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/generar-acta` | Coordinador / Vicerrector | Compila y genera el PDF formal de Acta de Armonización Curricular mediante el motor documental. |
 
 ---
 

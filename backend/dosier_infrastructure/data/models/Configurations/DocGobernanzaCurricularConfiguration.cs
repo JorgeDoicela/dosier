@@ -171,6 +171,8 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.IdModeloEducativo).HasColumnName("idModeloEducativo");
             builder.Property(e => e.EstadoGeneral).HasColumnName("estadoGeneral").IsRequired().HasMaxLength(20);
             builder.Property(e => e.SnapshotCurricularJson).HasColumnName("snapshotCurricularJson").HasColumnType("json");
+            builder.Property(e => e.SalaColaborativaActiva).HasColumnName("sala_colaborativa_activa").HasDefaultValue(false);
+            builder.Property(e => e.SalaSesionMetadataJson).HasColumnName("sala_sesion_metadata_json").HasColumnType("json");
             builder.Property(e => e.FechaApertura).HasColumnName("fechaApertura");
             builder.Property(e => e.FechaCierre).HasColumnName("fechaCierre");
             builder.Property(e => e.Activo).HasColumnName("activo");

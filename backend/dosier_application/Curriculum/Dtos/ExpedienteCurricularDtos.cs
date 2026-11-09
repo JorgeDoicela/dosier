@@ -136,6 +136,8 @@ namespace dosier_application.Curriculum.Dtos
         public int? IdModeloEducativo { get; set; }
         public string? NombreModeloEducativo { get; set; }
         public string EstadoGeneral { get; set; } = "Abierto"; // Abierto, EnRevision, Aprobado, Cerrado
+        public bool SalaColaborativaActiva { get; set; } = false;
+        public string? SalaSesionMetadataJson { get; set; }
         public DateTime FechaApertura { get; set; }
         public DateTime? FechaCierre { get; set; }
         public bool Activo { get; set; } = true;
@@ -154,5 +156,79 @@ namespace dosier_application.Curriculum.Dtos
         public List<NormativaArticuloDto> ChecklistNormativo { get; set; } = new List<NormativaArticuloDto>();
         public List<AsignaturaResultadoPerfilDto> TributacionPerfil { get; set; } = new List<AsignaturaResultadoPerfilDto>();
         public PeaDto? Pea { get; set; }
+    }
+
+    // =========================================================================
+    // DTOs DE SALA CURRICULAR COLEGIADA POR CARRERA Y PRE-PEA
+    // =========================================================================
+
+    public class SalaCarreraEstadoDto
+    {
+        public int IdCarrera { get; set; }
+        public string NombreCarrera { get; set; } = string.Empty;
+        public string IdPeriodo { get; set; } = string.Empty;
+        public bool Activa { get; set; }
+        public string? ModeradorId { get; set; }
+        public string? ModeradorNombre { get; set; }
+        public DateTime? FechaApertura { get; set; }
+        public string? TemaPrincipal { get; set; }
+        public int TotalAsignaturas { get; set; }
+        public int AsignaturasConBorrador { get; set; }
+        public List<SalaAsignaturaItemDto> Asignaturas { get; set; } = new List<SalaAsignaturaItemDto>();
+    }
+
+    public class SalaAsignaturaItemDto
+    {
+        public int IdExpediente { get; set; }
+        public string ExpedienteUuid { get; set; } = string.Empty;
+        public int IdAsignatura { get; set; }
+        public string NombreAsignatura { get; set; } = string.Empty;
+        public string? CodigoAsignatura { get; set; }
+        public string? IdDocenteResponsable { get; set; }
+        public string? NombreDocenteResponsable { get; set; }
+        public int? IdNivel { get; set; }
+        public string? NombreNivel { get; set; }
+        public int? IdMalla { get; set; }
+        public int? IdPea { get; set; }
+        public string? PeaUuid { get; set; }
+        public string? EstadoPea { get; set; }
+        public bool TieneBorradorSala { get; set; }
+        public DateTime? UltimaActualizacionBorrador { get; set; }
+    }
+
+    public class BorradorPrePeaDto
+    {
+        public int IdExpediente { get; set; }
+        public int IdAsignatura { get; set; }
+        public string? NombreAsignatura { get; set; }
+        public string? ObjetivoAsignatura { get; set; }
+        public string? MetodologiaEnsenanza { get; set; }
+        public string? RecursosDidacticos { get; set; }
+        public string? EvaluacionAprendizaje { get; set; }
+        public string? JustificacionCambiosMalla { get; set; }
+        public string? NotasLluviaIdeas { get; set; }
+        public List<PeaUnidadDto> Unidades { get; set; } = new List<PeaUnidadDto>();
+        public List<PeaResultadoAprendizajeDto> ResultadosAprendizaje { get; set; } = new List<PeaResultadoAprendizajeDto>();
+        public List<PeaActividadPracticaDto> ActividadesPracticas { get; set; } = new List<PeaActividadPracticaDto>();
+        public DateTime ActualizadoEn { get; set; } = DateTime.UtcNow;
+        public string? ActualizadoPor { get; set; }
+    }
+
+    public class ConmutarSalaCarreraRequest
+    {
+        public bool Activar { get; set; }
+        public string? TemaPrincipal { get; set; }
+    }
+
+    public class GuardarBorradorPrePeaRequest
+    {
+        public BorradorPrePeaDto Borrador { get; set; } = new BorradorPrePeaDto();
+    }
+
+    public class GenerarActaCarreraResponse
+    {
+        public string FileName { get; set; } = "acta_armonizacion.pdf";
+        public string TraceabilityCode { get; set; } = string.Empty;
+        public DateTime GeneradoEn { get; set; } = DateTime.UtcNow;
     }
 }

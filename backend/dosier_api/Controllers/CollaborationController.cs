@@ -82,6 +82,23 @@ namespace dosier_api.Controllers
         }
 
         /// <summary>
+        /// Obtiene el listado de comentarios de un documento o sala colegiada.
+        /// </summary>
+        [HttpGet("comments/{instanceUuid}")]
+        public async Task<IActionResult> GetComments(string instanceUuid)
+        {
+            try
+            {
+                var pulse = await _collaborationService.GetPulseAsync(instanceUuid);
+                return Ok(pulse.Comments ?? new System.Collections.Generic.List<CommentDto>());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error interno al obtener comentarios", detail = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Publica un comentario en el hilo de colaboración / retroalimentación de un documento o grupo.
         /// </summary>
         [HttpPost("comments")]

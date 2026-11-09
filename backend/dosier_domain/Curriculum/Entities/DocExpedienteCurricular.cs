@@ -27,6 +27,8 @@ namespace dosier_domain.Curriculum.Entities
         public int? IdModeloEducativo { get; set; }
         public string EstadoGeneral { get; set; } = "Abierto"; // 'Abierto', 'EnRevision', 'Aprobado', 'Cerrado'
         public string? SnapshotCurricularJson { get; set; }
+        public bool SalaColaborativaActiva { get; set; } = false;
+        public string? SalaSesionMetadataJson { get; set; }
         public DateTime FechaApertura { get; set; } = DateTime.UtcNow;
         public DateTime? FechaCierre { get; set; }
         public bool Activo { get; set; } = true;

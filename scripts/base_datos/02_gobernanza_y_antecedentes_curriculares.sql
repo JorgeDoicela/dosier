@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- DOSIER: GOBERNANZA Y ANTECEDENTES CURRICULARES INSTITUCIONALES
 -- 1. Normativas Externas (CES, CACES, SENESCYT) - Consulta inalterable
 -- 2. Artículos y Lineamientos para Checklist Activo
@@ -202,6 +202,8 @@ CREATE TABLE doc_expedientes_curriculares (
     idModeloEducativo       INT             NULL,
     estadoGeneral           ENUM('Abierto', 'EnRevision', 'Aprobado', 'Cerrado') NOT NULL DEFAULT 'Abierto',
     snapshotCurricularJson  JSON            NULL COMMENT 'Snapshot oficial congelado con contexto académico',
+    sala_colaborativa_activa TINYINT(1)     NOT NULL DEFAULT 0 COMMENT 'Indica si la sala curricular de la carrera/asignatura está abierta para co-diseño en tiempo real',
+    sala_sesion_metadata_json JSON          NULL COMMENT 'Borrador consensuado pre-PEA, acuerdos metodológicos y metadatos de la sala',
     fechaApertura           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fechaCierre             DATETIME        NULL,
     activo                  TINYINT(1)      NOT NULL DEFAULT 1,
@@ -292,6 +294,26 @@ INSERT INTO doc_modelos_educativos (uuid, codigo, nombre, version, resolucionApr
     '2024-01-01',
     0
 );
+
+-- Semilla de Perfil de Egreso y RDA para Tecnología Superior en Desarrollo de Software (Carrera 9, Malla 23)
+INSERT INTO doc_perfiles_egreso (idPerfilEgreso, uuid, idCarrera, idMalla, version, descripcionGeneral, activo) VALUES
+(
+    1,
+    UUID(),
+    9,
+    23,
+    '1.0',
+    'El Tecnólogo Superior en Desarrollo de Software del ISTPET diseña, codifica, prueba, despliega y mantiene soluciones informáticas robustas y escalables, aplicando estándares de ingeniería de software, arquitecturas modulares, seguridad de la información, bases de datos relacionales y no relacionales, e interfaces centradas en la experiencia de usuario (UX/UI), contribuyendo a la transformación digital y productiva del país.',
+    1
+) ON DUPLICATE KEY UPDATE descripcionGeneral = VALUES(descripcionGeneral);
+
+INSERT INTO doc_perfil_egreso_resultados (idResultadoPerfil, uuid, idPerfilEgreso, codigo, descripcion, orden) VALUES
+(1, UUID(), 1, 'RDA-SOF-01', 'Diseñar e implementar algoritmos y estructuras de datos eficientes mediante buenas prácticas de codificación en lenguajes de programación modernos.', 1),
+(2, UUID(), 1, 'RDA-SOF-02', 'Modelar, normalizar, optimizar y gestionar bases de datos relacionales y no relacionales garantizando integridad, concurrencia y seguridad.', 2),
+(3, UUID(), 1, 'RDA-SOF-03', 'Construir aplicaciones web y móviles escalables aplicando arquitecturas limpias, consumo e integración de APIs REST y patrones de diseño.', 3),
+(4, UUID(), 1, 'RDA-SOF-04', 'Aplicar pruebas de software unitarias, de integración y rendimiento bajo metodologías ágiles y aseguramiento de la calidad (QA).', 4),
+(5, UUID(), 1, 'RDA-SOF-05', 'Desplegar y mantener sistemas de software en entornos productivos empleando control de versiones, integración continua y buenas prácticas DevOps.', 5)
+ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion);
 
 -- =============================================================================
 -- 6. CAPA DE DESIGNACIONES Y AUTORIDADES CURRICULARES INSTITUCIONALES

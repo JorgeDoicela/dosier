@@ -15,7 +15,8 @@ import {
     Building2,
     ExternalLink,
     CheckCircle2,
-    Info
+    Info,
+    Radio
 } from 'lucide-react';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useAuth } from '../../../api/AuthContext';
@@ -358,6 +359,21 @@ export const PeaSupervisionTray: React.FC = () => {
                                 <List size={14} />
                             </button>
                         </div>
+
+                        {carrerasDisponibles.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const id = selectedCarrera !== 'todas' ? selectedCarrera : String(carrerasDisponibles[0].id);
+                                    navigate(`/documentacion/carrera/${id}/sala-curricular?periodo=${selectedPeriodo}`);
+                                }}
+                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs shrink-0"
+                                title="Abrir Sala Curricular Colegiada para armonización en vivo con los docentes"
+                            >
+                                <Radio size={13} className="text-white animate-pulse" />
+                                <span>Sala Curricular</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 

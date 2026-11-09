@@ -335,4 +335,47 @@ INSERT INTO doc_document_templates (
     collaborative_fields_json = VALUES(collaborative_fields_json),
     is_active = 1;
 
+-- =============================================================================
+-- SEEDER DE PLANTILLA: ACTA DE ACUERDOS DE ARMONIZACIÓN CURRICULAR DE CARRERA
+-- =============================================================================
+INSERT INTO doc_document_templates (
+    code,
+    name,
+    description,
+    html_content,
+    category,
+    version,
+    requires_lopdp,
+    supports_blind_mode,
+    requires_traceability,
+    requires_signature,
+    signature_type,
+    filename_pattern,
+    collaborative_fields_json,
+    is_active
+) VALUES (
+    'ACTA_ARMONIZACION_CARRERA',
+    'Acta de Acuerdos de Armonización Curricular y Cambios de Malla',
+    'Acta institucional oficial de acuerdos colegiados, lluvia de ideas y propuestas de ajuste de malla y articulación con el perfil de egreso celebrada en Sala Curricular de Carrera.',
+    '<!-- Plantilla oficial Acta de Armonización Curricular ISTPET -->',
+    91, -- DocumentCategory.ActaCurricular
+    1,
+    1,
+    0,
+    1,
+    1,
+    'DOSIER',
+    'ACTA_ARMONIZACION_{carrera}_{periodo}',
+    '["resumen_acuerdos", "propuestas_malla", "compromisos_docentes"]',
+    1
+) ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    description = VALUES(description),
+    category = VALUES(category),
+    requires_lopdp = VALUES(requires_lopdp),
+    requires_signature = VALUES(requires_signature),
+    filename_pattern = VALUES(filename_pattern),
+    collaborative_fields_json = VALUES(collaborative_fields_json),
+    is_active = 1;
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -336,6 +336,18 @@ export const DocumentWorkspace: React.FC = () => {
     }
 
     const handleCloseEditor = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('from') === 'sala') {
+            const carreraId = params.get('carrera');
+            const perId = params.get('periodo');
+            if (carreraId) {
+                navigate(`/documentacion/carrera/${carreraId}/sala-curricular${perId ? `?periodo=${encodeURIComponent(perId)}` : ''}`);
+                return;
+            }
+            navigate('/salas-curriculares');
+            return;
+        }
+
         if (templateCode === 'PEA_OFICIAL' || activeDocument === 'PEA_OFICIAL') {
             navigate(urlPrefix || '/documentacion/mis-proyectos');
             return;

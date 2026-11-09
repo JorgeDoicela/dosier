@@ -1,6 +1,9 @@
-import React from 'react';
-import { FileSignature } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileSignature, Sparkles, Layers, Download } from 'lucide-react';
 import { useWorkflowStates } from '../../../../hooks/useWorkflowStates';
+import { salaCarreraService } from '../../../../services/salaCarreraService';
+import { useNotifications } from '../../../../api/NotificationsContext';
+import { useConfirm } from '../../../../api/ConfirmContext';
 
 interface WorkspaceTitleProps {
     currentProject: {
@@ -8,6 +11,8 @@ interface WorkspaceTitleProps {
         status: string;
         uuid: string;
         id: string;
+        isPea?: boolean;
+        peaData?: any;
     };
     user: any;
     templateCode: string;
@@ -20,7 +25,57 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
     setActiveDocument
 }) => {
     const { getEstadoConfig } = useWorkflowStates();
+    const { addToast } = useNotifications();
+    const confirm = useConfirm();
+    const [isImporting, setIsImporting] = useState(false);
+
     const cfg = getEstadoConfig(currentProject.status);
+
+    const idExpediente = currentProject.peaData?.id_expediente ?? currentProject.peaData?.idExpediente;
+    const idPea = currentProject.peaData?.id_pea ?? currentProject.peaData?.idPea;
+
+    const handleImportarAcuerdosSala = async () => {
+        if (!idExpediente) {
+            addToast({
+                type: 'warning',
+                title: 'Expediente no vinculado',
+                message: 'Este PEA no tiene expediente curricular asociado para consultar la sala.'
+            });
+            return;
+        }
+
+        const confirmado = await confirm({
+            title: 'Importar Acuerdos de Sala Curricular',
+            message: '¿Deseas volcar los contenidos, unidades, metodología y resultados de aprendizaje acordados con la Coordinación de Carrera en la Sala Colegiada? Esto sobreescribirá los campos de borrador actuales.',
+            confirmText: 'Sí, importar al PEA',
+            cancelText: 'Cancelar',
+            type: 'info'
+        });
+
+        if (!confirmado) return;
+
+        setIsImporting(true);
+        try {
+            const resp = await salaCarreraService.aplicarAlPea(idExpediente, idPea);
+            addToast({
+                type: 'success',
+                title: 'Acuerdos Importados con Éxito',
+                message: resp.message || 'Se ha actualizado el borrador del PEA con los acuerdos de la Sala Curricular.'
+            });
+            setTimeout(() => {
+                window.location.reload();
+            }, 800);
+        } catch (err: any) {
+            addToast({
+                type: 'error',
+                title: 'Error al Importar',
+                message: err.message || 'No se pudo importar el borrador de la sala curricular.'
+            });
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
     return (
         <>
             {/* ── Page Title ── */}
@@ -49,6 +104,33 @@ export const WorkspaceTitle: React.FC<WorkspaceTitleProps> = ({
                     </div>
                 </div>
             </header>
+
+            {/* Banner de Sincronización Previa con la Sala Curricular de Carrera */}
+            {currentProject.isPea && currentProject.status === 'Borrador' && idExpediente && (
+                <div className="mb-6 p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in">
+                    <div className="flex items-start gap-3">
+                        <Sparkles size={18} className="text-[#0070f3] dark:text-blue-400 shrink-0 mt-0.5 stroke-[1.75]" />
+                        <div>
+                            <h4 className="text-xs font-semibold text-slate-900 dark:text-white">
+                                Acuerdos de Armonización Curricular Disponibles
+                            </h4>
+                            <p className="text-xs text-slate-600 dark:text-zinc-300 mt-0.5 leading-relaxed">
+                                Puedes cargar con un solo clic los acuerdos colegiados de objetivos, unidades y metodología consensuados en la Sala Curricular de Carrera previa a la redacción oficial.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={handleImportarAcuerdosSala}
+                        disabled={isImporting}
+                        className="px-3.5 py-2 rounded-lg bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold transition-all shadow-2xs flex items-center gap-2 cursor-pointer shrink-0 disabled:opacity-40"
+                    >
+                        <Download size={13} />
+                        <span>{isImporting ? 'Sincronizando...' : 'Cargar desde Sala Curricular'}</span>
+                    </button>
+                </div>
+            )}
 
             {templateCode && templateCode !== 'PEA_OFICIAL' && (
                 <div className="mb-8 p-6 rounded-xl bg-white dark:bg-zinc-950 border border-slate-200/60 dark:border-zinc-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in relative overflow-hidden">
