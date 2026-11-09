@@ -254,7 +254,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                         >
                                             <MoreHorizontalIcon className="shrink-0 text-slate-400" size={13} />
                                             <span className="text-[11.5px] font-mono font-medium tracking-tight">
-                                                Ver {sidebarProjects.length - displayLimit} más
+                                                Ver {relevantProjects.length - displayLimit} más
                                             </span>
                                         </button>
                                     )}
@@ -435,9 +435,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                         <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
                             {[
                                 { name: 'Catálogo de Trámites', path: '/solicitudes', icon: Layers },
-                                { name: 'Prórrogas de Plazo', path: '/solicitudes?tipo=prorrogas', icon: Clock },
-                                { name: 'Clonación Curricular', path: '/solicitudes?tipo=clonacion', icon: Copy },
-                                ...(isAdmin ? [{ name: 'Buzón de Incidencias', path: '/incidencias', icon: MessageSquarePlus }] : [])
+                                { name: 'Buzón de Incidencias', path: '/incidencias', icon: MessageSquarePlus }
                             ].map((subItem) => {
                                 const isSubActive = 
                                     (subItem.path === '/solicitudes' && location.pathname === '/solicitudes' && (!location.search || location.search === '')) ||

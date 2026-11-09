@@ -267,11 +267,13 @@ function App() {
                             <Route path="/lopdp/arco" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/lopdp/admin" element={<Navigate to="/lopdp" replace />} />
                             
+                            {/* Salas Curriculares Colegiadas (Exclusivo Docentes con sus Coordinadores de Carrera) */}
+                            <Route path="/salas-curriculares" element={<RoleRoute allowedRoles={['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_ADMIN']}><SalaCarreraPage /></RoleRoute>} />
+                            <Route path="/salas-curriculares/:idCarrera" element={<RoleRoute allowedRoles={['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_ADMIN']}><SalaCarreraPage /></RoleRoute>} />
+                            <Route path="/documentacion/carrera/:idCarrera/sala-curricular" element={<RoleRoute allowedRoles={['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_ADMIN']}><SalaCarreraPage /></RoleRoute>} />
+                            
                             {/* Supervision Context (Admin, Coordinadores, Vicerrector) */}
-                            <Route path="/salas-curriculares" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_DOCENTE']}><SalaCarreraPage /></RoleRoute>} />
-                            <Route path="/salas-curriculares/:idCarrera" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_DOCENTE']}><SalaCarreraPage /></RoleRoute>} />
                             <Route path="/documentacion" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><SupervisionCurricularPage /></RoleRoute>} />
-                            <Route path="/documentacion/carrera/:idCarrera/sala-curricular" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_DOCENTE']}><SalaCarreraPage /></RoleRoute>} />
                             <Route path="/documentacion/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
                             <Route path="/documentacion/monitoreo/:projectUuid" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><MonitoreoCurricularPage /></RoleRoute>} />
                             <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionCurricularPage />} />

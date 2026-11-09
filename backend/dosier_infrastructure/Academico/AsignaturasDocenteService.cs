@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using dosier_application.Academico;
 using dosier_application.Academico.Dtos;
 using dosier_infrastructure.data.models;
@@ -13,11 +15,19 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
 {
     private readonly DosierContext _context;
     private readonly IPeriodoInstitucionalResolver _periodoResolver;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<AsignaturasDocenteService> _logger;
 
-    public AsignaturasDocenteService(DosierContext context, IPeriodoInstitucionalResolver periodoResolver)
+    public AsignaturasDocenteService(
+        DosierContext context, 
+        IPeriodoInstitucionalResolver periodoResolver,
+        IServiceProvider serviceProvider,
+        ILogger<AsignaturasDocenteService> logger)
     {
         _context = context;
         _periodoResolver = periodoResolver;
+        _serviceProvider = serviceProvider;
+        _logger = logger;
     }
 
     public Task<PeriodoAcademicoDto?> GetPeriodoActivoAsync()
@@ -132,6 +142,47 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             .GroupBy(p => p.IdAsignacion!.Value)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.Version).First());
 
+        // Auto-aprovisionar PEA oficial para asignaciones curriculares que aún no tengan registro en BD
+        var missingAsignaciones = asignaciones
+            .Where(a => a.ExtraCurricular != 1 && !peasExistentes.ContainsKey(a.IdAsignacion))
+            .ToList();
+
+        if (missingAsignaciones.Any())
+        {
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var peaService = scope.ServiceProvider.GetService<dosier_application.Curriculum.Interfaces.IPeaService>();
+                if (peaService != null)
+                {
+                    foreach (var missing in missingAsignaciones)
+                    {
+                        try
+                        {
+                            var newPea = await peaService.CrearDesdeAsignacionAsync(missing.IdAsignacion, idProfesor);
+                            if (newPea != null && !string.IsNullOrWhiteSpace(newPea.Uuid))
+                            {
+                                var createdEntity = await _context.DocPeas.AsNoTracking()
+                                    .FirstOrDefaultAsync(p => p.IdPea == newPea.IdPea);
+                                if (createdEntity != null)
+                                {
+                                    peasExistentes[missing.IdAsignacion] = createdEntity;
+                                }
+                            }
+                        }
+                        catch (Exception exMissing)
+                        {
+                            _logger.LogWarning(exMissing, "Auto-aprovisionamiento diferido para asignación {IdAsignacion}", missing.IdAsignacion);
+                        }
+                    }
+                }
+            }
+            catch (Exception exScope)
+            {
+                _logger.LogWarning(exScope, "No se pudo completar el auto-aprovisionamiento de PEAs para el docente {IdProfesor}", idProfesor);
+            }
+        }
+
         var result = new List<DocenteAsignaturaDto>();
 
         foreach (var asig in asignaciones)
@@ -192,7 +243,11 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                     DetallePeriodo = periodo?.Detalle,
 
                     IdModalidad = asig.IdModalidad,
-                    NombreModalidad = modalidad?.ModalidadImpresion ?? modalidad?.Modalidad1,
+                    NombreModalidad = !string.IsNullOrWhiteSpace(modalidad?.ModalidadImpresion) 
+                        ? modalidad.ModalidadImpresion 
+                        : (!string.IsNullOrWhiteSpace(modalidad?.Modalidad1) 
+                            ? modalidad.Modalidad1 
+                            : (asig.IdModalidad == 2 || asig.IdModalidad == 3 ? "En línea" : "Presencial")),
 
                     IdNivel = asig.IdNivel,
                     NombreNivel = curso.Nivel ?? $"Nivel {asig.IdNivel}",
@@ -279,7 +334,11 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
                 DetallePeriodo = periodo?.Detalle,
 
                 IdModalidad = asig.IdModalidad,
-                NombreModalidad = modalidad?.ModalidadImpresion ?? modalidad?.Modalidad1,
+                NombreModalidad = !string.IsNullOrWhiteSpace(modalidad?.ModalidadImpresion) 
+                    ? modalidad.ModalidadImpresion 
+                    : (!string.IsNullOrWhiteSpace(modalidad?.Modalidad1) 
+                        ? modalidad.Modalidad1 
+                        : (asig.IdModalidad == 2 || asig.IdModalidad == 3 ? "En línea" : "Presencial")),
 
                 IdNivel = asig.IdNivel,
                 NombreNivel = curso.Nivel ?? $"Nivel {asig.IdNivel}",

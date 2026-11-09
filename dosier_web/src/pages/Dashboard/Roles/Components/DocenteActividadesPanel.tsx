@@ -1,12 +1,6 @@
 import React, { useMemo } from 'react';
 import type { DocenteAsignaturaDto } from '../../../../services/docenteAsignaturasService';
-import {
-    ArrowRight,
-    PlusCircle,
-    Building2,
-    Loader2,
-    ListTodo
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface Props {
     materias: DocenteAsignaturaDto[];
@@ -112,31 +106,25 @@ export const DocenteActividadesPanel: React.FC<Props> = ({
     return (
         <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-4">
             {/* Cabecera del Panel */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-900">
-                <div className="flex items-center gap-2">
-                    <ListTodo className="w-4 h-4 text-[#0070f3]" />
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
-                        Actividades y Formulación Curricular
-                    </h2>
-                </div>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-semibold font-mono border border-slate-200 dark:border-zinc-700">
-                    {materias.length} {materias.length === 1 ? 'asignatura' : 'asignaturas'}
-                </span>
+            <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                    Actividades y Formulación Curricular
+                </h2>
             </div>
 
-            {/* Lista de Actividades por Asignatura */}
+            {/* Lista de Actividades por Asignatura (Folio Continuo sin cajas anidadas) */}
             {loading ? (
                 <div className="space-y-3 py-2">
-                    <div className="h-24 bg-slate-100 dark:bg-zinc-900 rounded-xl animate-pulse" />
-                    <div className="h-24 bg-slate-100 dark:bg-zinc-900 rounded-xl animate-pulse" />
-                    <div className="h-24 bg-slate-100 dark:bg-zinc-900 rounded-xl animate-pulse" />
+                    <div className="h-20 bg-slate-100 dark:bg-zinc-900 rounded-lg animate-pulse" />
+                    <div className="h-20 bg-slate-100 dark:bg-zinc-900 rounded-lg animate-pulse" />
+                    <div className="h-20 bg-slate-100 dark:bg-zinc-900 rounded-lg animate-pulse" />
                 </div>
             ) : materiasOrdenadas.length === 0 ? (
                 <div className="py-10 text-center text-zinc-500 text-xs rounded-lg border border-dashed border-slate-200 dark:border-zinc-800">
                     No se registran asignaturas asignadas en el período seleccionado.
                 </div>
             ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-slate-100 dark:divide-zinc-900 -mx-2">
                     {materiasOrdenadas.map(materia => {
                         const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
                         const isCreating = creatingPeaId === materia.id_asignacion;
@@ -173,17 +161,14 @@ export const DocenteActividadesPanel: React.FC<Props> = ({
                                 tabIndex={0}
                                 role="button"
                                 aria-label={`${accionTexto} de ${materia.nombre_asignatura}`}
-                                className={`group rounded-xl border p-4 transition-all flex flex-col justify-between space-y-3 bg-white dark:bg-zinc-950 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-[#0070f3]/40 ${
-                                    esObservado
-                                        ? 'border-amber-300 dark:border-amber-900/70 bg-amber-50/20 dark:bg-amber-950/10 hover:border-amber-400 dark:hover:border-amber-700 hover:shadow-xs'
-                                        : 'border-slate-200 dark:border-zinc-800 hover:border-[#0070f3]/60 dark:hover:border-[#0070f3]/60 hover:shadow-xs'
+                                className={`py-4 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer select-none space-y-2.5 ${
+                                    esObservado ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''
                                 }`}
                             >
-                                {/* Top: Título y Datos de la Asignatura */}
+                                {/* Fila Superior: Título y Datos de la Asignatura */}
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                                    <div className="space-y-1.5 min-w-0">
+                                    <div className="space-y-1 min-w-0">
                                         <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                                            <Building2 className="w-3.5 h-3.5 text-[#0070f3] shrink-0" />
                                             <span className="truncate">{materia.nombre_carrera}</span>
                                             <span className="text-zinc-300 dark:text-zinc-700">·</span>
                                             <span>Paralelo {materia.paralelo}</span>
@@ -194,47 +179,30 @@ export const DocenteActividadesPanel: React.FC<Props> = ({
                                         </h3>
                                     </div>
 
-                                    {/* Botón de Acción Directa */}
-                                    <div className="shrink-0 pt-1 sm:pt-0">
-                                        {tienePea ? (
-                                            <span
-                                                className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-xs inline-flex items-center gap-1.5 ${
-                                                    esObservado
-                                                        ? 'bg-amber-600 group-hover:bg-amber-700 text-white'
-                                                        : 'bg-[#0070f3] group-hover:bg-[#005bb5] text-white'
-                                                }`}
-                                            >
-                                                <span>{accionTexto}</span>
-                                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                    {/* Botón de Acción Directa sin iconos decorativos */}
+                                    <div className="shrink-0 pt-0.5 sm:pt-0">
+                                        {isCreating ? (
+                                            <span className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white opacity-75 inline-flex items-center gap-1.5">
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                <span>Iniciando...</span>
                                             </span>
                                         ) : (
                                             <span
-                                                className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] group-hover:bg-[#005bb5] text-white transition-all shadow-xs inline-flex items-center gap-1.5 ${
-                                                    isCreating ? 'opacity-70' : ''
+                                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors inline-block ${
+                                                    esObservado
+                                                        ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                                                        : 'bg-[#0070f3] hover:bg-[#005bb5] text-white'
                                                 }`}
                                             >
-                                                {isCreating ? (
-                                                    <>
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                        <span>Iniciando...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <PlusCircle className="w-3.5 h-3.5 group-hover:scale-105 transition-transform" />
-                                                        <span>Elaborar PEA</span>
-                                                    </>
-                                                )}
+                                                {accionTexto}
                                             </span>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Cuánto ha avanzado abajo de cada uno */}
-                                <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-zinc-900">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                                            Avance de Formulación
-                                        </span>
+                                {/* Barra de Progreso y Estado */}
+                                <div className="space-y-1 pt-1">
+                                    <div className="flex items-center justify-end text-xs">
                                         <span className={`font-mono text-xs font-semibold ${avance.colorTexto}`}>
                                             {avance.etiqueta}
                                         </span>

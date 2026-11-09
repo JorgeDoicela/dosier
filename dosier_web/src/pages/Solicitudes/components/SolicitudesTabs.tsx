@@ -9,6 +9,7 @@ interface SolicitudesTabsProps {
     onSelectTab: (tab: 'catalogo' | 'historial') => void;
     totalTramites: number;
     totalHistorial: number;
+    isAdmin?: boolean;
 }
 
 export const SolicitudesTabs: React.FC<SolicitudesTabsProps> = ({
@@ -21,11 +22,11 @@ export const SolicitudesTabs: React.FC<SolicitudesTabsProps> = ({
 }) => {
     return (
         <div className="space-y-4 mb-6">
-            {/* Riel Principal de Vistas: Catálogo vs Historial */}
+            {/* Riel Principal de Vistas: Canales vs Historial */}
             <div className="border-b border-slate-200 dark:border-zinc-800">
                 <nav 
                     className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" 
-                    aria-label="Vistas de solicitudes"
+                    aria-label="Vistas de trámites"
                 >
                     <button
                         type="button"
@@ -37,7 +38,7 @@ export const SolicitudesTabs: React.FC<SolicitudesTabsProps> = ({
                         }`}
                     >
                         <Layers size={14} className="stroke-[1.75]" />
-                        <span>Catálogo de trámites</span>
+                        <span>Canales y trámites</span>
                         <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-500">
                             ({totalTramites})
                         </span>
@@ -60,38 +61,6 @@ export const SolicitudesTabs: React.FC<SolicitudesTabsProps> = ({
                     </button>
                 </nav>
             </div>
-
-            {/* Subfiltros contextuales para el catálogo de trámites */}
-            {activeTab === 'catalogo' && (
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-mono uppercase tracking-wider mr-1">
-                        Filtrar por:
-                    </span>
-                    {[
-                        { id: 'todas', label: 'Todos los trámites' },
-                        { id: 'prorrogas', label: 'Prórrogas de plazo' },
-                        { id: 'clonacion', label: 'Clonación curricular' },
-                        { id: 'convocatoria', label: 'Convocatorias y aperturas' },
-                        { id: 'soporte', label: 'Incidencias y soporte' }
-                    ].map(filtro => {
-                        const isActive = activeCategory === filtro.id;
-                        return (
-                            <button
-                                key={filtro.id}
-                                type="button"
-                                onClick={() => onSelectCategory(filtro.id as SolicitudCategoria)}
-                                className={`px-2.5 py-1 rounded-md text-xs transition-colors cursor-pointer border-0 ${
-                                    isActive
-                                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold shadow-2xs'
-                                        : 'bg-transparent text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 font-medium'
-                                }`}
-                            >
-                                {filtro.label}
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
         </div>
     );
 };

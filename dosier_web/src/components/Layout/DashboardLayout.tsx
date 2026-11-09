@@ -357,57 +357,6 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setIsFeedbackOpen(true)}
-                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
-                                    title="Reportar problema o sugerencia"
-                                    aria-label="Abrir formulario de feedback e incidencias"
-                                >
-                                    <MessageSquarePlus size={18} strokeWidth={1.75} className="text-text-main" />
-                                </button>
-                                <button
-                                    onClick={() => setIsHelpOpen(true)}
-                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
-                                    title="Guía Interactiva"
-                                    aria-label="Abrir guía interactiva"
-                                >
-                                    <HelpCircle size={18} strokeWidth={1.75} className="text-text-main" />
-                                </button>
-                                <NotificationBell size="sm" />
-
-                                <div className="h-5 w-[1px] bg-border-thin mx-1 shrink-0" />
-
-                                <button
-                                    onClick={toggleTheme}
-                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
-                                    title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
-                                    aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                                >
-                                    {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} className="text-text-main" /> : <Moon size={18} strokeWidth={1.75} className="text-text-main" />}
-                                </button>
-
-                                <Link
-                                    to="/configuracion"
-                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
-                                    title="Configuración"
-                                    aria-label="Ir a Configuración"
-                                >
-                                    <Settings size={18} strokeWidth={1.75} className="text-text-main" />
-                                </Link>
-
-                                {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
-                                    <Link
-                                        to="/papelera"
-                                        className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
-                                        title="Papelera"
-                                        aria-label="Ir a Papelera"
-                                    >
-                                        <Trash2 size={18} strokeWidth={1.75} className="text-text-main" />
-                                    </Link>
-                                )}
-
-                                <div className="h-5 w-[1px] bg-border-thin mx-1 shrink-0" />
-
                                 {/* User Identity & Institutional Role */}
                                 <div className="relative">
                                     <div
@@ -419,7 +368,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                         onClick={hasMultipleRoles ? () => setIsUserMenuOpen(!isUserMenuOpen) : undefined}
                                         title={hasMultipleRoles ? 'Cambiar rol institucional' : undefined}
                                     >
-                                        <div className="flex flex-col items-end text-right select-none leading-tight">
+                                        <div className="flex flex-col items-start text-left select-none leading-tight">
                                             <span className="text-[12px] font-semibold text-text-main truncate max-w-[240px]">
                                                 {formatShortName(user?.nombre_completo) || username}
                                             </span>
@@ -435,7 +384,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                     {hasMultipleRoles && isUserMenuOpen && (
                                         <>
                                             <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
-                                            <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in duration-150 slide-in-from-top-2">
+                                            <div className="absolute left-0 top-full mt-2 w-64 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in duration-150 slide-in-from-top-2">
                                                 <div className="px-2 py-1.5 border-b border-slate-100 dark:border-zinc-800 mb-1">
                                                     <span className="text-[9.5px] font-mono font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">
                                                         Rol Institucional
@@ -467,6 +416,57 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                         </>
                                     )}
                                 </div>
+
+                                <div className="h-5 w-[1px] bg-border-thin mx-1 shrink-0" />
+
+                                <button
+                                    onClick={() => setIsHelpOpen(true)}
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
+                                    title="Guía Interactiva"
+                                    aria-label="Abrir guía interactiva"
+                                >
+                                    <HelpCircle size={18} strokeWidth={1.75} className="text-text-main" />
+                                </button>
+                                <button
+                                    onClick={() => setIsFeedbackOpen(true)}
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
+                                    title="Reportar problema o sugerencia"
+                                    aria-label="Abrir formulario de feedback e incidencias"
+                                >
+                                    <MessageSquarePlus size={18} strokeWidth={1.75} className="text-text-main" />
+                                </button>
+                                <NotificationBell size="sm" />
+
+                                <div className="h-5 w-[1px] bg-border-thin mx-1 shrink-0" />
+
+                                <button
+                                    onClick={toggleTheme}
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center"
+                                    title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+                                    aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                                >
+                                    {theme === 'dark' ? <Sun size={18} strokeWidth={1.75} className="text-text-main" /> : <Moon size={18} strokeWidth={1.75} className="text-text-main" />}
+                                </button>
+
+                                {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
+                                    <Link
+                                        to="/papelera"
+                                        className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                        title="Papelera"
+                                        aria-label="Ir a Papelera"
+                                    >
+                                        <Trash2 size={18} strokeWidth={1.75} className="text-text-main" />
+                                    </Link>
+                                )}
+
+                                <Link
+                                    to="/configuracion"
+                                    className="w-8 h-8 rounded-lg text-text-main hover:bg-surface-hover transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                    title="Configuración"
+                                    aria-label="Ir a Configuración"
+                                >
+                                    <Settings size={18} strokeWidth={1.75} className="text-text-main" />
+                                </Link>
 
                                 <div className="h-5 w-[1px] bg-border-thin mx-0.5 shrink-0" />
 
@@ -528,13 +528,6 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                             >
                                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
-                            <Link
-                                to="/configuracion"
-                                className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer flex items-center justify-center no-underline"
-                                title="Configuración"
-                            >
-                                <Settings size={20} />
-                            </Link>
                             {(isAdmin || user?.roles?.includes('DOSIER_DOCENTE')) && (
                                 <Link
                                     to="/papelera"
@@ -544,6 +537,13 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
                                     <Trash2 size={20} />
                                 </Link>
                             )}
+                            <Link
+                                to="/configuracion"
+                                className="p-2 text-text-main hover:bg-surface-hover rounded-md transition-colors cursor-pointer flex items-center justify-center no-underline"
+                                title="Configuración"
+                            >
+                                <Settings size={20} />
+                            </Link>
                             <button
                                 onClick={handleConfirmLogout}
                                 className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md transition-colors cursor-pointer flex items-center justify-center"

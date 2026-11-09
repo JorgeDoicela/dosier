@@ -173,9 +173,9 @@ export const curriculumProjectService = {
             .then(r => {
                 const list = Array.isArray(r.data) ? r.data : [];
                 return list
-                    .filter((m: any) => m.uuid_pea || m.id_pea)
+                    .filter((m: any) => !m.es_extracurricular && m.estado_pea !== 'NoAplica')
                     .map((m: any) => ({
-                        uuid: m.uuid_pea || String(m.id_pea),
+                        uuid: m.uuid_pea || String(m.id_pea || m.id_asignacion),
                         titulo: m.nombre_asignatura,
                         title: m.nombre_asignatura,
                         codigo_institucional: m.codigo_asignatura,

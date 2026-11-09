@@ -125,12 +125,22 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
                 ? await curriculumProjectService.getAllProjects()
                 : await curriculumProjectService.getMyProjects();
 
+            const sortProjects = (list: any[]) => {
+                return [...list].sort((a: any, b: any) => {
+                    const dateA = a.fecha_modificacion || a.fecha_registro || '';
+                    const dateB = b.fecha_modificacion || b.fecha_registro || '';
+                    if (dateA && dateB) {
+                        const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
+                        if (!isNaN(diff) && diff !== 0) return diff;
+                    }
+                    const titleA = (a.titulo || a.title || '').trim();
+                    const titleB = (b.titulo || b.title || '').trim();
+                    return titleA.localeCompare(titleB);
+                });
+            };
+
             const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
-            const sorted = projectList.sort((a: any, b: any) => {
-                const dateA = a.fecha_modificacion || a.fecha_registro || '';
-                const dateB = b.fecha_modificacion || b.fecha_registro || '';
-                return new Date(dateB).getTime() - new Date(dateA).getTime();
-            });
+            const sorted = sortProjects(projectList);
 
             setSidebarProjects(sorted);
 
@@ -138,11 +148,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
                 try {
                     const myData = await curriculumProjectService.getMyProjects();
                     const myList = Array.isArray(myData) ? myData : (myData as any)?.items || [];
-                    const mySorted = myList.sort((a: any, b: any) => {
-                        const dateA = a.fecha_modificacion || a.fecha_registro || '';
-                        const dateB = b.fecha_modificacion || b.fecha_registro || '';
-                        return new Date(dateB).getTime() - new Date(dateA).getTime();
-                    });
+                    const mySorted = sortProjects(myList);
                     setSidebarMyProjects(mySorted);
                 } catch {
                     setSidebarMyProjects([]);
@@ -286,7 +292,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Tablero', icon: Home, path: '/dashboard', roles: ['ANY'], group: 1 },
         { name: 'Notificaciones', icon: Bell, path: '/notificaciones', roles: ['DOSIER_ADMIN'], group: 1 },
         { name: 'Calendario', icon: Calendar, path: '/calendario', roles: ['ANY'], group: 1 },
-        { name: 'Salas Curriculares', icon: Users, path: '/salas-curriculares', roles: ['ANY'], group: 1 },
+        { name: 'Salas Curriculares', icon: Users, path: '/salas-curriculares', roles: ['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_ADMIN'], group: 1 },
         // ── Ciclo documental y gestión curricular (inicio → formulación → revisión → aprobación) ──
         { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 1, hasChevron: true },
         { name: 'Mis Instrumentos PEA', icon: BookOpen, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ADMIN'], group: 1, hasChevron: true },

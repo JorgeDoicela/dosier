@@ -9,10 +9,6 @@ import {
     type PeriodoAcademicoDto
 } from '../../../services/docenteAsignaturasService';
 import { crearPeaDesdeAsignacion } from '../../../services/peaService';
-import {
-    ArrowRight,
-    Calendar
-} from 'lucide-react';
 import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
 import { DocenteActividadesPanel } from './Components/DocenteActividadesPanel';
 
@@ -137,48 +133,16 @@ export const DocentePeaDashboard: React.FC = () => {
         navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
     };
 
-    const periodoActivoNombre = useMemo(() => {
-        const found = periodos.find(p => String(p.id_periodo) === String(selectedPeriodo));
-        return found?.detalle || found?.id_periodo;
-    }, [periodos, selectedPeriodo]);
-
     return (
         <div className="space-y-6">
-            {/* Encabezado Modern Enterprise Docs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-zinc-800">
-                <div>
-                    <div className="flex items-center gap-2.5">
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Panel Curricular Docente
-                        </h1>
-                        {periodoActivoNombre && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">
-                                {periodoActivoNombre}
-                            </span>
-                        )}
-                    </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        Seguimiento de formulación del PEA, avance de cátedras y agenda académica.
-                    </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    <button
-                        onClick={() => navigate('/calendario')}
-                        className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-all shadow-2xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                        <Calendar className="w-3.5 h-3.5 text-[#0070f3]" />
-                        <span>Calendario</span>
-                    </button>
-
-                    <button
-                        onClick={() => navigate('/documentacion/mis-proyectos')}
-                        className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                        <span>Vista Folio de Proyectos</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                </div>
+            {/* Encabezado */}
+            <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    Panel Curricular Docente
+                </h1>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Seguimiento de formulación del PEA, avance de cátedras y agenda académica.
+                </p>
             </div>
 
             {/* Dashboard Ejecutivo y Operativo: Actividades con Avance vs Agenda de Calendario */}

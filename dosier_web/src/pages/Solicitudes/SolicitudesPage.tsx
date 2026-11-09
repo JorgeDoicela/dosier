@@ -1,17 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
-import { useNotifications } from '../../api/NotificationsContext';
 import { solicitudesService } from '../../services/solicitudesService';
-import { docenteAsignaturasService, type DocenteAsignaturaDto } from '../../services/docenteAsignaturasService';
 import { SolicitudesHeader } from './components/SolicitudesHeader';
 import { SolicitudesTabs } from './components/SolicitudesTabs';
 import { SolicitudBentoCard } from './components/SolicitudBentoCard';
 import { SolicitudesHistoryTable } from './components/SolicitudesHistoryTable';
-import { ProrrogaPlazoModal } from '../Dashboard/Roles/Modals/ProrrogaPlazoModal';
-import { ClonarPeaModal } from '../Dashboard/Roles/Modals/ClonarPeaModal';
-import { AperturaConvocatoriaModal } from '../Dashboard/Roles/Modals/AperturaConvocatoriaModal';
-import { RecordatorioDocentesModal, type DocenteRezagadoItem } from '../Dashboard/Roles/Modals/RecordatorioDocentesModal';
 import type { 
     SolicitudCategoria, 
     SolicitudTramiteItem, 
@@ -21,7 +15,6 @@ import type {
 export const SolicitudesPage: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { addToast } = useNotifications();
     const { 
         roles, 
         isAdmin, 
@@ -34,27 +27,16 @@ export const SolicitudesPage: React.FC = () => {
 
     const [activeCategory, setActiveCategory] = useState<SolicitudCategoria>(activeCategoryParam);
     const [activeTab, setActiveTab] = useState<'catalogo' | 'historial'>(activeTabParam);
-
-    // Modales Curriculares
-    const [isProrrogaOpen, setIsProrrogaOpen] = useState(false);
-    const [isClonarOpen, setIsClonarOpen] = useState(false);
-    const [isConvocatoriaOpen, setIsConvocatoriaOpen] = useState(false);
-    const [isRecordatorioOpen, setIsRecordatorioOpen] = useState(false);
-
-    // Asignaturas y contexto del docente para clonación
-    const [misMaterias, setMisMaterias] = useState<DocenteAsignaturaDto[]>([]);
     const [historial, setHistorial] = useState<SolicitudRegistroHistorial[]>([]);
+    const [isLoadingHistorial, setIsLoadingHistorial] = useState(false);
 
     useEffect(() => {
-        if (isDocente) {
-            docenteAsignaturasService.getMisMaterias()
-                .then(materias => setMisMaterias(materias))
-                .catch(() => setMisMaterias([]));
-        }
-        solicitudesService.getHistorialSolicitudes()
+        setIsLoadingHistorial(true);
+        solicitudesService.getHistorialSolicitudes(isAdmin)
             .then(data => setHistorial(data))
-            .catch(() => setHistorial([]));
-    }, [isDocente]);
+            .catch(() => setHistorial([]))
+            .finally(() => setIsLoadingHistorial(false));
+    }, [isAdmin]);
 
     // Actualizar estado local si cambia la URL
     useEffect(() => {
@@ -95,60 +77,16 @@ export const SolicitudesPage: React.FC = () => {
     // Filtrar catálogo por categoría seleccionada
     const tramitesFiltrados = useMemo(() => {
         if (activeCategory === 'todas') return tramitesDisponibles;
-        return tramitesDisponibles.filter(item => item.categoria === activeCategory);
+        const filtrados = tramitesDisponibles.filter(item => item.categoria === activeCategory);
+        return filtrados.length > 0 ? filtrados : tramitesDisponibles;
     }, [tramitesDisponibles, activeCategory]);
 
-    // Ejecución de acciones de trámite
+    // Ejecución de acciones de trámite (redirección fáctica a rutas funcionales)
     const handleEjecutarAccion = (tramite: SolicitudTramiteItem) => {
-        switch (tramite.tipoAccion) {
-            case 'modal_prorroga':
-                setIsProrrogaOpen(true);
-                break;
-            case 'modal_clonar':
-                setIsClonarOpen(true);
-                break;
-            case 'modal_convocatoria':
-                setIsConvocatoriaOpen(true);
-                break;
-            case 'modal_recordatorio':
-                setIsRecordatorioOpen(true);
-                break;
-            case 'ruta':
-                if (tramite.rutaDestino) {
-                    navigate(tramite.rutaDestino);
-                }
-                break;
-            default:
-                break;
+        if (tramite.rutaDestino) {
+            navigate(tramite.rutaDestino);
         }
     };
-
-    const asignaturaDestinoClonacion = useMemo(() => {
-        if (misMaterias.length > 0) {
-            return misMaterias[0].nombre_asignatura;
-        }
-        return 'Asignatura en curso';
-    }, [misMaterias]);
-
-    // Docentes de ejemplo para modal de recordatorio si es coordinador
-    const docentesRezagadosEjemplo: DocenteRezagadoItem[] = [
-        {
-            nombre: 'Ing. Carlos Mendoza',
-            asignatura: 'Desarrollo de Software Web',
-            carrera: 'Desarrollo de Software',
-            email: 'carlos.mendoza@istpet.edu.ec',
-            estado: 'Borrador',
-            dias_restantes: 2
-        },
-        {
-            nombre: 'Lic. Ana Morales',
-            asignatura: 'Ciberseguridad y Redes',
-            carrera: 'Ciberseguridad',
-            email: 'ana.morales@istpet.edu.ec',
-            estado: 'En elaboración',
-            dias_restantes: 1
-        }
-    ];
 
     return (
         <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
@@ -163,6 +101,7 @@ export const SolicitudesPage: React.FC = () => {
                 onSelectTab={handleSelectTab}
                 totalTramites={tramitesFiltrados.length}
                 totalHistorial={historial.length}
+                isAdmin={isAdmin}
             />
 
             {/* Contenido Principal */}
@@ -185,53 +124,16 @@ export const SolicitudesPage: React.FC = () => {
                     </div>
                 )
             ) : (
-                <SolicitudesHistoryTable historial={historial} />
+                isLoadingHistorial ? (
+                    <div className="p-12 text-center border border-slate-200/90 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-950">
+                        <p className="text-xs text-slate-500 dark:text-zinc-400">
+                            Cargando historial de solicitudes e incidencias...
+                        </p>
+                    </div>
+                ) : (
+                    <SolicitudesHistoryTable historial={historial} />
+                )
             )}
-
-            {/* Modales Institucionales Integrados */}
-            <ProrrogaPlazoModal
-                isOpen={isProrrogaOpen}
-                onClose={() => setIsProrrogaOpen(false)}
-                onProrrogaConcedida={() => {
-                    addToast(
-                        'Prórroga Curricular Registrada',
-                        'La solicitud de extensión de plazo fue registrada y comunicada a las instancias académicas.',
-                        'success'
-                    );
-                }}
-            />
-
-            <ClonarPeaModal
-                isOpen={isClonarOpen}
-                onClose={() => setIsClonarOpen(false)}
-                asignaturaDestino={asignaturaDestinoClonacion}
-                onClonadoExitoso={() => {
-                    addToast(
-                        'Clonación Curricular Exitosa',
-                        'Los contenidos históricos del PEA fueron importados satisfactoriamente.',
-                        'success'
-                    );
-                }}
-            />
-
-            <AperturaConvocatoriaModal
-                isOpen={isConvocatoriaOpen}
-                onClose={() => setIsConvocatoriaOpen(false)}
-                onConvocatoriaActivada={() => {
-                    addToast(
-                        'Convocatoria Activada',
-                        'El calendario oficial del PEA ha sido sincronizado con el período académico.',
-                        'success'
-                    );
-                }}
-            />
-
-            <RecordatorioDocentesModal
-                isOpen={isRecordatorioOpen}
-                onClose={() => setIsRecordatorioOpen(false)}
-                tituloContexto="Recordatorio Institucional a Docentes con PEAs en Elaboración"
-                docentes={docentesRezagadosEjemplo}
-            />
         </div>
     );
 };

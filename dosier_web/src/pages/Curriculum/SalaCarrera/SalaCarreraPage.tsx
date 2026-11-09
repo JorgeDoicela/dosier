@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { salaCarreraService, type SalaCarreraEstadoDto } from '../../../services/salaCarreraService';
@@ -21,36 +21,43 @@ export const SalaCarreraPage: React.FC = () => {
     const [estadoSala, setEstadoSala] = useState<SalaCarreraEstadoDto | null>(null);
     const [isLoadingSala, setIsLoadingSala] = useState(true);
 
-    const esSuperAutoridad = useMemo(() => {
-        return !!(user?.administrador || 
-            user?.roles?.includes('DOSIER_ADMIN') || 
-            user?.roles?.includes('DOSIER_VICERRECTOR') || 
-            user?.roles?.includes('DOSIER_COORD_ACAD'));
+    const esAdmin = useMemo(() => {
+        return !!(user?.administrador || user?.roles?.includes('DOSIER_ADMIN'));
     }, [user]);
 
-    // 1. Cargar contexto institucional (carreras y períodos)
+    // Función auxiliar para resolver período activo oficial
+    const resolverPeriodoDefecto = (periodos: PeriodoAcademicoDto[]): string => {
+        const pActivo = periodos.find((p: any) => 
+            p.es_activo === true || p.es_activo === 1 || p.es_activo === '1' ||
+            p.esActivo === true || p.esActivo === 1 ||
+            p.id_periodo === 'OCT2026'
+        );
+        return pActivo?.id_periodo || periodos[0]?.id_periodo || 'OCT2026';
+    };
+
+    // 1. Cargar contexto institucional docente (carreras asignadas y períodos oficiales)
     useEffect(() => {
         let isMounted = true;
         Promise.all([
             curriculumProjectService.getDocenteCarreras().catch(() => []),
-            curriculumProjectService.getCarrerasInstitucionales().catch(() => []),
+            esAdmin ? curriculumProjectService.getCarrerasInstitucionales().catch(() => []) : Promise.resolve([]),
             docenteAsignaturasService.getPeriodosAcademicos().catch(() => [])
         ]).then(([misCarrerasList, todasCarrerasList, periodosList]) => {
             if (!isMounted) return;
 
-            const listaCarreras = (!esSuperAutoridad && misCarrerasList.length > 0)
+            const listaCarreras = (misCarrerasList.length > 0)
                 ? misCarrerasList
                 : (todasCarrerasList.length > 0 ? todasCarrerasList : misCarrerasList);
 
             setCarrerasDisponibles(listaCarreras);
             setPeriodosDisponibles(periodosList);
 
-            const periodoDefecto = periodosList.find(p => p.es_activo)?.id_periodo || periodosList[0]?.id_periodo || '2025-A';
+            const periodoDefecto = resolverPeriodoDefecto(periodosList);
             const periodoQuery = searchParams.get('periodo') || periodoDefecto;
 
-            // Si se ingresó directo a /salas-curriculares sin idCarrera en la URL, auto-resolver carrera
+            // Si se ingresó sin idCarrera en la URL, auto-resolver a la primera carrera del docente
             if (!idCarreraParam && listaCarreras.length > 0) {
-                const primerCarreraId = listaCarreras[0].id_carrera ?? listaCarreras[0].idCarrera ?? 1;
+                const primerCarreraId = listaCarreras[0].id_carrera ?? listaCarreras[0].idCarrera ?? 9;
                 navigate(`/salas-curriculares/${primerCarreraId}?periodo=${encodeURIComponent(periodoQuery)}`, { replace: true });
                 return;
             }
@@ -59,15 +66,28 @@ export const SalaCarreraPage: React.FC = () => {
         });
 
         return () => { isMounted = false; };
-    }, [idCarreraParam, esSuperAutoridad]);
+    }, [idCarreraParam, esAdmin]);
 
-    const idCarrera = Number(idCarreraParam) || (carrerasDisponibles[0]?.id_carrera ?? 1);
-    const periodoActual = searchParams.get('periodo') || (periodosDisponibles.find(p => p.es_activo)?.id_periodo || '2025-A');
+    // Resolución de carrera y período actual
+    const idCarrera = useMemo(() => {
+        if (idCarreraParam) return Number(idCarreraParam);
+        if (carrerasDisponibles.length > 0) {
+            return carrerasDisponibles[0].id_carrera ?? carrerasDisponibles[0].idCarrera ?? 9;
+        }
+        return 9;
+    }, [idCarreraParam, carrerasDisponibles]);
+
+    const periodoActual = useMemo(() => {
+        const queryP = searchParams.get('periodo');
+        if (queryP) return queryP;
+        return resolverPeriodoDefecto(periodosDisponibles);
+    }, [searchParams, periodosDisponibles]);
+
     const idAsignaturaParam = searchParams.get('asignatura');
     const idExpedienteParam = searchParams.get('expediente');
 
     // 2. Cargar estado de la sala de la carrera
-    const cargarEstado = async () => {
+    const cargarEstado = useCallback(async () => {
         if (!idCarrera) return;
         try {
             const data = await salaCarreraService.getEstado(idCarrera, periodoActual);
@@ -78,14 +98,14 @@ export const SalaCarreraPage: React.FC = () => {
         } finally {
             setIsLoadingSala(false);
         }
-    };
+    }, [idCarrera, periodoActual, addToast]);
 
     useEffect(() => {
         if (!idCarrera) return;
         cargarEstado();
         const timer = setInterval(cargarEstado, 12000);
         return () => clearInterval(timer);
-    }, [idCarrera, periodoActual]);
+    }, [idCarrera, periodoActual, cargarEstado]);
 
     // 3. Resolver la asignatura activa (por expediente, por asignatura o la primera)
     const asignaturaActiva = useMemo(() => {
@@ -105,7 +125,7 @@ export const SalaCarreraPage: React.FC = () => {
         return estadoSala.asignaturas[0];
     }, [idExpedienteParam, idAsignaturaParam, estadoSala?.asignaturas]);
 
-    // 4. Cambiar de asignatura al vuelo
+    // 4. Cambiar de asignatura al vuelo en el dropdown
     const handleCambiarAsignatura = (targetId: number, isExpediente: boolean = false) => {
         const params = new URLSearchParams(searchParams);
         if (isExpediente) {
@@ -128,12 +148,12 @@ export const SalaCarreraPage: React.FC = () => {
         navigate(`/salas-curriculares/${idCarrera}?periodo=${encodeURIComponent(nuevoPeriodo)}`);
     };
 
-    // 7. Volver al dashboard
+    // 7. Volver al tablero general (cero pantallas intermedias)
     const handleVolverAlDashboard = () => {
         navigate('/dashboard');
     };
 
-    if (isResolvingContext || isLoadingSala) {
+    if (isResolvingContext || (isLoadingSala && !estadoSala)) {
         return (
             <div className="h-screen w-full flex flex-col items-center justify-center bg-bg-deep text-text-dim">
                 <Loader2 size={36} className="animate-spin text-[#0070f3] mb-3 stroke-[1.75]" />
@@ -149,7 +169,7 @@ export const SalaCarreraPage: React.FC = () => {
                 <p className="text-xs max-w-md mb-4">Verifica la asignación de distributivo y período académico en SIGAFI.</p>
                 <button
                     onClick={handleVolverAlDashboard}
-                    className="px-4 py-2 bg-[#0070f3] text-white text-xs font-semibold rounded-lg hover:bg-[#005bb5]"
+                    className="px-4 py-2 bg-[#0070f3] text-white text-xs font-semibold rounded-lg hover:bg-[#005bb5] cursor-pointer"
                 >
                     Volver al Tablero
                 </button>
@@ -157,7 +177,9 @@ export const SalaCarreraPage: React.FC = () => {
         );
     }
 
-    // Renderizado directo en toda la pantalla con DOSIERBuilderShell
+    // ─────────────────────────────────────────────────────────────
+    // ESPACIO DE CO-DISEÑO CURRICULAR DIRECTO (DOSIERBuilderShell)
+    // ─────────────────────────────────────────────────────────────
     return (
         <AsignaturaCoDesignWorkspace
             asignatura={asignaturaActiva}
@@ -165,7 +187,7 @@ export const SalaCarreraPage: React.FC = () => {
             onCambiarAsignatura={handleCambiarAsignatura}
             idCarrera={idCarrera}
             idPeriodo={periodoActual}
-            carreraNombre={estadoSala.nombreCarrera || 'Carrera ISTPET'}
+            carreraNombre={estadoSala.nombreCarrera || estadoSala.nombre_carrera || 'Carrera ISTPET'}
             carrerasDisponibles={carrerasDisponibles}
             onCambiarCarrera={handleCambiarCarrera}
             periodosDisponibles={periodosDisponibles}

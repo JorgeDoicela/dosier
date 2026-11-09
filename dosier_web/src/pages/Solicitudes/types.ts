@@ -1,13 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type SolicitudCategoria = 'todas' | 'prorrogas' | 'clonacion' | 'convocatoria' | 'soporte';
+export type SolicitudCategoria = 'todas' | 'soporte';
 
-export type SolicitudAccionTipo = 
-    | 'modal_prorroga'
-    | 'modal_clonar'
-    | 'modal_convocatoria'
-    | 'modal_recordatorio'
-    | 'ruta';
+export type SolicitudAccionTipo = 'ruta';
 
 export type SolicitudEstado = 'pendiente' | 'aprobado' | 'en_revision' | 'rechazado' | 'resuelto';
 

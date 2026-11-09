@@ -1,52 +1,22 @@
 import { 
-    Clock, 
-    Copy, 
-    Calendar, 
-    Bell, 
-    MessageSquarePlus, 
-    Settings, 
-    ShieldCheck 
+    MessageSquarePlus 
 } from 'lucide-react';
 import type { 
     SolicitudTramiteItem, 
-    SolicitudRegistroHistorial 
+    SolicitudRegistroHistorial,
+    SolicitudEstado
 } from '../pages/Solicitudes/types';
+import { getMyFeedback, getAllFeedback, type FeedbackReporte } from './feedbackService';
 
 /**
- * Catálogo canónico de trámites y solicitudes curriculares del ISTPET.
- * Se adapta y filtra según el rol institucional activo.
+ * Catálogo canónico de canales y trámites operativos del ISTPET.
+ * Exclusivamente compuesto por herramientas reales y conectadas con el backend.
  */
 export const CATALOGO_TRAMITES_OFICIALES: SolicitudTramiteItem[] = [
     {
-        id: 'prorroga_docente',
-        titulo: 'Prórroga de Entrega de PEA',
-        descripcion: 'Solicita una extensión formal de la fecha límite para la formulación o corrección del Programa de Estudio de la Asignatura ante la Coordinación.',
-        icono: Clock,
-        categoria: 'prorrogas',
-        rolesPermitidos: ['DOSIER_DOCENTE'],
-        sla: '24 horas',
-        responsable: 'Coordinación de Carrera',
-        accionTexto: 'Solicitar prórroga',
-        tipoAccion: 'modal_prorroga',
-        destacado: true
-    },
-    {
-        id: 'clonacion_docente',
-        titulo: 'Clonación de PEA Aprobado',
-        descripcion: 'Importa las unidades temáticas, metodología y bibliografía de una asignatura de períodos lectivos anteriores legalizada por CACES.',
-        icono: Copy,
-        categoria: 'clonacion',
-        rolesPermitidos: ['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_ADMIN'],
-        sla: 'Inmediato',
-        responsable: 'Sistema DOSIER',
-        accionTexto: 'Clonar contenidos',
-        tipoAccion: 'modal_clonar',
-        destacado: true
-    },
-    {
-        id: 'incidencia_docente',
+        id: 'incidencia_curricular',
         titulo: 'Buzón de Incidencias Curriculares',
-        descripcion: 'Reporta discrepancias en horas distributivas de SIGAFI, errores de acreditación o fallas técnicas en la firma digital de instrumentos.',
+        descripcion: 'Reporta discrepancias en horas distributivas de SIGAFI, errores de acreditación CACES o requerimientos de soporte técnico institucional.',
         icono: MessageSquarePlus,
         categoria: 'soporte',
         rolesPermitidos: ['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_ADMIN'],
@@ -54,126 +24,37 @@ export const CATALOGO_TRAMITES_OFICIALES: SolicitudTramiteItem[] = [
         responsable: 'Soporte Técnico Institucional',
         accionTexto: 'Abrir buzón',
         tipoAccion: 'ruta',
-        rutaDestino: '/incidencias'
-    },
-    {
-        id: 'prorroga_coordinacion',
-        titulo: 'Concesión de Prórrogas de Carrera',
-        descripcion: 'Extiende el cronograma de entrega del PEA para una carrera o asigna días adicionales a docentes rezagados con justificativo académico.',
-        icono: Clock,
-        categoria: 'prorrogas',
-        rolesPermitidos: ['DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_ADMIN'],
-        sla: 'Resolución inmediata',
-        responsable: 'Coordinación Académica',
-        accionTexto: 'Conceder prórroga',
-        tipoAccion: 'modal_prorroga',
+        rutaDestino: '/incidencias',
         destacado: true
-    },
-    {
-        id: 'recordatorio_docentes',
-        titulo: 'Recordatorio Masivo a Docentes',
-        descripcion: 'Emite una notificación institucional y por correo electrónico a los docentes con instrumentos en borrador o próximos al vencimiento de plazo.',
-        icono: Bell,
-        categoria: 'convocatoria',
-        rolesPermitidos: ['DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_ADMIN'],
-        sla: 'Envío inmediato',
-        responsable: 'Motor de Notificaciones',
-        accionTexto: 'Enviar recordatorio',
-        tipoAccion: 'modal_recordatorio'
-    },
-    {
-        id: 'apertura_convocatoria',
-        titulo: 'Apertura de Convocatoria Curricular',
-        descripcion: 'Activa el ciclo de elaboración del PEA para el período lectivo oficial, sincronizando las fechas límites docentes y de supervisión colegiada.',
-        icono: Calendar,
-        categoria: 'convocatoria',
-        rolesPermitidos: ['DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR', 'DOSIER_ADMIN'],
-        sla: 'Inmediato',
-        responsable: 'Vicerrectorado Académico',
-        accionTexto: 'Configurar convocatoria',
-        tipoAccion: 'modal_convocatoria',
-        destacado: true
-    },
-    {
-        id: 'excepcion_normativa',
-        titulo: 'Excepción Normativa de Calendario',
-        descripcion: 'Autoriza prórrogas mayores o excepciones curriculares extraordinarias fuera de término formal CACES con dictamen de Vicerrectorado.',
-        icono: ShieldCheck,
-        categoria: 'prorrogas',
-        rolesPermitidos: ['DOSIER_VICERRECTOR', 'DOSIER_ADMIN'],
-        sla: '48 horas',
-        responsable: 'Consejo Académico',
-        accionTexto: 'Evaluar excepción',
-        tipoAccion: 'modal_prorroga'
-    },
-    {
-        id: 'parametros_normativos',
-        titulo: 'Parámetros Normativos de Solicitudes',
-        descripcion: 'Administra los límites máximos de prórroga permitidos, los plazos de vigencia curricular y las políticas institucionales de clonación.',
-        icono: Settings,
-        categoria: 'soporte',
-        rolesPermitidos: ['DOSIER_ADMIN'],
-        sla: 'Inmediato',
-        responsable: 'Administrador DOSIER',
-        accionTexto: 'Ajustar parámetros',
-        tipoAccion: 'ruta',
-        rutaDestino: '/configuracion?tab=parametros'
     }
 ];
 
-/**
- * Registros históricos representativos de solicitudes institucionales.
- */
-export const REGISTROS_HISTORIAL_MOCK: SolicitudRegistroHistorial[] = [
-    {
-        id: 'sol-001',
-        codigo: 'SOL-2026-089',
-        titulo: 'Prórroga de 5 días para entrega de PEA - Desarrollo de Software',
-        categoria: 'Prórrogas',
-        solicitante: 'Ing. Carlos Mendoza',
-        rolSolicitante: 'Docente Titular',
-        carrera: 'Desarrollo de Software',
-        fecha: 'Hace 2 horas',
-        estado: 'aprobado',
-        detalle: 'Concedida por Coordinación de Carrera ante actualización de mallas SIGAFI.'
-    },
-    {
-        id: 'sol-002',
-        codigo: 'SOL-2026-088',
-        titulo: 'Clonación de contenidos curriculares - Base de Datos II',
-        categoria: 'Clonación',
-        solicitante: 'Lic. Ana Morales',
-        rolSolicitante: 'Docente Titular',
-        carrera: 'Ciberseguridad',
-        fecha: 'Ayer',
-        estado: 'resuelto',
-        detalle: 'Estructura metodológica y bibliografía CACES importadas desde 2025-B.'
-    },
-    {
-        id: 'sol-003',
-        codigo: 'SOL-2026-087',
-        titulo: 'Apertura extraordinaria para revisión de PEA extemporáneo',
-        categoria: 'Convocatoria',
-        solicitante: 'Coordinación de Carrera',
-        rolSolicitante: 'Coordinador',
-        carrera: 'Redes y Telecomunicaciones',
-        fecha: 'Hace 3 días',
-        estado: 'en_revision',
-        detalle: 'Pendiente de aval formal de Coordinación Académica.'
-    },
-    {
-        id: 'sol-004',
-        codigo: 'SOL-2026-086',
-        titulo: 'Inconsistencia en horas autónomas vs Art. 21 CES',
-        categoria: 'Soporte',
-        solicitante: 'Dr. Roberto Dávila',
-        rolSolicitante: 'Docente Titular',
-        carrera: 'Desarrollo de Software',
-        fecha: 'Hace 5 días',
-        estado: 'resuelto',
-        detalle: 'Se ajustó la asignación horaria en el distributivo de SIGAFI.'
+const mapearEstadoFeedback = (estado: string): SolicitudEstado => {
+    switch (estado?.toUpperCase()) {
+        case 'ATENDIDO':
+            return 'resuelto';
+        case 'EN_REVISION':
+            return 'en_revision';
+        case 'DESCARTADO':
+            return 'rechazado';
+        case 'PENDIENTE':
+        default:
+            return 'pendiente';
     }
-];
+};
+
+const mapearTipoFeedback = (tipo: string): string => {
+    switch (tipo?.toUpperCase()) {
+        case 'ERROR':
+            return 'Incidencia Técnica';
+        case 'SUGERENCIA':
+            return 'Mejora Curricular';
+        case 'DUDA':
+            return 'Consulta Operativa';
+        default:
+            return 'Soporte Curricular';
+    }
+};
 
 export const solicitudesService = {
     /**
@@ -188,9 +69,51 @@ export const solicitudesService = {
     },
 
     /**
-     * Retorna el historial de solicitudes institucionales.
+     * Retorna el historial de solicitudes e incidencias reales registradas en el backend.
      */
-    getHistorialSolicitudes: async (): Promise<SolicitudRegistroHistorial[]> => {
-        return REGISTROS_HISTORIAL_MOCK;
+    getHistorialSolicitudes: async (isAdmin = false): Promise<SolicitudRegistroHistorial[]> => {
+        try {
+            const reportes: FeedbackReporte[] = isAdmin 
+                ? await getAllFeedback() 
+                : await getMyFeedback();
+
+            if (!Array.isArray(reportes)) return [];
+
+            return reportes.map(r => {
+                const idNum = r.id_feedback || r.idFeedback;
+                const codigo = idNum ? `INC-${String(idNum).padStart(4, '0')}` : r.uuid.substring(0, 8).toUpperCase();
+                const fechaRaw = r.fecha_creacion || r.fechaCreacion;
+                let fechaFormateada = 'Reciente';
+                if (fechaRaw) {
+                    try {
+                        const dateObj = new Date(fechaRaw);
+                        if (!isNaN(dateObj.getTime())) {
+                            fechaFormateada = dateObj.toLocaleDateString('es-EC', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            });
+                        }
+                    } catch {
+                        fechaFormateada = 'Reciente';
+                    }
+                }
+
+                return {
+                    id: r.uuid,
+                    codigo,
+                    titulo: r.titulo,
+                    categoria: mapearTipoFeedback(r.tipo),
+                    solicitante: r.nombre_usuario || r.nombreUsuario || 'Usuario Institucional',
+                    rolSolicitante: r.rol_usuario || r.rolUsuario || 'Docente',
+                    carrera: 'Institucional',
+                    fecha: fechaFormateada,
+                    estado: mapearEstadoFeedback(r.estado),
+                    detalle: r.descripcion
+                };
+            });
+        } catch {
+            return [];
+        }
     }
 };

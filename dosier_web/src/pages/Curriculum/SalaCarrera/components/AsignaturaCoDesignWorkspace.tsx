@@ -25,6 +25,7 @@ import type { PeriodoAcademicoDto } from '../../../../services/docenteAsignatura
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { useAuth } from '../../../../api/AuthContext';
 import { CareerProfileSidebar } from './CareerProfileSidebar';
+import { GeistSelect } from '../../../../components/Common/GeistSelect';
 
 interface AsignaturaCoDesignWorkspaceProps {
     asignatura: SalaAsignaturaItemDto;
@@ -213,6 +214,44 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
         }
     ], [borrador.unidades?.length, borrador.resultadosAprendizaje?.length]);
 
+    // Opciones formateadas para GeistSelect (Sistema Oficial DOSIER)
+    const opcionesAsignatura = useMemo(() => {
+        return asignaturas.map(a => {
+            const expId = a.idExpediente || a.id_expediente;
+            const aId = a.idAsignatura || a.id_asignatura || 0;
+            const val = expId ? `exp_${expId}` : `asig_${aId}`;
+            const codigo = a.codigoAsignatura || a.codigo_asignatura;
+            const nombre = a.nombreAsignatura || a.nombre_asignatura;
+            const nivel = a.nombreNivel || a.nombre_nivel;
+            return {
+                value: val,
+                label: `${codigo ? `${codigo} - ` : ''}${nombre} (${nivel || 'Nivel'})`
+            };
+        });
+    }, [asignaturas]);
+
+    const opcionesCarrera = useMemo(() => {
+        return carrerasDisponibles.map(c => {
+            const cId = c.id_carrera ?? c.idCarrera ?? 0;
+            const cNom = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${cId}`;
+            return {
+                value: cId,
+                label: cNom
+            };
+        });
+    }, [carrerasDisponibles]);
+
+    const valorAsignaturaActual = asignatura.idExpediente ? `exp_${asignatura.idExpediente}` : `asig_${idAsignatura}`;
+
+    const handleSelectAsignatura = (val: string | number) => {
+        const raw = String(val);
+        if (raw.startsWith('exp_')) {
+            onCambiarAsignatura(Number(raw.replace('exp_', '')), true);
+        } else {
+            onCambiarAsignatura(Number(raw.replace('asig_', '')), false);
+        }
+    };
+
     // Manejadores de Unidades Curriculares Consensuadas
     const handleAddUnidad = () => {
         const nuevaUnidad: PeaUnidadDto = {
@@ -301,51 +340,32 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Selector de Carrera (si tiene varias) */}
                                 {carrerasDisponibles.length > 1 && onCambiarCarrera && (
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-[11px] font-mono uppercase text-text-dim font-semibold">Carrera:</span>
-                                        <select
-                                            value={idCarrera}
-                                            onChange={(e) => onCambiarCarrera(Number(e.target.value))}
-                                            className="text-xs font-semibold text-text-main bg-bg-deep border border-border-thin rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#0070f3]"
-                                        >
-                                            {carrerasDisponibles.map(c => {
-                                                const cId = c.id_carrera ?? c.idCarrera ?? 0;
-                                                const cNom = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${cId}`;
-                                                return <option key={cId} value={cId}>{cNom}</option>;
-                                            })}
-                                        </select>
+                                    <div className="flex items-center gap-1.5 min-w-[200px]">
+                                        <span className="text-[11px] font-mono uppercase text-text-dim font-semibold shrink-0">Carrera:</span>
+                                        <div className="w-48">
+                                            <GeistSelect
+                                                value={idCarrera}
+                                                options={opcionesCarrera}
+                                                onChange={(val) => onCambiarCarrera(Number(val))}
+                                                size="sm"
+                                                className="w-full text-xs font-semibold"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* Selector de Asignatura de la Malla */}
+                                {/* Selector de Asignatura de la Malla (GeistSelect Oficial del Sistema) */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[11px] font-mono uppercase text-text-dim font-semibold">Asignatura:</span>
-                                    <select
-                                        value={asignatura.idExpediente ? `exp_${asignatura.idExpediente}` : `asig_${idAsignatura}`}
-                                        onChange={(e) => {
-                                            const raw = e.target.value;
-                                            if (raw.startsWith('exp_')) {
-                                                onCambiarAsignatura(Number(raw.replace('exp_', '')), true);
-                                            } else {
-                                                onCambiarAsignatura(Number(raw.replace('asig_', '')), false);
-                                            }
-                                        }}
-                                        className="text-xs font-bold text-text-main bg-bg-deep border border-border-thin rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0070f3] max-w-xs sm:max-w-md truncate"
-                                    >
-                                        {asignaturas.map((a, idx) => {
-                                            const expId = a.idExpediente || a.id_expediente;
-                                            const aId = a.idAsignatura || a.id_asignatura || 0;
-                                            const val = expId ? `exp_${expId}` : `asig_${aId}`;
-                                            const codigo = a.codigoAsignatura || a.codigo_asignatura;
-                                            const nombre = a.nombreAsignatura || a.nombre_asignatura;
-                                            const nivel = a.nombreNivel || a.nombre_nivel;
-                                            return (
-                                                <option key={`asig_item_${expId || aId}_${idx}`} value={val}>
-                                                    {codigo ? `${codigo} - ` : ''}{nombre} ({nivel || 'Nivel'})
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
+                                    <span className="text-[11px] font-mono uppercase text-text-dim font-semibold shrink-0">Asignatura:</span>
+                                    <div className="w-80 sm:w-96 md:w-[420px]">
+                                        <GeistSelect
+                                            value={valorAsignaturaActual}
+                                            options={opcionesAsignatura}
+                                            onChange={handleSelectAsignatura}
+                                            size="sm"
+                                            className="w-full font-bold text-xs"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Docente Titular */}

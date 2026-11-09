@@ -1,23 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Clock,
-    Award,
-    CheckCircle2,
     AlertCircle,
-    ArrowRight,
     Search,
-    FileText,
-    Shield,
     Loader2,
-    Building2,
-    PlusCircle,
-    GraduationCap,
-    LayoutGrid,
-    List,
-    Info,
-    Radio,
-    Users
+    GraduationCap
 } from 'lucide-react';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { GeistSelect } from '../../components/Common/GeistSelect';
@@ -51,7 +38,6 @@ export const MisAsignaturasPage: React.FC = () => {
     const [filterCarrera, setFilterCarrera] = useState<string>('todas');
     const [filterModalidad, setFilterModalidad] = useState<string>('todas');
     const [filterTipo, setFilterTipo] = useState<'todas' | 'curriculares' | 'institucionales'>('todas');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Catálogo de estados dinámicos desde la BD (tabla doc_config_workflow)
     const [workflowEstados, setWorkflowEstados] = useState<Array<{ estado: string; etiqueta?: string; color?: string }>>([]);
@@ -315,75 +301,90 @@ export const MisAsignaturasPage: React.FC = () => {
         });
     }, [materias, search, filterEstado, filterCarrera, filterModalidad, filterTipo, getEstadoLabel]);
 
+    const formatModalidad = (mod?: string, idModalidad?: number): string => {
+        if (mod && mod.trim()) {
+            const clean = mod.trim();
+            const lower = clean.toLowerCase();
+            if (lower.includes('linea') || lower.includes('línea') || lower.includes('virtual') || lower.includes('online')) {
+                return 'En línea';
+            }
+            if (lower.includes('semipresencial')) {
+                return 'Semipresencial';
+            }
+            if (lower.includes('hibrid') || lower.includes('híbrid')) {
+                return 'Híbrida';
+            }
+            if (lower.includes('presencial')) {
+                return 'Presencial';
+            }
+            return clean;
+        }
+        if (idModalidad === 2 || idModalidad === 3) {
+            return 'En línea';
+        }
+        return 'Presencial';
+    };
+
     const renderEstadoBadge = (estado: string) => {
         const label = getEstadoLabel(estado);
         switch (estado) {
             case 'NoAplica':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-500">
-                        <Info className="w-3 h-3 text-zinc-400" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-500">
                         Acompañamiento
                     </span>
                 );
             case 'NoIniciado':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-                        <Clock className="w-3 h-3 text-zinc-400" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
                         {label}
                     </span>
                 );
             case 'Borrador':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300">
-                        <FileText className="w-3 h-3 text-blue-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300">
                         {label}
                     </span>
                 );
             case 'EnRevision':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
-                        <Clock className="w-3 h-3 text-amber-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
                         {label}
                     </span>
                 );
             case 'Observado':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300">
-                        <AlertCircle className="w-3 h-3 text-red-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300">
                         {label}
                     </span>
                 );
             case 'Corregido':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
-                        <CheckCircle2 className="w-3 h-3 text-purple-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
                         {label}
                     </span>
                 );
             case 'RevisadoCoord':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
-                        <Award className="w-3 h-3 text-cyan-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300">
                         {label}
                     </span>
                 );
             case 'RevisadoAcad':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
-                        <Shield className="w-3 h-3 text-indigo-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
                         {label}
                     </span>
                 );
             case 'Aprobado':
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
                         {label}
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
+                    <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
                         {label}
                     </span>
                 );
@@ -514,34 +515,6 @@ export const MisAsignaturasPage: React.FC = () => {
                             Limpiar
                         </button>
                     )}
-
-                    {/* Selector de Modo: Cuadros vs Lista */}
-                    <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('grid')}
-                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                viewMode === 'grid'
-                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                            }`}
-                            title="Vista en Cuadros"
-                        >
-                            <LayoutGrid size={14} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('list')}
-                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                viewMode === 'list'
-                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                            }`}
-                            title="Vista en Lista"
-                        >
-                            <List size={14} />
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -563,8 +536,7 @@ export const MisAsignaturasPage: React.FC = () => {
                             : 'No existen materias asignadas para su perfil docente en este período lectivo.'}
                     </p>
                 </div>
-            ) : viewMode === 'grid' ? (
-                /* ── MODO CUADROS ── */
+            ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {materiasFiltradas.map((materia) => {
                         const tienePea = Boolean(materia.id_pea && materia.id_pea > 0);
@@ -605,8 +577,7 @@ export const MisAsignaturasPage: React.FC = () => {
                                 {/* Top: Carrera y Estado */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                            <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
+                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
                                             <span className="truncate">{materia.nombre_carrera}</span>
                                         </div>
                                         <div>{renderEstadoBadge(materia.estado_pea)}</div>
@@ -618,52 +589,24 @@ export const MisAsignaturasPage: React.FC = () => {
                                     </h2>
 
                                     {/* Metadatos Curriculares */}
-                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-                                        {materia.codigo_asignatura && (
-                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
-                                                {materia.codigo_asignatura}
-                                            </span>
-                                        )}
-                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                            {materia.horas_totales}h ({materia.creditos || Math.round(materia.horas_totales / 48)} Créd.)
-                                        </span>
-                                        {materia.horas_semanales ? (
-                                            <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-mono text-[11px] font-semibold border border-blue-200/50 dark:border-blue-900/50">
-                                                {materia.horas_semanales}h/sem
-                                            </span>
-                                        ) : null}
-                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                            {materia.nombre_nivel}
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold text-[11px]">
+                                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span>{materia.nombre_nivel}</span>
+                                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
                                             Paralelo {materia.paralelo}
                                         </span>
-                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                            {materia.nombre_modalidad || 'Presencial'}
+                                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                            {formatModalidad(materia.nombre_modalidad, materia.id_modalidad)}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Botón de Acción Principal */}
-                                <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-zinc-900">
-                                    {materia.id_carrera ? (
-                                        <button
-                                            type="button"
-                                            title="Ingresar a la Sala Curricular de la carrera para co-diseñar borradores y planes"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/documentacion/carrera/${materia.id_carrera}/sala-curricular?periodo=${selectedPeriodo}`);
-                                            }}
-                                            className="text-xs text-zinc-500 hover:text-[#0070f3] dark:text-zinc-400 dark:hover:text-blue-400 inline-flex items-center gap-1.5 px-2 py-1 rounded transition-colors cursor-pointer"
-                                        >
-                                            <Users className="w-3.5 h-3.5" />
-                                            <span className="font-medium">Sala Curricular</span>
-                                        </button>
-                                    ) : <div />}
+                                <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-zinc-900">
                                     <div className="flex items-center gap-2">
                                         {isExtra ? (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
-                                                <Info className="w-3.5 h-3.5 text-zinc-400" />
+                                            <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
                                                 No requiere PEA
                                             </span>
                                         ) : tienePea ? (
@@ -673,10 +616,9 @@ export const MisAsignaturasPage: React.FC = () => {
                                                     e.stopPropagation();
                                                     handleContinuarPea(materia);
                                                 }}
-                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                                             >
                                                 <span>{materia.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
-                                                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                                             </button>
                                         ) : (
                                             <button
@@ -686,19 +628,9 @@ export const MisAsignaturasPage: React.FC = () => {
                                                     handleCrearPea(materia);
                                                 }}
                                                 disabled={isCreating}
-                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                             >
-                                                {isCreating ? (
-                                                    <>
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                        <span>Inicializando...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <PlusCircle className="w-3.5 h-3.5" />
-                                                        <span>Elaborar PEA</span>
-                                                    </>
-                                                )}
+                                                <span>{isCreating ? 'Inicializando...' : 'Elaborar PEA'}</span>
                                             </button>
                                         )}
                                     </div>
@@ -706,143 +638,6 @@ export const MisAsignaturasPage: React.FC = () => {
                             </div>
                         );
                     })}
-                </div>
-            ) : (
-                /* ── MODO LISTA TABULAR ── */
-                <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th className="py-2.5 px-4">Asignatura y Carrera</th>
-                                <th className="py-2.5 px-3">Carga Horaria</th>
-                                <th className="py-2.5 px-3">Nivel y Modalidad</th>
-                                <th className="py-2.5 px-3">Estado del PEA</th>
-                                <th className="py-2.5 px-4 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-sans">
-                            {materiasFiltradas.map(m => {
-                                const tienePea = Boolean(m.id_pea && m.id_pea > 0);
-                                const isCreating = creatingPeaId === m.id_asignacion;
-                                const isExtra = Boolean(m.es_extracurricular || m.estado_pea === 'NoAplica');
-
-                                const handleRowClick = () => {
-                                    if (isCreating) return;
-                                    if (isExtra) {
-                                        addToast(
-                                            'Actividad Institucional',
-                                            `"${m.nombre_asignatura}" es una carga de acompañamiento que no requiere formulación de PEA microcurricular.`,
-                                            'info'
-                                        );
-                                        return;
-                                    }
-                                    if (tienePea) {
-                                        handleContinuarPea(m);
-                                    } else {
-                                        handleCrearPea(m);
-                                    }
-                                };
-
-                                return (
-                                    <tr
-                                        key={m.id_asignacion}
-                                        onClick={handleRowClick}
-                                        className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/50 transition-colors cursor-pointer group"
-                                    >
-                                        <td className="py-3 px-4">
-                                            <div className="space-y-0.5">
-                                                <div className="flex items-center gap-1.5">
-                                                    {m.codigo_asignatura && (
-                                                        <span className="font-mono text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                                                             {m.codigo_asignatura}
-                                                        </span>
-                                                    )}
-                                                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors">
-                                                        {m.nombre_asignatura}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-                                                    <Building2 className="w-3 h-3 shrink-0" />
-                                                    <span>{m.nombre_carrera}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-3 font-mono">
-                                            <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                                                <span>{m.horas_totales}h Total</span>
-                                                {m.horas_semanales ? (
-                                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200/50 dark:border-blue-900/50">
-                                                        {m.horas_semanales}h/sem
-                                                    </span>
-                                                ) : null}
-                                            </div>
-                                            <div className="text-[10px] text-zinc-500">
-                                                {m.horas_docencia}D / {m.horas_practico_experimental}P / {m.horas_autonomo}A
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-3">
-                                            <div className="text-zinc-700 dark:text-zinc-300">
-                                                {m.nombre_nivel} • Paralelo {m.paralelo}
-                                            </div>
-                                            <div className="text-[11px] text-zinc-500">
-                                                {m.nombre_modalidad || 'Presencial'}
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-3">
-                                            {renderEstadoBadge(m.estado_pea)}
-                                        </td>
-                                        <td className="py-3 px-4 text-right">
-                                            <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                                                {m.id_carrera ? (
-                                                    <button
-                                                        type="button"
-                                                        title="Ingresar a la Sala Curricular de la Carrera"
-                                                        onClick={() => navigate(`/documentacion/carrera/${m.id_carrera}/sala-curricular?periodo=${selectedPeriodo}`)}
-                                                        className="px-2.5 py-1.5 text-xs font-medium rounded-md text-zinc-600 dark:text-zinc-300 hover:text-[#0070f3] dark:hover:text-blue-400 bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-                                                    >
-                                                        <Users className="w-3.5 h-3.5" />
-                                                        <span>Sala</span>
-                                                    </button>
-                                                ) : null}
-                                                {isExtra ? (
-                                                    <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border border-slate-200 dark:border-zinc-800 inline-flex items-center gap-1">
-                                                        <Info className="w-3 h-3 text-zinc-400" />
-                                                        No requiere PEA
-                                                    </span>
-                                                ) : tienePea ? (
-                                                    <button
-                                                        onClick={() => handleContinuarPea(m)}
-                                                        className="px-3 py-1.5 text-xs font-semibold rounded-md bg-[#0070f3] hover:bg-[#005bb5] text-white transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                                                    >
-                                                        <span>{m.estado_pea === 'Aprobado' ? 'Ver PEA' : 'Continuar PEA'}</span>
-                                                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleCrearPea(m)}
-                                                        disabled={isCreating}
-                                                        className="px-3 py-1.5 text-xs font-semibold rounded-md bg-[#0070f3] hover:bg-[#005bb5] text-white transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
-                                                    >
-                                                        {isCreating ? (
-                                                            <>
-                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                                <span>Inicializando...</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <PlusCircle className="w-3.5 h-3.5" />
-                                                                <span>Elaborar PEA</span>
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
                 </div>
             )}
         </div>

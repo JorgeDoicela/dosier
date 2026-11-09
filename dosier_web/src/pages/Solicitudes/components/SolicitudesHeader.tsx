@@ -10,8 +10,8 @@ interface SolicitudesHeaderProps {
 export const SolicitudesHeader: React.FC<SolicitudesHeaderProps> = ({ isDocente }) => {
     return (
         <PageHeader
-            title="Centro de Solicitudes"
-            description="Canal centralizado para la tramitación de prórrogas curriculares, clonación de contenidos PEA, aperturas extraordinarias y soporte institucional."
+            title="Centro de Solicitudes y Trámites"
+            description="Canal institucional para la tramitación de incidencias curriculares, verificación de firmas y soporte técnico."
         >
             <div className="flex items-center gap-2">
                 {isDocente && (
