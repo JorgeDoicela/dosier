@@ -150,10 +150,30 @@ namespace dosier_infrastructure.Collaboration
             if (pea != null)
             {
                 bool isElaborador = pea.IdDocenteElaborador == user.IdSigafi;
+                bool isAuthorizedColaborador = false;
+
                 if (!isElaborador && !isCurricularAuthority)
                 {
-                    _logger.LogWarning("[HUB] Access Denied: User {User} no es elaborador ni autoridad supervisora del PEA {PeaUuid}", username, peaUuid);
-                    throw new HubException("No tienes permisos para unirte a la sesión colaborativa de este PEA.");
+                    // Validar si el docente tiene una colaboración formalmente aprobada por el titular para este PEA en doc_pea
+                    if (pea.EstadoColaboracion == "Aprobada" && pea.IdDocenteColaborador == user.IdSigafi)
+                    {
+                        isAuthorizedColaborador = true;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(pea.ColaboradoresJson))
+                    {
+                        try
+                        {
+                            var list = System.Text.Json.JsonSerializer.Deserialize<List<Dictionary<string, object>>>(pea.ColaboradoresJson);
+                            isAuthorizedColaborador = list?.Any(c => c.TryGetValue("id_docente", out var id) && id?.ToString() == user.IdSigafi && c.TryGetValue("estado", out var st) && st?.ToString() == "Aprobada") == true;
+                        }
+                        catch { }
+                    }
+                }
+
+                if (!isElaborador && !isCurricularAuthority && !isAuthorizedColaborador)
+                {
+                    _logger.LogWarning("[HUB] Access Denied: User {User} no tiene autorización aprobada por el docente titular para el PEA {PeaUuid}", username, peaUuid);
+                    throw new HubException("Se requiere que el docente titular acepte previamente su solicitud de colaboración para ingresar a este PEA.");
                 }
             }
 
@@ -171,6 +191,11 @@ namespace dosier_infrastructure.Collaboration
                 isOversightObserver = true;
                 userName = $"{userName} (Revisión)";
                 userRole = "Revisor";
+            }
+            else if (pea != null && pea.IdDocenteElaborador != user.IdSigafi)
+            {
+                userName = $"{userName} (Colaborador)";
+                userRole = "Docente Colaborador";
             }
 
             // 3. Registrar auditoría de acceso (LOPDP)

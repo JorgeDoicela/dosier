@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { DocenteAsignaturaDto } from '../../../../services/docenteAsignaturasService';
 import { Loader2 } from 'lucide-react';
+import { recordRecentSubjectOpen } from '../../../../utils/recentSubjectStorage';
 
 interface Props {
     materias: DocenteAsignaturaDto[];
@@ -133,6 +134,7 @@ export const DocenteActividadesPanel: React.FC<Props> = ({
 
                         const handleCardClick = () => {
                             if (isCreating) return;
+                            recordRecentSubjectOpen(materia);
                             if (tienePea) {
                                 onContinuarPea(materia);
                             } else {

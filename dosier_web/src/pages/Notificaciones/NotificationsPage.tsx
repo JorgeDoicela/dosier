@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Bell, ExternalLink, Mail, Info, AlertTriangle,
-    CheckCheck, Search, Inbox, Trash2
+    CheckCheck, Search, Inbox, Trash2, Users, UserCheck, UserX, Check, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificacionesService, type NotificationDto } from '../../services/notificacionesService';
 import { useNotifications } from '../../api/NotificationsContext';
 import { stripHtmlToText } from '../../utils/notificationText';
 import { PageHeader } from '../../components/Common/PageHeader';
+import { responderColaboracion, getSolicitudesColaboracionRecibidas } from '../../services/peaService';
 
 type NotificationItem = NotificationDto;
 
@@ -15,6 +16,7 @@ const categoryConfig: Record<string, { icon: typeof Info; color: string; bg: str
     INVESTIGACION: { icon: ExternalLink, color: 'text-info', bg: 'bg-info/10', label: 'Investigación' },
     SISTEMA: { icon: Info, color: 'text-text-dim', bg: 'bg-text-main/5', label: 'Sistema' },
     URGENTE: { icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10', label: 'Urgente' },
+    COLABORACION: { icon: Users, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/20', label: 'Colaboración PEA' },
 };
 
 const getCategoryConfig = (cat: string) => categoryConfig[cat] || { icon: Mail, color: 'text-text-dim', bg: 'bg-text-main/5', label: cat };
@@ -23,11 +25,28 @@ const NotificationsPage = () => {
     const navigate = useNavigate();
     const { notifications, markAsRead, markAllAsRead, fetchNotifications, deleteNotification, clearReadNotifications, addToast } = useNotifications();
     const [allNotifications, setAllNotifications] = useState<NotificationItem[]>([]);
-    const [filter, setFilter] = useState<'all' | 'unread' | 'investigacion' | 'sistema' | 'urgente'>('all');
+    const [filter, setFilter] = useState<'all' | 'unread' | 'colaboracion' | 'investigacion' | 'sistema' | 'urgente'>('all');
     const [search, setSearch] = useState('');
     const [loadingAll, setLoadingAll] = useState(false);
 
     const lastFetchRef = useRef<number>(0);
+    const [colaboracionesRespondidas, setColaboracionesRespondidas] = useState<Record<string, 'Aprobada' | 'Rechazada'>>({});
+    const [respondingUuid, setRespondingUuid] = useState<string | null>(null);
+
+    useEffect(() => {
+        getSolicitudesColaboracionRecibidas().then(list => {
+            if (Array.isArray(list)) {
+                const map: Record<string, 'Aprobada' | 'Rechazada'> = {};
+                list.forEach(item => {
+                    if (item.estado === 'Aprobada' || item.estado === 'Rechazada') {
+                        map[item.uuid] = item.estado as 'Aprobada' | 'Rechazada';
+                    }
+                });
+                setColaboracionesRespondidas(prev => ({ ...prev, ...map }));
+            }
+        }).catch(() => {});
+    }, []);
+
 
     useEffect(() => {
         document.title = "Centro de Notificaciones | DOSIER";
@@ -157,6 +176,34 @@ const NotificationsPage = () => {
         }
     };
 
+        const handleResponderColaboracion = async (e: React.MouseEvent, n: NotificationItem, uuid: string, aceptar: boolean) => {
+        e.stopPropagation();
+        setRespondingUuid(uuid);
+        try {
+            await responderColaboracion(uuid, aceptar);
+            setColaboracionesRespondidas(prev => ({ ...prev, [uuid]: aceptar ? 'Aprobada' : 'Rechazada' }));
+            if (!n.leido) {
+                await markAsRead(n.uuid);
+                setAllNotifications(prev => prev.map(x => x.uuid === n.uuid ? { ...x, leido: true } : x));
+            }
+            addToast(
+                aceptar ? 'Colaboración Autorizada' : 'Colaboración Rechazada',
+                aceptar
+                    ? 'El docente colaborador ha sido autorizado y podrá ingresar a co-elaborar el PEA.'
+                    : 'Se ha rechazado la solicitud de colaboración.',
+                aceptar ? 'success' : 'info'
+            );
+        } catch (err: unknown) {
+            console.error('[DOSIER] Error al responder colaboración:', err);
+            const message = err && typeof err === 'object' && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+                : undefined;
+            addToast('Error', message || 'No se pudo procesar la respuesta a la solicitud.', 'error');
+        } finally {
+            setRespondingUuid(null);
+        }
+    };
+
     const handleMarkAllRead = async () => {
         await markAllAsRead();
         setAllNotifications(prev => prev.map(x => ({ ...x, leido: true })));
@@ -177,6 +224,7 @@ const NotificationsPage = () => {
         if (filter === 'unread') list = list.filter(n => !n.leido);
         else if (filter === 'investigacion') list = list.filter(n => n.categoria === 'INVESTIGACION');
         else if (filter === 'sistema') list = list.filter(n => n.categoria === 'SISTEMA');
+        else if (filter === 'colaboracion') list = list.filter(n => n.categoria === 'COLABORACION');
         else if (filter === 'urgente') list = list.filter(n => n.categoria === 'URGENTE');
 
         if (search.trim()) {
@@ -240,6 +288,7 @@ const NotificationsPage = () => {
     const filters = [
         { key: 'all' as const, label: 'Todas' },
         { key: 'unread' as const, label: 'Sin leer', count: unreadCount },
+        { key: 'colaboracion' as const, label: 'Colaboración PEA' },
         { key: 'investigacion' as const, label: 'Investigación' },
         { key: 'sistema' as const, label: 'Sistema' },
         { key: 'urgente' as const, label: 'Urgente' },
@@ -391,21 +440,84 @@ const NotificationsPage = () => {
                                                             <div className="flex items-center gap-3 pt-0.5">
                                                                 <span className={`inline-flex items-center gap-1.5 text-xs font-mono font-medium ${
                                                                     n.categoria === 'URGENTE' ? 'text-rose-600 dark:text-rose-400' :
-                                                                    n.categoria === 'INVESTIGACION' ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-500 dark:text-zinc-400'
+                                                                    n.categoria === 'INVESTIGACION' ? 'text-[#0070f3] dark:text-blue-400' :
+                                                                    n.categoria === 'COLABORACION' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
                                                                 }`}>
                                                                     <span className={`w-1.5 h-1.5 rounded-full ${
                                                                         n.categoria === 'URGENTE' ? 'bg-rose-500' :
-                                                                        n.categoria === 'INVESTIGACION' ? 'bg-[#0070f3]' : 'bg-slate-400 dark:bg-zinc-500'
+                                                                        n.categoria === 'INVESTIGACION' ? 'bg-[#0070f3]' :
+                                                                        n.categoria === 'COLABORACION' ? 'bg-indigo-500' : 'bg-slate-400 dark:bg-zinc-500'
                                                                     }`} />
                                                                     {config.label}
                                                                 </span>
 
-                                                                {n.url_accion && (
+                                                                {n.url_accion && !n.url_accion.includes('colaboracion=') && (
                                                                     <span className="text-xs font-medium text-[#0070f3] hover:underline flex items-center gap-1">
                                                                         Ir al detalle <ExternalLink size={11} />
                                                                     </span>
                                                                 )}
                                                             </div>
+
+                                                            {(() => {
+                                                                let colabUuid: string | null = null;
+                                                                if (n.categoria === 'COLABORACION' && n.url_accion && n.url_accion.includes('colaboracion=')) {
+                                                                    try {
+                                                                        const query = n.url_accion.split('?')[1];
+                                                                        const params = new URLSearchParams(query);
+                                                                        colabUuid = params.get('colaboracion');
+                                                                    } catch {
+                                                                        // fallback
+                                                                    }
+                                                                }
+                                                                if (!colabUuid) return null;
+
+                                                                const respuesta = colaboracionesRespondidas[colabUuid];
+                                                                if (respuesta === 'Aprobada') {
+                                                                    return (
+                                                                        <div className="pt-2">
+                                                                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
+                                                                                <Check size={12} /> Colaboración Aceptada
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                if (respuesta === 'Rechazada') {
+                                                                    return (
+                                                                        <div className="pt-2">
+                                                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-700">
+                                                                                Solicitud Rechazada
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <div className="flex items-center gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={respondingUuid === colabUuid}
+                                                                            onClick={(e) => handleResponderColaboracion(e, n, colabUuid!, true)}
+                                                                            className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                                                                        >
+                                                                            {respondingUuid === colabUuid ? (
+                                                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                                            ) : (
+                                                                                <UserCheck size={13} />
+                                                                            )}
+                                                                            <span>Aceptar</span>
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={respondingUuid === colabUuid}
+                                                                            onClick={(e) => handleResponderColaboracion(e, n, colabUuid!, false)}
+                                                                            className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:opacity-50"
+                                                                        >
+                                                                            <UserX size={13} />
+                                                                            <span>Rechazar</span>
+                                                                        </button>
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 </div>

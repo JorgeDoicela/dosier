@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using dosier_domain.Identity.Entities;
 using dosier_infrastructure.data.models.Cowork;
 
@@ -180,3 +180,4 @@ public partial class DosierContext : DbContext
     partial void OnModelCreatingDosier(ModelBuilder modelBuilder);
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+

@@ -23,7 +23,8 @@ import {
     Calendar,
     BookOpen,
     HelpCircle,
-    ExternalLink
+    ExternalLink,
+    Users
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../api/AuthContext';
@@ -73,6 +74,21 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
     const isCoordCarrera = userRole.includes('COORD_CARRERA') || userRole.includes('CARRERA') || isAdmin;
     const isCoordAcad = userRole.includes('COORD_ACAD') || userRole.includes('ACADEMICA') || isAdmin;
     const isVicerrector = userRole.includes('VICERRECTOR') || userRole.includes('RECTOR') || isAdmin;
+
+    const userIdentifiers = [
+        user?.id_referencia,
+        user?.idSigafi,
+        user?.id_sigafi,
+        (user as any)?.cedula,
+        user?.id_usuario?.toString(),
+        user?.usuario
+    ].filter(Boolean) as string[];
+
+    const titularId = String(peaData?.id_docente_elaborador || peaData?.idDocenteElaborador || peaData?.IdDocenteElaborador || '');
+    const isDocenteTitular = Boolean(
+        isAdmin ||
+        (titularId && userIdentifiers.some(id => id.trim().toLowerCase() === titularId.trim().toLowerCase()))
+    );
 
     // Estado actual del PEA
     const estado = peaData?.estado || peaData?.Estado || 'Borrador';
@@ -630,8 +646,8 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                     </div>
                 )}
 
-                {/* Docente (cuando está en Borrador o ha sido Observado) */}
-                {isDocente && (estado === 'Borrador' || estado === 'Observado') && (
+                {/* Docente Titular (cuando está en Borrador o ha sido Observado) */}
+                {isDocente && isDocenteTitular && (estado === 'Borrador' || estado === 'Observado') && (
                     <button
                         type="button"
                         onClick={handleEnviarARevision}
@@ -641,6 +657,19 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                         {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         <span>Enviar PEA a Revisión</span>
                     </button>
+                )}
+
+                {/* Docente Colaborador (apoyo entre pares) */}
+                {isDocente && !isDocenteTitular && !isAdmin && (estado === 'Borrador' || estado === 'Observado') && (
+                    <div className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 text-xs flex items-start gap-2.5">
+                        <Users className="w-4 h-4 shrink-0 mt-0.5 text-[#0070f3] dark:text-blue-400" />
+                        <div className="leading-relaxed">
+                            <span className="font-semibold block text-zinc-900 dark:text-zinc-100">
+                                Modo de Apoyo Académico Colegiado
+                            </span>
+                            Estás colaborando en este PEA asignado a <strong>{peaData?.nombre_docente_elaborador || peaData?.nombreDocenteElaborador || 'otro docente'}</strong>. Por normativa institucional, la firma de elaboración y el envío formal a revisión corresponden exclusivamente al docente titular de la materia.
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

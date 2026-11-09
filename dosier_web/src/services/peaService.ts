@@ -70,6 +70,7 @@ export interface PeaBibliografiaDto {
 export interface PeaObservacionDto {
     idObservacion: number;
     uuid: string;
+    id_asignacion?: number;
     idPea: number;
     idUsuarioObservador?: number;
     nombreObservador?: string;
@@ -85,6 +86,7 @@ export interface PeaObservacionDto {
 export interface PeaTrazabilidadDto {
     idTrazabilidad: number;
     uuid: string;
+    id_asignacion?: number;
     idPea: number;
     idUsuario?: number;
     nombreUsuario?: string;
@@ -119,6 +121,7 @@ export interface PeaEvaluacionDto {
 export interface PeaDto {
     idPea: number;
     uuid: string;
+    id_asignacion?: number;
     idCarrera: number;
     nombreCarrera?: string;
     idAsignatura: number;
@@ -281,6 +284,7 @@ export const getTrazabilidadPea = (idOrUuid: number | string): Promise<PeaTrazab
 export interface PeaBandejaItemDto {
     id_pea: number;
     uuid: string;
+    id_asignacion?: number;
     id_carrera: number;
     nombre_carrera: string;
     id_asignatura: number;
@@ -309,8 +313,58 @@ export interface PeaBandejaItemDto {
     fecha_aprobado?: string;
     total_firmas_completadas: number;
 
-    total_observaciones_pendientes: number;
+        total_observaciones_pendientes: number;
+    estado_colaboracion?: 'Pendiente' | 'Aprobada' | 'Rechazada' | string;
+    uuid_colaboracion?: string;
 }
+
+export interface SolicitarColaboracionDto {
+    idAsignacion: number;
+    idPea?: number;
+    uuidPea?: string;
+    motivo?: string;
+}
+
+export interface ResponderColaboracionDto {
+    aceptar: boolean;
+    motivo?: string;
+}
+
+export interface PeaColaboracionItemDto {
+    id_colaboracion: number;
+    uuid: string;
+    id_pea?: number;
+    uuid_pea?: string;
+    id_asignacion: number;
+    id_docente_titular: string;
+    id_docente_colaborador: string;
+    nombre_docente_colaborador?: string;
+    nombre_asignatura?: string;
+    estado: 'Pendiente' | 'Aprobada' | 'Rechazada' | string;
+    fecha_solicitud: string;
+    fecha_respuesta?: string;
+}
+
+export const solicitarColaboracion = (dto: SolicitarColaboracionDto): Promise<PeaColaboracionItemDto> =>
+    api.post('/pea/colaboraciones/solicitar', {
+        id_asignacion: dto.idAsignacion,
+        id_pea: dto.idPea,
+        uuid_pea: dto.uuidPea,
+        motivo: dto.motivo
+    }).then(r => r.data);
+
+export const responderColaboracion = (uuid: string, aceptar: boolean, motivo?: string): Promise<{ success: boolean; mensaje?: string }> =>
+    api.post('/pea/colaboraciones/' + uuid + '/responder', {
+        aceptar,
+        motivo
+    }).then(r => r.data);
+
+export const getMisSolicitudesColaboracion = (): Promise<PeaColaboracionItemDto[]> =>
+    api.get('/pea/colaboraciones/mis-solicitudes').then(r => r.data);
+
+export const getSolicitudesColaboracionRecibidas = (): Promise<PeaColaboracionItemDto[]> =>
+    api.get('/pea/colaboraciones/recibidas').then(r => r.data);
+
 
 export const getBandejaPeas = (params?: {
     idPeriodo?: string;
@@ -322,6 +376,19 @@ export const getBandejaPeas = (params?: {
             idPeriodo: params?.idPeriodo,
             idCarrera: params?.idCarrera,
             estado: params?.estado
+        }
+    }).then(r => r.data);
+
+
+
+export const getPeasOtrosDocentes = (params?: {
+    idPeriodo?: string;
+    idCarrera?: number;
+}): Promise<PeaBandejaItemDto[]> =>
+    api.get('/pea/otros-docentes', {
+        params: {
+            idPeriodo: params?.idPeriodo,
+            idCarrera: params?.idCarrera
         }
     }).then(r => r.data);
 

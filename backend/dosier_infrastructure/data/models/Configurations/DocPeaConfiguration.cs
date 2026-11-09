@@ -27,6 +27,13 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.FuenteMalla).HasColumnName("fuenteMalla").HasMaxLength(40);
             builder.Property(e => e.SnapshotCurricularJson).HasColumnName("snapshotCurricularJson").HasColumnType("json");
             builder.Property(e => e.IdDocenteElaborador).HasColumnName("idDocenteElaborador").HasMaxLength(20);
+            builder.Property(e => e.IdDocenteColaborador).HasColumnName("idDocenteColaborador").HasMaxLength(20);
+            builder.Property(e => e.NombreDocenteColaborador).HasColumnName("nombreDocenteColaborador").HasMaxLength(255);
+            builder.Property(e => e.EstadoColaboracion).HasColumnName("estadoColaboracion").HasMaxLength(30);
+            builder.Property(e => e.FechaSolicitudColaboracion).HasColumnName("fechaSolicitudColaboracion");
+            builder.Property(e => e.FechaRespuestaColaboracion).HasColumnName("fechaRespuestaColaboracion");
+            builder.Property(e => e.MotivoColaboracion).HasColumnName("motivoColaboracion").HasColumnType("text");
+            builder.Property(e => e.ColaboradoresJson).HasColumnName("colaboradoresJson").HasColumnType("json");
             builder.Property(e => e.Modalidad).HasColumnName("modalidad").IsRequired().HasMaxLength(50);
             builder.Property(e => e.UnidadOrganizacion).HasColumnName("unidadOrganizacion").HasMaxLength(100);
             builder.Property(e => e.SemestreNivel).HasColumnName("semestreNivel").HasMaxLength(20);
@@ -53,6 +60,7 @@ namespace dosier_infrastructure.data.models.Configurations
             builder.Property(e => e.FirmaAprobadoVicerrector).HasColumnName("firmaAprobadoVicerrector").HasMaxLength(255);
             builder.Property(e => e.FechaAprobado).HasColumnName("fechaAprobado");
             builder.HasIndex(e => new { e.IdAsignacion, e.Version });
+            builder.HasIndex(e => new { e.IdDocenteColaborador, e.EstadoColaboracion });
             builder.HasIndex(e => e.IdExpediente);
 
             builder.HasOne(e => e.Expediente)

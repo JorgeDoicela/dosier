@@ -165,14 +165,13 @@ export function useProjectCore() {
                 ].filter(Boolean) as string[];
 
                 const docenteNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || user?.nombre_completo || 'Docente Responsable';
-                const isDocenteAutor = Boolean(
+                const isDocenteTitular = Boolean(
                     isAdmin ||
-                    isDocenteRole ||
-                    (pea.id_docente_elaborador && userIdentifiers.includes(pea.id_docente_elaborador))
+                    (pea.id_docente_elaborador && userIdentifiers.some(id => id.trim().toLowerCase() === pea.id_docente_elaborador.trim().toLowerCase()))
                 );
                 const canEditPea = Boolean(
                     isAdmin ||
-                    (isDocenteAutor && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección' || pea.estado === 'NoIniciado' || !pea.estado))
+                    (isDocenteRole && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección' || pea.estado === 'NoIniciado' || !pea.estado))
                 );
 
                 const peaState = pea.estado || 'Borrador';
@@ -180,11 +179,11 @@ export function useProjectCore() {
                 const isCoordCarrera = userRolesList.includes('DOSIER_COORD_CARRERA') || user?.role === 'DOSIER_COORD_CARRERA';
                 const isCoordAcad = userRolesList.includes('DOSIER_COORD_ACAD') || user?.role === 'DOSIER_COORD_ACAD';
                 const isVicerrector = userRolesList.includes('DOSIER_VICERRECTOR') || user?.role === 'DOSIER_VICERRECTOR';
-                const isDocente = isDocenteAutor || isDocenteRole;
 
+                // OBLIGATORIO: Solo el docente titular asignado a la materia puede firmar la etapa de elaboración del PEA
                 let canSignPea = false;
                 if (peaState === 'Borrador' || peaState === 'Observado' || peaState === 'Corregido' || peaState === 'En Corrección' || peaState === 'NoIniciado') {
-                    canSignPea = Boolean(isDocente || isAdmin);
+                    canSignPea = Boolean(isDocenteTitular || isAdmin);
                 } else if (peaState === 'EnRevision') {
                     canSignPea = Boolean(isCoordCarrera || isAdmin);
                 } else if (peaState === 'RevisadoCoord') {
@@ -207,6 +206,7 @@ export function useProjectCore() {
                     puedeEditar: canEditPea,
                     puedeSolicitarCambioEquipo: false,
                     puedeFirmar: canSignPea,
+                    isDocenteTitular: isDocenteTitular,
                     puntajeEvaluacion: null,
                     grupoInvestigacion: '',
                     grupoInvestigacionUuid: '',

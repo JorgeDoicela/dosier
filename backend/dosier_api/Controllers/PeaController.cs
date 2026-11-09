@@ -77,6 +77,100 @@ namespace dosier_api.Controllers
             return Ok(lista);
         }
 
+        /// <summary>
+        /// Lista los PEAs formulados por otros docentes en el período seleccionado.
+        /// Permite apoyo intercurricular y co-diseño colegiado entre profesores.
+        /// La firma de elaboración se mantiene estricta y exclusiva del docente titular asignado.
+        /// </summary>
+        [HttpGet("otros-docentes")]
+        public async Task<IActionResult> GetPeasOtrosDocentes(
+            [FromQuery] string? idPeriodo = null,
+            [FromQuery] int? idCarrera = null,
+            CancellationToken cancellationToken = default)
+        {
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(identifier))
+                return Unauthorized(new { message = "No se pudo identificar la sesión del usuario." });
+
+            var lista = await _peaService.ListarPeasOtrosDocentesAsync(idPeriodo, idCarrera, identifier, cancellationToken);
+            return Ok(lista);
+        }
+
+        [HttpPost("colaboraciones/solicitar")]
+        public async Task<IActionResult> SolicitarColaboracion(
+            [FromBody] SolicitarColaboracionDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(identifier))
+                return Unauthorized(new { message = "No se pudo identificar la sesión del usuario." });
+
+            try
+            {
+                var result = await _peaService.SolicitarColaboracionAsync(dto, identifier, cancellationToken);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("colaboraciones/{uuid}/responder")]
+        public async Task<IActionResult> ResponderColaboracion(
+            string uuid,
+            [FromBody] ResponderColaboracionDto req,
+            CancellationToken cancellationToken = default)
+        {
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(identifier))
+                return Unauthorized(new { message = "No se pudo identificar la sesión del usuario." });
+
+            try
+            {
+                var ok = await _peaService.ResponderColaboracionAsync(uuid, req.Aceptar, identifier, req.Motivo, cancellationToken);
+                return Ok(new { success = ok });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("colaboraciones/mis-solicitudes")]
+        public async Task<IActionResult> GetMisSolicitudesColaboracion(CancellationToken cancellationToken = default)
+        {
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(identifier))
+                return Unauthorized(new { message = "No se pudo identificar la sesión del usuario." });
+
+            var lista = await _peaService.ListarMisSolicitudesColaboracionAsync(identifier, cancellationToken);
+            return Ok(lista);
+        }
+
+        [HttpGet("colaboraciones/recibidas")]
+        public async Task<IActionResult> GetSolicitudesRecibidas(CancellationToken cancellationToken = default)
+        {
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(identifier))
+                return Unauthorized(new { message = "No se pudo identificar la sesión del usuario." });
+
+            var lista = await _peaService.ListarSolicitudesRecibidasAsync(identifier, cancellationToken);
+            return Ok(lista);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Guardar([FromBody] PeaDto dto)

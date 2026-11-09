@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using dosier_application.Academico;
 using dosier_application.Curriculum.Dtos;
 using dosier_application.Curriculum.Interfaces;
@@ -27,6 +28,7 @@ namespace dosier_infrastructure.Curriculum
         private readonly SignatureHashService _hashService;
         private readonly dosier_application.Common.IAppUrlService _appUrlService;
         private readonly IFirmaElectronicaService _firmaElectronicaService;
+        private readonly dosier_application.Common.Notifications.INotificationService? _notificationService;
         private readonly IServiceProvider? _serviceProvider;
 
         public PeaService(
@@ -36,6 +38,7 @@ namespace dosier_infrastructure.Curriculum
             SignatureHashService hashService,
             dosier_application.Common.IAppUrlService appUrlService,
             IFirmaElectronicaService firmaElectronicaService,
+            dosier_application.Common.Notifications.INotificationService? notificationService = null,
             IServiceProvider? serviceProvider = null)
         {
             _context = context;
@@ -44,7 +47,13 @@ namespace dosier_infrastructure.Curriculum
             _hashService = hashService;
             _appUrlService = appUrlService;
             _firmaElectronicaService = firmaElectronicaService;
+            _notificationService = notificationService;
             _serviceProvider = serviceProvider;
+        }
+
+        private dosier_application.Common.Notifications.INotificationService? GetNotificationService()
+        {
+            return _notificationService ?? _serviceProvider?.GetService<dosier_application.Common.Notifications.INotificationService>();
         }
 
         public async Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)
@@ -520,6 +529,33 @@ namespace dosier_infrastructure.Curriculum
             {
                 if (!isAdmin && !userRoles.Contains("DOSIER_DOCENTE"))
                     throw new UnauthorizedAccessException("El usuario no posee el rol de Docente (DOSIER_DOCENTE) para firmar la elaboración del PEA.");
+
+                // EXIGENCIA NORMATIVA: La firma de elaboración es obligatoria y exclusiva del docente titular asignado a la materia
+                if (!isAdmin)
+                {
+                    bool esDocenteTitular = false;
+                    if (!string.IsNullOrEmpty(pea.IdDocenteElaborador) && !string.IsNullOrEmpty(user.IdSigafi))
+                    {
+                        esDocenteTitular = string.Equals(pea.IdDocenteElaborador.Trim(), user.IdSigafi.Trim(), StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    if (!esDocenteTitular && pea.IdAsignacion.HasValue)
+                    {
+                        var asignacion = await _context.AsignacionesProfesores
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(a => a.IdAsignacion == pea.IdAsignacion.Value);
+
+                        if (asignacion != null && !string.IsNullOrEmpty(asignacion.IdProfesor) && !string.IsNullOrEmpty(user.IdSigafi))
+                        {
+                            esDocenteTitular = string.Equals(asignacion.IdProfesor.Trim(), user.IdSigafi.Trim(), StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+
+                    if (!esDocenteTitular)
+                    {
+                        throw new UnauthorizedAccessException("Firma no autorizada: La firma de elaboración del PEA es obligatoria y exclusiva del docente titular que tiene asignada esta materia. Los demás docentes solo pueden colaborar en el contenido.");
+                    }
+                }
 
                 if (pea.Estado != "Borrador" && pea.Estado != "Corregido")
                     throw new InvalidOperationException($"El docente solo puede firmar PEAs en estado Borrador o Corregido. Estado actual: {pea.Estado}");
@@ -2053,6 +2089,574 @@ namespace dosier_infrastructure.Curriculum
                 };
             }).ToList();
         }
+
+        public async Task<List<PeaBandejaItemDto>> ListarPeasOtrosDocentesAsync(
+            string? idPeriodo,
+            int? idCarrera,
+            string? identifier = null,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == identifier || u.IdUsuario.ToString() == identifier || u.Nombre == identifier, cancellationToken);
+
+            string? idSigafi = user?.IdSigafi ?? identifier;
+
+            // 1. Determinar período objetivo (si no se proporciona o es "todos", usar período activo)
+            string targetPeriodo = idPeriodo?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(targetPeriodo) || targetPeriodo == "todos")
+            {
+                var activo = await _context.Periodos.AsNoTracking()
+                    .Where(p => p.Periodoactivoinstituto == 1 || p.Activo == true)
+                    .Select(p => p.IdPeriodo)
+                    .FirstOrDefaultAsync(cancellationToken);
+                targetPeriodo = activo ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(targetPeriodo))
+            {
+                return new List<PeaBandejaItemDto>();
+            }
+
+            // 2. Obtener las carreras en las que el docente tiene carga académica en este período
+            // Un docente solo debe poder ver los PEAs de otros docentes que pertenezcan a su(s) misma(s) carrera(s)
+            var misCarreraIds = new List<int>();
+            if (!string.IsNullOrEmpty(idSigafi))
+            {
+                var misNivelesDocente = await _context.AsignacionesProfesores.AsNoTracking()
+                    .Where(a => a.IdProfesor == idSigafi && a.IdPeriodo == targetPeriodo && a.Activo == 1)
+                    .Select(a => a.IdNivel)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
+                if (misNivelesDocente.Any())
+                {
+                    misCarreraIds = await _context.Cursos.AsNoTracking()
+                        .Where(c => misNivelesDocente.Contains(c.IdNivel))
+                        .Select(c => c.IdCarrera)
+                        .Distinct()
+                        .ToListAsync(cancellationToken);
+                }
+            }
+
+            // 3. Obtener todas las asignaciones curriculares del período en SIGAFI, excluyendo al docente actual
+            var asignacionesQuery = _context.AsignacionesProfesores.AsNoTracking()
+                .Where(a => a.IdPeriodo == targetPeriodo && a.Activo == 1 && a.ExtraCurricular != 1);
+
+            if (!string.IsNullOrEmpty(idSigafi))
+            {
+                asignacionesQuery = asignacionesQuery.Where(a => a.IdProfesor != idSigafi);
+            }
+
+            var asignaciones = await asignacionesQuery.ToListAsync(cancellationToken);
+
+            if (!asignaciones.Any())
+            {
+                return new List<PeaBandejaItemDto>();
+            }
+
+            // 4. Resolver catálogos de SIGAFI (Cursos, Carreras del Instituto, Asignaturas, Modalidades, Profesores)
+            var nivelIds = asignaciones.Select(a => a.IdNivel).Distinct().ToList();
+            var cursosList = await _context.Cursos.AsNoTracking()
+                .Where(c => nivelIds.Contains(c.IdNivel))
+                .ToListAsync(cancellationToken);
+            var cursosMap = cursosList.GroupBy(c => c.IdNivel).ToDictionary(g => g.Key, g => g.First());
+
+            var carreraIds = cursosMap.Values.Select(c => c.IdCarrera).Distinct().ToList();
+            var carrerasList = await _context.Carreras.AsNoTracking()
+                .Where(c => carreraIds.Contains(c.IdCarrera) && c.EsInstituto == 1)
+                .ToListAsync(cancellationToken);
+            var carrerasMap = carrerasList.GroupBy(c => c.IdCarrera).ToDictionary(g => g.Key, g => g.First());
+
+            // Filtrar asignaciones correspondientes únicamente a las carreras del docente institucional (y por idCarrera si aplica)
+            var asignacionesFiltradas = asignaciones.Where(a =>
+            {
+                if (!cursosMap.TryGetValue(a.IdNivel, out var cur)) return false;
+                if (!carrerasMap.TryGetValue(cur.IdCarrera, out var car)) return false;
+                // Restricción disciplinar: solo materias de su(s) carrera(s)
+                if (misCarreraIds.Any() && !misCarreraIds.Contains(car.IdCarrera)) return false;
+                if (idCarrera.HasValue && idCarrera.Value > 0 && car.IdCarrera != idCarrera.Value) return false;
+                return true;
+            }).ToList();
+
+            if (!asignacionesFiltradas.Any())
+            {
+                return new List<PeaBandejaItemDto>();
+            }
+
+            var asigIds = asignacionesFiltradas.Select(a => a.IdAsignatura).Distinct().ToList();
+            var asignaturasList = await _context.Asignaturas.AsNoTracking()
+                .Where(a => asigIds.Contains(a.IdAsignatura))
+                .ToListAsync(cancellationToken);
+            var asignaturasMap = asignaturasList.GroupBy(a => a.IdAsignatura).ToDictionary(g => g.Key, g => g.First());
+
+            var modalidadIds = asignacionesFiltradas.Select(a => a.IdModalidad).Distinct().ToList();
+            var modalidadesList = await _context.Modalidades.AsNoTracking()
+                .Where(m => modalidadIds.Contains(m.IdModalidad))
+                .ToListAsync(cancellationToken);
+            var modalidadesMap = modalidadesList.GroupBy(m => m.IdModalidad).ToDictionary(g => g.Key, g => g.First());
+
+            var profesorIds = asignacionesFiltradas.Select(a => a.IdProfesor).Distinct().ToList();
+            var profesoresList = await _context.Profesores.AsNoTracking()
+                .Where(p => profesorIds.Contains(p.IdProfesor))
+                .ToListAsync(cancellationToken);
+            var profesoresMap = profesoresList.GroupBy(p => p.IdProfesor).ToDictionary(g => g.Key, g => g.First());
+
+            // 4. Consultar PEAs existentes en DocPeas para este período
+            var peasExistentes = await _context.DocPeas.AsNoTracking()
+                .Include(p => p.Observaciones)
+                .Where(p => p.IdPeriodo == targetPeriodo && p.Activo)
+                .ToListAsync(cancellationToken);
+
+            var peasPorAsignacion = peasExistentes
+                .Where(p => p.IdAsignacion.HasValue)
+                .GroupBy(p => p.IdAsignacion!.Value)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.Version).First());
+
+            var peasPorMateriaYDocente = peasExistentes
+                .Where(p => !string.IsNullOrEmpty(p.IdDocenteElaborador))
+                .GroupBy(p => $"{p.IdAsignatura}_{p.IdDocenteElaborador}")
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.Version).First());
+
+            // 5. La colaboración vive directamente en doc_pea (columnas idDocenteColaborador / colaboradoresJson)
+
+            var resultado = new List<PeaBandejaItemDto>();
+
+            foreach (var asig in asignacionesFiltradas)
+            {
+                if (!cursosMap.TryGetValue(asig.IdNivel, out var curso) ||
+                    !carrerasMap.TryGetValue(curso.IdCarrera, out var carrera) ||
+                    !asignaturasMap.TryGetValue(asig.IdAsignatura, out var asignatura))
+                {
+                    continue;
+                }
+
+                modalidadesMap.TryGetValue(asig.IdModalidad, out var modalidad);
+                profesoresMap.TryGetValue(asig.IdProfesor, out var profesor);
+
+                string nombreDocente = profesor != null ? $"{profesor.Nombres} {profesor.Apellidos}".Trim() : asig.IdProfesor;
+                string nombreModalidad = modalidad?.Modalidad1 ?? "Presencial";
+                string nombreNivel = curso.Nivel ?? string.Empty;
+
+
+
+                // Buscar si existe un PEA para esta asignación institucional
+                DocPea? pea = null;
+                if (peasPorAsignacion.TryGetValue(asig.IdAsignacion, out var pAsig))
+                {
+                    pea = pAsig;
+                }
+                else if (peasPorMateriaYDocente.TryGetValue($"{asig.IdAsignatura}_{asig.IdProfesor}", out var pMat))
+                {
+                    pea = pMat;
+                }
+
+                if (pea != null)
+                {
+                    resultado.Add(new PeaBandejaItemDto
+                    {
+                        IdPea = pea.IdPea,
+                        Uuid = pea.Uuid,
+                        IdAsignacion = asig.IdAsignacion,
+                        IdCarrera = carrera.IdCarrera,
+                        NombreCarrera = carrera.Carrera1 ?? "Carrera ISTPET",
+                        IdAsignatura = asignatura.IdAsignatura,
+                        NombreAsignatura = asignatura.Asignatura1 ?? "Asignatura",
+                        CodigoAsignatura = asignatura.Codigo,
+                        IdPeriodo = targetPeriodo,
+                        IdDocenteElaborador = pea.IdDocenteElaborador ?? asig.IdProfesor,
+                        NombreDocenteElaborador = nombreDocente,
+                        Modalidad = pea.Modalidad ?? nombreModalidad,
+                        SemestreNivel = pea.SemestreNivel ?? nombreNivel,
+                        Paralelo = pea.Paralelo ?? asig.Paralelo,
+                        TotalHorasAsignatura = pea.TotalHorasAsignatura,
+                        Creditos = pea.Creditos,
+                        Estado = pea.Estado,
+                        Version = pea.Version,
+                        FechaModificacion = pea.FechaModificacion,
+                        EstadoColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.EstadoColaboracion : null,
+                        UuidColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.Uuid : null,
+                        FirmaDocente = !string.IsNullOrEmpty(pea.FirmaElaboradoDocente),
+                        FechaElaborado = pea.FechaElaborado,
+                        FirmaCoord = !string.IsNullOrEmpty(pea.FirmaRevisadoCoord),
+                        FechaRevisadoCoord = pea.FechaRevisadoCoord,
+                        FirmaAcad = !string.IsNullOrEmpty(pea.FirmaRevisadoAcad),
+                        FechaRevisadoAcad = pea.FechaRevisadoAcad,
+                        FirmaVicerrector = !string.IsNullOrEmpty(pea.FirmaAprobadoVicerrector),
+                        FechaAprobado = pea.FechaAprobado,
+                        TotalObservacionesPendientes = (pea.Estado == "Observado") ? (pea.Observaciones?.Count(o => o.Estado == "Pendiente") ?? 0) : 0
+                    });
+                }
+                else
+                {
+                    // Asignatura del distributivo que aún no tiene PEA iniciado (Estado = NoIniciado)
+                    resultado.Add(new PeaBandejaItemDto
+                    {
+                        IdPea = 0,
+                        Uuid = string.Empty,
+                        IdAsignacion = asig.IdAsignacion,
+                        IdCarrera = carrera.IdCarrera,
+                        NombreCarrera = carrera.Carrera1 ?? "Carrera ISTPET",
+                        IdAsignatura = asignatura.IdAsignatura,
+                        NombreAsignatura = asignatura.Asignatura1 ?? "Asignatura",
+                        CodigoAsignatura = asignatura.Codigo,
+                        IdPeriodo = targetPeriodo,
+                        IdDocenteElaborador = asig.IdProfesor,
+                        NombreDocenteElaborador = nombreDocente,
+                        Modalidad = nombreModalidad,
+                        SemestreNivel = nombreNivel,
+                        Paralelo = asig.Paralelo,
+                        TotalHorasAsignatura = 0,
+                        Creditos = 0,
+                        Estado = "NoIniciado",
+                        Version = 1,
+                        FechaModificacion = null,
+                        EstadoColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.EstadoColaboracion : null,
+                        UuidColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.Uuid : null,
+                        FirmaDocente = false,
+                        FirmaCoord = false,
+                        FirmaAcad = false,
+                        FirmaVicerrector = false,
+                        TotalObservacionesPendientes = 0
+                    });
+                }
+            }
+
+            // Ordenar: primero los que tienen PEA activo/en progreso, luego los NoIniciados, y por nombre de asignatura
+            return resultado
+                .OrderBy(r => r.Estado == "NoIniciado" ? 1 : 0)
+                .ThenBy(r => r.NombreAsignatura)
+                .ToList();
+        }
+
+        public async Task<PeaColaboracionItemDto> SolicitarColaboracionAsync(
+            SolicitarColaboracionDto dto,
+            string idDocenteSolicitante,
+            CancellationToken cancellationToken = default)
+        {
+            var userSolicitante = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == idDocenteSolicitante || u.IdUsuario.ToString() == idDocenteSolicitante || u.Nombre == idDocenteSolicitante, cancellationToken);
+
+            string sigafiSolicitante = userSolicitante?.IdSigafi ?? idDocenteSolicitante;
+
+            // Obtener datos del profesor solicitante
+            var profSolicitante = await _context.Profesores.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.IdProfesor == sigafiSolicitante, cancellationToken);
+            string nombreSolicitante = profSolicitante != null 
+                ? $"{profSolicitante.Nombres} {profSolicitante.Apellidos}".Trim() 
+                : userSolicitante?.Nombre ?? sigafiSolicitante;
+
+            // Obtener asignación institucional de SIGAFI
+            var asignacion = await _context.AsignacionesProfesores.AsNoTracking()
+                .FirstOrDefaultAsync(a => a.IdAsignacion == dto.IdAsignacion, cancellationToken)
+                ?? throw new KeyNotFoundException("No se encontró la asignación académica especificada.");
+
+            // Obtener nombre de la asignatura
+            var asignatura = await _context.Asignaturas.AsNoTracking()
+                .FirstOrDefaultAsync(a => a.IdAsignatura == asignacion.IdAsignatura, cancellationToken);
+            string nombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura Curricular";
+
+            // Buscar si ya existe el PEA en doc_pea
+            var pea = await _context.DocPeas
+                .FirstOrDefaultAsync(p => p.IdAsignacion == dto.IdAsignacion && p.Activo, cancellationToken);
+
+            // Si aún no existe el PEA, lo creamos/aseguramos a partir de la asignación institucional
+            if (pea == null)
+            {
+                await CrearDesdeAsignacionAsync(dto.IdAsignacion, asignacion.IdProfesor);
+                pea = await _context.DocPeas
+                    .FirstOrDefaultAsync(p => p.IdAsignacion == dto.IdAsignacion && p.Activo, cancellationToken)
+                    ?? throw new KeyNotFoundException("No se pudo instanciar el PEA para registrar la colaboración.");
+            }
+
+            // Actualizar columnas directas de colaboración en doc_pea
+            pea.IdDocenteColaborador = sigafiSolicitante;
+            pea.NombreDocenteColaborador = nombreSolicitante;
+            pea.EstadoColaboracion = "Pendiente";
+            pea.FechaSolicitudColaboracion = DateTime.UtcNow;
+            pea.FechaRespuestaColaboracion = null;
+            pea.MotivoColaboracion = dto.Motivo;
+
+            // Historial estructurado en json
+            var colabList = new List<Dictionary<string, object>>();
+            if (!string.IsNullOrWhiteSpace(pea.ColaboradoresJson))
+            {
+                try
+                {
+                    colabList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(pea.ColaboradoresJson) ?? new();
+                }
+                catch { }
+            }
+            colabList.RemoveAll(c => c.TryGetValue("id_docente", out var id) && id?.ToString() == sigafiSolicitante);
+            colabList.Add(new Dictionary<string, object>
+            {
+                ["id_docente"] = sigafiSolicitante,
+                ["nombre_docente"] = nombreSolicitante,
+                ["estado"] = "Pendiente",
+                ["fecha_solicitud"] = DateTime.UtcNow.ToString("o"),
+                ["fecha_respuesta"] = string.Empty,
+                ["motivo"] = dto.Motivo ?? string.Empty
+            });
+            pea.ColaboradoresJson = JsonSerializer.Serialize(colabList);
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Enviar notificación in-app y correo electrónico al docente titular
+            try
+            {
+                var userTitular = await _context.Users.AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.IdSigafi == asignacion.IdProfesor, cancellationToken);
+
+                if (userTitular != null)
+                {
+                    var notifService = GetNotificationService();
+                    if (notifService != null)
+                    {
+                        var extraData = new Dictionary<string, string>
+                        {
+                            ["tipo"] = "SOLICITUD_COLABORACION",
+                            ["uuid_colaboracion"] = pea.Uuid,
+                            ["uuid_pea"] = pea.Uuid,
+                            ["id_asignacion"] = dto.IdAsignacion.ToString(),
+                            ["docente_colaborador"] = nombreSolicitante,
+                            ["asignatura"] = nombreAsignatura
+                        };
+
+                        await notifService.NotifyUserAsync(
+                            userTitular.IdUsuario,
+                            $"Solicitud de Colaboración: {nombreAsignatura}",
+                            $"El docente {nombreSolicitante} ha solicitado colaborar en la formulación del PEA de {nombreAsignatura}. Puede responder a esta solicitud en el centro de notificaciones para autorizar el ingreso al espacio de trabajo.",
+                            "COLABORACION",
+                            $"/notificaciones?colaboracion={pea.Uuid}",
+                            extraData
+                        );
+                    }
+                }
+            }
+            catch
+            {
+                // La notificación no bloquea la persistencia
+            }
+
+            return new PeaColaboracionItemDto
+            {
+                IdColaboracion = pea.IdPea,
+                Uuid = pea.Uuid,
+                IdPea = pea.IdPea,
+                UuidPea = pea.Uuid,
+                IdAsignacion = dto.IdAsignacion,
+                IdDocenteTitular = asignacion.IdProfesor,
+                IdDocenteColaborador = sigafiSolicitante,
+                NombreDocenteColaborador = nombreSolicitante,
+                NombreAsignatura = nombreAsignatura,
+                Estado = "Pendiente",
+                FechaSolicitud = pea.FechaSolicitudColaboracion ?? DateTime.UtcNow,
+                FechaRespuesta = null
+            };
+        }
+
+        public async Task<bool> ResponderColaboracionAsync(
+            string uuidColaboracion,
+            bool aceptar,
+            string idDocenteTitular,
+            string? motivo = null,
+            CancellationToken cancellationToken = default)
+        {
+            var userTitular = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == idDocenteTitular || u.IdUsuario.ToString() == idDocenteTitular || u.Nombre == idDocenteTitular, cancellationToken);
+            string sigafiTitular = userTitular?.IdSigafi ?? idDocenteTitular;
+
+            var pea = await _context.DocPeas
+                .FirstOrDefaultAsync(p => (p.Uuid == uuidColaboracion || p.IdPea.ToString() == uuidColaboracion) && p.Activo, cancellationToken)
+                ?? throw new KeyNotFoundException("No se encontró el PEA o solicitud de colaboración especificada.");
+
+            bool isAdmin = userTitular?.Administrador == true;
+            if (!isAdmin && pea.IdDocenteElaborador != sigafiTitular)
+            {
+                throw new UnauthorizedAccessException("Solo el docente titular de la cátedra puede autorizar la colaboración.");
+            }
+
+            pea.EstadoColaboracion = aceptar ? "Aprobada" : "Rechazada";
+            pea.FechaRespuestaColaboracion = DateTime.UtcNow;
+            pea.MotivoColaboracion = motivo;
+
+            // Actualizar JSON estructurado
+            var colabList = new List<Dictionary<string, object>>();
+            if (!string.IsNullOrWhiteSpace(pea.ColaboradoresJson))
+            {
+                try
+                {
+                    colabList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(pea.ColaboradoresJson) ?? new();
+                }
+                catch { }
+            }
+            var entry = colabList.FirstOrDefault(c => c.TryGetValue("id_docente", out var id) && id?.ToString() == pea.IdDocenteColaborador);
+            if (entry != null)
+            {
+                entry["estado"] = pea.EstadoColaboracion;
+                entry["fecha_respuesta"] = DateTime.UtcNow.ToString("o");
+                entry["motivo"] = motivo ?? string.Empty;
+            }
+            else if (!string.IsNullOrEmpty(pea.IdDocenteColaborador))
+            {
+                colabList.Add(new Dictionary<string, object>
+                {
+                    ["id_docente"] = pea.IdDocenteColaborador,
+                    ["nombre_docente"] = pea.NombreDocenteColaborador ?? string.Empty,
+                    ["estado"] = pea.EstadoColaboracion,
+                    ["fecha_solicitud"] = (pea.FechaSolicitudColaboracion ?? DateTime.UtcNow).ToString("o"),
+                    ["fecha_respuesta"] = DateTime.UtcNow.ToString("o"),
+                    ["motivo"] = motivo ?? string.Empty
+                });
+            }
+            pea.ColaboradoresJson = JsonSerializer.Serialize(colabList);
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Obtener nombre de la asignatura para la notificación
+            var asignatura = await _context.Asignaturas.AsNoTracking()
+                .FirstOrDefaultAsync(a => a.IdAsignatura == pea.IdAsignatura, cancellationToken);
+            string nombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura Curricular";
+
+            // Notificar al docente colaborador solicitante (in-app y correo institucional)
+            try
+            {
+                if (!string.IsNullOrEmpty(pea.IdDocenteColaborador))
+                {
+                    var userColaborador = await _context.Users.AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.IdSigafi == pea.IdDocenteColaborador, cancellationToken);
+
+                    if (userColaborador != null)
+                    {
+                        var notifService = GetNotificationService();
+                        if (notifService != null)
+                        {
+                            string targetUrl = aceptar
+                                ? $"/documentacion/workspace/pea-oficial/{pea.Uuid}?edit=pea-oficial"
+                                : "/documentacion/mis-proyectos";
+
+                            string titulo = aceptar
+                                ? $"Colaboración Aceptada: {nombreAsignatura}"
+                                : $"Solicitud de Colaboración Declinada: {nombreAsignatura}";
+
+                            string mensaje = aceptar
+                                ? $"El docente titular ha aceptado tu solicitud para colaborar en '{nombreAsignatura}'. Ya puedes ingresar al espacio de trabajo para co-elaborar el PEA."
+                                : $"El docente titular no ha aceptado la solicitud de colaboración para '{nombreAsignatura}'.";
+
+                            var extraData = new Dictionary<string, string>
+                            {
+                                ["tipo"] = "RESPUESTA_COLABORACION",
+                                ["uuid_colaboracion"] = pea.Uuid,
+                                ["uuid_pea"] = pea.Uuid,
+                                ["id_asignacion"] = (pea.IdAsignacion ?? 0).ToString(),
+                                ["estado"] = pea.EstadoColaboracion
+                            };
+
+                            await notifService.NotifyUserAsync(
+                                userColaborador.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "COLABORACION",
+                                targetUrl,
+                                extraData
+                            );
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // No bloquear si la notificación falla
+            }
+
+            return true;
+        }
+
+        public async Task<List<PeaColaboracionItemDto>> ListarMisSolicitudesColaboracionAsync(
+            string idDocente,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == idDocente || u.IdUsuario.ToString() == idDocente || u.Nombre == idDocente, cancellationToken);
+            string sigafiId = user?.IdSigafi ?? idDocente;
+
+            var peas = await _context.DocPeas.AsNoTracking()
+                .Where(p => p.IdDocenteColaborador == sigafiId && p.Activo)
+                .OrderByDescending(p => p.FechaSolicitudColaboracion)
+                .ToListAsync(cancellationToken);
+
+            var materiaIds = peas.Select(p => p.IdAsignatura).Distinct().ToList();
+            var materiasMap = await _context.Asignaturas.AsNoTracking()
+                .Where(a => materiaIds.Contains(a.IdAsignatura))
+                .ToDictionaryAsync(a => a.IdAsignatura, a => a.Asignatura1, cancellationToken);
+
+            return peas.Select(p => new PeaColaboracionItemDto
+            {
+                IdColaboracion = p.IdPea,
+                Uuid = p.Uuid,
+                IdPea = p.IdPea,
+                UuidPea = p.Uuid,
+                IdAsignacion = p.IdAsignacion ?? 0,
+                IdDocenteTitular = p.IdDocenteElaborador ?? string.Empty,
+                IdDocenteColaborador = p.IdDocenteColaborador ?? string.Empty,
+                NombreDocenteColaborador = p.NombreDocenteColaborador,
+                NombreAsignatura = materiasMap.TryGetValue(p.IdAsignatura, out var nom) ? nom : "Asignatura",
+                Estado = p.EstadoColaboracion ?? "Pendiente",
+                FechaSolicitud = p.FechaSolicitudColaboracion ?? p.FechaCreacion,
+                FechaRespuesta = p.FechaRespuestaColaboracion
+            }).ToList();
+        }
+
+        public async Task<List<PeaColaboracionItemDto>> ListarSolicitudesRecibidasAsync(
+            string idDocenteTitular,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == idDocenteTitular || u.IdUsuario.ToString() == idDocenteTitular || u.Nombre == idDocenteTitular, cancellationToken);
+            string sigafiId = user?.IdSigafi ?? idDocenteTitular;
+
+            var peas = await _context.DocPeas.AsNoTracking()
+                .Where(p => p.IdDocenteElaborador == sigafiId && !string.IsNullOrEmpty(p.IdDocenteColaborador) && p.Activo)
+                .OrderByDescending(p => p.FechaSolicitudColaboracion)
+                .ToListAsync(cancellationToken);
+
+            var materiaIds = peas.Select(p => p.IdAsignatura).Distinct().ToList();
+            var materiasMap = await _context.Asignaturas.AsNoTracking()
+                .Where(a => materiaIds.Contains(a.IdAsignatura))
+                .ToDictionaryAsync(a => a.IdAsignatura, a => a.Asignatura1, cancellationToken);
+
+            return peas.Select(p => new PeaColaboracionItemDto
+            {
+                IdColaboracion = p.IdPea,
+                Uuid = p.Uuid,
+                IdPea = p.IdPea,
+                UuidPea = p.Uuid,
+                IdAsignacion = p.IdAsignacion ?? 0,
+                IdDocenteTitular = p.IdDocenteElaborador ?? string.Empty,
+                IdDocenteColaborador = p.IdDocenteColaborador ?? string.Empty,
+                NombreDocenteColaborador = p.NombreDocenteColaborador,
+                NombreAsignatura = materiasMap.TryGetValue(p.IdAsignatura, out var nom) ? nom : "Asignatura",
+                Estado = p.EstadoColaboracion ?? "Pendiente",
+                FechaSolicitud = p.FechaSolicitudColaboracion ?? p.FechaCreacion,
+                FechaRespuesta = p.FechaRespuestaColaboracion
+            }).ToList();
+        }
+
+        public async Task<Dictionary<int, string>> ObtenerEstadosColaboracionPorAsignacionesAsync(
+            List<int> idAsignaciones,
+            string idDocenteSolicitante,
+            CancellationToken cancellationToken = default)
+        {
+            var user = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == idDocenteSolicitante || u.IdUsuario.ToString() == idDocenteSolicitante || u.Nombre == idDocenteSolicitante, cancellationToken);
+            string sigafiId = user?.IdSigafi ?? idDocenteSolicitante;
+
+            var peas = await _context.DocPeas.AsNoTracking()
+                .Where(p => p.IdAsignacion.HasValue && idAsignaciones.Contains(p.IdAsignacion.Value) && p.IdDocenteColaborador == sigafiId && p.Activo)
+                .ToListAsync(cancellationToken);
+
+            return peas
+                .Where(p => p.IdAsignacion.HasValue && !string.IsNullOrEmpty(p.EstadoColaboracion))
+                .ToDictionary(p => p.IdAsignacion!.Value, p => p.EstadoColaboracion!);
+        }
     }
 }
-

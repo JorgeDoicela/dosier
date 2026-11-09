@@ -189,6 +189,7 @@ namespace dosier_application.Curriculum.Dtos
     {
         public int IdPea { get; set; }
         public string Uuid { get; set; } = string.Empty;
+        public int? IdAsignacion { get; set; }
         public int IdCarrera { get; set; }
         public string NombreCarrera { get; set; } = string.Empty;
         public int IdAsignatura { get; set; }
@@ -205,6 +206,8 @@ namespace dosier_application.Curriculum.Dtos
         public string Estado { get; set; } = "Borrador";
         public int Version { get; set; } = 1;
         public DateTime? FechaModificacion { get; set; }
+        public string? EstadoColaboracion { get; set; } // 'Pendiente', 'Aprobada', 'Rechazada', null
+        public string? UuidColaboracion { get; set; }
 
         // Circuito de 4 Firmas Digitales
         public bool FirmaDocente { get; set; }

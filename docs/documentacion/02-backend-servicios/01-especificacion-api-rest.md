@@ -84,6 +84,7 @@ Controlador central para la elaboración, edición, validación de horas, circui
 | `GET` | `/uuid/{uuid}` | Autenticado | Obtiene un PEA por su UUID único. |
 | `GET` | `/buscar` | Autenticado | Busca PEA por `idAsignatura` e `idPeriodo`. |
 | `GET` | `/bandeja` | Autenticado | Bandeja de supervisión curricular filtrada por `idPeriodo`, `idCarrera`, `estado`. Calcula firmas completadas. |
+| `GET` | `/otros-docentes` | Autenticado | Lista las asignaturas curriculares del período lectivo asignadas a otros docentes que pertenecen a la(s) misma(s) carrera(s) del docente en sesión (incluyendo aquellas en estado `NoIniciado` y con PEA en curso) para co-elaboración y consulta colegiada. Excluye asignaciones del usuario autenticado y materias de carreras ajenas. |
 | `POST`| `/` | Autenticado | Guarda o actualiza incrementalmente las secciones del PEA. Valida balance de horas. |
 | `POST`| `/desde-asignacion/{idAsignacion:int}` | Autenticado | Instancia un nuevo PEA a partir de la asignación docente oficial de SIGAFI. |
 | `PATCH`| `/{id}/estado` | `DOSIER_ADMIN` | Modificación forzada de estado administrativo. |
@@ -97,7 +98,11 @@ Controlador central para la elaboración, edición, validación de horas, circui
 | `GET` | `/ai/config` | Autenticado | Consulta del estado de configuración, proveedor activo, modelo y endpoint del asistente de IA. |
 | `POST`| `/ai/config` | Autenticado / Admin | Almacenamiento cifrado con AES-256 de la API Key y configuración del motor IA (personal o global). |
 | `POST`| `/uuid/{uuid}/ai/generar` | Autenticado (Docente/Admin) | Generación asistida de propuesta curricular completa o por sección con cuadre matemático SIGAFI. |
-| POST| /uuid/{uuid}/importar-documento | Autenticado (Docente/Admin) | Ingestión y extracción sintáctica de PEA desde documentos digitales (.pdf y .docx) con mapeo estructurado a Yjs y protección de datos bloqueados de SIGAFI. |
+| `POST`| `/uuid/{uuid}/importar-documento` | Autenticado (Docente/Admin) | Ingestión y extracción sintáctica de PEA desde documentos digitales (.pdf y .docx) con mapeo estructurado a Yjs y protección de datos bloqueados de SIGAFI. |
+| `POST`| `/colaboraciones/solicitar` | Autenticado | Registra una solicitud de colaboración de un docente hacia la asignatura de otro docente titular de su carrera. Genera notificación in-app y correo electrónico institucional al docente titular. |
+| `POST`| `/colaboraciones/{uuid}/responder` | Docente Titular / Admin | Acepta o rechaza formalmente la solicitud de colaboración. Al aceptarse, autoriza la conexión en tiempo real vía WebSocket (CollaborationHub), inicializa el PEA si estaba `NoIniciado` y notifica al docente colaborador. |
+| `GET` | `/colaboraciones/mis-solicitudes` | Autenticado | Lista las solicitudes de colaboración formuladas por el docente autenticado con sus estados (`Pendiente`, `Aprobada`, `Rechazada`). |
+| `GET` | `/colaboraciones/recibidas` | Autenticado | Lista las solicitudes de colaboración recibidas por el docente titular de la cátedra. |
 
 ---
 

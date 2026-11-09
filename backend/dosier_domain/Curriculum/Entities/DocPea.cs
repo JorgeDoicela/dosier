@@ -21,6 +21,16 @@ namespace dosier_domain.Curriculum.Entities
         public string? FuenteMalla { get; set; }
         public string? SnapshotCurricularJson { get; set; }
         public string? IdDocenteElaborador { get; set; }
+
+        // Colaboración Colegiada (Workflow entre Docentes)
+        public string? IdDocenteColaborador { get; set; }
+        public string? NombreDocenteColaborador { get; set; }
+        public string? EstadoColaboracion { get; set; } // 'Pendiente', 'Aprobada', 'Rechazada'
+        public DateTime? FechaSolicitudColaboracion { get; set; }
+        public DateTime? FechaRespuestaColaboracion { get; set; }
+        public string? MotivoColaboracion { get; set; }
+        public string? ColaboradoresJson { get; set; }
+
         public string Modalidad { get; set; } = "Presencial";
         public string? UnidadOrganizacion { get; set; }
         public string? SemestreNivel { get; set; }
