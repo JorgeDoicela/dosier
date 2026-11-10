@@ -12,6 +12,7 @@ import { LegalizacionFirmaModal } from './Modals/LegalizacionFirmaModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
+import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
 import {
     Award,
     BookOpen,
@@ -394,13 +395,14 @@ export const VicerrectorDashboard: React.FC = () => {
                                         <span className="truncate">{p.nombre_docente_elaborador || 'Docente de Asignatura'}</span>
                                     </div>
 
-                                    {/* Metadatos Curriculares en Línea Limpia con Puntos */}
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
-                                        {[
-                                            `${p.total_horas_asignatura || 0}h${p.creditos ? ` (${p.creditos} Créd.)` : ''}`,
-                                            p.semestre_nivel
-                                        ].filter(Boolean).join(' · ')}
-                                    </p>
+                                    {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
+                                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
+                                        {p.semestre_nivel && <span>{p.semestre_nivel}</span>}
+                                        {p.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                            {formatModalidad(p.modalidad)}
+                                        </span>
+                                    </div>
 
                                     {/* Cadena de Avales */}
                                     <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 pt-1">

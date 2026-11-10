@@ -21,6 +21,7 @@ import { ProrrogaPlazoModal } from './Modals/ProrrogaPlazoModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
+import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
 import { 
     Search, 
     RefreshCw, 
@@ -368,11 +369,13 @@ export const CoordAcadDashboard: React.FC = () => {
                                         <span className="truncate">{p.nombre_docente_elaborador || 'Docente Asignado'}</span>
                                     </div>
 
-                                    {/* Metadatos Curriculares: Texto limpio continuo con puntos, sin cajas ni chips */}
+                                    {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
                                     <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
-                                        <span>{p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} Créd.)` : ''}</span>
-                                        {p.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
                                         {p.semestre_nivel && <span>{p.semestre_nivel}</span>}
+                                        {p.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                            {formatModalidad(p.modalidad)}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -420,7 +423,7 @@ export const CoordAcadDashboard: React.FC = () => {
                                 <tr>
                                     <th className="py-2.5 px-4">Asignatura y Carrera</th>
                                     <th className="py-2.5 px-3">Docente Responsable</th>
-                                    <th className="py-2.5 px-3">Horas CES Art. 21</th>
+                                    <th className="py-2.5 px-3">Modalidad</th>
                                     <th className="py-2.5 px-3">Estado del Circuito</th>
                                     <th className="py-2.5 px-4 text-right">Acción</th>
                                 </tr>
@@ -445,10 +448,8 @@ export const CoordAcadDashboard: React.FC = () => {
                                                     {p.nombre_docente_elaborador || 'Docente Asignado'}
                                                 </span>
                                             </td>
-                                            <td className="py-2.5 px-3 font-mono text-[11px]">
-                                                <span className="text-zinc-800 dark:text-zinc-200">
-                                                    {p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} créd.)` : ''}
-                                                </span>
+                                            <td className="py-2.5 px-3 text-xs text-zinc-700 dark:text-zinc-300">
+                                                {formatModalidad(p.modalidad)}
                                             </td>
                                             <td className="py-2.5 px-3">
                                                 {p.estado === 'Borrador' && (

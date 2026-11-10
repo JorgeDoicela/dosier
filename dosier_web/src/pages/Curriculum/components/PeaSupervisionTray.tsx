@@ -32,7 +32,8 @@ import {
     isPeaBorrador,
     isPeaEnRevision,
     isPeaAvalado,
-    getPeaStatusDescriptor
+    getPeaStatusDescriptor,
+    formatModalidad
 } from '../utils/peaStatusWorkflow';
 
 export const PeaSupervisionTray: React.FC = () => {
@@ -493,14 +494,15 @@ export const PeaSupervisionTray: React.FC = () => {
                                         <span className="truncate">{pea.nombre_docente_elaborador || 'Docente Responsable'}</span>
                                     </div>
 
-                                    {/* Metadatos Curriculares en Línea Limpia con Puntos */}
+                                    {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
                                     <div className="flex items-center justify-between gap-2 pt-0.5">
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                            {[
-                                                `${pea.total_horas_asignatura || 0}h${pea.creditos ? ` (${pea.creditos} Créd.)` : ''}`,
-                                                pea.semestre_nivel
-                                            ].filter(Boolean).join(' · ')}
-                                        </p>
+                                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                            {pea.semestre_nivel && <span>{pea.semestre_nivel}</span>}
+                                            {pea.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                                            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                                {formatModalidad(pea.modalidad)}
+                                            </span>
+                                        </div>
                                         {pea.total_observaciones_pendientes > 0 && (
                                             <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 shrink-0">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />

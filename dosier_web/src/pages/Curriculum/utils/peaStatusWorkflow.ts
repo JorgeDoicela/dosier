@@ -243,3 +243,30 @@ export const getPeaStatusDescriptor = (status?: string | null): PeaStatusDescrip
     }
 };
 
+/**
+ * Normaliza y formatea la modalidad curricular según la denominación oficial institucional.
+ */
+export const formatModalidad = (mod?: string | null, idModalidad?: number | null): string => {
+    if (mod && mod.trim()) {
+        const clean = mod.trim();
+        const lower = clean.toLowerCase();
+        if (lower.includes('linea') || lower.includes('línea') || lower.includes('virtual') || lower.includes('online')) {
+            return 'En línea';
+        }
+        if (lower.includes('semipresencial')) {
+            return 'Semipresencial';
+        }
+        if (lower.includes('hibrid') || lower.includes('híbrid')) {
+            return 'Híbrida';
+        }
+        if (lower.includes('presencial')) {
+            return 'Presencial';
+        }
+        return clean;
+    }
+    if (idModalidad === 2 || idModalidad === 3) {
+        return 'En línea';
+    }
+    return 'Presencial';
+};
+
