@@ -173,15 +173,15 @@ export const curriculumProjectService = {
             .then(r => {
                 const list = Array.isArray(r.data) ? r.data : [];
                 return list
-                    .filter((m: any) => !m.es_extracurricular && m.estado_pea !== 'NoAplica')
+                    .filter((m: any) => !m.es_extracurricular)
                     .map((m: any) => ({
                         uuid: m.uuid_pea || String(m.id_pea || m.id_asignacion),
                         titulo: m.nombre_asignatura,
                         title: m.nombre_asignatura,
                         codigo_institucional: m.codigo_asignatura,
                         carrera: m.nombre_carrera,
-                        estado: m.estado_pea || 'Borrador',
-                        status: m.estado_pea || 'Borrador',
+                        estado: m.estado_pea === 'NoAplica' ? 'Borrador' : (m.estado_pea || 'Borrador'),
+                        status: m.estado_pea === 'NoAplica' ? 'Borrador' : (m.estado_pea || 'Borrador'),
                         fecha_modificacion: m.fecha_modificacion,
                         template_code: 'PEA_OFICIAL'
                     }));

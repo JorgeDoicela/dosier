@@ -124,7 +124,8 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         if (!user) return;
         try {
             setSidebarProjectsLoading(true);
-            const data = isAdmin
+            const esSupervisora = isAdmin || isVicerrector || isCoordAcad || isCoordCarrera;
+            const data = esSupervisora
                 ? await curriculumProjectService.getAllProjects()
                 : await curriculumProjectService.getMyProjects();
 
@@ -147,7 +148,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
 
             setSidebarProjects(sorted);
 
-            if (isAdmin) {
+            if (esSupervisora) {
                 try {
                     const myData = await curriculumProjectService.getMyProjects();
                     const myList = Array.isArray(myData) ? myData : (myData as any)?.items || [];

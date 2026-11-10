@@ -2206,7 +2206,14 @@ namespace dosier_infrastructure.Curriculum
         }
 
 
-        public async Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, string? identifier = null, System.Threading.CancellationToken cancellationToken = default)
+        public async Task<List<PeaBandejaItemDto>> ListarBandejaAsync(
+            string? idPeriodo,
+            int? idCarrera,
+            string? estado,
+            int idUsuario,
+            string? identifier = null,
+            bool alcanceInstitucional = false,
+            System.Threading.CancellationToken cancellationToken = default)
         {
             User? user = null;
             if (idUsuario > 0)
@@ -2243,9 +2250,12 @@ namespace dosier_infrastructure.Curriculum
                 .Include(p => p.Observaciones)
                 .Where(p => p.Activo);
 
-            if (!string.IsNullOrWhiteSpace(idPeriodo) && idPeriodo != "todos")
+            // Filtrado resiliente de período (ignora mayúsculas/minúsculas y comodines 'todos'/'todas')
+            if (!string.IsNullOrWhiteSpace(idPeriodo) &&
+                !string.Equals(idPeriodo, "todos", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(idPeriodo, "todas", StringComparison.OrdinalIgnoreCase))
             {
-                query = query.Where(p => p.IdPeriodo == idPeriodo);
+                query = query.Where(p => p.IdPeriodo == idPeriodo.Trim());
             }
 
             if (idCarrera.HasValue && idCarrera.Value > 0)
@@ -2253,12 +2263,17 @@ namespace dosier_infrastructure.Curriculum
                 query = query.Where(p => p.IdCarrera == idCarrera.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(estado) && estado != "todos")
+            // Filtrado resiliente de estado (ignora mayúsculas/minúsculas y comodines 'todos'/'todas')
+            if (!string.IsNullOrWhiteSpace(estado) &&
+                !string.Equals(estado, "todos", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(estado, "todas", StringComparison.OrdinalIgnoreCase))
             {
-                query = query.Where(p => p.Estado == estado);
+                var estLimpio = estado.Trim();
+                query = query.Where(p => p.Estado == estLimpio);
             }
 
-            // Si es docente exclusivo sin rol de supervisión institucional, solo ve sus materias
+            // Gobernanza de visibilidad y alcance institucional por rol:
+            // 1. Docentes regulares sin rol de autoridad: ven exclusivamente sus PEAs elaborados.
             if (!isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera)
             {
                 if (!string.IsNullOrEmpty(user.IdSigafi))
@@ -2266,9 +2281,10 @@ namespace dosier_infrastructure.Curriculum
                     query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
                 }
             }
+            // 2. Coordinadores de Carrera (DOSIER_COORD_CARRERA exclusivo): ven ÚNICAMENTE las materias de sus carreras asignadas.
+            // Regla institucional estricta: Los coordinadores de carrera supervisan solo de sus carreras, mientras que el coordinador académico supervisa todas.
             else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad && !string.IsNullOrEmpty(user.IdSigafi))
             {
-                // Coordinador de Carrera: supervisa las carreras que coordina o sus materias formuladas
                 var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
                     .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
                     .Select(a => a.IdCarrera!.Value)
@@ -2278,10 +2294,17 @@ namespace dosier_infrastructure.Curriculum
                 {
                     query = query.Where(p => carrerasCoordinadas.Contains(p.IdCarrera) || p.IdDocenteElaborador == user.IdSigafi);
                 }
+                else
+                {
+                    query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+                }
             }
+            // 3. Coordinador Académico (DOSIER_COORD_ACAD), Vicerrector (DOSIER_VICERRECTOR) y Admin (DOSIER_ADMIN):
+            // Supervisión macro-curricular institucional: tienen acceso y supervisión sobre todas las carreras.
 
             // Auto-aprovisionamiento proactivo de PEAs para asignaciones del distributivo SIGAFI que aún no hayan sido abiertas
-            await SincronizarDistributivoInternoAsync(idPeriodo, idCarrera, user.IdSigafi, isAdmin || isVicerrector || isCoordAcad, cancellationToken);
+            bool tieneAlcanceGlobal = isAdmin || isVicerrector || isCoordAcad;
+            await SincronizarDistributivoInternoAsync(idPeriodo, idCarrera, user.IdSigafi, tieneAlcanceGlobal, cancellationToken);
 
             var peas = await query
                 .OrderByDescending(p => p.FechaModificacion)
@@ -2381,7 +2404,9 @@ namespace dosier_infrastructure.Curriculum
             try
             {
                 string targetPeriodo = idPeriodo?.Trim() ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(targetPeriodo) || targetPeriodo == "todos")
+                if (string.IsNullOrWhiteSpace(targetPeriodo) ||
+                    string.Equals(targetPeriodo, "todos", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(targetPeriodo, "todas", StringComparison.OrdinalIgnoreCase))
                 {
                     var activo = await _context.Periodos.AsNoTracking()
                         .Where(p => p.Periodoactivoinstituto == 1 || p.Activo == true)
@@ -2443,7 +2468,9 @@ namespace dosier_infrastructure.Curriculum
 
             // 1. Determinar período objetivo (si no se proporciona o es "todos", usar período activo)
             string targetPeriodo = idPeriodo?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(targetPeriodo) || targetPeriodo == "todos")
+            if (string.IsNullOrWhiteSpace(targetPeriodo) ||
+                string.Equals(targetPeriodo, "todos", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(targetPeriodo, "todas", StringComparison.OrdinalIgnoreCase))
             {
                 var activo = await _context.Periodos.AsNoTracking()
                     .Where(p => p.Periodoactivoinstituto == 1 || p.Activo == true)

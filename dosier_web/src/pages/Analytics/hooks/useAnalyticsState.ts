@@ -25,8 +25,6 @@ export const useAnalyticsState = () => {
     const [selectedChartSegment, setSelectedChartSegment] = useState<string | null>(null);
     const [exporting, setExporting] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
-    const [activeCacesCode, setActiveCacesCode] = useState<string>('C1.PEA');
-    const [activeProjectUuid, setActiveProjectUuid] = useState<string | null>(null);
 
     const handleExportPdf = async () => {
         setExporting(true);
@@ -53,10 +51,6 @@ export const useAnalyticsState = () => {
         setSelectedChartSegment,
         exporting,
         exportError,
-        activeCacesCode,
-        setActiveCacesCode,
-        activeProjectUuid,
-        setActiveProjectUuid,
         handleExportPdf
     };
 };

@@ -49,14 +49,9 @@ export const AnalyticsPage: React.FC = () => {
     return (
         <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto space-y-6">
             {/* Cabecera Principal */}
-            <AnalyticsHeader
-                refreshing={refreshing}
-                exporting={exporting}
-                exportError={exportError}
-                onExportPdf={handleExportPdf}
-            />
+            <AnalyticsHeader />
 
-            {/* Panel de Filtros Directos */}
+            {/* Fila de Filtros y Acción de Descarga */}
             <AnalyticsFilters
                 period={period}
                 setPeriod={setPeriod}
@@ -64,6 +59,9 @@ export const AnalyticsPage: React.FC = () => {
                 setCarrera={setCarrera}
                 dbPeriods={dbPeriods}
                 dbCareers={dbCareers}
+                exporting={exporting}
+                exportError={exportError}
+                onExportPdf={handleExportPdf}
             />
 
             {/* Contenido Ejecutivo */}
@@ -95,7 +93,6 @@ export const AnalyticsPage: React.FC = () => {
                     setSelectedChartSegment={setSelectedChartSegment}
                     carrerasCumplimiento={processed.carrerasCumplimiento}
                     cuelloBotella={processed.cuelloBotella}
-                    cargaHorariaCaces={processed.cargaHorariaCaces}
                     onSelectCarrera={(c) => setCarrera(c)}
                 />
             )}

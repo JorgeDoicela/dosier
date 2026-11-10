@@ -30,12 +30,58 @@ namespace dosier_infrastructure.Common
 
         public async Task<byte[]> GenerateAnalyticsReportPdfAsync(string? period, string? carrera, string userIdRef, bool isAdmin, string userName)
         {
-            _logger.LogInformation("[DOSIER Reports] Generando reporte curricular PEA. Periodo={Period}, Carrera={Carrera}", period, carrera);
+            _logger.LogInformation("[DOSIER Reports] Generando reporte curricular PEA. Periodo={Period}, Carrera={Carrera}, Usuario={Usuario}", period, carrera, userName);
 
-            var peas = await _context.Set<DocPea>()
+            var query = _context.Set<DocPea>()
                 .AsNoTracking()
-                .Where(p => p.Activo)
-                .ToListAsync();
+                .Where(p => p.Activo);
+
+            // Gobernanza institucional de acceso:
+            // Coordinador Académico, Vicerrector y Administrador: visualizan todas las carreras.
+            // Coordinadores de Carrera: supervisan estrictamente las carreras que coordinan.
+            var user = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == userIdRef || u.IdUsuario.ToString() == userIdRef || u.Nombre == userIdRef);
+
+            bool isCoordAcad = false;
+            bool isVicerrector = false;
+            bool isCoordCarrera = false;
+
+            if (user != null)
+            {
+                var roles = await _context.UserRoles.AsNoTracking()
+                    .Where(ur => ur.IdUsuario == user.IdUsuario && (ur.EsActivo ?? true) && ur.Role != null)
+                    .Select(ur => ur.Role.CodigoRol)
+                    .ToListAsync();
+
+                isCoordAcad = roles.Contains("DOSIER_COORD_ACAD");
+                isVicerrector = roles.Contains("DOSIER_VICERRECTOR");
+                isCoordCarrera = roles.Contains("DOSIER_COORD_CARRERA");
+            }
+
+            bool esSuperAutoridad = isAdmin || isVicerrector || isCoordAcad;
+
+            if (!esSuperAutoridad && isCoordCarrera && user != null && !string.IsNullOrEmpty(user.IdSigafi))
+            {
+                var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                    .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                    .Select(a => a.IdCarrera!.Value)
+                    .ToListAsync();
+
+                if (carrerasCoordinadas.Any())
+                {
+                    query = query.Where(p => carrerasCoordinadas.Contains(p.IdCarrera) || p.IdDocenteElaborador == user.IdSigafi);
+                }
+            }
+
+            // Filtro opcional por período académico
+            if (!string.IsNullOrWhiteSpace(period) &&
+                !string.Equals(period, "todos", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(period, "todas", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(p => p.IdPeriodo == period.Trim());
+            }
+
+            var peas = await query.ToListAsync();
 
             using var ms = new MemoryStream();
             using var writer = new PdfWriter(ms);

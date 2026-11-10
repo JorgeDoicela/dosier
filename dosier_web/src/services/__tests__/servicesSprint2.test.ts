@@ -115,7 +115,7 @@ describe('Sprint 2 Service Layer Tests', () => {
             const s = await analyticsService.getStats();
             const c = await analyticsService.getCarreras();
 
-            expect(api.get).toHaveBeenCalledWith('/pea/bandeja');
+            expect(api.get).toHaveBeenCalledWith('/pea/bandeja', { params: { alcanceInstitucional: true } });
             expect(api.get).toHaveBeenCalledWith('/catalogs/carreras');
             expect(p).toHaveLength(1);
             expect(s?.totalProyectos).toBe(1);

@@ -123,18 +123,19 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 ---
 
-### 2.4. Módulo de Analíticas Curriculares y Auditoría CACES (`src/pages/Analytics/`)
+### 2.4. Módulo de Seguimiento de PEAs (`src/pages/Analytics/`)
 
-Consola directiva unificada en tiempo real para el seguimiento de la planificación microcurricular (PEA), gobernanza institucional y acreditación del CACES:
+Panel directivo para el seguimiento operativo de los Programas de Estudio de la Asignatura (PEA) por período y carrera:
 
-* **`AnalyticsOverviewTab.tsx`:** Consola directiva ejecutiva dividida en 4 módulos operativos:
-  * **Indicadores Ejecutivos Globales:** Total de asignaturas del corte, porcentaje de legalización oficial, PEAs en circuito activo de avales y volumen de horas prácticas (APE).
-  * **Semáforo y Ranking de Cumplimiento por Carrera:** Tabla comparativa por Tecnología con cálculo dinámico de avance, detección de rezago crítico (< 40%), en proceso (40-79%) y óptimo (>= 80%), horas totales y filtrado contextual directo.
-  * **Diagnóstico de Cuello de Botella Operativo:** Embudo fáctico de 6 etapas del circuito de avales (Formulación Inicial, Subsanación de Observaciones, Revisión de Carrera, Verificación Académica, Aprobación de Vicerrectorado y PEAs Legalizados) con plazos normativos y responsables institucionales.
-  * **Auditoría de Componentes Pedagógicos CACES (RRA Art. 21 / 27):** Desglose y balance de carga horaria en Contacto Docente (CD), Práctico-Experimental (APE) en talleres y laboratorios, y Aprendizaje Autónomo (AA), junto con detección de anomalías (asignaturas sin horas).
-  * **Nómina y Estado Curricular:** Tabla fáctica con buscador reactivo, metadatos de cátedra, nivel, modalidad y seguimiento de 4 firmas digitales (Ley 67 DFRM).
-* **`useAnalyticsData.ts`:** Hook que consolida y procesa los datos agregados desde la API `/pea/bandeja` y catálogos institucionales, integrando sincronización por eventos en tiempo real.
-* **`analyticsService.ts`:** Fachada de comunicación tipada para consumo de bandejas curriculares y generación de reportes ejecutivos PDF.
+* **`AnalyticsOverviewTab.tsx`:** Navegación por pestañas sobre riel plano organizada en tres secciones operativas:
+  * **Resumen general:**
+    * **Paso actual del trámite:** Conteo fáctico de materias en cada etapa del proceso (Redacción inicial, Por corregir, En revisión de carrera, En coordinación académica, En vicerrectorado, y Aprobados y firmados) identificando el responsable directo de cada acción.
+    * **Distribución por estado:** Gráfico de distribución y desglose de materias según su estado en el sistema.
+    * **Avance de firmas:** Seguimiento de las 4 firmas institucionales requeridas por PEA (Docente elaborador, Coordinación de carrera, Coordinación académica y Vicerrectorado).
+  * **Por carrera:** Tabla comparativa por carrera con total de materias, porcentaje de avance, materias en trámite, materias con observaciones, materias pendientes y estado operativo (Al día, En proceso, Pendiente), con acceso directo para filtrar la lista.
+  * **Lista de asignaturas:** Nómina completa de cátedras con buscador en tiempo real por materia, código o docente, indicando nivel, modalidad, avance visual de firmas (1 a 4) y estado actual.
+* **`useAnalyticsData.ts`:** Hook que consolida y procesa los datos reales desde la API institucional `/pea/bandeja`, calculando estados y firmas con sincronización reactiva en tiempo real.
+* **`analyticsService.ts`:** Fachada de comunicación tipada para la consulta de datos curriculares y descarga de reportes ejecutivos en PDF.
 
 ---
 

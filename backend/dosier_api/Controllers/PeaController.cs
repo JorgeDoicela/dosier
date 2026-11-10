@@ -62,6 +62,7 @@ namespace dosier_api.Controllers
             [FromQuery] string? idPeriodo = null,
             [FromQuery] int? idCarrera = null,
             [FromQuery] string? estado = null,
+            [FromQuery] bool alcanceInstitucional = false,
             CancellationToken cancellationToken = default)
         {
             var userIdStr = User.FindFirstValue("id_usuario");
@@ -73,7 +74,7 @@ namespace dosier_api.Controllers
 
             var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
 
-            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, cancellationToken);
+            var lista = await _peaService.ListarBandejaAsync(idPeriodo, idCarrera, estado, idUsuario, identifier, alcanceInstitucional, cancellationToken);
             return Ok(lista);
         }
 

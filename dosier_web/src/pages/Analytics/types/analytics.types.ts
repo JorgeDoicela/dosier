@@ -58,24 +58,6 @@ export interface DashboardStats {
     actividadReciente: ActividadReciente[];
 }
 
-export interface CacesIndicator {
-    code: string;
-    name: string;
-    description: string;
-    status: 'CUMPLIDO' | 'EN PROCESO' | 'ALERTA';
-    progress: number;
-    metaLabel: string;
-    currentLabel: string;
-}
-
-export interface LineaInvestigacionData {
-    nombre: string;
-    proyectos: number;
-    pres: number;
-    pct: number;
-    colorClass: string;
-}
-
 export interface CarreraCumplimiento {
     carrera: string;
     totalAsignaturas: number;
@@ -84,8 +66,6 @@ export interface CarreraCumplimiento {
     observados: number;
     borradores: number;
     porcentajeAprobados: number;
-    totalHoras: number;
-    totalCreditos: number;
     estadoSemaforo: 'optimo' | 'regular' | 'critico';
 }
 
@@ -95,33 +75,15 @@ export interface CuelloBotellaItem {
     rol: string;
     cantidad: number;
     porcentaje: number;
-    tiempoEstimado: string;
     colorBadge: string;
     bgProgress: string;
 }
 
-export interface CargaHorariaCaces {
-    totalHoras: number;
-    totalCreditos: number;
-    horasCD: number;
-    horasAPE: number;
-    horasAA: number;
-    pctCD: number;
-    pctAPE: number;
-    pctAA: number;
-    asignaturasSinCarga: number;
-}
-
 export interface ProcessedAnalyticsData {
     filteredProjects: ProyectoResumen[];
-    linesData: LineaInvestigacionData[];
     proyectosPorEstado: EstadoConteo[];
-    budgetTotal: number;
-    budgetExecuted: number;
-    cacesIndicators: readonly CacesIndicator[];
     dbPeriods: string[];
     dbCareers: string[];
     carrerasCumplimiento: CarreraCumplimiento[];
     cuelloBotella: CuelloBotellaItem[];
-    cargaHorariaCaces: CargaHorariaCaces;
 }

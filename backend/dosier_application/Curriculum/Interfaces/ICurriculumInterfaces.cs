@@ -66,7 +66,7 @@ namespace dosier_application.Curriculum.Interfaces
         Task<bool> SincronizarMetadataAsync(string peaUuid, string snapshotJson);
 
         // Bandeja de Supervisión Curricular (Coordinadores, Vicerrector y Docentes)
-        Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, string? identifier = null, System.Threading.CancellationToken cancellationToken = default);
+        Task<List<PeaBandejaItemDto>> ListarBandejaAsync(string? idPeriodo, int? idCarrera, string? estado, int idUsuario, string? identifier = null, bool alcanceInstitucional = false, System.Threading.CancellationToken cancellationToken = default);
 
         // Exploración de PEAs de otros docentes para apoyo intercurricular y co-diseño colegiado
         Task<List<PeaBandejaItemDto>> ListarPeasOtrosDocentesAsync(string? idPeriodo, int? idCarrera, string? identifier = null, System.Threading.CancellationToken cancellationToken = default);

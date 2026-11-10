@@ -78,10 +78,10 @@ Para garantizar la interoperabilidad entre el editor colaborativo dinámico (`do
 
 Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), el endpoint `GET /api/pea/bandeja` provee la vista consolidada de los instrumentos microcurriculares:
 
-* **Filtros de Consulta:** Permite filtrar por período académico (`idPeriodo`), carrera (`idCarrera`) y estado del documento (`estado`).
+* **Filtros de Consulta:** Permite filtrar por período académico (`idPeriodo`), carrera (`idCarrera`), estado del documento (`estado`) y alcance institucional (`alcanceInstitucional`). Los filtros evalúan comodines institucionales (`todos`/`todas`) de forma insensible a mayúsculas y minúsculas.
 * **Seguridad y Alcance RBAC:**
   * Administrador, Vicerrector y Coordinador Académico: Acceso irrestricto a todas las carreras y asignaturas del instituto (`esInstituto = 1`).
-  * Coordinador de Carrera: Supervisión acotada a las asignaturas de su carrera respectiva.
+  * Coordinador de Carrera: Supervisión disciplinar habitual acotada a las asignaturas de sus carreras coordinadas. Cuando se consulta desde módulos directivos de analítica institucional con `alcanceInstitucional = true`, se permite la visualización agregada del corte institucional completo.
   * Docente: Visualización exclusiva de sus asignaturas asignadas.
 * **Optimización de Carga:** Mapeo mediante carga por lotes (batching) en memoria de diccionarios de carreras, asignaturas y profesores para erradicar el problema de consultas N+1 en bases de datos relacionales.
 

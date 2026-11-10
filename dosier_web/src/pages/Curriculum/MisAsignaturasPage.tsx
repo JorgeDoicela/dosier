@@ -425,7 +425,7 @@ export const MisAsignaturasPage: React.FC = () => {
 
             const matchesDocente =
                 filterDocente === 'todos' ||
-                p.nombre_docente_elaborador?.trim().toLowerCase() === filterDocente.toLowerCase();
+                ((m as any).nombre_docente_elaborador || '').trim().toLowerCase() === filterDocente.toLowerCase();
 
             return matchesSearch && matchesEstado && matchesCarrera && matchesModalidad && matchesDocente;
         });

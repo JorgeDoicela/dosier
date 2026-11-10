@@ -53,10 +53,10 @@ export interface CarreraCatalogoDto {
 
 export const analyticsService = {
     /**
-     * Obtiene la nómina de instrumentos curriculares con sus atributos para agregación analítica.
+     * Obtiene la nómina de instrumentos curriculares con sus atributos para agregación analítica institucional.
      */
     getProjects: (): Promise<AnalyticsProjectDto[]> =>
-        api.get<any[]>('/pea/bandeja').then(r => {
+        api.get<any[]>('/pea/bandeja', { params: { alcanceInstitucional: true } }).then(r => {
             const list = Array.isArray(r.data) ? r.data : [];
             return list.map((p: any) => ({
                 uuid: p.uuid,
