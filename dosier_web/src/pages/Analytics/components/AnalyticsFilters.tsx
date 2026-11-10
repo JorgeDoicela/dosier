@@ -1,5 +1,6 @@
 import React from 'react';
-import { Filter, Clock, Building2 } from 'lucide-react';
+import { Filter } from 'lucide-react';
+import { GeistSelect } from '../../../components/Common/GeistSelect';
 
 export interface AnalyticsFiltersProps {
     period: string;
@@ -27,35 +28,29 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             
             <div className="flex flex-wrap items-center gap-3">
                 {/* Select Periodo */}
-                <div className="relative group">
-                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-                    <select
+                <div className="w-48">
+                    <GeistSelect
                         value={period}
-                        onChange={(e) => setPeriod(e.target.value)}
-                        className="!pl-8 !pr-7 !py-1.5 text-[10px] font-medium uppercase tracking-wider bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-md cursor-pointer text-text-main focus:outline-none focus:border-[#0070f3]"
-                        id="period-filter-select"
-                    >
-                        <option value="TODOS">Todos los Periodos</option>
-                        {dbPeriods.map((p, idx) => (
-                            <option key={idx} value={p}>{p}</option>
-                        ))}
-                    </select>
+                        onChange={(val) => setPeriod(String(val))}
+                        options={[
+                            { value: 'TODOS', label: 'Todos los Periodos' },
+                            ...dbPeriods.map(p => ({ value: p, label: p }))
+                        ]}
+                        placeholder="Período..."
+                    />
                 </div>
 
                 {/* Select Carrera */}
-                <div className="relative group">
-                    <Building2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-                    <select
+                <div className="w-56">
+                    <GeistSelect
                         value={carrera}
-                        onChange={(e) => setCarrera(e.target.value)}
-                        className="!pl-8 !pr-7 !py-1.5 text-[10px] font-medium uppercase tracking-wider bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-md cursor-pointer text-text-main focus:outline-none focus:border-[#0070f3]"
-                        id="carrera-filter-select"
-                    >
-                        <option value="TODAS">Todas las Tecnologías</option>
-                        {dbCareers.map((c, idx) => (
-                            <option key={idx} value={c}>{c}</option>
-                        ))}
-                    </select>
+                        onChange={(val) => setCarrera(String(val))}
+                        options={[
+                            { value: 'TODAS', label: 'Todas las Tecnologías' },
+                            ...dbCareers.map(c => ({ value: c, label: c }))
+                        ]}
+                        placeholder="Tecnología..."
+                    />
                 </div>
             </div>
         </div>

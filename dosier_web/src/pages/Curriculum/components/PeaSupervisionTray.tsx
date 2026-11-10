@@ -353,58 +353,48 @@ export const PeaSupervisionTray: React.FC = () => {
                     </div>
 
                     {/* Filtro de Carrera */}
-                    <div className="flex items-center gap-1">
-                        <label className="text-zinc-500 dark:text-zinc-400 text-[11px]">Carrera:</label>
-                        <select
+                    <div className="w-56">
+                        <GeistSelect
                             value={selectedCarrera}
-                            onChange={e => setSelectedCarrera(e.target.value)}
-                            className="py-1 px-2 text-xs rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none"
-                        >
-                            <option value="todas">Todas las Carreras</option>
-                            {carrerasDisponibles.map(c => (
-                                <option key={c.id} value={String(c.id)}>{c.nombre}</option>
-                            ))}
-                        </select>
+                            onChange={val => setSelectedCarrera(String(val))}
+                            options={[
+                                { value: 'todas', label: 'Todas las Carreras' },
+                                ...carrerasDisponibles.map(c => ({ value: String(c.id), label: c.nombre }))
+                            ]}
+                            placeholder="Carrera..."
+                        />
                     </div>
 
                     {/* Filtro de Estado Específico */}
-                    <div className="flex items-center gap-1">
-                        <label className="text-zinc-500 dark:text-zinc-400 text-[11px]">Estado:</label>
-                        <select
+                    <div className="w-52">
+                        <GeistSelect
                             value={selectedEstado}
-                            onChange={e => setSelectedEstado(e.target.value)}
-                            className="py-1 px-2 text-xs rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none"
-                        >
-                            <option value="todos">Todos los Estados</option>
-                            {workflowTab === 'por_revisar' ? (
-                                <>
-                                    <option value="EnRevision">En Revisión Técnica</option>
-                                    <option value="Observado">Con Observaciones</option>
-                                    <option value="Corregido">Corregido</option>
-                                </>
-                            ) : workflowTab === 'en_redaccion' ? (
-                                <>
-                                    <option value="Borrador">En Redacción (Borrador)</option>
-                                    <option value="NoIniciado">Sin Inicializar</option>
-                                </>
-                            ) : workflowTab === 'aprobados' ? (
-                                <>
-                                    <option value="RevisadoCoord">Aval de Carrera</option>
-                                    <option value="RevisadoAcad">Aval Académico</option>
-                                    <option value="Aprobado">Aprobado / Legalizado</option>
-                                </>
-                            ) : (
-                                <>
-                                    <option value="Borrador">Borrador Docente</option>
-                                    <option value="EnRevision">En Revisión Técnica</option>
-                                    <option value="Observado">Observado</option>
-                                    <option value="Corregido">Corregido</option>
-                                    <option value="RevisadoCoord">Aval de Carrera</option>
-                                    <option value="RevisadoAcad">Aval Académico</option>
-                                    <option value="Aprobado">Aprobado / Legalizado</option>
-                                </>
-                            )}
-                        </select>
+                            onChange={val => setSelectedEstado(String(val))}
+                            options={[
+                                { value: 'todos', label: 'Todos los Estados' },
+                                ...(workflowTab === 'por_revisar' ? [
+                                    { value: 'EnRevision', label: 'En Revisión Técnica' },
+                                    { value: 'Observado', label: 'Con Observaciones' },
+                                    { value: 'Corregido', label: 'Corregido' }
+                                ] : workflowTab === 'en_redaccion' ? [
+                                    { value: 'Borrador', label: 'En Redacción (Borrador)' },
+                                    { value: 'NoIniciado', label: 'Sin Inicializar' }
+                                ] : workflowTab === 'aprobados' ? [
+                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
+                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
+                                    { value: 'Aprobado', label: 'Aprobado / Legalizado' }
+                                ] : [
+                                    { value: 'Borrador', label: 'Borrador Docente' },
+                                    { value: 'EnRevision', label: 'En Revisión Técnica' },
+                                    { value: 'Observado', label: 'Observado' },
+                                    { value: 'Corregido', label: 'Corregido' },
+                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
+                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
+                                    { value: 'Aprobado', label: 'Aprobado / Legalizado' }
+                                ])
+                            ]}
+                            placeholder="Estado..."
+                        />
                     </div>
 
                     {(search || selectedCarrera !== 'todas' || selectedEstado !== 'todos') && (

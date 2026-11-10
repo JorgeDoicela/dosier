@@ -17,6 +17,7 @@ import {
 import { useAuditLogs } from './Audit/useAuditLogs';
 import { AuditDetailDrawer } from './Audit/AuditDetailDrawer';
 import { formatDateSafe, formatActionLabel, getActionBadge, getActionDotClass } from './Audit/auditTypes';
+import { GeistSelect } from '../../components/Common/GeistSelect';
 
 const AuditPage: React.FC = () => {
     const {
@@ -96,55 +97,54 @@ const AuditPage: React.FC = () => {
                             />
                         </div>
 
-                        <div className="relative group">
-                            <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim group-focus-within:text-text-main transition-colors" />
-                            <select
-                                className="input-vercel !pl-10 !py-2.5 !text-sm"
+                        <div className="w-56">
+                            <GeistSelect
                                 value={modulo}
-                                onChange={(e) => setModulo(e.target.value)}
-                            >
-                                <option value="">Todos los Módulos</option>
-                                <option value="SEGURIDAD">Seguridad</option>
-                                <option value="USUARIOS">Usuarios</option>
-                                <option value="PROYECTOS">Proyectos y Documentos</option>
-                                <option value="INVESTIGACION">Comités y Grupos Documentales</option>
-                                <option value="CONVOCATORIAS">Convocatorias</option>
-                            </select>
+                                onChange={(val) => setModulo(String(val))}
+                                options={[
+                                    { value: '', label: 'Todos los Módulos' },
+                                    { value: 'SEGURIDAD', label: 'Seguridad' },
+                                    { value: 'USUARIOS', label: 'Usuarios' },
+                                    { value: 'PROYECTOS', label: 'Proyectos y Documentos' },
+                                    { value: 'INVESTIGACION', label: 'Comités y Grupos Documentales' },
+                                    { value: 'CONVOCATORIAS', label: 'Convocatorias' }
+                                ]}
+                                placeholder="Módulo..."
+                            />
                         </div>
 
-                        <div className="relative group">
-                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-dim group-focus-within:text-text-main transition-colors" />
-                            <select
-                                className="input-vercel !pl-10 !py-2.5 !text-sm"
+                        <div className="w-64">
+                            <GeistSelect
                                 value={action}
-                                onChange={(e) => setAction(e.target.value)}
-                            >
-                                <option value="">Todas las Acciones</option>
-                                <option value="ASIGNAR_ROL">Asignar Rol</option>
-                                <option value="REVOCAR_ROL">Revocar Rol</option>
-                                <option value="ACTUALIZAR_METADATA">Actualizar datos del documento</option>
-
-                                <option value="LOGIN">Inicio de Sesión</option>
-                                <option value="CREAR_GRUPO">Crear Grupo</option>
-                                <option value="EDITAR_GRUPO">Editar Grupo</option>
-                                <option value="APROBAR_GRUPO">Aprobar Grupo</option>
-                                <option value="RECHAZAR_GRUPO">Rechazar Grupo</option>
-                                <option value="DESACTIVAR_GRUPO">Desactivar Grupo</option>
-                                <option value="AGREGAR_MIEMBRO_GRUPO">Agregar Miembro</option>
-                                <option value="REMOVER_MIEMBRO_GRUPO">Remover Miembro</option>
-                                <option value="CREAR_PROYECTO">Crear Proyecto</option>
-                                <option value="ACTUALIZAR_PROYECTO">Actualizar Proyecto</option>
-                                <option value="ELIMINAR_PROYECTO">Eliminar Proyecto</option>
-                                <option value="TRANSICIONAR_PROYECTO">Transicionar Proyecto</option>
-                                <option value="ASIGNAR_REVISOR">Asignar Revisor</option>
-                                <option value="EVALUAR_PROYECTO">Evaluar Proyecto</option>
-                                <option value="ACTUALIZAR_EQUIPO_PROYECTO">Actualizar Equipo</option>
-                                <option value="TRANSFERIR_DIRECCION">Transferir Dirección</option>
-                                <option value="CREAR_CONVOCATORIA">Crear Convocatoria</option>
-                                <option value="EDITAR_CONVOCATORIA">Editar Convocatoria</option>
-                                <option value="CAMBIAR_ESTADO_CONVOCATORIA">Cambiar Estado Convocatoria</option>
-                                <option value="ELIMINAR_CONVOCATORIA">Eliminar Convocatoria</option>
-                            </select>
+                                onChange={(val) => setAction(String(val))}
+                                options={[
+                                    { value: '', label: 'Todas las Acciones' },
+                                    { value: 'ASIGNAR_ROL', label: 'Asignar Rol' },
+                                    { value: 'REVOCAR_ROL', label: 'Revocar Rol' },
+                                    { value: 'ACTUALIZAR_METADATA', label: 'Actualizar datos del documento' },
+                                    { value: 'LOGIN', label: 'Inicio de Sesión' },
+                                    { value: 'CREAR_GRUPO', label: 'Crear Grupo' },
+                                    { value: 'EDITAR_GRUPO', label: 'Editar Grupo' },
+                                    { value: 'APROBAR_GRUPO', label: 'Aprobar Grupo' },
+                                    { value: 'RECHAZAR_GRUPO', label: 'Rechazar Grupo' },
+                                    { value: 'DESACTIVAR_GRUPO', label: 'Desactivar Grupo' },
+                                    { value: 'AGREGAR_MIEMBRO_GRUPO', label: 'Agregar Miembro' },
+                                    { value: 'REMOVER_MIEMBRO_GRUPO', label: 'Remover Miembro' },
+                                    { value: 'CREAR_PROYECTO', label: 'Crear Proyecto' },
+                                    { value: 'ACTUALIZAR_PROYECTO', label: 'Actualizar Proyecto' },
+                                    { value: 'ELIMINAR_PROYECTO', label: 'Eliminar Proyecto' },
+                                    { value: 'TRANSICIONAR_PROYECTO', label: 'Transicionar Proyecto' },
+                                    { value: 'ASIGNAR_REVISOR', label: 'Asignar Revisor' },
+                                    { value: 'EVALUAR_PROYECTO', label: 'Evaluar Proyecto' },
+                                    { value: 'ACTUALIZAR_EQUIPO_PROYECTO', label: 'Actualizar Equipo' },
+                                    { value: 'TRANSFERIR_DIRECCION', label: 'Transferir Dirección' },
+                                    { value: 'CREAR_CONVOCATORIA', label: 'Crear Convocatoria' },
+                                    { value: 'EDITAR_CONVOCATORIA', label: 'Editar Convocatoria' },
+                                    { value: 'CAMBIAR_ESTADO_CONVOCATORIA', label: 'Cambiar Estado Convocatoria' },
+                                    { value: 'ELIMINAR_CONVOCATORIA', label: 'Eliminar Convocatoria' }
+                                ]}
+                                placeholder="Acción..."
+                            />
                         </div>
 
                         <div className="relative group">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, ShieldCheck, X, CheckCircle2, Clock } from 'lucide-react';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { docenteAsignaturasService, type PeriodoAcademicoDto } from '../../../../services/docenteAsignaturasService';
+import { GeistSelect } from '../../../../components/Common/GeistSelect';
 
 interface Props {
     isOpen: boolean;
@@ -97,18 +98,15 @@ export const AperturaConvocatoriaModal: React.FC<Props> = ({ isOpen, onClose, on
                                 Período Académico (SIGAFI)
                             </label>
                             {periodos.length > 0 ? (
-                                <select
+                                <GeistSelect
                                     value={periodo}
-                                    onChange={e => setPeriodo(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                                    required
-                                >
-                                    {periodos.map(p => (
-                                        <option key={p.id_periodo} value={p.id_periodo}>
-                                            {p.id_periodo} — {p.detalle || 'Período Ordinario'} {p.es_activo ? '(Activo)' : ''}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={val => setPeriodo(String(val))}
+                                    options={periodos.map(p => ({
+                                        value: p.id_periodo,
+                                        label: `${p.id_periodo} — ${p.detalle || 'Período Ordinario'}${p.es_activo ? ' (Activo)' : ''}`
+                                    }))}
+                                    placeholder="Seleccione período..."
+                                />
                             ) : (
                                 <input
                                     type="text"

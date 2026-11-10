@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle2, X } from 'lucide-react';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { curriculumProjectService, type DocenteCarreraDto } from '../../../../services/curriculumProjectService';
+import { GeistSelect } from '../../../../components/Common/GeistSelect';
 
 interface Props {
     isOpen: boolean;
@@ -72,37 +73,35 @@ export const ProrrogaPlazoModal: React.FC<Props> = ({ isOpen, onClose, onProrrog
                         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
                             Destinatarios de la Extensión
                         </label>
-                        <select
+                        <GeistSelect
                             value={carrera}
-                            onChange={e => setCarrera(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                        >
-                            <option value="Todas las Carreras">Todas las Carreras (Institucional)</option>
-                            {carreras.map(c => {
-                                const nombre = c.carrera1 || c.nombre_carrera || c.carrera || '';
-                                return (
-                                    <option key={c.id_carrera ?? c.idCarrera ?? nombre} value={nombre}>
-                                        {nombre}
-                                    </option>
-                                );
-                            })}
-                        </select>
+                            onChange={val => setCarrera(String(val))}
+                            options={[
+                                { value: 'Todas las Carreras', label: 'Todas las Carreras (Institucional)' },
+                                ...carreras.map(c => {
+                                    const nombre = c.carrera1 || c.nombre_carrera || c.carrera || '';
+                                    return { value: nombre, label: nombre };
+                                })
+                            ]}
+                            placeholder="Seleccione carrera..."
+                        />
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
                             Días Hábiles Adicionales
                         </label>
-                        <select
+                        <GeistSelect
                             value={diasProrroga}
-                            onChange={e => setDiasProrroga(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                        >
-                            <option value="3">3 Días adicionales</option>
-                            <option value="5">5 Días adicionales</option>
-                            <option value="7">7 Días adicionales (1 semana)</option>
-                            <option value="15">15 Días adicionales</option>
-                        </select>
+                            onChange={val => setDiasProrroga(String(val))}
+                            options={[
+                                { value: '3', label: '3 Días adicionales' },
+                                { value: '5', label: '5 Días adicionales' },
+                                { value: '7', label: '7 Días adicionales (1 semana)' },
+                                { value: '15', label: '15 Días adicionales' }
+                            ]}
+                            placeholder="Seleccione días..."
+                        />
                     </div>
 
                     <div>

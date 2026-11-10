@@ -268,29 +268,33 @@ export const VicerrectorDashboard: React.FC = () => {
 
                     {/* Filtro de Carrera */}
                     {carrerasDisponibles.length > 1 && (
-                        <select
-                            value={filterCarrera}
-                            onChange={e => setFilterCarrera(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none"
-                        >
-                            <option value="todas">Todas las Carreras</option>
-                            {carrerasDisponibles.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
+                        <div className="w-56">
+                            <GeistSelect
+                                value={filterCarrera}
+                                onChange={val => setFilterCarrera(String(val))}
+                                options={[
+                                    { value: 'todas', label: 'Todas las Carreras' },
+                                    ...carrerasDisponibles.map(c => ({ value: c, label: c }))
+                                ]}
+                                placeholder="Carrera..."
+                            />
+                        </div>
                     )}
 
                     {/* Filtro de Estado Legal */}
-                    <select
-                        value={filterEstado}
-                        onChange={e => setFilterEstado(e.target.value)}
-                        className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none"
-                    >
-                        <option value="todos">Todos los Estados</option>
-                        <option value="listos">Listos para Firma</option>
-                        <option value="legalizados">Legalizados (Aprobados)</option>
-                        <option value="proceso">En Proceso Previo</option>
-                    </select>
+                    <div className="w-52">
+                        <GeistSelect
+                            value={filterEstado}
+                            onChange={val => setFilterEstado(String(val))}
+                            options={[
+                                { value: 'todos', label: 'Todos los Estados' },
+                                { value: 'listos', label: 'Listos para Firma' },
+                                { value: 'legalizados', label: 'Legalizados (Aprobados)' },
+                                { value: 'proceso', label: 'En Proceso Previo' }
+                            ]}
+                            placeholder="Estado Legal..."
+                        />
+                    </div>
 
                     {/* Selector de Modo de Vista (Cuadros / Lista) */}
                     <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-100/80 dark:bg-zinc-900 p-0.5">

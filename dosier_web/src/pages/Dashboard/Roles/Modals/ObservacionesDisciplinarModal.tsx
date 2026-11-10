@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Send, X, Clock } from 'lucide-react';
 import { useNotifications } from '../../../../api/NotificationsContext';
+import { GeistSelect } from '../../../../components/Common/GeistSelect';
 
 interface Props {
     isOpen: boolean;
@@ -89,17 +90,12 @@ export const ObservacionesDisciplinarModal: React.FC<Props> = ({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
                             Sección Curricular con Observación
                         </label>
-                        <select
+                        <GeistSelect
                             value={seccion}
-                            onChange={e => setSeccion(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
-                        >
-                            {SECCIONES_PEA.map((s, idx) => (
-                                <option key={idx} value={s}>
-                                    {s}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={val => setSeccion(String(val))}
+                            options={SECCIONES_PEA.map(s => ({ value: s, label: s }))}
+                            placeholder="Seleccione sección..."
+                        />
                     </div>
 
                     <div>
@@ -119,15 +115,16 @@ export const ObservacionesDisciplinarModal: React.FC<Props> = ({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
                             Plazo Máximo para Subsanar
                         </label>
-                        <select
+                        <GeistSelect
                             value={plazoHoras}
-                            onChange={e => setPlazoHoras(e.target.value)}
-                            className="w-full px-3 py-2 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
-                        >
-                            <option value="24">24 Horas (Urgente)</option>
-                            <option value="48">48 Horas (Estándar)</option>
-                            <option value="72">72 Horas (Complejo)</option>
-                        </select>
+                            onChange={val => setPlazoHoras(String(val))}
+                            options={[
+                                { value: '24', label: '24 Horas (Urgente)' },
+                                { value: '48', label: '48 Horas (Estándar)' },
+                                { value: '72', label: '72 Horas (Complejo)' }
+                            ]}
+                            placeholder="Seleccione plazo..."
+                        />
                     </div>
 
                     {/* Footer */}

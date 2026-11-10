@@ -20,6 +20,7 @@ import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/Re
 import { ProrrogaPlazoModal } from './Modals/ProrrogaPlazoModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
+import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { 
     Search, 
     RefreshCw, 
@@ -207,52 +208,53 @@ export const CoordAcadDashboard: React.FC = () => {
 
                 <div className="flex flex-wrap items-center gap-2">
                     {periodos.length > 0 && (
-                        <select
-                            value={selectedPeriodo}
-                            onChange={e => setSelectedPeriodo(e.target.value)}
-                            className="px-3 py-2 text-xs font-medium bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                        >
-                            {periodos.map(p => (
-                                <option key={p.id_periodo} value={p.id_periodo}>
-                                    {p.id_periodo} {p.es_activo ? '(Activo)' : ''}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="w-48">
+                            <GeistSelect
+                                value={selectedPeriodo}
+                                onChange={val => setSelectedPeriodo(String(val))}
+                                options={periodos.map(p => ({
+                                    value: p.id_periodo,
+                                    label: `${p.id_periodo}${p.es_activo ? ' (Activo)' : ''}`
+                                }))}
+                                placeholder="Período..."
+                            />
+                        </div>
                     )}
 
-                    <select
-                        value={selectedCarreraId}
-                        onChange={e => {
-                            const val = e.target.value;
-                            setSelectedCarreraId(val === 'todas' ? 'todas' : Number(val));
-                        }}
-                        className="px-3 py-2 text-xs font-medium bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                    >
-                        <option value="todas">Todas las Carreras</option>
-                        {carreras.map(c => {
-                            const id = c.id_carrera ?? c.idCarrera ?? 0;
-                            const nombre = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${id}`;
-                            return (
-                                <option key={id} value={id}>
-                                    {nombre}
-                                </option>
-                            );
-                        })}
-                    </select>
+                    <div className="w-56">
+                        <GeistSelect
+                            value={selectedCarreraId}
+                            onChange={val => {
+                                setSelectedCarreraId(val === 'todas' ? 'todas' : Number(val));
+                            }}
+                            options={[
+                                { value: 'todas', label: 'Todas las Carreras' },
+                                ...carreras.map(c => {
+                                    const id = c.id_carrera ?? c.idCarrera ?? 0;
+                                    const nombre = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${id}`;
+                                    return { value: id, label: nombre };
+                                })
+                            ]}
+                            placeholder="Carrera..."
+                        />
+                    </div>
 
-                    <select
-                        value={selectedEstado}
-                        onChange={e => setSelectedEstado(e.target.value)}
-                        className="px-3 py-2 text-xs font-medium bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                    >
-                        <option value="todos">Todos los Estados</option>
-                        <option value="Borrador">Borrador</option>
-                        <option value="EnRevision">En Revisión de Carrera</option>
-                        <option value="Observado">Con Observaciones</option>
-                        <option value="RevisadoCoord">Avalado por Carrera</option>
-                        <option value="RevisadoAcad">Avalado por Académica</option>
-                        <option value="Aprobado">Aprobado / Legalizado</option>
-                    </select>
+                    <div className="w-52">
+                        <GeistSelect
+                            value={selectedEstado}
+                            onChange={val => setSelectedEstado(String(val))}
+                            options={[
+                                { value: 'todos', label: 'Todos los Estados' },
+                                { value: 'Borrador', label: 'Borrador' },
+                                { value: 'EnRevision', label: 'En Revisión de Carrera' },
+                                { value: 'Observado', label: 'Con Observaciones' },
+                                { value: 'RevisadoCoord', label: 'Avalado por Carrera' },
+                                { value: 'RevisadoAcad', label: 'Avalado por Académica' },
+                                { value: 'Aprobado', label: 'Aprobado / Legalizado' }
+                            ]}
+                            placeholder="Estado..."
+                        />
+                    </div>
 
                     {/* Selector de Modo: Cuadros vs Lista */}
                     <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
