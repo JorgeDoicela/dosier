@@ -73,7 +73,6 @@ const AnalyticsPage: React.FC = () => {
                 refreshing={refreshing}
                 exporting={exporting}
                 exportError={exportError}
-                onReload={reload}
                 onExportPdf={handleExportPdf}
             />
 

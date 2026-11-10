@@ -124,24 +124,5 @@ namespace dosier_api.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-        /// <summary>
-        /// Genera el acta o minuta oficial de acuerdos de armonización curricular de la carrera en formato PDF.
-        /// </summary>
-        [HttpPost("sala-carrera/{idCarrera:int}/{idPeriodo}/generar-acta")]
-        public async Task<IActionResult> GenerarActaCarrera(int idCarrera, string idPeriodo)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("id_sigafi") ?? "0";
-            try
-            {
-                var (pdfBytes, fileName, traceabilityCode) = await _expedienteService.GenerarActaAcuerdosCarreraAsync(idCarrera, idPeriodo, userId);
-                Response.Headers.Append("X-Traceability-Code", traceabilityCode);
-                return File(pdfBytes, "application/pdf", fileName);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error al compilar el acta institucional en PDF", detail = ex.Message });
-            }
-        }
     }
 }

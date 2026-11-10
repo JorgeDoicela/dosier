@@ -42,12 +42,13 @@ graph TD
 
 ### 3.3. Canal de Correo Transaccional (`EmailSenderSubservice`)
 * **Layout Maestro (`EmailMasterLayoutRenderer`):** Renderiza el correo encapsulándolo en la plantilla HTML institucional (cabecera con logotipo del ISTPET, cuerpo del mensaje, enlace directo al PEA y pie legal LOPDP).
-* **Plantillas Institucionales (`EmailTemplateService`):** Administra las plantillas para eventos clave del calendario académico:
-  * `PEA_ENVIADO_REVISION`: Notificación al Coordinador de Carrera.
-  * `PEA_OBSERVADO`: Notificación al Docente Elaborador con el detalle de secciones a subsanar.
-  * `PEA_AVAL_CARRERA`: Notificación a Coordinación Académica para revisión metodológica.
-  * `PEA_APROBADO`: Notificación general al docente y carrera con el PDF oficial y QR adjunto.
-  * `ALERTA_PLAZO_ENTREGA`: Recordatorio automatizado antes del inicio del período académico.
+* **Despacho Automático en Hitos de Workflow (`PeaService.cs`):** Cada transición normativa en el ciclo de vida del PEA desencadena notificaciones in-app y despachos de correo en segundo plano vía `NotificarHitoWorkflowPeaAsync`:
+  * `EnRevision` (Docente elabora y firma/remite): Notifica y despacha correo al Coordinador de Carrera y Administradores para iniciar la revisión colegiada.
+  * `Observado` (Coordinador/Revisor formula observaciones): Notifica y despacha correo al Docente Elaborador con el requerimiento/motivo para que ingrese al editor microcurricular a subsanar.
+  * `Corregido` (Docente subsana observaciones): Notifica y despacha correo al Coordinador de Carrera para que verifique los cambios y proceda al aval.
+  * `RevisadoCoord` / Aval de Carrera (Coordinador emite aval): Notifica al Docente Elaborador sobre la concesión del aval y remite alerta a Coordinación Académica y Vicerrectorado para la validación final.
+  * `RevisadoAcad` (Coordinación Académica emite aval metodológico): Notifica al Docente, Coordinador y Vicerrectorado.
+  * `Aprobado` (Vicerrectorado emite aprobación definitiva): Notifica al Docente Elaborador, Coordinación de Carrera y Administradores con confirmación del sellado criptográfico bajo Ley 67.
 
 ---
 

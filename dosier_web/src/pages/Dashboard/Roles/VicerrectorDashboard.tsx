@@ -11,6 +11,7 @@ import {
 import { LegalizacionFirmaModal } from './Modals/LegalizacionFirmaModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import {
     Award,
     BookOpen,
@@ -19,7 +20,6 @@ import {
     FileCheck2,
     GraduationCap,
     QrCode,
-    RefreshCw,
     Search,
     Shield,
     ShieldCheck,
@@ -82,20 +82,19 @@ export const VicerrectorDashboard: React.FC = () => {
         cargarDatos();
     }, [cargarDatos]);
 
-    const handleRefrescar = async () => {
-        setRefreshing(true);
-        try {
-            const data = await getBandejaPeas({
-                idPeriodo: selectedPeriodo || undefined
-            });
-            setPeas(data);
-            addToast('Bandeja Sincronizada', 'Estado curricular actualizado con la base de datos.', 'info');
-        } catch (err) {
-            console.error('[DOSIER Vicerrector] Error al refrescar:', err);
-        } finally {
-            setRefreshing(false);
+    // Sincronización continua en tiempo real (SignalR, foco de pestaña y heartbeat pasivo)
+    const silentSync = useCallback(() => {
+        if (selectedPeriodo) {
+            getBandejaPeas({ idPeriodo: selectedPeriodo }).then(setPeas).catch(() => {});
+        } else {
+            cargarDatos();
         }
-    };
+    }, [selectedPeriodo, cargarDatos]);
+
+    useRealtimeSync({
+        onSync: silentSync,
+        events: ['dosier-projects-changed']
+    });
 
     const handlePeriodoChange = async (val: string | number) => {
         const idStr = String(val);
@@ -240,7 +239,6 @@ export const VicerrectorDashboard: React.FC = () => {
                         <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
                             Cola de Legalización y Archivo Oficial de PEAs
                         </h2>
-                        {refreshing && <RefreshCw className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -324,15 +322,6 @@ export const VicerrectorDashboard: React.FC = () => {
                                 <span>Lista</span>
                             </button>
                         </div>
-
-                        <button
-                            onClick={handleRefrescar}
-                            disabled={refreshing}
-                            className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 border border-zinc-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-                            title="Recargar bandeja"
-                        >
-                            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                        </button>
                     </div>
                 </div>
 

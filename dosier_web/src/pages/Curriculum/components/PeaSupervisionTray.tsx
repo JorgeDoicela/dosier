@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useAuth } from '../../../api/AuthContext';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { getBandejaPeas, type PeaBandejaItemDto } from '../../../services/peaService';
 import {
     getPeriodosAcademicos,
@@ -99,48 +100,16 @@ export const PeaSupervisionTray: React.FC = () => {
         cargarDatos();
     }, [cargarDatos]);
 
-    // 1. Sincronización en tiempo real vía eventos de dominio (SignalR WebSockets y transiciones de workflow)
-    useEffect(() => {
-        const handleProjectsChanged = () => {
+    // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: () => {
             if (selectedPeriodo) {
                 recargarPeas(selectedPeriodo, true);
             }
-        };
-
-        window.addEventListener('dosier-projects-changed', handleProjectsChanged);
-        return () => {
-            window.removeEventListener('dosier-projects-changed', handleProjectsChanged);
-        };
-    }, [selectedPeriodo, recargarPeas]);
-
-    // 2. Revalidación automática al recuperar foco o visibilidad de pestaña (revalidateOnFocus)
-    useEffect(() => {
-        const handleVisibilityAndFocus = () => {
-            if (document.visibilityState === 'visible' && selectedPeriodo) {
-                recargarPeas(selectedPeriodo, true);
-            }
-        };
-
-        window.addEventListener('focus', handleVisibilityAndFocus);
-        document.addEventListener('visibilitychange', handleVisibilityAndFocus);
-        return () => {
-            window.removeEventListener('focus', handleVisibilityAndFocus);
-            document.removeEventListener('visibilitychange', handleVisibilityAndFocus);
-        };
-    }, [selectedPeriodo, recargarPeas]);
-
-    // 3. Heartbeat pasivo (revalidación periódica cada 20 segundos mientras la pestaña esté activa)
-    useEffect(() => {
-        if (!selectedPeriodo) return;
-
-        const interval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                recargarPeas(selectedPeriodo, true);
-            }
-        }, 20000);
-
-        return () => clearInterval(interval);
-    }, [selectedPeriodo, recargarPeas]);
+        },
+        events: ['dosier-projects-changed'],
+        heartbeatIntervalMs: 20000
+    });
 
     const handlePeriodoChange = async (val: string | number) => {
         const idStr = String(val);

@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { analyticsService } from '../../../services/analyticsService';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import type {
     ProyectoResumen,
     DashboardStats,
@@ -17,7 +18,7 @@ export const useAnalyticsData = (period: string, carrera: string) => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [allCareers, setAllCareers] = useState<any[]>([]);
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setRefreshing(true);
         try {
             const [projectsData, statsData, careersData] = await Promise.all([
@@ -45,11 +46,18 @@ export const useAnalyticsData = (period: string, carrera: string) => {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [loadData]);
+
+    // Sincronización continua en tiempo real (SignalR, foco y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: loadData,
+        events: ['dosier-projects-changed'],
+        heartbeatIntervalMs: 45000
+    });
 
     // ── PROCESAMIENTO REACTIVO DE CORTE (FILTROS) ──
     const processed: ProcessedAnalyticsData = useMemo(() => {

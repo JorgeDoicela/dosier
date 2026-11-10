@@ -134,7 +134,6 @@ Gestión del Expediente Curricular Maestro por Asignatura y Período.
 | `GET` | `/carrera/{idCarrera:int}/periodo/{idPeriodo}/asignatura/{idMateria:int}/borrador` | Autenticado | Recupera el borrador colaborativo pre-PEA para una asignatura específica. |
 | `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/asignatura/{idMateria:int}/borrador` | Autenticado | Guarda y versiona acuerdos curriculares del borrador pre-PEA con trazabilidad de autor. |
 | `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/asignatura/{idMateria:int}/aplicar-pea` | Autenticado | Aplica e inyecta el borrador pre-PEA directamente en las secciones del PEA oficial. |
-| `POST`| `/carrera/{idCarrera:int}/periodo/{idPeriodo}/generar-acta` | Coordinador / Vicerrector | Compila y genera el PDF formal de Acta de Armonización Curricular mediante el motor documental. |
 
 ---
 

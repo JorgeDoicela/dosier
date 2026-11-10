@@ -41,7 +41,6 @@ namespace dosier_application.Curriculum.Interfaces
         Task<BorradorPrePeaDto?> GetBorradorPrePeaAsync(int idExpediente);
         Task<BorradorPrePeaDto> GuardarBorradorPrePeaAsync(int idExpediente, BorradorPrePeaDto dto, string idUsuario);
         Task<PeaDto> AplicarBorradorASalaPeaAsync(int idExpediente, int? idPea, string idUsuario);
-        Task<(byte[] PdfBytes, string FileName, string TraceabilityCode)> GenerarActaAcuerdosCarreraAsync(int idCarrera, string idPeriodo, string idUsuario);
     }
 
     public interface IPeaService

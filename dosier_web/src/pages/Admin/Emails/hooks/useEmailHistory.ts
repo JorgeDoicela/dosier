@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { emailService } from '../../../../services/emailService';
+import { useRealtimeSync } from '../../../../hooks/useRealtimeSync';
 import type { EmailHistorial } from '../emailEngineTypes';
 import { mapHistorialToCamelCase } from './useEmailEngineData';
 
@@ -49,17 +50,12 @@ export const useEmailHistory = (): UseEmailHistoryResult => {
         }
     }, [historyLimit]);
 
-    // Escuchar actualizaciones en tiempo real (SignalR WebSocket)
-    useEffect(() => {
-        const handleEmailChange = () => {
-            fetchHistory(undefined, true);
-        };
-
-        window.addEventListener('dosier-emails-changed', handleEmailChange);
-        return () => {
-            window.removeEventListener('dosier-emails-changed', handleEmailChange);
-        };
-    }, [fetchHistory]);
+    // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: () => fetchHistory(undefined, true),
+        events: ['dosier-emails-changed'],
+        heartbeatIntervalMs: 25000
+    });
 
     const getStatusBadge = (state: string) => {
         switch (state.toUpperCase()) {

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { documentMaintenanceService } from '../../../services/documentMaintenanceService';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { useConfirm } from '../../../api/ConfirmContext';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import type { ObsoleteDoc, BackupLog, DiskInfo } from './documentMaintenanceTypes';
 
 export const useDocumentMaintenance = () => {
@@ -75,6 +76,18 @@ export const useDocumentMaintenance = () => {
         fetchBackups();
         fetchDiskInfo();
     }, []);
+
+    const syncAll = useCallback(() => {
+        fetchDiagnosis();
+        fetchBackups();
+        fetchDiskInfo();
+    }, []);
+
+    useRealtimeSync({
+        onSync: syncAll,
+        events: ['dosier-projects-changed'],
+        heartbeatIntervalMs: 45000
+    });
 
     useEffect(() => {
         const hasPending = backups.some(b => b.estado === 'En_Proceso');

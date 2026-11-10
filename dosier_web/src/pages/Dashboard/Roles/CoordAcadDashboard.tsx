@@ -19,6 +19,7 @@ import { AperturaConvocatoriaModal } from './Modals/AperturaConvocatoriaModal';
 import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/RecordatorioDocentesModal';
 import { ProrrogaPlazoModal } from './Modals/ProrrogaPlazoModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { 
     Search, 
     RefreshCw, 
@@ -97,6 +98,12 @@ export const CoordAcadDashboard: React.FC = () => {
     useEffect(() => {
         fetchPeas();
     }, [fetchPeas]);
+
+    // Sincronización en tiempo real (SignalR, foco de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: fetchPeas,
+        events: ['dosier-projects-changed']
+    });
 
     // Filtros en memoria
     const peasFiltrados = useMemo(() => {
@@ -179,14 +186,6 @@ export const CoordAcadDashboard: React.FC = () => {
                         className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                         Conceder Prórroga
-                    </button>
-                    <button
-                        onClick={fetchPeas}
-                        disabled={isLoading}
-                        title="Actualizar datos"
-                        className="p-1.5 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                    >
-                        <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
                     </button>
                 </div>
             </div>

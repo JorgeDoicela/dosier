@@ -25,6 +25,16 @@ namespace dosier_api.Controllers
         [HttpGet("templates/{code}/ui-config")]
         public async Task<IActionResult> GetUiConfig(string code, CancellationToken ct)
         {
+            bool isAdmin = User.IsInRole("DOSIER_ADMIN") ||
+                           User.IsInRole("ADMIN") ||
+                           User.FindFirst("es_admin")?.Value == "true" ||
+                           User.FindFirst("administrador")?.Value == "true";
+
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !isAdmin)
+            {
+                return NotFound(new { message = $"La plantilla '{code}' no está activa o no existe en la base de datos." });
+            }
+
             var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
             var template = templates.FirstOrDefault(t => t.Code == code);
 

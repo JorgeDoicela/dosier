@@ -7,8 +7,7 @@ import {
     Shield,
     FileText,
     ChevronDown,
-    ChevronUp,
-    RefreshCw
+    ChevronUp
 } from 'lucide-react';
 import {
     getChecklistCurricular,
@@ -116,15 +115,6 @@ export const NormativaDrawer: React.FC<NormativaDrawerProps> = ({ isOpen, onClos
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                        <button
-                            type="button"
-                            onClick={loadData}
-                            disabled={loading}
-                            className="p-1.5 rounded-lg text-text-dim hover:text-text-main hover:bg-surface-hover transition-colors"
-                            title="Recargar normativas"
-                        >
-                            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-                        </button>
                         <button
                             type="button"
                             onClick={onClose}

@@ -108,7 +108,10 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         location.pathname.startsWith('/documentacion/mis-proyectos')
     );
     const [isSolicitudesOpen, setIsSolicitudesOpen] = useState(
-        location.pathname.startsWith('/solicitudes')
+        location.pathname.startsWith('/solicitudes') ||
+        location.pathname.startsWith('/incidencias') ||
+        location.pathname.startsWith('/mis-incidencias') ||
+        location.pathname.startsWith('/admin/incidencias')
     );
     const [sidebarProjects, setSidebarProjects] = useState<SidebarProject[]>([]);
     const [sidebarMyProjects, setSidebarMyProjects] = useState<SidebarProject[]>([]);
@@ -211,19 +214,31 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         if (location.pathname.startsWith('/parametros-normativos')) {
             setIsParametrosOpen(true);
         }
-        if (location.pathname.startsWith('/documentacion/mis-proyectos')) {
+        const isMyProjectWorkspace = location.pathname.includes('/workspace/') && (
+            location.pathname.includes('/mis-proyectos/') ||
+            sidebarMyProjects.some(p => location.pathname.toLowerCase().includes(p.uuid.toLowerCase()))
+        );
+
+        if (location.pathname.startsWith('/documentacion/mis-proyectos') || isMyProjectWorkspace) {
             setIsMisProyectosOpen(true);
         }
-        if (location.pathname.startsWith('/solicitudes')) {
+        if (
+            location.pathname.startsWith('/solicitudes') ||
+            location.pathname.startsWith('/incidencias') ||
+            location.pathname.startsWith('/mis-incidencias') ||
+            location.pathname.startsWith('/admin/incidencias')
+        ) {
             setIsSolicitudesOpen(true);
         }
         
-        const isDocumentacionRoute = (location.pathname.startsWith('/documentacion') && !location.pathname.startsWith('/documentacion/mis-proyectos')) ||
-            (location.pathname.includes('/workspace/') && !location.pathname.includes('/mis-proyectos/'));
+        const isDocumentacionRoute = !isMyProjectWorkspace && (
+            (location.pathname.startsWith('/documentacion') && !location.pathname.startsWith('/documentacion/mis-proyectos')) ||
+            (location.pathname.includes('/workspace/') && !location.pathname.includes('/mis-proyectos/'))
+        );
         if (isDocumentacionRoute) {
             setIsInvestigacionOpen(true);
         }
-    }, [location.pathname]);
+    }, [location.pathname, sidebarMyProjects]);
 
     let notifications: NotificationItem[] = [];
     let unreadCount = 0;
@@ -301,14 +316,13 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         ] : []),
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
-        { name: 'Solicitudes', icon: Send, path: '/solicitudes', roles: ['ANY'], group: 2 },
+        { name: 'Solicitudes', icon: Send, path: '/solicitudes', roles: ['ANY'], group: 2, hasChevron: true },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2, hasChevron: true },
         // ── Administración y Control Total del Sistema ──────────────────────
         { name: 'Usuarios', icon: Users, path: '/usuarios', permission: 'USUARIOS:VER', roles: ['DOSIER_ADMIN'], group: 3, hasChevron: true },
         ...(canEditTemplates ? [
             { name: 'Plantillas', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 }
         ] : []),
-        { name: 'Incidencias', icon: MessageSquarePlus, path: '/incidencias', roles: ['DOSIER_ADMIN'], group: 3 },
         { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], group: 3 },
         { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
     ];
@@ -337,8 +351,21 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
     });
 
     const activeItem = menuItems.reduce<MenuItem | null>((best, item) => {
-        const isMatch = location.pathname === item.path
+        let isMatch = location.pathname === item.path
             || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+
+        if (!isMatch && item.name === 'Solicitudes') {
+            isMatch = location.pathname.startsWith('/incidencias') ||
+                      location.pathname.startsWith('/mis-incidencias') ||
+                      location.pathname.startsWith('/admin/incidencias');
+        }
+
+        if (!isMatch && item.name === 'Mis Instrumentos PEA') {
+            isMatch = location.pathname.includes('/workspace/') && (
+                location.pathname.includes('/mis-proyectos/') ||
+                sidebarMyProjects.some(p => location.pathname.toLowerCase().includes(p.uuid.toLowerCase()))
+            );
+        }
 
         if (isMatch && (!best || item.path.length > best.path.length)) {
             return item;

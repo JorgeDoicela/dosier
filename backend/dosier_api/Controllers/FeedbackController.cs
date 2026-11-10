@@ -44,24 +44,38 @@ public class FeedbackController : ControllerBase
         var safeYearMonth = Path.GetFileName(yearMonth);
         var safeFileName = Path.GetFileName(fileName);
 
-        var wwwrootBase = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName);
-        var currentDirBase = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "feedback", safeYearMonth, safeFileName);
+        var candidatePaths = new[]
+        {
+            Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName),
+            Path.Combine(Directory.GetCurrentDirectory(), "uploads", "feedback", safeYearMonth, safeFileName),
+            Path.Combine(Directory.GetCurrentDirectory(), "backend", "dosier_api", "uploads", "feedback", safeYearMonth, safeFileName),
+            Path.Combine(Directory.GetCurrentDirectory(), "backend", "dosier_api", "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName),
+            Path.Combine(AppContext.BaseDirectory, "uploads", "feedback", safeYearMonth, safeFileName),
+            Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName)
+        };
 
-        string finalPath;
-        if (System.IO.File.Exists(wwwrootBase))
+        string? finalPath = candidatePaths.FirstOrDefault(p => System.IO.File.Exists(p));
+        var ext = Path.GetExtension(safeFileName).ToLowerInvariant();
+        var isImage = ext is ".png" or ".jpg" or ".jpeg" or ".webp";
+
+        if (finalPath == null)
         {
-            finalPath = wwwrootBase;
-        }
-        else if (System.IO.File.Exists(currentDirBase))
-        {
-            finalPath = currentDirBase;
-        }
-        else
-        {
+            if (isImage)
+            {
+                // Responder con SVG institucional de fallback para evitar 404 en consola y miniaturas rotas
+                string svg = @"<svg xmlns=""http://www.w3.org/2000/svg"" width=""320"" height=""180"" viewBox=""0 0 320 180"" fill=""none"">
+                    <rect width=""320"" height=""180"" rx=""8"" fill=""#f8fafc""/>
+                    <rect x=""1"" y=""1"" width=""318"" height=""178"" rx=""7"" stroke=""#e2e8f0""/>
+                    <path d=""M148 76l-8 12h32l-10-15-7 10-7-7z"" fill=""#94a3b8""/>
+                    <circle cx=""168"" cy=""66"" r=""4"" fill=""#94a3b8""/>
+                    <text x=""160"" y=""112"" text-anchor=""middle"" font-family=""system-ui, -apple-system, sans-serif"" font-size=""11"" font-weight=""500"" fill=""#64748b"">Adjunto no disponible</text>
+                    <text x=""160"" y=""128"" text-anchor=""middle"" font-family=""system-ui, -apple-system, sans-serif"" font-size=""9"" fill=""#94a3b8"">Archivo no sincronizado en almacenamiento local</text>
+                </svg>";
+                return Content(svg, "image/svg+xml");
+            }
             return NotFound(new { message = "Archivo adjunto no encontrado." });
         }
 
-        var ext = Path.GetExtension(safeFileName).ToLowerInvariant();
         var contentType = ext switch
         {
             ".png" => "image/png",

@@ -11,7 +11,7 @@
  * - Fondos 100% sólidos, cero transparencias ni emojis.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     FileText,
     Award,
@@ -141,6 +141,12 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
         return { total, curricular, acreditacion, reportes };
     }, [templates]);
 
+    useEffect(() => {
+        if (selectedCategory === 'CURRICULAR' && stats.curricular === 0) setSelectedCategory('ALL');
+        if (selectedCategory === 'ACREDITACION' && stats.acreditacion === 0) setSelectedCategory('ALL');
+        if (selectedCategory === 'REPORTES' && stats.reportes === 0) setSelectedCategory('ALL');
+    }, [selectedCategory, stats]);
+
     return (
         <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 flex flex-col min-h-screen font-sans gap-6">
             <div className="max-w-[1600px] w-full mx-auto space-y-6">
@@ -167,28 +173,32 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                         >
                             Todos ({stats.total})
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setSelectedCategory('CURRICULAR')}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                                selectedCategory === 'CURRICULAR'
-                                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
-                                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                            }`}
-                        >
-                            Curricular & PEA ({stats.curricular})
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setSelectedCategory('ACREDITACION')}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer shrink-0 ${
-                                selectedCategory === 'ACREDITACION'
-                                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
-                                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                            }`}
-                        >
-                            Acreditación & Actas ({stats.acreditacion})
-                        </button>
+                        {stats.curricular > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setSelectedCategory('CURRICULAR')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer shrink-0 ${
+                                    selectedCategory === 'CURRICULAR'
+                                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
+                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                }`}
+                            >
+                                Curricular & PEA ({stats.curricular})
+                            </button>
+                        )}
+                        {stats.acreditacion > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setSelectedCategory('ACREDITACION')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer shrink-0 ${
+                                    selectedCategory === 'ACREDITACION'
+                                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
+                                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                                }`}
+                            >
+                                Acreditación & Actas ({stats.acreditacion})
+                            </button>
+                        )}
                         {stats.reportes > 0 && (
                             <button
                                 type="button"

@@ -171,6 +171,16 @@ namespace dosier_api.Controllers
         public async Task<IActionResult> GetTemplates()
         {
             var templates = await _documentEngine.GetAvailableTemplatesAsync();
+            bool isAdmin = User.IsInRole("DOSIER_ADMIN") ||
+                           User.IsInRole("ADMIN") ||
+                           User.FindFirst("es_admin")?.Value == "true" ||
+                           User.FindFirst("administrador")?.Value == "true";
+
+            if (!isAdmin)
+            {
+                templates = templates.Where(t => !string.Equals(t.Code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase));
+            }
+
             return Ok(templates);
         }
 

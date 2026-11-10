@@ -79,7 +79,7 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
   * **Estructura y Componentes:**
     * *Columna Izquierda (`CareerProfileSidebar`):* Inspección del Perfil de Egreso CES de la carrera, resultados de aprendizaje del egresado (RDA) y matriz de tributación al perfil.
     * *Espacio Central Amplio:* Matriz y catálogo de asignaturas de la malla organizadas por nivel/semestre con badges normativos de estado. Cada tarjeta ofrece acceso directo mediante el botón "Abrir en Pantalla Completa" que transiciona fluidamente al editor maestro (`DocumentWorkspace` con `DOSIERBuilderShell`), garantizando espacio holgado, las 11 secciones oficiales del PEA, motor colaborativo y retorno limpio a la sala curricular.
-    * *Columna Derecha (`LivePresenceSidebar`):* Panel de moderación y presencia en vivo con control de apertura/pausa de sesión (`Conmutar Sala`), lista de docentes en línea vía Awareness CRDT, hilo de debate colaborativo y compilación automática del Acta de Armonización Curricular en PDF.
+    * *Columna Derecha (`LivePresenceSidebar`):* Panel de moderación y presencia en vivo con control de apertura/pausa de sesión (`Conmutar Sala`), lista de docentes en línea vía Awareness CRDT e hilo de debate colaborativo.
 * **`MisAsignaturasPage.tsx` (`/documentacion/mis-proyectos`):**
   * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI y el estado de formulación de cada PEA.
   * **Navegación sobre Riel Plano Continuo:** Permite alternar limpiamente entre **Mis Asignaturas** y **PEAs de Otros Docentes** mediante pestañas directas sobre la línea base con contadores de asignaturas en tiempo real.
@@ -215,6 +215,6 @@ Módulo de trabajo cooperativo y armonización curricular colegiada por carrera 
   * **Navegación Izquierda (`BuilderNavigationSidebar`):** Se pliega con `<` y se expande mediante la pestaña flotante inteligente (`BuilderFloatingTab`) con las 6 secciones de armonización (Propuesta y Malla, Objetivo, Unidades, RDAs, Metodología y Perfil CES).
   * **Lienzo Central de Co-Creación:** Espacio amplio de redacción colegiada sin scrolls comprimidos.
   * **Colaboración Derecha (`CollaborationSidebar`):** Se oculta con `>` y permite debatir en vivo mediante el motor CRDT y sockets de CoWork.
-  * **Gobernanza:** Botón para generar y descargar el **Acta de Armonización Curricular en PDF** y botón para **Aplicar al PEA Oficial** con un solo clic.
+  * **Gobernanza:** Botón de acción principal para **Aplicar al PEA Oficial** con un solo clic.
 
 

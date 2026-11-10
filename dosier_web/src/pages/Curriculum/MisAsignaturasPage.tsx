@@ -29,6 +29,7 @@ import {
     recordRecentSubjectOpen,
     sortSubjectsByRecentOpen
 } from '../../utils/recentSubjectStorage';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync';
 
 export const MisAsignaturasPage: React.FC = () => {
     const navigate = useNavigate();
@@ -126,48 +127,15 @@ export const MisAsignaturasPage: React.FC = () => {
         cargarPeriodosYDatos();
     }, [cargarPeriodosYDatos]);
 
-    // 1. Sincronización en tiempo real vía eventos de dominio (SignalR WebSockets y workflow transitions)
-    useEffect(() => {
-        const handleProjectsChanged = () => {
+    // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: () => {
             if (selectedPeriodo) {
                 recargarMaterias(selectedPeriodo, true);
             }
-        };
-
-        window.addEventListener('dosier-projects-changed', handleProjectsChanged);
-        return () => {
-            window.removeEventListener('dosier-projects-changed', handleProjectsChanged);
-        };
-    }, [selectedPeriodo, recargarMaterias]);
-
-    // 2. Revalidación automática al recuperar foco o visibilidad de pestaña (revalidateOnFocus)
-    useEffect(() => {
-        const handleVisibilityAndFocus = () => {
-            if (document.visibilityState === 'visible' && selectedPeriodo) {
-                recargarMaterias(selectedPeriodo, true);
-            }
-        };
-
-        window.addEventListener('focus', handleVisibilityAndFocus);
-        document.addEventListener('visibilitychange', handleVisibilityAndFocus);
-        return () => {
-            window.removeEventListener('focus', handleVisibilityAndFocus);
-            document.removeEventListener('visibilitychange', handleVisibilityAndFocus);
-        };
-    }, [selectedPeriodo, recargarMaterias]);
-
-    // 3. Heartbeat pasivo (revalidación periódica cada 30 segundos mientras la pestaña esté activa)
-    useEffect(() => {
-        if (!selectedPeriodo) return;
-
-        const interval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                recargarMaterias(selectedPeriodo, true);
-            }
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [selectedPeriodo, recargarMaterias]);
+        },
+        events: ['dosier-projects-changed']
+    });
 
     // 4. Sincronización del orden de asignaturas recientemente abiertas
     useEffect(() => {
@@ -836,9 +804,11 @@ export const MisAsignaturasPage: React.FC = () => {
                                     {/* Top: Carrera y Estado */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                                <span className="truncate">{materia.nombre_carrera}</span>
-                                            </div>
+                                            {carrerasDisponibles.length > 1 ? (
+                                                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                    <span className="truncate">{materia.nombre_carrera}</span>
+                                                </div>
+                                            ) : <div />}
                                             <div>{renderEstadoBadge(materia.estado_pea)}</div>
                                         </div>
 
@@ -964,9 +934,11 @@ export const MisAsignaturasPage: React.FC = () => {
                                     {/* Top: Carrera y Estado */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                                <span className="truncate">{pea.nombre_carrera || 'Carrera Institucional'}</span>
-                                            </div>
+                                            {carrerasDisponibles.length > 1 ? (
+                                                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                    <span className="truncate">{pea.nombre_carrera || 'Carrera Institucional'}</span>
+                                                </div>
+                                            ) : <div />}
                                             <div>{renderEstadoBadge(pea.estado)}</div>
                                         </div>
 

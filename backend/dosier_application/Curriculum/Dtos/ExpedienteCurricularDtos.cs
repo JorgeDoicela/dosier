@@ -224,11 +224,4 @@ namespace dosier_application.Curriculum.Dtos
     {
         public BorradorPrePeaDto Borrador { get; set; } = new BorradorPrePeaDto();
     }
-
-    public class GenerarActaCarreraResponse
-    {
-        public string FileName { get; set; } = "acta_armonizacion.pdf";
-        public string TraceabilityCode { get; set; } = string.Empty;
-        public DateTime GeneradoEn { get; set; } = DateTime.UtcNow;
-    }
 }

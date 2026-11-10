@@ -75,5 +75,4 @@ El motor colaborativo amplía su alcance de la asignatura individual a la **Sala
 * **Control de Sesión:** El Coordinador modera la sala abriendo o pausando la sesión colaborativa (`sala_colaborativa_activa` en `doc_expedientes_curriculares`).
 * **Co-diseño Pre-PEA:** Permite estructurar de forma previa y conjunta la justificación curricular, articulación de asignaturas con el Perfil de Egreso CES, unidades curriculares y metodologías sugeridas.
 * **Inyección de Borrador al PEA:** Con un solo clic (`POST /api/expedientes-curriculares/carrera/{id}/periodo/{p}/asignatura/{m}/aplicar-pea`), el borrador acordado en la sala se mapea e inyecta directamente como versión base en las secciones correspondientes del PEA oficial (`doc_peas`), preservando auditoría y trazabilidad completa.
-* **Acta de Armonización Curricular:** Al concluir las sesiones de trabajo, el motor documental genera automáticamente el acta formal en PDF (`ACTA_ARMONIZACION_CARRERA`) con los acuerdos y modificaciones consensuadas por el cuerpo docente.
 

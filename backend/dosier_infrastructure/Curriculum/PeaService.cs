@@ -424,6 +424,9 @@ namespace dosier_infrastructure.Curriculum
 
             await RegistrarTrazabilidadAsync(idPea, estadoAnterior, nuevoEstado, motivo ?? $"Transición de estado a {nuevoEstado}", hashSha256, idUserInt);
 
+            // Notificación e Hitos de Correo Electrónico Institucional
+            await NotificarHitoWorkflowPeaAsync(entity, estadoAnterior, nuevoEstado, motivo);
+
             return true;
         }
 
@@ -742,6 +745,9 @@ namespace dosier_infrastructure.Curriculum
 
             string verificationUrl = _appUrlService.BuildFrontendUrl($"/verificacion/{firmaCode}");
 
+            // Notificación e Hitos de Correo Electrónico tras firma institucional
+            await NotificarHitoWorkflowPeaAsync(pea, estadoAnterior, estadoNuevo, dto.Motivo);
+
             return new PeaFirmaResultadoDto
             {
                 Exito = true,
@@ -809,6 +815,14 @@ namespace dosier_infrastructure.Curriculum
             var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo)
                 ?? throw new KeyNotFoundException($"No se encontró el PEA con id {idPea}");
 
+            string estadoAnteriorPea = pea.Estado;
+            if (pea.Estado != "Observado")
+            {
+                pea.Estado = "Observado";
+                pea.FechaModificacion = DateTime.UtcNow;
+                await RegistrarTrazabilidadAsync(idPea, estadoAnteriorPea, "Observado", $"Observación registrada en {seccion}: {texto}", null, effectiveUserId);
+            }
+
             var obs = new DocPeaObservacion
             {
                 Uuid = Guid.NewGuid().ToString(),
@@ -823,6 +837,11 @@ namespace dosier_infrastructure.Curriculum
 
             _context.DocPeaObservaciones.Add(obs);
             await _context.SaveChangesAsync();
+
+            if (estadoAnteriorPea != "Observado")
+            {
+                await NotificarHitoWorkflowPeaAsync(pea, estadoAnteriorPea, "Observado", $"Observación en {seccion}: {texto}");
+            }
 
             return new PeaObservacionDto
             {
@@ -883,6 +902,8 @@ namespace dosier_infrastructure.Curriculum
                     pea.Estado = "Corregido";
                     await RegistrarTrazabilidadAsync(obs.IdPea, "Observado", "Corregido", "Todas las observaciones fueron subsanadas por el docente", null, idUsuario);
                     await _context.SaveChangesAsync();
+
+                    await NotificarHitoWorkflowPeaAsync(pea, "Observado", "Corregido", "Todas las observaciones fueron subsanadas por el docente");
                 }
             }
 
@@ -928,6 +949,8 @@ namespace dosier_infrastructure.Curriculum
                     pea.Estado = "EnRevision";
                     await RegistrarTrazabilidadAsync(idPea, "Observado", "EnRevision", "Observación eliminada sin pendientes restantes. Retorno a EnRevision.", null, idUsuario);
                     await _context.SaveChangesAsync();
+
+                    await NotificarHitoWorkflowPeaAsync(pea, "Observado", "EnRevision", "Observaciones eliminadas sin pendientes. Retorno a EnRevision.");
                 }
             }
 
@@ -1044,6 +1067,253 @@ namespace dosier_infrastructure.Curriculum
 
             _context.DocPeaTrazabilidades.Add(traza);
             await _context.SaveChangesAsync();
+        }
+
+        private async Task NotificarHitoWorkflowPeaAsync(
+            DocPea pea, 
+            string estadoAnterior, 
+            string estadoNuevo, 
+            string? motivo = null, 
+            CancellationToken cancellationToken = default)
+        {
+            if (string.Equals(estadoAnterior, estadoNuevo, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            try
+            {
+                var notifService = GetNotificationService();
+                if (notifService == null) return;
+
+                // 1. Resolver metadatos de asignatura y carrera
+                var asignatura = await _context.Asignaturas.AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.IdAsignatura == pea.IdAsignatura, cancellationToken);
+                string nombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura Curricular";
+
+                var carrera = await _context.Carreras.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.IdCarrera == pea.IdCarrera, cancellationToken);
+                string nombreCarrera = carrera?.Carrera1 ?? "Carrera Institucional";
+
+                // 2. Resolver docente elaborador
+                User? userDocente = null;
+                if (!string.IsNullOrEmpty(pea.IdDocenteElaborador))
+                {
+                    userDocente = await _context.Users.AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.Activo && (u.IdSigafi == pea.IdDocenteElaborador || u.IdUsuario.ToString() == pea.IdDocenteElaborador), cancellationToken);
+                }
+                string nombreDocente = userDocente?.Nombre ?? "Docente Titular";
+
+                // 3. Resolver coordinadores de la carrera
+                var coordSigafis = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                    .Where(a => a.IdCarrera == pea.IdCarrera && a.EsActivo && a.CargoCurricular == "COORD_CARRERA")
+                    .Select(a => a.IdSigafi)
+                    .ToListAsync(cancellationToken);
+
+                var coordinadoresQuery = _context.Users.AsNoTracking()
+                    .Where(u => u.Activo && (
+                        (coordSigafis.Count > 0 && coordSigafis.Contains(u.IdSigafi)) ||
+                        u.UserRoles.Any(ur => ur.Role.CodigoRol == "DOSIER_COORD_CARRERA" && (ur.EsActivo ?? true))
+                    ));
+
+                var coordinadores = await coordinadoresQuery.ToListAsync(cancellationToken);
+                var coordinadoresCarrera = coordinadores.Where(u => coordSigafis.Contains(u.IdSigafi)).ToList();
+                var destinatariosCoord = (coordinadoresCarrera.Any() ? coordinadoresCarrera : coordinadores)
+                    .DistinctBy(u => u.IdUsuario)
+                    .ToList();
+
+                // 4. Resolver autoridades académicas institucionales (Vicerrectorado y Coordinación Académica)
+                var autoridadesAcad = await _context.Users.AsNoTracking()
+                    .Where(u => u.Activo && u.UserRoles.Any(ur => 
+                        (ur.Role.CodigoRol == "DOSIER_VICERRECTOR" || ur.Role.CodigoRol == "DOSIER_COORD_ACAD") && 
+                        (ur.EsActivo ?? true)))
+                    .DistinctBy(u => u.IdUsuario)
+                    .ToListAsync(cancellationToken);
+
+                // 5. Administradores de respaldo
+                var adminUsers = await _context.Users.AsNoTracking()
+                    .Where(u => u.Activo && (u.Administrador || u.UserRoles.Any(ur => ur.Role.CodigoRol == "DOSIER_ADMIN" && (ur.EsActivo ?? true))))
+                    .DistinctBy(u => u.IdUsuario)
+                    .ToListAsync(cancellationToken);
+
+                string urlPea = $"/documentacion/workspace/pea-oficial/{pea.Uuid}";
+
+                var baseExtraData = new Dictionary<string, string>
+                {
+                    ["uuid_pea"] = pea.Uuid,
+                    ["id_pea"] = pea.IdPea.ToString(),
+                    ["asignatura"] = nombreAsignatura,
+                    ["carrera"] = nombreCarrera,
+                    ["estado_anterior"] = estadoAnterior,
+                    ["estado_nuevo"] = estadoNuevo
+                };
+
+                // Despacho según el hito normativo
+                switch (estadoNuevo)
+                {
+                    case "EnRevision":
+                    {
+                        baseExtraData["tipo"] = "PEA_EN_REVISION";
+                        baseExtraData["docente"] = nombreDocente;
+
+                        string titulo = $"PEA Remitido a Revisión: {nombreAsignatura}";
+                        string mensaje = $"El docente {nombreDocente} ha remitido a revisión curricular el PEA de '{nombreAsignatura}' ({nombreCarrera}). Se requiere la revisión colegiada y emisión del Aval de Carrera.";
+
+                        var destinatarios = destinatariosCoord.Concat(adminUsers)
+                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .DistinctBy(u => u.IdUsuario);
+
+                        foreach (var dest in destinatarios)
+                        {
+                            await notifService.NotifyUserAsync(
+                                dest.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+                        break;
+                    }
+
+                    case "Observado":
+                    {
+                        baseExtraData["tipo"] = "PEA_OBSERVADO";
+                        if (!string.IsNullOrWhiteSpace(motivo)) baseExtraData["motivo"] = motivo;
+
+                        string titulo = $"PEA con Observaciones Curriculares: {nombreAsignatura}";
+                        string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha recibido observaciones curriculares por parte de la Coordinación de Carrera." +
+                            (string.IsNullOrWhiteSpace(motivo) ? "" : $" Requerimiento: {motivo}.") +
+                            " Ingrese al editor microcurricular para subsanar los puntos observados.";
+
+                        if (userDocente != null)
+                        {
+                            await notifService.NotifyUserAsync(
+                                userDocente.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+                        break;
+                    }
+
+                    case "Corregido":
+                    {
+                        baseExtraData["tipo"] = "PEA_CORREGIDO";
+                        baseExtraData["docente"] = nombreDocente;
+
+                        string titulo = $"Observaciones Subsanadas: {nombreAsignatura}";
+                        string mensaje = $"El docente {nombreDocente} ha subsanado las observaciones del PEA de '{nombreAsignatura}' ({nombreCarrera}). El instrumento está disponible para su verificación y emisión del Aval de Carrera.";
+
+                        var destinatarios = destinatariosCoord.Concat(adminUsers)
+                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .DistinctBy(u => u.IdUsuario);
+
+                        foreach (var dest in destinatarios)
+                        {
+                            await notifService.NotifyUserAsync(
+                                dest.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+                        break;
+                    }
+
+                    case "RevisadoCoord":
+                    {
+                        baseExtraData["tipo"] = "PEA_AVAL_CARRERA";
+
+                        // 1. Notificar al docente elaborador
+                        if (userDocente != null)
+                        {
+                            string tituloDocente = $"Aval de Carrera Concedido: {nombreAsignatura}";
+                            string mensajeDocente = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha recibido el Aval de Carrera formal por parte de la Coordinación y ha avanzado a la fase de aprobación institucional.";
+
+                            await notifService.NotifyUserAsync(
+                                userDocente.IdUsuario,
+                                tituloDocente,
+                                mensajeDocente,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+
+                        // 2. Notificar a Vicerrectorado y Coordinación Académica
+                        string tituloAutoridades = $"PEA con Aval de Carrera Listo para Aprobación: {nombreAsignatura}";
+                        string mensajeAutoridades = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) cuenta con el Aval de Carrera emitido y se encuentra listo para validación institucional y firma de aprobación por Vicerrectorado.";
+
+                        var destinatariosAcad = autoridadesAcad.Concat(adminUsers)
+                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
+                            .DistinctBy(u => u.IdUsuario);
+
+                        foreach (var dest in destinatariosAcad)
+                        {
+                            await notifService.NotifyUserAsync(
+                                dest.IdUsuario,
+                                tituloAutoridades,
+                                mensajeAutoridades,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+                        break;
+                    }
+
+                    case "RevisadoAcad":
+                    {
+                        baseExtraData["tipo"] = "PEA_REVISADO_ACAD";
+
+                        string titulo = $"Revisión Académica Completada: {nombreAsignatura}";
+                        string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha sido avalado por la Coordinación Académica y espera la firma de aprobación final de Vicerrectorado.";
+
+                        var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
+                            .DistinctBy(u => u.IdUsuario);
+
+                        foreach (var dest in destinatarios)
+                        {
+                            await notifService.NotifyUserAsync(
+                                dest.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+                        break;
+                    }
+
+                    case "Aprobado":
+                    {
+                        baseExtraData["tipo"] = "PEA_APROBADO";
+
+                        string titulo = $"PEA Aprobado Oficialmente: {nombreAsignatura}";
+                        string mensaje = $"El Programa de Estudio de la Asignatura (PEA) de '{nombreAsignatura}' ({nombreCarrera}) ha sido formalmente APROBADO por Vicerrectorado Académico con firma digital y sellado criptográfico institucional bajo Ley 67.";
+
+                        var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
+                            .Concat(adminUsers)
+                            .DistinctBy(u => u.IdUsuario);
+
+                        foreach (var dest in destinatarios)
+                        {
+                            await notifService.NotifyUserAsync(
+                                dest.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlPea,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DOSIER PEA] Advertencia: No se pudo despachar la notificación del hito '{estadoNuevo}' para el PEA {pea.IdPea}: {ex.Message}");
+            }
         }
 
         private static string CalcularHashSha256(DocPea pea)
@@ -2273,8 +2543,8 @@ namespace dosier_infrastructure.Curriculum
                         Estado = pea.Estado,
                         Version = pea.Version,
                         FechaModificacion = pea.FechaModificacion,
-                        EstadoColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.EstadoColaboracion : null,
-                        UuidColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.Uuid : null,
+                        EstadoColaboracion = pea.IdDocenteColaborador == idSigafi ? pea.EstadoColaboracion : null,
+                        UuidColaboracion = pea.IdDocenteColaborador == idSigafi ? pea.Uuid : null,
                         FirmaDocente = !string.IsNullOrEmpty(pea.FirmaElaboradoDocente),
                         FechaElaborado = pea.FechaElaborado,
                         FirmaCoord = !string.IsNullOrEmpty(pea.FirmaRevisadoCoord),
@@ -2310,8 +2580,8 @@ namespace dosier_infrastructure.Curriculum
                         Estado = "NoIniciado",
                         Version = 1,
                         FechaModificacion = null,
-                        EstadoColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.EstadoColaboracion : null,
-                        UuidColaboracion = pea?.IdDocenteColaborador == idSigafi ? pea.Uuid : null,
+                        EstadoColaboracion = null,
+                        UuidColaboracion = null,
                         FirmaDocente = false,
                         FirmaCoord = false,
                         FirmaAcad = false,

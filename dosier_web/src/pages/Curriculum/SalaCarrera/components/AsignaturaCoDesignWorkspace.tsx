@@ -8,7 +8,6 @@ import {
     Shield, 
     Plus, 
     Trash2, 
-    FileDown,
     User,
     ExternalLink
 } from 'lucide-react';
@@ -78,7 +77,6 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
     });
 
     const [isApplying, setIsApplying] = useState(false);
-    const [isDownloadingActa, setIsDownloadingActa] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     // Instancia de CoWork para colaboración en tiempo real con presencia y chat nativo de DOSIERBuilderShell
@@ -151,32 +149,6 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
             addToast('Error al Aplicar', err.message || 'No se pudo transferir el borrador al PEA oficial.', 'error');
         } finally {
             setIsApplying(false);
-        }
-    };
-
-    // Descargar Acta formal de Carrera en PDF
-    const handleDescargarActa = async () => {
-        setIsDownloadingActa(true);
-        try {
-            const { blob, fileName, traceabilityCode } = await salaCarreraService.descargarActaPdf(idCarrera, idPeriodo);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
-
-            addToast(
-                'Acta de Carrera Generada',
-                `Acta compilada exitosamente (${traceabilityCode || 'Oficial ISTPET'}).`,
-                'success'
-            );
-        } catch (err: any) {
-            addToast('Error al Descargar Acta', err.message || 'No se pudo generar el acta en PDF.', 'error');
-        } finally {
-            setIsDownloadingActa(false);
         }
     };
 
@@ -403,17 +375,6 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
                                         <span className="hidden sm:inline">PEA Oficial</span>
                                     </a>
                                 )}
-
-                                <button
-                                    type="button"
-                                    onClick={handleDescargarActa}
-                                    disabled={isDownloadingActa}
-                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border-thin bg-surface hover:bg-surface-hover text-text-main transition-colors cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
-                                    title="Descargar Acta formal de Armonización Curricular en PDF"
-                                >
-                                    <FileDown size={13} className="text-emerald-600 dark:text-emerald-400" />
-                                    <span className="hidden sm:inline">Acta Carrera PDF</span>
-                                </button>
 
                                 <button
                                     type="button"

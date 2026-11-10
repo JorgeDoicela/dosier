@@ -157,7 +157,9 @@ const SettingsPage: React.FC = () => {
         setIsLoadingTemplates(true);
         try {
             const data = await documentTemplateService.getTemplates();
-            setTemplates(data || []);
+            const rawList = data || [];
+            const filtered = isAdmin ? rawList : rawList.filter(t => t.code !== 'PROTOCOLO_INVESTIGACION');
+            setTemplates(filtered);
         } catch (err) {
             console.error('[DOSIER] Error al cargar plantillas de firma:', err);
             addToast('Error', 'No se pudieron cargar las plantillas de firma institucional.', 'error');

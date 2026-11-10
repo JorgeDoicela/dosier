@@ -9,6 +9,7 @@ import {
     type PeriodoAcademicoDto
 } from '../../../services/docenteAsignaturasService';
 import { crearPeaDesdeAsignacion } from '../../../services/peaService';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
 import { DocenteActividadesPanel } from './Components/DocenteActividadesPanel';
 
@@ -62,48 +63,15 @@ export const DocentePeaDashboard: React.FC = () => {
         cargarDatos();
     }, [cargarDatos]);
 
-    // 1. Sincronización en tiempo real vía eventos de dominio (SignalR WebSockets y workflow transitions)
-    useEffect(() => {
-        const handleProjectsChanged = () => {
+    // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: () => {
             if (selectedPeriodo) {
                 recargarMaterias(selectedPeriodo, true);
             }
-        };
-
-        window.addEventListener('dosier-projects-changed', handleProjectsChanged);
-        return () => {
-            window.removeEventListener('dosier-projects-changed', handleProjectsChanged);
-        };
-    }, [selectedPeriodo, recargarMaterias]);
-
-    // 2. Revalidación automática al recuperar foco o visibilidad de pestaña (revalidateOnFocus)
-    useEffect(() => {
-        const handleVisibilityAndFocus = () => {
-            if (document.visibilityState === 'visible' && selectedPeriodo) {
-                recargarMaterias(selectedPeriodo, true);
-            }
-        };
-
-        window.addEventListener('focus', handleVisibilityAndFocus);
-        document.addEventListener('visibilitychange', handleVisibilityAndFocus);
-        return () => {
-            window.removeEventListener('focus', handleVisibilityAndFocus);
-            document.removeEventListener('visibilitychange', handleVisibilityAndFocus);
-        };
-    }, [selectedPeriodo, recargarMaterias]);
-
-    // 3. Heartbeat pasivo (revalidación periódica cada 30 segundos mientras la pestaña esté activa)
-    useEffect(() => {
-        if (!selectedPeriodo) return;
-
-        const interval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                recargarMaterias(selectedPeriodo, true);
-            }
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, [selectedPeriodo, recargarMaterias]);
+        },
+        events: ['dosier-projects-changed']
+    });
 
     const handleCrearPea = async (asignacion: DocenteAsignaturaDto) => {
         setCreatingPeaId(asignacion.id_asignacion);

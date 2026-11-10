@@ -7,9 +7,10 @@
 // sin cambios en los demás componentes.
 // ═══════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Activity, Edit3, CheckCircle, Eye, GitBranch, MessageSquare, RefreshCw, Clock } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Activity, Edit3, CheckCircle, Eye, GitBranch, MessageSquare, Clock } from 'lucide-react';
 import { curriculumProjectService } from '../../../services/curriculumProjectService';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 
 interface ActividadItem {
     tipo: string;
@@ -62,7 +63,6 @@ const WorkspaceActivityPanel: React.FC<WorkspaceActivityPanelProps> = ({ project
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const fetchActivity = useCallback(async (silent = false) => {
         if (!projectUuid) return;
@@ -94,15 +94,15 @@ const WorkspaceActivityPanel: React.FC<WorkspaceActivityPanelProps> = ({ project
 
     useEffect(() => {
         fetchActivity(false);
-        pollRef.current = setInterval(() => fetchActivity(true), POLL_INTERVAL_MS);
-        return () => {
-            if (pollRef.current) clearInterval(pollRef.current);
-        };
     }, [fetchActivity]);
 
-    const handleManualRefresh = () => {
-        fetchActivity(false);
-    };
+    // Sincronización continua en tiempo real (SignalR, foco de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: () => fetchActivity(true),
+        events: ['dosier-activity-updated', 'dosier-projects-changed'],
+        heartbeatIntervalMs: POLL_INTERVAL_MS,
+        enabled: !!projectUuid
+    });
 
     return (
         <div className={`flex flex-col gap-0 ${className}`}>
@@ -114,14 +114,6 @@ const WorkspaceActivityPanel: React.FC<WorkspaceActivityPanelProps> = ({ project
                         Actividad Reciente
                     </span>
                 </div>
-                <button
-                    onClick={handleManualRefresh}
-                    disabled={isLoading || isRefreshing}
-                    title="Actualizar actividad"
-                    className="p-1 h-6 w-6 rounded-md hover:bg-surface-hover text-text-dim hover:text-text-main transition-colors disabled:opacity-40 flex items-center justify-center cursor-pointer"
-                >
-                    <RefreshCw size={11} className={isRefreshing ? 'animate-spin' : ''} />
-                </button>
             </div>
 
             {/* Content */}

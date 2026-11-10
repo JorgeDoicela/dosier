@@ -46,6 +46,14 @@ namespace dosier_api.Controllers
                    User.FindFirst("es_admin")?.Value == "true";
         }
 
+        private bool IsAdminUser()
+        {
+            return User.IsInRole("DOSIER_ADMIN") ||
+                   User.IsInRole("ADMIN") ||
+                   User.FindFirst("es_admin")?.Value == "true" ||
+                   User.FindFirst("administrador")?.Value == "true";
+        }
+
         /// <summary>
         /// Lista todas las plantillas activas registradas en el motor.
         /// Los usuarios no administradores reciben únicamente las plantillas activas y publicadas.
@@ -66,6 +74,14 @@ namespace dosier_api.Controllers
                         return idx >= 0 ? idx : int.MaxValue;
                     })
                     .ThenBy(t => t.Category)
+                    .ToList();
+            }
+
+            // El formato PROTOCOLO_INVESTIGACION queda exclusivamente reservado para revisión técnica de Administradores
+            if (!IsAdminUser())
+            {
+                orderedTemplates = orderedTemplates
+                    .Where(t => !string.Equals(t.Code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase))
                     .ToList();
             }
 
@@ -100,6 +116,9 @@ namespace dosier_api.Controllers
         [HttpGet("{code}")]
         public async Task<IActionResult> GetByCode(string code, CancellationToken ct)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+
             var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
             var template = templates.FirstOrDefault(t => t.Code == code);
 
@@ -148,6 +167,9 @@ namespace dosier_api.Controllers
         [HttpPut("{code}")]
         public async Task<IActionResult> Update(string code, [FromBody] UpdateTemplateRequest request, CancellationToken ct)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return Forbid();
+
             try
             {
                 var updatedBy = User.Identity?.Name ?? "admin";
@@ -195,6 +217,9 @@ namespace dosier_api.Controllers
         [HttpPost("{code}/reset-to-default")]
         public async Task<IActionResult> ResetToDefault(string code, CancellationToken ct)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return Forbid();
+
             try
             {
                 var updatedBy = User.Identity?.Name ?? "admin";
@@ -214,6 +239,9 @@ namespace dosier_api.Controllers
         [HttpPut("{code}/signature-config")]
         public async Task<IActionResult> UpdateSignatureConfig(string code, [FromBody] UpdateSignatureConfigRequest request, CancellationToken ct)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return Forbid();
+
             try
             {
                 var updatedBy = User.Identity?.Name ?? "admin";
@@ -234,6 +262,9 @@ namespace dosier_api.Controllers
         [HttpPut("{code}/filename-pattern")]
         public async Task<IActionResult> UpdateFilenamePattern(string code, [FromBody] UpdateFilenamePatternRequest request, CancellationToken ct)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return Forbid();
+
             try
             {
                 var updatedBy = User.Identity?.Name ?? "admin";
@@ -252,6 +283,9 @@ namespace dosier_api.Controllers
         [HttpGet("{code}/usage-count")]
         public async Task<IActionResult> GetUsageCount(string code, CancellationToken ct)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+
             var count = await _templateAdminService.GetUsageCountAsync(code, ct);
             return Ok(new { count });
         }
@@ -340,6 +374,9 @@ namespace dosier_api.Controllers
             [FromQuery] bool download = false,
             CancellationToken ct = default)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+
             try
             {
                 var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);
@@ -388,6 +425,9 @@ namespace dosier_api.Controllers
             [FromQuery] bool download = false,
             CancellationToken ct = default)
         {
+            if (string.Equals(code, "PROTOCOLO_INVESTIGACION", StringComparison.OrdinalIgnoreCase) && !IsAdminUser())
+                return NotFound(new { error = $"Plantilla '{code}' no encontrada." });
+
             try
             {
                 var templates = await _documentEngine.GetAvailableTemplatesAsync(ct);

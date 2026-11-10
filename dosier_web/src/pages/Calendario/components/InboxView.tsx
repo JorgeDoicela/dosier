@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import {
@@ -8,6 +8,22 @@ import {
 import { COLORES_OPCIONES } from '../../../services/calendarioService';
 import type { Evento, PlanificandoState } from '../types/calendarioTypes';
 import './InboxView.css';
+
+const ALL_CONTEXTS = [
+    { key: 'Curricular', label: 'Curricular / PEA', icon: BookOpen },
+    { key: 'Coordinacion', label: 'Coordinación', icon: Folder },
+    { key: 'Vicerrectoria', label: 'Vicerrectoría', icon: BarChart3 },
+    { key: 'Agenda', label: 'Agenda / Tareas', icon: CalendarIcon },
+];
+
+const getNoteContextKey = (note: Evento): string => {
+    const url = note.url_accion || '';
+    if (url.startsWith('/curriculum') || note.categoria_global === 'Curricular' || note.categoria_global === 'EntregaPea') return 'Curricular';
+    if (url.startsWith('/coordinacion')) return 'Coordinacion';
+    if (url.startsWith('/vicerrectoria')) return 'Vicerrectoria';
+    if (url.startsWith('/agenda') || note.categoria_global === 'Personal') return 'Agenda';
+    return 'General';
+};
 
 interface InboxViewProps {
     stickyNotes: Evento[];
@@ -52,83 +68,113 @@ export const InboxView: React.FC<InboxViewProps> = ({
     handleQuickPriorityChange,
     handleQuickColorChange,
 }) => {
+    // Solo mostrar contextos que realmente tienen notas asociadas
+    const availableContexts = useMemo(() => {
+        return ALL_CONTEXTS.filter(ctx =>
+            stickyNotes.some(note => getNoteContextKey(note) === ctx.key)
+        );
+    }, [stickyNotes]);
+
+    // Solo mostrar colores que realmente existen en las notas creadas
+    const availableColors = useMemo(() => {
+        return COLORES_OPCIONES.filter(col =>
+            stickyNotes.some(note => (note.color_hex || '').toLowerCase() === col.value.toLowerCase())
+        );
+    }, [stickyNotes]);
+
+    // Limpieza automática si se eliminan notas de un contexto o color seleccionado
+    useEffect(() => {
+        if (selectedFilterContext && !availableContexts.some(c => c.key === selectedFilterContext)) {
+            setSelectedFilterContext(null);
+        }
+    }, [availableContexts, selectedFilterContext, setSelectedFilterContext]);
+
+    useEffect(() => {
+        if (selectedFilterColor && !availableColors.some(c => c.value.toLowerCase() === selectedFilterColor.toLowerCase())) {
+            setSelectedFilterColor(null);
+        }
+    }, [availableColors, selectedFilterColor, setSelectedFilterColor]);
+
+    const isGlobalEmpty = stickyNotes.length === 0;
+
     return (
         <div className="sticky-inbox-view">
-            {/* ── Barra de herramientas premium (Búsqueda + Filtros) ── */}
-            <div className="sticky-inbox-toolbar animate-slide-up">
-                <div className="sticky-inbox-search-wrapper">
-                    <Search size={14} className="search-icon" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por título o contenido de la nota..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="sticky-inbox-search-input"
-                    />
-                    {searchQuery && (
-                        <button
-                            type="button"
-                            onClick={() => setSearchQuery('')}
-                            className="search-clear-btn"
-                        >
-                            <X size={12} />
-                        </button>
-                    )}
-                </div>
-
-                <div className="sticky-inbox-filters-wrapper">
-                    {/* Filtro por módulo de origen */}
-                    <div className="sticky-inbox-context-filters">
-                        <button
-                            type="button"
-                            className={`inbox-filter-chip ${selectedFilterContext === null ? 'active' : ''}`}
-                            onClick={() => setSelectedFilterContext(null)}
-                        >
-                            Todos
-                        </button>
-                        {[
-                            { key: 'Curricular', label: 'Curricular / PEA', icon: BookOpen },
-                            { key: 'Coordinacion', label: 'Coordinación', icon: Folder },
-                            { key: 'Vicerrectoria', label: 'Vicerrectoría', icon: BarChart3 },
-                            { key: 'Agenda', label: 'Agenda / Tareas', icon: CalendarIcon },
-                        ].map(ctx => (
+            {/* ── Barra de herramientas premium (Búsqueda + Filtros) - Solo visible si hay notas registradas ── */}
+            {!isGlobalEmpty && (
+                <div className="sticky-inbox-toolbar animate-slide-up">
+                    <div className="sticky-inbox-search-wrapper">
+                        <Search size={14} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por título o contenido de la nota..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="sticky-inbox-search-input"
+                        />
+                        {searchQuery && (
                             <button
-                                key={ctx.key}
                                 type="button"
-                                className={`inbox-filter-chip ${selectedFilterContext === ctx.key ? 'active' : ''}`}
-                                onClick={() => setSelectedFilterContext(ctx.key)}
+                                onClick={() => setSearchQuery('')}
+                                className="search-clear-btn"
                             >
-                                <ctx.icon size={11} className="mr-1.5 opacity-70" />
-                                {ctx.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Filtro por color de tarjeta */}
-                    <div className="sticky-inbox-color-filters">
-                        {COLORES_OPCIONES.map(col => (
-                            <button
-                                key={col.value}
-                                type="button"
-                                className={`inbox-color-filter-dot ${selectedFilterColor === col.value ? 'active' : ''}`}
-                                style={{ backgroundColor: col.value }}
-                                onClick={() => setSelectedFilterColor(prev => prev === col.value ? null : col.value)}
-                                title={`Filtrar por ${col.label}`}
-                            />
-                        ))}
-                        {selectedFilterColor && (
-                            <button
-                                type="button"
-                                className="inbox-color-filter-clear"
-                                onClick={() => setSelectedFilterColor(null)}
-                                title="Limpiar filtro de color"
-                            >
-                                <RotateCcw size={10} />
+                                <X size={12} />
                             </button>
                         )}
                     </div>
+
+                    <div className="sticky-inbox-filters-wrapper">
+                        {/* Filtro por módulo de origen (solo categorías con notas) */}
+                        {availableContexts.length > 0 && (
+                            <div className="sticky-inbox-context-filters">
+                                <button
+                                    type="button"
+                                    className={`inbox-filter-chip ${selectedFilterContext === null ? 'active' : ''}`}
+                                    onClick={() => setSelectedFilterContext(null)}
+                                >
+                                    Todos
+                                </button>
+                                {availableContexts.map(ctx => (
+                                    <button
+                                        key={ctx.key}
+                                        type="button"
+                                        className={`inbox-filter-chip ${selectedFilterContext === ctx.key ? 'active' : ''}`}
+                                        onClick={() => setSelectedFilterContext(ctx.key)}
+                                    >
+                                        <ctx.icon size={11} className="mr-1.5 opacity-70" />
+                                        {ctx.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Filtro por color de tarjeta (solo colores con notas) */}
+                        {availableColors.length > 0 && (
+                            <div className="sticky-inbox-color-filters">
+                                {availableColors.map(col => (
+                                    <button
+                                        key={col.value}
+                                        type="button"
+                                        className={`inbox-color-filter-dot ${selectedFilterColor === col.value ? 'active' : ''}`}
+                                        style={{ backgroundColor: col.value }}
+                                        onClick={() => setSelectedFilterColor(prev => prev === col.value ? null : col.value)}
+                                        title={`Filtrar por ${col.label}`}
+                                    />
+                                ))}
+                                {selectedFilterColor && (
+                                    <button
+                                        type="button"
+                                        className="inbox-color-filter-clear"
+                                        onClick={() => setSelectedFilterColor(null)}
+                                        title="Limpiar filtro de color"
+                                    >
+                                        <RotateCcw size={10} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ── Rejilla responsiva de notas filtradas ── */}
             <div className="sticky-inbox-grid">
@@ -156,14 +202,16 @@ export const InboxView: React.FC<InboxViewProps> = ({
                             <div className="sticky-inbox-empty col-span-full animate-slide-up">
                                 <div className="text-center p-12 bg-surface border border-border-thin rounded-xl max-w-md mx-auto">
                                     <FileText size={40} className="text-text-dim mx-auto mb-4 opacity-50" />
-                                    <h4 className="text-sm font-bold text-fg mb-1">Sin notas coincidentes</h4>
+                                    <h4 className="text-sm font-bold text-fg mb-1">
+                                        {isGlobalEmpty ? 'Sin notas registradas' : 'Sin notas coincidentes'}
+                                    </h4>
                                     <p className="text-xs text-text-dim leading-relaxed">
-                                        {stickyNotes.length === 0
-                                            ? 'Usa el botón flotante en la esquina inferior derecha o el botón "Añadir Nota" de arriba para guardar recordatorios rápidos.'
+                                        {isGlobalEmpty
+                                            ? 'Usa el botón flotante en la esquina inferior derecha o el botón "+ Añadir Nota" de arriba para guardar recordatorios rápidos.'
                                             : 'Prueba a cambiar tus términos de búsqueda o a limpiar los filtros activos de arriba.'
                                         }
                                     </p>
-                                    {(searchQuery || selectedFilterContext || selectedFilterColor) && (
+                                    {!isGlobalEmpty && (searchQuery || selectedFilterContext || selectedFilterColor) && (
                                         <button
                                             type="button"
                                             onClick={() => {

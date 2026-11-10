@@ -10,7 +10,7 @@
  * @pattern Custom Hook + Sub-componentes Modularizados
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PageHeader } from '../../../components/Common/PageHeader';
 import {
     FileCode2,
@@ -105,12 +105,17 @@ export const DocumentTemplatesPage: React.FC = () => {
         handleReorderTemplates,
     } = useDocumentTemplatesPage();
 
+    // El formato PROTOCOLO_INVESTIGACION queda exclusivamente reservado para revisión técnica de Administradores
+    const visibleTemplates = useMemo(() => {
+        return isAdmin ? templates : templates.filter(t => t.code !== 'PROTOCOLO_INVESTIGACION');
+    }, [templates, isAdmin]);
+
     // Para docentes, coordinadores de carrera y demás roles: catálogo institucional de formatos oficiales
     if (!canManageTemplates) {
         return (
             <>
                 <OfficialTemplatesCatalogView
-                    templates={templates}
+                    templates={visibleTemplates}
                     loading={loading}
                     onOpenPreview={handleOpenPreview}
                     onDownloadPdf={handleQuickDownloadPdf}
@@ -278,7 +283,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                     {/* Columna Izquierda: Catálogo */}
                     <div className={`w-80 shrink-0 flex-col min-h-0 md:flex ${activeMobileTab === 'catalog' ? 'flex w-full md:w-80' : 'hidden'}`}>
                         <TemplateCatalog
-                            templates={templates}
+                            templates={visibleTemplates}
                             selectedTemplate={selectedTemplate}
                             onSelectTemplate={handleSelectTemplate}
                             onPreviewTemplate={handleOpenPreview}

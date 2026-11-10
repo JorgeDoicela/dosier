@@ -1,20 +1,18 @@
 import React from 'react';
-import { RefreshCw, Download, BarChart2 } from 'lucide-react';
+import { Download, BarChart2 } from 'lucide-react';
 import { PageHeader } from '../../../components/Common/PageHeader';
 
 export interface AnalyticsHeaderProps {
-    refreshing: boolean;
+    refreshing?: boolean;
     exporting: boolean;
     exportError: string | null;
-    onReload: () => void;
+    onReload?: () => void;
     onExportPdf: () => void;
 }
 
 export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
-    refreshing,
     exporting,
     exportError,
-    onReload,
     onExportPdf
 }) => {
     return (
@@ -26,15 +24,6 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
         >
             <div className="flex flex-col items-end gap-1">
                 <div className="flex items-center gap-2 shrink-0">
-                    <button
-                        onClick={onReload}
-                        disabled={refreshing}
-                        className="btn-vercel-secondary !p-2 h-9 w-9 flex items-center justify-center rounded-lg cursor-pointer"
-                        title="Sincronizar base de datos en tiempo real"
-                        id="refresh-analytics-btn"
-                    >
-                        <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-                    </button>
                     <button
                         onClick={onExportPdf}
                         disabled={exporting}

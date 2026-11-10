@@ -18,6 +18,7 @@ import {
 } from '../../../services/curriculumProjectService';
 import { ObservacionesDisciplinarModal } from './Modals/ObservacionesDisciplinarModal';
 import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/RecordatorioDocentesModal';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import {
     isPeaBorrador,
@@ -118,6 +119,12 @@ export const CoordCarreraDashboard: React.FC = () => {
         fetchPeas();
     }, [fetchPeas]);
 
+    // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
+    useRealtimeSync({
+        onSync: fetchPeas,
+        events: ['dosier-projects-changed']
+    });
+
     // Filtrado en memoria por estado y texto de búsqueda
     const peasFiltrados = useMemo(() => {
         return peas.filter(p => {
@@ -204,8 +211,8 @@ export const CoordCarreraDashboard: React.FC = () => {
                 </h1>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* Selector de Carrera Real de SIGAFI */}
-                    {carreras.length > 1 ? (
+                    {/* Selector de Carrera Real de SIGAFI (solo cuando coordina múltiples carreras) */}
+                    {carreras.length > 1 && (
                         <select
                             value={selectedCarreraId}
                             onChange={e => {
@@ -225,11 +232,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                                 );
                             })}
                         </select>
-                    ) : carreras.length === 1 ? (
-                        <div className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-200">
-                            {carreras[0].carrera1 || carreras[0].nombre_carrera || carreras[0].carrera}
-                        </div>
-                    ) : null}
+                    )}
 
                     {/* Selector de Período Académico */}
                     {periodos.length > 0 && (
@@ -252,15 +255,6 @@ export const CoordCarreraDashboard: React.FC = () => {
                     >
                         Notificar Rezagados ({docentesRezagados.length})
                     </button>
-
-                    <button
-                        onClick={fetchPeas}
-                        disabled={isLoading}
-                        title="Actualizar bandeja"
-                        className="p-1.5 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                    >
-                        <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
-                    </button>
                 </div>
             </div>
 
@@ -269,7 +263,7 @@ export const CoordCarreraDashboard: React.FC = () => {
             <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
                 <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900">
                     <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                        Bandeja de Asignaturas: {nombreCarreraActiva}
+                        Bandeja de Asignaturas{carreras.length > 1 ? `: ${nombreCarreraActiva}` : ''}
                     </h2>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -355,10 +349,12 @@ export const CoordCarreraDashboard: React.FC = () => {
                                     {/* Top: Carrera y Estado */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                                <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
-                                                <span className="truncate">{p.nombre_carrera}</span>
-                                            </div>
+                                            {carreras.length > 1 ? (
+                                                <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                    <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
+                                                    <span className="truncate">{p.nombre_carrera}</span>
+                                                </div>
+                                            ) : <div />}
                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass} shrink-0`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
                                                 {descriptor.label}
@@ -485,7 +481,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                         </p>
                                                     </div>
                                                     <p className="text-[11px] text-zinc-500">
-                                                        {p.nombre_carrera} {p.semestre_nivel ? `• ${p.semestre_nivel}` : ''}
+                                                        {carreras.length > 1 ? `${p.nombre_carrera} ${p.semestre_nivel ? `• ${p.semestre_nivel}` : ''}` : p.semestre_nivel || ''}
                                                     </p>
                                                 </div>
                                             </td>

@@ -134,18 +134,6 @@ export const salaCarreraService = {
         const query = idPea ? `?idPea=${idPea}` : '';
         return api.post<{ success: boolean; pea: PeaDto; message: string }>(`/expedientes-curriculares/${idExpediente}/aplicar-borrador-pea${query}`)
             .then(r => r.data);
-    },
-
-    /**
-     * Descarga el acta o minuta oficial de acuerdos de armonización curricular en PDF.
-     */
-    descargarActaPdf: async (idCarrera: number, idPeriodo: string): Promise<{ blob: Blob; fileName: string; traceabilityCode?: string }> => {
-        const response = await api.post(`/expedientes-curriculares/sala-carrera/${idCarrera}/${encodeURIComponent(idPeriodo)}/generar-acta`, null, {
-            responseType: 'blob'
-        });
-        const traceabilityCode = response.headers['x-traceability-code'] || '';
-        const fileName = `Acta_Armonizacion_Carrera_${idCarrera}_${idPeriodo}.pdf`;
-        return { blob: response.data, fileName, traceabilityCode };
     }
 };
 

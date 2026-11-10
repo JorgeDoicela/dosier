@@ -232,9 +232,21 @@ graph TD
 
 ---
 
-## 4. Hooks Especializados del Shell y CoWork
+## 4. Hooks Especializados del Shell, CoWork y Sincronización Reactiva
 
-### 4.1. Hooks del Shell Curricular (`src/components/DOSIER/shell/hooks/`)
+### 4.1. `useRealtimeSync.ts`: Sincronización Continua y Eliminación de Botones de Recarga (`src/hooks/`)
+Elimina la necesidad de botones de recarga manual en todas las bandejas y paneles del sistema (`/dashboard`, `Mis Asignaturas`, `Mantenimiento`, `Analíticas`, `Historial de Correos`, `Actividad`), implementando una arquitectura de actualización en tres niveles (Three-Tier Reactive Sync):
+* **Nivel 1 — Eventos de Dominio en Tiempo Real (SignalR WebSockets):**
+  * Se suscribe al bus de eventos del navegador (`window.addEventListener`) para capturar eventos de dominio despachados por SignalR en `NotificationsContext`: `dosier-projects-changed`, `dosier-emails-changed` y `dosier-activity-updated`.
+  * Ante cualquier cambio de estado curricular (aprobación, devolución con observaciones, firma, asignación), la UI se revalida de inmediato de forma reactiva.
+* **Nivel 2 — Revalidación por Foco y Visibilidad (Stale-While-Revalidate):**
+  * Monitorea `document.visibilityState === 'visible'` y el evento `window.onfocus`.
+  * Cuando el usuario regresa a la pestaña de DOSIER tras interactuar con el correo institucional o el sistema SIGAFI, los datos se sincronizan al instante sin requerir F5 ni clics adicionales.
+* **Nivel 3 — Latido Pasivo Silencioso (Passive Heartbeat):**
+  * Temporizador no invasivo en segundo plano (por defecto cada 30 a 45 segundos) que refresca los datos periódicamente únicamente mientras la pestaña está visible, suspendiendo los ciclos cuando la pestaña está en segundo plano para optimizar el consumo de red y CPU.
+  * Dispone de referencias mutables (`syncRef`) para evitar destrucciones y recreaciones innecesarias de suscripciones ante re-renderizados.
+
+### 4.2. Hooks del Shell Curricular (`src/components/DOSIER/shell/hooks/`)
 * **`useBuilderAutoSave.ts`:**
   * Implementa debounce configurable (1.5s a 3s) para guardar cambios automáticamente sin interrumpir la escritura del docente.
   * Control de bandera `isDirty` para advertir antes de cerrar la ventana con cambios pendientes.
@@ -245,7 +257,7 @@ graph TD
 * **`useBuilderPdfAndSign.ts`:**
   * Orquesta el renderizado en segundo plano del PDF oficial vía `/api/documents/preview`, cálculo del hash y despliegue del modal de firma.
 
-### 4.2. Hooks del Subsistema CoWork (`src/core/cowork/hooks/`)
+### 4.3. Hooks del Subsistema CoWork (`src/core/cowork/hooks/`)
 * **`useCoWork.ts`:**
   * Suscribe un campo de texto al tipo compartido Yjs (`Y.Text`).
   * Emite y recibe actualizaciones delta en formato binario comprimido mediante WebSocket SignalR.

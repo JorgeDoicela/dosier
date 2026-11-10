@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { UseEmailHistoryResult } from '../hooks/useEmailHistory';
@@ -50,14 +50,6 @@ export const EmailHistorySection: React.FC<EmailHistorySectionProps> = ({ histor
                             </button>
                         ))}
                     </div>
-                    <button
-                        onClick={() => fetchHistory()}
-                        disabled={refreshing}
-                        className="btn-vercel-secondary !p-2 h-9 w-9 flex items-center justify-center rounded-lg cursor-pointer disabled:opacity-50"
-                        title="Refrescar cola de correos"
-                    >
-                        <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-                    </button>
                 </div>
             </div>
 

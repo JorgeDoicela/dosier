@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardDrive, RefreshCw, FileText, Database } from 'lucide-react';
+import { HardDrive, FileText, Database } from 'lucide-react';
 import { useDocumentMaintenance } from './DocumentMaintenance/useDocumentMaintenance';
 import { ObsoleteVersionsTab } from './DocumentMaintenance/ObsoleteVersionsTab';
 import { BackupsTab } from './DocumentMaintenance/BackupsTab';
@@ -68,16 +68,6 @@ const DocumentMaintenancePage: React.FC<DocumentMaintenancePageProps> = ({ isEmb
                         </p>
                     </div>
                 )}
-                
-                <button
-                    type="button"
-                    onClick={() => { fetchDiagnosis(); fetchBackups(); fetchDiskInfo(); }}
-                    className="bg-surface hover:bg-slate-50 dark:hover:bg-zinc-800 text-text-main border border-slate-200/90 dark:border-zinc-800 rounded-lg shadow-2xs !py-1.5 !px-3 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-colors"
-                    title="Recargar todos los diagnósticos y métricas"
-                >
-                    <RefreshCw size={12} className={(loadingDocs || loadingBackups || loadingDiskInfo) ? 'animate-spin' : ''} />
-                    <span>Refrescar Todo</span>
-                </button>
             </header>
 
             {/* Selector de sub-pestañas */}

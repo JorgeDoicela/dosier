@@ -23,6 +23,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { useConfirm } from '../../../../api/ConfirmContext';
+import { useAuth } from '../../../../api/AuthContext';
 import { type DocumentTemplateDto, type DocumentBlock, type BlockType, type TableRow, BLOCK_METADATA } from '../types';
 import {
     DEFAULT_TECHNICAL_SUBSECTIONS,
@@ -60,6 +61,7 @@ class SmartPointerSensor extends PointerSensor {
 }
 
 export const useDocumentTemplatesPage = () => {
+    const { isAdmin } = useAuth();
     const [templates, setTemplates] = useState<DocumentTemplateDto[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplateDto | null>(null);
     const [loading, setLoading] = useState(true);
@@ -208,7 +210,15 @@ export const useDocumentTemplatesPage = () => {
         setLoading(true);
         try {
             const data = await documentTemplateService.getTemplates();
-            setTemplates(data || []);
+            const rawList = data || [];
+            const filtered = isAdmin
+                ? rawList
+                : rawList.filter(t => t.code !== 'PROTOCOLO_INVESTIGACION');
+            setTemplates(filtered);
+            if (!isAdmin && selectedTemplate?.code === 'PROTOCOLO_INVESTIGACION') {
+                setSelectedTemplate(null);
+                setBlocks([]);
+            }
         } catch (err: any) {
             console.error(err);
             addToast("Error al Cargar", "No se pudo obtener el catálogo de plantillas.", "error");
@@ -219,7 +229,7 @@ export const useDocumentTemplatesPage = () => {
 
     useEffect(() => {
         fetchTemplates();
-    }, []);
+    }, [isAdmin]);
 
     const handleAddBlock = (type: BlockType) => {
         const newId = `block-${Date.now()}`;
@@ -615,7 +625,11 @@ export const useDocumentTemplatesPage = () => {
             setIsDirty(false);
 
             const catalogData = await documentTemplateService.getTemplates();
-            setTemplates(catalogData || []);
+            const rawCatalog = catalogData || [];
+            const filteredCatalog = isAdmin
+                ? rawCatalog
+                : rawCatalog.filter(t => t.code !== 'PROTOCOLO_INVESTIGACION');
+            setTemplates(filteredCatalog);
 
             const updated = (catalogData || []).find((t: any) => t.code === selectedTemplate.code);
             if (updated) {
