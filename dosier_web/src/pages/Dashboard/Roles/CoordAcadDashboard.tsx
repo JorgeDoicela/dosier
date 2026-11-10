@@ -368,10 +368,6 @@ export const CoordAcadDashboard: React.FC = () => {
 
                                     {/* Metadatos Curriculares: Texto limpio continuo con puntos, sin cajas ni chips */}
                                     <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
-                                        {p.codigo_asignatura && (
-                                            <span className="font-mono text-zinc-700 dark:text-zinc-300">{p.codigo_asignatura}</span>
-                                        )}
-                                        {p.codigo_asignatura && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
                                         <span>{p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} Créd.)` : ''}</span>
                                         {p.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
                                         {p.semestre_nivel && <span>{p.semestre_nivel}</span>}
@@ -434,16 +430,9 @@ export const CoordAcadDashboard: React.FC = () => {
                                         <tr key={p.uuid} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50 transition-colors">
                                             <td className="py-2.5 px-4">
                                                 <div className="space-y-0.5">
-                                                    <div className="flex items-center gap-2">
-                                                        {p.codigo_asignatura && (
-                                                            <span className="font-mono text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                                                                {p.codigo_asignatura}
-                                                            </span>
-                                                        )}
-                                                        <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                                            {p.nombre_asignatura}
-                                                        </p>
-                                                    </div>
+                                                    <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                                        {p.nombre_asignatura}
+                                                    </p>
                                                     <p className="text-[11px] text-zinc-500">
                                                         {p.nombre_carrera} {p.semestre_nivel ? `• ${p.semestre_nivel}` : ''}
                                                     </p>

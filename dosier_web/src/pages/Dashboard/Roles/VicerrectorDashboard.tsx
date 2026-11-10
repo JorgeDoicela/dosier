@@ -391,9 +391,8 @@ export const VicerrectorDashboard: React.FC = () => {
                                     </div>
 
                                     {/* Metadatos Curriculares en Línea Limpia con Puntos */}
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 pt-0.5 font-mono">
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
                                         {[
-                                            p.codigo_asignatura,
                                             `${p.total_horas_asignatura || 0}h${p.creditos ? ` (${p.creditos} Créd.)` : ''}`,
                                             p.semestre_nivel
                                         ].filter(Boolean).join(' · ')}
@@ -484,8 +483,8 @@ export const VicerrectorDashboard: React.FC = () => {
                                             <p className="font-semibold text-zinc-900 dark:text-zinc-100">
                                                 {p.nombre_asignatura}
                                             </p>
-                                            <p className="text-[11px] text-zinc-500 font-mono">
-                                                {p.codigo_asignatura ? `${p.codigo_asignatura} • ` : ''}{p.nombre_docente_elaborador || 'Docente de Asignatura'}
+                                            <p className="text-[11px] text-zinc-500">
+                                                {p.nombre_docente_elaborador || 'Docente de Asignatura'}
                                             </p>
                                         </td>
                                         <td className="py-2.5 px-3">

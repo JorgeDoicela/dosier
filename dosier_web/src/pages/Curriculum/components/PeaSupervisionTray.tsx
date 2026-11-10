@@ -505,9 +505,8 @@ export const PeaSupervisionTray: React.FC = () => {
 
                                     {/* Metadatos Curriculares en Línea Limpia con Puntos */}
                                     <div className="flex items-center justify-between gap-2 pt-0.5">
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                             {[
-                                                pea.codigo_asignatura,
                                                 `${pea.total_horas_asignatura || 0}h${pea.creditos ? ` (${pea.creditos} Créd.)` : ''}`,
                                                 pea.semestre_nivel
                                             ].filter(Boolean).join(' · ')}
@@ -617,11 +616,6 @@ export const PeaSupervisionTray: React.FC = () => {
                                         <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors tracking-tight truncate">
                                             {pea.nombre_asignatura}
                                         </h3>
-                                        {pea.codigo_asignatura && (
-                                            <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                                                {pea.codigo_asignatura}
-                                            </span>
-                                        )}
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass}`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass}`} />
                                             {descriptor.label}
