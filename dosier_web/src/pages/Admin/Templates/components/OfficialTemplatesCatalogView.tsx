@@ -20,9 +20,7 @@ import {
     Eye,
     Download,
     Search,
-    X,
-    Copy,
-    Check
+    X
 } from 'lucide-react';
 import { PageHeader } from '../../../../components/Common/PageHeader';
 import type { DocumentTemplateDto } from '../types';
@@ -95,29 +93,6 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
 }) => {
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<TemplateCategoryFilter>('ALL');
-    const [copiedTmplCode, setCopiedTmplCode] = useState<string | null>(null);
-
-    const handleCopyTemplatePrompt = async (tmpl: DocumentTemplateDto) => {
-        const text = [
-            `# FORMATO INSTITUCIONAL OFICIAL: ${tmpl.name}`,
-            `• Código Normativo: ${tmpl.code}`,
-            `• Versión Aprobada: v${tmpl.version}`,
-            `• Marco de Acreditación: CACES / ISTPET`,
-            `\n## ALCANCE Y DESCRIPCIÓN:`,
-            getTemplateDescription(tmpl),
-            `\n## REQUERIMIENTOS:`,
-            `• Firma Electrónica: ${tmpl.requiresElectronicSignature ? 'Requerida' : 'No requerida'}`,
-            `• Cláusula LOPDP: ${tmpl.requiresLopdpClause ? 'Requerida' : 'No requerida'}`
-        ].join('\n');
-
-        try {
-            await navigator.clipboard.writeText(text);
-            setCopiedTmplCode(tmpl.code);
-            setTimeout(() => setCopiedTmplCode(null), 2000);
-        } catch (e) {
-            console.error('Error al copiar especificación:', e);
-        }
-    };
 
     const filteredTemplates = useMemo(() => {
         return templates.filter(t => {
@@ -254,9 +229,6 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTemplates.map((tmpl) => {
-                            const cat = getTemplateCategory(tmpl.code);
-                            const badge = getCategoryBadge(cat);
-                            const BadgeIcon = badge.icon;
                             const description = getTemplateDescription(tmpl);
 
                             return (
@@ -265,29 +237,13 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                                     className="group rounded-xl border border-slate-200/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 flex flex-col justify-between hover:border-[#0070f3] dark:hover:border-blue-500 transition-colors relative overflow-hidden"
                                 >
                                     <div>
-                                        {/* Cabecera de la Tarjeta */}
-                                        <div className="flex items-center justify-between gap-2 mb-3">
-                                            <div className="flex items-center gap-1.5">
-                                                <BadgeIcon className={`w-4 h-4 ${badge.textClass}`} strokeWidth={1.5} />
-                                                <span className={`text-[11px] font-semibold tracking-wide uppercase ${badge.textClass}`}>
-                                                    {badge.label}
-                                                </span>
-                                            </div>
-                                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200/50 dark:border-zinc-700/50">
-                                                v{tmpl.version}
-                                            </span>
-                                        </div>
-
-                                        {/* Título y Código */}
-                                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        {/* Título de la Plantilla */}
+                                        <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                             {tmpl.name}
                                         </h3>
-                                        <p className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 mt-1 uppercase">
-                                            Código: {tmpl.code}
-                                        </p>
 
                                         {/* Descripción */}
-                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-3 leading-relaxed line-clamp-3">
+                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-2.5 leading-relaxed line-clamp-3">
                                             {description}
                                         </p>
                                     </div>
@@ -308,22 +264,10 @@ export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogView
                                                 type="button"
                                                 onClick={() => onDownloadPdf(tmpl)}
                                                 title="Descargar PDF Oficial"
-                                                className="p-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 transition-colors cursor-pointer"
+                                                className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold transition-colors cursor-pointer"
                                             >
                                                 <Download className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCopyTemplatePrompt(tmpl)}
-                                                title="Copiar especificación normativa"
-                                                className="p-2 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"
-                                            >
-                                                {copiedTmplCode === tmpl.code ? (
-                                                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                                ) : (
-                                                    <Copy className="w-3.5 h-3.5" strokeWidth={1.5} />
-                                                )}
+                                                <span>PDF</span>
                                             </button>
                                         </div>
                                     </div>

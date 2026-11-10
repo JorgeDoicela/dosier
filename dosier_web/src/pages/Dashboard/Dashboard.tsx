@@ -37,16 +37,21 @@ const Dashboard: React.FC = () => {
         return <FullscreenLoader message="Cargando panel de control y circuito curricular..." />;
     }
 
-    // Para usuarios regulares (Docentes, Coordinadores, Vicerrector): vista limpia y directa de su dashboard institucional
+    // Para usuarios regulares (Docentes, Coordinadores, Vicerrector): vista limpia y directa según el rol activo
     if (!isAdmin) {
         return (
             <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] transition-colors duration-200">
                 <div className="max-w-[1440px] mx-auto p-4 md:p-8 space-y-6">
-                    {isVicerrector && <VicerrectorDashboard />}
-                    {isCoordAcad && !isVicerrector && <CoordAcadDashboard />}
-                    {isCoordCarrera && !isCoordAcad && !isVicerrector && <CoordCarreraDashboard />}
-                    {isDocente && !isCoordCarrera && !isCoordAcad && !isVicerrector && <DocentePeaDashboard />}
-                    {!isVicerrector && !isCoordAcad && !isCoordCarrera && !isDocente && <DocentePeaDashboard />}
+                    {defaultRol === 'VICERRECTOR' && <VicerrectorDashboard />}
+                    {defaultRol === 'COORD_ACAD' && <CoordAcadDashboard />}
+                    {defaultRol === 'COORD_CARRERA' && <CoordCarreraDashboard />}
+                    {defaultRol === 'DOCENTE' && <DocentePeaDashboard />}
+                    {!['VICERRECTOR', 'COORD_ACAD', 'COORD_CARRERA', 'DOCENTE'].includes(defaultRol) && (
+                        isVicerrector ? <VicerrectorDashboard /> :
+                        isCoordAcad ? <CoordAcadDashboard /> :
+                        isCoordCarrera ? <CoordCarreraDashboard /> :
+                        <DocentePeaDashboard />
+                    )}
                 </div>
             </main>
         );

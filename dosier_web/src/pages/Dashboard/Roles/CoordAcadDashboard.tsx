@@ -107,10 +107,36 @@ export const CoordAcadDashboard: React.FC = () => {
         events: ['dosier-projects-changed']
     });
 
+    // Identificación de asignaturas propias del usuario actual
+    const isMiMateria = useCallback((p: PeaBandejaItemDto) => {
+        if (!user) return false;
+        const userIdentifiers = [
+            user.id_sigafi,
+            user.idSigafi,
+            user.id_referencia,
+            user.id?.toString(),
+            user.id_usuario?.toString(),
+            (user as any)?.cedula
+        ].filter(Boolean) as string[];
+
+        const matchesId = p.id_docente_elaborador && userIdentifiers.some(
+            id => id.trim().toLowerCase() === p.id_docente_elaborador.trim().toLowerCase()
+        );
+        const matchesNombre = Boolean(
+            p.nombre_docente_elaborador && user.nombre_completo &&
+            p.nombre_docente_elaborador.trim().toLowerCase() === user.nombre_completo.trim().toLowerCase()
+        );
+        return Boolean(matchesId || matchesNombre);
+    }, [user]);
+
     // Filtros en memoria
     const peasFiltrados = useMemo(() => {
         return peas.filter(p => {
-            const matchesEstado = selectedEstado === 'todos' || p.estado === selectedEstado;
+            const matchesEstado = selectedEstado === 'todos'
+                ? true
+                : selectedEstado === 'mis_materias'
+                    ? isMiMateria(p)
+                    : p.estado === selectedEstado;
             const matchesSearch = search === '' ||
                 p.nombre_asignatura.toLowerCase().includes(search.toLowerCase()) ||
                 (p.nombre_docente_elaborador || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -118,7 +144,7 @@ export const CoordAcadDashboard: React.FC = () => {
                 p.nombre_carrera.toLowerCase().includes(search.toLowerCase());
             return matchesEstado && matchesSearch;
         });
-    }, [peas, selectedEstado, search]);
+    }, [peas, selectedEstado, search, isMiMateria]);
 
 
 
@@ -246,6 +272,7 @@ export const CoordAcadDashboard: React.FC = () => {
                             onChange={val => setSelectedEstado(String(val))}
                             options={[
                                 { value: 'todos', label: 'Todos los Estados' },
+                                { value: 'mis_materias', label: 'Mis Asignaturas (Carga Propia)' },
                                 { value: 'Borrador', label: 'Borrador' },
                                 { value: 'EnRevision', label: 'En Revisión de Carrera' },
                                 { value: 'Observado', label: 'Con Observaciones' },
@@ -306,14 +333,27 @@ export const CoordAcadDashboard: React.FC = () => {
                         return (
                             <div
                                 key={p.uuid}
-                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all flex flex-col justify-between space-y-4 text-left"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => handleAbrirRevision(p.uuid)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleAbrirRevision(p.uuid);
+                                    }
+                                }}
+                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
                             >
-                                {/* Top: Carrera y Estado */}
+                                {/* Top: Carrera (solo si ve todas) y Estado */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                            <span>{p.nombre_carrera}</span>
-                                        </div>
+                                        {selectedCarreraId === 'todas' ? (
+                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                <span>{p.nombre_carrera}</span>
+                                            </div>
+                                        ) : (
+                                            <span />
+                                        )}
                                         {p.estado === 'Borrador' && (
                                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 shrink-0">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
@@ -367,6 +407,11 @@ export const CoordAcadDashboard: React.FC = () => {
                                     <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                                         <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
                                         <span className="truncate">{p.nombre_docente_elaborador || 'Docente Asignado'}</span>
+                                        {isMiMateria(p) && (
+                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
+                                                Tú
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
@@ -377,38 +422,6 @@ export const CoordAcadDashboard: React.FC = () => {
                                             {formatModalidad(p.modalidad)}
                                         </span>
                                     </div>
-                                </div>
-
-                                {/* Pie de Tarjeta con Acciones */}
-                                <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setAuditoriaPea(p)}
-                                        className="px-3 py-1.5 text-xs font-medium rounded-lg text-[#0070f3] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                    >
-                                        <ShieldCheck className="w-3.5 h-3.5 text-[#0070f3]" />
-                                        <span>Auditar CACES</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleAbrirRevision(p.uuid)}
-                                        className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                    >
-                                        <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                        <span>Ver PEA</span>
-                                    </button>
-
-                                    {puedeEmitirAvalAcad && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleEmitirAvalAcademico(p)}
-                                            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                                        >
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                            <span>Emitir Aval</span>
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -444,9 +457,16 @@ export const CoordAcadDashboard: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="py-2.5 px-3">
-                                                <span className="text-zinc-700 dark:text-zinc-300">
-                                                    {p.nombre_docente_elaborador || 'Docente Asignado'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-zinc-700 dark:text-zinc-300">
+                                                        {p.nombre_docente_elaborador || 'Docente Asignado'}
+                                                    </span>
+                                                    {isMiMateria(p) && (
+                                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
+                                                            Tú
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-2.5 px-3 text-xs text-zinc-700 dark:text-zinc-300">
                                                 {formatModalidad(p.modalidad)}

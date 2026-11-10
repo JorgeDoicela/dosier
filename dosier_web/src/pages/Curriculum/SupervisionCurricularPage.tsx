@@ -16,8 +16,8 @@ export const SupervisionCurricularPage: React.FC = () => {
             <PageHeader
                 kicker="Gobernanza Curricular Institucional"
                 icon={BookOpen}
-                title="Supervisión de Programas de Estudio (PEA)"
-                description="Supervise los instrumentos curriculares PEA oficiales del ISTPET, valide la carga horaria pedagógica y audite el circuito colegiado de firmas."
+                title="Revisión Curricular de Programas de Estudio (PEA)"
+                description="Revise y supervise los instrumentos curriculares PEA oficiales del ISTPET, valide la pertinencia disciplinar y audite el circuito colegiado de firmas."
             />
             <PeaSupervisionTray />
         </main>

@@ -117,7 +117,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
 
     const renderMenuItem = (item: MenuItem) => {
         const isActive = item === activeItem;
-        const isDocumentacion = item.name === 'Documentación' || item.name === 'Mis Instrumentos PEA' || item.path.startsWith('/documentacion');
+        const isDocumentacion = item.name === 'Revisión Curricular' || item.name === 'Documentación' || item.name === 'Mis Instrumentos PEA' || item.path.startsWith('/documentacion');
 
         if (isDocumentacion) {
             const isMenuOpen = item.path === '/documentacion' ? isInvestigacionOpen : isMisProyectosOpen;
@@ -402,105 +402,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             );
         }
 
-        if (item.name === 'Analíticas') {
-            const isMenuOpen = isAnalyticsOpen;
-            const isParentActive = isActive && !isMenuOpen;
-            return (
-                <div key={item.name} className="flex flex-col gap-0.5">
-                    <div
-                        className={`flex items-center justify-between rounded-md transition-colors duration-150 group w-full ${
-                            isParentActive
-                                ? 'bg-blue-50/75 dark:bg-blue-950/35 text-[#0070f3] dark:text-blue-400 font-semibold'
-                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/50'
-                        }`}
-                    >
-                        <Link
-                            to="/analiticas"
-                            onClick={(e) => {
-                                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) {
-                                    setIsAnalyticsOpen(true);
-                                    if (onClose) onClose();
-                                }
-                            }}
-                            className="flex items-center gap-2.5 min-w-0 py-1.5 px-2.5 rounded-md border-0 bg-transparent text-inherit cursor-pointer flex-1 text-left no-underline"
-                        >
-                            <item.icon
-                                size={15}
-                                strokeWidth={isParentActive ? 2 : 1.75}
-                                className={`shrink-0 ${
-                                    isParentActive
-                                        ? 'text-[#0070f3] dark:text-blue-400'
-                                        : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-200'
-                                }`}
-                            />
-                            <span className={`text-[13.5px] tracking-tight truncate ${
-                                isParentActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
-                            }`}>
-                                {item.name}
-                            </span>
-                        </Link>
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setIsAnalyticsOpen(!isAnalyticsOpen);
-                            }}
-                            className="p-1.5 mr-1 rounded text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 border-0 bg-transparent cursor-pointer flex items-center justify-center transition-colors shrink-0"
-                            title="Expandir"
-                        >
-                            <ChevronRightIcon className={`shrink-0 transition-transform duration-200 ${
-                                isMenuOpen ? 'rotate-90' : ''
-                            }`} />
-                        </button>
-                    </div>
 
-                    {isMenuOpen && (
-                        <div className="flex flex-col gap-0.5 mt-0.5 animate-in slide-in-from-top-1 duration-150">
-                            {[
-                                { name: 'Métricas Curriculares', path: '/analiticas?tab=general', icon: TrendingUp },
-                                { name: 'Cumplimiento Curricular', path: '/analiticas?tab=caces', icon: ShieldCheck },
-                                { name: 'Portafolio de Instrumentos', path: '/analiticas?tab=proyectos', icon: ClipboardList }
-                            ].map((subItem) => {
-                                const isSubActive = location.pathname === '/analiticas' && (
-                                    (subItem.path.includes('tab=general') && (!location.search || location.search.includes('tab=general'))) ||
-                                    location.search.includes(subItem.path.split('?')[1])
-                                );
-
-                                return (
-                                    <Link
-                                        key={subItem.name}
-                                        to={subItem.path}
-                                        onClick={() => {
-                                            if (onClose) onClose();
-                                        }}
-                                        className={`flex items-center justify-between px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-150 group no-underline ml-3 ${
-                                            isSubActive
-                                                ? 'bg-blue-50/70 dark:bg-blue-950/30 text-[#0070f3] dark:text-blue-400 font-semibold'
-                                                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100/60 dark:hover:bg-zinc-850/40'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-2 min-w-0 py-0.5">
-                                            <subItem.icon
-                                                size={13}
-                                                strokeWidth={isSubActive ? 2 : 1.75}
-                                                className={`shrink-0 ${
-                                                    isSubActive ? 'text-[#0070f3] dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
-                                                }`}
-                                            />
-                                            <span className={`text-[12.5px] tracking-tight truncate ${
-                                                isSubActive ? 'font-semibold text-[#0070f3] dark:text-blue-400' : 'font-medium'
-                                            }`}>
-                                                {subItem.name}
-                                            </span>
-                                        </div>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-            );
-        }
 
 
 

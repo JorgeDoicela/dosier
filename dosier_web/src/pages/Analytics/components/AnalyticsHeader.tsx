@@ -17,17 +17,17 @@ export const AnalyticsHeader: React.FC<AnalyticsHeaderProps> = ({
 }) => {
     return (
         <PageHeader
-            kicker="Gestión Curricular Institucional — IST Traversari"
+            kicker="Gobernanza Curricular Institucional"
             icon={BarChart2}
-            title="Analíticas de Documentación y Planificación Curricular"
-            description="Consola directiva en tiempo real. Seguimiento actualizado de instrumentos PEA y cumplimiento de estándares curriculares institucionales."
+            title="Analíticas Curriculares y Trazabilidad del PEA"
+            description="Consola de observabilidad en tiempo real. Seguimiento institucional de formulación, revisión y legalización de los Programas de Estudio de la Asignatura."
         >
             <div className="flex flex-col items-end gap-1">
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={onExportPdf}
                         disabled={exporting}
-                        className="btn-vercel-primary flex items-center gap-2 h-10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                         id="export-pdf-report-btn"
                     >
                         <Download size={13} className={exporting ? "animate-spin" : ""} />

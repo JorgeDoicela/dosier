@@ -1,25 +1,34 @@
 export interface ProyectoResumen {
-    idProyecto: number;
+    idProyecto?: number;
     uuid: string;
     codigoInstitucional: string | null;
     titulo: string;
     estado: string;
-    lineaInvestigacion: string | null;
+    lineaInvestigacion?: string | null;
     carrera: string | null;
-    presupuestoTotal: number | null;
-    presupuestoEjecutado: number | null;
-    puntajeEvaluacion: number | null;
-    fechaRegistro: string | null;
-    fechaModificacion: string | null;
-    fechaInicio: string | null;
-    fechaFin: string | null;
-    tiempoEjecucion: string | null;
+    idCarrera?: number;
+    presupuestoTotal?: number | null;
+    presupuestoEjecutado?: number | null;
+    puntajeEvaluacion?: number | null;
+    fechaRegistro?: string | null;
+    fechaModificacion?: string | null;
     convocatoriaTitulo: string | null;
-    totalInvestigadores: number;
-    totalInformes: number;
-    informesAprobados: number;
-    totalEstudiantes?: number;
-    convocatoriaCodigo?: string | null;
+    totalInvestigadores?: number;
+    docenteElaborador?: string;
+    semestreNivel?: string;
+    modalidad?: string;
+    totalHoras?: number;
+    creditos?: number;
+    horasCD?: number;
+    horasAPE?: number;
+    horasAA?: number;
+    firmaDocente?: boolean;
+    firmaCoord?: boolean;
+    firmaAcad?: boolean;
+    firmaVicerrector?: boolean;
+    totalFirmas?: number;
+    totalObservaciones?: number;
+    [key: string]: any;
 }
 
 export interface EstadoConteo {
@@ -67,6 +76,42 @@ export interface LineaInvestigacionData {
     colorClass: string;
 }
 
+export interface CarreraCumplimiento {
+    carrera: string;
+    totalAsignaturas: number;
+    aprobados: number;
+    enRevision: number;
+    observados: number;
+    borradores: number;
+    porcentajeAprobados: number;
+    totalHoras: number;
+    totalCreditos: number;
+    estadoSemaforo: 'optimo' | 'regular' | 'critico';
+}
+
+export interface CuelloBotellaItem {
+    etapa: string;
+    responsable: string;
+    rol: string;
+    cantidad: number;
+    porcentaje: number;
+    tiempoEstimado: string;
+    colorBadge: string;
+    bgProgress: string;
+}
+
+export interface CargaHorariaCaces {
+    totalHoras: number;
+    totalCreditos: number;
+    horasCD: number;
+    horasAPE: number;
+    horasAA: number;
+    pctCD: number;
+    pctAPE: number;
+    pctAA: number;
+    asignaturasSinCarga: number;
+}
+
 export interface ProcessedAnalyticsData {
     filteredProjects: ProyectoResumen[];
     linesData: LineaInvestigacionData[];
@@ -76,4 +121,7 @@ export interface ProcessedAnalyticsData {
     cacesIndicators: readonly CacesIndicator[];
     dbPeriods: string[];
     dbCareers: string[];
+    carrerasCumplimiento: CarreraCumplimiento[];
+    cuelloBotella: CuelloBotellaItem[];
+    cargaHorariaCaces: CargaHorariaCaces;
 }

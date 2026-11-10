@@ -1,14 +1,6 @@
 import React from 'react';
 import { FolderOpen } from 'lucide-react';
 
-// Re-export contracts for 100% backwards compatibility
-export type {
-    ProyectoResumen,
-    EstadoConteo,
-    ActividadReciente,
-    DashboardStats
-} from './types/analytics.types';
-
 // Custom Hooks & Subcomponents
 import { useAnalyticsData } from './hooks/useAnalyticsData';
 import { useAnalyticsState } from './hooks/useAnalyticsState';
@@ -16,27 +8,18 @@ import { useAnalyticsState } from './hooks/useAnalyticsState';
 import { SkeletonDashboard } from './components/SkeletonDashboard';
 import { AnalyticsHeader } from './components/AnalyticsHeader';
 import { AnalyticsFilters } from './components/AnalyticsFilters';
-import { AnalyticsTabs } from './components/AnalyticsTabs';
 import { AnalyticsOverviewTab } from './components/AnalyticsOverviewTab';
-import { AnalyticsCacesTab } from './components/AnalyticsCacesTab';
-import { AnalyticsProjectsTab } from './components/AnalyticsProjectsTab';
 
-const AnalyticsPage: React.FC = () => {
+export const AnalyticsPage: React.FC = () => {
     const {
         period,
         setPeriod,
         carrera,
         setCarrera,
-        activeTab,
-        setActiveTab,
         selectedChartSegment,
         setSelectedChartSegment,
         exporting,
         exportError,
-        activeCacesCode,
-        setActiveCacesCode,
-        activeProjectUuid,
-        setActiveProjectUuid,
         handleExportPdf
     } = useAnalyticsState();
 
@@ -45,13 +28,12 @@ const AnalyticsPage: React.FC = () => {
         refreshing,
         projects,
         stats,
-        processed,
-        reload
+        processed
     } = useAnalyticsData(period, carrera);
 
     if (loading) {
         return (
-            <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto relative overflow-hidden space-y-6 pb-12 select-none">
+            <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto space-y-6">
                 <SkeletonDashboard />
             </main>
         );
@@ -59,15 +41,13 @@ const AnalyticsPage: React.FC = () => {
 
     const {
         filteredProjects,
-        linesData,
         proyectosPorEstado,
-        cacesIndicators,
         dbPeriods,
         dbCareers
     } = processed;
 
     return (
-        <main className="flex-1 bg-bg-deep p-4 md:p-10 overflow-y-auto relative overflow-hidden space-y-6 pb-12 select-none">
+        <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 overflow-y-auto space-y-6">
             {/* Cabecera Principal */}
             <AnalyticsHeader
                 refreshing={refreshing}
@@ -76,7 +56,7 @@ const AnalyticsPage: React.FC = () => {
                 onExportPdf={handleExportPdf}
             />
 
-            {/* Panel de Filtros Bento */}
+            {/* Panel de Filtros Directos */}
             <AnalyticsFilters
                 period={period}
                 setPeriod={setPeriod}
@@ -86,76 +66,38 @@ const AnalyticsPage: React.FC = () => {
                 dbCareers={dbCareers}
             />
 
-            {/* Navegación por Pestañas */}
-            <AnalyticsTabs
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-            />
-
-            {/* Renderizado de Pestañas Específicas */}
-            {activeTab === 'general' && (
-                filteredProjects.length === 0 && !stats ? (
-                    <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
-                        <FolderOpen size={36} className="text-text-dim/60" />
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
-                            <p className="text-xs text-text-dim max-w-sm leading-relaxed">
-                                No se encontraron instrumentos curriculares o PEA registrados en el sistema para el período o carrera seleccionada.
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => { setPeriod('TODOS'); setCarrera('TODAS'); }}
-                            className="btn-vercel-secondary text-[9px]"
-                        >
-                            Restablecer Filtros
-                        </button>
+            {/* Contenido Ejecutivo */}
+            {filteredProjects.length === 0 && !stats ? (
+                <div className="rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-16 text-center space-y-3">
+                    <FolderOpen size={36} className="text-zinc-400 mx-auto" />
+                    <div className="space-y-1">
+                        <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            Sin registros en el corte
+                        </h3>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                            No se encontraron instrumentos curriculares PEA para el período o carrera seleccionada.
+                        </p>
                     </div>
-                ) : (
-                    <AnalyticsOverviewTab
-                        filteredProjects={filteredProjects}
-                        allProjects={projects}
-                        stats={stats}
-                        linesData={linesData}
-                        proyectosPorEstado={proyectosPorEstado}
-                        selectedChartSegment={selectedChartSegment}
-                        setSelectedChartSegment={setSelectedChartSegment}
-                    />
-                )
-            )}
-
-            {activeTab === 'caces' && (
-                <AnalyticsCacesTab
+                    <button
+                        onClick={() => { setPeriod('TODOS'); setCarrera('TODAS'); }}
+                        className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-all cursor-pointer"
+                    >
+                        Restablecer Filtros
+                    </button>
+                </div>
+            ) : (
+                <AnalyticsOverviewTab
                     filteredProjects={filteredProjects}
-                    cacesIndicators={cacesIndicators}
-                    activeCacesCode={activeCacesCode}
-                    setActiveCacesCode={setActiveCacesCode}
+                    allProjects={projects}
+                    stats={stats}
+                    proyectosPorEstado={proyectosPorEstado}
+                    selectedChartSegment={selectedChartSegment}
+                    setSelectedChartSegment={setSelectedChartSegment}
+                    carrerasCumplimiento={processed.carrerasCumplimiento}
+                    cuelloBotella={processed.cuelloBotella}
+                    cargaHorariaCaces={processed.cargaHorariaCaces}
+                    onSelectCarrera={(c) => setCarrera(c)}
                 />
-            )}
-
-            {activeTab === 'proyectos' && (
-                filteredProjects.length === 0 ? (
-                    <div className="bento-card static p-16 text-center space-y-4 flex flex-col items-center justify-center bg-surface/20">
-                        <FolderOpen size={36} className="text-text-dim/60" />
-                        <div className="space-y-1">
-                            <h3 className="text-sm font-semibold text-text-main tracking-tight">Sin registros en el corte</h3>
-                            <p className="text-xs text-text-dim max-w-sm leading-relaxed">
-                                No se encontraron instrumentos curriculares o PEA registrados en el sistema para el período o carrera seleccionada.
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => { setPeriod('TODOS'); setCarrera('TODAS'); }}
-                            className="btn-vercel-secondary text-[9px]"
-                        >
-                            Restablecer Filtros
-                        </button>
-                    </div>
-                ) : (
-                    <AnalyticsProjectsTab
-                        filteredProjects={filteredProjects}
-                        activeProjectUuid={activeProjectUuid}
-                        setActiveProjectUuid={setActiveProjectUuid}
-                    />
-                )
             )}
         </main>
     );

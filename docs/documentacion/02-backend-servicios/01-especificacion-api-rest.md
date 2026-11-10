@@ -373,7 +373,7 @@ Tableros analíticos y paquetes de evidencias para acreditación CACES 2026.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/analiticas` | `DOSIER_ADMIN` | Reporte consolidado de cobertura curricular por período y carrera. |
+| `GET` | `/analiticas` | `DOSIER_ADMIN`, `DOSIER_VICERRECTOR`, `DOSIER_COORD_ACAD`, `DOSIER_COORD_CARRERA` | Reporte consolidado de cobertura curricular por período y carrera. |
 | `GET` | `/caces-preview` | `DOSIER_ADMIN` | Previsualización de indicadores de acreditación CACES. |
 | `GET` | `/caces-package` | `DOSIER_ADMIN` | Generación del paquete PDF unificado de evidencias institucionales. |
 | `GET` | `/caces-coverage` | `DOSIER_ADMIN` | Matriz porcentual de cobertura de PEAs aprobados y firmados. |

@@ -61,7 +61,7 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = ({
     activeRole = '',
     setActiveRole
 }) => {
-    const hasMultipleRoles = Boolean(isAdmin && availableRoles && availableRoles.length > 1);
+    const hasMultipleRoles = Boolean(availableRoles && availableRoles.length > 1);
 
     return (
         <div className="px-2.5 pt-2 pb-0.5 mt-auto relative shrink-0 bg-white dark:bg-[#131720] border-t border-slate-100 dark:border-zinc-800/80">

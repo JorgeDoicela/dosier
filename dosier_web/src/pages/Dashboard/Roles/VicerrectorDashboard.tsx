@@ -419,48 +419,6 @@ export const VicerrectorDashboard: React.FC = () => {
                                         </span>
                                     </div>
                                 </div>
-
-                                {/* Pie de Tarjeta con Acciones Limpias */}
-                                <div className="pt-2 flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`)}
-                                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                    >
-                                        <Eye className="w-3.5 h-3.5" />
-                                        <span>Ver PEA</span>
-                                    </button>
-
-                                    {listoParaFirma && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setFirmaModalPea(p)}
-                                            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
-                                        >
-                                            <Award className="w-3.5 h-3.5" />
-                                            <span>Firmar PEA</span>
-                                        </button>
-                                    )}
-
-                                    {estaAprobado && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const url = `${window.location.origin}/verificacion/${p.uuid}`;
-                                                navigator.clipboard.writeText(url);
-                                                addToast(
-                                                    'Enlace QR Público Copiado',
-                                                    url,
-                                                    'info'
-                                                );
-                                            }}
-                                            className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors font-mono cursor-pointer inline-flex items-center gap-1"
-                                        >
-                                            <QrCode className="w-3.5 h-3.5" />
-                                            <span>QR CACES</span>
-                                        </button>
-                                    )}
-                                </div>
                             </div>
                         );
                     })}

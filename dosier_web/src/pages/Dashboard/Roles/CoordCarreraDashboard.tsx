@@ -127,17 +127,43 @@ export const CoordCarreraDashboard: React.FC = () => {
         events: ['dosier-projects-changed']
     });
 
+    // Identificación de asignaturas propias del usuario actual
+    const isMiMateria = useCallback((p: PeaBandejaItemDto) => {
+        if (!user) return false;
+        const userIdentifiers = [
+            user.id_sigafi,
+            user.idSigafi,
+            user.id_referencia,
+            user.id?.toString(),
+            user.id_usuario?.toString(),
+            (user as any)?.cedula
+        ].filter(Boolean) as string[];
+
+        const matchesId = p.id_docente_elaborador && userIdentifiers.some(
+            id => id.trim().toLowerCase() === p.id_docente_elaborador.trim().toLowerCase()
+        );
+        const matchesNombre = Boolean(
+            p.nombre_docente_elaborador && user.nombre_completo &&
+            p.nombre_docente_elaborador.trim().toLowerCase() === user.nombre_completo.trim().toLowerCase()
+        );
+        return Boolean(matchesId || matchesNombre);
+    }, [user]);
+
     // Filtrado en memoria por estado y texto de búsqueda
     const peasFiltrados = useMemo(() => {
         return peas.filter(p => {
-            const matchesEstado = filterEstado === 'todos' || p.estado === filterEstado;
+            const matchesEstado = filterEstado === 'todos'
+                ? true
+                : filterEstado === 'mis_materias'
+                    ? isMiMateria(p)
+                    : p.estado === filterEstado;
             const matchesSearch = search === '' ||
                 p.nombre_asignatura.toLowerCase().includes(search.toLowerCase()) ||
                 (p.nombre_docente_elaborador || '').toLowerCase().includes(search.toLowerCase()) ||
                 (p.codigo_asignatura || '').toLowerCase().includes(search.toLowerCase());
             return matchesEstado && matchesSearch;
         });
-    }, [peas, filterEstado, search]);
+    }, [peas, filterEstado, search, isMiMateria]);
 
 
     // Emisión formal de Aval de Carrera
@@ -279,6 +305,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                             onChange={val => setFilterEstado(String(val))}
                             options={[
                                 { value: 'todos', label: 'Todos los Estados' },
+                                { value: 'mis_materias', label: 'Mis Asignaturas (Carga Propia)' },
                                 { value: 'Borrador', label: 'Borrador' },
                                 { value: 'EnRevision', label: 'En Revisión de Carrera' },
                                 { value: 'Observado', label: 'Con Observaciones' },
@@ -342,14 +369,27 @@ export const CoordCarreraDashboard: React.FC = () => {
                         return (
                             <div
                                 key={p.uuid}
-                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all flex flex-col justify-between space-y-4 text-left"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => handleAbrirRevision(p.uuid)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        handleAbrirRevision(p.uuid);
+                                    }
+                                }}
+                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
                             >
-                                {/* Top: Carrera y Estado */}
+                                {/* Top: Estado */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                            <span>{p.nombre_carrera}</span>
-                                        </div>
+                                        {selectedCarreraId === 'todas' ? (
+                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                                <span>{p.nombre_carrera}</span>
+                                            </div>
+                                        ) : (
+                                            <span />
+                                        )}
                                         <span className="inline-flex items-center gap-1.5 text-xs font-medium shrink-0">
                                             <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
                                             <span className={descriptor.textClass}>{descriptor.label}</span>
@@ -365,6 +405,11 @@ export const CoordCarreraDashboard: React.FC = () => {
                                     <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                                         <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
                                         <span className="truncate">{p.nombre_docente_elaborador || 'Docente Responsable'}</span>
+                                        {isMiMateria(p) && (
+                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
+                                                Tú
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
@@ -375,60 +420,6 @@ export const CoordCarreraDashboard: React.FC = () => {
                                             {formatModalidad(p.modalidad)}
                                         </span>
                                     </div>
-                                </div>
-
-                                {/* Pie de Tarjeta con Acciones Coherentes */}
-                                <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
-                                    {esBorrador ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAbrirRevision(p.uuid)}
-                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                            title="Consultar avance de formulación docente"
-                                        >
-                                            <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                            <span>Ver avance</span>
-                                        </button>
-                                    ) : esEnRevision ? (
-                                        <>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAbrirRevision(p.uuid)}
-                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                            >
-                                                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>Revisar</span>
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setObservacionPea(p)}
-                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-                                            >
-                                                Observar
-                                            </button>
-
-                                            {puedeEmitirAval && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleEmitirAvalCarrera(p)}
-                                                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                                                >
-                                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                                    <span>Emitir Aval</span>
-                                                </button>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAbrirRevision(p.uuid)}
-                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                        >
-                                            <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                            <span>Ver expediente</span>
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -467,9 +458,16 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="py-2.5 px-3">
-                                                <span className="text-zinc-700 dark:text-zinc-300">
-                                                    {p.nombre_docente_elaborador || 'Docente Asignado'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-zinc-700 dark:text-zinc-300">
+                                                        {p.nombre_docente_elaborador || 'Docente Asignado'}
+                                                    </span>
+                                                    {isMiMateria(p) && (
+                                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
+                                                            Tú
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-2.5 px-3 text-xs text-zinc-700 dark:text-zinc-300">
                                                 {formatModalidad(p.modalidad)}

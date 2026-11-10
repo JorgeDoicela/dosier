@@ -123,15 +123,18 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 
 ---
 
-### 2.4. Módulo de Analíticas e Indicadores CACES (`src/pages/Analytics/`)
+### 2.4. Módulo de Analíticas Curriculares y Auditoría CACES (`src/pages/Analytics/`)
 
-* **`AnalyticsOverviewTab.tsx`:** Gráficas de avance global de planificación curricular institucional.
-* **`AnalyticsProjectsTab.tsx`:** Desglose del estado de avance curricular por carreras del ISTPET.
-* **`AnalyticsCacesTab.tsx`:** Matriz de cumplimiento de estándares del CACES 2026:
-  * Cobertura de PEAs aprobados y legalizados.
-  * Cumplimiento del Artículo 21 del CES en carga horaria.
-  * Trazabilidad de firmas electrónicas válidas bajo Ley 67.
-* **`cacesCalculator.ts`:** Lógica de cálculo matemático de los indicadores de aseguramiento de la calidad.
+Consola directiva unificada en tiempo real para el seguimiento de la planificación microcurricular (PEA), gobernanza institucional y acreditación del CACES:
+
+* **`AnalyticsOverviewTab.tsx`:** Consola directiva ejecutiva dividida en 4 módulos operativos:
+  * **Indicadores Ejecutivos Globales:** Total de asignaturas del corte, porcentaje de legalización oficial, PEAs en circuito activo de avales y volumen de horas prácticas (APE).
+  * **Semáforo y Ranking de Cumplimiento por Carrera:** Tabla comparativa por Tecnología con cálculo dinámico de avance, detección de rezago crítico (< 40%), en proceso (40-79%) y óptimo (>= 80%), horas totales y filtrado contextual directo.
+  * **Diagnóstico de Cuello de Botella Operativo:** Embudo fáctico de 6 etapas del circuito de avales (Formulación Inicial, Subsanación de Observaciones, Revisión de Carrera, Verificación Académica, Aprobación de Vicerrectorado y PEAs Legalizados) con plazos normativos y responsables institucionales.
+  * **Auditoría de Componentes Pedagógicos CACES (RRA Art. 21 / 27):** Desglose y balance de carga horaria en Contacto Docente (CD), Práctico-Experimental (APE) en talleres y laboratorios, y Aprendizaje Autónomo (AA), junto con detección de anomalías (asignaturas sin horas).
+  * **Nómina y Estado Curricular:** Tabla fáctica con buscador reactivo, metadatos de cátedra, nivel, modalidad y seguimiento de 4 firmas digitales (Ley 67 DFRM).
+* **`useAnalyticsData.ts`:** Hook que consolida y procesa los datos agregados desde la API `/pea/bandeja` y catálogos institucionales, integrando sincronización por eventos en tiempo real.
+* **`analyticsService.ts`:** Fachada de comunicación tipada para consumo de bandejas curriculares y generación de reportes ejecutivos PDF.
 
 ---
 

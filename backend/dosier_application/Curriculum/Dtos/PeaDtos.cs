@@ -203,6 +203,9 @@ namespace dosier_application.Curriculum.Dtos
         public string? Paralelo { get; set; }
         public decimal TotalHorasAsignatura { get; set; }
         public decimal Creditos { get; set; }
+        public decimal HorasContactoDocente { get; set; }
+        public decimal HorasPracticoExperimental { get; set; }
+        public decimal HorasAutonomo { get; set; }
         public string Estado { get; set; } = "Borrador";
         public int Version { get; set; } = 1;
         public DateTime? FechaModificacion { get; set; }

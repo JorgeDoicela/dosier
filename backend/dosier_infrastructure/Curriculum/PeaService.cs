@@ -2280,6 +2280,9 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
+            // Auto-aprovisionamiento proactivo de PEAs para asignaciones del distributivo SIGAFI que aún no hayan sido abiertas
+            await SincronizarDistributivoInternoAsync(idPeriodo, idCarrera, user.IdSigafi, isAdmin || isVicerrector || isCoordAcad, cancellationToken);
+
             var peas = await query
                 .OrderByDescending(p => p.FechaModificacion)
                 .ToListAsync(cancellationToken);
@@ -2344,6 +2347,9 @@ namespace dosier_infrastructure.Curriculum
                     Paralelo = p.Paralelo,
                     TotalHorasAsignatura = p.TotalHorasAsignatura,
                     Creditos = p.Creditos,
+                    HorasContactoDocente = p.HorasContactoDocente,
+                    HorasPracticoExperimental = p.HorasPracticoExperimental,
+                    HorasAutonomo = p.HorasAutonomo,
                     Estado = p.Estado,
                     Version = p.Version,
                     FechaModificacion = p.FechaModificacion,
@@ -2358,6 +2364,70 @@ namespace dosier_infrastructure.Curriculum
                     TotalObservacionesPendientes = (p.Estado == "Observado") ? (p.Observaciones?.Count(o => o.Estado == "Pendiente") ?? 0) : 0
                 };
             }).ToList();
+        }
+
+        /// <summary>
+        /// Sincroniza y auto-aprovisiona de forma proactiva todos los PEAs correspondientes al distributivo
+        /// académico oficial de SIGAFI, garantizando que el 100% de la carga institucional esté disponible
+        /// en la bandeja y en las analíticas sin requerir que el docente haya abierto previamente el documento.
+        /// </summary>
+        private async Task SincronizarDistributivoInternoAsync(
+            string? idPeriodo,
+            int? idCarrera,
+            string? idSigafi,
+            bool tieneAlcanceGlobal,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                string targetPeriodo = idPeriodo?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(targetPeriodo) || targetPeriodo == "todos")
+                {
+                    var activo = await _context.Periodos.AsNoTracking()
+                        .Where(p => p.Periodoactivoinstituto == 1 || p.Activo == true)
+                        .Select(p => p.IdPeriodo)
+                        .FirstOrDefaultAsync(cancellationToken);
+                    targetPeriodo = activo ?? string.Empty;
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPeriodo)) return;
+
+                var asigQuery = _context.AsignacionesProfesores.AsNoTracking()
+                    .Where(a => a.IdPeriodo == targetPeriodo && a.Activo == 1 && a.ExtraCurricular != 1);
+
+                if (!tieneAlcanceGlobal && !string.IsNullOrEmpty(idSigafi))
+                {
+                    asigQuery = asigQuery.Where(a => a.IdProfesor == idSigafi);
+                }
+
+                var asignaciones = await asigQuery.ToListAsync(cancellationToken);
+                if (!asignaciones.Any()) return;
+
+                var asignacionIds = asignaciones.Select(a => a.IdAsignacion).ToList();
+                var peasExistentes = await _context.DocPeas.AsNoTracking()
+                    .Where(p => p.IdAsignacion.HasValue && asignacionIds.Contains(p.IdAsignacion.Value) && p.Activo)
+                    .Select(p => p.IdAsignacion!.Value)
+                    .ToListAsync(cancellationToken);
+
+                var missing = asignaciones.Where(a => !peasExistentes.Contains(a.IdAsignacion)).ToList();
+                if (!missing.Any()) return;
+
+                foreach (var m in missing)
+                {
+                    try
+                    {
+                        await CrearDesdeAsignacionAsync(m.IdAsignacion, m.IdProfesor);
+                    }
+                    catch
+                    {
+                        // Best effort: se continúa con las siguientes asignaciones
+                    }
+                }
+            }
+            catch
+            {
+                // Fallo tolerante
+            }
         }
 
         public async Task<List<PeaBandejaItemDto>> ListarPeasOtrosDocentesAsync(
@@ -2540,6 +2610,9 @@ namespace dosier_infrastructure.Curriculum
                         Paralelo = pea.Paralelo ?? asig.Paralelo,
                         TotalHorasAsignatura = pea.TotalHorasAsignatura,
                         Creditos = pea.Creditos,
+                        HorasContactoDocente = pea.HorasContactoDocente,
+                        HorasPracticoExperimental = pea.HorasPracticoExperimental,
+                        HorasAutonomo = pea.HorasAutonomo,
                         Estado = pea.Estado,
                         Version = pea.Version,
                         FechaModificacion = pea.FechaModificacion,
@@ -2577,6 +2650,9 @@ namespace dosier_infrastructure.Curriculum
                         Paralelo = asig.Paralelo,
                         TotalHorasAsignatura = 0,
                         Creditos = 0,
+                        HorasContactoDocente = 0,
+                        HorasPracticoExperimental = 0,
+                        HorasAutonomo = 0,
                         Estado = "NoIniciado",
                         Version = 1,
                         FechaModificacion = null,

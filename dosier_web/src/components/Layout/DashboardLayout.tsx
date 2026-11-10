@@ -93,7 +93,7 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
         return saved === 'true';
     });
     const [topBarCollapsed, setTopBarCollapsed] = useState(false);
-    const hasMultipleRoles = Boolean(isAdmin && availableRoles && availableRoles.length > 1);
+    const hasMultipleRoles = Boolean(availableRoles && availableRoles.length > 1);
     const username = user?.usuario?.split('@')[0] || user?.nombre_completo || 'Usuario';
 
     // ── Cierre de Bienvenida y Activación Única de Notificación de Bienvenida ──

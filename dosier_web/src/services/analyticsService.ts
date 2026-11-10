@@ -10,10 +10,23 @@ export interface AnalyticsProjectDto {
     codigoInstitucional?: string;
     estado: string;
     carrera?: string;
-    lineaInvestigacion?: string;
+    idCarrera?: number;
     convocatoriaTitulo?: string;
-    presupuestoTotal?: number;
     porcentajeCompletado?: number;
+    docenteElaborador?: string;
+    semestreNivel?: string;
+    modalidad?: string;
+    totalHoras?: number;
+    creditos?: number;
+    horasCD?: number;
+    horasAPE?: number;
+    horasAA?: number;
+    firmaDocente?: boolean;
+    firmaCoord?: boolean;
+    firmaAcad?: boolean;
+    firmaVicerrector?: boolean;
+    totalFirmas?: number;
+    totalObservaciones?: number;
     [key: string]: any;
 }
 
@@ -51,9 +64,23 @@ export const analyticsService = {
                 codigoInstitucional: p.codigo_asignatura,
                 estado: p.estado,
                 carrera: p.nombre_carrera,
+                idCarrera: p.id_carrera,
                 convocatoriaTitulo: p.id_periodo,
                 porcentajeCompletado: Math.round((p.total_firmas_completadas || 0) * 25),
-                presupuestoTotal: 0
+                docenteElaborador: p.nombre_docente_elaborador,
+                semestreNivel: p.semestre_nivel,
+                modalidad: p.modalidad,
+                totalHoras: Number(p.total_horas_asignatura) || 0,
+                creditos: Number(p.creditos) || 0,
+                horasCD: Number(p.horas_contacto_docente) || 0,
+                horasAPE: Number(p.horas_practico_experimental) || 0,
+                horasAA: Number(p.horas_autonomo) || 0,
+                firmaDocente: Boolean(p.firma_docente),
+                firmaCoord: Boolean(p.firma_coord),
+                firmaAcad: Boolean(p.firma_acad),
+                firmaVicerrector: Boolean(p.firma_vicerrector),
+                totalFirmas: p.total_firmas_completadas || 0,
+                totalObservaciones: p.total_observaciones_pendientes || 0
             }));
         }).catch(() => []),
 

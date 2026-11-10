@@ -20,7 +20,7 @@ namespace dosier_api.Controllers
         }
 
         [HttpGet("analiticas")]
-        [Authorize(Roles = "DOSIER_ADMIN")]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_VICERRECTOR,DOSIER_COORD_ACAD,DOSIER_COORD_CARRERA")]
         public async Task<IActionResult> GenerateAnalyticsReport(
             [FromQuery] string? period = null,
             [FromQuery] string? carrera = null)

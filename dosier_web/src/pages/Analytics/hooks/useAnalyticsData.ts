@@ -90,15 +90,14 @@ export const useAnalyticsData = (period: string, carrera: string) => {
             colorClass: colors[idx % colors.length]
         })).sort((a, b) => b.proyectos - a.proyectos);
 
-        // 3. Recalcular la distribución por estado del corte
+        // 3. Recalcular la distribución por estado real del PEA en el corte
         const stateColors: Record<string, string> = {
-            "Borrador": "#6B7280",
-            "Enviado": "#3B82F6",
-            "En Revisión": "#F59E0B",
-            "Aprobado": "#10B981",
-            "En Ejecución": "#8B5CF6",
-            "Finalizado": "#059669",
-            "Rechazado": "#EF4444"
+            "Borrador": "#64748b",
+            "EnRevision": "#0070f3",
+            "Observado": "#d97706",
+            "RevisadoCoord": "#7c3aed",
+            "RevisadoAcad": "#0284c7",
+            "Aprobado": "#059669"
         };
         const counts: Record<string, number> = {};
         filteredProjects.forEach(p => {
@@ -107,7 +106,7 @@ export const useAnalyticsData = (period: string, carrera: string) => {
         const proyectosPorEstado: EstadoConteo[] = Object.entries(counts).map(([estado, cantidad]) => ({
             estado,
             cantidad,
-            color: stateColors[estado] || "#6B7280"
+            color: stateColors[estado] || "#64748b"
         }));
 
         // 4. Calcular presupuesto acumulado
@@ -130,6 +129,169 @@ export const useAnalyticsData = (period: string, carrera: string) => {
             projects.map(p => p.carrera).filter(Boolean)
         )) as string[];
 
+        // 8. Semáforo y Ranking de Cumplimiento por Carrera / Tecnología
+        const carrerasMap: Record<string, {
+            carrera: string;
+            total: number;
+            aprobados: number;
+            enRevision: number;
+            observados: number;
+            borradores: number;
+            totalHoras: number;
+            totalCreditos: number;
+        }> = {};
+
+        filteredProjects.forEach(p => {
+            const nomCarrera = p.carrera || 'Tecnología General';
+            if (!carrerasMap[nomCarrera]) {
+                carrerasMap[nomCarrera] = {
+                    carrera: nomCarrera,
+                    total: 0,
+                    aprobados: 0,
+                    enRevision: 0,
+                    observados: 0,
+                    borradores: 0,
+                    totalHoras: 0,
+                    totalCreditos: 0
+                };
+            }
+            const item = carrerasMap[nomCarrera];
+            item.total += 1;
+            item.totalHoras += p.totalHoras || 0;
+            item.totalCreditos += p.creditos || 0;
+
+            if (p.estado === 'Aprobado') {
+                item.aprobados += 1;
+            } else if (p.estado === 'Observado') {
+                item.observados += 1;
+            } else if (p.estado === 'EnRevision' || p.estado === 'RevisadoCoord' || p.estado === 'RevisadoAcad') {
+                item.enRevision += 1;
+            } else {
+                item.borradores += 1;
+            }
+        });
+
+        const carrerasCumplimiento = Object.values(carrerasMap).map(c => {
+            const pct = c.total > 0 ? Math.round((c.aprobados / c.total) * 100) : 0;
+            const estadoSemaforo: 'optimo' | 'regular' | 'critico' =
+                pct >= 80 ? 'optimo' : pct >= 40 ? 'regular' : 'critico';
+            return {
+                carrera: c.carrera,
+                totalAsignaturas: c.total,
+                aprobados: c.aprobados,
+                enRevision: c.enRevision,
+                observados: c.observados,
+                borradores: c.borradores,
+                porcentajeAprobados: pct,
+                totalHoras: c.totalHoras,
+                totalCreditos: c.totalCreditos,
+                estadoSemaforo
+            };
+        }).sort((a, b) => b.totalAsignaturas - a.totalAsignaturas || b.porcentajeAprobados - a.porcentajeAprobados);
+
+        // 9. Diagnóstico de Cuellos de Botella (Embudo Operativo del Circuito de Avales)
+        const totalP = filteredProjects.length || 1;
+        const borradorC = filteredProjects.filter(p => p.estado === 'Borrador' || p.estado === 'NoIniciado' || !p.estado).length;
+        const observadoC = filteredProjects.filter(p => p.estado === 'Observado').length;
+        const enRevCarreraC = filteredProjects.filter(p => p.estado === 'EnRevision').length;
+        const revCoordC = filteredProjects.filter(p => p.estado === 'RevisadoCoord').length;
+        const revAcadC = filteredProjects.filter(p => p.estado === 'RevisadoAcad').length;
+        const aprobadoC = filteredProjects.filter(p => p.estado === 'Aprobado').length;
+
+        const cuelloBotella = [
+            {
+                etapa: '1. Formulación Inicial',
+                responsable: 'Docente Titular',
+                rol: 'Elaboración',
+                cantidad: borradorC,
+                porcentaje: Math.round((borradorC / totalP) * 100),
+                tiempoEstimado: 'En desarrollo inicial',
+                colorBadge: 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300',
+                bgProgress: 'bg-slate-500'
+            },
+            {
+                etapa: '2. Subsanación de Observaciones',
+                responsable: 'Docente Titular',
+                rol: 'Corrección Pedagógica',
+                cantidad: observadoC,
+                porcentaje: Math.round((observadoC / totalP) * 100),
+                tiempoEstimado: '48h límite normativo',
+                colorBadge: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300',
+                bgProgress: 'bg-amber-500'
+            },
+            {
+                etapa: '3. Revisión Técnica y Aval',
+                responsable: 'Coordinación de Carrera',
+                rol: 'Revisión Disciplinar',
+                cantidad: enRevCarreraC,
+                porcentaje: Math.round((enRevCarreraC / totalP) * 100),
+                tiempoEstimado: '72h para emisión de dictamen',
+                colorBadge: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300',
+                bgProgress: 'bg-purple-600'
+            },
+            {
+                etapa: '4. Verificación y Aval Académico',
+                responsable: 'Coordinación Académica',
+                rol: 'Validación Curricular',
+                cantidad: revCoordC,
+                porcentaje: Math.round((revCoordC / totalP) * 100),
+                tiempoEstimado: '48h verificación de malla',
+                colorBadge: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300',
+                bgProgress: 'bg-sky-600'
+            },
+            {
+                etapa: '5. Aprobación y Firma Final',
+                responsable: 'Vicerrectorado Académico',
+                rol: 'Legalización Institucional',
+                cantidad: revAcadC,
+                porcentaje: Math.round((revAcadC / totalP) * 100),
+                tiempoEstimado: '24h firma con validez jurídica',
+                colorBadge: 'bg-blue-50 dark:bg-blue-950/40 text-[#0070f3]',
+                bgProgress: 'bg-[#0070f3]'
+            },
+            {
+                etapa: '6. PEAs Legalizados',
+                responsable: 'Expediente Institucional',
+                rol: 'Circuito Concluido (4/4 firmas)',
+                cantidad: aprobadoC,
+                porcentaje: Math.round((aprobadoC / totalP) * 100),
+                tiempoEstimado: 'Vigente para el período',
+                colorBadge: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300',
+                bgProgress: 'bg-emerald-600'
+            }
+        ];
+
+        // 10. Auditoría de Carga Horaria y Componentes CACES (RRA Art. 21)
+        const totalHoras = filteredProjects.reduce((s, p) => s + (p.totalHoras || 0), 0);
+        const totalCreditos = filteredProjects.reduce((s, p) => s + (p.creditos || 0), 0);
+        let horasCD = filteredProjects.reduce((s, p) => s + (p.horasCD || 0), 0);
+        let horasAPE = filteredProjects.reduce((s, p) => s + (p.horasAPE || 0), 0);
+        let horasAA = filteredProjects.reduce((s, p) => s + (p.horasAA || 0), 0);
+
+        // Si las horas desagregadas aún no fueron editadas individualmente, estimar por estándar RRA técnico
+        if (horasCD === 0 && totalHoras > 0) {
+            horasCD = Math.round(totalHoras * 0.35);
+            horasAPE = Math.round(totalHoras * 0.35);
+            horasAA = totalHoras - horasCD - horasAPE;
+        }
+
+        const pctCD = totalHoras > 0 ? Math.round((horasCD / totalHoras) * 100) : 0;
+        const pctAPE = totalHoras > 0 ? Math.round((horasAPE / totalHoras) * 100) : 0;
+        const pctAA = totalHoras > 0 ? Math.round((horasAA / totalHoras) * 100) : 0;
+        const asignaturasSinCarga = filteredProjects.filter(p => !p.totalHoras || p.totalHoras <= 0).length;
+
+        const cargaHorariaCaces = {
+            totalHoras,
+            totalCreditos,
+            horasCD,
+            horasAPE,
+            horasAA,
+            pctCD,
+            pctAPE,
+            pctAA,
+            asignaturasSinCarga
+        };
+
         return {
             filteredProjects,
             linesData,
@@ -138,7 +300,10 @@ export const useAnalyticsData = (period: string, carrera: string) => {
             budgetExecuted,
             cacesIndicators,
             dbPeriods,
-            dbCareers
+            dbCareers,
+            carrerasCumplimiento,
+            cuelloBotella,
+            cargaHorariaCaces
         };
 
     }, [projects, stats, period, carrera]);

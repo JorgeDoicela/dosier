@@ -45,8 +45,8 @@ export const PeaSupervisionTray: React.FC = () => {
     const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
     const [selectedCarrera, setSelectedCarrera] = useState<string>('todas');
     const [selectedEstado, setSelectedEstado] = useState<string>('todos');
-    // Tab por defecto: 'por_revisar' para que las autoridades vean directamente su bandeja de trabajo operativo
-    const [workflowTab, setWorkflowTab] = useState<'por_revisar' | 'en_redaccion' | 'aprobados' | 'todos'>('por_revisar');
+    // Tab por defecto: 'todos' para que las autoridades visualicen inmediatamente todo el universo de asignaturas
+    const [workflowTab, setWorkflowTab] = useState<'todos' | 'por_revisar' | 'en_redaccion' | 'aprobados'>('todos');
     const [search, setSearch] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState<boolean>(true);
@@ -199,6 +199,21 @@ export const PeaSupervisionTray: React.FC = () => {
                 <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Bandejas de supervisión del PEA">
                     <button
                         type="button"
+                        onClick={() => handleWorkflowTabChange('todos')}
+                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                            workflowTab === 'todos'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <span>Todas las Asignaturas</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                            {stats.total}
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
                         onClick={() => handleWorkflowTabChange('por_revisar')}
                         className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                             workflowTab === 'por_revisar'
@@ -245,21 +260,6 @@ export const PeaSupervisionTray: React.FC = () => {
                         <span>Aprobados con aval</span>
                         <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
                             {stats.aprobados}
-                        </span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => handleWorkflowTabChange('todos')}
-                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            workflowTab === 'todos'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <span>Todos</span>
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
-                            {stats.total}
                         </span>
                     </button>
                 </nav>
@@ -510,70 +510,6 @@ export const PeaSupervisionTray: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                </div>
-
-                                {/* Pie de Tarjeta con Acciones Claras e Intencionales */}
-                                <div className="pt-3 flex items-center justify-between border-t border-slate-100 dark:border-zinc-900">
-                                    {esAutorOAdmin ? (
-                                        <button
-                                            type="button"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                handleAbrirEditor(pea.uuid);
-                                            }}
-                                            className="text-[11px] text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors inline-flex items-center gap-1 cursor-pointer font-medium"
-                                            title="Editar contenido curricular del PEA"
-                                        >
-                                            <ExternalLink size={12} />
-                                            <span>Editar</span>
-                                        </button>
-                                    ) : (
-                                        <div />
-                                    )}
-
-                                    {esBorrador ? (
-                                        /* Borrador no enviado: Botón secundario discreto de consulta */
-                                        <button
-                                            type="button"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                handleAbrirPea(pea.uuid);
-                                            }}
-                                            className="bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 shadow-2xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
-                                            title="Consultar avance de redacción docente (lectura previa a envío formal)"
-                                        >
-                                            <Eye size={13} className="text-slate-400 dark:text-zinc-500" />
-                                            <span>Consultar avance</span>
-                                        </button>
-                                    ) : esEnRevision ? (
-                                        /* Enviado a revisión técnica: Botón primario de dictamen */
-                                        <button
-                                            type="button"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                handleAbrirPea(pea.uuid);
-                                            }}
-                                            className="bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-                                            title="Realizar revisión técnica curricular y dictamen"
-                                        >
-                                            <Eye size={13} />
-                                            <span>Revisión Técnica</span>
-                                        </button>
-                                    ) : (
-                                        /* Con aval o legalizado: Botón de consulta de expediente */
-                                        <button
-                                            type="button"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                handleAbrirPea(pea.uuid);
-                                            }}
-                                            className="bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
-                                            title="Ver expediente curricular avalado"
-                                        >
-                                            <CheckCircle2 size={13} />
-                                            <span>Ver expediente</span>
-                                        </button>
-                                    )}
                                 </div>
                             </div>
                         );

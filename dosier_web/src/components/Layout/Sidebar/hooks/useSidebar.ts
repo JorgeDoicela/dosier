@@ -309,7 +309,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Calendario', icon: Calendar, path: '/calendario', roles: ['ANY'], group: 1 },
         { name: 'Salas Curriculares', icon: Users, path: '/salas-curriculares', roles: ['DOSIER_DOCENTE', 'DOSIER_COORD_CARRERA', 'DOSIER_ADMIN'], group: 1 },
         // ── Ciclo documental y gestión curricular (inicio → formulación → revisión → aprobación) ──
-        { name: 'Documentación', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 1, hasChevron: true },
+        { name: 'Revisión Curricular', icon: ClipboardList, path: '/documentacion', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 1, hasChevron: true },
         { name: 'Mis Instrumentos PEA', icon: BookOpen, path: '/documentacion/mis-proyectos', roles: ['DOSIER_DOCENTE', 'DOSIER_ADMIN'], group: 1, hasChevron: true },
         ...(!canEditTemplates ? [
             { name: 'Formatos', icon: FileText, path: '/plantillas', roles: ['ANY'], group: 1 }
@@ -317,7 +317,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         // ── Resultados, evidencias y observabilidad ─────────────────────────
         { name: 'Verificación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], group: 2 },
         { name: 'Solicitudes', icon: Send, path: '/solicitudes', roles: ['ANY'], group: 2, hasChevron: true },
-        { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2, hasChevron: true },
+        { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2 },
         // ── Administración y Control Total del Sistema ──────────────────────
         { name: 'Usuarios', icon: Users, path: '/usuarios', permission: 'USUARIOS:VER', roles: ['DOSIER_ADMIN'], group: 3, hasChevron: true },
         ...(canEditTemplates ? [
@@ -327,7 +327,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
     ];
 
-    const isSupervisorOnly = (isCoordCarrera || isCoordAcad || isVicerrector) && !isAdmin;
+    const isSupervisorOnly = (isCoordCarrera || isCoordAcad || isVicerrector) && !isDocente && !isAdmin;
 
     const menuItems = allMenuItems.filter(item => {
         if (item.path === '/notificaciones' && !isAdmin) return false;
