@@ -486,7 +486,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                             <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
                                             <span className="truncate">{pea.nombre_carrera}</span>
                                         </div>
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass} shrink-0`}>
+                                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${descriptor.textClass} shrink-0`}>
                                             <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass}`} />
                                             {descriptor.label}
                                         </span>
@@ -503,23 +503,17 @@ export const PeaSupervisionTray: React.FC = () => {
                                         <span className="truncate">{pea.nombre_docente_elaborador || 'Docente Responsable'}</span>
                                     </div>
 
-                                    {/* Metadatos Curriculares */}
-                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-                                        {pea.codigo_asignatura && (
-                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
-                                                {pea.codigo_asignatura}
-                                            </span>
-                                        )}
-                                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                            {pea.total_horas_asignatura}h ({pea.creditos} Créditos)
-                                        </span>
-                                        {pea.semestre_nivel && (
-                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                                {pea.semestre_nivel}
-                                            </span>
-                                        )}
+                                    {/* Metadatos Curriculares en Línea Limpia con Puntos */}
+                                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                                            {[
+                                                pea.codigo_asignatura,
+                                                `${pea.total_horas_asignatura || 0}h${pea.creditos ? ` (${pea.creditos} Créd.)` : ''}`,
+                                                pea.semestre_nivel
+                                            ].filter(Boolean).join(' · ')}
+                                        </p>
                                         {pea.total_observaciones_pendientes > 0 && (
-                                            <span className="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-semibold text-[11px] inline-flex items-center gap-1">
+                                            <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 shrink-0">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                                 {pea.total_observaciones_pendientes} Obs.
                                             </span>

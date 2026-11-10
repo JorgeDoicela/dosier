@@ -259,196 +259,183 @@ export const CoordCarreraDashboard: React.FC = () => {
             </div>
 
 
-            {/* Bandeja de Supervisión Disciplinar */}
-            <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-xs">
-                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900">
-                    <h2 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                        Bandeja de Asignaturas{carreras.length > 1 ? `: ${nombreCarreraActiva}` : ''}
-                    </h2>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="relative">
-                            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar asignatura o docente..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                className="pl-7 pr-3 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] w-52"
-                            />
-                        </div>
-
-                        <select
-                            value={filterEstado}
-                            onChange={e => setFilterEstado(e.target.value)}
-                            className="px-2.5 py-1.5 text-xs bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md text-zinc-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
-                        >
-                            <option value="todos">Todos los Estados</option>
-                            <option value="Borrador">Borrador</option>
-                            <option value="EnRevision">En Revisión de Carrera</option>
-                            <option value="Observado">Con Observaciones</option>
-                            <option value="RevisadoCoord">Avalado por Carrera</option>
-                            <option value="RevisadoAcad">Avalado por Académica</option>
-                            <option value="Aprobado">Aprobado / Legalizado</option>
-                        </select>
-
-                        {/* Selector de Modo: Cuadros vs Lista */}
-                        <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                    viewMode === 'grid'
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                                }`}
-                                title="Vista en Cuadros"
-                            >
-                                <LayoutGrid size={14} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                    viewMode === 'list'
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                                }`}
-                                title="Vista en Lista"
-                            >
-                                <List size={14} />
-                            </button>
-                        </div>
-                    </div>
+            {/* Barra de Filtros y Búsqueda (Sin cuadros sobre cuadros) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-md">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                        type="text"
+                        placeholder="Buscar por asignatura, docente o código..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3]"
+                    />
                 </div>
 
-                {/* Contenido: Grid o Tabla */}
-                {isLoading ? (
-                    <div className="py-16 text-center text-zinc-400 text-xs">
-                        <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#0070f3]" />
-                        Cargando asignaturas y estado curricular...
+                <div className="flex flex-wrap items-center gap-2">
+                    <select
+                        value={filterEstado}
+                        onChange={e => setFilterEstado(e.target.value)}
+                        className="px-3 py-2 text-xs font-medium bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:border-[#0070f3]"
+                    >
+                        <option value="todos">Todos los Estados</option>
+                        <option value="Borrador">Borrador</option>
+                        <option value="EnRevision">En Revisión de Carrera</option>
+                        <option value="Observado">Con Observaciones</option>
+                        <option value="RevisadoCoord">Avalado por Carrera</option>
+                        <option value="RevisadoAcad">Avalado por Académica</option>
+                        <option value="Aprobado">Aprobado / Legalizado</option>
+                    </select>
+
+                    {/* Selector de Modo: Cuadros vs Lista */}
+                    <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('grid')}
+                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                viewMode === 'grid'
+                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                            }`}
+                            title="Vista en Cuadros"
+                        >
+                            <LayoutGrid size={14} />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                viewMode === 'list'
+                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
+                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                            }`}
+                            title="Vista en Lista"
+                        >
+                            <List size={14} />
+                        </button>
                     </div>
-                ) : peasFiltrados.length === 0 ? (
-                    <div className="py-12 text-center text-zinc-500 text-xs">
-                        No se encontraron asignaturas registradas para este filtro.
-                    </div>
-                ) : viewMode === 'grid' ? (
-                    /* ── MODO CUADROS (ESTILO DOCENTE) ── */
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-zinc-50/50 dark:bg-zinc-950">
-                        {peasFiltrados.map(p => {
-                            const descriptor = getPeaStatusDescriptor(p.estado);
-                            const esBorrador = isPeaBorrador(p.estado);
-                            const esEnRevision = isPeaEnRevision(p.estado);
-                            const puedeEmitirAval = esEnRevision && !p.firma_coord;
+                </div>
+            </div>
 
-                            return (
-                                <div
-                                    key={p.uuid}
-                                    className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all flex flex-col justify-between space-y-4 text-left"
-                                >
-                                    {/* Top: Carrera y Estado */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between gap-2">
-                                            {carreras.length > 1 ? (
-                                                <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                                    <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
-                                                    <span className="truncate">{p.nombre_carrera}</span>
-                                                </div>
-                                            ) : <div />}
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium rounded-md border ${descriptor.borderClass} ${descriptor.badgeBgClass} ${descriptor.textClass} shrink-0`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
-                                                {descriptor.label}
-                                            </span>
+            {/* Contenido: Grid o Tabla Directos en el Folio */}
+            {isLoading ? (
+                <div className="py-16 text-center text-zinc-400 text-xs">
+                    <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#0070f3]" />
+                    Cargando asignaturas y estado curricular...
+                </div>
+            ) : peasFiltrados.length === 0 ? (
+                <div className="py-12 text-center text-zinc-500 text-xs rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                    No se encontraron asignaturas registradas para este filtro.
+                </div>
+            ) : viewMode === 'grid' ? (
+                /* ── MODO CUADROS (ESTILO DOCENTE LIMPIO) ── */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {peasFiltrados.map(p => {
+                        const descriptor = getPeaStatusDescriptor(p.estado);
+                        const esBorrador = isPeaBorrador(p.estado);
+                        const esEnRevision = isPeaEnRevision(p.estado);
+                        const puedeEmitirAval = esEnRevision && !p.firma_coord;
+
+                        return (
+                            <div
+                                key={p.uuid}
+                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all flex flex-col justify-between space-y-4 text-left"
+                            >
+                                {/* Top: Carrera y Estado */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
+                                            <span>{p.nombre_carrera}</span>
                                         </div>
-
-                                        {/* Título de la Asignatura */}
-                                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
-                                            {p.nombre_asignatura}
-                                        </h3>
-
-                                        {/* Docente Elaborador */}
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-0.5">
-                                            <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
-                                            <span className="truncate">{p.nombre_docente_elaborador || 'Docente Responsable'}</span>
-                                        </div>
-
-                                        {/* Metadatos Curriculares */}
-                                        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-                                            {p.codigo_asignatura && (
-                                                <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
-                                                    {p.codigo_asignatura}
-                                                </span>
-                                            )}
-                                            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                                {p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} Créd.)` : ''}
-                                            </span>
-                                            {p.semestre_nivel && (
-                                                <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-[11px]">
-                                                    {p.semestre_nivel}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium shrink-0">
+                                            <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
+                                            <span className={descriptor.textClass}>{descriptor.label}</span>
+                                        </span>
                                     </div>
 
-                                    {/* Pie de Tarjeta con Acciones Coherentes */}
-                                    <div className="pt-2 flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
-                                        {esBorrador ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAbrirRevision(p.uuid)}
-                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                                title="Consultar avance de formulación docente"
-                                            >
-                                                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>Ver avance</span>
-                                            </button>
-                                        ) : esEnRevision ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleAbrirRevision(p.uuid)}
-                                                    className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5" />
-                                                    <span>Revisar</span>
-                                                </button>
+                                    {/* Título de la Asignatura */}
+                                    <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                        {p.nombre_asignatura}
+                                    </h3>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setObservacionPea(p)}
-                                                    className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-                                                >
-                                                    Observar
-                                                </button>
+                                    {/* Docente Elaborador */}
+                                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
+                                        <span className="truncate">{p.nombre_docente_elaborador || 'Docente Responsable'}</span>
+                                    </div>
 
-                                                {puedeEmitirAval && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleEmitirAvalCarrera(p)}
-                                                        className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
-                                                    >
-                                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                                        <span>Emitir Aval</span>
-                                                    </button>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAbrirRevision(p.uuid)}
-                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                            >
-                                                <Eye className="w-3.5 h-3.5" />
-                                                <span>Ver expediente</span>
-                                            </button>
+                                    {/* Metadatos Curriculares: Texto limpio continuo con puntos, sin cajas ni chips */}
+                                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
+                                        {p.codigo_asignatura && (
+                                            <span className="font-mono text-zinc-700 dark:text-zinc-300">{p.codigo_asignatura}</span>
                                         )}
+                                        {p.codigo_asignatura && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                                        <span>{p.total_horas_asignatura || 0}h {p.creditos ? `(${p.creditos} Créd.)` : ''}</span>
+                                        {p.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
+                                        {p.semestre_nivel && <span>{p.semestre_nivel}</span>}
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    /* ── MODO TABLA / LISTA ── */
+
+                                {/* Pie de Tarjeta con Acciones Coherentes */}
+                                <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 dark:border-zinc-900" onClick={e => e.stopPropagation()}>
+                                    {esBorrador ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                            title="Consultar avance de formulación docente"
+                                        >
+                                            <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>Ver avance</span>
+                                        </button>
+                                    ) : esEnRevision ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAbrirRevision(p.uuid)}
+                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                            >
+                                                <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                                <span>Revisar</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setObservacionPea(p)}
+                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                                            >
+                                                Observar
+                                            </button>
+
+                                            {puedeEmitirAval && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEmitirAvalCarrera(p)}
+                                                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                                                >
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    <span>Emitir Aval</span>
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                                        >
+                                            <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>Ver expediente</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                /* ── MODO TABLA / LISTA ── */
+                <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
                             <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
@@ -509,7 +496,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                     {esBorrador ? (
                                                         <button
                                                             onClick={() => handleAbrirRevision(p.uuid)}
-                                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                                                             title="Consultar avance de formulación docente"
                                                         >
                                                             <Eye className="w-3.5 h-3.5 text-slate-400" />
@@ -519,7 +506,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                         <>
                                                             <button
                                                                 onClick={() => handleAbrirRevision(p.uuid)}
-                                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                                                             >
                                                                 <Eye className="w-3.5 h-3.5" />
                                                                 <span>Revisar</span>
@@ -527,7 +514,7 @@ export const CoordCarreraDashboard: React.FC = () => {
 
                                                             <button
                                                                 onClick={() => setObservacionPea(p)}
-                                                                className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+                                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
                                                             >
                                                                 Observar
                                                             </button>
@@ -535,16 +522,17 @@ export const CoordCarreraDashboard: React.FC = () => {
                                                             {puedeEmitirAval && (
                                                                 <button
                                                                     onClick={() => handleEmitirAvalCarrera(p)}
-                                                                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
+                                                                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                                                                 >
-                                                                    Emitir Aval
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                    <span>Emitir Aval</span>
                                                                 </button>
                                                             )}
                                                         </>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleAbrirRevision(p.uuid)}
-                                                            className="px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer inline-flex items-center gap-1"
+                                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                                                         >
                                                             <Eye className="w-3.5 h-3.5" />
                                                             <span>Ver expediente</span>
@@ -558,8 +546,8 @@ export const CoordCarreraDashboard: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Modales */}
             {observacionPea && (
