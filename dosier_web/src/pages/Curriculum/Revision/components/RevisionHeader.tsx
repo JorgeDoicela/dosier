@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     ArrowLeft,
     FileText,
@@ -12,7 +13,8 @@ import {
     MessageSquare,
     AlertCircle,
     BookOpen,
-    Clock
+    Clock,
+    SquarePen
 } from 'lucide-react';
 import { useAuth } from '../../../../api/AuthContext';
 import {
@@ -42,6 +44,7 @@ interface RevisionHeaderProps {
 
 export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
     projectTitle,
+    projectUuid,
     projectStatus,
     viewMode,
     setViewMode,
@@ -55,6 +58,7 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
     pendingObservationsCount = 0,
     isVisible = true
 }) => {
+    const navigate = useNavigate();
     const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const isAuthority = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
 
@@ -169,6 +173,19 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
 
                 {/* 3. Derecha: Acciones de Cabecera y Dictamen */}
                 <div className="flex items-center gap-2 shrink-0">
+                    {/* Botón de Edición para Autoridades y Coordinadores */}
+                    {isAuthority && projectUuid && (
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/documentacion/workspace/PEA_OFICIAL/${projectUuid}?edit=pea-oficial&from=revision`)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                            title="Abrir el editor colaborativo para corregir o ajustar contenidos del PEA"
+                        >
+                            <SquarePen size={13} className="text-[#0070f3] dark:text-blue-400" />
+                            <span>Editar PEA</span>
+                        </button>
+                    )}
+
                     <button
                         onClick={toggleTheme}
                         className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors cursor-pointer"

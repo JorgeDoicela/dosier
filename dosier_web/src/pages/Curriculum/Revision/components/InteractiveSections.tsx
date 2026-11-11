@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ProjectDetail, SectionComment } from '../types/revisionTecnicaTypes';
-import { Info } from 'lucide-react';
+import { Info, SquarePen, Check, Loader2, Scale, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { isPeaBorrador, getPeaStatusDescriptor } from '../../utils/peaStatusWorkflow';
 import { SectionObservationColumn } from './SectionObservationColumn';
+import { useAuth } from '../../../../api/AuthContext';
+
+export interface DatosGeneralesEditPayload {
+    modalidad: string;
+    unidadOrganizacion: string;
+    nivel: string;
+    creditos: number;
+    totalHoras: number;
+    horasCD: number;
+    horasAPE: number;
+    horasTA: number;
+}
 
 const stripHtml = (html: any): string => {
     if (!html || typeof html !== 'string') return '';
@@ -46,6 +58,7 @@ interface InteractiveSectionsProps {
     onRemoveComment?: (sectionKey: string, id: number) => Promise<void>;
     onStartListening?: (onTranscript: (text: string) => void) => void;
     onScroll?: React.UIEventHandler<HTMLDivElement>;
+    onUpdateDatosGenerales?: (payload: DatosGeneralesEditPayload) => Promise<boolean>;
 }
 
 export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
@@ -66,11 +79,198 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     onSaveComment,
     onRemoveComment,
     onStartListening,
-    onScroll
+    onScroll,
+    onUpdateDatosGenerales
 }) => {
+    const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const isAuthority = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
+
     const snap = docSnapshot || {};
     const statusDescriptor = getPeaStatusDescriptor(project.status, { esSupervisor: true });
     const statusLabel = statusDescriptor.key === 'EnRevision' ? 'En Revisión' : statusDescriptor.label;
+
+    // Estado local para edición directa in-situ de Datos Generales
+    const [isEditingGeneral, setIsEditingGeneral] = useState<boolean>(false);
+    const [editModalidad, setEditModalidad] = useState<string>('Presencial');
+    const [editUnidadOrg, setEditUnidadOrg] = useState<string>('Unidad Básica');
+    const [editNivel, setEditNivel] = useState<string>('');
+    const [editCreditos, setEditCreditos] = useState<number>(3);
+    const [editTotalHoras, setEditTotalHoras] = useState<number>(144);
+    const [editHorasCD, setEditHorasCD] = useState<number>(48);
+    const [editHorasAPE, setEditHorasAPE] = useState<number>(48);
+    const [editHorasTA, setEditHorasTA] = useState<number>(48);
+    const [savingGeneral, setSavingGeneral] = useState<boolean>(false);
+    const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState<boolean>(false);
+
+    const handleStartEditGeneral = () => {
+        let mod = snap.Modalidad || project.modalidad || 'Presencial';
+        if (mod.toLowerCase() === 'en linea' || mod.toLowerCase() === 'en línea') {
+            mod = 'En Línea';
+        }
+        setEditModalidad(mod);
+
+        let uOrg = snap.UnidadOrganizacion || 'Unidad Básica';
+        const uUpper = String(uOrg).trim().toUpperCase();
+        if (uUpper === 'BASICA' || uUpper === 'BÁSICA' || uUpper === 'TRONCO COMUN' || uUpper === 'TRONCO COMÚN') {
+            uOrg = 'Unidad Básica';
+        } else if (uUpper === 'PROFESIONAL') {
+            uOrg = 'Unidad Profesional';
+        } else if (uUpper === 'TITULACION' || uUpper === 'TITULACIÓN') {
+            uOrg = 'Unidad de Integración Curricular';
+        }
+        setEditUnidadOrg(uOrg);
+
+        setEditNivel((snap.Nivel || project.semestre_nivel || '').toUpperCase());
+        
+        const cred = Number(snap.Creditos ?? project.creditos ?? 3) || 3;
+        setEditCreditos(cred);
+
+        const horasSemanales = Number(snap.HorasSemanales ?? snap.horas_semanales ?? project.peaData?.horas_semanales ?? 0);
+        let cd = Number(snap.HorasContactoDocente ?? project.horas_docencia ?? 0);
+        let ape = Number(snap.HorasPracticoExperimental ?? project.horas_practica ?? 0);
+        let ta = Number(snap.HorasAutonomo ?? project.horas_autonomo ?? 0);
+        let tot = Number(snap.TotalHorasAsignatura ?? project.horas_totales ?? 0);
+
+        if (cd <= 0 && ape <= 0 && ta <= 0) {
+            if (tot <= 0) tot = cred * 48;
+            if (horasSemanales > 0 && (horasSemanales * 16) < tot) {
+                cd = horasSemanales * 16;
+                const restante = tot - cd;
+                ape = Math.floor(restante / 2);
+                ta = tot - cd - ape;
+            } else {
+                const third = Math.floor(tot / 3);
+                cd = third;
+                ape = third;
+                ta = tot - cd - ape;
+            }
+        } else if (tot <= 0) {
+            tot = cd + ape + ta;
+        }
+
+        setEditHorasCD(cd);
+        setEditHorasAPE(ape);
+        setEditHorasTA(ta);
+        setEditTotalHoras(cd + ape + ta);
+        setIsEditingGeneral(true);
+    };
+
+    const handleCancelEditGeneral = () => {
+        setIsEditingGeneral(false);
+    };
+
+    const handleHorasCDChange = (val: string) => {
+        const cd = Math.max(0, parseInt(val, 10) || 0);
+        setEditHorasCD(cd);
+        const newTot = cd + editHorasAPE + editHorasTA;
+        setEditTotalHoras(newTot);
+        if (newTot > 0 && newTot % 48 === 0) {
+            setEditCreditos(newTot / 48);
+        }
+    };
+
+    const handleHorasAPEChange = (val: string) => {
+        const ape = Math.max(0, parseInt(val, 10) || 0);
+        setEditHorasAPE(ape);
+        const newTot = editHorasCD + ape + editHorasTA;
+        setEditTotalHoras(newTot);
+        if (newTot > 0 && newTot % 48 === 0) {
+            setEditCreditos(newTot / 48);
+        }
+    };
+
+    const handleHorasTAChange = (val: string) => {
+        const ta = Math.max(0, parseInt(val, 10) || 0);
+        setEditHorasTA(ta);
+        const newTot = editHorasCD + editHorasAPE + ta;
+        setEditTotalHoras(newTot);
+        if (newTot > 0 && newTot % 48 === 0) {
+            setEditCreditos(newTot / 48);
+        }
+    };
+
+    const handleCreditosChange = (newCred: number) => {
+        const c = Math.max(1, newCred);
+        setEditCreditos(c);
+        const newTot = c * 48;
+        const horasSemanales = Number(snap.HorasSemanales ?? snap.horas_semanales ?? project.peaData?.horas_semanales ?? 0);
+        let cd = 0;
+        let ape = 0;
+        let ta = 0;
+        if (horasSemanales > 0 && (horasSemanales * 16) < newTot) {
+            cd = horasSemanales * 16;
+            const restante = newTot - cd;
+            ape = Math.floor(restante / 2);
+            ta = newTot - cd - ape;
+        } else {
+            const third = Math.floor(newTot / 3);
+            cd = third;
+            ape = third;
+            ta = newTot - third * 2;
+        }
+        setEditTotalHoras(newTot);
+        setEditHorasCD(cd);
+        setEditHorasAPE(ape);
+        setEditHorasTA(ta);
+    };
+
+    const handleSaveEditGeneral = async (): Promise<boolean> => {
+        if (!onUpdateDatosGenerales) return false;
+        setSavingGeneral(true);
+        try {
+            const ok = await onUpdateDatosGenerales({
+                modalidad: editModalidad,
+                unidadOrganizacion: editUnidadOrg,
+                nivel: editNivel,
+                creditos: editCreditos,
+                totalHoras: editTotalHoras,
+                horasCD: editHorasCD,
+                horasAPE: editHorasAPE,
+                horasTA: editHorasTA
+            });
+            if (ok) {
+                setIsEditingGeneral(false);
+                setIsConfirmSaveOpen(false);
+                return true;
+            }
+            return false;
+        } finally {
+            setSavingGeneral(false);
+        }
+    };
+
+    const handleAutoBalance = () => {
+        const total = (editHorasCD + editHorasAPE + editHorasTA) > 0 
+            ? (editHorasCD + editHorasAPE + editHorasTA) 
+            : (editCreditos * 48);
+        const horasSemanales = Number(snap.HorasSemanales ?? snap.horas_semanales ?? project.peaData?.horas_semanales ?? 0);
+        let cd = 0;
+        let ape = 0;
+        let ta = 0;
+        if (horasSemanales > 0 && (horasSemanales * 16) < total) {
+            cd = horasSemanales * 16;
+            const restante = total - cd;
+            ape = Math.floor(restante / 2);
+            ta = total - cd - ape;
+        } else {
+            const third = Math.floor(total / 3);
+            cd = third;
+            ape = third;
+            ta = total - cd - ape;
+        }
+        setEditHorasCD(cd);
+        setEditHorasAPE(ape);
+        setEditHorasTA(ta);
+        setEditTotalHoras(total);
+        if (total > 0 && total % 48 === 0) {
+            setEditCreditos(total / 48);
+        }
+    };
+
+    const sumaComponentesGeneral = editHorasCD + editHorasAPE + editHorasTA;
+    const horasNormativasCreditos = editCreditos * 48;
+    const isCreditosEquivalente = editTotalHoras === horasNormativasCreditos;
+    const isGeneralBalanced = isCreditosEquivalente;
 
     const getFieldComments = (fieldKey: string): SectionComment[] => {
         const list = [...(comments[fieldKey] || [])];
@@ -134,7 +334,8 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     const renderSectionHeader = (
         title: string,
         _subtitle: string,
-        _fieldKey: string
+        _fieldKey: string,
+        extraAction?: React.ReactNode
     ) => {
         return (
             <div className="flex items-center justify-between gap-3 pb-1">
@@ -143,6 +344,11 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                         {title}
                     </h2>
                 </div>
+                {extraAction && (
+                    <div className="shrink-0" onClick={e => e.stopPropagation()}>
+                        {extraAction}
+                    </div>
+                )}
             </div>
         );
     };
@@ -307,97 +513,307 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '1. Datos Generales de la Asignatura',
                                 'Metadatos curriculares institucionales, distribución horaria y créditos oficiales',
-                                'NombreAsignatura'
+                                'NombreAsignatura',
+                                (isAuthority || canAudit) && (
+                                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                        {isEditingGeneral ? (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCancelEditGeneral}
+                                                    disabled={savingGeneral}
+                                                    className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                                >
+                                                    <X size={12} />
+                                                    <span>Cancelar</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsConfirmSaveOpen(true)}
+                                                    disabled={savingGeneral}
+                                                    className="px-3 py-1 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-blue-600 transition-colors inline-flex items-center gap-1 cursor-pointer shadow-xs disabled:opacity-60"
+                                                >
+                                                    {savingGeneral ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                                    <span>{savingGeneral ? 'Guardando...' : 'Guardar y cerrar'}</span>
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={handleStartEditGeneral}
+                                                className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1.5 cursor-pointer py-1 px-1"
+                                                title="Editar directamente datos generales, modalidad, unidad de organización y horas CACES"
+                                            >
+                                                <SquarePen size={13} />
+                                                <span>Editar datos</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                )
                             )}
 
-                            {/* Matriz Unificada de Especificaciones */}
-                            <dl className="divide-y divide-slate-100 dark:divide-zinc-800/80">
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Nombre de la Asignatura</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
-                                        {stripHtml(snap.NombreAsignatura) || stripHtml(project.title) || 'No registrado'}
-                                    </dd>
+                            {isEditingGeneral ? (
+                                /* ── MODO EDICIÓN IN-SITU DIRECTA ── */
+                                <div className="space-y-4 pt-1" onClick={(e) => e.stopPropagation()}>
+                                    <dl className="divide-y divide-slate-100 dark:divide-zinc-800/80">
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Nombre de la Asignatura</dt>
+                                            <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
+                                                {stripHtml(snap.NombreAsignatura) || stripHtml(project.title) || 'No registrado'}
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Carrera</dt>
+                                            <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
+                                                {snap.CodigoCarrera || project.codigo_carrera || '-'}
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Carrera</dt>
+                                            <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                                {snap.Carrera || project.carrera || 'No asignada'}
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-300">Modalidad</dt>
+                                            <dd className="sm:col-span-2 mt-1 sm:mt-0">
+                                                <select
+                                                    value={editModalidad}
+                                                    onChange={(e) => setEditModalidad(e.target.value)}
+                                                    className="w-full sm:max-w-xs px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                >
+                                                    <option value="Presencial">Presencial</option>
+                                                    <option value="Semipresencial">Semipresencial</option>
+                                                    <option value="En Línea">En Línea</option>
+                                                    <option value="Híbrida">Híbrida</option>
+                                                    <option value="Dual">Dual</option>
+                                                </select>
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-300">Unidad de Organización Curricular</dt>
+                                            <dd className="sm:col-span-2 mt-1 sm:mt-0">
+                                                <select
+                                                    value={editUnidadOrg}
+                                                    onChange={(e) => setEditUnidadOrg(e.target.value)}
+                                                    className="w-full sm:max-w-xs px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                >
+                                                    <option value="Unidad Básica">Unidad Básica</option>
+                                                    <option value="Unidad Profesional">Unidad Profesional</option>
+                                                    <option value="Unidad de Integración Curricular">Unidad de Integración Curricular</option>
+                                                </select>
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-300">Semestre / Nivel</dt>
+                                            <dd className="sm:col-span-2 mt-1 sm:mt-0">
+                                                <input
+                                                    type="text"
+                                                    value={editNivel}
+                                                    onChange={(e) => setEditNivel(e.target.value.toUpperCase())}
+                                                    placeholder="Ej: PRIMERO, SEGUNDO, TERCERO..."
+                                                    className="w-full sm:max-w-xs px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] uppercase font-semibold"
+                                                />
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Período Académico</dt>
+                                            <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                                {snap.Periodo || project.periodo || '-'}
+                                            </dd>
+                                        </div>
+                                        <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-300">
+                                                <span>Distribución Horaria y Créditos (CACES)</span>
+                                                <span className="block text-[11px] font-normal text-slate-500 dark:text-zinc-400 mt-0.5">
+                                                    CD + APE + TA = Total
+                                                </span>
+                                            </dt>
+                                            <dd className="sm:col-span-2 space-y-3 mt-1 sm:mt-0">
+                                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                                    <div>
+                                                        <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block font-medium">Total (h)</label>
+                                                        <div className="relative mt-1">
+                                                            <input
+                                                                type="number"
+                                                                readOnly
+                                                                value={editTotalHoras}
+                                                                title="Total calculado automáticamente: Docencia + Práctica APE + Autónomo"
+                                                                className="w-full px-2.5 py-1.5 text-xs sm:text-sm font-mono font-bold rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-100/90 dark:bg-zinc-800/80 text-slate-900 dark:text-zinc-100 cursor-default select-none focus:outline-none"
+                                                            />
+                                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 dark:text-zinc-500 select-none">
+                                                                auto
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block font-medium">Créditos</label>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={editCreditos}
+                                                            onChange={(e) => handleCreditosChange(parseInt(e.target.value, 10) || 1)}
+                                                            className="w-full mt-1 px-2.5 py-1.5 text-xs sm:text-sm font-mono font-bold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block font-medium">Docencia</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={editHorasCD}
+                                                            onChange={(e) => handleHorasCDChange(e.target.value)}
+                                                            className="w-full mt-1 px-2.5 py-1.5 text-xs sm:text-sm font-mono font-bold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block font-medium">Práctica APE</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={editHorasAPE}
+                                                            onChange={(e) => handleHorasAPEChange(e.target.value)}
+                                                            className="w-full mt-1 px-2.5 py-1.5 text-xs sm:text-sm font-mono font-bold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block font-medium">Autónomo</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={editHorasTA}
+                                                            onChange={(e) => handleHorasTAChange(e.target.value)}
+                                                            className="w-full mt-1 px-2.5 py-1.5 text-xs sm:text-sm font-mono font-bold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 ${
+                                                    isCreditosEquivalente 
+                                                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                                                        : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+                                                }`}>
+                                                    <div className="flex items-center gap-1.5">
+                                                        {isCreditosEquivalente ? (
+                                                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                                                        ) : (
+                                                            <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                                                        )}
+                                                        <span>
+                                                            {isCreditosEquivalente 
+                                                                ? `Balance CACES válido: ${editHorasCD}h (CD) + ${editHorasAPE}h (APE) + ${editHorasTA}h (TA) = ${editTotalHoras}h (${editCreditos} créditos normativos · 48h/crédito)`
+                                                                : `Total calculado: ${editTotalHoras}h (${editHorasCD}h + ${editHorasAPE}h + ${editHorasTA}h). Equivale a ${(editTotalHoras / 48).toFixed(1)} créditos (Registrados: ${editCreditos} = ${horasNormativasCreditos}h).`}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAutoBalance}
+                                                        className="font-semibold text-[#0070f3] dark:text-blue-400 hover:underline shrink-0 cursor-pointer text-xs"
+                                                        title="Distribuir total de horas en tercios (1/3 exacto para cada componente)"
+                                                    >
+                                                        Distribuir en 1/3
+                                                    </button>
+                                                </div>
+                                            </dd>
+                                        </div>
+                                        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Docente Titular Elaborador</dt>
+                                            <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
+                                                {snap.DocenteElaborador || project.docente_elaborador || project.directorProyecto || '-'}
+                                            </dd>
+                                        </div>
+                                    </dl>
                                 </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Carrera</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.CodigoCarrera || project.codigo_carrera || '-'}
-                                    </dd>
-                                </div>
-                                {(snap.CodigoAsignatura || project.codigo_asignatura) && (
+                            ) : (
+                                /* ── MODO VISUALIZACIÓN FORMATEADA NORMAL ── */
+                                <dl className="divide-y divide-slate-100 dark:divide-zinc-800/80">
                                     <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Asignatura</dt>
-                                        <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
-                                            {snap.CodigoAsignatura || project.codigo_asignatura}
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Nombre de la Asignatura</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
+                                            {stripHtml(snap.NombreAsignatura) || stripHtml(project.title) || 'No registrado'}
                                         </dd>
                                     </div>
-                                )}
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Carrera</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.Carrera || project.carrera || 'No asignada'}
-                                    </dd>
-                                </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Modalidad</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.Modalidad || project.modalidad || '-'}
-                                    </dd>
-                                </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Unidad de Organización Curricular</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.UnidadOrganizacion || '-'}
-                                    </dd>
-                                </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Semestre / Nivel</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {(snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('nivel') || (snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('semestre')
-                                            ? (snap.Nivel || project.semestre_nivel)
-                                            : `Nivel ${snap.Nivel || project.semestre_nivel || '-'}`}
-                                    </dd>
-                                </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Período Académico</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
-                                        {snap.Periodo || project.periodo || '-'}
-                                    </dd>
-                                </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Distribución Horaria y Créditos (CACES)</dt>
-                                    <dd className="sm:col-span-2">
-                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                                            <div>
-                                                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Total</span>
-                                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.TotalHorasAsignatura || project.horas_totales || 0}h</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Créditos</span>
-                                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.Creditos || project.creditos || 0}</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Docencia</span>
-                                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.HorasContactoDocente || project.horas_docencia || 0}h</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Práctica APE</span>
-                                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.HorasPracticoExperimental || project.horas_practica || 0}h</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Autónomo</span>
-                                                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.HorasAutonomo || project.horas_autonomo || 0}h</span>
-                                            </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Carrera</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
+                                            {snap.CodigoCarrera || project.codigo_carrera || '-'}
+                                        </dd>
+                                    </div>
+                                    {(snap.CodigoAsignatura || project.codigo_asignatura) && (
+                                        <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                            <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Código de Asignatura</dt>
+                                            <dd className="sm:col-span-2 text-sm sm:text-base font-mono font-semibold text-slate-800 dark:text-zinc-200">
+                                                {snap.CodigoAsignatura || project.codigo_asignatura}
+                                            </dd>
                                         </div>
-                                    </dd>
-                                </div>
-                                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
-                                    <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Docente Titular Elaborador</dt>
-                                    <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
-                                        {snap.DocenteElaborador || project.docente_elaborador || project.directorProyecto || '-'}
-                                    </dd>
-                                </div>
-                            </dl>
+                                    )}
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Carrera</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                            {snap.Carrera || project.carrera || 'No asignada'}
+                                        </dd>
+                                    </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Modalidad</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                            {snap.Modalidad || project.modalidad || '-'}
+                                        </dd>
+                                    </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Unidad de Organización Curricular</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                            {snap.UnidadOrganizacion || '-'}
+                                        </dd>
+                                    </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Semestre / Nivel</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                            {(snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('nivel') || (snap.Nivel || project.semestre_nivel || '').toLowerCase().startsWith('semestre')
+                                                ? (snap.Nivel || project.semestre_nivel)
+                                                : `Nivel ${snap.Nivel || project.semestre_nivel || '-'}`}
+                                        </dd>
+                                    </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Período Académico</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200">
+                                            {snap.Periodo || project.periodo || '-'}
+                                        </dd>
+                                    </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Distribución Horaria y Créditos (CACES)</dt>
+                                        <dd className="sm:col-span-2">
+                                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                                                <div>
+                                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Total</span>
+                                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.TotalHorasAsignatura || project.horas_totales || 0}h</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Créditos</span>
+                                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.Creditos || project.creditos || 0}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Docencia</span>
+                                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.HorasContactoDocente || project.horas_docencia || 0}h</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Práctica APE</span>
+                                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.HorasPracticoExperimental || project.horas_practica || 0}h</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 block font-medium">Autónomo</span>
+                                                    <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 font-mono mt-0.5 block">{snap.HorasAutonomo || project.horas_autonomo || 0}h</span>
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </div>
+                                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-6">
+                                        <dt className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-zinc-400">Docente Titular Elaborador</dt>
+                                        <dd className="sm:col-span-2 text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">
+                                            {snap.DocenteElaborador || project.docente_elaborador || project.directorProyecto || '-'}
+                                        </dd>
+                                    </div>
+                                </dl>
+                            )}
                         </section>
                     )}
 
@@ -830,6 +1246,90 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* Modal de Confirmación para Guardar Datos Generales */}
+            {isConfirmSaveOpen && (
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+                    onClick={() => !savingGeneral && setIsConfirmSaveOpen(false)}
+                >
+                    <div 
+                        className="w-full max-w-md rounded-xl bg-white dark:bg-[#131720] border border-slate-200 dark:border-zinc-800 shadow-2xl overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                Confirmar actualización de datos generales
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => !savingGeneral && setIsConfirmSaveOpen(false)}
+                                disabled={savingGeneral}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1 rounded-md transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <div className="p-5 space-y-3">
+                            <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
+                                Se actualizarán las especificaciones curriculares de la asignatura en el documento oficial del PEA:
+                            </p>
+
+                            <div className="rounded-lg bg-slate-50 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800/80 p-3 space-y-2 text-xs">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-500 dark:text-zinc-400">Modalidad:</span>
+                                    <span className="font-semibold text-slate-900 dark:text-zinc-100">{editModalidad}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-500 dark:text-zinc-400">Unidad Curricular:</span>
+                                    <span className="font-semibold text-slate-900 dark:text-zinc-100">{editUnidadOrg}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-500 dark:text-zinc-400">Semestre / Nivel:</span>
+                                    <span className="font-semibold text-slate-900 dark:text-zinc-100">{editNivel || '-'}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-500 dark:text-zinc-400">Horas Totales:</span>
+                                    <span className="font-mono font-semibold text-slate-900 dark:text-zinc-100">{editTotalHoras}h ({editCreditos} créditos)</span>
+                                </div>
+                                <div className="pt-1.5 border-t border-slate-200/60 dark:border-zinc-800 flex justify-between items-center text-[11px] text-slate-500 dark:text-zinc-400">
+                                    <span>Docencia CD: <strong className="text-slate-700 dark:text-zinc-200">{editHorasCD}h</strong></span>
+                                    <span>Práctica APE: <strong className="text-slate-700 dark:text-zinc-200">{editHorasAPE}h</strong></span>
+                                    <span>Autónomo TA: <strong className="text-slate-700 dark:text-zinc-200">{editHorasTA}h</strong></span>
+                                </div>
+                            </div>
+
+                            {!isCreditosEquivalente && (
+                                <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+                                    <AlertCircle size={14} className="shrink-0" />
+                                    <span>Advertencia: El total de horas ({editTotalHoras}h) difiere de la equivalencia por créditos ({editCreditos} créditos = {editCreditos * 48}h).</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="px-5 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => setIsConfirmSaveOpen(false)}
+                                disabled={savingGeneral}
+                                className="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-zinc-300 hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveEditGeneral}
+                                disabled={savingGeneral}
+                                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-blue-600 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-60"
+                            >
+                                {savingGeneral ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                <span>{savingGeneral ? 'Guardando...' : 'Confirmar y guardar'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

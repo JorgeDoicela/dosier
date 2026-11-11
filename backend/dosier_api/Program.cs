@@ -331,11 +331,14 @@ if (!string.IsNullOrEmpty(connectionString))
     var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
     builder.Services.AddDbContext<dosier_infrastructure.data.models.DosierContext>(options =>
         options.UseMySql(connectionString, serverVersion, mysqlOptions =>
+        {
             mysqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(5),
                 errorNumbersToAdd: null
-            )));
+            );
+            mysqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        }));
 }
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

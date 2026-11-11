@@ -165,7 +165,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                                 { value: 'Híbrida', label: 'Híbrida' },
                                 { value: 'Dual', label: 'Dual' }
                             ]}
-                            readOnly={true}
+                            readOnly={readOnly}
                             className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                             onValueChange={(val) => onUpdate('Modalidad', val)}
                         />
@@ -213,7 +213,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                             type="text"
                             label="Semestre"
                             placeholder="Semestre oficial"
-                            readOnly={true}
+                            readOnly={readOnly}
                             className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all uppercase"
                             uppercase={true}
                             onValueChange={(val) => onUpdate('Nivel', val)}
@@ -232,7 +232,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         allowDecimal={true}
                         label="Número de horas de la asignatura"
                         placeholder="0"
-                        readOnly={readOnly || totalHoras > 0}
+                        readOnly={readOnly}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                         onValueChange={(val) => onUpdate('TotalHorasAsignatura', parseFloat(val) || 0)}
                     />
@@ -244,7 +244,7 @@ export const PeaGeneralSection: React.FC<PeaGeneralSectionProps> = ({
                         type="text"
                         label="Número de créditos"
                         placeholder="0"
-                        readOnly={true}
+                        readOnly={readOnly}
                         className="w-full bg-bg-deep border border-border-thin rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-mono font-bold text-text-main placeholder:text-text-dim/30 focus:border-text-main outline-none transition-all"
                         onValueChange={(val) => onUpdate('Creditos', Number(val) || 0)}
                     />

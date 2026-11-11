@@ -337,6 +337,11 @@ export const DocumentWorkspace: React.FC = () => {
 
     const handleCloseEditor = () => {
         const params = new URLSearchParams(window.location.search);
+        if (params.get('from') === 'revision') {
+            navigate(`/documentacion/revision-tecnica/${resolvedProjectUuid}`);
+            return;
+        }
+
         if (params.get('from') === 'sala') {
             const carreraId = params.get('carrera');
             const perId = params.get('periodo');
@@ -372,7 +377,7 @@ export const DocumentWorkspace: React.FC = () => {
 
         if (activeDocument === 'PEA_OFICIAL' || activeDocument === 'GUIA_PRACTICA_LAB') {
             isReadOnly = !currentProject.puedeEditar;
-            readOnlyReason = (currentProject.status !== 'Borrador' && currentProject.status !== 'Observado' && currentProject.status !== 'En Corrección' && currentProject.status !== 'NoIniciado') ? 'state' : 'membership';
+            readOnlyReason = isReadOnly ? ((currentProject.status !== 'Borrador' && currentProject.status !== 'Observado' && currentProject.status !== 'En Corrección' && currentProject.status !== 'NoIniciado') ? 'state' : 'membership') : 'state';
         } else if (activeDocument === 'RUBRICA_EVALUACION') {
             isReadOnly = true;
             readOnlyReason = 'review';

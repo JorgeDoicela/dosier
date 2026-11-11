@@ -169,16 +169,29 @@ export function useProjectCore() {
                     isAdmin ||
                     (pea.id_docente_elaborador && userIdentifiers.some(id => id.trim().toLowerCase() === pea.id_docente_elaborador.trim().toLowerCase()))
                 );
-                const canEditPea = Boolean(
-                    isAdmin ||
-                    (isDocenteRole && (pea.estado === 'Borrador' || pea.estado === 'Observado' || pea.estado === 'En Corrección' || pea.estado === 'NoIniciado' || !pea.estado))
-                );
 
                 const peaState = pea.estado || 'Borrador';
                 const userRolesList = user?.roles || [];
                 const isCoordCarrera = userRolesList.includes('DOSIER_COORD_CARRERA') || user?.role === 'DOSIER_COORD_CARRERA';
                 const isCoordAcad = userRolesList.includes('DOSIER_COORD_ACAD') || user?.role === 'DOSIER_COORD_ACAD';
                 const isVicerrector = userRolesList.includes('DOSIER_VICERRECTOR') || user?.role === 'DOSIER_VICERRECTOR';
+                const isAuthority = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
+
+                // Las autoridades curriculares (Coordinadores, Vicerrectorado y Admin) pueden editar y ajustar datos del PEA durante la formulación y la revisión
+                const isEditableForAuthority = isAuthority && (
+                    peaState === 'EnRevision' ||
+                    peaState === 'Observado' ||
+                    peaState === 'Corregido' ||
+                    peaState === 'Borrador' ||
+                    peaState === 'En Corrección' ||
+                    peaState === 'NoIniciado'
+                );
+
+                const canEditPea = Boolean(
+                    isAdmin ||
+                    isEditableForAuthority ||
+                    (isDocenteRole && (peaState === 'Borrador' || peaState === 'Observado' || peaState === 'En Corrección' || peaState === 'NoIniciado' || !pea.estado))
+                );
 
                 // OBLIGATORIO: Solo el docente titular asignado a la materia puede firmar la etapa de elaboración del PEA
                 let canSignPea = false;

@@ -47,6 +47,7 @@ namespace dosier_application.Curriculum.Interfaces
     {
         Task<PeaDto?> GetByIdAsync(int idPea);
         Task<PeaDto?> GetByUuidAsync(string uuid);
+        Task<(int IdPea, string Estado)?> GetHeaderByUuidAsync(string uuid);
         Task<PeaDto?> GetByAsignaturaPeriodoAsync(int idAsignatura, string idPeriodo);
         Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor);
         Task<PeaDto> GuardarPeaAsync(PeaDto dto, string? idUsuarioModificador);

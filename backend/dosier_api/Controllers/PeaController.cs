@@ -238,13 +238,13 @@ namespace dosier_api.Controllers
         [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR,DOSIER_DOCENTE")]
         public async Task<IActionResult> CambiarEstadoByUuid(string uuid, [FromBody] CambiarEstadoRequest req)
         {
-            var pea = await _peaService.GetByUuidAsync(uuid);
-            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+            var header = await _peaService.GetHeaderByUuidAsync(uuid);
+            if (header == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
 
             var userId = User.FindFirstValue("id_usuario") 
                       ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
                       ?? User.FindFirstValue("sub");
-            var ok = await _peaService.CambiarEstadoAsync(pea.IdPea, req.NuevoEstado, req.Firma, userId, req.Motivo);
+            var ok = await _peaService.CambiarEstadoAsync(header.Value.IdPea, req.NuevoEstado, req.Firma, userId, req.Motivo);
             if (!ok) return NotFound("No se pudo actualizar el estado del PEA.");
             return Ok(new { success = true });
         }
@@ -275,8 +275,8 @@ namespace dosier_api.Controllers
         [HttpPost("{uuid:guid}/firmar")]
         public async Task<IActionResult> FirmarByUuid(string uuid, [FromBody] FirmarPeaDto dto)
         {
-            var pea = await _peaService.GetByUuidAsync(uuid);
-            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+            var header = await _peaService.GetHeaderByUuidAsync(uuid);
+            if (header == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
 
             var userIdStr = User.FindFirstValue("id_usuario")
                 ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
@@ -288,7 +288,7 @@ namespace dosier_api.Controllers
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
             var userAgent = Request.Headers["User-Agent"].ToString();
 
-            var resultado = await _peaService.FirmarPeaAsync(pea.IdPea, idUsuario, dto, ip, userAgent);
+            var resultado = await _peaService.FirmarPeaAsync(header.Value.IdPea, idUsuario, dto, ip, userAgent);
             return Ok(resultado);
         }
 
@@ -332,8 +332,8 @@ namespace dosier_api.Controllers
         [HttpGet("{uuid:guid}/observaciones")]
         public async Task<IActionResult> GetObservacionesByUuid(string uuid)
         {
-            var pea = await _peaService.GetByUuidAsync(uuid);
-            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+            var header = await _peaService.GetHeaderByUuidAsync(uuid);
+            if (header == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
 
             bool isReviewer = User.IsInRole("DOSIER_ADMIN") 
                            || User.IsInRole("DOSIER_COORD_CARRERA") 
@@ -342,12 +342,12 @@ namespace dosier_api.Controllers
                            || User.FindFirst("es_admin")?.Value == "true"
                            || User.HasClaim("es_admin", "true");
 
-            if (!isReviewer && pea.Estado != "Observado" && pea.Estado != "Corregido")
+            if (!isReviewer && header.Value.Estado != "Observado" && header.Value.Estado != "Corregido")
             {
                 return Ok(new List<dosier_application.Curriculum.Dtos.PeaObservacionDto>());
             }
 
-            var list = await _peaService.GetObservacionesByPeaAsync(pea.IdPea);
+            var list = await _peaService.GetObservacionesByPeaAsync(header.Value.IdPea);
             return Ok(list);
         }
 
@@ -419,9 +419,9 @@ namespace dosier_api.Controllers
         [HttpGet("{uuid:guid}/trazabilidad")]
         public async Task<IActionResult> GetTrazabilidadByUuid(string uuid)
         {
-            var pea = await _peaService.GetByUuidAsync(uuid);
-            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
-            var list = await _peaService.GetTrazabilidadByPeaAsync(pea.IdPea);
+            var header = await _peaService.GetHeaderByUuidAsync(uuid);
+            if (header == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+            var list = await _peaService.GetTrazabilidadByPeaAsync(header.Value.IdPea);
             return Ok(list);
         }
 

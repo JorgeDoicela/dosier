@@ -135,6 +135,8 @@ namespace dosier_infrastructure.Curriculum
         public async Task<PeaDto?> GetByIdAsync(int idPea)
         {
             var pea = await _context.DocPeas
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(p => p.Unidades).ThenInclude(u => u.Temas)
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
@@ -152,6 +154,8 @@ namespace dosier_infrastructure.Curriculum
         public async Task<PeaDto?> GetByUuidAsync(string uuid)
         {
             var pea = await _context.DocPeas
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(p => p.Unidades).ThenInclude(u => u.Temas)
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
@@ -166,9 +170,22 @@ namespace dosier_infrastructure.Curriculum
             return await MapToDtoAsync(pea);
         }
 
+        public async Task<(int IdPea, string Estado)?> GetHeaderByUuidAsync(string uuid)
+        {
+            var item = await _context.DocPeas
+                .AsNoTracking()
+                .Where(p => p.Uuid == uuid && p.Activo)
+                .Select(p => new { p.IdPea, p.Estado })
+                .FirstOrDefaultAsync();
+
+            return item != null ? (item.IdPea, item.Estado) : null;
+        }
+
         public async Task<PeaDto?> GetByAsignaturaPeriodoAsync(int idAsignatura, string idPeriodo)
         {
             var pea = await _context.DocPeas
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(p => p.Unidades).ThenInclude(u => u.Temas)
                 .Include(p => p.ResultadosAprendizaje)
                 .Include(p => p.ActividadesPracticas)
@@ -956,34 +973,38 @@ namespace dosier_infrastructure.Curriculum
                 .OrderByDescending(o => o.FechaObservacion)
                 .ToListAsync();
 
-            var dtos = new List<PeaObservacionDto>();
-            foreach (var o in list)
-            {
-                string? nombreUsuario = null;
-                if (o.IdUsuarioObservador.HasValue)
-                {
-                    var u = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.IdUsuario == o.IdUsuarioObservador.Value);
-                    if (u != null) nombreUsuario = u.Nombre;
-                }
+            if (list.Count == 0) return new List<PeaObservacionDto>();
 
-                dtos.Add(new PeaObservacionDto
-                {
-                    IdObservacion = o.IdObservacion,
-                    Uuid = o.Uuid,
-                    IdPea = o.IdPea,
-                    IdUsuarioObservador = o.IdUsuarioObservador,
-                    NombreObservador = nombreUsuario,
-                    RolObservador = o.RolObservador,
-                    SeccionAfectada = o.SeccionAfectada,
-                    TextoObservacion = o.TextoObservacion,
-                    Estado = o.Estado,
-                    RespuestaDocente = o.RespuestaDocente,
-                    FechaObservacion = o.FechaObservacion,
-                    FechaResolucion = o.FechaResolucion
-                });
+            var userIds = list
+                .Where(o => o.IdUsuarioObservador.HasValue)
+                .Select(o => o.IdUsuarioObservador!.Value)
+                .Distinct()
+                .ToList();
+
+            var usersDict = new Dictionary<int, string?>();
+            if (userIds.Count > 0)
+            {
+                usersDict = await _context.Users
+                    .AsNoTracking()
+                    .Where(u => userIds.Contains(u.IdUsuario))
+                    .ToDictionaryAsync(u => u.IdUsuario, u => (string?)u.Nombre);
             }
 
-            return dtos;
+            return list.Select(o => new PeaObservacionDto
+            {
+                IdObservacion = o.IdObservacion,
+                Uuid = o.Uuid,
+                IdPea = o.IdPea,
+                IdUsuarioObservador = o.IdUsuarioObservador,
+                NombreObservador = (o.IdUsuarioObservador.HasValue && usersDict.TryGetValue(o.IdUsuarioObservador.Value, out var nombre)) ? nombre : null,
+                RolObservador = o.RolObservador,
+                SeccionAfectada = o.SeccionAfectada,
+                TextoObservacion = o.TextoObservacion,
+                Estado = o.Estado,
+                RespuestaDocente = o.RespuestaDocente,
+                FechaObservacion = o.FechaObservacion,
+                FechaResolucion = o.FechaResolucion
+            }).ToList();
         }
 
         public async Task<List<PeaTrazabilidadDto>> GetTrazabilidadByPeaAsync(int idPea)

@@ -98,6 +98,8 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
   * Integra en la Sección 1 del PEA (`PeaGeneralSection.tsx`) la distribución horaria asistida con botón de un clic para cuadre normativo CACES (1/3 docencia, 1/3 prácticas y 1/3 autónomo), permitiendo desbloqueo seguro de edición cuando la base institucional carece de horas desglosadas.
 * **`RevisionCurricularPage.tsx` (`/documentacion/revision-tecnica/:projectUuid`):**
   * Entorno de revisión colegiada y disciplinar para coordinadores y comisiones. Permite contrastar el contenido contra el checklist de normativas.
+  * **Edición In-Situ Directa de Datos Generales en Revisión (`InteractiveSections.tsx`):** Permite al coordinador o evaluador conmutar la Sección 1 a modo de edición directa en la misma tarjeta sin modales flotantes (modalidad de estudio, unidad de organización curricular, nivel/semestre y distribución horaria CACES CD/APE/TA con cálculo de balance 1/3) y guardar/cerrar para retornar de inmediato a la visualización formateada sin abandonar la vista de auditoría.
+  * **Acceso Directo al Editor Colaborativo (`Editar PEA` / `Editar en editor`):** La cabecera unificada `RevisionHeader.tsx` y las cabeceras de cada sección integran un acceso directo al editor completo (`DocumentWorkspace`) con retorno automático a la revisión (`from=revision`), habilitando a coordinadores y autoridades curriculares permisos de modificación directa sobre los datos del instrumento mientras se encuentra en fases de revisión o subsanación (`EnRevision`, `Observado`, `Corregido`).
 * **`MonitoreoCurricularPage.tsx` (`/documentacion/monitoreo/:projectUuid`):**
   * Monitor de avance, trazabilidad y estado de ejecución del documento docente.
 * **`DocumentWorkspace.tsx` (`/documentacion/workspace/:templateCode/:projectUuid`):**
@@ -106,6 +108,7 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
     * **`PeaObservationsDrawer.tsx`:** Panel deslizable lateral para consultar y subsanar observaciones por sección.
     * **Pestañas Secciones A - K:** Componentes modulares con `<CoWorkField>` para edición concurrente en vivo vía Yjs/SignalR.
     * **`NormativaDrawer.tsx`:** Asistente lateral de consulta de normativas CES y CACES vigentes.
+    * **Gobernanza de Permisos de Edición:** Concede permisos de escritura tanto al docente responsable como a los coordinadores y autoridades durante los estados de formulación y revisión curricular.
 
 ---
 

@@ -134,6 +134,7 @@ export const RevisionCurricularPage: React.FC = () => {
                                 onSaveComment={commentsState.saveCommentForSection}
                                 onRemoveComment={commentsState.removeCommentLocal}
                                 onStartListening={commentsState.handleStartListening}
+                                onUpdateDatosGenerales={data.updateDatosGenerales}
                             />
                         ) : (
                             <div className="h-full flex flex-col bg-white dark:bg-zinc-950 pt-14">

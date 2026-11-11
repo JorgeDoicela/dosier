@@ -50,15 +50,17 @@ export const useRevisionTecnicaData = ({
     const [templateBlocks, setTemplateBlocks] = useState<any[]>([]);
     const [templateSections, setTemplateSections] = useState<any[]>([]);
 
-    const loadTemplateBlocks = useCallback(async (uuid: string) => {
+    const loadTemplateBlocks = useCallback(async (uuid: string, preloadedInstance?: any) => {
         try {
             let loadedBlocks: any[] = [];
 
             try {
-                const instanceRes = await documentInstanceService.resolve({
-                    templateCode: 'PEA_OFICIAL',
-                    entityUuid: uuid
-                });
+                const instanceRes = preloadedInstance !== undefined
+                    ? preloadedInstance
+                    : await documentInstanceService.resolve({
+                        templateCode: 'PEA_OFICIAL',
+                        entityUuid: uuid
+                    });
 
                 const instanceUuid = instanceRes?.uuid || (instanceRes as any)?.Uuid;
                 if (instanceUuid) {
@@ -108,13 +110,15 @@ export const useRevisionTecnicaData = ({
         }
     }, []);
 
-    const loadPdf = useCallback(async (uuid: string) => {
+    const loadPdf = useCallback(async (uuid: string, preloadedInstance?: any) => {
         setLoadingPdf(true);
         try {
-            const instanceRes = await documentInstanceService.resolve({
-                templateCode: 'PEA_OFICIAL',
-                entityUuid: uuid
-            });
+            const instanceRes = preloadedInstance !== undefined
+                ? preloadedInstance
+                : await documentInstanceService.resolve({
+                    templateCode: 'PEA_OFICIAL',
+                    entityUuid: uuid
+                });
             const finalPath = (instanceRes as any)?.finalPdfPath || instanceRes?.final_pdf_path;
 
             const instanceUuid = instanceRes?.uuid || (instanceRes as any)?.Uuid;
@@ -157,14 +161,16 @@ export const useRevisionTecnicaData = ({
         }
     }, []);
 
-    const calculateMetrics = useCallback(async (uuid: string, pea: PeaDto) => {
+    const calculateMetrics = useCallback(async (uuid: string, pea: PeaDto, preloadedInstance?: any) => {
         try {
             let metadata: any = {};
             try {
-                const instanceRes = await documentInstanceService.resolve({
-                    templateCode: 'PEA_OFICIAL',
-                    entityUuid: uuid
-                });
+                const instanceRes = preloadedInstance !== undefined
+                    ? preloadedInstance
+                    : await documentInstanceService.resolve({
+                        templateCode: 'PEA_OFICIAL',
+                        entityUuid: uuid
+                    });
                 const dataJson = (instanceRes as any)?.dataSnapshotJson || instanceRes?.data_snapshot_json || '{}';
                 metadata = typeof dataJson === 'string' ? JSON.parse(dataJson) : (dataJson || {});
             } catch {}
@@ -327,7 +333,13 @@ export const useRevisionTecnicaData = ({
         if (!projectUuid) return;
         setLoading(true);
         try {
-            const pea = await getPeaByUuid(projectUuid);
+            const [pea, instanceRes] = await Promise.all([
+                getPeaByUuid(projectUuid),
+                documentInstanceService.resolve({
+                    templateCode: 'PEA_OFICIAL',
+                    entityUuid: projectUuid
+                }).catch(() => null)
+            ]);
             setRawPea(pea);
 
             const projectDetail: ProjectDetail = {
@@ -356,9 +368,9 @@ export const useRevisionTecnicaData = ({
             };
 
             setProject(projectDetail);
-            loadPdf(projectUuid);
-            await calculateMetrics(projectUuid, pea);
-            await loadTemplateBlocks(projectUuid);
+            loadPdf(projectUuid, instanceRes);
+            await calculateMetrics(projectUuid, pea, instanceRes);
+            await loadTemplateBlocks(projectUuid, instanceRes);
         } catch (err) {
             console.error('[DOSIER] Error al cargar detalles de revisión del PEA:', err);
             addToastRef.current("Error", "No se pudo cargar el expediente curricular del PEA.", "error");
@@ -497,6 +509,91 @@ export const useRevisionTecnicaData = ({
         }
     };
 
+    const updateDatosGenerales = useCallback(async (nuevosDatos: {
+        modalidad?: string;
+        unidadOrganizacion?: string;
+        nivel?: string;
+        creditos?: number;
+        totalHoras?: number;
+        horasCD?: number;
+        horasAPE?: number;
+        horasTA?: number;
+    }): Promise<boolean> => {
+        if (!projectUuid) return false;
+        try {
+            const instanceRes = await documentInstanceService.resolve({
+                templateCode: 'PEA_OFICIAL',
+                entityUuid: projectUuid
+            });
+            const instanceUuid = instanceRes?.uuid || (instanceRes as any)?.Uuid;
+            if (!instanceUuid) throw new Error('No se pudo resolver la instancia oficial del PEA');
+
+            const patchPayload: Record<string, any> = {};
+            if (nuevosDatos.modalidad !== undefined) {
+                patchPayload.Modalidad = nuevosDatos.modalidad;
+                patchPayload.modalidad = nuevosDatos.modalidad;
+            }
+            if (nuevosDatos.unidadOrganizacion !== undefined) {
+                patchPayload.UnidadOrganizacion = nuevosDatos.unidadOrganizacion;
+                patchPayload.unidad_organizacion = nuevosDatos.unidadOrganizacion;
+            }
+            if (nuevosDatos.nivel !== undefined) {
+                patchPayload.Nivel = nuevosDatos.nivel;
+                patchPayload.nivel = nuevosDatos.nivel;
+            }
+            if (nuevosDatos.creditos !== undefined) {
+                patchPayload.Creditos = nuevosDatos.creditos;
+                patchPayload.creditos = nuevosDatos.creditos;
+            }
+            if (nuevosDatos.totalHoras !== undefined) {
+                patchPayload.TotalHorasAsignatura = nuevosDatos.totalHoras;
+                patchPayload.total_horas_asignatura = nuevosDatos.totalHoras;
+            }
+            if (nuevosDatos.horasCD !== undefined) {
+                patchPayload.HorasContactoDocente = nuevosDatos.horasCD;
+                patchPayload.horas_contacto_docente = nuevosDatos.horasCD;
+            }
+            if (nuevosDatos.horasAPE !== undefined) {
+                patchPayload.HorasPracticoExperimental = nuevosDatos.horasAPE;
+                patchPayload.horas_practico_experimental = nuevosDatos.horasAPE;
+            }
+            if (nuevosDatos.horasTA !== undefined) {
+                patchPayload.HorasAutonomo = nuevosDatos.horasTA;
+                patchPayload.horas_autonomo = nuevosDatos.horasTA;
+            }
+
+            await documentInstanceService.updateMetadata(instanceUuid, patchPayload);
+
+            setDocSnapshot((prev: any) => ({
+                ...prev,
+                ...patchPayload
+            }));
+
+            setProject((prev: any) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    modalidad: nuevosDatos.modalidad ?? prev.modalidad,
+                    semestre_nivel: nuevosDatos.nivel ?? prev.semestre_nivel,
+                    creditos: nuevosDatos.creditos ?? prev.creditos,
+                    horas_totales: nuevosDatos.totalHoras ?? prev.horas_totales,
+                    horas_docencia: nuevosDatos.horasCD ?? prev.horas_docencia,
+                    horas_practica: nuevosDatos.horasAPE ?? prev.horas_practica,
+                    horas_autonomo: nuevosDatos.horasTA ?? prev.horas_autonomo
+                };
+            });
+
+            loadPdf(projectUuid);
+            addToast('Datos Generales Actualizados', 'Los cambios en los metadatos y distribución horaria fueron guardados.', 'success');
+            return true;
+        } catch (err: any) {
+            console.error('[DOSIER] Error al actualizar datos generales del PEA:', err);
+            const msg = err.response?.data?.message || err.message || 'No se pudieron guardar las modificaciones en los datos generales.';
+            addToast('Error al Guardar', msg, 'error');
+            return false;
+        }
+    }, [projectUuid, loadPdf, addToast]);
+
     return {
         project,
         rawPea,
@@ -512,6 +609,7 @@ export const useRevisionTecnicaData = ({
         teachersWithExceedingHours: [],
         handleAprobar,
         handleDevolver,
+        updateDatosGenerales,
         reloadProject: loadProjectData
     };
 };
