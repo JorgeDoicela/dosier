@@ -23,6 +23,10 @@ import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
 import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
+import {
+    recordRecentSubjectOpen,
+    sortSubjectsByRecentOpen
+} from '../../../utils/recentSubjectStorage';
 import { getAvanceDetalle } from './Components/DocenteActividadesPanel';
 import { 
     Search
@@ -158,9 +162,22 @@ export const CoordCarreraDashboard: React.FC = () => {
         return peas.filter(p => isMiMateria(p)).length;
     }, [peas, isMiMateria]);
 
+    const [recentsVersion, setRecentsVersion] = useState<number>(0);
+
+    // Listener para reordenamiento reactivo cuando se abre una asignatura en cualquier pestaña
+    useEffect(() => {
+        const handleRecents = () => setRecentsVersion(v => v + 1);
+        window.addEventListener('dosier-recents-updated', handleRecents);
+        window.addEventListener('dosier-project-preferences-changed', handleRecents);
+        return () => {
+            window.removeEventListener('dosier-recents-updated', handleRecents);
+            window.removeEventListener('dosier-project-preferences-changed', handleRecents);
+        };
+    }, []);
+
     // Filtrado en memoria
     const peasFiltrados = useMemo(() => {
-        return peas.filter(p => {
+        const filtrados = peas.filter(p => {
             const matchesTab = filterTab === 'todos'
                 ? true
                 : filterTab === 'pendientes'
@@ -174,10 +191,13 @@ export const CoordCarreraDashboard: React.FC = () => {
 
             return matchesTab && matchesSearch;
         });
-    }, [peas, filterTab, search, isMiMateria]);
+
+        return sortSubjectsByRecentOpen(filtrados);
+    }, [peas, filterTab, search, isMiMateria, recentsVersion]);
 
     // Navegación directa al editor para revisión o redacción docente propia
     const handleAbrirRevision = (p: PeaBandejaItemDto) => {
+        recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
         const esPropia = isMiMateria(p);
         const prefix = esPropia ? '/documentacion/mis-proyectos/workspace' : '/documentacion/workspace';
         navigate(`${prefix}/pea-oficial/${p.uuid}?edit=pea-oficial`);
@@ -192,11 +212,10 @@ export const CoordCarreraDashboard: React.FC = () => {
                 seccionAfectada: seccion,
                 texto: obs
             });
-            await cambiarEstadoPea(observacionPea.id_pea, 'Observado', undefined, `Observación en ${seccion}: ${obs}`);
             addToast(
                 'Observación Registrada',
-                `El PEA de "${observacionPea.nombre_asignatura}" fue devuelto al docente para subsanación.`,
-                'warning'
+                `Se guardó la observación técnica para "${observacionPea.nombre_asignatura}".`,
+                'success'
             );
             setObservacionPea(null);
             await fetchPeas();

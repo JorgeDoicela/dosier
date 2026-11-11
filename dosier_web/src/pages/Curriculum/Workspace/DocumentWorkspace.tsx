@@ -18,6 +18,7 @@ import DocumentEditor from './Wizard/DocumentEditor';
 // Hooks de Orquestación
 import { useProjectCore } from './hooks/useProjectCore';
 import { useProjectPreferences } from './hooks/useProjectPreferences';
+import { recordRecentSubjectOpen } from '../../../utils/recentSubjectStorage';
 
 // Subcomponentes Desacoplados
 import WorkspaceHeader from './components/WorkspaceHeader';
@@ -56,6 +57,11 @@ export const DocumentWorkspace: React.FC = () => {
                 currentProject.titulo,
                 currentProject.codigo_institucional || (currentProject as any).codigo
             );
+            recordRecentSubjectOpen({
+                uuid: currentProject.uuid,
+                id_pea: (currentProject as any).id_pea || (currentProject as any).peaData?.id_pea,
+                id_asignacion: (currentProject as any).id_asignacion || (currentProject as any).peaData?.id_asignacion
+            });
         }
     }, [currentProject?.uuid, currentProject?.titulo, (currentProject as any)?.codigo_institucional, touchProject]);
 

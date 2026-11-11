@@ -30,7 +30,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("users")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search, 
         [FromQuery] string type = "DOCENTE", 
@@ -66,7 +66,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("roles")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> GetRoles()
     {
         var roles = await _adminService.GetAvailableRolesAsync();
@@ -74,7 +74,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("departments")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> GetDepartments()
     {
         var departments = await _adminService.GetDepartmentsAsync();
@@ -83,7 +83,7 @@ public class AdminController : ControllerBase
 
     [HttpGet("users/{userUuid}/metadata")]
     [HttpGet("metadata/{userUuid}")]
-    [Authorize(Roles = "DOSIER_ADMIN")]
+    [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
     public async Task<IActionResult> GetUserMetadata(string userUuid)
     {
         var metadata = await _adminService.GetUserMetadataAsync(userUuid);

@@ -14,6 +14,10 @@ import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
 import {
+    recordRecentSubjectOpen,
+    sortSubjectsByRecentOpen
+} from '../../../utils/recentSubjectStorage';
+import {
     Award,
     BookOpen,
     CheckCircle2,
@@ -122,9 +126,22 @@ export const VicerrectorDashboard: React.FC = () => {
         return Array.from(unique).sort();
     }, [peas]);
 
+    const [recentsVersion, setRecentsVersion] = useState<number>(0);
+
+    // Listener para reordenamiento reactivo cuando se abre una asignatura en cualquier pestaña
+    useEffect(() => {
+        const handleRecents = () => setRecentsVersion(v => v + 1);
+        window.addEventListener('dosier-recents-updated', handleRecents);
+        window.addEventListener('dosier-project-preferences-changed', handleRecents);
+        return () => {
+            window.removeEventListener('dosier-recents-updated', handleRecents);
+            window.removeEventListener('dosier-project-preferences-changed', handleRecents);
+        };
+    }, []);
+
     // Filtrado en vivo
     const peasFiltrados = useMemo(() => {
-        return peas.filter(p => {
+        const filtrados = peas.filter(p => {
             const matchesCarrera = filterCarrera === 'todas' || p.nombre_carrera === filterCarrera;
             const query = search.trim().toLowerCase();
             const matchesSearch = !query ||
@@ -141,7 +158,9 @@ export const VicerrectorDashboard: React.FC = () => {
 
             return matchesCarrera && matchesSearch && matchesEstado;
         });
-    }, [peas, filterCarrera, search, filterEstado]);
+
+        return sortSubjectsByRecentOpen(filtrados);
+    }, [peas, filterCarrera, search, filterEstado, recentsVersion]);
 
     const peasListosParaFirma = useMemo(() => {
         return peas.filter(p => p.estado === 'RevisadoAcad' || p.estado === 'RevisadoCoord');
@@ -351,10 +370,14 @@ export const VicerrectorDashboard: React.FC = () => {
                                 key={p.uuid}
                                 role="button"
                                 tabIndex={0}
-                                onClick={() => navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`)}
+                                onClick={() => {
+                                    recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
+                                    navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
+                                }}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
+                                        recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
                                         navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
                                     }
                                 }}
@@ -492,7 +515,10 @@ export const VicerrectorDashboard: React.FC = () => {
                                         <td className="py-2.5 px-4 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <button
-                                                    onClick={() => navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`)}
+                                                    onClick={() => {
+                                                        recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
+                                                        navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
+                                                    }}
                                                     className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1"
                                                 >
                                                     <Eye className="w-3.5 h-3.5" />

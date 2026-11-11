@@ -170,7 +170,7 @@ public class RbacService : IRbacService
                         NombreCompleto = "ELVA DAYANA TAPIA VELASQUEZ",
                         CargoCurricular = "COORD_ACADEMICO",
                         IdCarrera = null,
-                        EsActivo = true,
+                        EsActivo = false,
                         FechaDesignacion = new DateOnly(2024, 1, 1)
                     },
                     new dosier_domain.Curriculum.Entities.DocAutoridadCurricular

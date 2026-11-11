@@ -22,6 +22,10 @@ import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
+import {
+    recordRecentSubjectOpen,
+    sortSubjectsByRecentOpen
+} from '../../../utils/recentSubjectStorage';
 import { 
     Search, 
     RefreshCw, 
@@ -134,9 +138,22 @@ export const CoordAcadDashboard: React.FC = () => {
         return Boolean(matchesId || matchesNombre);
     }, [user]);
 
+    const [recentsVersion, setRecentsVersion] = useState<number>(0);
+
+    // Listener para reordenamiento reactivo cuando se abre una asignatura en cualquier pestaña
+    useEffect(() => {
+        const handleRecents = () => setRecentsVersion(v => v + 1);
+        window.addEventListener('dosier-recents-updated', handleRecents);
+        window.addEventListener('dosier-project-preferences-changed', handleRecents);
+        return () => {
+            window.removeEventListener('dosier-recents-updated', handleRecents);
+            window.removeEventListener('dosier-project-preferences-changed', handleRecents);
+        };
+    }, []);
+
     // Filtros en memoria
     const peasFiltrados = useMemo(() => {
-        return peas.filter(p => {
+        const filtrados = peas.filter(p => {
             const matchesEstado = selectedEstado === 'todos'
                 ? true
                 : selectedEstado === 'mis_materias'
@@ -149,7 +166,9 @@ export const CoordAcadDashboard: React.FC = () => {
                 p.nombre_carrera.toLowerCase().includes(search.toLowerCase());
             return matchesEstado && matchesSearch;
         });
-    }, [peas, selectedEstado, search, isMiMateria]);
+
+        return sortSubjectsByRecentOpen(filtrados);
+    }, [peas, selectedEstado, search, isMiMateria, recentsVersion]);
 
 
 
@@ -176,6 +195,7 @@ export const CoordAcadDashboard: React.FC = () => {
 
     // Navegación directa al editor
     const handleAbrirRevision = (uuid: string) => {
+        recordRecentSubjectOpen({ uuid });
         navigate(`/documentacion/workspace/pea-oficial/${uuid}?edit=pea-oficial`);
     };
 

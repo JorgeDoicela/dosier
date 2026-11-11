@@ -36,7 +36,8 @@ export const RevisionCurricularPage: React.FC = () => {
     const isAuditActive = isAuthority && [
         'enviado',
         'enrevision',
-        'corregido'
+        'corregido',
+        'observado'
     ].includes(normalizedStatus);
     const isReadonlyResult = !isAuditActive;
 
@@ -77,21 +78,34 @@ export const RevisionCurricularPage: React.FC = () => {
                 isVisible={layout.isHeaderVisible}
             />
 
-            {/* Banner de Estado: En Subsanación por el Docente */}
+            {/* Banner de Estado: En Subsanación por el Docente o Auditoría con Observaciones */}
             {isObservado && (
                 <div className="mt-14 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/50 px-6 py-2.5 flex items-center justify-between text-xs text-amber-800 dark:text-amber-200 z-10 shrink-0">
                     <div className="flex items-center gap-2">
                         <AlertCircle size={15} className="shrink-0 text-amber-600 dark:text-amber-400" />
                         <span>
-                            <strong>Documento Devuelto al Docente:</strong> Este PEA cuenta con observaciones activas y se encuentra actualmente en proceso de subsanación por el docente titular.
+                            <strong>Documento con Observaciones:</strong> {isAuthority 
+                                ? `Este PEA cuenta con ${pendingObservationsCount} observación(es) técnica(s) registrada(s). Puede continuar auditando el documento o emitir el dictamen formal.`
+                                : 'Este PEA cuenta con observaciones activas y se encuentra actualmente en proceso de subsanación por el docente titular.'}
                         </span>
                     </div>
-                    <button
-                        onClick={handleNavigateBack}
-                        className="font-medium underline hover:text-amber-950 dark:hover:text-amber-100 cursor-pointer"
-                    >
-                        Volver a la bandeja
-                    </button>
+                    {isAuthority ? (
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => layout.setIsFinalizeModalOpen(true)}
+                                className="font-semibold underline hover:text-amber-950 dark:hover:text-amber-100 cursor-pointer"
+                            >
+                                Gestionar Dictamen
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleNavigateBack}
+                            className="font-medium underline hover:text-amber-950 dark:hover:text-amber-100 cursor-pointer"
+                        >
+                            Volver a la bandeja
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -135,6 +149,7 @@ export const RevisionCurricularPage: React.FC = () => {
                                 onRemoveComment={commentsState.removeCommentLocal}
                                 onStartListening={commentsState.handleStartListening}
                                 onUpdateDatosGenerales={data.updateDatosGenerales}
+                                onUpdateSection={data.updateSectionSnapshot}
                             />
                         ) : (
                             <div className="h-full flex flex-col bg-white dark:bg-zinc-950 pt-14">
@@ -180,9 +195,14 @@ export const RevisionCurricularPage: React.FC = () => {
                 generalFeedback={layout.generalFeedback}
                 setGeneralFeedback={layout.setGeneralFeedback}
                 submitting={data.submitting}
-                onAprobar={(motivo, password, tipoFirma, certP12, passP12) =>
-                    data.handleAprobar(motivo, password, tipoFirma, certP12, passP12)
-                }
+                onAprobar={async (motivo, password, tipoFirma, certP12, passP12) => {
+                    const success = await data.handleAprobar(motivo, password, tipoFirma, certP12, passP12);
+                    if (success) {
+                        layout.setIsFinalizeModalOpen(false);
+                        handleNavigateBack();
+                    }
+                    return success;
+                }}
                 onDevolver={async (fechaLimite) => {
                     const success = await data.handleDevolver(layout.generalFeedback, fechaLimite);
                     if (success) {

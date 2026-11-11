@@ -13,6 +13,7 @@ import {
 import { PageHeader } from '../../components/Common/PageHeader';
 import { GeistSelect } from '../../components/Common/GeistSelect';
 import { useNotifications } from '../../api/NotificationsContext';
+import { useAuth } from '../../api/AuthContext';
 import {
     getMisMaterias,
     getPeriodoActivo,
@@ -60,6 +61,19 @@ const formatModalidad = (mod?: string, idModalidad?: number): string => {
 export const MisAsignaturasPage: React.FC = () => {
     const navigate = useNavigate();
     const { addToast } = useNotifications();
+    const { isVicerrector, activeRole, isAdmin } = useAuth();
+
+    const effectiveRole = activeRole || (
+        isAdmin ? 'DOSIER_ADMIN' :
+        isVicerrector ? 'DOSIER_VICERRECTOR' : ''
+    );
+    const isVicerrectorMode = effectiveRole === 'DOSIER_VICERRECTOR' || (isVicerrector && effectiveRole !== 'DOSIER_ADMIN');
+
+    useEffect(() => {
+        if (isVicerrectorMode) {
+            navigate('/documentacion', { replace: true });
+        }
+    }, [isVicerrectorMode, navigate]);
 
     const [vistaActiva, setVistaActiva] = useState<'mis_asignaturas' | 'otros_docentes'>('mis_asignaturas');
     const [materias, setMaterias] = useState<DocenteAsignaturaDto[]>([]);

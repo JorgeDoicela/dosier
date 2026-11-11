@@ -1,9 +1,24 @@
 import React, { useState } from 'react';
 import type { ProjectDetail, SectionComment } from '../types/revisionTecnicaTypes';
-import { Info, SquarePen, Check, Loader2, Scale, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { Info, SquarePen, Check, Loader2, Scale, AlertCircle, CheckCircle2, X, Plus, Trash2 } from 'lucide-react';
 import { isPeaBorrador, getPeaStatusDescriptor } from '../../utils/peaStatusWorkflow';
 import { SectionObservationColumn } from './SectionObservationColumn';
 import { useAuth } from '../../../../api/AuthContext';
+import { GeistSelect, type GeistSelectOption } from '../../../../components/Common/GeistSelect';
+
+const MODALIDAD_OPTIONS: GeistSelectOption[] = [
+    { value: 'Presencial', label: 'Presencial' },
+    { value: 'Semipresencial', label: 'Semipresencial' },
+    { value: 'En Línea', label: 'En Línea' },
+    { value: 'Híbrida', label: 'Híbrida' },
+    { value: 'Dual', label: 'Dual' }
+];
+
+const UNIDAD_ORG_OPTIONS: GeistSelectOption[] = [
+    { value: 'Unidad Básica', label: 'Unidad Básica' },
+    { value: 'Unidad Profesional', label: 'Unidad Profesional' },
+    { value: 'Unidad de Integración Curricular', label: 'Unidad de Integración Curricular' }
+];
 
 export interface DatosGeneralesEditPayload {
     modalidad: string;
@@ -59,6 +74,7 @@ interface InteractiveSectionsProps {
     onStartListening?: (onTranscript: (text: string) => void) => void;
     onScroll?: React.UIEventHandler<HTMLDivElement>;
     onUpdateDatosGenerales?: (payload: DatosGeneralesEditPayload) => Promise<boolean>;
+    onUpdateSection?: (patchPayload: Record<string, any>, title?: string, message?: string) => Promise<boolean>;
 }
 
 export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
@@ -80,7 +96,8 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     onRemoveComment,
     onStartListening,
     onScroll,
-    onUpdateDatosGenerales
+    onUpdateDatosGenerales,
+    onUpdateSection
 }) => {
     const { isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const isAuthority = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
@@ -101,6 +118,24 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     const [editHorasTA, setEditHorasTA] = useState<number>(48);
     const [savingGeneral, setSavingGeneral] = useState<boolean>(false);
     const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState<boolean>(false);
+    const [pendingEditSection, setPendingEditSection] = useState<{ key: string; title: string } | null>(null);
+
+    // Estado local para edición directa de las demás secciones del PEA
+    const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+    const [savingSection, setSavingSection] = useState<string | null>(null);
+
+    // Buffers de edición por sección
+    const [editObjetivo, setEditObjetivo] = useState<string>('');
+    const [editPrerrequisitos, setEditPrerrequisitos] = useState<any[]>([]);
+    const [editRdaCarrera, setEditRdaCarrera] = useState<string>('');
+    const [editResultadosAprendizaje, setEditResultadosAprendizaje] = useState<any[]>([]);
+    const [editUnidades, setEditUnidades] = useState<any[]>([]);
+    const [editMetodologia, setEditMetodologia] = useState<string>('');
+    const [editRecursosDidacticos, setEditRecursosDidacticos] = useState<string>('');
+    const [editActividadesPracticas, setEditActividadesPracticas] = useState<any[]>([]);
+    const [editEvaluaciones, setEditEvaluaciones] = useState<any[]>([]);
+    const [editBioBasica, setEditBioBasica] = useState<string>('');
+    const [editBioConsulta, setEditBioConsulta] = useState<string>('');
 
     const handleStartEditGeneral = () => {
         let mod = snap.Modalidad || project.modalidad || 'Presencial';
@@ -239,32 +274,175 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
         }
     };
 
-    const handleAutoBalance = () => {
-        const total = (editHorasCD + editHorasAPE + editHorasTA) > 0 
-            ? (editHorasCD + editHorasAPE + editHorasTA) 
-            : (editCreditos * 48);
-        const horasSemanales = Number(snap.HorasSemanales ?? snap.horas_semanales ?? project.peaData?.horas_semanales ?? 0);
-        let cd = 0;
-        let ape = 0;
-        let ta = 0;
-        if (horasSemanales > 0 && (horasSemanales * 16) < total) {
-            cd = horasSemanales * 16;
-            const restante = total - cd;
-            ape = Math.floor(restante / 2);
-            ta = total - cd - ape;
-        } else {
-            const third = Math.floor(total / 3);
-            cd = third;
-            ape = third;
-            ta = total - cd - ape;
+    const handleStartEditSection = (key: string) => {
+        if (key === 'ObjetivoAsignatura') {
+            setEditObjetivo(stripHtml(snap.ObjetivoAsignatura || snap.objetivo_asignatura || snap.objetivoAsignatura || project.descripcion || ''));
+        } else if (key === 'Prerrequisitos') {
+            const arr = getSafeArray(snap.Prerrequisitos).map((p: any) => ({
+                Asignatura: p.Asignatura || p.asignatura || p.NombreAsignatura || p.nombre_asignatura || p.nombre || p['0'] || '',
+                Observacion: p.Observacion || p.observacion || p.Condicion || p.condicion || p['1'] || ''
+            }));
+            setEditPrerrequisitos(arr.length > 0 ? arr : [{ Asignatura: '', Observacion: '' }]);
+        } else if (key === 'AportePerfilEgreso') {
+            setEditRdaCarrera(stripHtml(snap.RdaCarrera || snap.rda_carrera || snap.rdacarrera || snap.RDA_Carrera || ''));
+        } else if (key === 'ResultadosAprendizaje') {
+            const arr = Array.isArray(snap.ResultadosAprendizaje) 
+                ? snap.ResultadosAprendizaje.map((r: any) => typeof r === 'string' ? r : (r.descripcion || r.Descripcion || r.texto || r.Texto || r.rda || ''))
+                : (typeof snap.ResultadosAprendizaje === 'string' && snap.ResultadosAprendizaje.trim() ? [stripHtml(snap.ResultadosAprendizaje)] : []);
+            setEditResultadosAprendizaje(arr.length > 0 ? arr : ['']);
+        } else if (key === 'Unidades') {
+            const arr = getSafeArray(snap.Unidades).map((u: any, idx: number) => ({
+                titulo: u.titulo || u.Titulo || u.nombre || u.NombreUnidad || u.nombre_unidad || u['0'] || `Unidad ${idx + 1}`,
+                horasCD: Number(u.horasCD || u.HorasCD || u.horasDocencia || u.horas_docencia || u['2'] || 0),
+                horasAPE: Number(u.horasAPE || u.HorasAPE || u.horasPractica || u.horas_practica || u['3'] || 0),
+                horasTA: Number(u.horasTA || u.HorasTA || u.horasAutonomo || u.horas_autonomo || u['4'] || 0),
+                contenidos: typeof u.contenidos === 'string' ? stripHtml(u.contenidos) : (Array.isArray(u.contenidos) ? u.contenidos.join('\n') : (u['1'] || ''))
+            }));
+            setEditUnidades(arr.length > 0 ? arr : [{ titulo: 'Unidad 1', horasCD: 0, horasAPE: 0, horasTA: 0, contenidos: '' }]);
+        } else if (key === 'MetodologiaEnsenanza') {
+            setEditMetodologia(stripHtml(snap.MetodologiaEnsenanza || ''));
+            setEditRecursosDidacticos(stripHtml(snap.RecursosDidacticos || ''));
+        } else if (key === 'ActividadesPracticas') {
+            const arr = getSafeArray(snap.ActividadesPracticas).map((p: any, idx: number) => ({
+                tema: p.tema || p.Tema || p.nombre || p['0'] || `Práctica ${idx + 1}`,
+                horas: Number(p.horas || p.Horas || p['1'] || 0),
+                escenario: p.escenario || p.Escenario || p['2'] || 'Laboratorio',
+                descripcion: p.descripcion || p.Descripcion || p['3'] || ''
+            }));
+            setEditActividadesPracticas(arr.length > 0 ? arr : [{ tema: '', horas: 0, escenario: 'Laboratorio', descripcion: '' }]);
+        } else if (key === 'Evaluaciones') {
+            const arr = getSafeArray(snap.Evaluaciones).map((ev: any) => ({
+                criterio: ev.criterio || ev.Criterio || ev.nombre || ev['0'] || '',
+                porcentaje: ev.porcentaje || ev.Porcentaje || ev.peso || ev['1'] || '',
+                descripcion: ev.descripcion || ev.Descripcion || ev['2'] || ''
+            }));
+            setEditEvaluaciones(arr.length > 0 ? arr : [{ criterio: '', porcentaje: '', descripcion: '' }]);
+        } else if (key === 'Bibliografia') {
+            setEditBioBasica(stripHtml(snap.BibliografiaBasica || ''));
+            setEditBioConsulta(stripHtml(snap.BibliografiaConsulta || ''));
         }
-        setEditHorasCD(cd);
-        setEditHorasAPE(ape);
-        setEditHorasTA(ta);
-        setEditTotalHoras(total);
-        if (total > 0 && total % 48 === 0) {
-            setEditCreditos(total / 48);
+        setEditingSectionId(key);
+    };
+
+    const handleSaveSection = async (key: string): Promise<boolean> => {
+        if (!onUpdateSection) return false;
+        setSavingSection(key);
+        try {
+            let ok = false;
+            if (key === 'ObjetivoAsignatura') {
+                ok = await onUpdateSection(
+                    { ObjetivoAsignatura: editObjetivo, objetivo_asignatura: editObjetivo },
+                    'Objetivo Actualizado',
+                    'El objetivo general de la asignatura fue guardado.'
+                );
+            } else if (key === 'Prerrequisitos') {
+                const cleaned = editPrerrequisitos.filter(p => p.Asignatura?.trim());
+                ok = await onUpdateSection(
+                    { Prerrequisitos: cleaned },
+                    'Prerrequisitos Actualizados',
+                    'Los prerrequisitos curriculares fueron guardados.'
+                );
+            } else if (key === 'AportePerfilEgreso') {
+                ok = await onUpdateSection(
+                    { RdaCarrera: editRdaCarrera, rda_carrera: editRdaCarrera },
+                    'Perfil de Egreso Actualizado',
+                    'Los aportes al perfil de egreso fueron guardados.'
+                );
+            } else if (key === 'ResultadosAprendizaje') {
+                const cleaned = editResultadosAprendizaje.filter(r => (typeof r === 'string' ? r.trim() : r));
+                ok = await onUpdateSection(
+                    { ResultadosAprendizaje: cleaned },
+                    'Resultados de Aprendizaje Actualizados',
+                    'Los resultados de aprendizaje de la asignatura fueron guardados.'
+                );
+            } else if (key === 'Unidades') {
+                const cleaned = editUnidades.map((u, i) => ({
+                    ...u,
+                    horasTotal: Number(u.horasCD || 0) + Number(u.horasAPE || 0) + Number(u.horasTA || 0),
+                    orden: i + 1
+                }));
+                ok = await onUpdateSection(
+                    { Unidades: cleaned },
+                    'Unidades Actualizadas',
+                    'Los contenidos y unidades temáticas fueron guardados.'
+                );
+            } else if (key === 'MetodologiaEnsenanza') {
+                ok = await onUpdateSection(
+                    { MetodologiaEnsenanza: editMetodologia, RecursosDidacticos: editRecursosDidacticos },
+                    'Metodología Actualizada',
+                    'La metodología y recursos didácticos fueron guardados.'
+                );
+            } else if (key === 'ActividadesPracticas') {
+                ok = await onUpdateSection(
+                    { ActividadesPracticas: editActividadesPracticas },
+                    'Actividades Prácticas Actualizadas',
+                    'Las actividades prácticas fueron guardadas.'
+                );
+            } else if (key === 'Evaluaciones') {
+                ok = await onUpdateSection(
+                    { Evaluaciones: editEvaluaciones },
+                    'Criterios de Evaluación Actualizados',
+                    'Los criterios de evaluación fueron guardados.'
+                );
+            } else if (key === 'Bibliografia') {
+                ok = await onUpdateSection(
+                    { BibliografiaBasica: editBioBasica, BibliografiaConsulta: editBioConsulta },
+                    'Bibliografía Actualizada',
+                    'La bibliografía fue guardada exitosamente.'
+                );
+            }
+            if (ok) {
+                setEditingSectionId(null);
+                return true;
+            }
+            return false;
+        } finally {
+            setSavingSection(null);
         }
+    };
+
+    const renderSectionAction = (key: string, title: string) => {
+        if (!isAuthority || readOnly || (!onUpdateSection && !onUpdateDatosGenerales)) return null;
+
+        if (editingSectionId === key) {
+            return (
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                        type="button"
+                        onClick={() => setEditingSectionId(null)}
+                        disabled={savingSection === key}
+                        className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    >
+                        <X size={12} />
+                        <span>Cancelar</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleSaveSection(key)}
+                        disabled={savingSection === key}
+                        className="px-3 py-1 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-blue-600 transition-colors inline-flex items-center gap-1 cursor-pointer shadow-xs disabled:opacity-60"
+                    >
+                        {savingSection === key ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                        <span>{savingSection === key ? 'Guardando...' : 'Guardar y cerrar'}</span>
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setPendingEditSection({ key, title });
+                }}
+                className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1.5 cursor-pointer py-1 px-1"
+                title={`Editar ${title}`}
+            >
+                <SquarePen size={13} />
+                <span>Editar</span>
+            </button>
+        );
     };
 
     const sumaComponentesGeneral = editHorasCD + editHorasAPE + editHorasTA;
@@ -540,7 +718,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                         ) : (
                                             <button
                                                 type="button"
-                                                onClick={handleStartEditGeneral}
+                                                onClick={() => setPendingEditSection({ key: 'General', title: 'datos generales' })}
                                                 className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1.5 cursor-pointer py-1 px-1"
                                                 title="Editar directamente datos generales, modalidad, unidad de organización y horas CACES"
                                             >
@@ -577,31 +755,29 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                         <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
                                             <dt className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-300">Modalidad</dt>
                                             <dd className="sm:col-span-2 mt-1 sm:mt-0">
-                                                <select
-                                                    value={editModalidad}
-                                                    onChange={(e) => setEditModalidad(e.target.value)}
-                                                    className="w-full sm:max-w-xs px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                                                >
-                                                    <option value="Presencial">Presencial</option>
-                                                    <option value="Semipresencial">Semipresencial</option>
-                                                    <option value="En Línea">En Línea</option>
-                                                    <option value="Híbrida">Híbrida</option>
-                                                    <option value="Dual">Dual</option>
-                                                </select>
+                                                <div className="w-full sm:max-w-xs">
+                                                    <GeistSelect
+                                                        value={editModalidad}
+                                                        onChange={(val) => setEditModalidad(String(val))}
+                                                        options={MODALIDAD_OPTIONS}
+                                                        size="sm"
+                                                        className="w-full"
+                                                    />
+                                                </div>
                                             </dd>
                                         </div>
                                         <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
                                             <dt className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-zinc-300">Unidad de Organización Curricular</dt>
                                             <dd className="sm:col-span-2 mt-1 sm:mt-0">
-                                                <select
-                                                    value={editUnidadOrg}
-                                                    onChange={(e) => setEditUnidadOrg(e.target.value)}
-                                                    className="w-full sm:max-w-xs px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                                                >
-                                                    <option value="Unidad Básica">Unidad Básica</option>
-                                                    <option value="Unidad Profesional">Unidad Profesional</option>
-                                                    <option value="Unidad de Integración Curricular">Unidad de Integración Curricular</option>
-                                                </select>
+                                                <div className="w-full sm:max-w-xs">
+                                                    <GeistSelect
+                                                        value={editUnidadOrg}
+                                                        onChange={(val) => setEditUnidadOrg(String(val))}
+                                                        options={UNIDAD_ORG_OPTIONS}
+                                                        size="sm"
+                                                        className="w-full"
+                                                    />
+                                                </div>
                                             </dd>
                                         </div>
                                         <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
@@ -688,32 +864,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                     </div>
                                                 </div>
 
-                                                <div className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 ${
-                                                    isCreditosEquivalente 
-                                                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                                                        : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-                                                }`}>
-                                                    <div className="flex items-center gap-1.5">
-                                                        {isCreditosEquivalente ? (
-                                                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-                                                        ) : (
-                                                            <AlertCircle size={14} className="text-amber-600 shrink-0" />
-                                                        )}
-                                                        <span>
-                                                            {isCreditosEquivalente 
-                                                                ? `Balance CACES válido: ${editHorasCD}h (CD) + ${editHorasAPE}h (APE) + ${editHorasTA}h (TA) = ${editTotalHoras}h (${editCreditos} créditos normativos · 48h/crédito)`
-                                                                : `Total calculado: ${editTotalHoras}h (${editHorasCD}h + ${editHorasAPE}h + ${editHorasTA}h). Equivale a ${(editTotalHoras / 48).toFixed(1)} créditos (Registrados: ${editCreditos} = ${horasNormativasCreditos}h).`}
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleAutoBalance}
-                                                        className="font-semibold text-[#0070f3] dark:text-blue-400 hover:underline shrink-0 cursor-pointer text-xs"
-                                                        title="Distribuir total de horas en tercios (1/3 exacto para cada componente)"
-                                                    >
-                                                        Distribuir en 1/3
-                                                    </button>
-                                                </div>
+
                                             </dd>
                                         </div>
                                         <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-6 sm:items-center">
@@ -825,14 +976,27 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '2. Objetivo General de la Asignatura',
                                 'Finalidad formativa, propósito metodológico y alcance del aprendizaje',
-                                'ObjetivoAsignatura'
+                                'ObjetivoAsignatura',
+                                renderSectionAction('ObjetivoAsignatura', 'objetivo general')
                             )}
-                            <div className="py-3 text-sm sm:text-base text-slate-800 dark:text-zinc-200 leading-relaxed">
-                                {renderHtml(
-                                    snap.ObjetivoAsignatura || snap.objetivo_asignatura || snap.objetivoAsignatura || project.descripcion,
-                                    'Sin objetivo formativo redactado por el docente.'
-                                )}
-                            </div>
+                            {editingSectionId === 'ObjetivoAsignatura' ? (
+                                <div className="py-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+                                    <textarea
+                                        value={editObjetivo}
+                                        onChange={(e) => setEditObjetivo(e.target.value)}
+                                        rows={4}
+                                        placeholder="Redacte el objetivo general formativo de la asignatura..."
+                                        className="w-full p-3 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="py-3 text-sm sm:text-base text-slate-800 dark:text-zinc-200 leading-relaxed">
+                                    {renderHtml(
+                                        snap.ObjetivoAsignatura || snap.objetivo_asignatura || snap.objetivoAsignatura || project.descripcion,
+                                        'Sin objetivo formativo redactado por el docente.'
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -844,42 +1008,93 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '3. Prerrequisitos y Co-requisitos',
                                 'Asignaturas previas requeridas y articulación curricular de la malla',
-                                'Prerrequisitos'
+                                'Prerrequisitos',
+                                renderSectionAction('Prerrequisitos', 'prerrequisitos')
                             )}
-                            <div className="overflow-x-auto py-1">
-                                {getSafeArray(snap.Prerrequisitos).length > 0 ? (
-                                    <table className="w-full text-left">
-                                        <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
-                                            <tr>
-                                                <th className="py-3 pr-4 font-semibold">#</th>
-                                                <th className="py-3 px-4 font-semibold">Asignatura Prerrequisito</th>
-                                                <th className="py-3 pl-4 font-semibold">Condición / Código</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
-                                            {getSafeArray(snap.Prerrequisitos).map((item: any, idx: number) => {
-                                                const asig = item.Asignatura || item.asignatura || item.NombreAsignatura || item.nombre_asignatura || item.nombreAsignatura || item.nombre || item['0'] || '-';
-                                                const obs = item.Observacion || item.observacion || item.Condicion || item.condicion || item['1'] || '-';
-                                                return (
-                                                    <tr key={idx}>
-                                                        <td className="py-3 pr-4 font-mono text-slate-400 font-medium">{idx + 1}</td>
-                                                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-zinc-100">
-                                                            {asig}
-                                                        </td>
-                                                        <td className="py-3 pl-4 text-slate-600 dark:text-zinc-300">
-                                                            {obs}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                ) : (
-                                    <p className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
-                                        Esta asignatura no registra prerrequisitos obligatorios en la malla.
-                                    </p>
-                                )}
-                            </div>
+                            {editingSectionId === 'Prerrequisitos' ? (
+                                <div className="py-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                                    <div className="space-y-2">
+                                        {editPrerrequisitos.map((item, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <span className="w-6 font-mono text-xs text-slate-400 font-semibold">{idx + 1}.</span>
+                                                <input
+                                                    type="text"
+                                                    value={item.Asignatura || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editPrerrequisitos];
+                                                        copy[idx] = { ...copy[idx], Asignatura: e.target.value };
+                                                        setEditPrerrequisitos(copy);
+                                                    }}
+                                                    placeholder="Nombre de la asignatura prerrequisito..."
+                                                    className="flex-1 px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={item.Observacion || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editPrerrequisitos];
+                                                        copy[idx] = { ...copy[idx], Observacion: e.target.value };
+                                                        setEditPrerrequisitos(copy);
+                                                    }}
+                                                    placeholder="Condición / Código..."
+                                                    className="w-48 px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditPrerrequisitos(editPrerrequisitos.filter((_, i) => i !== idx))}
+                                                    className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                                    title="Eliminar prerrequisito"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditPrerrequisitos([...editPrerrequisitos, { Asignatura: '', Observacion: '' }])}
+                                        className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer pt-1"
+                                    >
+                                        <Plus size={13} />
+                                        <span>Agregar Prerrequisito</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto py-1">
+                                    {getSafeArray(snap.Prerrequisitos).length > 0 ? (
+                                        <table className="w-full text-left">
+                                            <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
+                                                <tr>
+                                                    <th className="py-3 pr-4 font-semibold">#</th>
+                                                    <th className="py-3 px-4 font-semibold">Asignatura Prerrequisito</th>
+                                                    <th className="py-3 pl-4 font-semibold">Condición / Código</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
+                                                {getSafeArray(snap.Prerrequisitos).map((item: any, idx: number) => {
+                                                    const asig = item.Asignatura || item.asignatura || item.NombreAsignatura || item.nombre_asignatura || item.nombreAsignatura || item.nombre || item['0'] || '-';
+                                                    const obs = item.Observacion || item.observacion || item.Condicion || item.condicion || item['1'] || '-';
+                                                    return (
+                                                        <tr key={idx}>
+                                                            <td className="py-3 pr-4 font-mono text-slate-400 font-medium">{idx + 1}</td>
+                                                            <td className="py-3 px-4 font-bold text-slate-900 dark:text-zinc-100">
+                                                                {asig}
+                                                            </td>
+                                                            <td className="py-3 pl-4 text-slate-600 dark:text-zinc-300">
+                                                                {obs}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <p className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
+                                            Esta asignatura no registra prerrequisitos obligatorios en la malla.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -891,14 +1106,27 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '4. Resultados de Aprendizaje de Carrera (Perfil de Egreso)',
                                 'Competencias generales de titulación a las que tributa directamente la asignatura',
-                                'AportePerfilEgreso'
+                                'AportePerfilEgreso',
+                                renderSectionAction('AportePerfilEgreso', 'perfil de egreso')
                             )}
-                            <div className="py-3 text-sm sm:text-base text-slate-800 dark:text-zinc-200 leading-relaxed font-normal">
-                                {renderHtml(
-                                    snap.RdaCarrera || snap.rda_carrera || snap.rdacarrera || snap.RDA_Carrera,
-                                    'Sin aportes al perfil de egreso registrados.'
-                                )}
-                            </div>
+                            {editingSectionId === 'AportePerfilEgreso' ? (
+                                <div className="py-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+                                    <textarea
+                                        value={editRdaCarrera}
+                                        onChange={(e) => setEditRdaCarrera(e.target.value)}
+                                        rows={4}
+                                        placeholder="Redacte los aportes de la asignatura al perfil de egreso de la carrera..."
+                                        className="w-full p-3 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="py-3 text-sm sm:text-base text-slate-800 dark:text-zinc-200 leading-relaxed font-normal">
+                                    {renderHtml(
+                                        snap.RdaCarrera || snap.rda_carrera || snap.rdacarrera || snap.RDA_Carrera,
+                                        'Sin aportes al perfil de egreso registrados.'
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -910,34 +1138,76 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '5. Resultados de Aprendizaje de la Asignatura',
                                 'Logros formativos específicos verificables al concluir el ciclo académico',
-                                'ResultadosAprendizaje'
+                                'ResultadosAprendizaje',
+                                renderSectionAction('ResultadosAprendizaje', 'resultados de aprendizaje')
                             )}
-                            <div className="space-y-3 py-1">
-                                {Array.isArray(snap.ResultadosAprendizaje) && snap.ResultadosAprendizaje.length > 0 ? (
-                                    snap.ResultadosAprendizaje.map((rda: any, idx: number) => {
-                                        const texto = typeof rda === 'string'
-                                            ? rda
-                                            : (rda.descripcion || rda.Descripcion || rda.texto || rda.Texto || rda.rda || '-');
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className="flex items-start gap-3.5 py-2.5 border-b border-slate-100 dark:border-zinc-800/60 last:border-b-0"
-                                            >
-                                                <span className="w-6 h-6 rounded-md bg-blue-50 text-[#0070f3] dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-0.5">
+                            {editingSectionId === 'ResultadosAprendizaje' ? (
+                                <div className="py-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                                    <div className="space-y-2">
+                                        {editResultadosAprendizaje.map((rda, idx) => (
+                                            <div key={idx} className="flex items-start gap-2">
+                                                <span className="w-6 h-6 rounded-md bg-blue-50 text-[#0070f3] dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-1">
                                                     {idx + 1}
                                                 </span>
-                                                <p className="text-sm sm:text-base text-slate-800 dark:text-zinc-200 leading-relaxed pt-0.5">
-                                                    {texto}
-                                                </p>
+                                                <textarea
+                                                    value={typeof rda === 'string' ? rda : (rda?.descripcion || '')}
+                                                    onChange={(e) => {
+                                                        const copy = [...editResultadosAprendizaje];
+                                                        copy[idx] = e.target.value;
+                                                        setEditResultadosAprendizaje(copy);
+                                                    }}
+                                                    rows={2}
+                                                    placeholder={`Resultado de Aprendizaje ${idx + 1}...`}
+                                                    className="flex-1 p-2.5 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditResultadosAprendizaje(editResultadosAprendizaje.filter((_, i) => i !== idx))}
+                                                    className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors mt-1 cursor-pointer"
+                                                    title="Eliminar resultado"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
                                             </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
-                                        {renderHtml(snap.ResultadosAprendizaje, 'Sin resultados de aprendizaje detallados por el docente.')}
+                                        ))}
                                     </div>
-                                )}
-                            </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditResultadosAprendizaje([...editResultadosAprendizaje, ''])}
+                                        className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer pt-1"
+                                    >
+                                        <Plus size={13} />
+                                        <span>Agregar Resultado de Aprendizaje</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 py-1">
+                                    {Array.isArray(snap.ResultadosAprendizaje) && snap.ResultadosAprendizaje.length > 0 ? (
+                                        snap.ResultadosAprendizaje.map((rda: any, idx: number) => {
+                                            const texto = typeof rda === 'string'
+                                                ? rda
+                                                : (rda.descripcion || rda.Descripcion || rda.texto || rda.Texto || rda.rda || '-');
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-start gap-3.5 py-2.5 border-b border-slate-100 dark:border-zinc-800/60 last:border-b-0"
+                                                >
+                                                    <span className="w-6 h-6 rounded-md bg-blue-50 text-[#0070f3] dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-0.5">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <p className="text-sm sm:text-base text-slate-800 dark:text-zinc-200 leading-relaxed pt-0.5">
+                                                        {texto}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
+                                            {renderHtml(snap.ResultadosAprendizaje, 'Sin resultados de aprendizaje detallados por el docente.')}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -949,63 +1219,162 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '6. Contenidos de Enseñanza y Unidades Temáticas',
                                 'Desglose programático por unidades de estudio, horas pedagógicas y temas',
-                                'Unidades'
+                                'Unidades',
+                                renderSectionAction('Unidades', 'unidades temáticas')
                             )}
-                            <div className="divide-y divide-slate-200/80 dark:divide-zinc-800 space-y-6">
-                                {getSafeArray(snap.Unidades).length > 0 ? (
-                                    getSafeArray(snap.Unidades).map((u: any, idx: number) => {
-                                        const nombre = u.titulo || u.Titulo || u.nombre || u.NombreUnidad || u.nombre_unidad || u.nombreUnidad || u['0'] || `Unidad ${idx + 1}`;
-                                        const contenido = u.contenidos || u.Contenidos || u.temas || u.Temas || u['1'] || '-';
-                                        const hDoc = u.horasCD || u.HorasCD || u.horasDocencia || u.horas_docencia || u.horasDocente || u['2'] || 0;
-                                        const hPrac = u.horasAPE || u.HorasAPE || u.horasPractica || u.horas_practica || u.horasPracticoExp || u['3'] || 0;
-                                        const hAut = u.horasTA || u.HorasTA || u.horasAutonomo || u.horas_autonomo || u['4'] || 0;
-                                        const hTot = u.horasTotal || u.HorasTotal || u.TotalHorasUnidad || u.total_horas || u.totalHoras || u['5'] || (Number(hDoc) + Number(hPrac) + Number(hAut));
-
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className="pt-6 first:pt-0 space-y-3"
-                                            >
-                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2">
-                                                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-                                                        <span className="w-6 h-6 rounded-md bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold">
-                                                            {idx + 1}
-                                                        </span>
-                                                        <span>{nombre}</span>
-                                                    </h3>
-                                                    <div className="flex items-center gap-2.5 text-xs font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-900 px-3 py-1 rounded-lg">
-                                                        <span>Docencia: <strong className="text-slate-800 dark:text-zinc-200">{hDoc}h</strong></span>
-                                                        <span>•</span>
-                                                        <span>Práctica: <strong className="text-slate-800 dark:text-zinc-200">{hPrac}h</strong></span>
-                                                        <span>•</span>
-                                                        <span>Autónomo: <strong className="text-slate-800 dark:text-zinc-200">{hAut}h</strong></span>
-                                                        <span>•</span>
-                                                        <span className="font-bold text-[#0070f3] dark:text-blue-400">Total: {hTot}h</span>
-                                                    </div>
+                            {editingSectionId === 'Unidades' ? (
+                                <div className="py-3 space-y-4" onClick={(e) => e.stopPropagation()}>
+                                    {editUnidades.map((u, idx) => (
+                                        <div key={idx} className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 space-y-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2 flex-1">
+                                                    <span className="w-6 h-6 rounded-md bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold shrink-0">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        value={u.titulo || ''}
+                                                        onChange={(e) => {
+                                                            const copy = [...editUnidades];
+                                                            copy[idx] = { ...copy[idx], titulo: e.target.value };
+                                                            setEditUnidades(copy);
+                                                        }}
+                                                        placeholder="Título de la unidad temática..."
+                                                        className="flex-1 px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                    />
                                                 </div>
-
-                                                <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed pl-8">
-                                                    {typeof contenido === 'string' ? (
-                                                        <div dangerouslySetInnerHTML={{ __html: contenido }} />
-                                                    ) : Array.isArray(contenido) ? (
-                                                        <ul className="list-disc list-inside space-y-1.5">
-                                                            {contenido.map((t: any, tIdx: number) => (
-                                                                <li key={tIdx}>{typeof t === 'string' ? t : (t.nombre_tema || t.nombre || JSON.stringify(t))}</li>
-                                                            ))}
-                                                        </ul>
-                                                    ) : (
-                                                        <p>{String(contenido)}</p>
-                                                    )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditUnidades(editUnidades.filter((_, i) => i !== idx))}
+                                                    className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                                    title="Eliminar unidad"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2.5">
+                                                <div>
+                                                    <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Docencia (CD)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={u.horasCD || 0}
+                                                        onChange={(e) => {
+                                                            const copy = [...editUnidades];
+                                                            copy[idx] = { ...copy[idx], horasCD: Math.max(0, parseInt(e.target.value, 10) || 0) };
+                                                            setEditUnidades(copy);
+                                                        }}
+                                                        className="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Práctica (APE)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={u.horasAPE || 0}
+                                                        onChange={(e) => {
+                                                            const copy = [...editUnidades];
+                                                            copy[idx] = { ...copy[idx], horasAPE: Math.max(0, parseInt(e.target.value, 10) || 0) };
+                                                            setEditUnidades(copy);
+                                                        }}
+                                                        className="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Autónomo (TA)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={u.horasTA || 0}
+                                                        onChange={(e) => {
+                                                            const copy = [...editUnidades];
+                                                            copy[idx] = { ...copy[idx], horasTA: Math.max(0, parseInt(e.target.value, 10) || 0) };
+                                                            setEditUnidades(copy);
+                                                        }}
+                                                        className="w-full px-2.5 py-1 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono"
+                                                    />
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
-                                        <p>Sin unidades temáticas registradas por el docente.</p>
-                                    </div>
-                                )}
-                            </div>
+                                            <div>
+                                                <label className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 block mb-1">Contenidos y temas</label>
+                                                <textarea
+                                                    value={u.contenidos || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editUnidades];
+                                                        copy[idx] = { ...copy[idx], contenidos: e.target.value };
+                                                        setEditUnidades(copy);
+                                                    }}
+                                                    rows={3}
+                                                    placeholder="Detalle los temas, subtemas y contenidos pedagógicos..."
+                                                    className="w-full p-2.5 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditUnidades([...editUnidades, { titulo: `Unidad ${editUnidades.length + 1}`, horasCD: 0, horasAPE: 0, horasTA: 0, contenidos: '' }])}
+                                        className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer pt-1"
+                                    >
+                                        <Plus size={13} />
+                                        <span>Agregar Unidad Temática</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-slate-200/80 dark:divide-zinc-800 space-y-6">
+                                    {getSafeArray(snap.Unidades).length > 0 ? (
+                                        getSafeArray(snap.Unidades).map((u: any, idx: number) => {
+                                            const nombre = u.titulo || u.Titulo || u.nombre || u.NombreUnidad || u.nombre_unidad || u.nombreUnidad || u['0'] || `Unidad ${idx + 1}`;
+                                            const contenido = u.contenidos || u.Contenidos || u.temas || u.Temas || u['1'] || '-';
+                                            const hDoc = u.horasCD || u.HorasCD || u.horasDocencia || u.horas_docencia || u.horasDocente || u['2'] || 0;
+                                            const hPrac = u.horasAPE || u.HorasAPE || u.horasPractica || u.horas_practica || u.horasPracticoExp || u['3'] || 0;
+                                            const hAut = u.horasTA || u.HorasTA || u.horasAutonomo || u.horas_autonomo || u['4'] || 0;
+                                            const hTot = u.horasTotal || u.HorasTotal || u.TotalHorasUnidad || u.total_horas || u.totalHoras || u['5'] || (Number(hDoc) + Number(hPrac) + Number(hAut));
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="pt-6 first:pt-0 space-y-3"
+                                                >
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2">
+                                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+                                                            <span className="w-6 h-6 rounded-md bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold">
+                                                                {idx + 1}
+                                                            </span>
+                                                            <span>{nombre}</span>
+                                                        </h3>
+                                                        <div className="flex items-center gap-2.5 text-xs font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-900 px-3 py-1 rounded-lg">
+                                                            <span>Docencia: <strong className="text-slate-800 dark:text-zinc-200">{hDoc}h</strong></span>
+                                                            <span>•</span>
+                                                            <span>Práctica: <strong className="text-slate-800 dark:text-zinc-200">{hPrac}h</strong></span>
+                                                            <span>•</span>
+                                                            <span>Autónomo: <strong className="text-slate-800 dark:text-zinc-200">{hAut}h</strong></span>
+                                                            <span>•</span>
+                                                            <span className="font-bold text-[#0070f3] dark:text-blue-400">Total: {hTot}h</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed pl-8">
+                                                        {typeof contenido === 'string' ? (
+                                                            <div dangerouslySetInnerHTML={{ __html: contenido }} />
+                                                        ) : Array.isArray(contenido) ? (
+                                                            <ul className="list-disc list-inside space-y-1.5">
+                                                                {contenido.map((t: any, tIdx: number) => (
+                                                                    <li key={tIdx}>{typeof t === 'string' ? t : (t.nombre_tema || t.nombre || JSON.stringify(t))}</li>
+                                                                ))}
+                                                            </ul>
+                                                        ) : (
+                                                            <p>{String(contenido)}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
+                                            <p>Sin unidades temáticas registradas por el docente.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -1017,26 +1386,52 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '7. Metodología de Enseñanza y Recursos Didácticos',
                                 'Estrategias pedagógicas activas, entornos virtuales y materiales de aprendizaje',
-                                'MetodologiaEnsenanza'
+                                'MetodologiaEnsenanza',
+                                renderSectionAction('MetodologiaEnsenanza', 'metodología')
                             )}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-2">
-                                <div className="space-y-2.5">
-                                    <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
-                                        Estrategias Metodológicas
-                                    </h4>
-                                    <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
-                                        {renderHtml(snap.MetodologiaEnsenanza, 'Sin metodología detallada.')}
+                            {editingSectionId === 'MetodologiaEnsenanza' ? (
+                                <div className="py-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Estrategias Metodológicas</label>
+                                        <textarea
+                                            value={editMetodologia}
+                                            onChange={(e) => setEditMetodologia(e.target.value)}
+                                            rows={4}
+                                            placeholder="Detalle los métodos y estrategias formativas..."
+                                            className="w-full p-3 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Recursos Didácticos y Plataformas</label>
+                                        <textarea
+                                            value={editRecursosDidacticos}
+                                            onChange={(e) => setEditRecursosDidacticos(e.target.value)}
+                                            rows={3}
+                                            placeholder="Detalle los recursos tecnológicos, software y escenarios..."
+                                            className="w-full p-3 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                        />
                                     </div>
                                 </div>
-                                <div className="space-y-2.5">
-                                    <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
-                                        Recursos Didácticos y Plataformas
-                                    </h4>
-                                    <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
-                                        {renderHtml(snap.RecursosDidacticos, 'Sin recursos didácticos registrados.')}
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-2">
+                                    <div className="space-y-2.5">
+                                        <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
+                                            Estrategias Metodológicas
+                                        </h4>
+                                        <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                            {renderHtml(snap.MetodologiaEnsenanza, 'Sin metodología detallada.')}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
+                                            Recursos Didácticos y Plataformas
+                                        </h4>
+                                        <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                            {renderHtml(snap.RecursosDidacticos, 'Sin recursos didácticos registrados.')}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </section>
                     )}
 
@@ -1048,49 +1443,124 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '8. Actividades Prácticas y Experimentales (APE)',
                                 'Talleres, caracterización de prácticas de laboratorio y trabajo de campo',
-                                'ActividadesPracticas'
+                                'ActividadesPracticas',
+                                renderSectionAction('ActividadesPracticas', 'actividades prácticas')
                             )}
-                            <div className="overflow-x-auto py-1">
-                                {getSafeArray(snap.ActividadesPracticas).length > 0 ? (
-                                    <table className="w-full text-left">
-                                        <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
-                                            <tr>
-                                                <th className="py-3 pr-4 font-semibold">#</th>
-                                                <th className="py-3 px-4 font-semibold">Unidad</th>
-                                                <th className="py-3 px-4 font-semibold">Nombre de la Práctica / Caracterización</th>
-                                                <th className="py-3 pl-4 text-right font-semibold">Duración</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
-                                            {getSafeArray(snap.ActividadesPracticas).map((p: any, idx: number) => {
-                                                const uVal = p.unidad || p.Unidad || p.numeroUnidad || p['0'] || '-';
-                                                const nom = p.nombre || p.Nombre || p.nombrePractica || p.NombrePractica || p.nombre_practica || p.descripcion || p['1'] || '-';
-                                                const car = p.caracterizacion || p.Caracterizacion || p.escenario || p.producto || '';
-                                                const hrs = p.horas ?? p.Horas ?? p.duracionHoras ?? p.DuracionHoras ?? p.duracion_horas ?? p['2'];
-                                                return (
-                                                    <tr key={idx}>
-                                                        <td className="py-3 pr-4 font-mono text-slate-400 font-medium">{idx + 1}</td>
-                                                        <td className="py-3 px-4 font-bold text-slate-800 dark:text-zinc-200 whitespace-nowrap">
-                                                            {uVal}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-slate-700 dark:text-zinc-300">
-                                                            <div className="font-bold text-slate-900 dark:text-zinc-100">{nom}</div>
-                                                            {car && <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{car}</div>}
-                                                        </td>
-                                                        <td className="py-3 pl-4 text-right font-mono font-bold text-[#0070f3] dark:text-blue-400">
-                                                            {hrs !== undefined && hrs !== null && hrs !== '' ? `${hrs}h` : '-'}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                ) : (
-                                    <p className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
-                                        No se registran actividades prácticas en este período.
-                                    </p>
-                                )}
-                            </div>
+                            {editingSectionId === 'ActividadesPracticas' ? (
+                                <div className="py-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                                    <div className="space-y-3">
+                                        {editActividadesPracticas.map((p, idx) => (
+                                            <div key={idx} className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40 space-y-2">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="w-6 font-mono text-xs text-slate-400 font-semibold">{idx + 1}.</span>
+                                                    <input
+                                                        type="text"
+                                                        value={p.tema || ''}
+                                                        onChange={(e) => {
+                                                            const copy = [...editActividadesPracticas];
+                                                            copy[idx] = { ...copy[idx], tema: e.target.value };
+                                                            setEditActividadesPracticas(copy);
+                                                        }}
+                                                        placeholder="Tema o título de la práctica..."
+                                                        className="flex-1 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        value={p.horas || 0}
+                                                        onChange={(e) => {
+                                                            const copy = [...editActividadesPracticas];
+                                                            copy[idx] = { ...copy[idx], horas: Math.max(0, parseInt(e.target.value, 10) || 0) };
+                                                            setEditActividadesPracticas(copy);
+                                                        }}
+                                                        placeholder="Horas"
+                                                        className="w-20 px-2 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono text-center"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={p.escenario || ''}
+                                                        onChange={(e) => {
+                                                            const copy = [...editActividadesPracticas];
+                                                            copy[idx] = { ...copy[idx], escenario: e.target.value };
+                                                            setEditActividadesPracticas(copy);
+                                                        }}
+                                                        placeholder="Escenario"
+                                                        className="w-36 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditActividadesPracticas(editActividadesPracticas.filter((_, i) => i !== idx))}
+                                                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                                        title="Eliminar práctica"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                                <textarea
+                                                    value={p.descripcion || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editActividadesPracticas];
+                                                        copy[idx] = { ...copy[idx], descripcion: e.target.value };
+                                                        setEditActividadesPracticas(copy);
+                                                    }}
+                                                    rows={2}
+                                                    placeholder="Descripción o instrucciones de la actividad práctica..."
+                                                    className="w-full p-2.5 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditActividadesPracticas([...editActividadesPracticas, { tema: '', horas: 0, escenario: 'Laboratorio', descripcion: '' }])}
+                                        className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer pt-1"
+                                    >
+                                        <Plus size={13} />
+                                        <span>Agregar Actividad Práctica</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto py-1">
+                                    {getSafeArray(snap.ActividadesPracticas).length > 0 ? (
+                                        <table className="w-full text-left">
+                                            <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
+                                                <tr>
+                                                    <th className="py-3 pr-4 font-semibold">#</th>
+                                                    <th className="py-3 px-4 font-semibold">Unidad</th>
+                                                    <th className="py-3 px-4 font-semibold">Nombre de la Práctica / Caracterización</th>
+                                                    <th className="py-3 pl-4 text-right font-semibold">Duración</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
+                                                {getSafeArray(snap.ActividadesPracticas).map((p: any, idx: number) => {
+                                                    const uVal = p.unidad || p.Unidad || p.numeroUnidad || p['0'] || '-';
+                                                    const nom = p.nombre || p.Nombre || p.nombrePractica || p.NombrePractica || p.nombre_practica || p.descripcion || p['1'] || '-';
+                                                    const car = p.caracterizacion || p.Caracterizacion || p.escenario || p.producto || '';
+                                                    const hrs = p.horas ?? p.Horas ?? p.duracionHoras ?? p.DuracionHoras ?? p.duracion_horas ?? p['2'];
+                                                    return (
+                                                        <tr key={idx}>
+                                                            <td className="py-3 pr-4 font-mono text-slate-400 font-medium">{idx + 1}</td>
+                                                            <td className="py-3 px-4 font-bold text-slate-800 dark:text-zinc-200 whitespace-nowrap">
+                                                                {uVal}
+                                                            </td>
+                                                            <td className="py-3 px-4 text-slate-700 dark:text-zinc-300">
+                                                                <div className="font-bold text-slate-900 dark:text-zinc-100">{nom}</div>
+                                                                {car && <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{car}</div>}
+                                                            </td>
+                                                            <td className="py-3 pl-4 text-right font-mono font-bold text-[#0070f3] dark:text-blue-400">
+                                                                {hrs !== undefined && hrs !== null && hrs !== '' ? `${hrs}h` : '-'}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <p className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
+                                            No se registran actividades prácticas en este período.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -1102,45 +1572,106 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '9. Evaluación del Aprendizaje',
                                 'Matriz oficial de ponderaciones y criterios de calificación del ISTPET',
-                                'Evaluaciones'
+                                'Evaluaciones',
+                                renderSectionAction('Evaluaciones', 'criterios de evaluación')
                             )}
-                            <div className="overflow-x-auto py-1">
-                                {getSafeArray(snap.Evaluaciones).length > 0 ? (
-                                    <table className="w-full text-left">
-                                        <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
-                                            <tr>
-                                                <th className="py-3 pr-4 font-semibold">Evaluación</th>
-                                                <th className="py-3 px-4 font-semibold">Tipo de Actividad / Criterio</th>
-                                                <th className="py-3 pl-4 text-right font-semibold">Puntaje</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
-                                            {getSafeArray(snap.Evaluaciones).map((ev: any, idx: number) => {
-                                                const nota = ev.nota || ev.Nota || ev['0'] || ev.denominacion || ev.Denominacion || '-';
-                                                const tipo = ev.tipo || ev.Tipo || ev['1'] || ev.tipoEvaluacion || ev.TipoEvaluacion || '-';
-                                                const calif = ev.calificacion ?? ev.Calificacion ?? ev['2'] ?? ev.calificacionMaxima ?? ev.CalificacionMaxima;
-                                                return (
-                                                    <tr key={idx}>
-                                                        <td className="py-3 pr-4 font-bold text-slate-900 dark:text-zinc-100">
-                                                            {nota}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-slate-700 dark:text-zinc-300">
-                                                            {tipo}
-                                                        </td>
-                                                        <td className="py-3 pl-4 text-right font-mono font-bold text-base text-[#0070f3] dark:text-blue-400">
-                                                            {calif !== undefined && calif !== null && calif !== '' ? calif : '-'}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                ) : (
-                                    <p className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
-                                        Sin esquema de evaluación registrado.
-                                    </p>
-                                )}
-                            </div>
+                            {editingSectionId === 'Evaluaciones' ? (
+                                <div className="py-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                                    <div className="space-y-2">
+                                        {editEvaluaciones.map((ev, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={ev.criterio || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editEvaluaciones];
+                                                        copy[idx] = { ...copy[idx], criterio: e.target.value };
+                                                        setEditEvaluaciones(copy);
+                                                    }}
+                                                    placeholder="Criterio (ej. Evaluación Parcial)..."
+                                                    className="w-48 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={ev.porcentaje || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editEvaluaciones];
+                                                        copy[idx] = { ...copy[idx], porcentaje: e.target.value };
+                                                        setEditEvaluaciones(copy);
+                                                    }}
+                                                    placeholder="Puntaje / Ponderación..."
+                                                    className="w-28 px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 font-mono text-center"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={ev.descripcion || ''}
+                                                    onChange={(e) => {
+                                                        const copy = [...editEvaluaciones];
+                                                        copy[idx] = { ...copy[idx], descripcion: e.target.value };
+                                                        setEditEvaluaciones(copy);
+                                                    }}
+                                                    placeholder="Tipo de Actividad / Criterio..."
+                                                    className="flex-1 px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditEvaluaciones(editEvaluaciones.filter((_, i) => i !== idx))}
+                                                    className="p-1.5 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                                    title="Eliminar criterio"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditEvaluaciones([...editEvaluaciones, { criterio: '', porcentaje: '', descripcion: '' }])}
+                                        className="text-xs font-semibold text-[#0070f3] dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer pt-1"
+                                    >
+                                        <Plus size={13} />
+                                        <span>Agregar Criterio de Evaluación</span>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto py-1">
+                                    {getSafeArray(snap.Evaluaciones).length > 0 ? (
+                                        <table className="w-full text-left">
+                                            <thead className="border-b border-slate-200 dark:border-zinc-800 text-xs font-mono uppercase text-slate-500 dark:text-zinc-400 font-semibold tracking-wider">
+                                                <tr>
+                                                    <th className="py-3 pr-4 font-semibold">Evaluación</th>
+                                                    <th className="py-3 px-4 font-semibold">Tipo de Actividad / Criterio</th>
+                                                    <th className="py-3 pl-4 text-right font-semibold">Puntaje</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
+                                                {getSafeArray(snap.Evaluaciones).map((ev: any, idx: number) => {
+                                                    const nota = ev.nota || ev.Nota || ev['0'] || ev.denominacion || ev.Denominacion || '-';
+                                                    const tipo = ev.tipo || ev.Tipo || ev['1'] || ev.tipoEvaluacion || ev.TipoEvaluacion || '-';
+                                                    const calif = ev.calificacion ?? ev.Calificacion ?? ev['2'] ?? ev.calificacionMaxima ?? ev.CalificacionMaxima;
+                                                    return (
+                                                        <tr key={idx}>
+                                                            <td className="py-3 pr-4 font-bold text-slate-900 dark:text-zinc-100">
+                                                                {nota}
+                                                            </td>
+                                                            <td className="py-3 px-4 text-slate-700 dark:text-zinc-300">
+                                                                {tipo}
+                                                            </td>
+                                                            <td className="py-3 pl-4 text-right font-mono font-bold text-base text-[#0070f3] dark:text-blue-400">
+                                                                {calif !== undefined && calif !== null && calif !== '' ? calif : '-'}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <p className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
+                                            Sin esquema de evaluación registrado.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -1152,50 +1683,76 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                             {renderSectionHeader(
                                 '10. Bibliografía Institucional (Normas APA)',
                                 'Obras básicas de biblioteca y referencias complementarias recomendadas',
-                                'Bibliografia'
+                                'Bibliografia',
+                                renderSectionAction('Bibliografia', 'bibliografía')
                             )}
-                            <div className="space-y-6 py-2">
-                                <div className="space-y-2.5">
-                                    <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
-                                        Bibliografía Básica
-                                    </h4>
-                                    {snap.BibliografiaBasica ? (
-                                        <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
-                                            {renderHtml(snap.BibliografiaBasica, 'Sin bibliografía básica registrada.')}
-                                        </div>
-                                    ) : Array.isArray(snap.Bibliografias) && snap.Bibliografias.some((b: any) => (b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic')) ? (
-                                        <ul className="list-disc list-inside space-y-2 text-sm sm:text-base text-slate-700 dark:text-zinc-300">
-                                            {snap.Bibliografias
-                                                .filter((b: any) => (b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic'))
-                                                .map((b: any, bIdx: number) => (
-                                                    <li key={bIdx}>{b.citaCompletaApa || b.cita_completa_apa || b.CitaCompletaApa || `${b.autor || ''} - ${b.tituloLibro || b.titulo_libro || ''}`}</li>
-                                                ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-sm text-slate-400 dark:text-zinc-500 italic">Sin bibliografía básica registrada.</p>
-                                    )}
+                            {editingSectionId === 'Bibliografia' ? (
+                                <div className="py-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Bibliografía Básica</label>
+                                        <textarea
+                                            value={editBioBasica}
+                                            onChange={(e) => setEditBioBasica(e.target.value)}
+                                            rows={3}
+                                            placeholder="Detalle las referencias bibliográficas básicas..."
+                                            className="w-full p-3 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Bibliografía Complementaria de Consulta</label>
+                                        <textarea
+                                            value={editBioConsulta}
+                                            onChange={(e) => setEditBioConsulta(e.target.value)}
+                                            rows={3}
+                                            placeholder="Detalle las referencias de consulta o complementarias..."
+                                            className="w-full p-3 text-xs sm:text-sm font-sans rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#0070f3] leading-relaxed"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-2.5">
-                                    <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
-                                        Bibliografía Complementaria de Consulta
-                                    </h4>
-                                    {snap.BibliografiaConsulta ? (
-                                        <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
-                                            {renderHtml(snap.BibliografiaConsulta, 'Sin bibliografía complementaria registrada.')}
-                                        </div>
-                                    ) : Array.isArray(snap.Bibliografias) && snap.Bibliografias.some((b: any) => !(b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic')) ? (
-                                        <ul className="list-disc list-inside space-y-2 text-sm sm:text-base text-slate-700 dark:text-zinc-300">
-                                            {snap.Bibliografias
-                                                .filter((b: any) => !(b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic'))
-                                                .map((b: any, bIdx: number) => (
-                                                    <li key={bIdx}>{b.citaCompletaApa || b.cita_completa_apa || b.CitaCompletaApa || `${b.autor || ''} - ${b.tituloLibro || b.titulo_libro || ''}`}</li>
-                                                ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-sm text-slate-400 dark:text-zinc-500 italic">Sin bibliografía complementaria registrada.</p>
-                                    )}
+                            ) : (
+                                <div className="space-y-6 py-2">
+                                    <div className="space-y-2.5">
+                                        <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
+                                            Bibliografía Básica
+                                        </h4>
+                                        {snap.BibliografiaBasica ? (
+                                            <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                                {renderHtml(snap.BibliografiaBasica, 'Sin bibliografía básica registrada.')}
+                                            </div>
+                                        ) : Array.isArray(snap.Bibliografias) && snap.Bibliografias.some((b: any) => (b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic')) ? (
+                                            <ul className="list-disc list-inside space-y-2 text-sm sm:text-base text-slate-700 dark:text-zinc-300">
+                                                {snap.Bibliografias
+                                                    .filter((b: any) => (b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic'))
+                                                    .map((b: any, bIdx: number) => (
+                                                        <li key={bIdx}>{b.citaCompletaApa || b.cita_completa_apa || b.CitaCompletaApa || `${b.autor || ''} - ${b.tituloLibro || b.titulo_libro || ''}`}</li>
+                                                    ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-sm text-slate-400 dark:text-zinc-500 italic">Sin bibliografía básica registrada.</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        <h4 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-slate-600 dark:text-zinc-400 font-bold border-b border-slate-200 dark:border-zinc-800 pb-2">
+                                            Bibliografía Complementaria de Consulta
+                                        </h4>
+                                        {snap.BibliografiaConsulta ? (
+                                            <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                                {renderHtml(snap.BibliografiaConsulta, 'Sin bibliografía complementaria registrada.')}
+                                            </div>
+                                        ) : Array.isArray(snap.Bibliografias) && snap.Bibliografias.some((b: any) => !(b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic')) ? (
+                                            <ul className="list-disc list-inside space-y-2 text-sm sm:text-base text-slate-700 dark:text-zinc-300">
+                                                {snap.Bibliografias
+                                                    .filter((b: any) => !(b.tipoBibliografia || b.tipo_bibliografia || b.TipoBibliografia || 'Basica').toLowerCase().includes('basic'))
+                                                    .map((b: any, bIdx: number) => (
+                                                        <li key={bIdx}>{b.citaCompletaApa || b.cita_completa_apa || b.CitaCompletaApa || `${b.autor || ''} - ${b.tituloLibro || b.titulo_libro || ''}`}</li>
+                                                    ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-sm text-slate-400 dark:text-zinc-500 italic">Sin bibliografía complementaria registrada.</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </section>
                     )}
 
@@ -1246,6 +1803,64 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* Modal de Confirmación para Habilitar Edición de Cualquier Sección */}
+            {pendingEditSection && (
+                <div 
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+                    onClick={() => setPendingEditSection(null)}
+                >
+                    <div 
+                        className="w-full max-w-md rounded-xl bg-white dark:bg-[#131720] border border-slate-200 dark:border-zinc-800 shadow-2xl overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                Confirmar edición de {pendingEditSection.title}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setPendingEditSection(null)}
+                                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1 rounded-md transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <div className="p-5">
+                            <p className="text-xs sm:text-sm text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                ¿Desea habilitar la edición de {pendingEditSection.key === 'General' ? 'los datos generales' : pendingEditSection.title} de esta asignatura?
+                            </p>
+                        </div>
+
+                        <div className="px-5 py-3.5 bg-zinc-50 dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => setPendingEditSection(null)}
+                                className="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-zinc-300 hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const { key } = pendingEditSection;
+                                    setPendingEditSection(null);
+                                    if (key === 'General') {
+                                        handleStartEditGeneral();
+                                    } else {
+                                        handleStartEditSection(key);
+                                    }
+                                }}
+                                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-blue-600 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                            >
+                                <SquarePen size={12} />
+                                <span>Habilitar edición</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal de Confirmación para Guardar Datos Generales */}
             {isConfirmSaveOpen && (

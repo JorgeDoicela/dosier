@@ -114,7 +114,7 @@ const PermissionRoute = ({ children, module, op }: { children: React.ReactNode; 
 };
 
 export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) => {
-    const { isAuthenticated, isLoading, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles } = useAuth();
+    const { isAuthenticated, isLoading, isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, activeRole } = useAuth();
 
     if (isLoading) {
         return <PageLoader />;
@@ -124,21 +124,55 @@ export const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNod
 
     if (allowedRoles.includes('ANY')) return <>{children}</>;
 
-    if (isAdmin) return <>{children}</>;
+    const effectiveRole = activeRole || (
+        isAdmin ? 'DOSIER_ADMIN' :
+        isVicerrector ? 'DOSIER_VICERRECTOR' :
+        isCoordAcad ? 'DOSIER_COORD_ACAD' :
+        isCoordCarrera ? 'DOSIER_COORD_CARRERA' :
+        isDocente ? 'DOSIER_DOCENTE' : ''
+    );
 
-    if (roles.some(r => allowedRoles.map(a => a.toUpperCase()).includes(r.toUpperCase()))) return <>{children}</>;
+    const isVicerrectorMode = effectiveRole === 'DOSIER_VICERRECTOR' || (isVicerrector && effectiveRole !== 'DOSIER_ADMIN');
 
-    if (isDocente && allowedRoles.includes('DOSIER_DOCENTE')) return <>{children}</>;
+    // Regla institucional: El Vicerrector no participa en Salas Curriculares ni realiza documentos
+    if (isVicerrectorMode && !allowedRoles.includes('DOSIER_VICERRECTOR')) {
+        return <Navigate to="/documentacion" replace />;
+    }
 
-    if (isCoordCarrera && allowedRoles.includes('DOSIER_COORD_CARRERA')) return <>{children}</>;
+    if (isAdmin && effectiveRole === 'DOSIER_ADMIN') return <>{children}</>;
 
-    if (isCoordAcad && allowedRoles.includes('DOSIER_COORD_ACAD')) return <>{children}</>;
+    if (allowedRoles.includes(effectiveRole)) return <>{children}</>;
 
-    if (isVicerrector && allowedRoles.includes('DOSIER_VICERRECTOR')) return <>{children}</>;
-
-    if (isEstudiante && allowedRoles.includes('DOSIER_ESTUDIANTE')) return <>{children}</>;
+    if (!isVicerrectorMode) {
+        if (roles.some(r => allowedRoles.map(a => a.toUpperCase()).includes(r.toUpperCase()))) return <>{children}</>;
+        if (isDocente && allowedRoles.includes('DOSIER_DOCENTE')) return <>{children}</>;
+        if (isCoordCarrera && allowedRoles.includes('DOSIER_COORD_CARRERA')) return <>{children}</>;
+        if (isCoordAcad && allowedRoles.includes('DOSIER_COORD_ACAD')) return <>{children}</>;
+        if (isVicerrector && allowedRoles.includes('DOSIER_VICERRECTOR')) return <>{children}</>;
+        if (isEstudiante && allowedRoles.includes('DOSIER_ESTUDIANTE')) return <>{children}</>;
+    }
 
     return <Navigate to="/dashboard" replace />;
+};
+
+const AuthorRoute = ({ children }: { children: React.ReactNode }) => {
+    const { isAuthenticated, isLoading, isAdmin, isVicerrector, activeRole } = useAuth();
+    if (isLoading) return <PageLoader />;
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+    const effectiveRole = activeRole || (
+        isAdmin ? 'DOSIER_ADMIN' :
+        isVicerrector ? 'DOSIER_VICERRECTOR' : ''
+    );
+
+    const isVicerrectorMode = effectiveRole === 'DOSIER_VICERRECTOR' || (isVicerrector && effectiveRole !== 'DOSIER_ADMIN');
+
+    // El Vicerrector no realiza documentos: redirigir a la bandeja oficial de supervisión
+    if (isVicerrectorMode) {
+        return <Navigate to="/documentacion" replace />;
+    }
+
+    return <>{children}</>;
 };
 
 const NavigateToProjectDetail = () => {
@@ -240,10 +274,10 @@ function App() {
                             <Route path="/lopdp" element={<AdminRoute><LopdpAdminPage /></AdminRoute>} />
                             <Route path="/analiticas" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><AnalyticsPage /></RoleRoute>} />
                             <Route path="/notificaciones" element={<NotificationsPage />} />
-                            <Route path="/usuarios" element={<PermissionRoute module="USUARIOS" op="VER"><UsersPage /></PermissionRoute>} />
-                            <Route path="/auditoria" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><AuditPage /></RoleRoute>} />
+                            <Route path="/usuarios" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><UsersPage /></RoleRoute>} />
+                            <Route path="/auditoria" element={<AdminRoute><AuditPage /></AdminRoute>} />
                             <Route path="/parametros-normativos" element={<Navigate to="/configuracion?tab=parametros" replace />} />
-                             <Route path="/emails" element={<AdminRoute><EmailEnginePage /></AdminRoute>} />
+                             <Route path="/emails" element={<RoleRoute allowedRoles={['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR']}><EmailEnginePage /></RoleRoute>} />
                              <Route path="/admin/documentos" element={<AdminRoute><DocumentMaintenancePage /></AdminRoute>} />
                              <Route path="/plantillas" element={<RoleRoute allowedRoles={['ANY']}><DocumentTemplatesPage /></RoleRoute>} />
                              <Route path="/formatos" element={<RedirectPreserveSearch to="/plantillas" />} />
@@ -279,9 +313,9 @@ function App() {
                             <Route path="/documentacion/revision-tecnica/:projectUuid" element={<RevisionCurricularPage />} />
                             
                             {/* Author / Docente Context */}
-                            <Route path="/documentacion/mis-proyectos" element={<ProtectedRoute><MisAsignaturasPage /></ProtectedRoute>} />
-                            <Route path="/documentacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<ProtectedRoute><DocumentWorkspace /></ProtectedRoute>} />
-                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<ProtectedRoute><MonitoreoCurricularPage /></ProtectedRoute>} />
+                            <Route path="/documentacion/mis-proyectos" element={<AuthorRoute><MisAsignaturasPage /></AuthorRoute>} />
+                            <Route path="/documentacion/mis-proyectos/workspace/:templateCode/:projectUuid" element={<AuthorRoute><DocumentWorkspace /></AuthorRoute>} />
+                            <Route path="/documentacion/mis-proyectos/monitoreo/:projectUuid" element={<AuthorRoute><MonitoreoCurricularPage /></AuthorRoute>} />
                             
                             <Route path="/verificacion" element={<VerifyDocument />} />
                             <Route path="/verificar-firma" element={<RedirectPreserveSearch to="/verificacion" />} />

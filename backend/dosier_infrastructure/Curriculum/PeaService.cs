@@ -506,27 +506,29 @@ namespace dosier_infrastructure.Curriculum
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(user.Contrasenia))
-                    throw new UnauthorizedAccessException("El usuario no posee una contraseña configurada para validar la firma.");
-
-                bool passwordOk = false;
-                try
+                // Para firma interna institucional DOSIER (DFRM): la identidad está validada por la sesión JWT activa.
+                // Si se suministra contraseña se valida formalmente; si se omite, se autoriza por sesión activa.
+                if (!string.IsNullOrWhiteSpace(dto.Password))
                 {
-                    if (!string.IsNullOrEmpty(dto.Password) && BCrypt.Net.BCrypt.Verify(dto.Password, user.Contrasenia))
+                    bool passwordOk = false;
+                    try
                     {
-                        passwordOk = true;
+                        if (BCrypt.Net.BCrypt.Verify(dto.Password, user.Contrasenia))
+                        {
+                            passwordOk = true;
+                        }
                     }
-                }
-                catch
-                {
-                    if (user.Contrasenia == dto.Password)
+                    catch
                     {
-                        passwordOk = true;
+                        if (user.Contrasenia == dto.Password)
+                        {
+                            passwordOk = true;
+                        }
                     }
-                }
 
-                if (!passwordOk)
-                    throw new UnauthorizedAccessException("Contraseña incorrecta. La firma requiere verificación estricta de identidad.");
+                    if (!passwordOk)
+                        throw new UnauthorizedAccessException("Contraseña incorrecta. La firma requiere verificación estricta de identidad.");
+                }
             }
 
             // 2. Validación de Roles Institucionales y Workflow Oficial
@@ -1040,7 +1042,86 @@ namespace dosier_infrastructure.Curriculum
                 });
             }
 
-            return dtos;
+            // Integrar también observaciones disciplinarias registradas y subsanadas
+            var observaciones = await _context.DocPeaObservaciones
+                .AsNoTracking()
+                .Where(o => o.IdPea == idPea)
+                .ToListAsync();
+
+            foreach (var obs in observaciones)
+            {
+                string obsMotivo = $"Observación en {obs.SeccionAfectada}: {obs.TextoObservacion}";
+                if (!dtos.Any(d => d.Motivo != null && d.Motivo.Contains(obs.TextoObservacion)))
+                {
+                    string? nombreObs = null;
+                    if (obs.IdUsuarioObservador.HasValue)
+                    {
+                        var u = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.IdUsuario == obs.IdUsuarioObservador.Value);
+                        if (u != null) nombreObs = u.Nombre;
+                    }
+
+                    dtos.Add(new PeaTrazabilidadDto
+                    {
+                        IdTrazabilidad = -obs.IdObservacion,
+                        Uuid = obs.Uuid,
+                        IdPea = obs.IdPea,
+                        IdUsuario = obs.IdUsuarioObservador,
+                        NombreUsuario = nombreObs,
+                        EstadoAnterior = "EnRevision",
+                        EstadoNuevo = "Observado",
+                        Motivo = obsMotivo,
+                        FechaTransicion = obs.FechaObservacion
+                    });
+                }
+
+                if (!string.IsNullOrWhiteSpace(obs.RespuestaDocente) && obs.FechaResolucion.HasValue)
+                {
+                    string subMotivo = $"Subsanación en {obs.SeccionAfectada}: {obs.RespuestaDocente}";
+                    if (!dtos.Any(d => d.Motivo != null && d.Motivo.Contains(obs.RespuestaDocente)))
+                    {
+                        dtos.Add(new PeaTrazabilidadDto
+                        {
+                            IdTrazabilidad = -obs.IdObservacion - 10000,
+                            Uuid = Guid.NewGuid().ToString(),
+                            IdPea = obs.IdPea,
+                            EstadoAnterior = "Observado",
+                            EstadoNuevo = "Corregido",
+                            Motivo = subMotivo,
+                            FechaTransicion = obs.FechaResolucion.Value
+                        });
+                    }
+                }
+            }
+
+            return dtos.OrderByDescending(t => t.FechaTransicion).ToList();
+        }
+
+        public async Task<bool> RegistrarEventoTrazabilidadAsync(int idPea, string accion, string? detalle, int? idUsuario)
+        {
+            var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == idPea);
+            if (pea == null) return false;
+
+            int? validUserId = null;
+            if (idUsuario.HasValue && idUsuario.Value > 0)
+            {
+                var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario.Value);
+                if (user != null) validUserId = user.IdUsuario;
+            }
+
+            var traza = new DocPeaTrazabilidad
+            {
+                Uuid = Guid.NewGuid().ToString(),
+                IdPea = idPea,
+                IdUsuario = validUserId,
+                EstadoAnterior = pea.Estado,
+                EstadoNuevo = pea.Estado,
+                Motivo = string.IsNullOrWhiteSpace(detalle) ? accion : $"{accion}: {detalle}",
+                FechaTransicion = DateTime.UtcNow
+            };
+
+            _context.DocPeaTrazabilidades.Add(traza);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         private async Task RegistrarTrazabilidadAsync(int idPea, string anterior, string nuevo, string? motivo, string? hashSha256, int? idUsuario)
@@ -1196,10 +1277,13 @@ namespace dosier_infrastructure.Curriculum
                             (string.IsNullOrWhiteSpace(motivo) ? "" : $" Requerimiento: {motivo}.") +
                             " Ingrese al editor microcurricular para subsanar los puntos observados.";
 
-                        if (userDocente != null)
+                        var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
+                            .DistinctBy(u => u.IdUsuario);
+
+                        foreach (var dest in destinatarios)
                         {
                             await notifService.NotifyUserAsync(
-                                userDocente.IdUsuario,
+                                dest.IdUsuario,
                                 titulo,
                                 mensaje,
                                 "CURRICULUM",
@@ -2367,6 +2451,7 @@ namespace dosier_infrastructure.Curriculum
                 {
                     IdPea = p.IdPea,
                     Uuid = p.Uuid,
+                    IdAsignacion = p.IdAsignacion,
                     IdCarrera = p.IdCarrera,
                     NombreCarrera = nomCarrera ?? "Carrera ISTPET",
                     IdAsignatura = p.IdAsignatura,

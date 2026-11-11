@@ -159,7 +159,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
         }
 
         const targetDate = new Date(targetYear, targetMonth, day);
-        
+
         // Verificar límites
         if (minParsed && targetDate < minParsed) return;
         if (maxParsed && targetDate > maxParsed) return;
@@ -181,7 +181,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
     };
 
     return (
-        <div 
+        <div
             onClick={(e) => e.stopPropagation()}
             className={`w-[290px] sm:w-[310px] p-3.5 bg-surface border border-border-thin rounded-xl shadow-2xl select-none animate-scale-up font-sans text-text-main ${className}`}
         >
@@ -203,7 +203,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                         </button>
 
                         {isSelectingMonth && (
-                            <div 
+                            <div
                                 ref={monthDropdownRef}
                                 className="absolute top-full left-0 mt-1 z-50 w-32 max-h-48 overflow-y-auto bg-surface border border-border-thin rounded-lg shadow-xl p-1 grid grid-cols-1 gap-0.5 custom-scrollbar"
                             >
@@ -216,11 +216,10 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                                             setViewDate(new Date(currentYear, idx, 1));
                                             setIsSelectingMonth(false);
                                         }}
-                                        className={`px-2 py-1.5 rounded text-left text-xs font-medium transition-colors ${
-                                            idx === currentMonth 
-                                                ? 'bg-text-main text-bg-deep font-bold' 
+                                        className={`px-2 py-1.5 rounded text-left text-xs font-medium transition-colors ${idx === currentMonth
+                                                ? 'bg-text-main text-bg-deep font-bold'
                                                 : 'text-text-dim hover:text-text-main hover:bg-surface-hover'
-                                        }`}
+                                            }`}
                                     >
                                         {mName}
                                     </button>
@@ -244,7 +243,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                         </button>
 
                         {isSelectingYear && (
-                            <div 
+                            <div
                                 ref={yearDropdownRef}
                                 className="absolute top-full left-0 mt-1 z-50 w-24 max-h-48 overflow-y-auto bg-surface border border-border-thin rounded-lg shadow-xl p-1 grid grid-cols-1 gap-0.5 custom-scrollbar"
                             >
@@ -257,11 +256,10 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                                             setViewDate(new Date(y, currentMonth, 1));
                                             setIsSelectingYear(false);
                                         }}
-                                        className={`px-2 py-1.5 rounded text-left text-xs font-medium transition-colors ${
-                                            y === currentYear 
-                                                ? 'bg-text-main text-bg-deep font-bold' 
+                                        className={`px-2 py-1.5 rounded text-left text-xs font-medium transition-colors ${y === currentYear
+                                                ? 'bg-text-main text-bg-deep font-bold'
                                                 : 'text-text-dim hover:text-text-main hover:bg-surface-hover'
-                                        }`}
+                                            }`}
                                     >
                                         {y}
                                     </button>
@@ -289,7 +287,7 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
-                </div>
+                    si inte</div>
             </div>
 
             {/* Días de la Semana */}
@@ -322,14 +320,14 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                 {Array.from({ length: daysInMonth }).map((_, idx) => {
                     const dayNum = idx + 1;
                     const dateObj = new Date(currentYear, currentMonth, dayNum);
-                    
-                    const isSelected = selectedDate && 
-                        selectedDate.getFullYear() === currentYear && 
-                        selectedDate.getMonth() === currentMonth && 
+
+                    const isSelected = selectedDate &&
+                        selectedDate.getFullYear() === currentYear &&
+                        selectedDate.getMonth() === currentMonth &&
                         selectedDate.getDate() === dayNum;
 
-                    const isToday = today.getFullYear() === currentYear && 
-                        today.getMonth() === currentMonth && 
+                    const isToday = today.getFullYear() === currentYear &&
+                        today.getMonth() === currentMonth &&
                         today.getDate() === dayNum;
 
                     const isDisabled = (minParsed && dateObj < minParsed) || (maxParsed && dateObj > maxParsed);
@@ -340,13 +338,12 @@ export const GeistCalendar: React.FC<GeistCalendarProps> = ({
                             type="button"
                             disabled={isDisabled}
                             onClick={() => handleSelectDay(dayNum)}
-                            className={`h-8 w-full flex items-center justify-center rounded-lg text-xs transition-all relative ${
-                                isSelected
+                            className={`h-8 w-full flex items-center justify-center rounded-lg text-xs transition-all relative ${isSelected
                                     ? 'bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 font-bold shadow-sm'
                                     : isToday
-                                    ? 'border border-text-main/40 font-bold text-text-main hover:bg-surface-hover'
-                                    : 'font-medium text-text-main hover:bg-surface-hover'
-                            } ${isDisabled ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
+                                        ? 'border border-text-main/40 font-bold text-text-main hover:bg-surface-hover'
+                                        : 'font-medium text-text-main hover:bg-surface-hover'
+                                } ${isDisabled ? 'opacity-20 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
                         >
                             {dayNum}
                             {isToday && !isSelected && (

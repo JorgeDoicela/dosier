@@ -25,6 +25,10 @@ import {
     getPeaStatusDescriptor,
     formatModalidad
 } from '../utils/peaStatusWorkflow';
+import {
+    recordRecentSubjectOpen,
+    sortSubjectsByRecentOpen
+} from '../../../utils/recentSubjectStorage';
 
 export const PeaSupervisionTray: React.FC = () => {
     const navigate = useNavigate();
@@ -35,8 +39,8 @@ export const PeaSupervisionTray: React.FC = () => {
     const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
     const [selectedCarrera, setSelectedCarrera] = useState<string>('todas');
     const [selectedEstado, setSelectedEstado] = useState<string>('todos');
-    // Tab por defecto: 'todos' para que las autoridades visualicen inmediatamente todo el universo de asignaturas
-    const [workflowTab, setWorkflowTab] = useState<'todos' | 'por_revisar' | 'en_redaccion' | 'aprobados'>('todos');
+    // Tab por defecto: 'por_revisar' para que las autoridades vean directamente su bandeja de trabajo operativo pendiente
+    const [workflowTab, setWorkflowTab] = useState<'por_revisar' | 'en_redaccion' | 'aprobados' | 'todos'>('por_revisar');
     const [search, setSearch] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState<boolean>(true);
@@ -87,9 +91,22 @@ export const PeaSupervisionTray: React.FC = () => {
         }
     }, [recargarPeas]);
 
+    const [recentsVersion, setRecentsVersion] = useState<number>(0);
+
     useEffect(() => {
         cargarDatos();
     }, [cargarDatos]);
+
+    // Listener para reordenamiento reactivo cuando se abre una asignatura en cualquier pestaña o modal
+    useEffect(() => {
+        const handleRecents = () => setRecentsVersion(v => v + 1);
+        window.addEventListener('dosier-recents-updated', handleRecents);
+        window.addEventListener('dosier-project-preferences-changed', handleRecents);
+        return () => {
+            window.removeEventListener('dosier-recents-updated', handleRecents);
+            window.removeEventListener('dosier-project-preferences-changed', handleRecents);
+        };
+    }, []);
 
     // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
     useRealtimeSync({
@@ -146,9 +163,9 @@ export const PeaSupervisionTray: React.FC = () => {
         };
     }, [peasVisibles]);
 
-    // Filtrado en memoria por búsqueda, carrera y estado
+    // Filtrado en memoria por búsqueda, carrera y estado, ordenando por apertura reciente del usuario
     const filteredPeas = useMemo(() => {
-        return peasVisibles.filter(p => {
+        const list = peasVisibles.filter(p => {
             const query = search.trim().toLowerCase();
             const matchSearch = !query ||
                 (p.nombre_asignatura && p.nombre_asignatura.toLowerCase().includes(query)) ||
@@ -165,6 +182,9 @@ export const PeaSupervisionTray: React.FC = () => {
                 matchWorkflow = isPeaBorrador(p.estado);
             } else if (workflowTab === 'aprobados') {
                 matchWorkflow = isPeaAvalado(p.estado);
+            } else if (workflowTab === 'todos' && isCoordCarrera && !isAdmin) {
+                // Al coordinador de carrera no se le muestran aquí los documentos que ya avaló y despachó
+                matchWorkflow = !isPeaAvalado(p.estado);
             }
 
             const matchEstado = selectedEstado === 'todos' ||
@@ -174,18 +194,42 @@ export const PeaSupervisionTray: React.FC = () => {
 
             return matchSearch && matchCarrera && matchWorkflow && matchEstado;
         });
-    }, [peasVisibles, search, selectedCarrera, selectedEstado, workflowTab]);
 
-    const handleAbrirPea = (uuid: string) => {
+        return sortSubjectsByRecentOpen(list);
+    }, [peasVisibles, search, selectedCarrera, selectedEstado, workflowTab, recentsVersion]);
+
+    const handleAbrirPea = (item: PeaBandejaItemDto | string) => {
+        const uuid = typeof item === 'string' ? item : item.uuid;
+        if (typeof item === 'object') {
+            recordRecentSubjectOpen({
+                uuid: item.uuid,
+                id_pea: item.id_pea,
+                id_asignacion: item.id_asignacion
+            });
+        } else {
+            recordRecentSubjectOpen({ uuid });
+        }
         navigate(`/documentacion/revision-tecnica/${uuid}`);
     };
 
-    const handleAbrirEditor = (uuid: string) => {
+    const handleAbrirEditor = (item: PeaBandejaItemDto | string) => {
+        const uuid = typeof item === 'string' ? item : item.uuid;
+        if (typeof item === 'object') {
+            recordRecentSubjectOpen({
+                uuid: item.uuid,
+                id_pea: item.id_pea,
+                id_asignacion: item.id_asignacion
+            });
+        } else {
+            recordRecentSubjectOpen({ uuid });
+        }
         navigate(`/documentacion/workspace/PEA_OFICIAL/${uuid}?edit=pea-oficial`);
     };
 
     // Verificar si el usuario autenticado tiene permiso de edición directa sobre este PEA
     const puedeEditarDocumento = (p: PeaBandejaItemDto): boolean => {
+        // Cuando el documento está siendo revisado o no está en borrador, no se permite editar directamente
+        if (!isPeaBorrador(p.estado)) return false;
         if (isAdmin) return true;
         if (user?.id_sigafi && p.id_docente_elaborador && user.id_sigafi === p.id_docente_elaborador) {
             return true;
@@ -287,21 +331,6 @@ export const PeaSupervisionTray: React.FC = () => {
                 <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Bandejas de supervisión del PEA">
                     <button
                         type="button"
-                        onClick={() => handleWorkflowTabChange('todos')}
-                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            workflowTab === 'todos'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <span>Todas las Asignaturas</span>
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
-                            {stats.total}
-                        </span>
-                    </button>
-
-                    <button
-                        type="button"
                         onClick={() => handleWorkflowTabChange('por_revisar')}
                         className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                             workflowTab === 'por_revisar'
@@ -319,6 +348,21 @@ export const PeaSupervisionTray: React.FC = () => {
                                 0
                             </span>
                         )}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => handleWorkflowTabChange('aprobados')}
+                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                            workflowTab === 'aprobados'
+                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                        }`}
+                    >
+                        <span>Aprobados con aval</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                            {stats.aprobados}
+                        </span>
                     </button>
 
                     {isAdmin && (
@@ -340,16 +384,16 @@ export const PeaSupervisionTray: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleWorkflowTabChange('aprobados')}
+                        onClick={() => handleWorkflowTabChange('todos')}
                         className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            workflowTab === 'aprobados'
+                            workflowTab === 'todos'
                                 ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
                                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                         }`}
                     >
-                        <span>Aprobados con aval</span>
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
-                            {stats.aprobados}
+                        <span>Todas las Asignaturas</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                            {isCoordCarrera && !isAdmin ? stats.porRevisar : stats.total}
                         </span>
                     </button>
                 </nav>
@@ -413,11 +457,11 @@ export const PeaSupervisionTray: React.FC = () => {
                                 key={pea.uuid}
                                 role="button"
                                 tabIndex={0}
-                                onClick={() => handleAbrirPea(pea.uuid)}
+                                onClick={() => handleAbrirPea(pea)}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
-                                        handleAbrirPea(pea.uuid);
+                                        handleAbrirPea(pea);
                                     }
                                 }}
                                 className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
@@ -479,11 +523,11 @@ export const PeaSupervisionTray: React.FC = () => {
                                 key={pea.uuid}
                                 role="button"
                                 tabIndex={0}
-                                onClick={() => handleAbrirPea(pea.uuid)}
+                                onClick={() => handleAbrirPea(pea)}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
-                                        handleAbrirPea(pea.uuid);
+                                        handleAbrirPea(pea);
                                     }
                                 }}
                                 className="group bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900/60 hover:border-[#0070f3] dark:hover:border-blue-500 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
@@ -529,12 +573,12 @@ export const PeaSupervisionTray: React.FC = () => {
 
                                 {/* Acciones (Solo Texto) */}
                                 <div className="flex items-center gap-2 shrink-0">
-                                    {esAutorOAdmin && (
+                                    {esAutorOAdmin && esBorrador && (
                                         <button
                                             type="button"
                                             onClick={e => {
                                                 e.stopPropagation();
-                                                handleAbrirEditor(pea.uuid);
+                                                handleAbrirEditor(pea);
                                             }}
                                             className="h-8 px-2.5 text-xs rounded-md font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800"
                                             title="Editar contenido curricular del PEA"
@@ -548,7 +592,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                             type="button"
                                             onClick={e => {
                                                 e.stopPropagation();
-                                                handleAbrirPea(pea.uuid);
+                                                handleAbrirPea(pea);
                                             }}
                                             className="h-8 px-3 text-xs rounded-md font-medium text-slate-700 dark:text-zinc-300 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer shadow-2xs"
                                             title="Consultar avance de redacción docente (lectura previa a envío formal)"
@@ -560,7 +604,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                             type="button"
                                             onClick={e => {
                                                 e.stopPropagation();
-                                                handleAbrirPea(pea.uuid);
+                                                handleAbrirPea(pea);
                                             }}
                                             className="h-8 px-3.5 text-xs rounded-md font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
                                             title="Realizar revisión técnica curricular"
@@ -572,7 +616,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                             type="button"
                                             onClick={e => {
                                                 e.stopPropagation();
-                                                handleAbrirPea(pea.uuid);
+                                                handleAbrirPea(pea);
                                             }}
                                             className="h-8 px-3 text-xs rounded-md font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer shadow-2xs"
                                             title="Ver expediente curricular avalado"

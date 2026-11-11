@@ -13,7 +13,7 @@ namespace Dosier.Infrastructure.Common.Documents
     public static class DocumentTemplateRegistry
     {
         public static DocumentTemplate? GetByCode(string code) => 
-            GetSeedTemplates().FirstOrDefault(t => t.Code == code);
+            GetSeedTemplates().FirstOrDefault(t => t.Code == (code == "PRE_PEA" ? "PEA_OFICIAL" : code));
 
         public static IEnumerable<DocumentTemplate> GetSeedTemplates()
         {

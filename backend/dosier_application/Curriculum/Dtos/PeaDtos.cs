@@ -162,6 +162,12 @@ namespace dosier_application.Curriculum.Dtos
         public DateTime FechaTransicion { get; set; }
     }
 
+    public class RegistrarEventoPeaDto
+    {
+        public string Accion { get; set; } = string.Empty;
+        public string? Detalle { get; set; }
+    }
+
     public class PeaPrerrequisitoDto
     {
         public int IdPrerequisito { get; set; }

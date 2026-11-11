@@ -169,26 +169,45 @@ const HighlightedText = ({
 // ─── Role filter ──────────────────────────────────────────────────────────────
 
 function useRoleFilter() {
-    const { isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, hasPermission } = useAuth();
+    const { isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, hasPermission, activeRole } = useAuth();
     return useCallback((item: SearchItem): boolean => {
+        const effectiveRole = activeRole || (
+            isAdmin ? 'DOSIER_ADMIN' :
+            isVicerrector ? 'DOSIER_VICERRECTOR' :
+            isCoordAcad ? 'DOSIER_COORD_ACAD' :
+            isCoordCarrera ? 'DOSIER_COORD_CARRERA' :
+            isDocente ? 'DOSIER_DOCENTE' : ''
+        );
+        const isVicerrectorMode = effectiveRole === 'DOSIER_VICERRECTOR' || (isVicerrector && effectiveRole !== 'DOSIER_ADMIN');
+
+        if (isVicerrectorMode) {
+            if (item.path === '/salas-curriculares' || item.path === '/documentacion/mis-proyectos' || item.id === 'mis-proyectos') {
+                return false;
+            }
+        }
+
         if (item.id === 'derechos-arco' && isAdmin) return false;
-        if (isAdmin) return true;
+        if (effectiveRole === 'DOSIER_ADMIN' && isAdmin) return true;
         if (item.permission) {
             const [module, op] = item.permission.split(':');
             return hasPermission(module, op);
         }
         if (item.roles) {
             if (item.roles.includes('ANY')) return true;
-            const checkRoles = item.roles.map(r => r.toUpperCase());
-            if (checkRoles.includes('DOSIER_DOCENTE') && isDocente) return true;
-            if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
-            if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
-            if (checkRoles.includes('DOSIER_VICERRECTOR') && isVicerrector) return true;
-            if (checkRoles.includes('DOSIER_ESTUDIANTE') && isEstudiante) return true;
-            return item.roles.some(r => roles.includes(r.toUpperCase()));
+            if (item.roles.includes(effectiveRole)) return true;
+
+            if (!isVicerrectorMode) {
+                const checkRoles = item.roles.map(r => r.toUpperCase());
+                if (checkRoles.includes('DOSIER_DOCENTE') && isDocente) return true;
+                if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
+                if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
+                if (checkRoles.includes('DOSIER_ESTUDIANTE') && isEstudiante) return true;
+                return item.roles.some(r => roles.includes(r.toUpperCase()));
+            }
+            return false;
         }
         return true;
-    }, [isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, hasPermission]);
+    }, [isAdmin, isDocente, isCoordCarrera, isCoordAcad, isVicerrector, isEstudiante, roles, hasPermission, activeRole]);
 }
 
 // ─── Static catalog ───────────────────────────────────────────────────────────
@@ -213,8 +232,8 @@ function buildStaticItems(
         { id: 'verificar', label: 'Verificar Documento', description: 'Comprueba la autenticidad con código QR o de verificación', category: 'Navegación', icon: ShieldCheck, path: '/verificacion', roles: ['ANY'], keywords: ['verificar', 'verificacion', 'documento', 'validar', 'hash', 'qr', 'trazabilidad'], boost: 4 },
         // ── Administración ────────────────────────────────────────────
         { id: 'analiticas', label: 'Seguimiento de PEAs', description: 'Avance de elaboración, revisión y firmas de los PEA', category: 'Administración', icon: BarChart3, path: '/analiticas', shortcut: 'A', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['analitica', 'seguimiento', 'avance', 'metricas', 'estadisticas', 'materias', 'firmas'], boost: isAdmin ? 9 : 0 },
-        { id: 'usuarios', label: 'Gestión de Usuarios', description: 'Administrar cuentas de docentes y autoridades institucionales', category: 'Administración', icon: Users, path: '/usuarios', shortcut: 'U', permission: 'USUARIOS:VER', keywords: ['usuarios', 'cuentas', 'personas', 'perfiles', 'docentes'], boost: isAdmin ? 8 : 0 },
-        { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro forense de firmas y cambios de estado en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
+        { id: 'usuarios', label: 'Gestión de Usuarios', description: 'Consultar nómina de docentes y autoridades institucionales', category: 'Administración', icon: Users, path: '/usuarios', shortcut: 'U', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['usuarios', 'cuentas', 'personas', 'perfiles', 'docentes'], boost: (isAdmin || isCoordAcad || isVicerrector) ? 8 : 0 },
+        { id: 'auditoria', label: 'Auditoría del Sistema', description: 'Registro forense de firmas y cambios de estado en el sistema', category: 'Administración', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN'], keywords: ['auditoria', 'logs', 'forense', 'eventos', 'historial'], boost: isAdmin ? 7 : 0 },
         { id: 'lopdp-admin', label: 'Panel LOPDP', description: 'Gestión de consentimientos y cumplimiento de protección de datos', category: 'Administración', icon: ShieldCheck, path: '/lopdp', roles: ['DOSIER_ADMIN'], keywords: ['lopdp', 'proteccion datos', 'consentimiento', 'rgpd'], boost: 4 },
         {
             id: 'plantillas',
@@ -227,7 +246,7 @@ function buildStaticItems(
             keywords: ['plantillas', 'templates', 'formatos', 'editor', 'documentos', 'formatos oficiales', 'oficiales', 'descargar', 'pea'],
             boost: canEditTemplates ? 6 : 4
         },
-        { id: 'correos', label: 'Correos Institucionales', description: 'Plantillas y notificaciones por correo del sistema', category: 'Administración', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], keywords: ['correos', 'emails', 'plantillas', 'smtp'], boost: 4 },
+        { id: 'correos', label: 'Correos Institucionales', description: 'Plantillas y notificaciones por correo del sistema', category: 'Administración', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], keywords: ['correos', 'emails', 'plantillas', 'smtp'], boost: 4 },
         // ── Parámetros Normativos ───────────────────────────────────────
         { id: 'parametros-normativos', label: 'Parámetros Normativos', description: 'Períodos académicos e hitos curriculares institucionales', category: 'Parámetros Normativos', icon: Settings, path: '/parametros-normativos', roles: ['DOSIER_ADMIN'], keywords: ['parametros', 'periodos', 'calendario', 'fechas', 'catalogos'], boost: isAdmin ? 6 : 0 },
         { id: 'settings', label: 'Configuración', description: 'Preferencias de cuenta, firma digital y ajustes personales', category: 'Configuración', icon: Settings, path: '/configuracion', roles: ['ANY'], keywords: ['perfil', 'cuenta', 'preferencias', 'firma', 'configuracion', 'settings'], boost: 4 },
@@ -496,8 +515,8 @@ export const CommandPalette = () => {
         try {
             const promises: Promise<void>[] = [];
 
-            // Usuarios (admin con permiso) — busca docentes y administrativos
-            if (isAdmin || hasPermission('USUARIOS', 'VER')) {
+            // Usuarios (admin o autoridades académicas) — busca docentes y administrativos
+            if (isAdmin || isCoordAcad || isVicerrector || hasPermission('USUARIOS', 'VER')) {
                 const userTypes = ['DOCENTE', 'ADMINISTRATIVO'];
                 userTypes.forEach(type => {
                     promises.push(

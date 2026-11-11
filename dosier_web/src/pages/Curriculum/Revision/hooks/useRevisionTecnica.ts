@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { useConfirm } from '../../../../api/ConfirmContext';
+import { recordRecentSubjectOpen } from '../../../../utils/recentSubjectStorage';
 import { useRevisionTecnicaLayout } from './useRevisionTecnicaLayout';
 import { useRevisionTecnicaComments } from './useRevisionTecnicaComments';
 import { useRevisionTecnicaData } from './useRevisionTecnicaData';
@@ -97,6 +98,13 @@ export const useRevisionTecnica = () => {
             if (!window.confirm('Tiene una observación en borrador sin enviar en el panel lateral. ¿Desea salir sin guardar?')) {
                 return;
             }
+        }
+        if (projectUuid) {
+            recordRecentSubjectOpen({
+                uuid: projectUuid,
+                id_pea: (data.rawPea as any)?.id_pea || (data.rawPea as any)?.idPea,
+                id_asignacion: (data.rawPea as any)?.id_asignacion || (data.rawPea as any)?.idAsignacion
+            });
         }
         navigate('/documentacion', { replace: true });
     };

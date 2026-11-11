@@ -6,9 +6,12 @@
 const STORAGE_KEY = 'dosier_recent_opened_asignaciones';
 
 export interface SubjectIdentifiable {
-    id_asignacion: number;
+    id_asignacion?: number;
+    idAsignacion?: number;
     uuid_pea?: string;
+    uuid?: string;
     id_pea?: number;
+    idPea?: number;
 }
 
 /**
@@ -20,15 +23,19 @@ export const recordRecentSubjectOpen = (subject: SubjectIdentifiable): void => {
         const raw = localStorage.getItem(STORAGE_KEY);
         const data: Record<string, number> = raw ? JSON.parse(raw) : {};
         const now = Date.now();
+        const rawUuid = subject.uuid_pea || subject.uuid;
+        const uuidVal = rawUuid ? rawUuid.trim().toLowerCase() : undefined;
+        const asigId = subject.id_asignacion ?? subject.idAsignacion;
+        const peaId = subject.id_pea ?? subject.idPea;
 
-        if (subject.id_asignacion) {
-            data[`asig_${subject.id_asignacion}`] = now;
+        if (asigId) {
+            data[`asig_${asigId}`] = now;
         }
-        if (subject.uuid_pea) {
-            data[`uuid_${subject.uuid_pea}`] = now;
+        if (uuidVal) {
+            data[`uuid_${uuidVal}`] = now;
         }
-        if (subject.id_pea) {
-            data[`pea_${subject.id_pea}`] = now;
+        if (peaId) {
+            data[`pea_${peaId}`] = now;
         }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -46,19 +53,23 @@ export const recordRecentSubjectOpen = (subject: SubjectIdentifiable): void => {
 export const getSubjectLastOpenedAt = (subject: SubjectIdentifiable): number => {
     try {
         let maxTime = 0;
+        const rawUuid = subject.uuid_pea || subject.uuid;
+        const uuidVal = rawUuid ? rawUuid.trim().toLowerCase() : undefined;
+        const asigId = subject.id_asignacion ?? subject.idAsignacion;
+        const peaId = subject.id_pea ?? subject.idPea;
 
         // 1. Registro directo por asignación / PEA
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             const data: Record<string, number> = JSON.parse(raw);
-            if (subject.id_asignacion && data[`asig_${subject.id_asignacion}`]) {
-                maxTime = Math.max(maxTime, data[`asig_${subject.id_asignacion}`]);
+            if (asigId && data[`asig_${asigId}`]) {
+                maxTime = Math.max(maxTime, data[`asig_${asigId}`]);
             }
-            if (subject.uuid_pea && data[`uuid_${subject.uuid_pea}`]) {
-                maxTime = Math.max(maxTime, data[`uuid_${subject.uuid_pea}`]);
+            if (uuidVal && data[`uuid_${uuidVal}`]) {
+                maxTime = Math.max(maxTime, data[`uuid_${uuidVal}`]);
             }
-            if (subject.id_pea && data[`pea_${subject.id_pea}`]) {
-                maxTime = Math.max(maxTime, data[`pea_${subject.id_pea}`]);
+            if (peaId && data[`pea_${peaId}`]) {
+                maxTime = Math.max(maxTime, data[`pea_${peaId}`]);
             }
         }
 
@@ -69,10 +80,12 @@ export const getSubjectLastOpenedAt = (subject: SubjectIdentifiable): number => 
                 try {
                     const recents = JSON.parse(localStorage.getItem(k) || '[]');
                     if (Array.isArray(recents)) {
-                        const match = recents.find((r: { uuid?: string; lastVisitedAt?: number }) =>
-                            (subject.uuid_pea && r.uuid === subject.uuid_pea) ||
-                            (subject.id_pea && String(r.uuid) === String(subject.id_pea))
-                        );
+                        const match = recents.find((r: { uuid?: string; lastVisitedAt?: number }) => {
+                            if (!r?.uuid) return false;
+                            const rUuid = String(r.uuid).trim().toLowerCase();
+                            return (uuidVal && rUuid === uuidVal) ||
+                                (peaId && rUuid === String(peaId));
+                        });
                         if (match?.lastVisitedAt) {
                             maxTime = Math.max(maxTime, match.lastVisitedAt);
                         }
@@ -103,7 +116,18 @@ export const sortSubjectsByRecentOpen = <T extends SubjectIdentifiable>(subjects
             return timeB - timeA; // El más recientemente abierto va primero
         }
 
-        return 0; // Conserva el orden original si ninguno ha sido abierto o tienen el mismo timestamp
+        // Si ninguno tiene historial de apertura local reciente, ordenar por fecha de modificación si existe
+        const dateA = (a as any).fecha_modificacion || (a as any).fechaModificacion;
+        const dateB = (b as any).fecha_modificacion || (b as any).fechaModificacion;
+        if (dateA && dateB) {
+            const parsedA = new Date(dateA).getTime();
+            const parsedB = new Date(dateB).getTime();
+            if (!isNaN(parsedA) && !isNaN(parsedB) && parsedB !== parsedA) {
+                return parsedB - parsedA;
+            }
+        }
+
+        return 0; // Conserva el orden original
     });
 };
 

@@ -330,7 +330,7 @@ export const EMAILS_CONFIG: HelpConfig = {
     icon: <Mail size={24} className="text-brand" />,
     title: "Plantillas y correos institucionales",
     summary: "Consola de administración para la edición de plantillas de correo electrónico transaccionales y notificaciones del sistema.",
-    description: "Módulo exclusivo para administradores diseñado para configurar los correos electrónicos que el sistema envía de forma automatizada (alertas de firma, notificaciones institucionales, recordatorios de hitos y credenciales de usuarios).",
+    description: "Módulo diseñado para configurar y gestionar las comunicaciones y correos electrónicos institucionales que el sistema envía de forma automatizada o masiva (alertas de firma, notificaciones institucionales, recordatorios de hitos y avisos).",
     steps: [
         {
             title: "Selección y edición de plantillas dinámicas",

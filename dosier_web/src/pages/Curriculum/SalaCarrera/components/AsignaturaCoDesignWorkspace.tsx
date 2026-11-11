@@ -293,7 +293,7 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
             <DOSIERBuilderShell
                 title={`SALA CURRICULAR — ${carreraNombre.toUpperCase()}`}
                 subtitle={`${asignatura.codigoAsignatura || 'ASIG'} • ${asignatura.nombreAsignatura} (${asignatura.nombreNivel || 'Nivel'})`}
-                templateCode="PRE_PEA"
+                templateCode="PEA_OFICIAL"
                 sections={sections}
                 formData={borrador}
                 setFormData={setBorrador as any}

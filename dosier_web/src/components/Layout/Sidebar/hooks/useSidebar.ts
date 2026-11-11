@@ -4,7 +4,7 @@ import { Home, ClipboardList, BarChart3, ShieldCheck, Users, Activity, Mail, Bel
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { curriculumProjectService } from '../../../../services/curriculumProjectService';
-import { isPeaBorrador } from '../../../../pages/Curriculum/utils/peaStatusWorkflow';
+import { isPeaBorrador, isPeaEnRevision } from '../../../../pages/Curriculum/utils/peaStatusWorkflow';
 import type { MenuItem, SidebarProject, NotificationItem } from '../types';
 
 const NOTIF_PANEL_WIDTH = 380;
@@ -121,6 +121,16 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
 
     const isFirstRender = useRef(true);
 
+    const effectiveRole = activeRole || (
+        isAdmin ? 'DOSIER_ADMIN' :
+        isVicerrector ? 'DOSIER_VICERRECTOR' :
+        isCoordAcad ? 'DOSIER_COORD_ACAD' :
+        isCoordCarrera ? 'DOSIER_COORD_CARRERA' :
+        isDocente ? 'DOSIER_DOCENTE' : ''
+    );
+
+    const isVicerrectorMode = effectiveRole === 'DOSIER_VICERRECTOR' || (isVicerrector && effectiveRole !== 'DOSIER_ADMIN');
+
     const fetchSidebarProjects = useCallback(async () => {
         if (!user) return;
         try {
@@ -141,7 +151,17 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
                 });
             };
 
-            if (esSupervisora) {
+            if (isVicerrectorMode) {
+                // El Vicerrector no realiza instrumentos propios: solo consulta la bandeja institucional global
+                const allRes = await curriculumProjectService.getAllProjects({ soloEnviados: true }).catch(() => []);
+                const projectList = Array.isArray(allRes) ? allRes : (allRes as any)?.items || [];
+                const filteredProjectList = projectList.filter((p: any) => {
+                    const st = p.estado || p.status;
+                    return !isPeaBorrador(st) && st !== 'NoIniciado' && st !== '';
+                });
+                setSidebarProjects(sortProjects(filteredProjectList));
+                setSidebarMyProjects([]);
+            } else if (esSupervisora) {
                 // Paralelización concurrente para máxima velocidad de respuesta sin cascada de peticiones
                 const [allRes, myRes] = await Promise.allSettled([
                     curriculumProjectService.getAllProjects({ soloEnviados: true }),
@@ -152,7 +172,14 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
                 const myData = myRes.status === 'fulfilled' ? myRes.value : [];
 
                 const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
-                const filteredProjectList = projectList.filter((p: any) => !isPeaBorrador(p.estado || p.status) && p.estado !== 'NoIniciado' && p.estado !== '');
+                const filteredProjectList = projectList.filter((p: any) => {
+                    const st = p.estado || p.status;
+                    if (isPeaBorrador(st) || st === 'NoIniciado' || st === '') return false;
+                    if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad) {
+                        return isPeaEnRevision(st);
+                    }
+                    return true;
+                });
                 setSidebarProjects(sortProjects(filteredProjectList));
 
                 const myList = Array.isArray(myData) ? myData : (myData as any)?.items || [];
@@ -169,7 +196,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         } finally {
             setSidebarProjectsLoading(false);
         }
-    }, [user, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera]);
+    }, [user, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera, isVicerrectorMode]);
 
     useEffect(() => {
         if (!user) {
@@ -324,34 +351,47 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         { name: 'Solicitudes', icon: Send, path: '/solicitudes', roles: ['ANY'], group: 2, hasChevron: true },
         { name: 'Analíticas', icon: BarChart3, path: '/analiticas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_CARRERA', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 2 },
         // ── Administración y Control Total del Sistema ──────────────────────
-        { name: 'Usuarios', icon: Users, path: '/usuarios', permission: 'USUARIOS:VER', roles: ['DOSIER_ADMIN'], group: 3, hasChevron: true },
+        { name: 'Usuarios', icon: Users, path: '/usuarios', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3, hasChevron: true },
         ...(canEditTemplates ? [
             { name: 'Plantillas', icon: FileCode2, path: '/plantillas', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 }
         ] : []),
-        { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN'], group: 3 },
-        { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
+        { name: 'Correos', icon: Mail, path: '/emails', roles: ['DOSIER_ADMIN', 'DOSIER_COORD_ACAD', 'DOSIER_VICERRECTOR'], group: 3 },
+        { name: 'Auditoría', icon: Activity, path: '/auditoria', roles: ['DOSIER_ADMIN'], group: 3 },
     ];
 
-    const isSupervisorOnly = (isCoordCarrera || isCoordAcad || isVicerrector) && !isDocente && !isAdmin;
-
     const menuItems = allMenuItems.filter(item => {
-        if (item.path === '/notificaciones' && !isAdmin) return false;
-        if (item.path === '/documentacion/mis-proyectos' && isSupervisorOnly) return false;
+        if (item.path === '/notificaciones' && effectiveRole !== 'DOSIER_ADMIN') return false;
 
-        if (isAdmin) return true;
+        // Regla institucional innegociable: El Vicerrector no realiza documentos ni participa en salas colegiadas
+        if (isVicerrectorMode) {
+            if (item.path === '/salas-curriculares' || item.path === '/documentacion/mis-proyectos') {
+                return false;
+            }
+        }
+
+        // Si el rol activo es Administrador puro, ve todos los módulos autorizados
+        if (effectiveRole === 'DOSIER_ADMIN' && isAdmin) return true;
+
         if (item.permission) {
             const [module, op] = item.permission.split(':');
             return hasPermission(module, op);
         }
+
         if (item.roles) {
             if (item.roles.includes('ANY')) return true;
-            const checkRoles = item.roles.map(r => r.toUpperCase());
-            if (checkRoles.includes('DOSIER_DOCENTE') && isDocente) return true;
-            if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
-            if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
-            if (checkRoles.includes('DOSIER_VICERRECTOR') && isVicerrector) return true;
-            return item.roles.some(r => roles.includes(r.toUpperCase()));
+            if (item.roles.includes(effectiveRole)) return true;
+
+            // Para otros roles institucionales con asignación dual en SIGAFI (ej. Coordinador que también es Docente)
+            if (!isVicerrectorMode) {
+                const checkRoles = item.roles.map(r => r.toUpperCase());
+                if (checkRoles.includes('DOSIER_DOCENTE') && isDocente) return true;
+                if (checkRoles.includes('DOSIER_COORD_CARRERA') && isCoordCarrera) return true;
+                if (checkRoles.includes('DOSIER_COORD_ACAD') && isCoordAcad) return true;
+                return item.roles.some(r => roles.includes(r.toUpperCase()));
+            }
+            return false;
         }
+
         return true;
     });
 

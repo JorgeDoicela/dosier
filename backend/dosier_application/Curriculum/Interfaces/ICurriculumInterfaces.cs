@@ -62,6 +62,7 @@ namespace dosier_application.Curriculum.Interfaces
         Task<bool> EliminarObservacionAsync(int idObservacion, int? idUsuario);
         Task<List<PeaObservacionDto>> GetObservacionesByPeaAsync(int idPea);
         Task<List<PeaTrazabilidadDto>> GetTrazabilidadByPeaAsync(int idPea);
+        Task<bool> RegistrarEventoTrazabilidadAsync(int idPea, string accion, string? detalle, int? idUsuario);
 
         // Sincronización con Document Instances (CoWork Yjs)
         Task<bool> SincronizarMetadataAsync(string peaUuid, string snapshotJson);

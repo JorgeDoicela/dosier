@@ -232,5 +232,8 @@ Módulo de trabajo cooperativo y armonización curricular colegiada por carrera 
   * **Lienzo Central de Co-Creación:** Espacio amplio de redacción colegiada sin scrolls comprimidos.
   * **Colaboración Derecha (`CollaborationSidebar`):** Se oculta con `>` y permite debatir en vivo mediante el motor CRDT y sockets de CoWork.
   * **Gobernanza:** Botón de acción principal para **Aplicar al PEA Oficial** con un solo clic.
+* **Gobernanza RBAC de Acceso:**
+  * Exclusivo para docentes autores (`DOSIER_DOCENTE`) y moderadores de carrera (`DOSIER_COORD_CARRERA`, `DOSIER_ADMIN`).
+  * El Vicerrector (`DOSIER_VICERRECTOR`) queda formalmente excluido de esta vista y de `/documentacion/mis-proyectos`, dado que su función institucional es de supervisión y legalización normativa global, redirigiendo automáticamente a `/documentacion`.
 
 

@@ -99,7 +99,12 @@ public class CalendarioService : ICalendarioService
                 p.FechaElaborado,
                 p.FechaRevisadoCoord,
                 p.FechaRevisadoAcad,
-                p.FechaAprobado
+                p.FechaAprobado,
+                UltimoMotivoObservado = p.Trazabilidades
+                    .Where(t => t.EstadoNuevo == "Observado")
+                    .OrderByDescending(t => t.FechaTransicion)
+                    .Select(t => t.Motivo)
+                    .FirstOrDefault()
             })
             .ToListAsync();
 
@@ -162,8 +167,16 @@ public class CalendarioService : ICalendarioService
                 {
                     case "Observado":
                         fechaEvento = DateOnly.FromDateTime(p.FechaModificacion);
-                        titulo = $"Observaciones PEA: {nombreAsignatura}";
-                        descripcion = $"Corrección disciplinar requerida para {nombreAsignatura} ({nombreCarrera}). Docente: {nombreDocente}.";
+                        if (!string.IsNullOrWhiteSpace(p.UltimoMotivoObservado))
+                        {
+                            var match = System.Text.RegularExpressions.Regex.Match(p.UltimoMotivoObservado, @"\b(\d{4}-\d{2}-\d{2})\b");
+                            if (match.Success && DateOnly.TryParse(match.Groups[1].Value, out var fechaParsed))
+                            {
+                                fechaEvento = fechaParsed;
+                            }
+                        }
+                        titulo = $"Límite Subsanación PEA: {nombreAsignatura}";
+                        descripcion = $"Plazo límite de entrega de correcciones para {nombreAsignatura} ({nombreCarrera}). Docente: {nombreDocente}.";
                         categoriaGlobal = "Revision";
                         subcategoria = "Revision";
                         colorHex = "#EF4444";

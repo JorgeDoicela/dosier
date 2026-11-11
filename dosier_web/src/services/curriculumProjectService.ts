@@ -120,6 +120,16 @@ export const curriculumProjectService = {
     },
 
     /**
+     * Registra un evento o cambio relevante en el historial del documento.
+     */
+    recordEvent: (projectUuid: string, accion: string, detalle?: string): Promise<any> => {
+        const url = projectUuid.includes("-")
+            ? `/pea/uuid/${encodeURIComponent(projectUuid)}/trazabilidad`
+            : `/pea/${encodeURIComponent(projectUuid)}/trazabilidad`;
+        return api.post(url, { accion, detalle }).catch(() => null);
+    },
+
+    /**
      * Ejecuta una transición de estado del proyecto curricular con observaciones y plazo opcional.
      */
     transitionState: (projectUuid: string, newState: string, observation?: string, _fechaLimite?: string): Promise<any> => {

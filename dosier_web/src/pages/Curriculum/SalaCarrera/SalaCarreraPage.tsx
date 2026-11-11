@@ -9,11 +9,23 @@ import { useNotifications } from '../../../api/NotificationsContext';
 import { useAuth } from '../../../api/AuthContext';
 
 export const SalaCarreraPage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, isVicerrector, activeRole, isAdmin } = useAuth();
     const { idCarrera: idCarreraParam } = useParams<{ idCarrera: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { addToast } = useNotifications();
+
+    const effectiveRole = activeRole || (
+        isAdmin ? 'DOSIER_ADMIN' :
+        isVicerrector ? 'DOSIER_VICERRECTOR' : ''
+    );
+    const isVicerrectorMode = effectiveRole === 'DOSIER_VICERRECTOR' || (isVicerrector && effectiveRole !== 'DOSIER_ADMIN');
+
+    useEffect(() => {
+        if (isVicerrectorMode) {
+            navigate('/documentacion', { replace: true });
+        }
+    }, [isVicerrectorMode, navigate]);
 
     const [carrerasDisponibles, setCarrerasDisponibles] = useState<DocenteCarreraDto[]>([]);
     const [periodosDisponibles, setPeriodosDisponibles] = useState<PeriodoAcademicoDto[]>([]);

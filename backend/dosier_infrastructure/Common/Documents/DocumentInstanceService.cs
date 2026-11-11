@@ -28,12 +28,13 @@ namespace Dosier.Infrastructure.Common.Documents
 
         public async Task<DocumentInstance> CreateAsync(string templateCode, string entityUuid, string createdBy, string? title = null, string entityType = "Proyecto", CancellationToken ct = default)
         {
+            var normalizedCode = templateCode == "PRE_PEA" ? "PEA_OFICIAL" : templateCode;
             var template = await _context.DocumentTemplates
-                .FirstOrDefaultAsync(t => t.Code == templateCode && t.IsActive, ct);
+                .FirstOrDefaultAsync(t => (t.Code == normalizedCode || t.Code == templateCode) && t.IsActive, ct);
 
             if (template == null)
             {
-                var seed = DocumentTemplateRegistry.GetByCode(templateCode);
+                var seed = DocumentTemplateRegistry.GetByCode(normalizedCode);
                 if (seed != null)
                 {
                     _context.DocumentTemplates.Add(seed);
@@ -63,7 +64,7 @@ namespace Dosier.Infrastructure.Common.Documents
             }
 
             var instance = DocumentInstance.Create(
-                templateCode, 
+                normalizedCode, 
                 template.Version, 
                 entityUuid, 
                 createdBy, 
@@ -547,8 +548,9 @@ namespace Dosier.Infrastructure.Common.Documents
 
         public async Task<DocumentInstance> ResolveAsync(string templateCode, string entityUuid, string createdBy, string? title = null, string entityType = "Proyecto", CancellationToken ct = default)
         {
+            var normalizedCode = templateCode == "PRE_PEA" ? "PEA_OFICIAL" : templateCode;
             var existing = await _context.DocumentInstances
-                .FirstOrDefaultAsync(i => i.EntityUuid == entityUuid && i.TemplateCode == templateCode, ct);
+                .FirstOrDefaultAsync(i => i.EntityUuid == entityUuid && (i.TemplateCode == normalizedCode || i.TemplateCode == templateCode), ct);
 
             if (existing != null)
             {
@@ -557,7 +559,7 @@ namespace Dosier.Infrastructure.Common.Documents
                 return existing;
             }
 
-            var created = await CreateAsync(templateCode, entityUuid, createdBy, title, entityType, ct);
+            var created = await CreateAsync(normalizedCode, entityUuid, createdBy, title, entityType, ct);
             await SyncFromProjectAsync(created, ct);
             await ValidateStorageIntegrityAsync(created, ct);
             return created;

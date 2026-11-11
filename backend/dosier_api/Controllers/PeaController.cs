@@ -425,6 +425,22 @@ namespace dosier_api.Controllers
             return Ok(list);
         }
 
+        [HttpPost("uuid/{uuid}/trazabilidad")]
+        [HttpPost("{uuid:guid}/trazabilidad")]
+        public async Task<IActionResult> RegistrarEventoTrazabilidad(string uuid, [FromBody] RegistrarEventoPeaDto dto)
+        {
+            var header = await _peaService.GetHeaderByUuidAsync(uuid);
+            if (header == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int? idUserInt = int.TryParse(userId, out int u) ? u : null;
+
+            await _peaService.RegistrarEventoTrazabilidadAsync(header.Value.IdPea, dto.Accion, dto.Detalle, idUserInt);
+            return Ok(new { success = true });
+        }
+
         [HttpGet("ai/config")]
         public async Task<IActionResult> GetAiConfig(CancellationToken ct)
         {

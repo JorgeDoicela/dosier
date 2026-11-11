@@ -10,6 +10,7 @@ import {
     cambiarEstadoPea,
     type PeaDto
 } from '../../../../services/peaService';
+import { recordRecentSubjectOpen } from '../../../../utils/recentSubjectStorage';
 import { useAuth } from '../../../../api/AuthContext';
 
 interface UseRevisionTecnicaDataParams {
@@ -333,6 +334,7 @@ export const useRevisionTecnicaData = ({
         if (!projectUuid) return;
         setLoading(true);
         try {
+            recordRecentSubjectOpen({ uuid: projectUuid });
             const [pea, instanceRes] = await Promise.all([
                 getPeaByUuid(projectUuid),
                 documentInstanceService.resolve({
@@ -341,6 +343,13 @@ export const useRevisionTecnicaData = ({
                 }).catch(() => null)
             ]);
             setRawPea(pea);
+            if (pea) {
+                recordRecentSubjectOpen({
+                    uuid: pea.uuid || projectUuid,
+                    id_pea: (pea as any).id_pea || (pea as any).idPea,
+                    id_asignacion: (pea as any).id_asignacion || (pea as any).idAsignacion
+                });
+            }
 
             const projectDetail: ProjectDetail = {
                 uuid: pea.uuid,
@@ -409,22 +418,6 @@ export const useRevisionTecnicaData = ({
                 ? 'Aval de Coordinación Académica'
                 : 'Aval de Coordinación de Carrera';
 
-        const pendientesCount = Object.values(comments).reduce(
-            (acc, list) => acc + (list ? list.filter(c => c.status === 'Pendiente').length : 0),
-            0
-        );
-
-        if (pendientesCount > 0) {
-            const proceed = await confirm({
-                title: "Observaciones Pendientes",
-                message: `Existen ${pendientesCount} observación(es) en estado pendiente. ¿Está seguro de emitir el aval favorable sin exigir subsanación previa?`,
-                confirmText: "Avalar de Todos Modos",
-                cancelText: "Volver a Revisar",
-                variant: "warning"
-            });
-            if (!proceed) return false;
-        }
-
         setSubmitting(true);
         try {
             const resultado = await firmarPea(projectUuid, {
@@ -459,21 +452,6 @@ export const useRevisionTecnicaData = ({
     const handleDevolver = async (generalFeedback: string, fechaLimite?: string): Promise<boolean> => {
         if (!project || !projectUuid) return false;
 
-        const totalObservaciones = Object.values(comments).reduce((acc, list) => acc + (list?.length || 0), 0);
-        if (!generalFeedback.trim() && totalObservaciones === 0) {
-            addToast("Observaciones Requeridas", "Debe redactar una síntesis general o registrar al menos una observación por sección antes de devolver el PEA.", "warning");
-            return false;
-        }
-
-        const confirmDevolver = await confirm({
-            title: "Devolver PEA para Subsanaciones",
-            message: `¿Desea cambiar el estado a 'Observado' y remitir las observaciones al docente elaborador${fechaLimite ? ` con fecha límite al ${fechaLimite}` : ''}?`,
-            confirmText: "Devolver al Docente",
-            cancelText: "Cancelar",
-            variant: "destructive"
-        });
-        if (!confirmDevolver) return false;
-
         setSubmitting(true);
         try {
             const sectionIssues = Object.entries(comments)
@@ -486,7 +464,9 @@ export const useRevisionTecnicaData = ({
 
             const motivoFull = generalFeedback.trim()
                 ? `${generalFeedback.trim()}${sectionIssues ? `\n\nDetalle por Sección:\n${sectionIssues}` : ''}`
-                : `Correcciones requeridas:\n${sectionIssues}`;
+                : sectionIssues
+                    ? `Correcciones requeridas:\n${sectionIssues}`
+                    : `Devuelto para revisión y subsanación${fechaLimite ? ` con plazo hasta ${fechaLimite}` : ''}.`;
 
             await cambiarEstadoPea(projectUuid, 'Observado', undefined, motivoFull);
 
@@ -584,11 +564,53 @@ export const useRevisionTecnicaData = ({
             });
 
             loadPdf(projectUuid);
+            curriculumProjectService.recordEvent(
+                projectUuid,
+                'Actualización de datos generales',
+                `Distribución horaria: ${nuevosDatos.horasCD ?? 0}h CD, ${nuevosDatos.horasAPE ?? 0}h APE, ${nuevosDatos.horasTA ?? 0}h Autónomo`
+            );
             addToast('Datos Generales Actualizados', 'Los cambios en los metadatos y distribución horaria fueron guardados.', 'success');
             return true;
         } catch (err: any) {
             console.error('[DOSIER] Error al actualizar datos generales del PEA:', err);
             const msg = err.response?.data?.message || err.message || 'No se pudieron guardar las modificaciones en los datos generales.';
+            addToast('Error al Guardar', msg, 'error');
+            return false;
+        }
+    }, [projectUuid, loadPdf, addToast]);
+
+    const updateSectionSnapshot = useCallback(async (
+        patchPayload: Record<string, any>,
+        successTitle: string = 'Sección Actualizada',
+        successMsg: string = 'Los cambios fueron guardados exitosamente.'
+    ): Promise<boolean> => {
+        if (!projectUuid) return false;
+        try {
+            const instanceRes = await documentInstanceService.resolve({
+                templateCode: 'PEA_OFICIAL',
+                entityUuid: projectUuid
+            });
+            const instanceUuid = instanceRes?.uuid || (instanceRes as any)?.Uuid;
+            if (!instanceUuid) throw new Error('No se pudo resolver la instancia oficial del PEA');
+
+            await documentInstanceService.updateMetadata(instanceUuid, patchPayload);
+
+            setDocSnapshot((prev: any) => ({
+                ...prev,
+                ...patchPayload
+            }));
+
+            loadPdf(projectUuid);
+            curriculumProjectService.recordEvent(
+                projectUuid,
+                'Actualización de contenido',
+                successTitle
+            );
+            addToast(successTitle, successMsg, 'success');
+            return true;
+        } catch (err: any) {
+            console.error('[DOSIER] Error al actualizar sección del PEA:', err);
+            const msg = err.response?.data?.message || err.message || 'No se pudieron guardar las modificaciones en la sección.';
             addToast('Error al Guardar', msg, 'error');
             return false;
         }
@@ -610,6 +632,7 @@ export const useRevisionTecnicaData = ({
         handleAprobar,
         handleDevolver,
         updateDatosGenerales,
+        updateSectionSnapshot,
         reloadProject: loadProjectData
     };
 };
