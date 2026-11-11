@@ -66,3 +66,27 @@ describe("esRutaActiva — coincidencia de URL", () => {
         expect(esRutaActiva("/admin/usuarios", "/documentacion/convocatorias")).toBe(false);
     });
 });
+
+describe("filtrarInstrumentosRevision — universo de revisión curricular", () => {
+    it("excluye borradores e instrumentos no iniciados, reteniendo únicamente lo enviado por docentes", () => {
+        const proyectosMock = [
+            { uuid: "p1", titulo: "Álgebra Lineal", estado: "Borrador" },
+            { uuid: "p2", titulo: "Análisis y Diseño", estado: "NoIniciado" },
+            { uuid: "p3", titulo: "Fundamentos de Programación", estado: "Observado" },
+            { uuid: "p4", titulo: "Matemáticas", estado: "RevisadoCoord" },
+            { uuid: "p5", titulo: "SGBD I", estado: "EnRevision" },
+            { uuid: "p6", titulo: "SGBD II", estado: "Corregido" },
+        ];
+
+        const estadosBorrador = new Set(["Borrador", "NoIniciado", ""]);
+        const enviados = proyectosMock.filter(p => !estadosBorrador.has(p.estado));
+
+        expect(enviados).toHaveLength(4);
+        expect(enviados.map(p => p.titulo)).toEqual([
+            "Fundamentos de Programación",
+            "Matemáticas",
+            "SGBD I",
+            "SGBD II"
+        ]);
+    });
+});

@@ -35,10 +35,10 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
   * **Agenda y Calendario Curricular (`DocenteAgendaWidget.tsx`):** Columna lateral de próximos hitos normativos CACES, fechas de entrega institucional y acceso directo al módulo de Calendario.
   * **Desacople del Distributivo Exhaustivo:** La cuadrícula/tabla completa de exploración de asignaturas se canaliza exclusivamente a través de la *Vista Folio de Proyectos* (`MisAsignaturasPage.tsx` en `/documentacion/mis-proyectos`), eliminando redundancias en el dashboard.
 * **`CoordCarreraDashboard.tsx` (`DOSIER_COORD_CARRERA`):**
-  * Vista panorámica de todas las asignaturas pertenecientes a las carreras bajo su coordinación técnica.
-  * Filtro disciplinar por nivel, paralelo y estado.
-  * Detección de PEAs con observaciones pendientes o demoras de entrega.
-  * Acciones: Apertura de revisión colegiada, registro de observaciones disciplinadas (`ObservacionesDisciplinarModal.tsx`) y emisión del Aval de Carrera (*RevisadoCoord*).
+  * **Estructura en Dos Columnas Minimalista:** Idéntica a la vista de docentes para consistencia visual (7 columnas para asignaturas y 5 columnas para agenda y alertas).
+  * **Columna de Asignaturas y Estado Curricular:** Folio continuo sin anidamiento excesivo con subpestañas directas ("Todas", "Pendientes de Aval", "Mis Asignaturas"), buscador ágil, barra de avance por materia y botón de acción contextual ("Revisar", "Ver observaciones", "Ver avance", "Ver PEA").
+  * **Columna Lateral de Rezagados y Agenda:** Bloque compacto de docentes rezagados con acción directa para notificar y widget `DocenteAgendaWidget` con hitos institucionales y fechas de corte.
+  * **Acciones:** Revisión técnica de PEAs en el editor, registro de observaciones disciplinares (`ObservacionesDisciplinarModal.tsx`) y emisión del Aval de Carrera (*RevisadoCoord*).
 * **`CoordAcadDashboard.tsx` (`DOSIER_COORD_ACAD`):**
   * Panel de control metodológico y normativo de todas las carreras del ISTPET.
   * Detección de inconsistencias con el Artículo 21 del CES (160 horas por 4 créditos).
@@ -73,7 +73,8 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
 ### 2.2. Módulo de Dominio Curricular y Gestión de Documentos Docentes (`src/pages/Curriculum/`)
 
 * **`SupervisionCurricularPage.tsx` (`/documentacion`):**
-  * Vista matriz de supervisión curricular que despliega directamente el componente `<PeaSupervisionTray>`, permitiendo a coordinadores de carrera, coordinadores académicos y vicerrectorado supervisar en tiempo real el avance institucional de los PEAs, filtrar por período y carrera, y acceder al espacio de trabajo documental con las firmas y validaciones normativas vigentes.
+  * Vista matriz de supervisión y revisión curricular que despliega el componente `<PeaSupervisionTray>`, permitiendo a coordinadores de carrera, coordinadores académicos y vicerrectorado tramitar los PEAs de sus carreras.
+  * **Regla de Visibilidad Curricular:** Tanto en la bandeja de supervisión `<PeaSupervisionTray>` como en el submenú desplegable de *Revisión Curricular* del Sidebar (`SidebarNav.tsx`), se muestran **exclusivamente aquellos PEAs que los docentes han enviado formalmente a revisión** (`EnRevision`, `Observado`, `Corregido`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`). Los borradores no enviados e instrumentos no iniciados permanecen en el espacio personal de redacción del docente (*Mis Instrumentos PEA*), garantizando que las mesas de revisión curricular gestionen únicamente lo enviado. Al seleccionar un instrumento en el menú lateral de revisión, se navega directamente a su auditoría técnica (`/documentacion/revision-tecnica/:uuid`).
 * **`SalaCarreraPage.tsx` (`/documentacion/carrera/:idCarrera/sala-curricular` y `/salas-curriculares/:idCarrera`):**
   * Entorno de armonización curricular colegiada y co-diseño para el claustro docente y la Coordinación de Carrera.
   * **Estructura y Componentes:**

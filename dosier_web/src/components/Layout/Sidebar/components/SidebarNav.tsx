@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { MenuItem, SidebarProject } from '../types';
 import { useAuth } from '../../../../api/AuthContext';
+import { isPeaBorrador } from '../../../../pages/Curriculum/utils/peaStatusWorkflow';
 
 const ChevronRightIcon = ({ className = "w-3 h-3", size = 12 }: { className?: string; size?: number }) => (
     <svg
@@ -131,13 +132,18 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                 }
             };
 
-            const relevantProjects = item.path === '/documentacion/mis-proyectos' ? (sidebarMyProjects || []) : sidebarProjects;
+            const isRevision = item.path === '/documentacion';
+            let relevantProjects = item.path === '/documentacion/mis-proyectos' ? (sidebarMyProjects || []) : sidebarProjects;
+            if (isRevision) {
+                relevantProjects = relevantProjects.filter(p => !isPeaBorrador(p.estado || p.status) && p.estado !== 'NoIniciado' && p.estado !== '');
+            }
             const displayLimit = 6;
             const shownProjects = showAllProjects ? relevantProjects : relevantProjects.slice(0, displayLimit);
             const hasMore = relevantProjects.length > displayLimit;
             const targetBasePath = item.path;
 
             const isAnySubActive = relevantProjects.some(p =>
+                (isRevision && location.pathname.includes(`/revision-tecnica/${p.uuid}`)) ||
                 location.pathname.includes(`/workspace/`) && (
                     location.pathname.toLowerCase().includes(p.uuid.toLowerCase()) ||
                     (p.id_pea && location.pathname.includes(String(p.id_pea))) ||
@@ -213,13 +219,17 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
                                         {shownProjects.map((p) => {
                                             const tCode = (p.template_code || p.templateCode || 'PEA_OFICIAL').toLowerCase().replace(/_/g, '-');
                                             const basePath = item.path.includes('/mis-proyectos') ? '/documentacion/mis-proyectos/workspace' : '/documentacion/workspace';
-                                            const projectPath = `${basePath}/${tCode}/${p.uuid}`;
+                                            const projectPath = isRevision
+                                                ? `/documentacion/revision-tecnica/${p.uuid}`
+                                                : `${basePath}/${tCode}/${p.uuid}`;
 
-                                            const isSubActive = location.pathname.includes(`/workspace/`) && (
-                                                location.pathname.toLowerCase().includes(p.uuid.toLowerCase()) ||
-                                                (p.id_pea && location.pathname.includes(String(p.id_pea))) ||
-                                                (p.id_asignacion && location.pathname.includes(String(p.id_asignacion)))
-                                            );
+                                            const isSubActive = isRevision
+                                                ? location.pathname.includes(`/revision-tecnica/${p.uuid}`) || location.pathname.toLowerCase().includes(p.uuid.toLowerCase())
+                                                : location.pathname.includes(`/workspace/`) && (
+                                                    location.pathname.toLowerCase().includes(p.uuid.toLowerCase()) ||
+                                                    (p.id_pea && location.pathname.includes(String(p.id_pea))) ||
+                                                    (p.id_asignacion && location.pathname.includes(String(p.id_asignacion)))
+                                                );
 
                                             return (
                                                 <Link

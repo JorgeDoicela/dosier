@@ -1,6 +1,6 @@
 ---
 name: styles-dosier
-description: Activa esta skill para el sistema de diseño visual de DOSIER basado en Modern Enterprise Docs (Stripe Docs, Mintlify, GitBook Enterprise, Linear): estética técnica y profesional con acentos vivos (#0070f3, esmeralda), steppers verticales interactivos, navegación de pestañas sobre riel plano (prohibición absoluta de segmented controls tipo iOS/macOS), badges de estado normativo con puntos discretos, especificaciones clave-valor de alta densidad, cero KPIs gigantes y fondos 100% sólidos.
+description: Activa esta skill para el sistema de diseño visual de DOSIER basado en Modern Enterprise Docs (Stripe Docs, Mintlify, GitBook Enterprise, Linear): estética técnica, minimalista y profesional sin saturación de elementos, casi cero iconos SVG (cero iconos decorativos o en botones de flujo), acentos vivos (#0070f3, esmeralda), steppers verticales interactivos, navegación de pestañas sobre riel plano, badges de estado normativo con puntos discretos, especificaciones clave-valor de alta densidad, cero KPIs gigantes y fondos 100% sólidos.
 ---
 # DOSIER Design System — Estándar Oficial Modern Enterprise Docs
 
@@ -52,7 +52,44 @@ El estándar **Modern Enterprise Docs rige de forma absoluta y universal en TODO
 * **Cero Amontonamiento:** Estructura espaciosa con paddings y gaps generosos (`p-6` a `p-8`, `gap-6` a `gap-8`). Cada elemento debe respirar con holgura.
 * **Folio Unificado:** En lugar de apilar múltiples cajas anidadas (*cards inside cards*), se utiliza un **Folio Unificado** con divisiones internas tenues mediante bordes de precisión (`border-slate-200/90` o `border-zinc-200 dark:border-zinc-800`).
 * **Cero Mezclas con Marketing:** Prohibido mezclar con elementos de landing pages (cero botones macOS semáforo "rojo/amarillo/verde", cero barras falsas de navegador, cero URLs decorativas).
-* **Cero Emojis:** Empleo exclusivo de iconografía técnica vectorial con Lucide React (`strokeWidth={1.5}` o `1.75`) desnuda y directa.
+* **Cero Emojis:** Prohibición absoluta de emojis en toda la interfaz, código y documentación.
+
+### 1.2. Regla de Minimalismo Radical: Casi Cero Iconos SVG (Almost Iconless UI)
+* **Principio Rector:** La interfaz es editorial, sobria y limpia. La jerarquía la definen el tamaño, el peso tipográfico y el espaciado, NUNCA la saturación de iconos SVG decorativos. Sencillo, entendible, sin saturar de elementos y con todo lo necesario.
+* **Prohibición de Iconos de Acompañamiento en Metadatos:**
+  - Queda estrictamente prohibido colocar un icono al lado de cada línea de datos (prohibido poner `User` o `UserCheck` al lado del docente, `GraduationCap` al lado de la carrera, `Clock` al lado de las horas o semestres, `Building` al lado del instituto o facultad). El texto plano con separadores discretos (`·`) en escala gris tenue es infinitamente más limpio y legible.
+* **Botones de Solo Texto (Cero Iconos en Botones de Flujo):**
+  - Los botones de acción curricular (`Continuar PEA`, `Corregir PEA`, `Elaborar PEA`, `Ver PEA`, `Revisar`, `Notificar`) deben ser **exclusivamente texto sólido**, sin iconos adentro (prohibido agregar `<Check />`, `<ChevronRight />`, `<ArrowRight />`, `<Send />`, `<Eye />` o `<Pen />` a los botones estándar).
+* **Únicos Casos de Uso Aprobados para Iconos SVG:**
+  - Pistas visuales dentro de inputs de búsqueda (la lupa de `<Search size={14} />`).
+  - Botones de acción aislados que no llevan texto (ej. botón de cerrar modal `X` o toggle de vista cuadrícula/lista).
+  - Acciones específicas de exportación o archivo (icono de descarga en botón `PDF`).
+  - Cabecera principal de un widget puntual aislado (ej. el pequeño calendario en "Agenda y Calendario Curricular").
+  - En cualquier otra situación: **suprimir el icono**.
+
+### 1.3. Principios de Composición Universal (Válidos para Cualquier Módulo del Sistema)
+Estos 5 principios abstractos rigen **todas las páginas del sistema sin importar su temática** (Dashboards, Instrumentos Curriculares, Catálogo de Formatos y Plantillas, Centro de Solicitudes y Trámites, Gestión de Usuarios o Configuración):
+
+1. **Jerarquía Tipográfica en 3 Niveles (La tipografía estructura la vista, jamás los iconos):**
+   * **Nivel 1 — Contexto Superior (Metadatos):** Texto tenue, pequeño (`text-xs text-zinc-500` o `font-mono text-[11px] text-zinc-400`), separado por puntos medios discretos (`·`). Jamás rodeado de cápsulas ni precedido de iconos temáticos.
+   * **Nivel 2 — Sujeto / Título Principal:** Tipografía clara y sólida en negrita (`text-sm` o `text-base font-bold text-zinc-900 dark:text-zinc-100`). Sostiene el peso visual por sí mismo sin muletas gráficas.
+   * **Nivel 3 — Estado y Acción en los Extremos:**
+     - El **estado** se ubica en la esquina superior derecha mediante un punto de color discreto (`w-1.5 h-1.5 rounded-full`) y texto en color semántico (`• Borrador`, `• Pendiente`, `• Con Observaciones`).
+     - La **acción** se ubica al extremo inferior o derecho en un botón de **solo texto plano**, coloreado según la urgencia operativa.
+
+2. **Cero Iconos por Defecto (Zero-Default Icons):**
+   * La regla base del sistema es: **si algo se puede expresar con texto legible y buen espaciado, NO lleva icono**.
+   * Los iconos no son decorativos ni deben usarse para rellenar espacio. Solo existen si cumplen una función interactiva insustituible (lupa en buscador, descarga en exportar PDF, disparador de cerrar modal).
+
+3. **Cero Saturación y Máxima Claridad Operativa:**
+   * *"Sencillo, entendible, sin saturar de elementos y tiene todo lo necesario."*
+   * Cada bloque o tarjeta debe responder únicamente a: *¿Qué es?*, *¿En qué estado está?* y *¿Qué acción tomo ahora?*. Cualquier elemento accesorio o texto obvio que no aporte a la decisión inmediata se descarta.
+
+4. **Navegación al Ras sobre Riel Plano:**
+   * Las pestañas de filtrado o vistas viven directamente al ras de la línea base divisoria continua (`border-b`), con etiqueta de texto y conteo numérico discreto al lado (`Mis Asignaturas  7`, `PEAs de Otros Docentes  32`), eliminando cajas encapsuladas grises o segmented controls.
+
+5. **Superficies Sólidas de Precisión:**
+   * Tarjetas y folios con fondo blanco opaco (`bg-white` en claro, `bg-zinc-950` en oscuro), bordes nítidos de 1px (`border-slate-200 dark:border-zinc-800`), esquinas redondeadas naturales (`rounded-xl` en tarjetas, `rounded-lg` en inputs y botones) y sombras mínimas (`shadow-xs`). Cero gradientes, cero fondos translúcidos y cero decoraciones superfluas.
 
 ---
 
@@ -147,20 +184,33 @@ El sistema utiliza exclusivamente la tipografía **Inter Variable** oficial inst
   * **Paso futuro:** `bg-white dark:bg-zinc-900 border-2 border-slate-300 dark:border-zinc-700 text-slate-500 dark:text-zinc-400`.
 * **Tarjeta de Fase Activa:** Resaltada sutilmente con `bg-blue-50/70 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900` y chevron suave.
 
-### 4.4. Botones y Elementos de Acción
-* **Botón Primario:**
+### 4.4. Botones y Elementos de Acción (Solo Texto, Cero Iconos Decorativos)
+* **Principio de Botones Limpios:** Los botones de acción institucional se construyen **exclusivamente con texto**, sin iconos SVG decorativos incrustados (cero checks, flechas, ojos o lápices dentro de botones de flujo).
+* **Botón Primario (Solo Texto):**
   ```tsx
-  <button className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs disabled:opacity-40 cursor-pointer inline-flex items-center gap-2">
+  <button className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-colors shadow-xs disabled:opacity-40 cursor-pointer">
+      Continuar PEA
+  </button>
   ```
-* **Botón Secundario:**
+* **Botón de Advertencia / Subsanación (Solo Texto):**
   ```tsx
-  <button className="px-3.5 py-2 text-xs font-medium rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:border-slate-300 transition-all cursor-pointer inline-flex items-center gap-2">
+  <button className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer">
+      Corregir PEA
+  </button>
   ```
-* **Botón Peligro / Destructivo:**
+* **Botón Secundario / Neutro (Solo Texto):**
   ```tsx
-  <button className="px-3.5 py-2 text-xs font-medium rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900 transition-all cursor-pointer inline-flex items-center gap-2">
+  <button className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+      Ver expediente
+  </button>
   ```
-* **Prohibiciones en Botones:** Prohibido transformar texto de botones a mayúsculas forzadas (`uppercase tracking-widest text-[10px]`) por defecto; usar Sentence case natural (`text-xs font-semibold`).
+* **Botón Peligro / Destructivo (Solo Texto):**
+  ```tsx
+  <button className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900 transition-colors cursor-pointer">
+      Eliminar
+  </button>
+  ```
+* **Prohibición de Mayúsculas Forzadas:** Usar siempre capitalización tipo título o frase natural (*Continuar PEA*, *Corregir PEA*, *Revisar*, *Notificar rezagados*), jamás `ALL CAPS`.
 
 ### 4.5. Formularios, Inputs y Selectores
 * **Inputs y Textareas:**
@@ -255,6 +305,8 @@ Antes de dar por finalizado cualquier componente, pantalla o refactorización:
 * [ ] ¿Los iconos SVG son **desnudos**, sin cajas ni wrappers redondeados de colores alrededor?
 * [ ] ¿Los steppers de proceso utilizan la **línea conectora continua** vertical y nodos circulares con acento activo?
 * [ ] ¿Se eliminaron los **KPIs gigantes** decorativos y los párrafos de relleno explicativo?
+* [ ] ¿Se aplicó la regla de **casi cero iconos SVG** (cero iconos decorativos de acompañamiento en metadatos y botones de flujo con solo texto plano)?
+* [ ] ¿La interfaz es sencilla, entendible, sin saturar de elementos y contiene todo lo necesario con holgura?
 * [ ] ¿Todos los modales, popovers y selectores tienen **fondos 100% sólidos y opacos**, sin `backdrop-blur` ni sangrado visual?
 * [ ] ¿Las pestañas de paneles laterales de inspección usan el acento `#0070f3` (cero líneas negras `border-text-main`) y los estados vacíos tienen capitalización natural?
 * [ ] ¿Las vistas de altura completa (editores/workspaces) suprimen los widgets flotantes (FAB) superpuestos?

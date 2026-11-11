@@ -219,6 +219,9 @@ graph TD
 * **Guardias y Evaluadores:**
   * `hasRole(role)`: Comprobación de membresía en roles institucionales (`DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, etc.).
   * `canSignPea(stage)`: Autorización estricta para firma en etapas del workflow.
+* **Gobernanza de Conmutación de Rol Institucional:**
+  * La capacidad de conmutar y alternar entre roles institucionales mediante el menú desplegable en la barra superior y pie del sidebar es **exclusiva del Administrador (`DOSIER_ADMIN`)** para fines de supervisión, auditoría y pruebas integrales de interfaz.
+  * Para todos los demás perfiles institucionales (Vicerrectorado, Coordinación Académica, Coordinación de Carrera y Docente), el rol institucional activo se fija de forma inmutable según la máxima jerarquía normada (`resolveCanonicalRole`), eliminando cualquier interactividad o menú selector de cambio de rol de la interfaz.
 
 ### 3.2. `NotificationsContext.tsx`: Alertas en Tiempo Real
 * Conexión con el WebSocket de SignalR (`/collaborationHub`).

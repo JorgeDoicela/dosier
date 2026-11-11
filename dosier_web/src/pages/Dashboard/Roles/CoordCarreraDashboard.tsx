@@ -21,21 +21,11 @@ import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/Re
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
-import {
-    isPeaBorrador,
-    isPeaEnRevision,
-    getPeaStatusDescriptor,
-    formatModalidad
-} from '../../Curriculum/utils/peaStatusWorkflow';
+import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
+import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
+import { getAvanceDetalle } from './Components/DocenteActividadesPanel';
 import { 
-    Search, 
-    CheckCircle2, 
-    RefreshCw,
-    LayoutGrid,
-    List,
-    Building2,
-    UserCheck,
-    Eye
+    Search
 } from 'lucide-react';
 
 export const CoordCarreraDashboard: React.FC = () => {
@@ -53,8 +43,7 @@ export const CoordCarreraDashboard: React.FC = () => {
     const [peas, setPeas] = useState<PeaBandejaItemDto[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [search, setSearch] = useState<string>('');
-    const [filterEstado, setFilterEstado] = useState<string>('todos');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [filterTab, setFilterTab] = useState<'todos' | 'pendientes' | 'mis_materias'>('todos');
 
     // Modales
     const [observacionPea, setObservacionPea] = useState<PeaBandejaItemDto | null>(null);
@@ -78,7 +67,6 @@ export const CoordCarreraDashboard: React.FC = () => {
         ]).then(([misCarrerasList, todasCarrerasList, periodosList]) => {
             if (!isMounted) return;
 
-            // Para coordinadores de carrera, limitar estrictamente a sus carreras asignadas
             const carrerasDisponibles = (!esSuperAutoridad && misCarrerasList.length > 0)
                 ? misCarrerasList
                 : (todasCarrerasList.length > 0 ? todasCarrerasList : misCarrerasList);
@@ -121,7 +109,7 @@ export const CoordCarreraDashboard: React.FC = () => {
         fetchPeas();
     }, [fetchPeas]);
 
-    // Sincronización continua en tiempo real (SignalR, visibilidad de pestaña y heartbeat pasivo)
+    // Sincronización continua en tiempo real
     useRealtimeSync({
         onSync: fetchPeas,
         events: ['dosier-projects-changed']
@@ -149,37 +137,36 @@ export const CoordCarreraDashboard: React.FC = () => {
         return Boolean(matchesId || matchesNombre);
     }, [user]);
 
-    // Filtrado en memoria por estado y texto de búsqueda
+    // Conteo por pestañas
+    const pendientesCount = useMemo(() => {
+        return peas.filter(p => p.estado === 'EnRevision').length;
+    }, [peas]);
+
+    const misMateriasCount = useMemo(() => {
+        return peas.filter(p => isMiMateria(p)).length;
+    }, [peas, isMiMateria]);
+
+    // Filtrado en memoria
     const peasFiltrados = useMemo(() => {
         return peas.filter(p => {
-            const matchesEstado = filterEstado === 'todos'
+            const matchesTab = filterTab === 'todos'
                 ? true
-                : filterEstado === 'mis_materias'
-                    ? isMiMateria(p)
-                    : p.estado === filterEstado;
+                : filterTab === 'pendientes'
+                    ? p.estado === 'EnRevision'
+                    : isMiMateria(p);
+
             const matchesSearch = search === '' ||
                 p.nombre_asignatura.toLowerCase().includes(search.toLowerCase()) ||
                 (p.nombre_docente_elaborador || '').toLowerCase().includes(search.toLowerCase()) ||
                 (p.codigo_asignatura || '').toLowerCase().includes(search.toLowerCase());
-            return matchesEstado && matchesSearch;
+
+            return matchesTab && matchesSearch;
         });
-    }, [peas, filterEstado, search, isMiMateria]);
+    }, [peas, filterTab, search, isMiMateria]);
 
-
-    // Emisión formal de Aval de Carrera
-    const handleEmitirAvalCarrera = async (peaItem: PeaBandejaItemDto) => {
-        try {
-            await cambiarEstadoPea(peaItem.id_pea, 'RevisadoCoord', undefined, 'Aval de pertinencia técnica y disciplinar emitido por Coordinación de Carrera');
-            addToast(
-                'Aval de Carrera Emitido',
-                `Se aprobó la pertinencia técnica y disciplinar de "${peaItem.nombre_asignatura}". Elevado a Coordinación Académica.`,
-                'success'
-            );
-            await fetchPeas();
-        } catch (error) {
-            console.error('Error al emitir aval de carrera:', error);
-            addToast('Error', 'No fue posible registrar el aval de carrera en el servidor.', 'error');
-        }
+    // Navegación directa al editor para revisión
+    const handleAbrirRevision = (uuid: string) => {
+        navigate(`/documentacion/workspace/pea-oficial/${uuid}?edit=pea-oficial`);
     };
 
     // Registro formal de observaciones
@@ -205,12 +192,7 @@ export const CoordCarreraDashboard: React.FC = () => {
         }
     };
 
-    // Navegación directa al editor para revisión
-    const handleAbrirRevision = (uuid: string) => {
-        navigate(`/documentacion/workspace/pea-oficial/${uuid}?edit=pea-oficial`);
-    };
-
-    // Cálculo dinámico de docentes rezagados para el modal de recordatorio
+    // Docentes rezagados
     const docentesRezagados: DocenteRezagadoItem[] = useMemo(() => {
         return peas
             .filter(p => p.estado === 'Borrador' || p.estado === 'Observado' || !p.firma_docente)
@@ -232,314 +214,249 @@ export const CoordCarreraDashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Encabezado */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-zinc-800">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                    Coordinación de Carrera
-                </h1>
-
-                <div className="flex flex-wrap items-center gap-2">
-                    {/* Selector de Carrera Real de SIGAFI (solo cuando coordina múltiples carreras) */}
-                    {carreras.length > 1 && (
-                        <div className="w-56">
-                            <GeistSelect
-                                value={selectedCarreraId}
-                                onChange={val => {
-                                    setSelectedCarreraId(val === 'todas' ? 'todas' : Number(val));
-                                }}
-                                options={[
-                                    ...(esSuperAutoridad ? [{ value: 'todas', label: 'Todas las Carreras' }] : []),
-                                    ...carreras.map(c => {
-                                        const id = c.id_carrera ?? c.idCarrera ?? 0;
-                                        const nombre = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${id}`;
-                                        return { value: id, label: nombre };
-                                    })
-                                ]}
-                                placeholder="Carrera..."
-                            />
-                        </div>
-                    )}
-
-                    {/* Selector de Período Académico */}
-                    {periodos.length > 0 && (
-                        <div className="w-48">
-                            <GeistSelect
-                                value={selectedPeriodo}
-                                onChange={val => setSelectedPeriodo(String(val))}
-                                options={periodos.map(p => ({
-                                    value: p.id_periodo,
-                                    label: `${p.id_periodo}${p.es_activo ? ' (Activo)' : ''}`
-                                }))}
-                                placeholder="Período..."
-                            />
-                        </div>
-                    )}
-
-                    <button
-                        onClick={() => setIsRecordatorioOpen(true)}
-                        className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer"
-                    >
-                        Notificar Rezagados ({docentesRezagados.length})
-                    </button>
-                </div>
-            </div>
-
-
-            {/* Barra de Filtros y Búsqueda (Sin cuadros sobre cuadros) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div className="relative flex-1 max-w-md">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por asignatura, docente o código..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3]"
-                    />
+            {/* Encabezado Directo */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                        Coordinación de Carrera
+                    </h1>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        Revisión curricular, aval de asignaturas y agenda de carrera.
+                    </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="w-52">
+                {carreras.length > 1 && (
+                    <div className="w-56">
                         <GeistSelect
-                            value={filterEstado}
-                            onChange={val => setFilterEstado(String(val))}
+                            value={selectedCarreraId}
+                            onChange={val => setSelectedCarreraId(val === 'todas' ? 'todas' : Number(val))}
                             options={[
-                                { value: 'todos', label: 'Todos los Estados' },
-                                { value: 'mis_materias', label: 'Mis Asignaturas (Carga Propia)' },
-                                { value: 'Borrador', label: 'Borrador' },
-                                { value: 'EnRevision', label: 'En Revisión de Carrera' },
-                                { value: 'Observado', label: 'Con Observaciones' },
-                                { value: 'RevisadoCoord', label: 'Avalado por Carrera' },
-                                { value: 'RevisadoAcad', label: 'Avalado por Académica' },
-                                { value: 'Aprobado', label: 'Aprobado / Legalizado' }
+                                ...(esSuperAutoridad ? [{ value: 'todas', label: 'Todas las Carreras' }] : []),
+                                ...carreras.map(c => {
+                                    const id = c.id_carrera ?? c.idCarrera ?? 0;
+                                    const nombre = c.carrera1 || c.nombre_carrera || c.carrera || `Carrera ${id}`;
+                                    return { value: id, label: nombre };
+                                })
                             ]}
-                            placeholder="Estado..."
+                            placeholder="Carrera..."
                         />
                     </div>
-
-                    {/* Selector de Modo: Cuadros vs Lista */}
-                    <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('grid')}
-                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                viewMode === 'grid'
-                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                            }`}
-                            title="Vista en Cuadros"
-                        >
-                            <LayoutGrid size={14} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('list')}
-                            className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                viewMode === 'list'
-                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                    : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                            }`}
-                            title="Vista en Lista"
-                        >
-                            <List size={14} />
-                        </button>
-                    </div>
-                </div>
+                )}
             </div>
 
-            {/* Contenido: Grid o Tabla Directos en el Folio */}
-            {isLoading ? (
-                <div className="py-16 text-center text-zinc-400 text-xs">
-                    <RefreshCw size={18} className="animate-spin mx-auto mb-2 text-[#0070f3]" />
-                    Cargando asignaturas y estado curricular...
-                </div>
-            ) : peasFiltrados.length === 0 ? (
-                <div className="py-12 text-center text-zinc-500 text-xs rounded-xl border border-dashed border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-                    No se encontraron asignaturas registradas para este filtro.
-                </div>
-            ) : viewMode === 'grid' ? (
-                /* ── MODO CUADROS (ESTILO DOCENTE LIMPIO) ── */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {peasFiltrados.map(p => {
-                        const descriptor = getPeaStatusDescriptor(p.estado);
-                        const esBorrador = isPeaBorrador(p.estado);
-                        const esEnRevision = isPeaEnRevision(p.estado);
-                        const puedeEmitirAval = esEnRevision && !p.firma_coord;
+            {/* Layout de 2 Columnas (Estilo Docente) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Columna Izquierda: Asignaturas y Revisión Curricular */}
+                <div className="lg:col-span-7">
+                    <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-4">
+                        {/* Cabecera y Pestañas Minimalistas al ras */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-4">
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                    Asignaturas y Estado Curricular
+                                </h2>
 
-                        return (
-                            <div
-                                key={p.uuid}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => handleAbrirRevision(p.uuid)}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        handleAbrirRevision(p.uuid);
-                                    }
-                                }}
-                                className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
-                            >
-                                {/* Top: Estado */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between gap-2">
-                                        {selectedCarreraId === 'todas' ? (
-                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                                <span>{p.nombre_carrera}</span>
-                                            </div>
-                                        ) : (
-                                            <span />
-                                        )}
-                                        <span className="inline-flex items-center gap-1.5 text-xs font-medium shrink-0">
-                                            <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
-                                            <span className={descriptor.textClass}>{descriptor.label}</span>
-                                        </span>
-                                    </div>
-
-                                    {/* Título de la Asignatura */}
-                                    <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
-                                        {p.nombre_asignatura}
-                                    </h3>
-
-                                    {/* Docente Elaborador */}
-                                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                        <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
-                                        <span className="truncate">{p.nombre_docente_elaborador || 'Docente Responsable'}</span>
-                                        {isMiMateria(p) && (
-                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
-                                                Tú
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
-                                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
-                                        {p.semestre_nivel && <span>{p.semestre_nivel}</span>}
-                                        {p.semestre_nivel && <span className="text-zinc-300 dark:text-zinc-700">·</span>}
-                                        <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                                            {formatModalidad(p.modalidad)}
-                                        </span>
-                                    </div>
-                                </div>
+                                <span className="text-xs font-mono text-zinc-400">
+                                    {peasFiltrados.length} de {peas.length}
+                                </span>
                             </div>
-                        );
-                    })}
-                </div>
-            ) : (
-                /* ── MODO TABLA / LISTA ── */
-                <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
-                                <tr>
-                                    <th className="py-2.5 px-4">Asignatura y Carrera</th>
-                                    <th className="py-2.5 px-3">Docente Elaborador</th>
-                                    <th className="py-2.5 px-3">Modalidad</th>
-                                    <th className="py-2.5 px-3">Estado Técnico</th>
-                                    <th className="py-2.5 px-4 text-right">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+
+                            {/* Pestañas Planas */}
+                            <div className="flex items-center gap-6 border-b border-slate-100 dark:border-zinc-800 -mb-px text-xs">
+                                <button
+                                    type="button"
+                                    onClick={() => setFilterTab('todos')}
+                                    className={`pb-2.5 font-medium transition-colors cursor-pointer border-b-2 ${
+                                        filterTab === 'todos'
+                                            ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
+                                            : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                    }`}
+                                >
+                                    Todas ({peas.length})
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFilterTab('pendientes')}
+                                    className={`pb-2.5 font-medium transition-colors cursor-pointer border-b-2 inline-flex items-center gap-1.5 ${
+                                        filterTab === 'pendientes'
+                                            ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
+                                            : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                    }`}
+                                >
+                                    <span>Pendientes de Aval</span>
+                                    {pendientesCount > 0 && (
+                                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-50 dark:bg-blue-950/60 text-[#0070f3] dark:text-blue-400 font-bold">
+                                            {pendientesCount}
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFilterTab('mis_materias')}
+                                    className={`pb-2.5 font-medium transition-colors cursor-pointer border-b-2 ${
+                                        filterTab === 'mis_materias'
+                                            ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
+                                            : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                    }`}
+                                >
+                                    Mis Asignaturas ({misMateriasCount})
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Buscador Simple */}
+                        <div className="relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar asignatura, docente o código..."
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3]"
+                            />
+                        </div>
+
+                        {/* Lista Continua (Folio Idéntico a Docentes) */}
+                        {isLoading ? (
+                            <div className="space-y-3 py-2">
+                                <div className="h-20 bg-slate-100 dark:bg-zinc-900 rounded-lg animate-pulse" />
+                                <div className="h-20 bg-slate-100 dark:bg-zinc-900 rounded-lg animate-pulse" />
+                                <div className="h-20 bg-slate-100 dark:bg-zinc-900 rounded-lg animate-pulse" />
+                            </div>
+                        ) : peasFiltrados.length === 0 ? (
+                            <div className="py-10 text-center text-zinc-500 text-xs rounded-lg border border-dashed border-slate-200 dark:border-zinc-800">
+                                No se encontraron asignaturas para este criterio.
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-slate-100 dark:divide-zinc-900 -mx-2">
                                 {peasFiltrados.map(p => {
-                                    const descriptor = getPeaStatusDescriptor(p.estado);
-                                    const esBorrador = isPeaBorrador(p.estado);
-                                    const esEnRevision = isPeaEnRevision(p.estado);
-                                    const puedeEmitirAval = (p.estado === 'EnRevision' || p.firma_docente) && !p.firma_coord;
+                                    const avance = getAvanceDetalle(p.estado);
+                                    const esEnRevision = p.estado === 'EnRevision';
+                                    const esObservado = p.estado === 'Observado';
+
+                                    const accionTexto = esEnRevision
+                                        ? 'Revisar'
+                                        : esObservado
+                                        ? 'Ver observaciones'
+                                        : p.estado === 'Borrador'
+                                        ? 'Ver avance'
+                                        : 'Ver PEA';
+
                                     return (
-                                        <tr key={p.uuid} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50 transition-colors">
-                                            <td className="py-2.5 px-4">
-                                                <div className="space-y-0.5">
-                                                    <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                        <div
+                                            key={p.uuid}
+                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleAbrirRevision(p.uuid);
+                                                }
+                                            }}
+                                            tabIndex={0}
+                                            role="button"
+                                            className={`py-4 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer select-none space-y-2.5 ${
+                                                esObservado ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''
+                                            }`}
+                                        >
+                                            {/* Fila Superior */}
+                                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                                <div className="space-y-1 min-w-0">
+                                                    <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                                                        <span className="truncate">{p.nombre_carrera}</span>
+                                                        {p.semestre_nivel && (
+                                                            <>
+                                                                <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                                                <span>{p.semestre_nivel}</span>
+                                                            </>
+                                                        )}
+                                                        <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                                        <span>{formatModalidad(p.modalidad)}</span>
+                                                    </div>
+
+                                                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-[#0070f3] transition-colors">
                                                         {p.nombre_asignatura}
-                                                    </p>
-                                                    <p className="text-[11px] text-zinc-500">
-                                                        {carreras.length > 1 ? `${p.nombre_carrera} ${p.semestre_nivel ? `• ${p.semestre_nivel}` : ''}` : p.semestre_nivel || ''}
-                                                    </p>
+                                                    </h3>
+
+                                                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                                        <span className="truncate">{p.nombre_docente_elaborador || 'Docente Responsable'}</span>
+                                                        {isMiMateria(p) && (
+                                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
+                                                                Tú
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </td>
-                                            <td className="py-2.5 px-3">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-zinc-700 dark:text-zinc-300">
-                                                        {p.nombre_docente_elaborador || 'Docente Asignado'}
+
+                                                {/* Botón de Acción Directa */}
+                                                <div className="shrink-0 pt-0.5 sm:pt-0">
+                                                    <span
+                                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors inline-block ${
+                                                            esEnRevision
+                                                                ? 'bg-[#0070f3] hover:bg-[#005bb5] text-white'
+                                                                : esObservado
+                                                                ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                                                                : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200'
+                                                        }`}
+                                                    >
+                                                        {accionTexto}
                                                     </span>
-                                                    {isMiMateria(p) && (
-                                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-[#0070f3] dark:text-blue-400 border border-blue-200/50 dark:border-blue-900/40 shrink-0">
-                                                            Tú
-                                                        </span>
-                                                    )}
                                                 </div>
-                                            </td>
-                                            <td className="py-2.5 px-3 text-xs text-zinc-700 dark:text-zinc-300">
-                                                {formatModalidad(p.modalidad)}
-                                            </td>
-                                            <td className="py-2.5 px-3">
-                                                <div className="flex items-center gap-1.5 text-xs font-medium">
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass} shrink-0`} />
-                                                    <span className={descriptor.textClass}>{descriptor.label}</span>
-                                                    {p.total_observaciones_pendientes > 0 && (
-                                                        <span className="text-[10px] text-rose-500 font-mono">
-                                                            ({p.total_observaciones_pendientes})
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="py-2.5 px-4 text-right">
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                    {esBorrador ? (
-                                                        <button
-                                                            onClick={() => handleAbrirRevision(p.uuid)}
-                                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                                            title="Consultar avance de formulación docente"
-                                                        >
-                                                            <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                                            <span>Ver avance</span>
-                                                        </button>
-                                                    ) : esEnRevision ? (
-                                                        <>
-                                                            <button
-                                                                onClick={() => handleAbrirRevision(p.uuid)}
-                                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5" />
-                                                                <span>Revisar</span>
-                                                            </button>
+                                            </div>
 
-                                                            <button
-                                                                onClick={() => setObservacionPea(p)}
-                                                                className="px-3 py-1.5 text-xs font-medium rounded-lg text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-                                                            >
-                                                                Observar
-                                                            </button>
-
-                                                            {puedeEmitirAval && (
-                                                                <button
-                                                                    onClick={() => handleEmitirAvalCarrera(p)}
-                                                                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1.5"
-                                                                >
-                                                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                    <span>Emitir Aval</span>
-                                                                </button>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleAbrirRevision(p.uuid)}
-                                                            className="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                                                        >
-                                                            <Eye className="w-3.5 h-3.5" />
-                                                            <span>Ver expediente</span>
-                                                        </button>
-                                                    )}
+                                            {/* Barra de Progreso y Estado */}
+                                            <div className="space-y-1 pt-1">
+                                                <div className="flex items-center justify-end text-xs">
+                                                    <span className={`font-mono text-xs font-semibold ${avance.colorTexto}`}>
+                                                        {avance.etiqueta}
+                                                    </span>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                                <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-zinc-900 overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-300 ${avance.colorBarra}`}
+                                                        style={{ width: `${avance.porcentaje}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     );
                                 })}
-                            </tbody>
-                        </table>
+                            </div>
+                        )}
                     </div>
                 </div>
-            )}
+
+                {/* Columna Derecha: Rezagados + Agenda Curricular */}
+                <div className="lg:col-span-5 space-y-6">
+                    {/* Tarjeta Minimalista de Rezagados */}
+                    {docentesRezagados.length > 0 && (
+                        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                    Docentes Rezagados
+                                </h2>
+                                <span className="text-xs font-mono font-semibold text-amber-600 dark:text-amber-400">
+                                    {docentesRezagados.length} pendientes
+                                </span>
+                            </div>
+
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                Tienen borradores pendientes o asignaturas sin iniciar en el período activo.
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsRecordatorioOpen(true)}
+                                className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer text-center"
+                            >
+                                Notificar a los {docentesRezagados.length} Docentes
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Widget de Agenda Curricular Institucional */}
+                    <DocenteAgendaWidget />
+                </div>
+            </div>
 
             {/* Modales */}
             {observacionPea && (
@@ -580,3 +497,5 @@ export const CoordCarreraDashboard: React.FC = () => {
         </div>
     );
 };
+
+export default CoordCarreraDashboard;

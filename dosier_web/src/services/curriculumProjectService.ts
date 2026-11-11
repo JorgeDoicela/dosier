@@ -1,4 +1,5 @@
 import api from '../api/axios_config';
+import { isPeaBorrador } from '../pages/Curriculum/utils/peaStatusWorkflow';
 
 // ─────────────────────────────────────────────────────────────
 //  Tipos y Contratos DTO de Proyectos Curriculares
@@ -144,13 +145,17 @@ export const curriculumProjectService = {
         api.get<DocenteCarreraDto[]>('/catalogs/carreras').then(r => r.data || []),
 
     /**
-     * Obtiene la nómina general de proyectos curriculares (PEAs institucionales).
+     * Obtiene la nómina de proyectos curriculares (PEAs institucionales).
+     * Opcionalmente filtra para retornar únicamente los instrumentos enviados a revisión.
      */
-    getAllProjects: (): Promise<any[]> =>
+    getAllProjects: (options?: { soloEnviados?: boolean }): Promise<any[]> =>
         api.get<any[]>('/pea/bandeja')
             .then(r => {
                 const list = Array.isArray(r.data) ? r.data : [];
-                return list.map((p: any) => ({
+                const filtered = options?.soloEnviados
+                    ? list.filter((p: any) => !isPeaBorrador(p.estado) && p.estado !== 'NoIniciado' && p.estado !== '')
+                    : list;
+                return filtered.map((p: any) => ({
                     uuid: p.uuid,
                     titulo: p.nombre_asignatura,
                     title: p.nombre_asignatura,

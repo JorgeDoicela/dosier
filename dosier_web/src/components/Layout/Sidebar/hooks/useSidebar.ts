@@ -4,6 +4,7 @@ import { Home, ClipboardList, BarChart3, ShieldCheck, Users, Activity, Mail, Bel
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { curriculumProjectService } from '../../../../services/curriculumProjectService';
+import { isPeaBorrador } from '../../../../pages/Curriculum/utils/peaStatusWorkflow';
 import type { MenuItem, SidebarProject, NotificationItem } from '../types';
 
 const NOTIF_PANEL_WIDTH = 380;
@@ -126,7 +127,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             setSidebarProjectsLoading(true);
             const esSupervisora = isAdmin || isVicerrector || isCoordAcad || isCoordCarrera;
             const data = esSupervisora
-                ? await curriculumProjectService.getAllProjects()
+                ? await curriculumProjectService.getAllProjects({ soloEnviados: true })
                 : await curriculumProjectService.getMyProjects();
 
             const sortProjects = (list: any[]) => {
@@ -144,7 +145,11 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
             };
 
             const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
-            const sorted = sortProjects(projectList);
+            // Para la supervisión curricular, solo se presentan instrumentos que los docentes hayan enviado a revisión
+            const filteredProjectList = esSupervisora
+                ? projectList.filter((p: any) => !isPeaBorrador(p.estado || p.status) && p.estado !== 'NoIniciado' && p.estado !== '')
+                : projectList;
+            const sorted = sortProjects(filteredProjectList);
 
             setSidebarProjects(sorted);
 

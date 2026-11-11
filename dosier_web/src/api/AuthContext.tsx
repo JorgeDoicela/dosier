@@ -35,6 +35,23 @@ export const ROLE_HIERARCHY_WEIGHT: Record<string, number> = {
     DOSIER_DOCENTE: 1,
 };
 
+export const resolveCanonicalRole = (userRoles: string[], currentIsAdmin: boolean): string => {
+    if (currentIsAdmin) {
+        const stored = localStorage.getItem('dosier_active_role');
+        if (stored && (stored in ROLE_DISPLAY_NAMES || userRoles.includes(stored))) {
+            return stored;
+        }
+        return 'DOSIER_ADMIN';
+    }
+
+    if (!userRoles || userRoles.length === 0) return '';
+    // Para usuarios no-administradores, se asigna exclusivamente el rol de mayor jerarquía y se purga cualquier override residual
+    const sorted = [...userRoles].sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b] || 0) - (ROLE_HIERARCHY_WEIGHT[a] || 0));
+    const canonical = sorted[0];
+    localStorage.setItem('dosier_active_role', canonical);
+    return canonical;
+};
+
 export interface RoleOption {
     code: string;
     name: string;
@@ -75,10 +92,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return localStorage.getItem('dosier_active_role') || '';
     });
 
+    const roles = React.useMemo(() => {
+        if (!user) return [];
+        const rawRoles = user.roles || (user.role ? [user.role] : []);
+        return rawRoles.map(r => r.toUpperCase());
+    }, [user]);
+
+    const isAdmin = React.useMemo(() => {
+        return Boolean(user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('ADMIN'));
+    }, [user, roles]);
+
+    const availableRoles = React.useMemo<RoleOption[]>(() => {
+        // Solo el Administrador tiene la potestad de conmutar de rol institucional para fines de supervisión y auditoría
+        if (!isAdmin) {
+            return [];
+        }
+
+        return Object.keys(ROLE_DISPLAY_NAMES).map(code => ({
+            code,
+            name: ROLE_DISPLAY_NAMES[code]
+        })).sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b.code] || 0) - (ROLE_HIERARCHY_WEIGHT[a.code] || 0));
+    }, [isAdmin]);
+
     const setActiveRole = useCallback((roleCode: string) => {
+        if (!isAdmin) {
+            console.warn('Operación bloqueada: sólo el Administrador puede cambiar el rol institucional activo.');
+            return;
+        }
         setActiveRoleState(roleCode);
         localStorage.setItem('dosier_active_role', roleCode);
-    }, []);
+    }, [isAdmin]);
 
     const refreshUser = useCallback(async () => {
         if (!localStorage.getItem('dosier_logged_in')) {
@@ -97,12 +140,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(normalized);
 
             const userRoles = (normalized.role_codes || normalized.roles || []).map((r: string) => r.toUpperCase());
-            const stored = localStorage.getItem('dosier_active_role');
-            if (stored && userRoles.includes(stored)) {
-                setActiveRoleState(stored);
-            } else if (userRoles.length > 0) {
-                setActiveRoleState(userRoles[0]);
-                localStorage.setItem('dosier_active_role', userRoles[0]);
+            const userIsAdmin = Boolean(normalized.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
+            const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
+            if (canonicalRole) {
+                setActiveRoleState(canonicalRole);
             }
         } catch (error: any) {
             setUser(null);
@@ -132,9 +173,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('dosier_logged_in', 'true');
 
         const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
-        if (userRoles.length > 0) {
-            setActiveRoleState(userRoles[0]);
-            localStorage.setItem('dosier_active_role', userRoles[0]);
+        const userIsAdmin = Boolean(normalizedUser.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
+        const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
+        if (canonicalRole) {
+            setActiveRoleState(canonicalRole);
         }
 
         return normalizedUser;
@@ -154,9 +196,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('dosier_logged_in', 'true');
 
         const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
-        if (userRoles.length > 0) {
-            setActiveRoleState(userRoles[0]);
-            localStorage.setItem('dosier_active_role', userRoles[0]);
+        const userIsAdmin = Boolean(normalizedUser.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
+        const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
+        if (canonicalRole) {
+            setActiveRoleState(canonicalRole);
         }
 
         return normalizedUser;
@@ -181,9 +224,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('dosier_logged_in', 'true');
 
         const userRoles = (user.role_codes || user.roles || []).map((r: string) => r.toUpperCase());
-        if (userRoles.length > 0) {
-            setActiveRoleState(userRoles[0]);
-            localStorage.setItem('dosier_active_role', userRoles[0]);
+        const userIsAdmin = Boolean(user.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
+        const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
+        if (canonicalRole) {
+            setActiveRoleState(canonicalRole);
         }
     };
 
@@ -201,9 +245,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('dosier_logged_in', 'true');
 
         const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
-        if (userRoles.length > 0) {
-            setActiveRoleState(userRoles[0]);
-            localStorage.setItem('dosier_active_role', userRoles[0]);
+        const userIsAdmin = Boolean(normalizedUser.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
+        const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
+        if (canonicalRole) {
+            setActiveRoleState(canonicalRole);
         }
 
         return normalizedUser;
@@ -251,34 +296,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const target = `${module}:${operation}`.toUpperCase();
         return user.permissions.includes(target);
     }, [user]);
-
-    const roles = React.useMemo(() => {
-        if (!user) return [];
-        const rawRoles = user.roles || (user.role ? [user.role] : []);
-        return rawRoles.map(r => r.toUpperCase());
-    }, [user]);
-
-    const isAdmin = React.useMemo(() => {
-        return Boolean(user?.administrador || roles.includes('DOSIER_ADMIN') || roles.includes('ADMIN'));
-    }, [user, roles]);
-
-    const availableRoles = React.useMemo<RoleOption[]>(() => {
-        if (isAdmin) {
-            // El Superadministrador / Desarrollador tiene a disposición todos los roles institucionales para validar flujos
-            return Object.keys(ROLE_DISPLAY_NAMES).map(code => ({
-                code,
-                name: ROLE_DISPLAY_NAMES[code]
-            })).sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b.code] || 0) - (ROLE_HIERARCHY_WEIGHT[a.code] || 0));
-        }
-
-        return roles
-            .filter(code => code in ROLE_DISPLAY_NAMES || code.startsWith('DOSIER_'))
-            .map(code => ({
-                code,
-                name: ROLE_DISPLAY_NAMES[code] || code
-            }))
-            .sort((a, b) => (ROLE_HIERARCHY_WEIGHT[b.code] || 0) - (ROLE_HIERARCHY_WEIGHT[a.code] || 0));
-    }, [roles, isAdmin]);
 
     const isDocente = React.useMemo(() => {
         return roles.includes('DOSIER_DOCENTE') || roles.includes('DOCENTE');

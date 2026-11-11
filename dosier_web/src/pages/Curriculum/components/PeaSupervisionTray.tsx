@@ -1,22 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    BookOpen,
-    Clock,
     Search,
     RefreshCw,
-    AlertCircle,
-    UserCheck,
-    Filter,
-    Eye,
-    GraduationCap,
-    LayoutGrid,
-    List,
-    Building2,
-    ExternalLink,
-    CheckCircle2,
     Info,
-    Radio
+    BookOpen,
+    AlertCircle,
+    CheckCircle2
 } from 'lucide-react';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useAuth } from '../../../api/AuthContext';
@@ -38,7 +28,7 @@ import {
 
 export const PeaSupervisionTray: React.FC = () => {
     const navigate = useNavigate();
-    const { user, isAdmin } = useAuth();
+    const { user, isAdmin, isCoordCarrera } = useAuth();
 
     const [peas, setPeas] = useState<PeaBandejaItemDto[]>([]);
     const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
@@ -135,22 +125,30 @@ export const PeaSupervisionTray: React.FC = () => {
         return Array.from(map.entries()).map(([id, nombre]) => ({ id, nombre }));
     }, [peas]);
 
-    // Métricas de estado del workflow curricular
+    // Los Coordinadores de Carrera tienen jurisdicción exclusiva sobre su propia carrera; no requieren filtro redundante
+    const puedeFiltrarCarreras = !isCoordCarrera && carrerasDisponibles.length > 1;
+
+    // Universo visible de PEAs: Para revisión curricular SOLO se muestran las asignaturas enviadas a revisión por los docentes
+    const peasVisibles = useMemo(() => {
+        return peas.filter(p => !isPeaBorrador(p.estado) && p.estado !== 'NoIniciado' && p.estado !== '');
+    }, [peas]);
+
+    // Métricas de estado del workflow curricular sobre el universo visible
     const stats = useMemo(() => {
-        const porRevisar = peas.filter(p => isPeaEnRevision(p.estado)).length;
-        const enRedaccion = peas.filter(p => isPeaBorrador(p.estado)).length;
-        const aprobados = peas.filter(p => isPeaAvalado(p.estado)).length;
+        const porRevisar = peasVisibles.filter(p => isPeaEnRevision(p.estado)).length;
+        const enRedaccion = peasVisibles.filter(p => isPeaBorrador(p.estado)).length;
+        const aprobados = peasVisibles.filter(p => isPeaAvalado(p.estado)).length;
         return {
-            total: peas.length,
+            total: peasVisibles.length,
             porRevisar,
             enRedaccion,
             aprobados
         };
-    }, [peas]);
+    }, [peasVisibles]);
 
     // Filtrado en memoria por búsqueda, carrera y estado
     const filteredPeas = useMemo(() => {
-        return peas.filter(p => {
+        return peasVisibles.filter(p => {
             const query = search.trim().toLowerCase();
             const matchSearch = !query ||
                 (p.nombre_asignatura && p.nombre_asignatura.toLowerCase().includes(query)) ||
@@ -173,7 +171,7 @@ export const PeaSupervisionTray: React.FC = () => {
 
             return matchSearch && matchCarrera && matchWorkflow && matchEstado;
         });
-    }, [peas, search, selectedCarrera, selectedEstado, workflowTab]);
+    }, [peasVisibles, search, selectedCarrera, selectedEstado, workflowTab]);
 
     const handleAbrirPea = (uuid: string) => {
         navigate(`/documentacion/revision-tecnica/${uuid}`);
@@ -194,8 +192,97 @@ export const PeaSupervisionTray: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* ── Riel Plano Continuo de Pestañas de Workflow (Regla 4.1 styles-dosier) ── */}
-            <div className="border-b border-slate-200 dark:border-zinc-800 -mb-px">
+            {/* ── BARRA DE FILTROS Y CONTROLES (ARRIBA, DIRECTA SIN CAJA ENVOLVENTE) ── */}
+            <div className="flex flex-col lg:flex-row gap-2.5 items-stretch lg:items-center justify-between">
+                <div className="relative flex-1">
+                    <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Buscar por asignatura, código institucional, docente o carrera..."
+                        className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-[#0070f3]"
+                    />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {/* Filtro de Carrera (Oculto para Coordinadores de Carrera que solo tienen su propia carrera) */}
+                    {puedeFiltrarCarreras && (
+                        <div className="w-48 sm:w-52">
+                            <GeistSelect
+                                value={selectedCarrera}
+                                onChange={val => setSelectedCarrera(String(val))}
+                                options={[
+                                    { value: 'todas', label: 'Todas las Carreras' },
+                                    ...carrerasDisponibles.map(c => ({ value: String(c.id), label: c.nombre }))
+                                ]}
+                                placeholder="Carrera..."
+                            />
+                        </div>
+                    )}
+
+                    {/* Filtro de Estado Específico */}
+                    <div className="w-44 sm:w-48">
+                        <GeistSelect
+                            value={selectedEstado}
+                            onChange={val => setSelectedEstado(String(val))}
+                            options={[
+                                { value: 'todos', label: 'Todos los Estados' },
+                                ...(workflowTab === 'por_revisar' ? [
+                                    { value: 'EnRevision', label: 'En Revisión Técnica' },
+                                    { value: 'Observado', label: 'Con Observaciones' },
+                                    { value: 'Corregido', label: 'Corregido' }
+                                ] : workflowTab === 'en_redaccion' ? [
+                                    { value: 'Borrador', label: 'En Redacción (Borrador)' },
+                                    { value: 'NoIniciado', label: 'Sin Inicializar' }
+                                ] : workflowTab === 'aprobados' ? [
+                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
+                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
+                                    { value: 'Aprobado', label: 'Aprobado / Legalizado' }
+                                ] : [
+                                    ...(isAdmin ? [{ value: 'Borrador', label: 'Borrador Docente' }] : []),
+                                    { value: 'EnRevision', label: 'En Revisión Técnica' },
+                                    { value: 'Observado', label: 'Observado' },
+                                    { value: 'Corregido', label: 'Corregido' },
+                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
+                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
+                                    { value: 'Aprobado', label: 'Aprobado / Legalizado' }
+                                ])
+                            ]}
+                            placeholder="Estado..."
+                        />
+                    </div>
+
+                    {/* Selector de Período Lectivo */}
+                    <div className="w-48 sm:w-52">
+                        <GeistSelect
+                            value={selectedPeriodo}
+                            onChange={handlePeriodoChange}
+                            options={periodos.map(p => ({
+                                value: p.id_periodo,
+                                label: p.detalle || p.id_periodo
+                            }))}
+                            placeholder="Período Lectivo..."
+                        />
+                    </div>
+
+                    {(search || (puedeFiltrarCarreras && selectedCarrera !== 'todas') || selectedEstado !== 'todos') && (
+                        <button
+                            onClick={() => {
+                                setSearch('');
+                                setSelectedCarrera('todas');
+                                setSelectedEstado('todos');
+                            }}
+                            className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer px-1"
+                        >
+                            Restablecer
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Riel Plano Continuo de Pestañas de Selección de Workflow ── */}
+            <div className="border-b border-slate-200 dark:border-zinc-800">
                 <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Bandejas de supervisión del PEA">
                     <button
                         type="button"
@@ -233,20 +320,22 @@ export const PeaSupervisionTray: React.FC = () => {
                         )}
                     </button>
 
-                    <button
-                        type="button"
-                        onClick={() => handleWorkflowTabChange('en_redaccion')}
-                        className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
-                            workflowTab === 'en_redaccion'
-                                ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
-                                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
-                        }`}
-                    >
-                        <span>En redacción docente</span>
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
-                            {stats.enRedaccion}
-                        </span>
-                    </button>
+                    {isAdmin && (
+                        <button
+                            type="button"
+                            onClick={() => handleWorkflowTabChange('en_redaccion')}
+                            className={`pb-2.5 pt-2 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                                workflowTab === 'en_redaccion'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 dark:border-blue-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
+                            }`}
+                        >
+                            <span>En redacción docente</span>
+                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                                {stats.enRedaccion}
+                            </span>
+                        </button>
+                    )}
 
                     <button
                         type="button"
@@ -265,8 +354,8 @@ export const PeaSupervisionTray: React.FC = () => {
                 </nav>
             </div>
 
-            {/* Banner explicativo contextual según la pestaña activa */}
-            {workflowTab === 'en_redaccion' && (
+            {/* Banner explicativo contextual según la pestaña activa (exclusivo para Admin) */}
+            {isAdmin && workflowTab === 'en_redaccion' && (
                 <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 text-xs flex items-center gap-3">
                     <Info size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
                     <span>
@@ -274,144 +363,6 @@ export const PeaSupervisionTray: React.FC = () => {
                     </span>
                 </div>
             )}
-
-            {/* ── BARRA DE FILTROS Y CONTROLES ── */}
-            <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-3 shadow-xs">
-                <div className="flex flex-col md:flex-row gap-2.5 items-stretch md:items-center">
-                    <div className="relative flex-1">
-                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Buscar por asignatura, código institucional, docente o carrera..."
-                            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-[#0070f3]"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <div className="w-56 shrink-0">
-                            <GeistSelect
-                                value={selectedPeriodo}
-                                onChange={handlePeriodoChange}
-                                options={periodos.map(p => ({
-                                    value: p.id_periodo,
-                                    label: p.detalle || p.id_periodo
-                                }))}
-                                placeholder="Período Lectivo..."
-                            />
-                        </div>
-
-                        {/* Selector de Modo de Vista: Cuadros vs Lista */}
-                        <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-zinc-100/80 dark:bg-zinc-900 p-0.5 shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                    viewMode === 'grid'
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                                }`}
-                                title="Vista en Cuadros"
-                            >
-                                <LayoutGrid size={14} />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                                    viewMode === 'list'
-                                        ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                        : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
-                                }`}
-                                title="Vista en Lista"
-                            >
-                                <List size={14} />
-                            </button>
-                        </div>
-
-                        {carrerasDisponibles.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    const id = selectedCarrera !== 'todas' ? selectedCarrera : String(carrerasDisponibles[0].id);
-                                    navigate(`/documentacion/carrera/${id}/sala-curricular?periodo=${selectedPeriodo}`);
-                                }}
-                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs shrink-0"
-                                title="Abrir Sala Curricular Colegiada para armonización en vivo con los docentes"
-                            >
-                                <Radio size={13} className="text-white animate-pulse" />
-                                <span>Sala Curricular</span>
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-zinc-800 text-xs">
-                    <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-                        <Filter size={12} />
-                        <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Filtros:</span>
-                    </div>
-
-                    {/* Filtro de Carrera */}
-                    <div className="w-56">
-                        <GeistSelect
-                            value={selectedCarrera}
-                            onChange={val => setSelectedCarrera(String(val))}
-                            options={[
-                                { value: 'todas', label: 'Todas las Carreras' },
-                                ...carrerasDisponibles.map(c => ({ value: String(c.id), label: c.nombre }))
-                            ]}
-                            placeholder="Carrera..."
-                        />
-                    </div>
-
-                    {/* Filtro de Estado Específico */}
-                    <div className="w-52">
-                        <GeistSelect
-                            value={selectedEstado}
-                            onChange={val => setSelectedEstado(String(val))}
-                            options={[
-                                { value: 'todos', label: 'Todos los Estados' },
-                                ...(workflowTab === 'por_revisar' ? [
-                                    { value: 'EnRevision', label: 'En Revisión Técnica' },
-                                    { value: 'Observado', label: 'Con Observaciones' },
-                                    { value: 'Corregido', label: 'Corregido' }
-                                ] : workflowTab === 'en_redaccion' ? [
-                                    { value: 'Borrador', label: 'En Redacción (Borrador)' },
-                                    { value: 'NoIniciado', label: 'Sin Inicializar' }
-                                ] : workflowTab === 'aprobados' ? [
-                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
-                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
-                                    { value: 'Aprobado', label: 'Aprobado / Legalizado' }
-                                ] : [
-                                    { value: 'Borrador', label: 'Borrador Docente' },
-                                    { value: 'EnRevision', label: 'En Revisión Técnica' },
-                                    { value: 'Observado', label: 'Observado' },
-                                    { value: 'Corregido', label: 'Corregido' },
-                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
-                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
-                                    { value: 'Aprobado', label: 'Aprobado / Legalizado' }
-                                ])
-                            ]}
-                            placeholder="Estado..."
-                        />
-                    </div>
-
-                    {(search || selectedCarrera !== 'todas' || selectedEstado !== 'todos') && (
-                        <button
-                            onClick={() => {
-                                setSearch('');
-                                setSelectedCarrera('todas');
-                                setSelectedEstado('todos');
-                            }}
-                            className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer ml-auto"
-                        >
-                            Restablecer filtros
-                        </button>
-                    )}
-                </div>
-            </div>
 
             {/* ── ESTADOS DE CARGA Y ERROR ── */}
             {error && (
@@ -449,7 +400,7 @@ export const PeaSupervisionTray: React.FC = () => {
                 </div>
             ) : viewMode === 'grid' ? (
                 /* ── MODO CUADROS / TARJETAS ── */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
                     {filteredPeas.map(pea => {
                         const descriptor = getPeaStatusDescriptor(pea.estado);
                         const esBorrador = isPeaBorrador(pea.estado);
@@ -473,8 +424,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 {/* Encabezado de la Tarjeta */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
-                                            <Building2 className="w-3.5 h-3.5 shrink-0 text-[#0070f3]" />
+                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
                                             <span className="truncate">{pea.nombre_carrera}</span>
                                         </div>
                                         <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${descriptor.textClass} shrink-0`}>
@@ -489,9 +439,8 @@ export const PeaSupervisionTray: React.FC = () => {
                                     </h3>
 
                                     {/* Docente Elaborador */}
-                                    <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 pt-0.5">
-                                        <UserCheck className="w-3.5 h-3.5 shrink-0 text-zinc-400" />
-                                        <span className="truncate">{pea.nombre_docente_elaborador || 'Docente Responsable'}</span>
+                                    <div className="text-xs text-zinc-600 dark:text-zinc-400 pt-0.5 truncate">
+                                        <span>{pea.nombre_docente_elaborador || 'Docente Responsable'}</span>
                                     </div>
 
                                     {/* Metadatos Curriculares: Nivel y Modalidad según BD */}
@@ -556,31 +505,28 @@ export const PeaSupervisionTray: React.FC = () => {
                                         )}
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                        <span className="flex items-center gap-1 font-medium text-zinc-800 dark:text-zinc-200">
-                                            <GraduationCap size={13} className="text-[#0070f3]" />
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span className="font-medium text-zinc-800 dark:text-zinc-200">
                                             {pea.nombre_carrera}
                                         </span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1">
-                                            <UserCheck size={13} />
+                                        <span>·</span>
+                                        <span>
                                             {pea.nombre_docente_elaborador || 'Docente Responsable'}
                                         </span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1 font-mono">
-                                            <Clock size={13} />
+                                        <span>·</span>
+                                        <span className="font-mono">
                                             {pea.total_horas_asignatura}h ({pea.creditos} Créditos)
                                         </span>
                                         {pea.semestre_nivel && (
                                             <>
-                                                <span>•</span>
+                                                <span>·</span>
                                                 <span>{pea.semestre_nivel}</span>
                                             </>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Acciones */}
+                                {/* Acciones (Solo Texto) */}
                                 <div className="flex items-center gap-2 shrink-0">
                                     {esAutorOAdmin && (
                                         <button
@@ -589,11 +535,10 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 e.stopPropagation();
                                                 handleAbrirEditor(pea.uuid);
                                             }}
-                                            className="h-8 px-2.5 flex items-center gap-1.5 text-xs rounded-md font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800"
+                                            className="h-8 px-2.5 text-xs rounded-md font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-800"
                                             title="Editar contenido curricular del PEA"
                                         >
-                                            <ExternalLink size={12} />
-                                            <span>Editar</span>
+                                            Editar
                                         </button>
                                     )}
 
@@ -604,11 +549,10 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 e.stopPropagation();
                                                 handleAbrirPea(pea.uuid);
                                             }}
-                                            className="h-8 px-3 flex items-center gap-1.5 text-xs rounded-md font-medium text-slate-700 dark:text-zinc-300 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer shadow-2xs"
+                                            className="h-8 px-3 text-xs rounded-md font-medium text-slate-700 dark:text-zinc-300 bg-white hover:bg-slate-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer shadow-2xs"
                                             title="Consultar avance de redacción docente (lectura previa a envío formal)"
                                         >
-                                            <Eye size={13} className="text-slate-400 dark:text-zinc-500" />
-                                            <span>Consultar avance</span>
+                                            Consultar avance
                                         </button>
                                     ) : esEnRevision ? (
                                         <button
@@ -617,11 +561,10 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 e.stopPropagation();
                                                 handleAbrirPea(pea.uuid);
                                             }}
-                                            className="h-8 px-3.5 flex items-center gap-1.5 text-xs rounded-md font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
+                                            className="h-8 px-3.5 text-xs rounded-md font-semibold text-white bg-[#0070f3] hover:bg-[#005bb5] transition-colors cursor-pointer shadow-xs"
                                             title="Realizar revisión técnica curricular"
                                         >
-                                            <Eye size={13} />
-                                            <span>Revisión Técnica</span>
+                                            Revisión Técnica
                                         </button>
                                     ) : (
                                         <button
@@ -630,11 +573,10 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 e.stopPropagation();
                                                 handleAbrirPea(pea.uuid);
                                             }}
-                                            className="h-8 px-3 flex items-center gap-1.5 text-xs rounded-md font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer shadow-2xs"
+                                            className="h-8 px-3 text-xs rounded-md font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer shadow-2xs"
                                             title="Ver expediente curricular avalado"
                                         >
-                                            <CheckCircle2 size={13} />
-                                            <span>Ver expediente</span>
+                                            Ver expediente
                                         </button>
                                     )}
                                 </div>
