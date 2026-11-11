@@ -74,6 +74,7 @@ namespace dosier_application.Curriculum.Interfaces
         // Solicitudes y gobernanza de colaboración entre docentes
         Task<PeaColaboracionItemDto> SolicitarColaboracionAsync(SolicitarColaboracionDto dto, string idDocenteSolicitante, System.Threading.CancellationToken cancellationToken = default);
         Task<bool> ResponderColaboracionAsync(string uuidColaboracion, bool aceptar, string idDocenteTitular, string? motivo = null, System.Threading.CancellationToken cancellationToken = default);
+        Task<bool> CancelarSolicitudColaboracionAsync(string uuidColaboracion, string idDocenteSolicitante, System.Threading.CancellationToken cancellationToken = default);
         Task<List<PeaColaboracionItemDto>> ListarMisSolicitudesColaboracionAsync(string idDocente, System.Threading.CancellationToken cancellationToken = default);
         Task<List<PeaColaboracionItemDto>> ListarSolicitudesRecibidasAsync(string idDocenteTitular, System.Threading.CancellationToken cancellationToken = default);
         Task<Dictionary<int, string>> ObtenerEstadosColaboracionPorAsignacionesAsync(List<int> idAsignaciones, string idDocenteSolicitante, System.Threading.CancellationToken cancellationToken = default);

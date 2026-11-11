@@ -126,9 +126,6 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         try {
             setSidebarProjectsLoading(true);
             const esSupervisora = isAdmin || isVicerrector || isCoordAcad || isCoordCarrera;
-            const data = esSupervisora
-                ? await curriculumProjectService.getAllProjects({ soloEnviados: true })
-                : await curriculumProjectService.getMyProjects();
 
             const sortProjects = (list: any[]) => {
                 return [...list].sort((a: any, b: any) => {
@@ -144,25 +141,27 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
                 });
             };
 
-            const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
-            // Para la supervisión curricular, solo se presentan instrumentos que los docentes hayan enviado a revisión
-            const filteredProjectList = esSupervisora
-                ? projectList.filter((p: any) => !isPeaBorrador(p.estado || p.status) && p.estado !== 'NoIniciado' && p.estado !== '')
-                : projectList;
-            const sorted = sortProjects(filteredProjectList);
-
-            setSidebarProjects(sorted);
-
             if (esSupervisora) {
-                try {
-                    const myData = await curriculumProjectService.getMyProjects();
-                    const myList = Array.isArray(myData) ? myData : (myData as any)?.items || [];
-                    const mySorted = sortProjects(myList);
-                    setSidebarMyProjects(mySorted);
-                } catch {
-                    setSidebarMyProjects([]);
-                }
+                // Paralelización concurrente para máxima velocidad de respuesta sin cascada de peticiones
+                const [allRes, myRes] = await Promise.allSettled([
+                    curriculumProjectService.getAllProjects({ soloEnviados: true }),
+                    curriculumProjectService.getMyProjects()
+                ]);
+
+                const data = allRes.status === 'fulfilled' ? allRes.value : [];
+                const myData = myRes.status === 'fulfilled' ? myRes.value : [];
+
+                const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
+                const filteredProjectList = projectList.filter((p: any) => !isPeaBorrador(p.estado || p.status) && p.estado !== 'NoIniciado' && p.estado !== '');
+                setSidebarProjects(sortProjects(filteredProjectList));
+
+                const myList = Array.isArray(myData) ? myData : (myData as any)?.items || [];
+                setSidebarMyProjects(sortProjects(myList));
             } else {
+                const data = await curriculumProjectService.getMyProjects();
+                const projectList = Array.isArray(data) ? data : (data as any)?.items || [];
+                const sorted = sortProjects(projectList);
+                setSidebarProjects(sorted);
                 setSidebarMyProjects(sorted);
             }
         } catch (err) {
@@ -170,7 +169,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
         } finally {
             setSidebarProjectsLoading(false);
         }
-    }, [user, isAdmin]);
+    }, [user, isAdmin, isVicerrector, isCoordAcad, isCoordCarrera]);
 
     useEffect(() => {
         if (!user) {

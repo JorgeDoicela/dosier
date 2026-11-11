@@ -9,6 +9,7 @@ import { useNotifications } from '../../api/NotificationsContext';
 import { stripHtmlToText } from '../../utils/notificationText';
 import { PageHeader } from '../../components/Common/PageHeader';
 import { responderColaboracion, getSolicitudesColaboracionRecibidas } from '../../services/peaService';
+import { ConfirmarRespuestaColaboracionModal } from '../Curriculum/components/ConfirmarRespuestaColaboracionModal';
 
 type NotificationItem = NotificationDto;
 
@@ -32,6 +33,14 @@ const NotificationsPage = () => {
     const lastFetchRef = useRef<number>(0);
     const [colaboracionesRespondidas, setColaboracionesRespondidas] = useState<Record<string, 'Aprobada' | 'Rechazada'>>({});
     const [respondingUuid, setRespondingUuid] = useState<string | null>(null);
+    const [modalRespuestaColab, setModalRespuestaColab] = useState<{
+        isOpen: boolean;
+        modo: 'aceptar' | 'rechazar';
+        notification: NotificationItem;
+        colabUuid: string;
+        solicitanteNombre: string;
+        asignaturaNombre: string;
+    } | null>(null);
 
     useEffect(() => {
         getSolicitudesColaboracionRecibidas().then(list => {
@@ -176,15 +185,46 @@ const NotificationsPage = () => {
         }
     };
 
-        const handleResponderColaboracion = async (e: React.MouseEvent, n: NotificationItem, uuid: string, aceptar: boolean) => {
+    const extractDocenteName = (n: NotificationItem): string => {
+        const raw = stripHtmlToText(n.mensaje || n.titulo || '');
+        const match = raw.match(/docente\s+([A-ZÁÉÍÓÚÑa-záéíóúñ\s]+?)\s+(solicita|ha solicitado|desea)/i);
+        if (match && match[1]) return match[1].trim();
+        const fallback = stripHtmlToText(n.titulo || '').replace(/solicitud de colaboraci[oó]n:?/i, '').trim();
+        return fallback || 'Docente Solicitante';
+    };
+
+    const extractAsignaturaName = (n: NotificationItem): string => {
+        const raw = stripHtmlToText(n.mensaje || n.titulo || '');
+        const match = raw.match(/asignatura\s+["“']?([^"”'\n\.]+)["”']?/i) ||
+                      raw.match(/en\s+["“']?([^"”'\n\.]+)["”']?/i);
+        if (match && match[1]) return match[1].trim();
+        return 'Programa de Estudio de la Asignatura (PEA)';
+    };
+
+    const handleSolicitarRespuestaModal = (e: React.MouseEvent, n: NotificationItem, uuid: string, modo: 'aceptar' | 'rechazar') => {
         e.stopPropagation();
-        setRespondingUuid(uuid);
+        setModalRespuestaColab({
+            isOpen: true,
+            modo,
+            notification: n,
+            colabUuid: uuid,
+            solicitanteNombre: extractDocenteName(n),
+            asignaturaNombre: extractAsignaturaName(n)
+        });
+    };
+
+    const ejecutarRespuestaColaboracion = async (motivo?: string) => {
+        if (!modalRespuestaColab) return;
+        const { notification, colabUuid, modo } = modalRespuestaColab;
+        const aceptar = modo === 'aceptar';
+
+        setRespondingUuid(colabUuid);
         try {
-            await responderColaboracion(uuid, aceptar);
-            setColaboracionesRespondidas(prev => ({ ...prev, [uuid]: aceptar ? 'Aprobada' : 'Rechazada' }));
-            if (!n.leido) {
-                await markAsRead(n.uuid);
-                setAllNotifications(prev => prev.map(x => x.uuid === n.uuid ? { ...x, leido: true } : x));
+            await responderColaboracion(colabUuid, aceptar, motivo);
+            setColaboracionesRespondidas(prev => ({ ...prev, [colabUuid]: aceptar ? 'Aprobada' : 'Rechazada' }));
+            if (!notification.leido) {
+                await markAsRead(notification.uuid);
+                setAllNotifications(prev => prev.map(x => x.uuid === notification.uuid ? { ...x, leido: true } : x));
             }
             addToast(
                 aceptar ? 'Colaboración Autorizada' : 'Colaboración Rechazada',
@@ -193,6 +233,7 @@ const NotificationsPage = () => {
                     : 'Se ha rechazado la solicitud de colaboración.',
                 aceptar ? 'success' : 'info'
             );
+            setModalRespuestaColab(null);
         } catch (err: unknown) {
             console.error('[DOSIER] Error al responder colaboración:', err);
             const message = err && typeof err === 'object' && 'response' in err
@@ -496,7 +537,7 @@ const NotificationsPage = () => {
                                                                         <button
                                                                             type="button"
                                                                             disabled={respondingUuid === colabUuid}
-                                                                            onClick={(e) => handleResponderColaboracion(e, n, colabUuid!, true)}
+                                                                            onClick={(e) => handleSolicitarRespuestaModal(e, n, colabUuid!, 'aceptar')}
                                                                             className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                                                         >
                                                                             {respondingUuid === colabUuid ? (
@@ -509,7 +550,7 @@ const NotificationsPage = () => {
                                                                         <button
                                                                             type="button"
                                                                             disabled={respondingUuid === colabUuid}
-                                                                            onClick={(e) => handleResponderColaboracion(e, n, colabUuid!, false)}
+                                                                            onClick={(e) => handleSolicitarRespuestaModal(e, n, colabUuid!, 'rechazar')}
                                                                             className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer disabled:opacity-50"
                                                                         >
                                                                             <UserX size={13} />
@@ -553,6 +594,17 @@ const NotificationsPage = () => {
                     />
                 </div>
             </div>
+
+            {/* Modal central explicativo para autorizar o rechazar colaboración */}
+            <ConfirmarRespuestaColaboracionModal
+                isOpen={modalRespuestaColab !== null}
+                onClose={() => setModalRespuestaColab(null)}
+                onConfirm={ejecutarRespuestaColaboracion}
+                modo={modalRespuestaColab?.modo || 'aceptar'}
+                solicitanteNombre={modalRespuestaColab?.solicitanteNombre || 'Docente'}
+                asignaturaNombre={modalRespuestaColab?.asignaturaNombre || 'Asignatura'}
+                isProcessing={respondingUuid !== null}
+            />
         </main>
     );
 };

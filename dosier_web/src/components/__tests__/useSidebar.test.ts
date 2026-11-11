@@ -90,3 +90,18 @@ describe("filtrarInstrumentosRevision — universo de revisión curricular", () 
         ]);
     });
 });
+
+describe("getPeaStatusDescriptor — semántica diferenciada coordinador vs docente", () => {
+    it("presenta 'En Revisión Técnica' al coordinador para evitar confusiones en la mesa de supervisión", async () => {
+        const { getPeaStatusDescriptor } = await import("../../pages/Curriculum/utils/peaStatusWorkflow");
+        
+        const descSupervisor = getPeaStatusDescriptor("Observado", { esSupervisor: true });
+        expect(descSupervisor.label).toBe("En Revisión Técnica");
+        expect(descSupervisor.dotClass).toContain("bg-amber-500");
+
+        const descDocente = getPeaStatusDescriptor("Observado", { esSupervisor: false });
+        expect(descDocente.label).toBe("Con Observaciones");
+        expect(descDocente.dotClass).toContain("bg-rose-500");
+        expect(descDocente.primaryActionLabel).toBe("Corregir PEA");
+    });
+});

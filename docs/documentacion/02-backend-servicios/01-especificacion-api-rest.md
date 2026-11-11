@@ -434,3 +434,11 @@ Ruta mapeada en `Program.cs` para chequeos de salud de balanceadores de carga y 
 * **Autenticación:** Ninguna (Acceso abierto).
 * **Respuesta:** `{ "status": "healthy", "timestamp": "..." }`.
 
+---
+
+### 3.24. Estrategia de Rendimiento y Caché en Memoria (`IMemoryCache`)
+Para prevenir cuellos de botella en la frontera SIGAFI y garantizar tiempos de respuesta sub-100ms para todos los roles:
+* **Consulta Idempotente de Bandeja (`/api/pea/bandeja`):** Desacoplada de sincronizaciones masivas bloqueantes. La consulta opera en modo de lectura pura y enriquecimiento por lotes.
+* **Resolución de Períodos Institucionales (`PeriodoInstitucionalResolver`):** Almacenamiento en caché en memoria (`IMemoryCache`) de los períodos oficiales del instituto durante 10 minutos, eliminando joins cruzados repetitivos contra tablas de asignaciones históricas de SIGAFI.
+* **Catálogo de Carreras Institucionales (`CatalogsService`):** Almacenamiento en caché en memoria durante 30 minutos para el listado de carreras (`esInstituto = 1`).
+

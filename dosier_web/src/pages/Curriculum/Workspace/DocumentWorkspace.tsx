@@ -348,6 +348,11 @@ export const DocumentWorkspace: React.FC = () => {
             return;
         }
 
+        if (params.get('from') === 'mis-proyectos' || location.pathname.includes('/mis-proyectos') || urlPrefix.includes('mis-proyectos')) {
+            navigate('/documentacion/mis-proyectos');
+            return;
+        }
+
         if (templateCode === 'PEA_OFICIAL' || activeDocument === 'PEA_OFICIAL') {
             navigate(urlPrefix || '/documentacion/mis-proyectos');
             return;

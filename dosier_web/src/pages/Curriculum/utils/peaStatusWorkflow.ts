@@ -106,11 +106,24 @@ export const isPeaAvalado = (status?: string | null): boolean => {
     );
 };
 
+export interface StatusDescriptorOptions {
+    /**
+     * Si es true, adapta la semántica visual para la mesa de supervisión y coordinación curricular:
+     * El estado 'Observado' se presenta como 'En Revisión Técnica' para las autoridades,
+     * reservando la etiqueta 'Con Observaciones' exclusivamente para la vista del docente que debe subsanar.
+     */
+    esSupervisor?: boolean;
+}
+
 /**
  * Retorna el descriptor visual y semántico completo para renderizado uniforme en la aplicación.
  */
-export const getPeaStatusDescriptor = (status?: string | null): PeaStatusDescriptor => {
+export const getPeaStatusDescriptor = (
+    status?: string | null,
+    options?: StatusDescriptorOptions | boolean
+): PeaStatusDescriptor => {
     const key = normalizePeaStatus(status);
+    const esSupervisor = typeof options === 'boolean' ? options : Boolean(options?.esSupervisor);
 
     switch (key) {
         case 'Aprobado':
@@ -171,6 +184,20 @@ export const getPeaStatusDescriptor = (status?: string | null): PeaStatusDescrip
             };
 
         case 'Observado':
+            if (esSupervisor) {
+                return {
+                    key,
+                    label: 'En Revisión Técnica',
+                    sublabel: 'En proceso de dictamen curricular con observaciones',
+                    dotClass: 'bg-amber-500',
+                    textClass: 'text-amber-800 dark:text-amber-300',
+                    borderClass: 'border-amber-200 dark:border-amber-900/60',
+                    badgeBgClass: 'bg-amber-50 dark:bg-amber-950/80',
+                    canAudit: true,
+                    primaryActionLabel: 'Revisión Técnica',
+                    primaryActionVariant: 'primary'
+                };
+            }
             return {
                 key,
                 label: 'Con Observaciones',
@@ -180,7 +207,7 @@ export const getPeaStatusDescriptor = (status?: string | null): PeaStatusDescrip
                 borderClass: 'border-rose-200 dark:border-rose-900/60',
                 badgeBgClass: 'bg-rose-50 dark:bg-rose-950/80',
                 canAudit: true,
-                primaryActionLabel: 'Revisión Técnica',
+                primaryActionLabel: 'Corregir PEA',
                 primaryActionVariant: 'primary'
             };
 

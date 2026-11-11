@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 
 // 1. Configurar CORS dinámico (Para React, SignalR, móvil, red local y producción)
 var frontendUrl = builder.Configuration["FrontendUrl"] ?? builder.Configuration["App:FrontendUrl"] ?? builder.Configuration["Email:FrontendUrl"];

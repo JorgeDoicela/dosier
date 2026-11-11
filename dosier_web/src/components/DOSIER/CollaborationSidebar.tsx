@@ -794,7 +794,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             <div className="flex items-center justify-between border-b border-border-thin bg-bg-deep shrink-0 select-none">
                 <div className="flex items-center flex-1 min-w-0">
                     {/* Tab de Revisión para Evaluadores / Coordinadores */}
-                    {isProtocolDocument && isReviewer && (
+                    {isProtocolDocument && isReviewer && isEnRevision && (
                         <button
                             type="button"
                             onClick={() => setActiveTab('revision')}

@@ -88,7 +88,7 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
 
     const getStatusBadge = () => {
         if (!projectStatus) return null;
-        const descriptor = getPeaStatusDescriptor(projectStatus);
+        const descriptor = getPeaStatusDescriptor(projectStatus, { esSupervisor: true });
         const label = descriptor.key === 'EnRevision' ? 'Revisión' : descriptor.label;
         return (
             <span className={`inline-flex items-center text-xs font-medium ${descriptor.textClass}`}>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using dosier_application.Academico;
 using dosier_application.Common.Dtos;
 using dosier_application.Common.Interfaces;
@@ -14,11 +15,18 @@ namespace dosier_infrastructure.Common
     {
         private readonly DosierContext _context;
         private readonly IPeriodoInstitucionalResolver _periodoResolver;
+        private readonly IMemoryCache? _cache;
+        private const string CacheKeyCarreras = "dosier_catalogo_carreras_instituto_v1";
+        private static readonly TimeSpan CacheDurationCarreras = TimeSpan.FromMinutes(30);
 
-        public CatalogsService(DosierContext context, IPeriodoInstitucionalResolver periodoResolver)
+        public CatalogsService(
+            DosierContext context, 
+            IPeriodoInstitucionalResolver periodoResolver,
+            IMemoryCache? cache = null)
         {
             _context = context;
             _periodoResolver = periodoResolver;
+            _cache = cache;
         }
 
         public async Task<List<ConfigGeneralDto>> GetConfigGeneralAsync(string? prefix = null)
@@ -39,7 +47,12 @@ namespace dosier_infrastructure.Common
 
         public async Task<List<CarreraCatalogoDto>> GetCarrerasAsync()
         {
-            return await _context.Carreras
+            if (_cache != null && _cache.TryGetValue(CacheKeyCarreras, out List<CarreraCatalogoDto>? cached) && cached != null)
+            {
+                return cached;
+            }
+
+            var carreras = await _context.Carreras
                 .AsNoTracking()
                 .Where(c => c.EsInstituto == 1)
                 .OrderBy(c => c.Carrera1)
@@ -53,6 +66,13 @@ namespace dosier_infrastructure.Common
                     Activa = c.Activa
                 })
                 .ToListAsync();
+
+            if (_cache != null && carreras.Any())
+            {
+                _cache.Set(CacheKeyCarreras, carreras, CacheDurationCarreras);
+            }
+
+            return carreras;
         }
 
         public async Task<List<CarreraCatalogoDto>> GetMiCarreraAsync(string idReferencia)

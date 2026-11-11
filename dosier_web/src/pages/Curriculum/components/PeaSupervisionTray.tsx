@@ -167,7 +167,10 @@ export const PeaSupervisionTray: React.FC = () => {
                 matchWorkflow = isPeaAvalado(p.estado);
             }
 
-            const matchEstado = selectedEstado === 'todos' || normalizePeaStatus(p.estado) === normalizePeaStatus(selectedEstado);
+            const matchEstado = selectedEstado === 'todos' ||
+                (selectedEstado === 'EnRevision'
+                    ? (normalizePeaStatus(p.estado) === 'EnRevision' || normalizePeaStatus(p.estado) === 'Observado')
+                    : normalizePeaStatus(p.estado) === normalizePeaStatus(selectedEstado));
 
             return matchSearch && matchCarrera && matchWorkflow && matchEstado;
         });
@@ -230,8 +233,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 { value: 'todos', label: 'Todos los Estados' },
                                 ...(workflowTab === 'por_revisar' ? [
                                     { value: 'EnRevision', label: 'En Revisión Técnica' },
-                                    { value: 'Observado', label: 'Con Observaciones' },
-                                    { value: 'Corregido', label: 'Corregido' }
+                                    { value: 'Corregido', label: 'Corregido por Docente' }
                                 ] : workflowTab === 'en_redaccion' ? [
                                     { value: 'Borrador', label: 'En Redacción (Borrador)' },
                                     { value: 'NoIniciado', label: 'Sin Inicializar' }
@@ -242,8 +244,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 ] : [
                                     ...(isAdmin ? [{ value: 'Borrador', label: 'Borrador Docente' }] : []),
                                     { value: 'EnRevision', label: 'En Revisión Técnica' },
-                                    { value: 'Observado', label: 'Observado' },
-                                    { value: 'Corregido', label: 'Corregido' },
+                                    { value: 'Corregido', label: 'Corregido por Docente' },
                                     { value: 'RevisadoCoord', label: 'Aval de Carrera' },
                                     { value: 'RevisadoAcad', label: 'Aval Académico' },
                                     { value: 'Aprobado', label: 'Aprobado / Legalizado' }
@@ -402,7 +403,7 @@ export const PeaSupervisionTray: React.FC = () => {
                 /* ── MODO CUADROS / TARJETAS ── */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
                     {filteredPeas.map(pea => {
-                        const descriptor = getPeaStatusDescriptor(pea.estado);
+                        const descriptor = getPeaStatusDescriptor(pea.estado, { esSupervisor: true });
                         const esBorrador = isPeaBorrador(pea.estado);
                         const esEnRevision = isPeaEnRevision(pea.estado);
                         const esAutorOAdmin = puedeEditarDocumento(pea);
@@ -452,7 +453,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 {formatModalidad(pea.modalidad)}
                                             </span>
                                         </div>
-                                        {pea.total_observaciones_pendientes > 0 && (
+                                        {pea.total_observaciones_pendientes > 0 && pea.estado === 'Observado' && (
                                             <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 shrink-0">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                                 {pea.total_observaciones_pendientes} Obs.
@@ -468,7 +469,7 @@ export const PeaSupervisionTray: React.FC = () => {
                 /* ── MODO LISTA TABULAR ── */
                 <div className="space-y-2.5">
                     {filteredPeas.map(pea => {
-                        const descriptor = getPeaStatusDescriptor(pea.estado);
+                        const descriptor = getPeaStatusDescriptor(pea.estado, { esSupervisor: true });
                         const esBorrador = isPeaBorrador(pea.estado);
                         const esEnRevision = isPeaEnRevision(pea.estado);
                         const esAutorOAdmin = puedeEditarDocumento(pea);
@@ -497,7 +498,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                             <span className={`w-1.5 h-1.5 rounded-full ${descriptor.dotClass}`} />
                                             {descriptor.label}
                                         </span>
-                                        {pea.total_observaciones_pendientes > 0 && (
+                                        {pea.total_observaciones_pendientes > 0 && pea.estado === 'Observado' && (
                                             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                                 {pea.total_observaciones_pendientes} Obs. Pendiente{pea.total_observaciones_pendientes > 1 ? 's' : ''}

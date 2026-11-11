@@ -560,44 +560,59 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                 </div>
             )}
 
-            {/* Formulario de Retroalimentación / Dictamen */}
-            <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-zinc-900">
-                <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                        Observaciones / Dictamen Técnico
-                    </label>
-                    <select
-                        value={seccionAfectada}
-                        onChange={e => setSeccionAfectada(e.target.value)}
-                        className="px-2 py-1 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md text-zinc-800 dark:text-zinc-200 focus:outline-none"
-                    >
-                        <option value="General">General (Todo el PEA)</option>
-                        <option value="Sección A: Datos Generales">Sección A: Datos Generales</option>
-                        <option value="Sección B: Objetivo">Sección B: Objetivo</option>
-                        <option value="Sección C: Prerrequisitos">Sección C: Prerrequisitos</option>
-                        <option value="Sección D: RDA">Sección D: RDA</option>
-                        <option value="Sección E: Contenidos">Sección E: Contenidos</option>
-                        <option value="Sección F: Metodología">Sección F: Metodología</option>
-                        <option value="Sección G: Prácticas APE">Sección G: Prácticas APE</option>
-                        <option value="Sección H: Evaluación">Sección H: Evaluación</option>
-                        <option value="Sección I: Bibliografía">Sección I: Bibliografía</option>
-                        <option value="Sección J: Firmas">Sección J: Firmas</option>
-                    </select>
+            {/* Formulario de Retroalimentación / Dictamen (Habilitado exclusivamente en fase de revisión activa) */}
+            {(estado === 'EnRevision' || estado === 'Corregido' || estado === 'RevisadoCoord') && (
+                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-zinc-900">
+                    <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                            Observaciones / Dictamen Técnico
+                        </label>
+                        <select
+                            value={seccionAfectada}
+                            onChange={e => setSeccionAfectada(e.target.value)}
+                            className="px-2 py-1 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md text-zinc-800 dark:text-zinc-200 focus:outline-none"
+                        >
+                            <option value="General">General (Todo el PEA)</option>
+                            <option value="Sección A: Datos Generales">Sección A: Datos Generales</option>
+                            <option value="Sección B: Objetivo">Sección B: Objetivo</option>
+                            <option value="Sección C: Prerrequisitos">Sección C: Prerrequisitos</option>
+                            <option value="Sección D: RDA">Sección D: RDA</option>
+                            <option value="Sección E: Contenidos">Sección E: Contenidos</option>
+                            <option value="Sección F: Metodología">Sección F: Metodología</option>
+                            <option value="Sección G: Prácticas APE">Sección G: Prácticas APE</option>
+                            <option value="Sección H: Evaluación">Sección H: Evaluación</option>
+                            <option value="Sección I: Bibliografía">Sección I: Bibliografía</option>
+                            <option value="Sección J: Firmas">Sección J: Firmas</option>
+                        </select>
+                    </div>
+
+                    <textarea
+                        value={feedback}
+                        onChange={e => setFeedback(e.target.value)}
+                        placeholder="Escriba aquí las observaciones detalladas para el docente o el dictamen de aprobación técnica..."
+                        disabled={isSubmitting}
+                        className="w-full h-24 p-3 text-xs bg-slate-50/60 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] resize-none transition-all"
+                    />
                 </div>
+            )}
 
-                <textarea
-                    value={feedback}
-                    onChange={e => setFeedback(e.target.value)}
-                    placeholder="Escriba aquí las observaciones detalladas para el docente o el dictamen de aprobación técnica..."
-                    disabled={isSubmitting}
-                    className="w-full h-24 p-3 text-xs bg-slate-50/60 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0070f3] resize-none transition-all"
-                />
-            </div>
-
-            {/* Acciones según Rol */}
+            {/* Acciones según Rol y Estado del Documento */}
             <div className="flex flex-col gap-2 pt-2 border-t border-slate-100 dark:border-zinc-900">
-                {/* Coordinador de Carrera / Admin */}
-                {(isCoordCarrera || isAdmin) && (
+                {/* 1. Docente Titular (cuando el PEA está en fase de formulación o subsanación) */}
+                {isDocenteTitular && (estado === 'Borrador' || estado === 'Observado') && (
+                    <button
+                        type="button"
+                        onClick={handleEnviarARevision}
+                        disabled={isSubmitting || !allChecksOk}
+                        className="w-full py-2.5 px-4 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                    >
+                        {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        <span>{estado === 'Observado' ? 'Reenviar PEA con Correcciones' : 'Enviar PEA a Revisión'}</span>
+                    </button>
+                )}
+
+                {/* 2. Coordinador de Carrera / Admin (exclusivo cuando el PEA ha sido remitido formalmente a revisión) */}
+                {(isCoordCarrera || isAdmin) && (estado === 'EnRevision' || estado === 'Corregido') && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <button
                             type="button"
@@ -621,8 +636,8 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                     </div>
                 )}
 
-                {/* Coordinador Académico (cuando ya cuenta con aval de carrera) */}
-                {isCoordAcad && !isCoordCarrera && (
+                {/* 3. Coordinador Académico (cuando ya cuenta con aval de carrera y está en revisión institucional) */}
+                {isCoordAcad && !isCoordCarrera && estado === 'RevisadoCoord' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <button
                             type="button"
@@ -646,20 +661,14 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                     </div>
                 )}
 
-                {/* Docente Titular (cuando está en Borrador o ha sido Observado) */}
-                {isDocente && isDocenteTitular && (estado === 'Borrador' || estado === 'Observado') && (
-                    <button
-                        type="button"
-                        onClick={handleEnviarARevision}
-                        disabled={isSubmitting || !allChecksOk}
-                        className="w-full py-2.5 px-4 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
-                    >
-                        {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                        <span>Enviar PEA a Revisión</span>
-                    </button>
+                {/* 4. Aviso para autoridades en documentos que aún están en borrador */}
+                {estado === 'Borrador' && !isDocenteTitular && (
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/50 text-slate-600 dark:text-zinc-400 text-xs leading-relaxed">
+                        El Programa de Estudio se encuentra en formulación docente (Borrador). La revisión técnica y emisión de avales se habilitará una vez remitido formalmente por el docente responsable.
+                    </div>
                 )}
 
-                {/* Docente Colaborador (apoyo entre pares) */}
+                {/* 5. Docente Colaborador (apoyo entre pares) */}
                 {isDocente && !isDocenteTitular && !isAdmin && (estado === 'Borrador' || estado === 'Observado') && (
                     <div className="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 text-xs flex items-start gap-2.5">
                         <Users className="w-4 h-4 shrink-0 mt-0.5 text-[#0070f3] dark:text-blue-400" />

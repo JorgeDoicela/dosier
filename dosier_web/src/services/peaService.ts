@@ -359,6 +359,9 @@ export const responderColaboracion = (uuid: string, aceptar: boolean, motivo?: s
         motivo
     }).then(r => r.data);
 
+export const cancelarSolicitudColaboracion = (uuid: string): Promise<{ success: boolean }> =>
+    api.post('/pea/colaboraciones/' + uuid + '/cancelar').then(r => r.data);
+
 export const getMisSolicitudesColaboracion = (): Promise<PeaColaboracionItemDto[]> =>
     api.get('/pea/colaboraciones/mis-solicitudes').then(r => r.data);
 

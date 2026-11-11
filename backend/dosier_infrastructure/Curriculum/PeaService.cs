@@ -815,13 +815,9 @@ namespace dosier_infrastructure.Curriculum
             var pea = await _context.DocPeas.FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo)
                 ?? throw new KeyNotFoundException($"No se encontró el PEA con id {idPea}");
 
-            string estadoAnteriorPea = pea.Estado;
-            if (pea.Estado != "Observado")
-            {
-                pea.Estado = "Observado";
-                pea.FechaModificacion = DateTime.UtcNow;
-                await RegistrarTrazabilidadAsync(idPea, estadoAnteriorPea, "Observado", $"Observación registrada en {seccion}: {texto}", null, effectiveUserId);
-            }
+            // La adición de una observación durante la revisión técnica NO debe mutar el estado global del PEA.
+            // El estado solo cambia a 'Observado' cuando la autoridad emite formalmente el dictamen de devolución al docente.
+            pea.FechaModificacion = DateTime.UtcNow;
 
             var obs = new DocPeaObservacion
             {
@@ -837,11 +833,6 @@ namespace dosier_infrastructure.Curriculum
 
             _context.DocPeaObservaciones.Add(obs);
             await _context.SaveChangesAsync();
-
-            if (estadoAnteriorPea != "Observado")
-            {
-                await NotificarHitoWorkflowPeaAsync(pea, estadoAnteriorPea, "Observado", $"Observación en {seccion}: {texto}");
-            }
 
             return new PeaObservacionDto
             {
@@ -2301,10 +2292,8 @@ namespace dosier_infrastructure.Curriculum
             }
             // 3. Coordinador Académico (DOSIER_COORD_ACAD), Vicerrector (DOSIER_VICERRECTOR) y Admin (DOSIER_ADMIN):
             // Supervisión macro-curricular institucional: tienen acceso y supervisión sobre todas las carreras.
-
-            // Auto-aprovisionamiento proactivo de PEAs para asignaciones del distributivo SIGAFI que aún no hayan sido abiertas
-            bool tieneAlcanceGlobal = isAdmin || isVicerrector || isCoordAcad;
-            await SincronizarDistributivoInternoAsync(idPeriodo, idCarrera, user.IdSigafi, tieneAlcanceGlobal, cancellationToken);
+            // Nota de Arquitectura y Rendimiento: La consulta de la bandeja es estrictamente de lectura (idempotente).
+            // Se desacopla el auto-aprovisionamiento bloqueante para garantizar tiempos de respuesta sub-100ms.
 
             var peas = await query
                 .OrderByDescending(p => p.FechaModificacion)
@@ -2941,6 +2930,47 @@ namespace dosier_infrastructure.Curriculum
                 // No bloquear si la notificación falla
             }
 
+            return true;
+        }
+
+        public async Task<bool> CancelarSolicitudColaboracionAsync(
+            string uuidColaboracion,
+            string idDocenteSolicitante,
+            CancellationToken cancellationToken = default)
+        {
+            var userSolicitante = await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.IdSigafi == idDocenteSolicitante || u.IdUsuario.ToString() == idDocenteSolicitante || u.Nombre == idDocenteSolicitante, cancellationToken);
+            string sigafiSolicitante = userSolicitante?.IdSigafi ?? idDocenteSolicitante;
+
+            var pea = await _context.DocPeas
+                .FirstOrDefaultAsync(p => (p.Uuid == uuidColaboracion || p.IdPea.ToString() == uuidColaboracion || (p.IdAsignacion.HasValue && p.IdAsignacion.ToString() == uuidColaboracion)) && p.Activo, cancellationToken)
+                ?? throw new KeyNotFoundException("No se encontró el PEA o solicitud de colaboración especificada.");
+
+            bool isAdmin = userSolicitante?.Administrador == true;
+            if (!isAdmin && pea.IdDocenteColaborador != sigafiSolicitante)
+            {
+                throw new UnauthorizedAccessException("Solo el docente que emitió la solicitud puede cancelarla.");
+            }
+
+            pea.IdDocenteColaborador = null;
+            pea.NombreDocenteColaborador = null;
+            pea.EstadoColaboracion = null;
+            pea.FechaSolicitudColaboracion = null;
+            pea.FechaRespuestaColaboracion = null;
+            pea.MotivoColaboracion = null;
+
+            if (!string.IsNullOrWhiteSpace(pea.ColaboradoresJson))
+            {
+                try
+                {
+                    var colabList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(pea.ColaboradoresJson) ?? new();
+                    colabList.RemoveAll(c => c.TryGetValue("id_docente", out var id) && id?.ToString() == sigafiSolicitante);
+                    pea.ColaboradoresJson = JsonSerializer.Serialize(colabList);
+                }
+                catch { }
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
             return true;
         }
 

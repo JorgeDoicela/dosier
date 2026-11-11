@@ -46,6 +46,7 @@ export const CoordAcadDashboard: React.FC = () => {
     const [selectedCarreraId, setSelectedCarreraId] = useState<number | 'todas'>('todas');
     const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
     const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
+    const [catalogsLoaded, setCatalogsLoaded] = useState<boolean>(false);
 
     // Datos del workflow
     const [peas, setPeas] = useState<PeaBandejaItemDto[]>([]);
@@ -75,12 +76,14 @@ export const CoordAcadDashboard: React.FC = () => {
             if (activo) {
                 setSelectedPeriodo(activo.id_periodo);
             }
+            setCatalogsLoaded(true);
         });
         return () => { isMounted = false; };
     }, []);
 
     // Consulta de la bandeja general de PEAs institucionales
     const fetchPeas = useCallback(async () => {
+        if (!catalogsLoaded) return;
         setIsLoading(true);
         try {
             const params: { idPeriodo?: string; idCarrera?: number } = {};
@@ -95,11 +98,13 @@ export const CoordAcadDashboard: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedPeriodo, selectedCarreraId]);
+    }, [catalogsLoaded, selectedPeriodo, selectedCarreraId]);
 
     useEffect(() => {
-        fetchPeas();
-    }, [fetchPeas]);
+        if (catalogsLoaded) {
+            fetchPeas();
+        }
+    }, [catalogsLoaded, fetchPeas]);
 
     // Sincronización en tiempo real (SignalR, foco de pestaña y heartbeat pasivo)
     useRealtimeSync({

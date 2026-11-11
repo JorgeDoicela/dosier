@@ -22,14 +22,40 @@ import type {
     DocenteAsignaturaDto,
     PeriodoAcademicoDto
 } from '../../services/docenteAsignaturasService';
-import { crearPeaDesdeAsignacion, getPeasOtrosDocentes, solicitarColaboracion } from '../../services/peaService';
+import { crearPeaDesdeAsignacion, getPeasOtrosDocentes, solicitarColaboracion, cancelarSolicitudColaboracion } from '../../services/peaService';
 import type { PeaBandejaItemDto } from '../../services/peaService';
 import { configuracionService } from '../../services/configuracionService';
+import { SolicitarColaboracionModal } from './components/SolicitarColaboracionModal';
+import { CancelarColaboracionModal } from './components/CancelarColaboracionModal';
 import {
     recordRecentSubjectOpen,
     sortSubjectsByRecentOpen
 } from '../../utils/recentSubjectStorage';
 import { useRealtimeSync } from '../../hooks/useRealtimeSync';
+
+const formatModalidad = (mod?: string, idModalidad?: number): string => {
+    if (mod && mod.trim()) {
+        const clean = mod.trim();
+        const lower = clean.toLowerCase();
+        if (lower.includes('linea') || lower.includes('línea') || lower.includes('virtual') || lower.includes('online')) {
+            return 'En línea';
+        }
+        if (lower.includes('semipresencial')) {
+            return 'Semipresencial';
+        }
+        if (lower.includes('hibrid') || lower.includes('híbrid')) {
+            return 'Híbrida';
+        }
+        if (lower.includes('presencial')) {
+            return 'Presencial';
+        }
+        return clean;
+    }
+    if (idModalidad === 2 || idModalidad === 3) {
+        return 'En línea';
+    }
+    return 'Presencial';
+};
 
 export const MisAsignaturasPage: React.FC = () => {
     const navigate = useNavigate();
@@ -71,6 +97,9 @@ export const MisAsignaturasPage: React.FC = () => {
     // Estado transaccional por asignación
     const [creatingPeaId, setCreatingPeaId] = useState<number | null>(null);
     const [requestingColabId, setRequestingColabId] = useState<number | null>(null);
+    const [colabModalPea, setColabModalPea] = useState<PeaBandejaItemDto | null>(null);
+    const [cancelarModalPea, setCancelarModalPea] = useState<PeaBandejaItemDto | null>(null);
+    const [isCanceling, setIsCanceling] = useState<boolean>(false);
 
     const recargarMaterias = useCallback(async (periodoId: string, silent = false) => {
         if (!periodoId) return;
@@ -179,9 +208,9 @@ export const MisAsignaturasPage: React.FC = () => {
             // Notificar a todos los escuchas que el estado de los proyectos curriculares ha cambiado
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
 
-            // Redirigir al workspace con el UUID o ID del PEA oficial
+            // Redirigir al workspace con el UUID o ID del PEA oficial preservando la ruta de mis-proyectos
             const targetUuid = nuevoPea.uuid || String(nuevoPea.idPea || (nuevoPea as { id_pea?: number | string }).id_pea);
-            navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
+            navigate(`/documentacion/mis-proyectos/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
         } catch (err: unknown) {
             console.error('[DOSIER] Error al inicializar PEA:', err);
             const message = err && typeof err === 'object' && 'response' in err
@@ -200,10 +229,14 @@ export const MisAsignaturasPage: React.FC = () => {
     const handleContinuarPea = (asignacion: DocenteAsignaturaDto) => {
         recordRecentSubjectOpen(asignacion);
         const targetUuid = asignacion.uuid_pea || String(asignacion.id_pea);
-        navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
+        navigate(`/documentacion/mis-proyectos/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
     };
 
-        const handleSolicitarColaborar = async (pea: PeaBandejaItemDto) => {
+    const handleSolicitarColaborar = (pea: PeaBandejaItemDto) => {
+        setColabModalPea(pea);
+    };
+
+    const ejecutarSolicitudColaborar = async (pea: PeaBandejaItemDto, motivo?: string) => {
         if (!pea.id_asignacion) {
             addToast('Error', 'La asignatura no cuenta con un código de asignación válido.', 'error');
             return;
@@ -214,7 +247,8 @@ export const MisAsignaturasPage: React.FC = () => {
             const res = await solicitarColaboracion({
                 idAsignacion: pea.id_asignacion,
                 idPea: pea.id_pea && pea.id_pea > 0 ? pea.id_pea : undefined,
-                uuidPea: pea.uuid || undefined
+                uuidPea: pea.uuid || undefined,
+                motivo
             });
 
             setOtrosPeas(prev => prev.map(p => {
@@ -248,6 +282,39 @@ export const MisAsignaturasPage: React.FC = () => {
         }
     };
 
+    const handleEjecutarCancelarColaboracion = async () => {
+        if (!cancelarModalPea) return;
+        const targetId = cancelarModalPea.uuid || String(cancelarModalPea.id_asignacion || cancelarModalPea.id_pea);
+        setIsCanceling(true);
+        try {
+            await cancelarSolicitudColaboracion(targetId);
+            setOtrosPeas(prev => prev.map(p => {
+                if (p.id_asignacion === cancelarModalPea.id_asignacion) {
+                    return {
+                        ...p,
+                        estado_colaboracion: undefined,
+                        uuid_colaboracion: undefined
+                    };
+                }
+                return p;
+            }));
+            addToast(
+                'Solicitud Retirada',
+                `Se ha cancelado la solicitud de colaboración para "${cancelarModalPea.nombre_asignatura}".`,
+                'info'
+            );
+            setCancelarModalPea(null);
+        } catch (err: unknown) {
+            console.error('[DOSIER] Error al cancelar colaboración:', err);
+            const message = err && typeof err === 'object' && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+                : undefined;
+            addToast('Error', message || 'No se pudo retirar la solicitud de colaboración.', 'error');
+        } finally {
+            setIsCanceling(false);
+        }
+    };
+
     const handleColaborarPea = async (pea: PeaBandejaItemDto) => {
         if (pea.id_pea && pea.id_pea > 0 && pea.uuid) {
             recordRecentSubjectOpen({
@@ -255,7 +322,7 @@ export const MisAsignaturasPage: React.FC = () => {
                 uuid_pea: pea.uuid,
                 id_pea: pea.id_pea
             });
-            navigate(`/documentacion/workspace/pea-oficial/${pea.uuid}?edit=pea-oficial`);
+            navigate(`/documentacion/mis-proyectos/workspace/pea-oficial/${pea.uuid}?edit=pea-oficial`);
             return;
         }
 
@@ -278,7 +345,7 @@ export const MisAsignaturasPage: React.FC = () => {
                 );
                 window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
                 const targetUuid = nuevoPea.uuid || String(nuevoPea.idPea || (nuevoPea as { id_pea?: number | string }).id_pea);
-                navigate(`/documentacion/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
+                navigate(`/documentacion/mis-proyectos/workspace/pea-oficial/${targetUuid}?edit=pea-oficial`);
             } catch (err: unknown) {
                 console.error('[DOSIER] Error al inicializar PEA colegiado:', err);
                 const message = err && typeof err === 'object' && 'response' in err
@@ -333,16 +400,16 @@ export const MisAsignaturasPage: React.FC = () => {
         return Array.from(unique).sort();
     }, [materias, otrosPeas]);
 
-    // Lista única de modalidades para filtro
+    // Lista única de modalidades normalizadas para filtro
     const modalidadesDisponibles = useMemo(() => {
         const unique = new Set<string>();
         materias.forEach(m => {
-            const mod = m.nombre_modalidad?.trim() || 'Presencial';
-            unique.add(mod);
+            const mod = formatModalidad(m.nombre_modalidad, m.id_modalidad);
+            if (mod) unique.add(mod);
         });
         otrosPeas.forEach(p => {
-            const mod = p.modalidad?.trim() || 'Presencial';
-            unique.add(mod);
+            const mod = formatModalidad(p.modalidad);
+            if (mod) unique.add(mod);
         });
         return Array.from(unique).sort();
     }, [materias, otrosPeas]);
@@ -402,7 +469,7 @@ export const MisAsignaturasPage: React.FC = () => {
     // Filtrado en vivo y ordenamiento invisible por más recientemente abierto (Mis Asignaturas)
     const materiasFiltradas = useMemo(() => {
         const filtradas = materias.filter(m => {
-            const modNombre = m.nombre_modalidad?.trim() || 'Presencial';
+            const modNombre = formatModalidad(m.nombre_modalidad, m.id_modalidad);
             const estadoLabel = getEstadoLabel(m.estado_pea || '');
 
             const matchesSearch =
@@ -434,23 +501,17 @@ export const MisAsignaturasPage: React.FC = () => {
         return sortSubjectsByRecentOpen(filtradas);
     }, [materias, search, filterEstado, filterCarrera, filterModalidad, getEstadoLabel, recentsVersion]);
 
-    // Filtrado en vivo y ordenamiento invisible para PEAs de otros docentes
+    // Filtrado en vivo y ordenamiento invisible para PEAs de otros docentes (para solicitar colaboración)
     const otrosPeasFiltrados = useMemo(() => {
         const filtrados = otrosPeas.filter(p => {
-            const modNombre = p.modalidad?.trim() || 'Presencial';
-            const estadoLabel = getEstadoLabel(p.estado || '');
+            const modNombre = formatModalidad(p.modalidad);
 
             const matchesSearch =
                 p.nombre_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
                 p.codigo_asignatura?.toLowerCase().includes(search.toLowerCase()) ||
                 p.nombre_carrera?.toLowerCase().includes(search.toLowerCase()) ||
                 p.nombre_docente_elaborador?.toLowerCase().includes(search.toLowerCase()) ||
-                modNombre.toLowerCase().includes(search.toLowerCase()) ||
-                estadoLabel.toLowerCase().includes(search.toLowerCase());
-
-            const matchesEstado =
-                filterEstado === 'todos' ||
-                p.estado?.toLowerCase() === filterEstado.toLowerCase();
+                modNombre.toLowerCase().includes(search.toLowerCase());
 
             const matchesCarrera = filterCarrera === 'todas' || p.nombre_carrera === filterCarrera;
 
@@ -458,7 +519,11 @@ export const MisAsignaturasPage: React.FC = () => {
                 filterModalidad === 'todas' ||
                 modNombre.toLowerCase() === filterModalidad.toLowerCase();
 
-            return matchesSearch && matchesEstado && matchesCarrera && matchesModalidad;
+            const matchesDocente =
+                filterDocente === 'todos' ||
+                (p.nombre_docente_elaborador || '').trim().toLowerCase() === filterDocente.toLowerCase();
+
+            return matchesSearch && matchesCarrera && matchesModalidad && matchesDocente;
         });
 
         // Ordenamiento invisible por uso reciente
@@ -468,31 +533,7 @@ export const MisAsignaturasPage: React.FC = () => {
             uuid_pea: p.uuid,
             id_pea: p.id_pea
         })));
-    }, [otrosPeas, search, filterEstado, filterCarrera, filterModalidad, filterDocente, getEstadoLabel, recentsVersion]);
-
-    const formatModalidad = (mod?: string, idModalidad?: number): string => {
-        if (mod && mod.trim()) {
-            const clean = mod.trim();
-            const lower = clean.toLowerCase();
-            if (lower.includes('linea') || lower.includes('línea') || lower.includes('virtual') || lower.includes('online')) {
-                return 'En línea';
-            }
-            if (lower.includes('semipresencial')) {
-                return 'Semipresencial';
-            }
-            if (lower.includes('hibrid') || lower.includes('híbrid')) {
-                return 'Híbrida';
-            }
-            if (lower.includes('presencial')) {
-                return 'Presencial';
-            }
-            return clean;
-        }
-        if (idModalidad === 2 || idModalidad === 3) {
-            return 'En línea';
-        }
-        return 'Presencial';
-    };
+    }, [otrosPeas, search, filterCarrera, filterModalidad, filterDocente, recentsVersion]);
 
     const renderEstadoBadge = (estado: string) => {
         const label = getEstadoLabel(estado);
@@ -711,7 +752,7 @@ export const MisAsignaturasPage: React.FC = () => {
                         </div>
                     )}
 
-                    {estadosDisponibles.length > 0 && (
+                    {vistaActiva === 'mis_asignaturas' && estadosDisponibles.length > 0 && (
                         <div className="w-44 shrink-0">
                             <GeistSelect
                                 value={filterEstado}
@@ -894,21 +935,6 @@ export const MisAsignaturasPage: React.FC = () => {
                             const tienePea = Boolean(pea.id_pea && pea.id_pea > 0 && pea.uuid);
                             const estadoColab = pea.estado_colaboracion;
 
-                            const handleCardClick = () => {
-                                if (isCreating || isRequesting) return;
-                                if (estadoColab === 'Aprobada') {
-                                    handleColaborarPea(pea);
-                                } else if (estadoColab === 'Pendiente') {
-                                    addToast(
-                                        'Solicitud en Espera',
-                                        `Su solicitud de colaboración para "${pea.nombre_asignatura}" está pendiente de aprobación por el docente titular (${pea.nombre_docente_elaborador || 'Docente'}).`,
-                                        'info'
-                                    );
-                                } else {
-                                    handleSolicitarColaborar(pea);
-                                }
-                            };
-
                             const keyIdentifier = (pea.id_pea && pea.id_pea > 0)
                                 ? `pea-${pea.id_pea}`
                                 : (pea.uuid && pea.uuid.length > 0)
@@ -920,30 +946,20 @@ export const MisAsignaturasPage: React.FC = () => {
                             return (
                                 <div
                                     key={keyIdentifier}
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={handleCardClick}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            handleCardClick();
-                                        }
-                                    }}
-                                    className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
+                                    className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 flex flex-col justify-between space-y-4 text-left"
                                 >
-                                    {/* Top: Carrera y Estado */}
+                                    {/* Top: Carrera */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            {carrerasDisponibles.length > 1 ? (
+                                            {carrerasDisponibles.length > 1 && (
                                                 <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
                                                     <span className="truncate">{pea.nombre_carrera || 'Carrera Institucional'}</span>
                                                 </div>
-                                            ) : <div />}
-                                            <div>{renderEstadoBadge(pea.estado)}</div>
+                                            )}
                                         </div>
 
                                         {/* Título de la Asignatura */}
-                                        <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                        <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2">
                                             {pea.nombre_asignatura}
                                         </h2>
 
@@ -966,15 +982,12 @@ export const MisAsignaturasPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Botón de Acción Principal */}
+                                    {/* Botón de Acción Principal - Solo aquí se ejecutan las acciones */}
                                     <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-zinc-900">
                                         {estadoColab === 'Aprobada' ? (
                                             <button
                                                 type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleColaborarPea(pea);
-                                                }}
+                                                onClick={() => handleColaborarPea(pea)}
                                                 disabled={isCreating}
                                                 className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                             >
@@ -987,17 +1000,24 @@ export const MisAsignaturasPage: React.FC = () => {
                                                 </span>
                                             </button>
                                         ) : estadoColab === 'Pendiente' ? (
-                                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
-                                                <Clock className="w-3.5 h-3.5 animate-pulse text-amber-500" />
-                                                <span>Solicitud Pendiente</span>
+                                            <div className="flex flex-wrap items-center justify-end gap-2">
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
+                                                    <Clock className="w-3.5 h-3.5 animate-pulse text-amber-500" />
+                                                    <span>Solicitud Pendiente</span>
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCancelarModalPea(pea)}
+                                                    className="text-xs text-slate-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer font-medium"
+                                                    title="Retirar o anular la solicitud de colaboración pendiente"
+                                                >
+                                                    Quitar Solicitud
+                                                </button>
                                             </div>
                                         ) : (
                                             <button
                                                 type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSolicitarColaborar(pea);
-                                                }}
+                                                onClick={() => handleSolicitarColaborar(pea)}
                                                 disabled={isRequesting}
                                                 className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                             >
@@ -1022,6 +1042,27 @@ export const MisAsignaturasPage: React.FC = () => {
                     </div>
                 )
             )}
+            {/* Modal central explicativo de solicitud de colaboración */}
+            <SolicitarColaboracionModal
+                isOpen={colabModalPea !== null}
+                onClose={() => setColabModalPea(null)}
+                pea={colabModalPea}
+                isRequesting={requestingColabId !== null}
+                onConfirm={async (motivo) => {
+                    if (!colabModalPea) return;
+                    await ejecutarSolicitudColaborar(colabModalPea, motivo);
+                    setColabModalPea(null);
+                }}
+            />
+
+            {/* Modal central explicativo para retirar o cancelar solicitud de colaboración */}
+            <CancelarColaboracionModal
+                isOpen={cancelarModalPea !== null}
+                onClose={() => setCancelarModalPea(null)}
+                onConfirm={handleEjecutarCancelarColaboracion}
+                pea={cancelarModalPea}
+                isCanceling={isCanceling}
+            />
         </div>
     );
 };

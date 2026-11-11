@@ -38,12 +38,12 @@ export function useProjectCore() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const isMisProyectos = location.pathname.startsWith('/documentacion/mis-proyectos');
+    const queryParams = new URLSearchParams(location.search);
+    const isMisProyectos = location.pathname.includes('/mis-proyectos') || queryParams.get('from') === 'mis-proyectos';
     const urlPrefix = isMisProyectos ? '/documentacion/mis-proyectos' : '/documentacion';
 
     const isPeaTemplate = templateCode === 'PEA_OFICIAL';
 
-    const queryParams = new URLSearchParams(location.search);
     const editParam = queryParams.get('edit');
     const sectionParam = queryParams.get('section');
     const activeDocument = editParam

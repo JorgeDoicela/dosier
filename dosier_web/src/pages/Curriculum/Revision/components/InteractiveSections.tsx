@@ -69,7 +69,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     onScroll
 }) => {
     const snap = docSnapshot || {};
-    const statusDescriptor = getPeaStatusDescriptor(project.status);
+    const statusDescriptor = getPeaStatusDescriptor(project.status, { esSupervisor: true });
     const statusLabel = statusDescriptor.key === 'EnRevision' ? 'En Revisión' : statusDescriptor.label;
 
     const getFieldComments = (fieldKey: string): SectionComment[] => {

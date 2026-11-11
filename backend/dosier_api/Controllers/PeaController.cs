@@ -150,6 +150,34 @@ namespace dosier_api.Controllers
             }
         }
 
+        [HttpPost("colaboraciones/{uuid}/cancelar")]
+        public async Task<IActionResult> CancelarSolicitudColaboracion(
+            string uuid,
+            CancellationToken cancellationToken = default)
+        {
+            var identifier = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(identifier))
+                return Unauthorized(new { message = "No se pudo identificar la sesión del usuario." });
+
+            try
+            {
+                var ok = await _peaService.CancelarSolicitudColaboracionAsync(uuid, identifier, cancellationToken);
+                return Ok(new { success = ok });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet("colaboraciones/mis-solicitudes")]
         public async Task<IActionResult> GetMisSolicitudesColaboracion(CancellationToken cancellationToken = default)
         {

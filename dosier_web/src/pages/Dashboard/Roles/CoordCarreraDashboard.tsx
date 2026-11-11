@@ -38,6 +38,7 @@ export const CoordCarreraDashboard: React.FC = () => {
     const [selectedCarreraId, setSelectedCarreraId] = useState<number | 'todas'>('todas');
     const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
     const [selectedPeriodo, setSelectedPeriodo] = useState<string>('');
+    const [catalogsLoaded, setCatalogsLoaded] = useState<boolean>(false);
 
     // Datos del workflow
     const [peas, setPeas] = useState<PeaBandejaItemDto[]>([]);
@@ -74,21 +75,30 @@ export const CoordCarreraDashboard: React.FC = () => {
             setCarreras(carrerasDisponibles);
             setPeriodos(periodosList);
 
+            let initialCarrera: number | 'todas' = 'todas';
             if (carrerasDisponibles.length > 0) {
                 const primerId = carrerasDisponibles[0].id_carrera ?? carrerasDisponibles[0].idCarrera;
-                if (primerId) setSelectedCarreraId(primerId);
+                if (primerId) {
+                    initialCarrera = primerId;
+                    setSelectedCarreraId(primerId);
+                }
             }
 
             const activo = periodosList.find(p => p.es_activo) || periodosList[0];
+            let initialPeriodo = '';
             if (activo) {
+                initialPeriodo = activo.id_periodo;
                 setSelectedPeriodo(activo.id_periodo);
             }
+
+            setCatalogsLoaded(true);
         });
         return () => { isMounted = false; };
     }, [esSuperAutoridad]);
 
     // Cargar PEAs de la bandeja según filtros
     const fetchPeas = useCallback(async () => {
+        if (!catalogsLoaded) return;
         setIsLoading(true);
         try {
             const params: { idPeriodo?: string; idCarrera?: number } = {};
@@ -103,11 +113,13 @@ export const CoordCarreraDashboard: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedPeriodo, selectedCarreraId]);
+    }, [catalogsLoaded, selectedPeriodo, selectedCarreraId]);
 
     useEffect(() => {
-        fetchPeas();
-    }, [fetchPeas]);
+        if (catalogsLoaded) {
+            fetchPeas();
+        }
+    }, [catalogsLoaded, fetchPeas]);
 
     // Sincronización continua en tiempo real
     useRealtimeSync({
@@ -164,9 +176,11 @@ export const CoordCarreraDashboard: React.FC = () => {
         });
     }, [peas, filterTab, search, isMiMateria]);
 
-    // Navegación directa al editor para revisión
-    const handleAbrirRevision = (uuid: string) => {
-        navigate(`/documentacion/workspace/pea-oficial/${uuid}?edit=pea-oficial`);
+    // Navegación directa al editor para revisión o redacción docente propia
+    const handleAbrirRevision = (p: PeaBandejaItemDto) => {
+        const esPropia = isMiMateria(p);
+        const prefix = esPropia ? '/documentacion/mis-proyectos/workspace' : '/documentacion/workspace';
+        navigate(`${prefix}/pea-oficial/${p.uuid}?edit=pea-oficial`);
     };
 
     // Registro formal de observaciones
@@ -345,11 +359,11 @@ export const CoordCarreraDashboard: React.FC = () => {
                                     return (
                                         <div
                                             key={p.uuid}
-                                            onClick={() => handleAbrirRevision(p.uuid)}
+                                            onClick={() => handleAbrirRevision(p)}
                                             onKeyDown={e => {
                                                 if (e.key === 'Enter' || e.key === ' ') {
                                                     e.preventDefault();
-                                                    handleAbrirRevision(p.uuid);
+                                                    handleAbrirRevision(p);
                                                 }
                                             }}
                                             tabIndex={0}
