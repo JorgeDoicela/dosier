@@ -32,7 +32,7 @@ import {
 
 export const PeaSupervisionTray: React.FC = () => {
     const navigate = useNavigate();
-    const { user, isAdmin, isCoordCarrera } = useAuth();
+    const { user, isAdmin, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
 
     const [peas, setPeas] = useState<PeaBandejaItemDto[]>([]);
     const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
@@ -145,27 +145,54 @@ export const PeaSupervisionTray: React.FC = () => {
     // Los Coordinadores de Carrera tienen jurisdicción exclusiva sobre su propia carrera; no requieren filtro redundante
     const puedeFiltrarCarreras = !isCoordCarrera && carrerasDisponibles.length > 1;
 
-    // Universo visible de PEAs: Para revisión curricular SOLO se muestran las asignaturas enviadas a revisión por los docentes
-    const peasVisibles = useMemo(() => {
-        return peas.filter(p => !isPeaBorrador(p.estado) && p.estado !== 'NoIniciado' && p.estado !== '');
-    }, [peas]);
+    // Función que determina si un PEA está pendiente de revisión según el rol del usuario
+    const isPendientePorRol = useCallback((p: PeaBandejaItemDto) => {
+        const estadoNorm = normalizePeaStatus(p.estado);
+        if (isVicerrector && !isAdmin) {
+            return estadoNorm === 'RevisadoAcad';
+        }
+        if (isCoordAcad && !isAdmin) {
+            return estadoNorm === 'RevisadoCoord';
+        }
+        if (isCoordCarrera && !isAdmin) {
+            return isPeaEnRevision(p.estado);
+        }
+        // Admin: cualquier etapa de revisión activa
+        return isPeaEnRevision(p.estado) || estadoNorm === 'RevisadoCoord' || estadoNorm === 'RevisadoAcad';
+    }, [isAdmin, isCoordCarrera, isCoordAcad, isVicerrector]);
 
-    // Métricas de estado del workflow curricular sobre el universo visible
+    // Función que determina si un PEA ya fue aprobado según el rol del usuario
+    const isAprobadoPorRol = useCallback((p: PeaBandejaItemDto) => {
+        const estadoNorm = normalizePeaStatus(p.estado);
+        if (isVicerrector && !isAdmin) {
+            return estadoNorm === 'Aprobado' || estadoNorm === 'Publicado';
+        }
+        if (isCoordAcad && !isAdmin) {
+            return estadoNorm === 'RevisadoAcad' || estadoNorm === 'Aprobado' || estadoNorm === 'Publicado';
+        }
+        if (isCoordCarrera && !isAdmin) {
+            return isPeaAvalado(p.estado);
+        }
+        // Admin
+        return estadoNorm === 'Aprobado' || estadoNorm === 'Publicado';
+    }, [isAdmin, isCoordCarrera, isCoordAcad, isVicerrector]);
+
+    // Métricas de estado del workflow curricular
     const stats = useMemo(() => {
-        const porRevisar = peasVisibles.filter(p => isPeaEnRevision(p.estado)).length;
-        const enRedaccion = peasVisibles.filter(p => isPeaBorrador(p.estado)).length;
-        const aprobados = peasVisibles.filter(p => isPeaAvalado(p.estado)).length;
+        const porRevisar = peas.filter(isPendientePorRol).length;
+        const enRedaccion = peas.filter(p => isPeaBorrador(p.estado)).length;
+        const aprobados = peas.filter(isAprobadoPorRol).length;
         return {
-            total: peasVisibles.length,
+            total: peas.length,
             porRevisar,
             enRedaccion,
             aprobados
         };
-    }, [peasVisibles]);
+    }, [peas, isPendientePorRol, isAprobadoPorRol]);
 
     // Filtrado en memoria por búsqueda, carrera y estado, ordenando por apertura reciente del usuario
     const filteredPeas = useMemo(() => {
-        const list = peasVisibles.filter(p => {
+        const list = peas.filter(p => {
             const query = search.trim().toLowerCase();
             const matchSearch = !query ||
                 (p.nombre_asignatura && p.nombre_asignatura.toLowerCase().includes(query)) ||
@@ -177,14 +204,11 @@ export const PeaSupervisionTray: React.FC = () => {
 
             let matchWorkflow = true;
             if (workflowTab === 'por_revisar') {
-                matchWorkflow = isPeaEnRevision(p.estado);
+                matchWorkflow = isPendientePorRol(p);
             } else if (workflowTab === 'en_redaccion') {
                 matchWorkflow = isPeaBorrador(p.estado);
             } else if (workflowTab === 'aprobados') {
-                matchWorkflow = isPeaAvalado(p.estado);
-            } else if (workflowTab === 'todos' && isCoordCarrera && !isAdmin) {
-                // Al coordinador de carrera no se le muestran aquí los documentos que ya avaló y despachó
-                matchWorkflow = !isPeaAvalado(p.estado);
+                matchWorkflow = isAprobadoPorRol(p);
             }
 
             const matchEstado = selectedEstado === 'todos' ||
@@ -196,7 +220,7 @@ export const PeaSupervisionTray: React.FC = () => {
         });
 
         return sortSubjectsByRecentOpen(list);
-    }, [peasVisibles, search, selectedCarrera, selectedEstado, workflowTab, recentsVersion]);
+    }, [peas, search, selectedCarrera, selectedEstado, workflowTab, recentsVersion, isPendientePorRol, isAprobadoPorRol]);
 
     const handleAbrirPea = (item: PeaBandejaItemDto | string) => {
         const uuid = typeof item === 'string' ? item : item.uuid;
@@ -365,7 +389,7 @@ export const PeaSupervisionTray: React.FC = () => {
                         </span>
                     </button>
 
-                    {isAdmin && (
+                    {(isAdmin || isCoordAcad || isCoordCarrera || isVicerrector) && (
                         <button
                             type="button"
                             onClick={() => handleWorkflowTabChange('en_redaccion')}
@@ -393,14 +417,14 @@ export const PeaSupervisionTray: React.FC = () => {
                     >
                         <span>Todas las Asignaturas</span>
                         <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
-                            {isCoordCarrera && !isAdmin ? stats.porRevisar : stats.total}
+                            {stats.total}
                         </span>
                     </button>
                 </nav>
             </div>
 
-            {/* Banner explicativo contextual según la pestaña activa (exclusivo para Admin) */}
-            {isAdmin && workflowTab === 'en_redaccion' && (
+            {/* Banner explicativo contextual según la pestaña activa */}
+            {(isAdmin || isCoordAcad || isCoordCarrera || isVicerrector) && workflowTab === 'en_redaccion' && (
                 <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 text-xs flex items-center gap-3">
                     <Info size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
                     <span>
