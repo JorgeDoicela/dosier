@@ -19,7 +19,14 @@ import { RecordatorioDocentesModal, type DocenteRezagadoItem } from './Modals/Re
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
-import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
+import { 
+    formatModalidad,
+    isPeaPropio,
+    isPeaPendienteParaRol,
+    isPeaRezagado,
+    getPeaNavegacion,
+    getPeaMetricsForRole
+} from '../../Curriculum/utils/peaStatusWorkflow';
 import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
 import { getAvanceDetalle } from './Components/DocenteActividadesPanel';
 import {
@@ -118,40 +125,20 @@ export const CoordAcadDashboard: React.FC = () => {
         events: SYNC_EVENTS
     });
 
-    // Identificación de asignaturas propias del usuario actual
+    // Reglas de negocio unificadas: identificación de materias propias y cálculo de métricas
     const isMiMateria = useCallback((p: PeaBandejaItemDto) => {
-        if (!user) return false;
-        const userIdentifiers = [
-            user.id_sigafi,
-            user.idSigafi,
-            user.id_referencia,
-            user.id?.toString(),
-            user.id_usuario?.toString(),
-            (user as any)?.cedula
-        ].filter(Boolean) as string[];
-
-        const matchesId = p.id_docente_elaborador && userIdentifiers.some(
-            id => id.trim().toLowerCase() === p.id_docente_elaborador.trim().toLowerCase()
-        );
-        const matchesNombre = Boolean(
-            p.nombre_docente_elaborador && user.nombre_completo &&
-            p.nombre_docente_elaborador.trim().toLowerCase() === user.nombre_completo.trim().toLowerCase()
-        );
-        return Boolean(matchesId || matchesNombre);
+        return isPeaPropio(p, user);
     }, [user]);
 
-    // Conteo de tareas operativas y de aval
-    const pendientesRevisionAcadCount = useMemo(() => {
-        return peas.filter(p => p.estado === 'RevisadoCoord').length;
-    }, [peas]);
+    const metrics = useMemo(() => {
+        return getPeaMetricsForRole(peas, 'DOSIER_COORD_ACAD', user);
+    }, [peas, user]);
 
+    const pendientesRevisionAcadCount = metrics.pendientes;
     const misMaterias = useMemo(() => {
-        return peas.filter(p => isMiMateria(p));
-    }, [peas, isMiMateria]);
-
-    const misPendientesFormularCount = useMemo(() => {
-        return misMaterias.filter(p => p.estado === 'Borrador' || p.estado === 'Observado' || !p.firma_docente).length;
-    }, [misMaterias]);
+        return peas.filter(p => isPeaPropio(p, user));
+    }, [peas, user]);
+    const misPendientesFormularCount = metrics.misPendientesCount;
 
     const [recentsVersion, setRecentsVersion] = useState<number>(0);
 
@@ -166,13 +153,13 @@ export const CoordAcadDashboard: React.FC = () => {
         };
     }, []);
 
-    // Filtros en memoria
+    // Filtros en memoria basados en las reglas de negocio centralizadas
     const peasFiltrados = useMemo(() => {
         const filtrados = peas.filter(p => {
             const matchesTab = filterTab === 'pendientes'
-                ? p.estado === 'RevisadoCoord'
+                ? isPeaPendienteParaRol(p.estado, 'DOSIER_COORD_ACAD')
                 : filterTab === 'mis_materias'
-                    ? isMiMateria(p)
+                    ? isPeaPropio(p, user)
                     : selectedEstado === 'todos'
                         ? true
                         : p.estado === selectedEstado;
@@ -187,7 +174,7 @@ export const CoordAcadDashboard: React.FC = () => {
         });
 
         return sortSubjectsByRecentOpen(filtrados);
-    }, [peas, filterTab, selectedEstado, search, isMiMateria, recentsVersion]);
+    }, [peas, filterTab, selectedEstado, search, user, recentsVersion]);
 
 
 
@@ -212,20 +199,17 @@ export const CoordAcadDashboard: React.FC = () => {
         }
     };
 
-    // Navegación a revisión curricular (o editor si es materia propia)
+    // Navegación inteligente centralizada (editor si es propia vs mesa de revisión técnica)
     const handleAbrirRevision = (p: PeaBandejaItemDto) => {
         recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
-        if (isMiMateria(p)) {
-            navigate(`/documentacion/mis-proyectos/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
-        } else {
-            navigate(`/documentacion/revision-tecnica/${p.uuid}`);
-        }
+        const nav = getPeaNavegacion(p, user, 'DOSIER_COORD_ACAD');
+        navigate(nav.url);
     };
 
-    // Docentes con rezagos en la entrega
+    // Docentes con rezagos en la entrega según la regla unificada
     const docentesRezagados: DocenteRezagadoItem[] = useMemo(() => {
         return peas
-            .filter(p => p.estado === 'Borrador' || p.estado === 'Observado' || !p.firma_docente)
+            .filter(isPeaRezagado)
             .map(p => ({
                 nombre: p.nombre_docente_elaborador || 'Docente Responsable',
                 asignatura: p.nombre_asignatura,

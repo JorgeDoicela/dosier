@@ -12,7 +12,12 @@ import { LegalizacionFirmaModal } from './Modals/LegalizacionFirmaModal';
 import { AuditoriaCacesModal } from './Modals/AuditoriaCacesModal';
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
-import { formatModalidad } from '../../Curriculum/utils/peaStatusWorkflow';
+import { 
+    formatModalidad,
+    isPeaPendienteParaRol,
+    isPeaAprobadoParaRol,
+    getPeaMetricsForRole
+} from '../../Curriculum/utils/peaStatusWorkflow';
 import {
     recordRecentSubjectOpen,
     sortSubjectsByRecentOpen
@@ -138,7 +143,20 @@ export const VicerrectorDashboard: React.FC = () => {
         };
     }, []);
 
-    // Filtrado en vivo
+    // Métricas centralizadas para Vicerrectorado
+    const metrics = useMemo(() => {
+        return getPeaMetricsForRole(peas, 'DOSIER_VICERRECTOR');
+    }, [peas]);
+
+    const peasListosParaFirma = useMemo(() => {
+        return peas.filter(p => isPeaPendienteParaRol(p.estado, 'DOSIER_VICERRECTOR'));
+    }, [peas]);
+
+    const peasLegalizados = useMemo(() => {
+        return peas.filter(p => isPeaAprobadoParaRol(p.estado, 'DOSIER_VICERRECTOR'));
+    }, [peas]);
+
+    // Filtrado en vivo según reglas de negocio centralizadas
     const peasFiltrados = useMemo(() => {
         const filtrados = peas.filter(p => {
             const matchesCarrera = filterCarrera === 'todas' || p.nombre_carrera === filterCarrera;
@@ -151,23 +169,15 @@ export const VicerrectorDashboard: React.FC = () => {
 
             const matchesEstado =
                 filterEstado === 'todos' ? true :
-                filterEstado === 'listos' ? (p.estado === 'RevisadoAcad') :
-                filterEstado === 'legalizados' ? (p.estado === 'Aprobado' || p.estado === 'Publicado') :
-                filterEstado === 'proceso' ? (p.estado !== 'Aprobado' && p.estado !== 'Publicado' && p.estado !== 'RevisadoAcad') : true;
+                filterEstado === 'listos' ? isPeaPendienteParaRol(p.estado, 'DOSIER_VICERRECTOR') :
+                filterEstado === 'legalizados' ? isPeaAprobadoParaRol(p.estado, 'DOSIER_VICERRECTOR') :
+                filterEstado === 'proceso' ? (!isPeaAprobadoParaRol(p.estado, 'DOSIER_VICERRECTOR') && !isPeaPendienteParaRol(p.estado, 'DOSIER_VICERRECTOR')) : true;
 
             return matchesCarrera && matchesSearch && matchesEstado;
         });
 
         return sortSubjectsByRecentOpen(filtrados);
     }, [peas, filterCarrera, search, filterEstado, recentsVersion]);
-
-    const peasListosParaFirma = useMemo(() => {
-        return peas.filter(p => p.estado === 'RevisadoAcad');
-    }, [peas]);
-
-    const peasLegalizados = useMemo(() => {
-        return peas.filter(p => p.estado === 'Aprobado' || p.estado === 'Publicado');
-    }, [peas]);
 
     const handleFirmadoExitoso = () => {
         cargarDatos(selectedPeriodo);

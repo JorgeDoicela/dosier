@@ -22,6 +22,10 @@ import {
     isPeaBorrador,
     isPeaEnRevision,
     isPeaAvalado,
+    isPeaPendienteParaRol,
+    isPeaAprobadoParaRol,
+    getPeaMetricsForRole,
+    getPeaNavegacion,
     getPeaStatusDescriptor,
     formatModalidad
 } from '../utils/peaStatusWorkflow';
@@ -145,50 +149,24 @@ export const PeaSupervisionTray: React.FC = () => {
     // Los Coordinadores de Carrera tienen jurisdicción exclusiva sobre su propia carrera; no requieren filtro redundante
     const puedeFiltrarCarreras = !isCoordCarrera && carrerasDisponibles.length > 1;
 
-    // Función que determina si un PEA está pendiente de revisión según el rol del usuario
-    const isPendientePorRol = useCallback((p: PeaBandejaItemDto) => {
-        const estadoNorm = normalizePeaStatus(p.estado);
-        if (isVicerrector && !isAdmin) {
-            return estadoNorm === 'RevisadoAcad';
-        }
-        if (isCoordAcad && !isAdmin) {
-            return estadoNorm === 'RevisadoCoord';
-        }
-        if (isCoordCarrera && !isAdmin) {
-            return isPeaEnRevision(p.estado);
-        }
-        // Admin: cualquier etapa de revisión activa
-        return isPeaEnRevision(p.estado) || estadoNorm === 'RevisadoCoord' || estadoNorm === 'RevisadoAcad';
-    }, [isAdmin, isCoordCarrera, isCoordAcad, isVicerrector]);
+    // Contexto de roles institucional para las reglas unificadas de dominio
+    const roleContext = useMemo(() => ({
+        isAdmin,
+        isCoordCarrera,
+        isCoordAcad,
+        isVicerrector
+    }), [isAdmin, isCoordCarrera, isCoordAcad, isVicerrector]);
 
-    // Función que determina si un PEA ya fue aprobado según el rol del usuario
-    const isAprobadoPorRol = useCallback((p: PeaBandejaItemDto) => {
-        const estadoNorm = normalizePeaStatus(p.estado);
-        if (isVicerrector && !isAdmin) {
-            return estadoNorm === 'Aprobado' || estadoNorm === 'Publicado';
-        }
-        if (isCoordAcad && !isAdmin) {
-            return estadoNorm === 'RevisadoAcad' || estadoNorm === 'Aprobado' || estadoNorm === 'Publicado';
-        }
-        if (isCoordCarrera && !isAdmin) {
-            return isPeaAvalado(p.estado);
-        }
-        // Admin
-        return estadoNorm === 'Aprobado' || estadoNorm === 'Publicado';
-    }, [isAdmin, isCoordCarrera, isCoordAcad, isVicerrector]);
-
-    // Métricas de estado del workflow curricular
+    // Métricas centralizadas de supervisión curricular
     const stats = useMemo(() => {
-        const porRevisar = peas.filter(isPendientePorRol).length;
-        const enRedaccion = peas.filter(p => isPeaBorrador(p.estado)).length;
-        const aprobados = peas.filter(isAprobadoPorRol).length;
+        const m = getPeaMetricsForRole(peas, roleContext, user);
         return {
-            total: peas.length,
-            porRevisar,
-            enRedaccion,
-            aprobados
+            total: m.total,
+            porRevisar: m.pendientes,
+            enRedaccion: m.enElaboracion,
+            aprobados: m.aprobados
         };
-    }, [peas, isPendientePorRol, isAprobadoPorRol]);
+    }, [peas, roleContext, user]);
 
     // Filtrado en memoria por búsqueda, carrera y estado, ordenando por apertura reciente del usuario
     const filteredPeas = useMemo(() => {
@@ -204,11 +182,11 @@ export const PeaSupervisionTray: React.FC = () => {
 
             let matchWorkflow = true;
             if (workflowTab === 'por_revisar') {
-                matchWorkflow = isPendientePorRol(p);
+                matchWorkflow = isPeaPendienteParaRol(p.estado, roleContext);
             } else if (workflowTab === 'en_redaccion') {
                 matchWorkflow = isPeaBorrador(p.estado);
             } else if (workflowTab === 'aprobados') {
-                matchWorkflow = isAprobadoPorRol(p);
+                matchWorkflow = isPeaAprobadoParaRol(p.estado, roleContext);
             }
 
             const matchEstado = selectedEstado === 'todos' ||
@@ -220,7 +198,7 @@ export const PeaSupervisionTray: React.FC = () => {
         });
 
         return sortSubjectsByRecentOpen(list);
-    }, [peas, search, selectedCarrera, selectedEstado, workflowTab, recentsVersion, isPendientePorRol, isAprobadoPorRol]);
+    }, [peas, search, selectedCarrera, selectedEstado, workflowTab, recentsVersion, roleContext]);
 
     const handleAbrirPea = (item: PeaBandejaItemDto | string) => {
         const uuid = typeof item === 'string' ? item : item.uuid;

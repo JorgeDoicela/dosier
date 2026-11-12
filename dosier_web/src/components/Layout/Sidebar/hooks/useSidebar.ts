@@ -4,7 +4,7 @@ import { Home, ClipboardList, BarChart3, ShieldCheck, Users, Activity, Mail, Bel
 import { useAuth } from '../../../../api/AuthContext';
 import { useNotifications } from '../../../../api/NotificationsContext';
 import { curriculumProjectService } from '../../../../services/curriculumProjectService';
-import { isPeaBorrador, isPeaEnRevision } from '../../../../pages/Curriculum/utils/peaStatusWorkflow';
+import { isPeaBorrador, isPeaEnRevision, isPeaPendienteParaRol } from '../../../../pages/Curriculum/utils/peaStatusWorkflow';
 import type { MenuItem, SidebarProject, NotificationItem } from '../types';
 
 const NOTIF_PANEL_WIDTH = 380;
@@ -176,7 +176,13 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
                     const st = p.estado || p.status;
                     if (isPeaBorrador(st) || st === 'NoIniciado' || st === '') return false;
                     if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad) {
-                        return isPeaEnRevision(st);
+                        return isPeaPendienteParaRol(st, 'DOSIER_COORD_CARRERA');
+                    }
+                    if (isCoordAcad && !isAdmin && !isVicerrector) {
+                        return isPeaPendienteParaRol(st, 'DOSIER_COORD_ACAD');
+                    }
+                    if (isVicerrector && !isAdmin) {
+                        return isPeaPendienteParaRol(st, 'DOSIER_VICERRECTOR');
                     }
                     return true;
                 });
