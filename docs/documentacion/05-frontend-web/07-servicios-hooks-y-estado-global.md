@@ -267,6 +267,20 @@ Elimina la necesidad de botones de recarga manual en todas las bandejas y panele
 * **`useCoWorkPresence.ts`:**
   * Mantiene la lista de docentes activos concurrentes en el mismo PEA, con indicadores de color y nombres en cursores remotos.
 
+### 4.4. `peaStatusWorkflow.ts`: Gobernanza Central de Reglas de Negocio del PEA (`src/pages/Curriculum/utils/`)
+Constituye el **módulo único y centralizado** de reglas de negocio para el ciclo de vida curricular del PEA, eliminando la dispersión lógica entre vistas:
+* **Resolución Canónica de Rol (`resolveRoleKey`):** Mapea cualquier entrada de rol (`DOSIER_ADMIN`, `DOSIER_VICERRECTOR`, `DOSIER_COORD_ACAD`, `DOSIER_COORD_CARRERA`, `DOSIER_DOCENTE` o flags de `useAuth()`) a una clave institucional tipada.
+* **Propiedad de Asignaturas (`isPeaPropio`):** Identifica de forma fáctica si una asignatura o PEA pertenece a la carga docente del usuario autenticado, cruzando identificadores (`id_sigafi`, `id_usuario`, `cedula`) y nombres normalizados.
+* **Pendientes según Rol (`isPeaPendienteParaRol`):**
+  * *Vicerrectorado:* `RevisadoAcad` (espera firma y legalización).
+  * *Coordinación Académica:* `RevisadoCoord` (espera aprobación académica CACES).
+  * *Coordinación de Carrera:* `EnRevision`, `Observado`, `Corregido` (espera dictamen disciplinar).
+  * *Docente:* `Borrador`, `NoIniciado`, `Observado` (espera formulación o corrección).
+  * *Administrador:* Cualquier fase activa de revisión.
+* **Aprobados según Rol (`isPeaAprobadoParaRol`):** Determina si el instrumento ya superó la instancia de revisión del rol o está formalmente legalizado.
+* **Navegación Inteligente (`getPeaNavegacion`):** Enruta de forma determinística al editor workspace (`/documentacion/mis-proyectos/workspace/...`) si la asignatura es propia, o a la mesa de supervisión técnica (`/documentacion/revision-tecnica/...`) si se trata de un revisor o autoridad.
+* **Cálculo Unificado de Métricas (`getPeaMetricsForRole`):** Computa en un solo recorrido los totales, pendientes, aprobados, borradores, materias propias y rezagos, garantizando paridad matemática exacta entre `/dashboard`, `/documentacion` y el sidebar.
+
 ---
 
 ## 5. Catálogo de Componentes UI Comunes (`src/components/Common/`)
