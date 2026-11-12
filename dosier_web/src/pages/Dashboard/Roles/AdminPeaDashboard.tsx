@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-    Users, 
-    ShieldCheck, 
-    FileCode, 
-    ArrowRight 
+import {
+    Users,
+    ShieldCheck,
+    FileCode,
+    ArrowRight
 } from 'lucide-react';
 import { PipelineCurricularStepper } from './Components/PipelineCurricularStepper';
 import { type RolSimulado } from './Components/RoleFlowBanner';
@@ -57,7 +57,7 @@ export const AdminPeaDashboard: React.FC<AdminPeaDashboardProps> = ({ onCambiarR
                                 Trazabilidad y Auditoría
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                                Bitácora inmutable de eventos normativos CACES: emisión de avales, legalizaciones y firmas digitales.
+                                Bitácora inmutable de eventos normativos CACES: registro de aprobaciones, legalizaciones y firmas digitales.
                             </p>
                         </div>
                     </div>

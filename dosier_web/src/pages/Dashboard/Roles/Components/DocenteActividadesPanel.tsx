@@ -24,14 +24,14 @@ export const getAvanceDetalle = (estado: string) => {
         case 'RevisadoAcad':
             return {
                 porcentaje: 90,
-                etiqueta: '90% · Aval Académico Emitido',
+                etiqueta: '90% · Aprobado por Académica',
                 colorBarra: 'bg-emerald-600',
                 colorTexto: 'text-emerald-600 dark:text-emerald-400'
             };
         case 'RevisadoCoord':
             return {
                 porcentaje: 75,
-                etiqueta: '75% · Aval de Carrera Emitido',
+                etiqueta: '75% · Aprobado por Carrera',
                 colorBarra: 'bg-[#0070f3]',
                 colorTexto: 'text-[#0070f3] dark:text-blue-400'
             };

@@ -171,22 +171,22 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
     // 2. ACCIONES DE WORKFLOW CURRICULAR
     // ─────────────────────────────────────────────────────────────
 
-    // Emitir Aval de Carrera (Coordinador de Carrera)
+    // Emitir Aprobación de Carrera (Coordinador de Carrera)
     const handleEmitirAvalCarrera = async () => {
         if (!allChecksOk) {
             const confirmed = await confirm({
                 title: 'Advertencia de Validación Curricular',
-                message: `El PEA cumple con ${passedChecks} de ${totalChecks} requisitos normativos de CACES/CES. ¿Desea emitir el Aval de Carrera de todas formas?`,
-                confirmText: 'Emitir Aval de todos modos',
+                message: `El PEA cumple con ${passedChecks} de ${totalChecks} requisitos normativos de CACES/CES. ¿Desea aprobar el PEA de todas formas?`,
+                confirmText: 'Aprobar de todos modos',
                 cancelText: 'Cancelar',
                 variant: 'warning'
             });
             if (!confirmed) return;
         } else {
             const confirmed = await confirm({
-                title: 'Emitir Aval de Coordinación de Carrera',
-                message: '¿Confirma la emisión formal del Aval Curricular de Carrera para este PEA? El documento pasará a revisión de Coordinación Académica.',
-                confirmText: 'Emitir Aval de Carrera',
+                title: 'Aprobar PEA (Coordinación de Carrera)',
+                message: '¿Confirma la aprobación de Carrera para este PEA? El documento pasará a revisión de Coordinación Académica.',
+                confirmText: 'Aprobar PEA',
                 cancelText: 'Cancelar',
                 variant: 'primary'
             });
@@ -196,18 +196,18 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
         setIsSubmitting(true);
         try {
             const targetId = peaUuid || peaId;
-            const motivo = feedback.trim() || 'Aval curricular de carrera emitido favorablemente. Cumple requisitos del CACES.';
+            const motivo = feedback.trim() || 'Aprobación curricular de carrera emitida favorablemente. Cumple requisitos del CACES.';
             await cambiarEstadoPea(targetId, 'RevisadoCoord', undefined, motivo);
 
             addToast(
-                'Aval de Carrera Emitido',
-                'El PEA ha sido avalado exitosamente y remitido a Coordinación Académica.',
+                'Aprobación de Carrera Emitida',
+                'El PEA ha sido aprobado exitosamente y remitido a Coordinación Académica.',
                 'success',
                 undefined,
                 async () => {
                     try {
-                        await cambiarEstadoPea(targetId, 'EnRevision', undefined, 'Reversión de aval de carrera');
-                        addToast('Acción Revertida', 'Se ha revertido el aval. El PEA vuelve a estado: En Revisión.', 'info');
+                        await cambiarEstadoPea(targetId, 'EnRevision', undefined, 'Reversión de aprobación de carrera');
+                        addToast('Acción Revertida', 'Se ha revertido la aprobación. El PEA vuelve a estado: En Revisión.', 'info');
                         onStatusChanged?.('EnRevision', 'Reversión');
                     } catch (err: any) {
                         addToast('Error al Revertir', err.message || 'No se pudo deshacer la acción.', 'error');
@@ -218,19 +218,19 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
             onStatusChanged?.('RevisadoCoord', motivo);
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
         } catch (err: any) {
-            console.error('[PeaReviewPanel] Error al emitir aval:', err);
-            addToast('Error al Emitir Aval', err.response?.data?.message || err.message || 'No se pudo cambiar el estado.', 'error');
+            console.error('[PeaReviewPanel] Error al aprobar:', err);
+            addToast('Error al Registrar Aprobación', err.response?.data?.message || err.message || 'No se pudo cambiar el estado.', 'error');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Emitir Aval Académico (Coordinador Académico)
+    // Emitir Aprobación Académica (Coordinador Académico)
     const handleEmitirAvalAcademico = async () => {
         const confirmed = await confirm({
-            title: 'Emitir Aval de Coordinación Académica',
-            message: '¿Confirma la emisión del Aval Académico Institucional? El PEA quedará listo para la firma legal final de Vicerrectorado.',
-            confirmText: 'Emitir Aval Académico',
+            title: 'Aprobar PEA (Coordinación Académica)',
+            message: '¿Confirma la aprobación académica institucional? El PEA quedará listo para la firma legal final de Vicerrectorado.',
+            confirmText: 'Aprobar PEA',
             cancelText: 'Cancelar',
             variant: 'primary'
         });
@@ -239,20 +239,20 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
         setIsSubmitting(true);
         try {
             const targetId = peaUuid || peaId;
-            const motivo = feedback.trim() || 'Aval institucional de Coordinación Académica emitido.';
+            const motivo = feedback.trim() || 'Aprobación institucional de Coordinación Académica emitida.';
             await cambiarEstadoPea(targetId, 'RevisadoAcad', undefined, motivo);
 
             addToast(
-                'Aval Académico Emitido',
-                'El PEA ha sido avalado por Coordinación Académica y remitido a Vicerrectorado para su legalización.',
+                'Aprobación Académica Emitida',
+                'El PEA ha sido aprobado por Coordinación Académica y remitido a Vicerrectorado para su legalización.',
                 'success'
             );
 
             onStatusChanged?.('RevisadoAcad', motivo);
             window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
         } catch (err: any) {
-            console.error('[PeaReviewPanel] Error al emitir aval académico:', err);
-            addToast('Error al Emitir Aval', err.response?.data?.message || err.message || 'No se pudo cambiar el estado.', 'error');
+            console.error('[PeaReviewPanel] Error al aprobar PEA:', err);
+            addToast('Error al Registrar Aprobación', err.response?.data?.message || err.message || 'No se pudo cambiar el estado.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -321,7 +321,7 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
     const handleEnviarARevision = async () => {
         const confirmed = await confirm({
             title: 'Enviar PEA a Revisión Oficial',
-            message: '¿Confirma el envío formal del PEA a la Coordinación de Carrera para su revisión colegiada y aval?',
+            message: '¿Confirma el envío formal del PEA a la Coordinación de Carrera para su revisión colegiada y aprobación?',
             confirmText: 'Enviar a Revisión',
             cancelText: 'Cancelar',
             variant: 'primary'
@@ -621,7 +621,7 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                             className="w-full py-2.5 px-4 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                         >
                             {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Award className="w-3.5 h-3.5" />}
-                            <span>Emitir Aval de Carrera</span>
+                            <span>Aprobar PEA</span>
                         </button>
 
                         <button
@@ -646,7 +646,7 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                             className="w-full py-2.5 px-4 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                         >
                             {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                            <span>Emitir Aval Académico</span>
+                            <span>Aprobar PEA</span>
                         </button>
 
                         <button
@@ -664,7 +664,7 @@ export const PeaReviewPanel: React.FC<PeaReviewPanelProps> = ({
                 {/* 4. Aviso para autoridades en documentos que aún están en borrador */}
                 {estado === 'Borrador' && !isDocenteTitular && (
                     <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/50 text-slate-600 dark:text-zinc-400 text-xs leading-relaxed">
-                        El Programa de Estudio se encuentra en formulación docente (Borrador). La revisión técnica y emisión de avales se habilitará una vez remitido formalmente por el docente responsable.
+                        El Programa de Estudio se encuentra en formulación docente (Borrador). La revisión técnica y aprobación se habilitará una vez remitido formalmente por el docente responsable.
                     </div>
                 )}
 

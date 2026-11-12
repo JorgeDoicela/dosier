@@ -415,8 +415,8 @@ export const useRevisionTecnicaData = ({
         const rolEtiqueta = isVicerrector
             ? 'Aprobación Definitiva de Vicerrectorado'
             : isCoordAcad
-                ? 'Aval de Coordinación Académica'
-                : 'Aval de Coordinación de Carrera';
+                ? 'Aprobación de Coordinación Académica'
+                : 'Aprobación de Coordinación de Carrera';
 
         setSubmitting(true);
         try {
@@ -430,7 +430,7 @@ export const useRevisionTecnicaData = ({
             });
 
             addToast(
-                "Aval Emitido Exitosamente",
+                "Aprobación Registrada Exitosamente",
                 `Se registró la firma digital institucional (${resultado.firmaCode}). El PEA avanzó a estado '${resultado.estadoNuevo}'.`,
                 "success"
             );
@@ -439,9 +439,9 @@ export const useRevisionTecnicaData = ({
             await loadProjectData();
             return true;
         } catch (err: any) {
-            console.error('[DOSIER] Error al firmar y avalar PEA:', err);
-            const msg = err.response?.data?.message || err.response?.data?.error || "No se pudo estampar la firma del aval curricular.";
-            addToast("Error al Emitir Aval", msg, "error");
+            console.error('[DOSIER] Error al firmar y aprobar PEA:', err);
+            const msg = err.response?.data?.message || err.response?.data?.error || "No se pudo registrar la firma de aprobación curricular.";
+            addToast("Error al Registrar Aprobación", msg, "error");
             return false;
         } finally {
             setSubmitting(false);

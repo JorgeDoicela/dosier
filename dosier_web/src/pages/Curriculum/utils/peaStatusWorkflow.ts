@@ -144,7 +144,7 @@ export const getPeaStatusDescriptor = (
         case 'RevisadoAcad':
             return {
                 key,
-                label: 'Aval Académico',
+                label: 'Aprobación Académica',
                 sublabel: 'En espera de firma vicerrectoral',
                 dotClass: 'bg-[#0070f3]',
                 textClass: 'text-[#0070f3] dark:text-blue-400',
@@ -158,7 +158,7 @@ export const getPeaStatusDescriptor = (
         case 'RevisadoCoord':
             return {
                 key,
-                label: 'Aval de Carrera',
+                label: 'Aprobación de Carrera',
                 sublabel: 'En espera de revisión académica',
                 dotClass: 'bg-sky-500',
                 textClass: 'text-sky-700 dark:text-sky-300',

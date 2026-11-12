@@ -282,15 +282,15 @@ export const PeaSupervisionTray: React.FC = () => {
                                     { value: 'Borrador', label: 'En Redacción (Borrador)' },
                                     { value: 'NoIniciado', label: 'Sin Inicializar' }
                                 ] : workflowTab === 'aprobados' ? [
-                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
-                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
+                                    { value: 'RevisadoCoord', label: 'Aprobación de Carrera' },
+                                    { value: 'RevisadoAcad', label: 'Aprobación Académica' },
                                     { value: 'Aprobado', label: 'Aprobado / Legalizado' }
                                 ] : [
                                     ...(isAdmin ? [{ value: 'Borrador', label: 'Borrador Docente' }] : []),
                                     { value: 'EnRevision', label: 'En Revisión Técnica' },
                                     { value: 'Corregido', label: 'Corregido por Docente' },
-                                    { value: 'RevisadoCoord', label: 'Aval de Carrera' },
-                                    { value: 'RevisadoAcad', label: 'Aval Académico' },
+                                    { value: 'RevisadoCoord', label: 'Aprobación de Carrera' },
+                                    { value: 'RevisadoAcad', label: 'Aprobación Académica' },
                                     { value: 'Aprobado', label: 'Aprobado / Legalizado' }
                                 ])
                             ]}
@@ -359,7 +359,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium'
                         }`}
                     >
-                        <span>Aprobados con aval</span>
+                        <span>Aprobados</span>
                         <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
                             {stats.aprobados}
                         </span>
@@ -404,7 +404,7 @@ export const PeaSupervisionTray: React.FC = () => {
                 <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/40 text-slate-700 dark:text-zinc-300 text-xs flex items-center gap-3">
                     <Info size={16} className="text-slate-400 dark:text-zinc-500 shrink-0" />
                     <span>
-                        <strong>Modo de Monitoreo:</strong> Las siguientes asignaturas están en fase de formulación docente (borrador) y aún no han sido remitidas formalmente a la Coordinación. La visualización está habilitada en modo consulta de avance sin emisión de aval.
+                        <strong>Modo de Monitoreo:</strong> Las siguientes asignaturas están en fase de formulación docente (borrador) y aún no han sido remitidas formalmente a la Coordinación. La visualización está habilitada en modo consulta de avance sin emisión de aprobación.
                     </span>
                 </div>
             )}
@@ -619,7 +619,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                                 handleAbrirPea(pea);
                                             }}
                                             className="h-8 px-3 text-xs rounded-md font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer shadow-2xs"
-                                            title="Ver expediente curricular avalado"
+                                            title="Ver expediente curricular aprobado"
                                         >
                                             Ver expediente
                                         </button>

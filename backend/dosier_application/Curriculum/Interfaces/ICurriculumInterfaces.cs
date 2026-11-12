@@ -45,8 +45,9 @@ namespace dosier_application.Curriculum.Interfaces
 
     public interface IPeaService
     {
-        Task<PeaDto?> GetByIdAsync(int idPea);
-        Task<PeaDto?> GetByUuidAsync(string uuid);
+        Task<PeaDto?> GetByIdAsync(int idPea, int? idUsuario = null);
+        Task<PeaDto?> GetByUuidAsync(string uuid, int? idUsuario = null);
+        Task<bool> CanUserAccessPeaAsync(int idPea, int idUsuario);
         Task<(int IdPea, string Estado)?> GetHeaderByUuidAsync(string uuid);
         Task<PeaDto?> GetByAsignaturaPeriodoAsync(int idAsignatura, string idPeriodo);
         Task<PeaDto> CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor);

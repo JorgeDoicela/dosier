@@ -554,6 +554,185 @@ export const generatePeaAiDraft = async (
     return normalizeStructuredDraft(res.data);
 };
 
+// ── Asistente de Revisión y Auditoría Curricular (Coordinadores / Vicerrectorado) ──
+
+export type PeaAiReviewFocusMode =
+    | 'overview'
+    | 'career_profile'
+    | 'hours_audit'
+    | 'custom';
+
+export interface PeaReviewCheckItem {
+    criterion: string;
+    status: 'cumple' | 'alerta' | 'observado';
+    detail: string;
+}
+
+export interface PeaReviewSuggestedObservation {
+    sectionKey: string;
+    sectionLabel: string;
+    severity: 'alta' | 'media' | 'sugerencia';
+    observationText: string;
+}
+
+export interface PeaAiReviewAnalysisResponse {
+    analysisSummary: string;
+    careerAlignmentAnalysis: string;
+    hoursComparisonSummary: string;
+    checks: PeaReviewCheckItem[];
+    suggestedObservations: PeaReviewSuggestedObservation[];
+    providerUsed: string;
+    modelUsed: string;
+}
+
+export interface AnalyzePeaReviewRequest {
+    focusMode?: PeaAiReviewFocusMode;
+    customQuestion?: string;
+    provider?: PeaAiProvider;
+    model?: string;
+    reasoningEffort?: AiReasoningEffort;
+    baseUrlOverride?: string;
+    apiKeyOverride?: string;
+    currentCreditos?: number;
+    currentHorasCD?: number;
+    currentHorasAPE?: number;
+    currentHorasTA?: number;
+    currentTotalHoras?: number;
+    currentModalidad?: string;
+    currentUnidadOrganizacion?: string;
+    currentNivel?: string;
+    currentObjetivo?: string;
+    currentPrerrequisitos?: Array<{ asignatura: string; observacion?: string }>;
+    currentRdaCarrera?: string;
+    currentResultadosAprendizaje?: string;
+    currentUnidades?: Array<{
+        num: number;
+        titulo: string;
+        contenidos: string;
+        horasCD: number;
+        horasAPE: number;
+        horasTA: number;
+    }>;
+    currentMetodologiaEnsenanza?: string;
+    currentRecursosDidacticos?: string;
+    currentActividadesPracticas?: Array<{
+        unidad?: number;
+        nombre: string;
+        horas?: number;
+        escenario?: string;
+        producto?: string;
+        caracterizacion?: string;
+    }>;
+    currentEvaluaciones?: Array<{ nota: string; tipo: string; calificacion: number }>;
+    currentBibliografias?: Array<{
+        tipoBibliografia?: string;
+        autor?: string;
+        tituloLibro?: string;
+        editorialCiudad?: string;
+        citaCompletaApa?: string;
+    }>;
+    currentBibliografiaBasica?: string;
+    currentBibliografiaConsulta?: string;
+    conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+}
+
+export const normalizeReviewAnalysisResponse = (raw: any): PeaAiReviewAnalysisResponse => {
+    const rawChecks: any[] = raw?.checks ?? raw?.Checks ?? [];
+    const rawObs: any[] = raw?.suggested_observations ?? raw?.suggestedObservations ?? raw?.SuggestedObservations ?? [];
+
+    return {
+        analysisSummary: String(raw?.analysis_summary ?? raw?.analysisSummary ?? raw?.AnalysisSummary ?? ''),
+        careerAlignmentAnalysis: String(raw?.career_alignment_analysis ?? raw?.careerAlignmentAnalysis ?? raw?.CareerAlignmentAnalysis ?? ''),
+        hoursComparisonSummary: String(raw?.hours_comparison_summary ?? raw?.hoursComparisonSummary ?? raw?.HoursComparisonSummary ?? ''),
+        checks: rawChecks.map((c: any) => {
+            const st = String(c?.status ?? c?.Status ?? 'cumple').toLowerCase();
+            return {
+                criterion: String(c?.criterion ?? c?.Criterion ?? ''),
+                status: (st === 'observado' || st === 'alerta' ? st : 'cumple') as 'cumple' | 'alerta' | 'observado',
+                detail: String(c?.detail ?? c?.Detail ?? '')
+            };
+        }).filter(c => c.criterion),
+        suggestedObservations: rawObs.map((o: any) => {
+            const sev = String(o?.severity ?? o?.Severity ?? 'media').toLowerCase();
+            return {
+                sectionKey: String(o?.section_key ?? o?.sectionKey ?? o?.SectionKey ?? 'ObjetivoAsignatura'),
+                sectionLabel: String(o?.section_label ?? o?.sectionLabel ?? o?.SectionLabel ?? 'Sección del PEA'),
+                severity: (sev === 'alta' || sev === 'sugerencia' ? sev : 'media') as 'alta' | 'media' | 'sugerencia',
+                observationText: String(o?.observation_text ?? o?.observationText ?? o?.ObservationText ?? '')
+            };
+        }).filter(o => o.observationText),
+        providerUsed: String(raw?.provider_used ?? raw?.providerUsed ?? raw?.ProviderUsed ?? 'deepseek'),
+        modelUsed: String(raw?.model_used ?? raw?.modelUsed ?? raw?.ModelUsed ?? '')
+    };
+};
+
+export const analyzePeaForReview = async (
+    peaUuid: string,
+    req: AnalyzePeaReviewRequest = {}
+): Promise<PeaAiReviewAnalysisResponse> => {
+    const res = await api.post(`/pea/uuid/${peaUuid}/ai/revisar`, {
+        focus_mode: req.focusMode ?? 'overview',
+        custom_question: req.customQuestion,
+        provider: req.provider,
+        model: req.model,
+        reasoning_effort: req.reasoningEffort,
+        base_url_override: req.baseUrlOverride,
+        api_key_override: req.apiKeyOverride,
+        current_creditos: req.currentCreditos,
+        current_horas_cd: req.currentHorasCD,
+        current_horas_ape: req.currentHorasAPE,
+        current_horas_ta: req.currentHorasTA,
+        current_total_horas: req.currentTotalHoras,
+        current_modalidad: req.currentModalidad,
+        current_unidad_organizacion: req.currentUnidadOrganizacion,
+        current_nivel: req.currentNivel,
+        current_objetivo: req.currentObjetivo,
+        current_prerrequisitos: req.currentPrerrequisitos?.map(p => ({
+            asignatura: p.asignatura,
+            observacion: p.observacion ?? ''
+        })),
+        current_rda_carrera: req.currentRdaCarrera,
+        current_resultados_aprendizaje: req.currentResultadosAprendizaje,
+        current_unidades: req.currentUnidades?.map(u => ({
+            num: u.num,
+            titulo: u.titulo,
+            contenidos: u.contenidos,
+            horas_cd: u.horasCD,
+            horas_ape: u.horasAPE,
+            horas_ta: u.horasTA
+        })),
+        current_metodologia_ensenanza: req.currentMetodologiaEnsenanza,
+        current_recursos_didacticos: req.currentRecursosDidacticos,
+        current_actividades_practicas: req.currentActividadesPracticas?.map(p => ({
+            unidad: p.unidad ?? 1,
+            nombre: p.nombre,
+            horas: p.horas ?? 2,
+            escenario: p.escenario ?? '',
+            producto: p.producto ?? '',
+            caracterizacion: p.caracterizacion ?? ''
+        })),
+        current_evaluaciones: req.currentEvaluaciones?.map(e => ({
+            nota: e.nota,
+            tipo: e.tipo,
+            calificacion: e.calificacion
+        })),
+        current_bibliografias: req.currentBibliografias?.map(b => ({
+            tipo_bibliografia: b.tipoBibliografia ?? 'Basica',
+            autor: b.autor ?? '',
+            titulo_libro: b.tituloLibro ?? '',
+            editorial_ciudad: b.editorialCiudad ?? '',
+            cita_completa_apa: b.citaCompletaApa ?? ''
+        })),
+        current_bibliografia_basica: req.currentBibliografiaBasica,
+        current_bibliografia_consulta: req.currentBibliografiaConsulta,
+        conversation_history: req.conversationHistory?.map(h => ({
+            role: h.role,
+            content: h.content
+        }))
+    });
+    return normalizeReviewAnalysisResponse(res.data);
+};
+
 // ── Extractor e Importador de Documentos (.pdf / .docx) ──
 // Re-exportación para retrocompatibilidad con componentes existentes
 export { extractPeaFromDocument, type ImportPeaDocumentOptions } from './peaDocumentExtractorService';

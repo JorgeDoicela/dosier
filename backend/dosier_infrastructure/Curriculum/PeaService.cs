@@ -132,7 +132,73 @@ namespace dosier_infrastructure.Curriculum
             return await MapToDtoAsync(entity);
         }
 
-        public async Task<PeaDto?> GetByIdAsync(int idPea)
+        public async Task<bool> CanUserAccessPeaAsync(int idPea, int idUsuario)
+        {
+            var pea = await _context.DocPeas.AsNoTracking().FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
+            if (pea == null) return false;
+            return await CanUserAccessPeaEntityAsync(pea, idUsuario);
+        }
+
+        private async Task<bool> CanUserAccessPeaEntityAsync(DocPea pea, int idUsuario)
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == idUsuario && u.Activo);
+            if (user == null) return false;
+
+            var userRoles = await _context.UserRoles
+                .AsNoTracking()
+                .Include(ur => ur.Role)
+                .Where(ur => ur.IdUsuario == idUsuario && (ur.EsActivo ?? true))
+                .Select(ur => ur.Role.CodigoRol)
+                .ToListAsync();
+
+            if (user.Administrador || userRoles.Contains("DOSIER_ADMIN")) return true;
+
+            // Instrumentos aprobados o publicados son de consulta pública institucional para cualquier usuario autenticado
+            if (pea.Estado == "Aprobado" || pea.Estado == "Publicado") return true;
+
+            // Docente titular elaborador tiene acceso total a su asignatura en cualquier fase
+            if (!string.IsNullOrEmpty(user.IdSigafi) && !string.IsNullOrEmpty(pea.IdDocenteElaborador) &&
+                string.Equals(pea.IdDocenteElaborador.Trim(), user.IdSigafi.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // Coordinador de Carrera: acceso exclusivo a los PEAs de sus carreras asignadas
+            if (userRoles.Contains("DOSIER_COORD_CARRERA") && !string.IsNullOrEmpty(user.IdSigafi))
+            {
+                var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                    .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                    .Select(a => a.IdCarrera!.Value)
+                    .ToListAsync();
+
+                if (carrerasCoordinadas.Contains(pea.IdCarrera))
+                {
+                    return true;
+                }
+            }
+
+            // Coordinador Académico: solo puede acceder una vez que la carrera emitió el Aval (RevisadoCoord) o superior
+            if (userRoles.Contains("DOSIER_COORD_ACAD"))
+            {
+                if (pea.Estado == "RevisadoCoord" || pea.Estado == "RevisadoAcad")
+                {
+                    return true;
+                }
+            }
+
+            // Vicerrectorado: solo puede acceder una vez que Coordinación Académica emitió el Aval (RevisadoAcad) o superior
+            if (userRoles.Contains("DOSIER_VICERRECTOR"))
+            {
+                if (pea.Estado == "RevisadoAcad")
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<PeaDto?> GetByIdAsync(int idPea, int? idUsuario = null)
         {
             var pea = await _context.DocPeas
                 .AsNoTracking()
@@ -148,10 +214,16 @@ namespace dosier_infrastructure.Curriculum
                 .FirstOrDefaultAsync(p => p.IdPea == idPea && p.Activo);
 
             if (pea == null) return null;
+
+            if (idUsuario.HasValue && !await CanUserAccessPeaEntityAsync(pea, idUsuario.Value))
+            {
+                throw new UnauthorizedAccessException("Acceso restringido: No cuenta con permisos jerárquicos para visualizar este PEA en su estado actual.");
+            }
+
             return await MapToDtoAsync(pea);
         }
 
-        public async Task<PeaDto?> GetByUuidAsync(string uuid)
+        public async Task<PeaDto?> GetByUuidAsync(string uuid, int? idUsuario = null)
         {
             var pea = await _context.DocPeas
                 .AsNoTracking()
@@ -167,6 +239,12 @@ namespace dosier_infrastructure.Curriculum
                 .FirstOrDefaultAsync(p => p.Uuid == uuid && p.Activo);
 
             if (pea == null) return null;
+
+            if (idUsuario.HasValue && !await CanUserAccessPeaEntityAsync(pea, idUsuario.Value))
+            {
+                throw new UnauthorizedAccessException("Acceso restringido: No cuenta con permisos jerárquicos para visualizar este PEA en su estado actual.");
+            }
+
             return await MapToDtoAsync(pea);
         }
 
@@ -396,6 +474,98 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
+            // Resolución del usuario y validación RBAC de máquina de estados
+            User? userActuante = null;
+            List<string> userRoles = new();
+            bool isAdmin = false;
+
+            if (!string.IsNullOrWhiteSpace(idUsuario))
+            {
+                if (int.TryParse(idUsuario, out int parsedId))
+                {
+                    userActuante = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUsuario == parsedId);
+                }
+                else
+                {
+                    userActuante = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdSigafi == idUsuario || u.EmailInstitucional == idUsuario);
+                }
+
+                if (userActuante != null)
+                {
+                    userRoles = await _context.UserRoles
+                        .AsNoTracking()
+                        .Include(ur => ur.Role)
+                        .Where(ur => ur.IdUsuario == userActuante.IdUsuario && (ur.EsActivo ?? true))
+                        .Select(ur => ur.Role.CodigoRol)
+                        .ToListAsync();
+
+                    isAdmin = userActuante.Administrador || userRoles.Contains("DOSIER_ADMIN");
+                }
+            }
+
+            // Control de Transiciones: Nadie salta fases ni actúa fuera de su nivel de autoridad
+            if (!isAdmin && userActuante != null)
+            {
+                if (nuevoEstado == "EnRevision")
+                {
+                    bool esDocenteTitular = !string.IsNullOrEmpty(entity.IdDocenteElaborador) && 
+                                           string.Equals(entity.IdDocenteElaborador.Trim(), userActuante.IdSigafi?.Trim(), StringComparison.OrdinalIgnoreCase);
+                    if (!esDocenteTitular && !userRoles.Contains("DOSIER_DOCENTE"))
+                    {
+                        throw new UnauthorizedAccessException("Solo el docente titular asignado puede remitir el PEA a revisión.");
+                    }
+                    if (entity.Estado != "Borrador" && entity.Estado != "Corregido")
+                    {
+                        throw new InvalidOperationException($"Transición inválida: No se puede remitir a EnRevision desde el estado '{entity.Estado}'.");
+                    }
+                }
+                else if (nuevoEstado == "RevisadoCoord")
+                {
+                    if (!userRoles.Contains("DOSIER_COORD_CARRERA"))
+                    {
+                        throw new UnauthorizedAccessException("Solo el Coordinador de Carrera puede emitir el Aval de Carrera.");
+                    }
+                    if (entity.Estado != "EnRevision")
+                    {
+                        throw new InvalidOperationException($"Transición inválida: Solo se puede emitir Aval de Carrera si el PEA está en estado 'EnRevision'. Estado actual: '{entity.Estado}'.");
+                    }
+                }
+                else if (nuevoEstado == "RevisadoAcad")
+                {
+                    if (!userRoles.Contains("DOSIER_COORD_ACAD"))
+                    {
+                        throw new UnauthorizedAccessException("Solo la Coordinación Académica puede emitir el Aval Académico.");
+                    }
+                    if (entity.Estado != "RevisadoCoord")
+                    {
+                        throw new InvalidOperationException($"Transición inválida: La Coordinación Académica solo puede actuar tras la emisión formal del Aval de Carrera ('RevisadoCoord'). Estado actual: '{entity.Estado}'.");
+                    }
+                }
+                else if (nuevoEstado == "Aprobado")
+                {
+                    if (!userRoles.Contains("DOSIER_VICERRECTOR"))
+                    {
+                        throw new UnauthorizedAccessException("Solo el Vicerrectorado Académico puede otorgar la aprobación legal final del PEA.");
+                    }
+                    if (entity.Estado != "RevisadoAcad")
+                    {
+                        throw new InvalidOperationException($"Transición inválida: El Vicerrectorado solo puede aprobar PEAs que cuenten con el Aval de Coordinación Académica ('RevisadoAcad'). Estado actual: '{entity.Estado}'.");
+                    }
+                }
+                else if (nuevoEstado == "Observado")
+                {
+                    bool puedeObservar = false;
+                    if (entity.Estado == "EnRevision" && userRoles.Contains("DOSIER_COORD_CARRERA")) puedeObservar = true;
+                    if (entity.Estado == "RevisadoCoord" && userRoles.Contains("DOSIER_COORD_ACAD")) puedeObservar = true;
+                    if (entity.Estado == "RevisadoAcad" && userRoles.Contains("DOSIER_VICERRECTOR")) puedeObservar = true;
+
+                    if (!puedeObservar)
+                    {
+                        throw new UnauthorizedAccessException($"No posee autorización jerárquica para devolver este PEA en su estado actual ('{entity.Estado}').");
+                    }
+                }
+            }
+
             string estadoAnterior = entity.Estado;
             entity.Estado = nuevoEstado;
             entity.FechaModificacion = DateTime.UtcNow;
@@ -419,6 +589,15 @@ namespace dosier_infrastructure.Curriculum
             {
                 entity.FirmaAprobadoVicerrector = firmaDocente;
                 entity.FechaAprobado = DateTime.UtcNow;
+            }
+            else if (nuevoEstado == "Observado")
+            {
+                // Si el instrumento es devuelto con observaciones (por Coord. Carrera o Coord. Académica),
+                // se anulan los avales posteriores ya que el documento debe ser subsanado y re-evaluado formalmente.
+                entity.FirmaRevisadoCoord = null;
+                entity.FechaRevisadoCoord = null;
+                entity.FirmaRevisadoAcad = null;
+                entity.FechaRevisadoAcad = null;
             }
 
             await _context.SaveChangesAsync();
@@ -631,8 +810,8 @@ namespace dosier_infrastructure.Curriculum
                 if (!isAdmin && !userRoles.Contains("DOSIER_VICERRECTOR"))
                     throw new UnauthorizedAccessException("El usuario no posee el rol de Vicerrectorado Académico (DOSIER_VICERRECTOR) para la aprobación final del PEA.");
 
-                if (pea.Estado != "RevisadoAcad" && pea.Estado != "RevisadoCoord")
-                    throw new InvalidOperationException($"El vicerrector solo puede aprobar PEAs que hayan cumplido con la fase de revisión previa. Estado actual: {pea.Estado}");
+                if (pea.Estado != "RevisadoAcad")
+                    throw new InvalidOperationException($"El vicerrector solo puede aprobar PEAs que hayan cumplido con la fase de revisión previa y cuenten con el Aval de Coordinación Académica (RevisadoAcad). Estado actual: {pea.Estado}");
 
                 estadoNuevo = "Aprobado";
                 rol = "Vicerrector";
@@ -1248,7 +1427,7 @@ namespace dosier_infrastructure.Curriculum
                         baseExtraData["docente"] = nombreDocente;
 
                         string titulo = $"PEA Remitido a Revisión: {nombreAsignatura}";
-                        string mensaje = $"El docente {nombreDocente} ha remitido a revisión curricular el PEA de '{nombreAsignatura}' ({nombreCarrera}). Se requiere la revisión colegiada y emisión del Aval de Carrera.";
+                        string mensaje = $"El docente {nombreDocente} ha remitido a revisión curricular el PEA de '{nombreAsignatura}' ({nombreCarrera}). Se requiere la revisión colegiada y aprobación de Carrera.";
 
                         var destinatarios = destinatariosCoord.Concat(adminUsers)
                             .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
@@ -1272,11 +1451,21 @@ namespace dosier_infrastructure.Curriculum
                         baseExtraData["tipo"] = "PEA_OBSERVADO";
                         if (!string.IsNullOrWhiteSpace(motivo)) baseExtraData["motivo"] = motivo;
 
-                        string titulo = $"PEA con Observaciones Curriculares: {nombreAsignatura}";
-                        string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha recibido observaciones curriculares por parte de la Coordinación de Carrera." +
+                        bool esDevolucionAcademica = string.Equals(estadoAnterior, "RevisadoCoord", StringComparison.OrdinalIgnoreCase);
+
+                        string titulo = esDevolucionAcademica
+                            ? $"PEA Devuelto por Coordinación Académica: {nombreAsignatura}"
+                            : $"PEA con Observaciones Curriculares: {nombreAsignatura}";
+
+                        string entidadEmisora = esDevolucionAcademica
+                            ? "la Coordinación Académica hacia la Coordinación de Carrera y su cuerpo docente"
+                            : "la Coordinación de Carrera";
+
+                        string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha recibido observaciones curriculares por parte de {entidadEmisora}." +
                             (string.IsNullOrWhiteSpace(motivo) ? "" : $" Requerimiento: {motivo}.") +
                             " Ingrese al editor microcurricular para subsanar los puntos observados.";
 
+                        // En ambos casos se notifica tanto al docente elaborador como a los coordinadores de carrera
                         var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
                             .DistinctBy(u => u.IdUsuario);
 
@@ -1299,7 +1488,7 @@ namespace dosier_infrastructure.Curriculum
                         baseExtraData["docente"] = nombreDocente;
 
                         string titulo = $"Observaciones Subsanadas: {nombreAsignatura}";
-                        string mensaje = $"El docente {nombreDocente} ha subsanado las observaciones del PEA de '{nombreAsignatura}' ({nombreCarrera}). El instrumento está disponible para su verificación y emisión del Aval de Carrera.";
+                        string mensaje = $"El docente {nombreDocente} ha subsanado las observaciones del PEA de '{nombreAsignatura}' ({nombreCarrera}). El instrumento está disponible para su verificación y aprobación de Carrera.";
 
                         var destinatarios = destinatariosCoord.Concat(adminUsers)
                             .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
@@ -1325,8 +1514,8 @@ namespace dosier_infrastructure.Curriculum
                         // 1. Notificar al docente elaborador
                         if (userDocente != null)
                         {
-                            string tituloDocente = $"Aval de Carrera Concedido: {nombreAsignatura}";
-                            string mensajeDocente = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha recibido el Aval de Carrera formal por parte de la Coordinación y ha avanzado a la fase de aprobación institucional.";
+                            string tituloDocente = $"Aprobación de Carrera Concedida: {nombreAsignatura}";
+                            string mensajeDocente = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha recibido la Aprobación de Carrera formal por parte de la Coordinación y ha avanzado a la fase de validación institucional.";
 
                             await notifService.NotifyUserAsync(
                                 userDocente.IdUsuario,
@@ -1338,8 +1527,8 @@ namespace dosier_infrastructure.Curriculum
                         }
 
                         // 2. Notificar a Vicerrectorado y Coordinación Académica
-                        string tituloAutoridades = $"PEA con Aval de Carrera Listo para Aprobación: {nombreAsignatura}";
-                        string mensajeAutoridades = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) cuenta con el Aval de Carrera emitido y se encuentra listo para validación institucional y firma de aprobación por Vicerrectorado.";
+                        string tituloAutoridades = $"PEA con Aprobación de Carrera Listo para Validación: {nombreAsignatura}";
+                        string mensajeAutoridades = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) cuenta con la Aprobación de Carrera emitida y se encuentra listo para validación institucional y firma de aprobación por Vicerrectorado.";
 
                         var destinatariosAcad = autoridadesAcad.Concat(adminUsers)
                             .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
@@ -1363,7 +1552,7 @@ namespace dosier_infrastructure.Curriculum
                         baseExtraData["tipo"] = "PEA_REVISADO_ACAD";
 
                         string titulo = $"Revisión Académica Completada: {nombreAsignatura}";
-                        string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha sido avalado por la Coordinación Académica y espera la firma de aprobación final de Vicerrectorado.";
+                        string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha sido aprobado por la Coordinación Académica y espera la firma final de Vicerrectorado.";
 
                         var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
                             .DistinctBy(u => u.IdUsuario);
@@ -2368,7 +2557,7 @@ namespace dosier_infrastructure.Curriculum
                 query = query.Where(p => p.Estado == estLimpio);
             }
 
-            // Gobernanza de visibilidad y alcance institucional por rol:
+            // Gobernanza de visibilidad y alcance institucional por rol (Workflow CACES/ISTPET):
             // 1. Docentes regulares sin rol de autoridad: ven exclusivamente sus PEAs elaborados.
             if (!isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera)
             {
@@ -2377,8 +2566,7 @@ namespace dosier_infrastructure.Curriculum
                     query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
                 }
             }
-            // 2. Coordinadores de Carrera (DOSIER_COORD_CARRERA exclusivo): ven ÚNICAMENTE las materias de sus carreras asignadas.
-            // Regla institucional estricta: Los coordinadores de carrera supervisan solo de sus carreras, mientras que el coordinador académico supervisa todas.
+            // 2. Coordinadores de Carrera (DOSIER_COORD_CARRERA): supervisan las materias de sus carreras asignadas o materias donde son elaboradores.
             else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad && !string.IsNullOrEmpty(user.IdSigafi))
             {
                 var carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
@@ -2395,10 +2583,55 @@ namespace dosier_infrastructure.Curriculum
                     query = query.Where(p => p.IdDocenteElaborador == user.IdSigafi);
                 }
             }
-            // 3. Coordinador Académico (DOSIER_COORD_ACAD), Vicerrector (DOSIER_VICERRECTOR) y Admin (DOSIER_ADMIN):
-            // Supervisión macro-curricular institucional: tienen acceso y supervisión sobre todas las carreras.
+            // 3. Coordinador Académico (DOSIER_COORD_ACAD):
+            // Circuito jerárquico normativo: el PEA solo pasa a Coordinación Académica tras la emisión formal del Aval de Carrera (RevisadoCoord).
+            // Mientras esté en Borrador, EnRevision (pendiente de carrera) u Observado (en subsanación docente), NO aparece en la bandeja macro académica,
+            // excepto si el usuario es docente titular de la asignatura o coordina directamente dicha carrera.
+            else if (isCoordAcad && !isAdmin && !isVicerrector)
+            {
+                List<int> carrerasCoordinadas = new();
+                if (isCoordCarrera && !string.IsNullOrEmpty(user.IdSigafi))
+                {
+                    carrerasCoordinadas = await _context.DocAutoridadesCurriculares.AsNoTracking()
+                        .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo && a.CargoCurricular == "COORD_CARRERA" && a.IdCarrera != null)
+                        .Select(a => a.IdCarrera!.Value)
+                        .ToListAsync(cancellationToken);
+                }
+
+                if (carrerasCoordinadas.Any())
+                {
+                    query = query.Where(p =>
+                        carrerasCoordinadas.Contains(p.IdCarrera) ||
+                        p.Estado == "RevisadoCoord" ||
+                        p.Estado == "RevisadoAcad" ||
+                        p.Estado == "Aprobado" ||
+                        p.Estado == "Publicado" ||
+                        (!string.IsNullOrEmpty(user.IdSigafi) && p.IdDocenteElaborador == user.IdSigafi));
+                }
+                else
+                {
+                    query = query.Where(p =>
+                        p.Estado == "RevisadoCoord" ||
+                        p.Estado == "RevisadoAcad" ||
+                        p.Estado == "Aprobado" ||
+                        p.Estado == "Publicado" ||
+                        (!string.IsNullOrEmpty(user.IdSigafi) && p.IdDocenteElaborador == user.IdSigafi));
+                }
+            }
+            // 4. Vicerrectorado Académico (DOSIER_VICERRECTOR):
+            // Aprobación final institucional: solo ve PEAs que cuentan con Aval de Coordinación Académica (RevisadoAcad) o superior (Aprobado, Publicado),
+            // a menos que sea el docente titular de la asignatura.
+            else if (isVicerrector && !isAdmin)
+            {
+                query = query.Where(p =>
+                    p.Estado == "RevisadoAcad" ||
+                    p.Estado == "Aprobado" ||
+                    p.Estado == "Publicado" ||
+                    (!string.IsNullOrEmpty(user.IdSigafi) && p.IdDocenteElaborador == user.IdSigafi));
+            }
+            // 5. Administrador del Sistema (DOSIER_ADMIN):
+            // Supervisión macro-curricular total sobre todos los estados y todas las carreras institucionales.
             // Nota de Arquitectura y Rendimiento: La consulta de la bandeja es estrictamente de lectura (idempotente).
-            // Se desacopla el auto-aprovisionamiento bloqueante para garantizar tiempos de respuesta sub-100ms.
 
             var peas = await query
                 .OrderByDescending(p => p.FechaModificacion)
@@ -2940,7 +3173,7 @@ namespace dosier_infrastructure.Curriculum
             bool isAdmin = userTitular?.Administrador == true;
             if (!isAdmin && pea.IdDocenteElaborador != sigafiTitular)
             {
-                throw new UnauthorizedAccessException("Solo el docente titular de la cátedra puede autorizar la colaboración.");
+                throw new UnauthorizedAccessException("Solo el docente titular de la materia puede autorizar la colaboración.");
             }
 
             pea.EstadoColaboracion = aceptar ? "Aprobada" : "Rechazada";

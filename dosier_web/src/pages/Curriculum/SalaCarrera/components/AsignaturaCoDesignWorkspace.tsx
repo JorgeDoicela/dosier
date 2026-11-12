@@ -415,7 +415,7 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
                                         Notas Colegiadas y Acuerdos Rápidos
                                     </label>
                                     <p className="text-xs text-text-dim">
-                                        Compromisos específicos, bibliografía sugerida por el equipo docente, articulación con asignaturas paralelas y acuerdos operativos de la cátedra.
+                                        Compromisos específicos, bibliografía sugerida por el equipo docente, articulación con asignaturas paralelas y acuerdos operativos de la materia.
                                     </p>
                                     <textarea
                                         value={borrador.notasLluviaIdeas || ''}

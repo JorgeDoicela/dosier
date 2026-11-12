@@ -105,7 +105,7 @@ export const getSubjectLastOpenedAt = (subject: SubjectIdentifiable): number => 
 /**
  * Ordena la lista de asignaturas priorizando las más recientemente abiertas
  * por el usuario en orden descendente, sin importar el estado del PEA
- * (Borrador, En Revisión, Aval, Con Observaciones, Aprobado, etc.).
+ * (Borrador, En Revisión, Aprobado por Carrera, Con Observaciones, Aprobado, etc.).
  */
 export const sortSubjectsByRecentOpen = <T extends SubjectIdentifiable>(subjects: T[]): T[] => {
     return [...subjects].sort((a, b) => {

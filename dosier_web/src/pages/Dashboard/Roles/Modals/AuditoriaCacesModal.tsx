@@ -150,10 +150,10 @@ export const AuditoriaCacesModal: React.FC<Props> = ({
                             </span>
                         </div>
 
-                        {/* Criterio 4: Cadena de Avales */}
+                        {/* Criterio 4: Cadena de Aprobaciones */}
                         <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 space-y-2">
                             <p className="text-xs font-semibold text-zinc-900 dark:text-white">
-                                4. Trazabilidad de Firmas y Avales Curriculares
+                                4. Trazabilidad de Firmas y Aprobaciones Curriculares
                             </p>
                             <div className="grid grid-cols-3 gap-2">
                                 <div className={`p-2 rounded border text-center ${
@@ -161,7 +161,7 @@ export const AuditoriaCacesModal: React.FC<Props> = ({
                                         ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
                                         : 'border-zinc-200 dark:border-zinc-800 text-zinc-400'
                                 }`}>
-                                    <p className="text-[10px] font-medium uppercase font-mono">Aval Carrera</p>
+                                    <p className="text-[10px] font-medium uppercase font-mono">Aprobación Carrera</p>
                                     <p className="text-xs font-semibold">{tieneAvalCarrera ? 'Emitido' : 'Pendiente'}</p>
                                 </div>
                                 <div className={`p-2 rounded border text-center ${
@@ -169,7 +169,7 @@ export const AuditoriaCacesModal: React.FC<Props> = ({
                                         ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
                                         : 'border-zinc-200 dark:border-zinc-800 text-zinc-400'
                                 }`}>
-                                    <p className="text-[10px] font-medium uppercase font-mono">Aval Académico</p>
+                                    <p className="text-[10px] font-medium uppercase font-mono">Aprobación Académica</p>
                                     <p className="text-xs font-semibold">{tieneAvalAcademica ? 'Emitido' : 'Pendiente'}</p>
                                 </div>
                                 <div className={`p-2 rounded border text-center ${

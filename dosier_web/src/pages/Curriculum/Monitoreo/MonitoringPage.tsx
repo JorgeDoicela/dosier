@@ -122,12 +122,12 @@ export const MonitoringPage: React.FC = () => {
                 </div>
 
                 <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-xl shadow-xs p-5 space-y-1">
-                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Circuito de Avales (CACES)</span>
+                    <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">Circuito de Aprobaciones (CACES)</span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <CheckCircle2 size={13} className="text-[#0070f3]" />
                         <span className="text-xs font-semibold text-text-main">{projectDetail.avancePorcentaje || 0}% de firmas</span>
                     </div>
-                    <span className="text-[10px] text-text-dim block">Firma docente y avales institucionales</span>
+                    <span className="text-[10px] text-text-dim block">Firma docente y aprobaciones institucionales</span>
                 </div>
             </div>
 
@@ -218,13 +218,13 @@ export const MonitoringPage: React.FC = () => {
 
                         <div className="p-4 rounded-xl border border-border-thin bg-surface space-y-1">
                             <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider block">2. Coordinación Carrera</span>
-                            <p className="text-xs font-semibold text-text-main">{projectDetail.firmas?.revisadoCoord?.firmante ? 'Aval Aprobado' : 'Pendiente'}</p>
-                            <span className="text-[10px] text-text-dim block truncate">{projectDetail.firmas?.revisadoCoord?.fecha || 'Pendiente de aval disciplinar'}</span>
+                            <p className="text-xs font-semibold text-text-main">{projectDetail.firmas?.revisadoCoord?.firmante ? 'Aprobado' : 'Pendiente'}</p>
+                            <span className="text-[10px] text-text-dim block truncate">{projectDetail.firmas?.revisadoCoord?.fecha || 'Pendiente de aprobación disciplinar'}</span>
                         </div>
 
                         <div className="p-4 rounded-xl border border-border-thin bg-surface space-y-1">
                             <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider block">3. Coordinación Académica</span>
-                            <p className="text-xs font-semibold text-text-main">{projectDetail.firmas?.revisadoAcad?.firmante ? 'Aval Aprobado' : 'Pendiente'}</p>
+                            <p className="text-xs font-semibold text-text-main">{projectDetail.firmas?.revisadoAcad?.firmante ? 'Aprobado' : 'Pendiente'}</p>
                             <span className="text-[10px] text-text-dim block truncate">{projectDetail.firmas?.revisadoAcad?.fecha || 'Pendiente de control de horas'}</span>
                         </div>
 

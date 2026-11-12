@@ -393,8 +393,8 @@ export const MisAsignaturasPage: React.FC = () => {
             'EnRevision': 'En Revisión',
             'Observado': 'Con Observaciones',
             'Corregido': 'Corregido',
-            'RevisadoCoord': 'Aval de Carrera',
-            'RevisadoAcad': 'Aval Académico',
+            'RevisadoCoord': 'Aprobado por Carrera',
+            'RevisadoAcad': 'Aprobado por Académica',
             'Aprobado': 'Aprobado Oficial',
             'Publicado': 'Publicado',
             'Rechazado': 'Rechazado'

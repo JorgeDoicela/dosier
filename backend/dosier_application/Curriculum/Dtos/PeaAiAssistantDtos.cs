@@ -164,5 +164,63 @@ namespace dosier_application.Curriculum.Dtos
         public List<string> ComplianceNotes { get; set; } = new();
         public List<string> GeneratedSections { get; set; } = new();
     }
+
+    public class AnalyzePeaReviewRequestDto
+    {
+        public string FocusMode { get; set; } = "overview"; // "overview" | "career_profile" | "hours_audit" | "methodology_bibliography" | "custom"
+        public string? CustomQuestion { get; set; }
+        public string? Provider { get; set; }
+        public string? Model { get; set; }
+        public string? ReasoningEffort { get; set; }
+        public string? BaseUrlOverride { get; set; }
+        public string? ApiKeyOverride { get; set; }
+        public int? CurrentCreditos { get; set; }
+        public decimal? CurrentHorasCD { get; set; }
+        public decimal? CurrentHorasAPE { get; set; }
+        public decimal? CurrentHorasTA { get; set; }
+        public decimal? CurrentTotalHoras { get; set; }
+        public string? CurrentModalidad { get; set; }
+        public string? CurrentUnidadOrganizacion { get; set; }
+        public string? CurrentNivel { get; set; }
+        public string? CurrentObjetivo { get; set; }
+        public List<PeaDraftPrerrequisitoDto>? CurrentPrerrequisitos { get; set; }
+        public string? CurrentRdaCarrera { get; set; }
+        public string? CurrentResultadosAprendizaje { get; set; }
+        public List<PeaDraftUnidadDto>? CurrentUnidades { get; set; }
+        public string? CurrentMetodologiaEnsenanza { get; set; }
+        public string? CurrentRecursosDidacticos { get; set; }
+        public List<PeaDraftActividadPracticaDto>? CurrentActividadesPracticas { get; set; }
+        public List<PeaDraftEvaluacionDto>? CurrentEvaluaciones { get; set; }
+        public List<PeaDraftBibliografiaDto>? CurrentBibliografias { get; set; }
+        public string? CurrentBibliografiaBasica { get; set; }
+        public string? CurrentBibliografiaConsulta { get; set; }
+        public List<PeaAiChatMessageDto> ConversationHistory { get; set; } = new();
+    }
+
+    public class PeaReviewCheckItemDto
+    {
+        public string Criterion { get; set; } = string.Empty;
+        public string Status { get; set; } = "cumple"; // "cumple" | "alerta" | "observado"
+        public string Detail { get; set; } = string.Empty;
+    }
+
+    public class PeaReviewSuggestedObservationDto
+    {
+        public string SectionKey { get; set; } = "ObjetivoAsignatura";
+        public string SectionLabel { get; set; } = string.Empty;
+        public string Severity { get; set; } = "media"; // "alta" | "media" | "sugerencia"
+        public string ObservationText { get; set; } = string.Empty;
+    }
+
+    public class PeaAiReviewAnalysisResponseDto
+    {
+        public string AnalysisSummary { get; set; } = string.Empty;
+        public string CareerAlignmentAnalysis { get; set; } = string.Empty;
+        public string HoursComparisonSummary { get; set; } = string.Empty;
+        public List<PeaReviewCheckItemDto> Checks { get; set; } = new();
+        public List<PeaReviewSuggestedObservationDto> SuggestedObservations { get; set; } = new();
+        public string ProviderUsed { get; set; } = string.Empty;
+        public string ModelUsed { get; set; } = string.Empty;
+    }
 }
 

@@ -62,8 +62,8 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             autoridad: 'Coordinador de Carrera',
             baseLegal: 'Estatuto Orgánico ISTPET — Control Disciplinar de Contenidos Mínimos y Pertinencia',
             dependencia: 'PEAs de la carrera en estado "En Revisión de Carrera"',
-            descripcion: 'El Coordinador de Carrera audita la pertinencia metodológica, bibliográfica y técnica de las unidades temáticas. Si requiere correcciones, registra observaciones por sección; si cumple, emite el Aval de Carrera.',
-            entregable: 'Aval disciplinar de carrera registrado formalmente en la bitácora del PEA.',
+            descripcion: 'El Coordinador de Carrera audita la pertinencia metodológica, bibliográfica y técnica de las unidades temáticas. Si requiere correcciones, registra observaciones por sección; si cumple, emite la Aprobación de Carrera.',
+            entregable: 'Aprobación disciplinar de carrera registrada formalmente en la bitácora del PEA.',
             icon: FileSearch
         },
         {
@@ -75,9 +75,9 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             rolEquivalente: 'COORD_ACAD' as RolSimulado,
             autoridad: 'Coordinación Académica Institucional',
             baseLegal: 'Modelo de Evaluación Institucional CACES — Criterio Docencia y Currículo',
-            dependencia: 'PEAs con Aval de Carrera emitido en espera de validación institucional',
-            descripcion: 'Supervisión transversal del cumplimiento normativo de carga horaria, coherencia de resultados de aprendizaje (RDA) y bibliografía. Otorga el Aval Académico necesario para la firma de legalización.',
-            entregable: 'Aval institucional que habilita la fase de firma legal del Vicerrectorado.',
+            dependencia: 'PEAs con Aprobación de Carrera emitida en espera de validación institucional',
+            descripcion: 'Supervisión transversal del cumplimiento normativo de carga horaria, coherencia de resultados de aprendizaje (RDA) y bibliografía. Otorga la Aprobación Académica necesaria para la firma de legalización.',
+            entregable: 'Aprobación institucional que habilita la fase de firma legal del Vicerrectorado.',
             icon: ShieldCheck
         },
         {
@@ -89,7 +89,7 @@ export const PipelineCurricularStepper: React.FC<Props> = ({ onSimularRol }) => 
             rolEquivalente: 'VICERRECTOR' as RolSimulado,
             autoridad: 'Vicerrectorado Académico',
             baseLegal: 'Ley 67 de Comercio Electrónico y Firmas Digitales del Ecuador',
-            dependencia: 'PEAs con doble aval normativo (Carrera + Académica) en bandeja de legalización',
+            dependencia: 'PEAs con doble aprobación normativa (Carrera + Académica) en bandeja de legalización',
             descripcion: 'Máxima autoridad curricular. Ejecuta la firma digital oficial individual o masiva con certificado DFRM o token PKCS#12, generando el sellado criptográfico SHA-256 y legalización en firme del PEA.',
             entregable: 'PEA oficializado en firme, jurídicamente inmutable y disponible con código QR.',
             icon: Award

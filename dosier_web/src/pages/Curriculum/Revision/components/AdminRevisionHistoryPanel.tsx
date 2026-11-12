@@ -43,12 +43,12 @@ const ESTADOS_MAP: Record<string, { label: string; dotClass: string; textClass: 
         textClass: 'text-sky-600 dark:text-sky-400'
     },
     RevisadoCoord: {
-        label: 'Aval de carrera emitido',
+        label: 'Aprobación de carrera emitida',
         dotClass: 'bg-indigo-500',
         textClass: 'text-indigo-600 dark:text-indigo-400'
     },
     RevisadoAcad: {
-        label: 'Aval académico emitido',
+        label: 'Aprobación académica emitida',
         dotClass: 'bg-emerald-500',
         textClass: 'text-emerald-600 dark:text-emerald-400'
     },

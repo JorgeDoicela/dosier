@@ -115,8 +115,8 @@ export const LegalizacionFirmaModal: React.FC<Props> = ({
                         </div>
                         <p className="text-zinc-600 dark:text-zinc-400">
                             {esMasivo
-                                ? `Se estampará la firma de Vicerrectorado en ${cantidadPeas} instrumentos curriculares avalados de la carrera ${carrera}.`
-                                : `El instrumento "${tituloDocumento}" ya cuenta con los avales previos de Coordinación de Carrera y Coordinación Académica.`}
+                                ? `Se estampará la firma de Vicerrectorado en ${cantidadPeas} instrumentos curriculares revisados de la carrera ${carrera}.`
+                                : `El instrumento "${tituloDocumento}" ya cuenta con las aprobaciones previas de Coordinación de Carrera y Coordinación Académica.`}
                         </p>
                     </div>
 

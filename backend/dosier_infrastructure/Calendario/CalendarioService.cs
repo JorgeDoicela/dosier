@@ -201,7 +201,7 @@ public class CalendarioService : ICalendarioService
                         else
                         {
                             titulo = $"PEA en Revisión: {nombreAsignatura}";
-                            descripcion = $"Instrumento curricular remitido a Coordinación de Carrera para aval disciplinar.";
+                            descripcion = $"Instrumento curricular remitido a Coordinación de Carrera para revisión disciplinar.";
                             categoriaGlobal = "Curricular";
                             subcategoria = "EntregaPea";
                             colorHex = "#8B5CF6";
@@ -216,7 +216,7 @@ public class CalendarioService : ICalendarioService
                         if (isCoordAcad)
                         {
                             titulo = $"Validación Académica: {nombreAsignatura}";
-                            descripcion = $"Aval de carrera emitido. Pendiente de control de coherencia institucional por Coordinación Académica.";
+                            descripcion = $"Aprobación de carrera emitida. Pendiente de control de coherencia institucional por Coordinación Académica.";
                             categoriaGlobal = "Revision";
                             subcategoria = "Revision";
                             colorHex = "#3B82F6";
@@ -226,8 +226,8 @@ public class CalendarioService : ICalendarioService
                         }
                         else
                         {
-                            titulo = $"Aval de Carrera Concedido: {nombreAsignatura}";
-                            descripcion = $"Avalado por coordinación de carrera, en trámite de validación institucional.";
+                            titulo = $"Aprobación de Carrera Concedida: {nombreAsignatura}";
+                            descripcion = $"Aprobado por coordinación de carrera, en trámite de validación institucional.";
                             categoriaGlobal = "Curricular";
                             subcategoria = "Revision";
                             colorHex = "#3B82F6";

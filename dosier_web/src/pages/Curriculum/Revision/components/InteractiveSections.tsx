@@ -286,35 +286,65 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
         } else if (key === 'AportePerfilEgreso') {
             setEditRdaCarrera(stripHtml(snap.RdaCarrera || snap.rda_carrera || snap.rdacarrera || snap.RDA_Carrera || ''));
         } else if (key === 'ResultadosAprendizaje') {
+            const rdaCarreraClean = stripHtml(snap.RdaCarrera || snap.rda_carrera || snap.rdacarrera || snap.RDA_Carrera || '').replace(/\s+/g, '');
             const arr = Array.isArray(snap.ResultadosAprendizaje) 
-                ? snap.ResultadosAprendizaje.map((r: any) => typeof r === 'string' ? r : (r.descripcion || r.Descripcion || r.texto || r.Texto || r.rda || ''))
+                ? snap.ResultadosAprendizaje
+                    .filter((r: any) => {
+                        const tipo = String(r?.tipoRda || r?.TipoRda || r?.tipo_rda || '').toLowerCase();
+                        return tipo !== 'carrera';
+                    })
+                    .map((r: any) => {
+                        const raw = typeof r === 'string' ? r : (r?.descripcion || r?.Descripcion || r?.texto || r?.Texto || r?.rda || '');
+                        return stripHtml(raw).replace(/^rda\s*\d+\s*:\s*/i, '').trim();
+                    })
+                    .filter((t: string) => {
+                        if (!t || t === '-' || /^rda\s*[-#]?\s*\d*\s*:?$/i.test(t)) return false;
+                        if (rdaCarreraClean.length > 20 && t.replace(/\s+/g, '') === rdaCarreraClean) return false;
+                        return true;
+                    })
                 : (typeof snap.ResultadosAprendizaje === 'string' && snap.ResultadosAprendizaje.trim() ? [stripHtml(snap.ResultadosAprendizaje)] : []);
             setEditResultadosAprendizaje(arr.length > 0 ? arr : ['']);
         } else if (key === 'Unidades') {
-            const arr = getSafeArray(snap.Unidades).map((u: any, idx: number) => ({
-                titulo: u.titulo || u.Titulo || u.nombre || u.NombreUnidad || u.nombre_unidad || u['0'] || `Unidad ${idx + 1}`,
-                horasCD: Number(u.horasCD || u.HorasCD || u.horasDocencia || u.horas_docencia || u['2'] || 0),
-                horasAPE: Number(u.horasAPE || u.HorasAPE || u.horasPractica || u.horas_practica || u['3'] || 0),
-                horasTA: Number(u.horasTA || u.HorasTA || u.horasAutonomo || u.horas_autonomo || u['4'] || 0),
-                contenidos: typeof u.contenidos === 'string' ? stripHtml(u.contenidos) : (Array.isArray(u.contenidos) ? u.contenidos.join('\n') : (u['1'] || ''))
-            }));
+            const peaUnits = Array.isArray((project?.peaData as any)?.unidades) ? (project.peaData as any).unidades : [];
+            const arr = getSafeArray(snap.Unidades).map((u: any, idx: number) => {
+                const dbU = peaUnits[idx] || {};
+                const cd = Number(u.horasCD ?? u.HorasCD ?? u.horasDocencia ?? u.HorasDocencia ?? u.horas_docencia ?? u.horasDocente ?? u['2'] ?? dbU.horasDocencia ?? dbU.horas_docencia ?? 0);
+                const ape = Number(u.horasAPE ?? u.HorasAPE ?? u.horasPractica ?? u.horas_practica ?? u.horasPracticoExp ?? u.HorasPracticoExp ?? u.horas_practico_exp ?? u['3'] ?? dbU.horasPracticoExp ?? dbU.horas_practico_exp ?? 0);
+                const ta = Number(u.horasTA ?? u.HorasTA ?? u.horasAutonomo ?? u.HorasAutonomo ?? u.horas_autonomo ?? u['4'] ?? dbU.horasAutonomo ?? dbU.horas_autonomo ?? 0);
+                const rawCont = u.contenidos ?? u.Contenidos ?? u.temas ?? u.Temas ?? u['1'] ?? '';
+                const contStr = typeof rawCont === 'string'
+                    ? stripHtml(rawCont)
+                    : Array.isArray(rawCont)
+                    ? rawCont
+                        .map((t: any) => typeof t === 'string' ? stripHtml(t) : stripHtml(t?.DescripcionSubtemas || t?.descripcion_subtemas || t?.TituloTema || t?.titulo_tema || t?.nombre_tema || t?.nombre || ''))
+                        .filter(Boolean)
+                        .join('\n')
+                    : '';
+                return {
+                    titulo: u.titulo || u.Titulo || u.nombre || u.NombreUnidad || u.nombre_unidad || u['0'] || `Unidad ${idx + 1}`,
+                    horasCD: cd,
+                    horasAPE: ape,
+                    horasTA: ta,
+                    contenidos: contStr
+                };
+            });
             setEditUnidades(arr.length > 0 ? arr : [{ titulo: 'Unidad 1', horasCD: 0, horasAPE: 0, horasTA: 0, contenidos: '' }]);
         } else if (key === 'MetodologiaEnsenanza') {
             setEditMetodologia(stripHtml(snap.MetodologiaEnsenanza || ''));
             setEditRecursosDidacticos(stripHtml(snap.RecursosDidacticos || ''));
         } else if (key === 'ActividadesPracticas') {
             const arr = getSafeArray(snap.ActividadesPracticas).map((p: any, idx: number) => ({
-                tema: p.tema || p.Tema || p.nombre || p['0'] || `Práctica ${idx + 1}`,
-                horas: Number(p.horas || p.Horas || p['1'] || 0),
+                tema: p.tema || p.Tema || p.nombre || p.Nombre || p.nombrePractica || p.NombrePractica || p.nombre_practica || p['0'] || `Práctica ${idx + 1}`,
+                horas: Number(p.horas ?? p.Horas ?? p.duracionHoras ?? p.DuracionHoras ?? p.duracion_horas ?? p['1'] ?? 0),
                 escenario: p.escenario || p.Escenario || p['2'] || 'Laboratorio',
-                descripcion: p.descripcion || p.Descripcion || p['3'] || ''
+                descripcion: p.descripcion || p.Descripcion || p.caracterizacion || p.Caracterizacion || p['3'] || ''
             }));
             setEditActividadesPracticas(arr.length > 0 ? arr : [{ tema: '', horas: 0, escenario: 'Laboratorio', descripcion: '' }]);
         } else if (key === 'Evaluaciones') {
             const arr = getSafeArray(snap.Evaluaciones).map((ev: any) => ({
-                criterio: ev.criterio || ev.Criterio || ev.nombre || ev['0'] || '',
-                porcentaje: ev.porcentaje || ev.Porcentaje || ev.peso || ev['1'] || '',
-                descripcion: ev.descripcion || ev.Descripcion || ev['2'] || ''
+                criterio: ev.criterio || ev.Criterio || ev.nota || ev.Nota || ev.denominacion || ev.Denominacion || ev.nombre || ev['0'] || '',
+                porcentaje: String(ev.porcentaje ?? ev.Porcentaje ?? ev.calificacion ?? ev.Calificacion ?? ev.calificacionMaxima ?? ev.CalificacionMaxima ?? ev.calificacion_maxima ?? ev.peso ?? ev['1'] ?? ''),
+                descripcion: ev.descripcion || ev.Descripcion || ev.tipo || ev.Tipo || ev.tipoEvaluacion || ev.TipoEvaluacion || ev.tipo_evaluacion || ev['2'] || ''
             }));
             setEditEvaluaciones(arr.length > 0 ? arr : [{ criterio: '', porcentaje: '', descripcion: '' }]);
         } else if (key === 'Bibliografia') {
@@ -458,9 +488,12 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
             Prerrequisitos: ['pea_prerequisites_section'],
             AportePerfilEgreso: ['RdaCarrera', 'pea_career_outcomes_section'],
             ResultadosAprendizaje: ['pea_subject_outcomes_section'],
+            Unidades: ['ContenidosCurriculares', 'pea_contents_section'],
             ContenidosCurriculares: ['Unidades', 'pea_contents_section'],
             MetodologiaEnsenanza: ['pea_methodology_section'],
+            ActividadesPracticas: ['RecursosDidacticos', 'pea_resources_section'],
             RecursosDidacticos: ['ActividadesPracticas', 'pea_resources_section'],
+            Evaluaciones: ['CriteriosEvaluacion', 'pea_evaluation_section'],
             CriteriosEvaluacion: ['Evaluaciones', 'pea_evaluation_section'],
             Bibliografia: ['BibliografiaBasica', 'BibliografiaConsulta', 'pea_bibliography_section'],
             FirmasLegalizacion: ['FirmasResponsabilidad', 'pea_signatures_section']
@@ -597,7 +630,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                     Instrumento Curricular en Formulación Docente (Borrador)
                                 </p>
                                 <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90 leading-relaxed">
-                                    Este Programa de Estudio de la Asignatura (PEA) está siendo redactado por el docente titular y aún no ha sido remitido formalmente a la Coordinación de Carrera. Esta vista es exclusiva para acompañamiento curricular en modo lectura; las observaciones formales y la emisión de aval se habilitarán tras el envío oficial.
+                                    Este Programa de Estudio de la Asignatura (PEA) está siendo redactado por el docente titular y aún no ha sido remitido formalmente a la Coordinación de Carrera. Esta vista es exclusiva para acompañamiento curricular en modo lectura; las observaciones formales y la aprobación se habilitarán tras el envío oficial.
                                 </p>
                             </div>
                         </div>
@@ -1182,12 +1215,29 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 </div>
                             ) : (
                                 <div className="space-y-3 py-1">
-                                    {Array.isArray(snap.ResultadosAprendizaje) && snap.ResultadosAprendizaje.length > 0 ? (
-                                        snap.ResultadosAprendizaje.map((rda: any, idx: number) => {
-                                            const texto = typeof rda === 'string'
-                                                ? rda
-                                                : (rda.descripcion || rda.Descripcion || rda.texto || rda.Texto || rda.rda || '-');
-                                            return (
+                                    {(() => {
+                                        const rdaCarreraClean = stripHtml(snap.RdaCarrera || snap.rda_carrera || snap.rdacarrera || snap.RDA_Carrera || '').replace(/\s+/g, '');
+                                        const validRdas = Array.isArray(snap.ResultadosAprendizaje)
+                                            ? snap.ResultadosAprendizaje
+                                                .filter((rda: any) => {
+                                                    const tipo = String(rda?.tipoRda || rda?.TipoRda || rda?.tipo_rda || '').toLowerCase();
+                                                    return tipo !== 'carrera';
+                                                })
+                                                .map((rda: any) => {
+                                                    const rawText = typeof rda === 'string'
+                                                        ? rda
+                                                        : (rda?.descripcion || rda?.Descripcion || rda?.texto || rda?.Texto || rda?.rda || '');
+                                                    return stripHtml(rawText).replace(/^rda\s*\d+\s*:\s*/i, '').trim();
+                                                })
+                                                .filter((t: string) => {
+                                                    if (!t || t === '-' || /^rda\s*[-#]?\s*\d*\s*:?$/i.test(t)) return false;
+                                                    if (rdaCarreraClean.length > 20 && t.replace(/\s+/g, '') === rdaCarreraClean) return false;
+                                                    return true;
+                                                })
+                                            : [];
+
+                                        if (validRdas.length > 0) {
+                                            return validRdas.map((texto: string, idx: number) => (
                                                 <div
                                                     key={idx}
                                                     className="flex items-start gap-3.5 py-2.5 border-b border-slate-100 dark:border-zinc-800/60 last:border-b-0"
@@ -1199,13 +1249,17 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                         {texto}
                                                     </p>
                                                 </div>
-                                            );
-                                        })
-                                    ) : (
-                                        <div className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
-                                            {renderHtml(snap.ResultadosAprendizaje, 'Sin resultados de aprendizaje detallados por el docente.')}
-                                        </div>
-                                    )}
+                                            ));
+                                        }
+
+                                        return (
+                                            <div className="py-3 text-sm text-slate-400 dark:text-zinc-500 italic">
+                                                {typeof snap.ResultadosAprendizaje === 'string' && stripHtml(snap.ResultadosAprendizaje).length > 0
+                                                    ? renderHtml(snap.ResultadosAprendizaje, 'Sin resultados de aprendizaje detallados por el docente.')
+                                                    : <p className="text-xs text-slate-400 dark:text-zinc-500 italic py-2 select-text">Sin resultados de aprendizaje detallados por el docente.</p>}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             )}
                         </section>
@@ -1322,12 +1376,16 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 <div className="divide-y divide-slate-200/80 dark:divide-zinc-800 space-y-6">
                                     {getSafeArray(snap.Unidades).length > 0 ? (
                                         getSafeArray(snap.Unidades).map((u: any, idx: number) => {
+                                            const peaUnits = Array.isArray((project?.peaData as any)?.unidades) ? (project.peaData as any).unidades : [];
+                                            const dbU = peaUnits[idx] || {};
                                             const nombre = u.titulo || u.Titulo || u.nombre || u.NombreUnidad || u.nombre_unidad || u.nombreUnidad || u['0'] || `Unidad ${idx + 1}`;
                                             const contenido = u.contenidos || u.Contenidos || u.temas || u.Temas || u['1'] || '-';
-                                            const hDoc = u.horasCD || u.HorasCD || u.horasDocencia || u.horas_docencia || u.horasDocente || u['2'] || 0;
-                                            const hPrac = u.horasAPE || u.HorasAPE || u.horasPractica || u.horas_practica || u.horasPracticoExp || u['3'] || 0;
-                                            const hAut = u.horasTA || u.HorasTA || u.horasAutonomo || u.horas_autonomo || u['4'] || 0;
-                                            const hTot = u.horasTotal || u.HorasTotal || u.TotalHorasUnidad || u.total_horas || u.totalHoras || u['5'] || (Number(hDoc) + Number(hPrac) + Number(hAut));
+                                            const hDoc = u.horasCD ?? u.HorasCD ?? u.horasDocencia ?? u.HorasDocencia ?? u.horas_docencia ?? u.horasDocente ?? u['2'] ?? dbU.horasDocencia ?? dbU.horas_docencia ?? 0;
+                                            const hPrac = u.horasAPE ?? u.HorasAPE ?? u.horasPractica ?? u.horas_practica ?? u.horasPracticoExp ?? u.HorasPracticoExp ?? u.horas_practico_exp ?? u['3'] ?? dbU.horasPracticoExp ?? dbU.horas_practico_exp ?? 0;
+                                            const hAut = u.horasTA ?? u.HorasTA ?? u.horasAutonomo ?? u.HorasAutonomo ?? u.horas_autonomo ?? u['4'] ?? dbU.horasAutonomo ?? dbU.horas_autonomo ?? 0;
+                                            const hTot = (Number(hDoc) + Number(hPrac) + Number(hAut)) > 0
+                                                ? (Number(hDoc) + Number(hPrac) + Number(hAut))
+                                                : (u.horasTotal || u.HorasTotal || u.TotalHorasUnidad || u.total_horas || u.totalHoras || u['5'] || 0);
 
                                             return (
                                                 <div
@@ -1354,15 +1412,40 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
 
                                                     <div className="text-sm sm:text-base text-slate-700 dark:text-zinc-300 leading-relaxed pl-8">
                                                         {typeof contenido === 'string' ? (
-                                                            <div dangerouslySetInnerHTML={{ __html: contenido }} />
+                                                            stripHtml(contenido).length > 0 && contenido !== '-' ? (
+                                                                <div dangerouslySetInnerHTML={{ __html: contenido }} />
+                                                            ) : (
+                                                                <p className="text-xs text-slate-400 dark:text-zinc-500 italic">Sin contenidos ni subtemas detallados en esta unidad.</p>
+                                                            )
                                                         ) : Array.isArray(contenido) ? (
-                                                            <ul className="list-disc list-inside space-y-1.5">
-                                                                {contenido.map((t: any, tIdx: number) => (
-                                                                    <li key={tIdx}>{typeof t === 'string' ? t : (t.nombre_tema || t.nombre || JSON.stringify(t))}</li>
-                                                                ))}
-                                                            </ul>
+                                                            (() => {
+                                                                const formattedTopics = contenido
+                                                                    .map((t: any) => {
+                                                                        if (typeof t === 'string') return stripHtml(t);
+                                                                        if (!t || typeof t !== 'object') return '';
+                                                                        const titulo = stripHtml(t.TituloTema || t.titulo_tema || t.titulo || t.nombre_tema || t.nombre || '');
+                                                                        const desc = stripHtml(t.DescripcionSubtemas || t.descripcion_subtemas || t.descripcion || t.subtemas || '');
+                                                                        const isPlaceholderTitle = !titulo || titulo.toLowerCase() === 'contenidos y subtemas de aprendizaje';
+                                                                        if (isPlaceholderTitle && !desc) return '';
+                                                                        if (!isPlaceholderTitle && desc) return `${titulo}: ${desc}`;
+                                                                        return desc || titulo;
+                                                                    })
+                                                                    .filter((txt: string) => txt.length > 0);
+
+                                                                if (formattedTopics.length === 0) {
+                                                                    return <p className="text-xs text-slate-400 dark:text-zinc-500 italic">Sin contenidos ni subtemas detallados en esta unidad.</p>;
+                                                                }
+
+                                                                return (
+                                                                    <ul className="list-disc list-inside space-y-1.5">
+                                                                        {formattedTopics.map((txt: string, tIdx: number) => (
+                                                                            <li key={tIdx}>{txt}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                );
+                                                            })()
                                                         ) : (
-                                                            <p>{String(contenido)}</p>
+                                                            <p className="text-xs text-slate-400 dark:text-zinc-500 italic">Sin contenidos ni subtemas detallados en esta unidad.</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1532,9 +1615,14 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80 text-sm sm:text-base">
                                                 {getSafeArray(snap.ActividadesPracticas).map((p: any, idx: number) => {
-                                                    const uVal = p.unidad || p.Unidad || p.numeroUnidad || p['0'] || '-';
-                                                    const nom = p.nombre || p.Nombre || p.nombrePractica || p.NombrePractica || p.nombre_practica || p.descripcion || p['1'] || '-';
+                                                    const rawUnit = p.unidad || p.Unidad || p.numeroUnidad || p.NumeroUnidad || p['0'];
+                                                    const numPrac = p.NumeroPractica || p.numeroPractica || p.numero_practica;
+                                                    const uVal = rawUnit
+                                                        ? (String(rawUnit).toLowerCase().startsWith('unidad') ? rawUnit : `Unidad ${rawUnit}`)
+                                                        : `Unidad ${numPrac || (idx + 1)}`;
+                                                    const nom = p.nombre || p.Nombre || p.nombrePractica || p.NombrePractica || p.nombre_practica || p.tema || p.Tema || p.descripcion || p['1'] || '-';
                                                     const car = p.caracterizacion || p.Caracterizacion || p.escenario || p.producto || '';
+                                                    const showCar = Boolean(car && !String(nom).toLowerCase().includes(String(car).toLowerCase()));
                                                     const hrs = p.horas ?? p.Horas ?? p.duracionHoras ?? p.DuracionHoras ?? p.duracion_horas ?? p['2'];
                                                     return (
                                                         <tr key={idx}>
@@ -1544,7 +1632,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                                             </td>
                                                             <td className="py-3 px-4 text-slate-700 dark:text-zinc-300">
                                                                 <div className="font-bold text-slate-900 dark:text-zinc-100">{nom}</div>
-                                                                {car && <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{car}</div>}
+                                                                {showCar && <div className="text-xs text-slate-500 dark:text-zinc-400 mt-1">{car}</div>}
                                                             </td>
                                                             <td className="py-3 pl-4 text-right font-mono font-bold text-[#0070f3] dark:text-blue-400">
                                                                 {hrs !== undefined && hrs !== null && hrs !== '' ? `${hrs}h` : '-'}
@@ -1762,7 +1850,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                         'Firmas de Responsabilidad',
                         <section id="section-pea_signatures_section" onClick={() => handleSelectSection('FirmasLegalizacion')} className={getSectionWrapperClasses('FirmasLegalizacion')}>
                             {renderSectionHeader(
-                                '11. Firmas de Responsabilidad y Avales Institucionales',
+                                '11. Firmas de Responsabilidad y Aprobaciones Institucionales',
                                 'Firmas digitales y validación colegiada del circuito microcurricular',
                                 'FirmasLegalizacion'
                             )}

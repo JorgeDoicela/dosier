@@ -3,7 +3,6 @@ import {
     ArrowLeft,
     FileText,
     Eye,
-    Scale,
     History,
     Download,
     Sun,
@@ -61,7 +60,12 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
 
     const isReviewState = isPeaEnRevision(projectStatus) || isPeaAvalado(projectStatus);
     const statusKey = normalizePeaStatus(projectStatus);
-    const isAuditActive = isAuthority && !isReadonly && (statusKey === 'EnRevision' || statusKey === 'Corregido' || statusKey === 'Observado');
+    const isAuditActive = isAuthority && !isReadonly && (
+        isAdmin ||
+        (isCoordCarrera && (statusKey === 'EnRevision' || statusKey === 'Corregido' || statusKey === 'Observado')) ||
+        (isCoordAcad && (statusKey === 'RevisadoCoord' || statusKey === 'EnRevision' || statusKey === 'Corregido' || statusKey === 'Observado')) ||
+        (isVicerrector && statusKey === 'RevisadoAcad')
+    );
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
         return document.documentElement.getAttribute('data-theme') !== 'light';
@@ -99,11 +103,10 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
     };
 
     const getActionButtonLabel = () => {
-        if (statusKey === 'Observado') return 'Actualizar o emitir dictamen';
         if (isVicerrector) return 'Legalizar y dictaminar';
-        if (isCoordAcad) return 'Emitir aval académico';
-        if (isCoordCarrera) return 'Emitir aval de carrera';
-        return 'Gestionar dictamen';
+        if (isCoordAcad) return 'Aprobar (Coordinación Académica)';
+        if (isCoordCarrera) return 'Aprobar (Coordinación de Carrera)';
+        return 'Emitir dictamen';
     };
 
     return (
@@ -190,8 +193,12 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
                             onClick={onOpenFinalizeModal}
                             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] shadow-xs transition-all cursor-pointer inline-flex items-center gap-1.5"
                         >
-                            <Scale size={13} />
                             <span>{getActionButtonLabel()}</span>
+                            {pendingObservationsCount > 0 && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-white/25 text-white font-semibold leading-none">
+                                    {pendingObservationsCount}
+                                </span>
+                            )}
                         </button>
                     ) : statusKey === 'Observado' ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">

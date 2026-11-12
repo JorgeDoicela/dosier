@@ -11,14 +11,16 @@ flowchart TD
     Docente["Docente en Editor PEA"] -->|"Solicita propuesta estructurada"| UI["Modal Asistente IA (PeaAiAssistantModal.tsx)"]
     Docente -->|"Chat interactivo en vivo"| ChatUI["Panel Lateral Chat IA (PeaAiChatSidebar.tsx)"]
     Docente -->|"Importar archivo Word/PDF"| ImportUI["Modal Extractor (PeaDocumentImportModal.tsx)"]
-    
+    Revisor["Coordinador / Evaluador en Revisión"] -->|"Auditoría y contraste curricular"| ReviewUI[" Botón y Panel Flotante IA (PeaAiReviewerWidget.tsx)"]
+
     UI -->|"POST /api/pea/uuid/{uuid}/ai/generar"| Controller["PeaController"]
     ChatUI -->|"POST /api/pea/uuid/{uuid}/ai/chat"| Controller
+    ReviewUI -->|"POST /api/pea/uuid/{uuid}/ai/revisar"| Controller
     ImportUI -->|"POST /api/pea/uuid/{uuid}/importar-documento"| Controller
 
-    Controller -->|"GenerateDraftAsync()"| AIService["PeaAiAssistantService"]
+    Controller -->|"GenerateDraftAsync() / AnalyzeForReviewAsync()"| AIService["PeaAiAssistantService"]
     Controller -->|"ExtractAndMapDocumentAsync()"| ExtractorService["PeaDocumentExtractorService"]
-    
+
     subgraph ContextoAcademico ["Inyeccion Contextual Institucional"]
         DB_SIGAFI[("sigafi_es (Materias, Horas CD/APE/TA, Nivel)")] --> AIService
         DB_SIGAFI --> ExtractorService
@@ -33,7 +35,7 @@ flowchart TD
 
     AIService -->|"Payload JSON con historial"| LLM{"Proveedor IA Seleccionado"}
     ExtractorService -->|"Extracción iText 9 / OpenXML"| LLM
-    
+
     LLM -->|"deepseek-chat / deepseek-reasoner"| DeepSeek["DeepSeek API"]
     LLM -->|"claude-3-5-sonnet"| Anthropic["Anthropic API"]
     LLM -->|"gemini-2.5-flash / pro"| Gemini["Google Gemini API"]
@@ -131,7 +133,7 @@ El procesamiento de archivos preexistentes está desacoplado del asistente gener
 ## 3. Integración en el Frontend
 
 ### 3.1. Servicios Desacoplados (`peaAiService.ts` y `peaDocumentExtractorService.ts`)
-- **`peaAiService.ts`**: Fachada para configuración de API Keys (`/api/pea/ai/config`), generación de borradores pedagógicos (`/api/pea/uuid/{uuid}/ai/generar`) y chat interactivo (`/api/pea/uuid/{uuid}/ai/chat`). Incluye la función de mapeo reactivo `convertDraftToEditorFields`, la cual sincroniza los totales de horas (`TotalHorasAsignatura`, componentes CD/APE/TA), el código de carrera y aplica distribución equitativa automática sobre las unidades si estas carecen de horas asignadas en el documento de origen.
+- **`peaAiService.ts`**: Fachada para configuración de API Keys (`/api/pea/ai/config`), generación de borradores pedagógicos (`/api/pea/uuid/{uuid}/ai/generar`), chat interactivo (`/api/pea/uuid/{uuid}/ai/chat`) y auditoría curricular de revisión (`/api/pea/uuid/{uuid}/ai/revisar`). Incluye la función de mapeo reactivo `convertDraftToEditorFields`, la cual sincroniza los totales de horas (`TotalHorasAsignatura`, componentes CD/APE/TA), el código de carrera y aplica distribución equitativa automática sobre las unidades si estas carecen de horas asignadas en el documento de origen.
 - **`peaDocumentExtractorService.ts`**: Módulo especializado para la carga de archivos `multipart/form-data` y extracción de PEAs digitales (`/api/pea/uuid/{uuid}/importar-documento`).
 
 ### 3.2. Experiencia de Usuario en el Editor (`DOSIERBuilderShell.tsx`)
@@ -142,7 +144,24 @@ El procesamiento de archivos preexistentes está desacoplado del asistente gener
 5. **Dropzone Rápido en `CollaborationSidebar.tsx`**: Zona de arrastre ampliada para cargar archivos `.pdf` o `.docx` directamente desde el panel lateral sin salir del lienzo.
 6. **Balance Dinámico y Botón "Distribuir horas" en Sección 6 (`PeaContentsSection.tsx`)**: Panel de verificación horaria con cálculo de desfase en tiempo real. Si existe descuadre entre las horas de las unidades y el total oficial de la asignatura, se presenta el botón interactivo "Distribuir horas", el cual calcula y distribuye la carga horaria exacta entre las unidades registradas y desaparece automáticamente al alcanzar el equilibrio.
 
-### 3.3. Hidratación Atómica en Tiempo Real (`useDOSIERDocument.ts`)
+### 3.3. Asistente Flotante para Revisión Curricular (`PeaAiReviewerWidget.tsx`)
+Para los roles de revisión y aprobación académica (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), la vista `RevisionCurricularPage.tsx` incorpora el componente flotante `PeaAiReviewerWidget.tsx`:
+- **Endpoint de Auditoría**: `POST /api/pea/uuid/{uuid}/ai/revisar` (`IPeaAiAssistantService.AnalyzeForReviewAsync`).
+- **Cruce Institucional Automatizado**: El backend cruza en tiempo real el snapshot actual del PEA contra la malla oficial en `sigafi_es` (`Carreras`, `Asignaturas`, `DetalleMallas`, `Prerequisitos`), el Perfil de Egreso de la Carrera (`doc_perfiles_egreso`) y el Modelo Educativo Institucional (`doc_modelos_educativos`).
+- **Enfoques de Auditoría de Alto Valor (`FocusMode`)**:
+  - `overview`: Explicación integral del PEA, propósito pedagógico, progresión de unidades y hallazgos principales antes de emitir aval.
+  - `career_profile`: Pertinencia de la asignatura frente a los Resultados de Aprendizaje (RDA) del perfil de egreso de la carrera y verificación de prerrequisitos de malla SIGAFI.
+  - `hours_audit`: Auditoría aritmética de horas de Contacto Docente (CD), Aprendizaje Práctico Experimental (APE), Trabajo Autónomo (TA) y créditos (RRA Art. 21) frente a la suma de unidades y la cobertura de talleres prácticos declarados.
+- **5 Criterios Normativos Clave de Auditoría (Semáforo Institucional)**:
+  1. *Distribución horaria y créditos (RRA Art. 21)*: 1 crédito = 48h y Total = CD + APE + TA.
+  2. *Suma de horas en unidades vs Sección 1*: Concordancia aritmética estricta de componentes.
+  3. *Cobertura de prácticas experimentales (APE)*: Justificación de las 48h de APE en la Sección 8.
+  4. *Alineación con el perfil de egreso de la carrera*: Coherencia con los RDAs institucionales de titulación.
+  5. *Coherencia de prerrequisitos con malla SIGAFI*: Validación determinista contra el registro de materias previas.
+- **Inyección Directa de Observaciones**: Devuelve observaciones sugeridas (`SuggestedObservations`) consolidadas por sección canónica. El revisor puede saltar a la sección con un clic, registrar cada observación individualmente o aplicar todas en lote (`Registrar todas`) mediante `saveCommentForSection`.
+- **Diseño Despejado y sin Redundancias**: Se eliminan párrafos intermedios repetitivos en el chat y selectores apretados en el pie, brindando un área de texto amplia para preguntas libres, chips horizontales de consulta rápida y acceso a la configuración del modelo desde la cabecera.
+
+### 3.4. Hidratación Atómica en Tiempo Real (`useDOSIERDocument.ts`)
 La inyección de los datos generados o importados al editor concurrente se ejecuta en una sola transacción `ydoc.transact()` sobre los tipos compartidos de Yjs:
 - Arreglos estructurados mediante `Y.Array` (`Unidades`, `Prerrequisitos`, `ActividadesPracticas`, `Evaluaciones`, `Bibliografias`).
 - Textos planos mediante `Y.Text`.

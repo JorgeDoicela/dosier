@@ -13,6 +13,8 @@ import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import { DocenteAgendaWidget } from './Components/DocenteAgendaWidget';
 import { DocenteActividadesPanel } from './Components/DocenteActividadesPanel';
 
+const SYNC_EVENTS = ['dosier-projects-changed'];
+
 export const DocentePeaDashboard: React.FC = () => {
     const navigate = useNavigate();
     const { addToast } = useNotifications();
@@ -70,7 +72,7 @@ export const DocentePeaDashboard: React.FC = () => {
                 recargarMaterias(selectedPeriodo, true);
             }
         },
-        events: ['dosier-projects-changed']
+        events: SYNC_EVENTS
     });
 
     const handleCrearPea = async (asignacion: DocenteAsignaturaDto) => {
@@ -109,7 +111,7 @@ export const DocentePeaDashboard: React.FC = () => {
                     Panel Curricular Docente
                 </h1>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Seguimiento de formulación del PEA, avance de cátedras y agenda académica.
+                    Seguimiento de formulación del PEA, avance de materias y agenda académica.
                 </p>
             </div>
 

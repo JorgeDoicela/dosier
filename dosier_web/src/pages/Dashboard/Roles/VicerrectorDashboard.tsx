@@ -32,10 +32,10 @@ import {
     Eye,
     ChevronRight,
     Loader2,
-    LayoutGrid,
-    List,
     Building2
 } from 'lucide-react';
+
+const SYNC_EVENTS = ['dosier-projects-changed'];
 
 export const VicerrectorDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -48,7 +48,6 @@ export const VicerrectorDashboard: React.FC = () => {
     const [search, setSearch] = useState<string>('');
     const [filterCarrera, setFilterCarrera] = useState<string>('todas');
     const [filterEstado, setFilterEstado] = useState<string>('todos');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [loading, setLoading] = useState<boolean>(true);
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -98,7 +97,7 @@ export const VicerrectorDashboard: React.FC = () => {
 
     useRealtimeSync({
         onSync: silentSync,
-        events: ['dosier-projects-changed']
+        events: SYNC_EVENTS
     });
 
     const handlePeriodoChange = async (val: string | number) => {
@@ -152,7 +151,7 @@ export const VicerrectorDashboard: React.FC = () => {
 
             const matchesEstado =
                 filterEstado === 'todos' ? true :
-                filterEstado === 'listos' ? (p.estado === 'RevisadoAcad' || p.estado === 'RevisadoCoord') :
+                filterEstado === 'listos' ? (p.estado === 'RevisadoAcad') :
                 filterEstado === 'legalizados' ? (p.estado === 'Aprobado' || p.estado === 'Publicado') :
                 filterEstado === 'proceso' ? (p.estado !== 'Aprobado' && p.estado !== 'Publicado' && p.estado !== 'RevisadoAcad') : true;
 
@@ -163,7 +162,7 @@ export const VicerrectorDashboard: React.FC = () => {
     }, [peas, filterCarrera, search, filterEstado, recentsVersion]);
 
     const peasListosParaFirma = useMemo(() => {
-        return peas.filter(p => p.estado === 'RevisadoAcad' || p.estado === 'RevisadoCoord');
+        return peas.filter(p => p.estado === 'RevisadoAcad');
     }, [peas]);
 
     const peasLegalizados = useMemo(() => {
@@ -315,40 +314,10 @@ export const VicerrectorDashboard: React.FC = () => {
                             placeholder="Estado Legal..."
                         />
                     </div>
-
-                    {/* Selector de Modo de Vista (Cuadros / Lista) */}
-                    <div className="flex items-center rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-100/80 dark:bg-zinc-900 p-0.5">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('grid')}
-                            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                                viewMode === 'grid'
-                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-                            }`}
-                            title="Vista en Cuadros"
-                        >
-                            <LayoutGrid className="w-3.5 h-3.5" />
-                            <span>Cuadros</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('list')}
-                            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
-                                viewMode === 'list'
-                                    ? 'bg-white dark:bg-zinc-800 text-[#0070f3] dark:text-blue-400 shadow-xs'
-                                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-                            }`}
-                            title="Vista en Lista"
-                        >
-                            <List className="w-3.5 h-3.5" />
-                            <span>Lista</span>
-                        </button>
-                    </div>
                 </div>
             </div>
 
-            {/* Contenido: Cuadros o Tabla de Legalización */}
+            {/* Contenido: Cuadros de Legalización */}
             {loading ? (
                 <div className="py-16 flex flex-col items-center justify-center text-zinc-400 space-y-2">
                     <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
@@ -358,12 +327,12 @@ export const VicerrectorDashboard: React.FC = () => {
                 <div className="py-12 text-center text-zinc-500 text-xs">
                     No se encontraron instrumentos curriculares que coincidan con los filtros aplicados.
                 </div>
-            ) : viewMode === 'grid' ? (
+            ) : (
                 /* ── MODO CUADROS (LIMPIO Y PLANO) ── */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {peasFiltrados.map(p => {
                         const estaAprobado = p.estado === 'Aprobado' || p.estado === 'Publicado';
-                        const listoParaFirma = p.estado === 'RevisadoAcad' || p.estado === 'RevisadoCoord';
+                        const listoParaFirma = p.estado === 'RevisadoAcad';
 
                         return (
                             <div
@@ -372,13 +341,13 @@ export const VicerrectorDashboard: React.FC = () => {
                                 tabIndex={0}
                                 onClick={() => {
                                     recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
-                                    navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
+                                    navigate(`/documentacion/revision-tecnica/${p.uuid}`);
                                 }}
                                 onKeyDown={e => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
                                         recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
-                                        navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
+                                        navigate(`/documentacion/revision-tecnica/${p.uuid}`);
                                     }
                                 }}
                                 className="group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md transition-all flex flex-col justify-between space-y-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950 text-left"
@@ -427,7 +396,7 @@ export const VicerrectorDashboard: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    {/* Cadena de Avales */}
+                                    {/* Cadena de Aprobaciones */}
                                     <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 pt-1">
                                         <span className={p.firma_docente ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 line-through'}>
                                             {p.firma_docente ? '✓ ' : '1. '}Doc
@@ -445,120 +414,6 @@ export const VicerrectorDashboard: React.FC = () => {
                             </div>
                         );
                     })}
-                </div>
-            ) : (
-                /* ── MODO TABLA / LISTA ── */
-                <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-                    <table className="w-full text-left text-xs">
-                        <thead className="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-semibold uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th className="py-2.5 px-4">Asignatura</th>
-                                <th className="py-2.5 px-3">Carrera</th>
-                                <th className="py-2.5 px-3">Cadena de Avales Previos</th>
-                                <th className="py-2.5 px-3">Estado Legal</th>
-                                <th className="py-2.5 px-4 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-sans">
-                            {peasFiltrados.map(p => {
-                                const estaAprobado = p.estado === 'Aprobado' || p.estado === 'Publicado';
-                                const listoParaFirma = p.estado === 'RevisadoAcad' || p.estado === 'RevisadoCoord';
-
-                                return (
-                                    <tr key={p.uuid} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/50 transition-colors">
-                                        <td className="py-2.5 px-4">
-                                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                                                {p.nombre_asignatura}
-                                            </p>
-                                            <p className="text-[11px] text-zinc-500">
-                                                {p.nombre_docente_elaborador || 'Docente de Asignatura'}
-                                            </p>
-                                        </td>
-                                        <td className="py-2.5 px-3">
-                                            <span className="text-zinc-700 dark:text-zinc-300">
-                                                {p.nombre_carrera}
-                                            </span>
-                                        </td>
-                                        <td className="py-2.5 px-3">
-                                            <div className="flex items-center gap-1.5 text-xs font-mono">
-                                                <span className={p.firma_docente ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 dark:text-zinc-600 line-through'}>
-                                                    {p.firma_docente ? '✓ ' : '1. '}Docente
-                                                </span>
-                                                <span className="text-zinc-300 dark:text-zinc-700">/</span>
-                                                <span className={p.firma_coord ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 dark:text-zinc-600'}>
-                                                    {p.firma_coord ? '✓ ' : '2. '}Carrera
-                                                </span>
-                                                <span className="text-zinc-300 dark:text-zinc-700">/</span>
-                                                <span className={p.firma_acad ? 'text-zinc-900 dark:text-zinc-100 font-medium' : 'text-zinc-400 dark:text-zinc-600'}>
-                                                    {p.firma_acad ? '✓ ' : '3. '}Académica
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="py-2.5 px-3">
-                                            {estaAprobado ? (
-                                                <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                                    <span>Legalizado en Firme</span>
-                                                </div>
-                                            ) : listoParaFirma ? (
-                                                <div className="flex items-center gap-1.5 text-xs font-medium text-[#0070f3] dark:text-blue-400">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] shrink-0" />
-                                                    <span>Listo para Firma Legal</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
-                                                    <span>En Proceso de Avales ({p.estado})</span>
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="py-2.5 px-4 text-right">
-                                            <div className="flex items-center justify-end gap-1.5">
-                                                <button
-                                                    onClick={() => {
-                                                        recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
-                                                        navigate(`/documentacion/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
-                                                    }}
-                                                    className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer inline-flex items-center gap-1"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5" />
-                                                    <span>Ver PEA</span>
-                                                </button>
-
-                                                {listoParaFirma && (
-                                                    <button
-                                                        onClick={() => setFirmaModalPea(p)}
-                                                        className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
-                                                    >
-                                                        <Award className="w-3.5 h-3.5" />
-                                                        <span>Firmar PEA</span>
-                                                    </button>
-                                                )}
-
-                                                {estaAprobado && (
-                                                    <button
-                                                        onClick={() => {
-                                                            const url = `${window.location.origin}/verificacion/${p.uuid}`;
-                                                            navigator.clipboard.writeText(url);
-                                                            addToast(
-                                                                'Enlace QR Público Copiado',
-                                                                url,
-                                                                'info'
-                                                            );
-                                                        }}
-                                                        className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors font-mono cursor-pointer inline-flex items-center gap-1"
-                                                    >
-                                                        <QrCode className="w-3.5 h-3.5" />
-                                                        <span>QR CACES</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
                 </div>
             )}
 

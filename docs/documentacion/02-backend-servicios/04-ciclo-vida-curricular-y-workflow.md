@@ -18,6 +18,7 @@ stateDiagram-v2
     EnRevision --> Observado: Coordinación de Carrera formula observaciones y emite dictamen de devolución
     Observado --> Corregido: Docente responde observaciones en el editor
     EnRevision --> RevisadoCoord: Aval favorable de Coordinación de Carrera
+    RevisadoCoord --> Observado: Coordinación Académica devuelve con observaciones a la carrera y cuerpo docente
     RevisadoCoord --> RevisadoAcad: Aval metodológico de Coordinación Académica
     RevisadoAcad --> Aprobado: Aprobación oficial de Vicerrectorado Académico
     Aprobado --> [*]: Sellado SHA-256, QR público y PDF emitido
@@ -29,7 +30,7 @@ stateDiagram-v2
 | :--- | :--- | :--- |
 | `Borrador` | Redacción inicial del PEA por el docente titular y co-redactores mediante CoWork. | `DOSIER_DOCENTE` |
 | `EnRevision` | Documento enviado formalmente para revisión colegiada. Se bloquea la edición directa. | `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD` |
-| `Observado` | Dictamen formal de devolución emitido por la autoridad. El docente recupera permisos de edición y visualiza las observaciones. | `DOSIER_DOCENTE` |
+| `Observado` | Dictamen formal de devolución emitido por Coordinación de Carrera o Coordinación Académica. Se anulan avales previos y se notifica a Carrera y Docente para subsanación integral. | `DOSIER_DOCENTE` |
 | `Corregido` | El docente ha subsanado los requerimientos y prepara el reenvío a evaluación. | `DOSIER_DOCENTE` |
 | `RevisadoCoord` | Aval favorable del Coordinador de Carrera sobre pertinencia disciplinar y perfil de egreso. | `DOSIER_COORD_ACAD` |
 | `RevisadoAcad` | Aval favorable de la Coordinación Académica sobre estructura metodológica y horas. | `DOSIER_VICERRECTOR` |
@@ -79,10 +80,12 @@ Para garantizar la interoperabilidad entre el editor colaborativo dinámico (`do
 Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), el endpoint `GET /api/pea/bandeja` provee la vista consolidada de los instrumentos microcurriculares:
 
 * **Filtros de Consulta:** Permite filtrar por período académico (`idPeriodo`), carrera (`idCarrera`), estado del documento (`estado`) y alcance institucional (`alcanceInstitucional`). Los filtros evalúan comodines institucionales (`todos`/`todas`) de forma insensible a mayúsculas y minúsculas.
-* **Seguridad y Alcance RBAC:**
-  * Administrador, Vicerrector y Coordinador Académico: Acceso irrestricto a todas las carreras y asignaturas del instituto (`esInstituto = 1`).
-  * Coordinador de Carrera: Supervisión disciplinar habitual acotada a las asignaturas de sus carreras coordinadas. Cuando se consulta desde módulos directivos de analítica institucional con `alcanceInstitucional = true`, se permite la visualización agregada del corte institucional completo.
-  * Docente: Visualización exclusiva de sus asignaturas asignadas.
+* **Seguridad y Alcance RBAC (Gobernanza Jerárquica CACES/ISTPET):**
+  * `DOSIER_ADMIN`: Acceso y supervisión macro-curricular total sobre todos los estados y todas las carreras institucionales.
+  * `DOSIER_COORD_CARRERA`: Supervisión disciplinar de los PEAs de sus carreras asignadas (en cualquier fase curricular) o materias donde figura como docente elaborador.
+  * `DOSIER_COORD_ACAD`: Supervisión macro institucional condicionada al avance normativo: los PEAs únicamente ingresan a su bandeja tras la emisión formal del Aval de Carrera (`RevisadoCoord`), manteniéndose en `RevisadoAcad` y `Aprobado` para seguimiento. Mientras un PEA permanezca en `Borrador`, `EnRevision` (pendiente de carrera) u `Observado` (en subsanación docente), no es visible para la Coordinación Académica, salvo que sea docente titular de dicha materia.
+  * `DOSIER_VICERRECTOR`: Supervisión macro institucional para legalización final: los PEAs ingresan a su bandeja únicamente tras el Aval de Coordinación Académica (`RevisadoAcad`) y en estado `Aprobado`, salvo que sea docente titular de la asignatura.
+  * `DOSIER_DOCENTE`: Visualización y formulación exclusiva de sus asignaturas asignadas.
 * **Optimización de Carga:** Mapeo mediante carga por lotes (batching) en memoria de diccionarios de carreras, asignaturas y profesores para erradicar el problema de consultas N+1 en bases de datos relacionales.
 
 ### 6.1. Separación de Tareas de Revisión vs. Monitoreo de Borradores
@@ -90,3 +93,12 @@ Para los roles de gestión y aseguramiento de la calidad académica (`DOSIER_COO
 Para evitar ambigüedad operativa en las autoridades curriculares:
 * **Bandeja de Tareas Operativas («Por revisar»):** Constituye la vista predeterminada de trabajo. Lista únicamente los instrumentos formalmente remitidos por los docentes con sellado de entrega (`EnRevision`, `Observado`, `Corregido`). Habilita de forma exclusiva el botón primario de «Revisión Técnica» y la emisión de avales.
 * **Monitoreo de Cumplimiento («En redacción docente»):** Permite verificar qué asignaturas continúan en formulación inicial (`Borrador`, `NoIniciado`). La interacción se restringe estrictamente a «Consultar avance (Lectura)», bloqueando la formulación de observaciones formales y la emisión de avales hasta la entrega formal. El botón de edición solo se habilita para el propio docente titular elaborador o administradores del sistema.
+
+### 6.2. Política de Aislamiento Temporal y Control Estricto de Acceso (`CanUserAccessPea`)
+
+Para impedir que cualquier rol acceda a información curricular antes del cumplimiento estricto de su fase previa:
+1. **Acceso por API (`GET /api/pea/{id}` y `GET /api/pea/uuid/{uuid}`):** Evaluado dinámicamente mediante `CanUserAccessPeaAsync`.
+2. **Coordinación Académica:** Denegación con código HTTP 403 Forbidden si intenta consultar instrumentos en `Borrador`, `EnRevision` u `Observado` de carreras donde no sea coordinador directo ni docente titular.
+3. **Vicerrectorado Académico:** Denegación con código HTTP 403 Forbidden si intenta consultar instrumentos en `Borrador`, `EnRevision`, `Observado` o `RevisadoCoord` (pendiente de académica).
+4. **Docentes Regulares:** Restricción absoluta sobre PEAs de otros docentes mientras no alcancen el estado `Aprobado` o `Publicado`.
+5. **Máquina de Estados Finita en Backend (`CambiarEstadoAsync` y `FirmarPeaAsync`):** Validación criptográfica y de roles que impide saltos de fase. El Vicerrectorado únicamente puede legalizar PEAs que cuenten con estado y firma previa de `RevisadoAcad`.

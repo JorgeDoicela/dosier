@@ -32,6 +32,8 @@ import {
     Search
 } from 'lucide-react';
 
+const SYNC_EVENTS = ['dosier-projects-changed'];
+
 export const CoordCarreraDashboard: React.FC = () => {
     const { addToast } = useNotifications();
     const { user } = useAuth();
@@ -101,9 +103,9 @@ export const CoordCarreraDashboard: React.FC = () => {
     }, [esSuperAutoridad]);
 
     // Cargar PEAs de la bandeja según filtros
-    const fetchPeas = useCallback(async () => {
+    const fetchPeas = useCallback(async (isSilent = false) => {
         if (!catalogsLoaded) return;
-        setIsLoading(true);
+        if (!isSilent) setIsLoading(true);
         try {
             const params: { idPeriodo?: string; idCarrera?: number } = {};
             if (selectedPeriodo) params.idPeriodo = selectedPeriodo;
@@ -113,9 +115,9 @@ export const CoordCarreraDashboard: React.FC = () => {
             setPeas(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error al cargar PEAs de carrera:', error);
-            setPeas([]);
+            if (!isSilent) setPeas([]);
         } finally {
-            setIsLoading(false);
+            if (!isSilent) setIsLoading(false);
         }
     }, [catalogsLoaded, selectedPeriodo, selectedCarreraId]);
 
@@ -126,9 +128,13 @@ export const CoordCarreraDashboard: React.FC = () => {
     }, [catalogsLoaded, fetchPeas]);
 
     // Sincronización continua en tiempo real
+    const silentSync = useCallback(() => {
+        fetchPeas(true);
+    }, [fetchPeas]);
+
     useRealtimeSync({
-        onSync: fetchPeas,
-        events: ['dosier-projects-changed']
+        onSync: silentSync,
+        events: SYNC_EVENTS
     });
 
     // Identificación de asignaturas propias del usuario actual
@@ -153,14 +159,20 @@ export const CoordCarreraDashboard: React.FC = () => {
         return Boolean(matchesId || matchesNombre);
     }, [user]);
 
-    // Conteo por pestañas
+    // Conteo por pestañas y tareas operativas
     const pendientesCount = useMemo(() => {
         return peas.filter(p => p.estado === 'EnRevision').length;
     }, [peas]);
 
-    const misMateriasCount = useMemo(() => {
-        return peas.filter(p => isMiMateria(p)).length;
+    const misMaterias = useMemo(() => {
+        return peas.filter(p => isMiMateria(p));
     }, [peas, isMiMateria]);
+
+    const misMateriasCount = misMaterias.length;
+
+    const misPendientesFormularCount = useMemo(() => {
+        return misMaterias.filter(p => p.estado === 'Borrador' || p.estado === 'Observado' || !p.firma_docente).length;
+    }, [misMaterias]);
 
     const [recentsVersion, setRecentsVersion] = useState<number>(0);
 
@@ -195,12 +207,14 @@ export const CoordCarreraDashboard: React.FC = () => {
         return sortSubjectsByRecentOpen(filtrados);
     }, [peas, filterTab, search, isMiMateria, recentsVersion]);
 
-    // Navegación directa al editor para revisión o redacción docente propia
+    // Navegación a revisión curricular (o editor si es materia propia)
     const handleAbrirRevision = (p: PeaBandejaItemDto) => {
         recordRecentSubjectOpen({ uuid: p.uuid, id_pea: p.id_pea });
-        const esPropia = isMiMateria(p);
-        const prefix = esPropia ? '/documentacion/mis-proyectos/workspace' : '/documentacion/workspace';
-        navigate(`${prefix}/pea-oficial/${p.uuid}?edit=pea-oficial`);
+        if (isMiMateria(p)) {
+            navigate(`/documentacion/mis-proyectos/workspace/pea-oficial/${p.uuid}?edit=pea-oficial`);
+        } else {
+            navigate(`/documentacion/revision-tecnica/${p.uuid}`);
+        }
     };
 
     // Registro formal de observaciones
@@ -254,7 +268,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                         Coordinación de Carrera
                     </h1>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        Revisión curricular, aval de asignaturas y agenda de carrera.
+                        Revisión curricular, aprobación de materias y agenda de carrera.
                     </p>
                 </div>
 
@@ -316,7 +330,7 @@ export const CoordCarreraDashboard: React.FC = () => {
                                             : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                 >
-                                    <span>Pendientes de Aval</span>
+                                    <span>Pendientes de Aprobación</span>
                                     {pendientesCount > 0 && (
                                         <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-50 dark:bg-blue-950/60 text-[#0070f3] dark:text-blue-400 font-bold">
                                             {pendientesCount}
@@ -458,8 +472,83 @@ export const CoordCarreraDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Columna Derecha: Rezagados + Agenda Curricular */}
+                {/* Columna Derecha: Tareas Pendientes, Rezagados y Agenda Curricular */}
                 <div className="lg:col-span-5 space-y-6">
+                    {/* Tarjeta Ejecutiva de Tareas Curriculares */}
+                    <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-zinc-800">
+                            <div>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                    Resumen de Pendientes
+                                </h2>
+                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                    Control de revisiones asignadas y carga docente propia.
+                                </p>
+                            </div>
+                            <span className="text-xs font-mono font-semibold text-zinc-500 bg-slate-100 dark:bg-zinc-900 px-2 py-0.5 rounded">
+                                {pendientesCount + misPendientesFormularCount} por atender
+                            </span>
+                        </div>
+
+                        <div className="space-y-3">
+                            {/* Tarea 1: Lo que tiene que revisar de sus docentes */}
+                            <div className="p-3.5 rounded-lg border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/30 flex items-center justify-between gap-3">
+                                <div className="space-y-0.5 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`w-2 h-2 rounded-full ${pendientesCount > 0 ? 'bg-[#0070f3]' : 'bg-emerald-500'}`} />
+                                        <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
+                                            Revisión y Aprobación de Carrera
+                                        </h3>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4">
+                                        {pendientesCount > 0
+                                            ? `${pendientesCount} ${pendientesCount === 1 ? 'PEA remitido para' : 'PEAs remitidos para'} aprobación`
+                                            : 'Al día · No hay PEAs pendientes de revisión disciplinar'}
+                                    </p>
+                                </div>
+                                {pendientesCount > 0 ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setFilterTab('pendientes')}
+                                        className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] transition-colors cursor-pointer"
+                                    >
+                                        Revisar ({pendientesCount})
+                                    </button>
+                                ) : (
+                                    <span className="shrink-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                        Completado
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Tarea 2: Carga docente propia */}
+                            {misMateriasCount > 0 && (
+                                <div className="p-3.5 rounded-lg border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-900/30 flex items-center justify-between gap-3">
+                                    <div className="space-y-0.5 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-2 h-2 rounded-full ${misPendientesFormularCount > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                            <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
+                                                Carga Docente Propia
+                                            </h3>
+                                        </div>
+                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-4">
+                                            {misPendientesFormularCount > 0
+                                                ? `${misPendientesFormularCount} ${misPendientesFormularCount === 1 ? 'asignatura propia por formular' : 'asignaturas propias por formular o firmar'}`
+                                                : 'Todas tus asignaturas propias han sido formuladas y enviadas'}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFilterTab('mis_materias')}
+                                        className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                                    >
+                                        Ver Mis PEA ({misMateriasCount})
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Tarjeta Minimalista de Rezagados */}
                     {docentesRezagados.length > 0 && (
                         <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-3">

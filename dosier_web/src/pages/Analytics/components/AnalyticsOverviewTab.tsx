@@ -69,7 +69,7 @@ export const AnalyticsOverviewTab: React.FC<AnalyticsOverviewTabProps> = ({
         },
         {
             nivel: '2. Coordinación de carrera',
-            cargo: 'Revisión y aval',
+            cargo: 'Revisión y aprobación',
             completadas: conFirmaCoord,
             pct: totalPeas > 0 ? Math.round((conFirmaCoord / totalPeas) * 100) : 0,
             barColor: 'bg-purple-600'

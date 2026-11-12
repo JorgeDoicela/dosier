@@ -56,8 +56,8 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
         isVicerrector
             ? 'Aprobación definitiva y legalización microcurricular para vigencia académica e inspección CACES.'
             : isCoordAcad
-                ? 'Aval de consistencia metodológica, cuadre de horas y ponderaciones normativas conforme al modelo educativo.'
-                : 'Aval curricular favorable: contenidos mínimos, articulación con el perfil de egreso y pertinencia disciplinar aprobados.'
+                ? 'Aprobación de consistencia metodológica, cuadre de horas y ponderaciones normativas conforme al modelo educativo.'
+                : 'Aprobación curricular favorable: contenidos mínimos, articulación con el perfil de egreso y pertinencia disciplinar aprobados.'
     );
 
     // Cargar perfil de firma al abrir el modal
@@ -191,7 +191,7 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                         }`}
                     >
                         <FileCheck2 size={13} />
-                        <span>Emitir Aval Favorable</span>
+                        <span>Emitir Aprobación</span>
                     </button>
                     <button
                         type="button"
@@ -203,11 +203,11 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                         }`}
                     >
                         <RotateCcw size={13} />
-                        <span>Devolver al Docente</span>
+                        <span>{isCoordAcad || isVicerrector ? 'Devolver a Carrera' : 'Devolver al Docente'}</span>
                     </button>
                 </div>
 
-                {/* ── PESTAÑA 1: EMITIR AVAL INSTITUCIONAL ── */}
+                {/* ── PESTAÑA 1: EMITIR APROBACIÓN INSTITUCIONAL ── */}
                 {activeTab === 'avalar' && (
                     <div className="space-y-6 pt-3">
                         {loadingProfile ? (
@@ -272,10 +272,10 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                                 onClick={handleConfirmAval}
                                 disabled={submitting || loadingProfile || !sigProfile?.esConfigurado}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-[#0070f3] hover:bg-[#0060df] text-white rounded-lg text-xs font-semibold uppercase tracking-wider disabled:opacity-40 cursor-pointer shadow-sm active:scale-95 transition-all"
-                                title={!sigProfile?.esConfigurado ? "Debe configurar su firma digital para emitir el aval" : undefined}
+                                title={!sigProfile?.esConfigurado ? "Debe configurar su firma digital para emitir la aprobación" : undefined}
                             >
                                 {submitting ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
-                                Firmar y Avalar PEA
+                                Firmar y Aprobar PEA
                             </button>
                         </div>
                     </div>
@@ -333,7 +333,7 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
                                 className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider disabled:opacity-40 cursor-pointer shadow-sm active:scale-95 transition-all"
                             >
                                 {submitting ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
-                                Devolver al Docente
+                                {isCoordAcad || isVicerrector ? 'Devolver a Carrera' : 'Devolver al Docente'}
                             </button>
                         </div>
                     </div>

@@ -32,21 +32,46 @@ namespace dosier_api.Controllers
             _logger = logger;
         }
 
+        private int? ObtenerIdUsuarioAutenticado()
+        {
+            var raw = User.FindFirstValue("id_usuario") 
+                   ?? User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                   ?? User.FindFirstValue("sub");
+            if (int.TryParse(raw, out int id)) return id;
+            return null;
+        }
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var pea = await _peaService.GetByIdAsync(id);
-            if (pea == null) return NotFound($"No se encontró el PEA con id {id}");
-            return Ok(pea);
+            try
+            {
+                var idUsuario = ObtenerIdUsuarioAutenticado();
+                var pea = await _peaService.GetByIdAsync(id, idUsuario);
+                if (pea == null) return NotFound($"No se encontró el PEA con id {id}");
+                return Ok(pea);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { error = ex.Message });
+            }
         }
 
         [HttpGet("uuid/{uuid}")]
         [HttpGet("{uuid:guid}")]
         public async Task<IActionResult> GetByUuid(string uuid)
         {
-            var pea = await _peaService.GetByUuidAsync(uuid);
-            if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
-            return Ok(pea);
+            try
+            {
+                var idUsuario = ObtenerIdUsuarioAutenticado();
+                var pea = await _peaService.GetByUuidAsync(uuid, idUsuario);
+                if (pea == null) return NotFound($"No se encontró el PEA con UUID {uuid}");
+                return Ok(pea);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { error = ex.Message });
+            }
         }
 
         [HttpGet("buscar")]
@@ -486,6 +511,33 @@ namespace dosier_api.Controllers
             {
                 var draft = await _peaAiService.GenerateDraftAsync(uuid, idUserInt, req ?? new GeneratePeaDraftRequestDto(), ct);
                 return Ok(draft);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("uuid/{uuid}/ai/revisar")]
+        [HttpPost("{uuid}/ai/revisar")]
+        public async Task<IActionResult> AnalizarRevisionAi(
+            string uuid,
+            [FromBody] AnalyzePeaReviewRequestDto req,
+            CancellationToken ct)
+        {
+            var userId = User.FindFirstValue("id_usuario")
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub");
+            int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+
+            try
+            {
+                var analysis = await _peaAiService.AnalyzeForReviewAsync(uuid, idUserInt, req ?? new AnalyzePeaReviewRequestDto(), ct);
+                return Ok(analysis);
             }
             catch (KeyNotFoundException ex)
             {
