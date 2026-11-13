@@ -499,10 +499,10 @@ export const generatePeaSignaturesHtml = (block: DocumentBlock): string => {
       <!-- FECHA -->
       <tr>
         <td style="${borderCss} padding: 4px 6px; font-weight: bold; text-align: left;">FECHA</td>
-        <td style="${borderCss} padding: 4px 6px;">{{default fecha_elaborado ""}}</td>
-        <td style="${borderCss} padding: 4px 6px;">{{default fecha_revisado_carrera ""}}</td>
-        <td style="${borderCss} padding: 4px 6px;">{{default fecha_revisado_academico ""}}</td>
-        <td style="${borderCss} padding: 4px 6px;">{{default fecha_aprobado ""}}</td>
+        <td style="${borderCss} padding: 4px 6px;">{{default fecha_elaborado (default FechaElaborado "${c.fechaElaborado || ''}")}}</td>
+        <td style="${borderCss} padding: 4px 6px;">{{default fecha_revisado_carrera (default FechaRevisadoCarrera "${c.fechaRevisado1 || ''}")}}</td>
+        <td style="${borderCss} padding: 4px 6px;">{{default fecha_revisado_academico (default FechaRevisadoAcademico "${c.fechaRevisado2 || ''}")}}</td>
+        <td style="${borderCss} padding: 4px 6px;">{{default fecha_aprobado (default FechaAprobado "${c.fechaAprobado || ''}")}}</td>
       </tr>
     </tbody>
   </table>

@@ -1042,6 +1042,13 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                     SetIfEmpty("FechaRevisadoCarrera", "CoordinadorFecha");
                     SetIfEmpty("FechaRevisadoAcademico", "CoordinadorAcadFecha");
                     SetIfEmpty("FechaAprobado", "VicerrectorFecha");
+
+                    if (!dict.ContainsKey("FechaElaborado") || string.IsNullOrWhiteSpace(dict["FechaElaborado"]?.ToString()))
+                    {
+                        var hoyEcuador = DateTime.Now.ToString("dd/MM/yyyy");
+                        dict["FechaElaborado"] = hoyEcuador;
+                        dict["fecha_elaborado"] = hoyEcuador;
+                    }
                 }
             }
 

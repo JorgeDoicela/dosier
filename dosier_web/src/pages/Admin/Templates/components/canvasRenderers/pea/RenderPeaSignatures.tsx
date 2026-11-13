@@ -9,6 +9,14 @@ import { ShieldCheck, Pencil, Check } from 'lucide-react';
 import { resolveHeaderColor, getContrastFg } from '../../properties/SharedColorPicker';
 import type { PeaBlockProps } from './types';
 
+const getFechaActualFormat = (): string => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
     config,
     title,
@@ -211,7 +219,7 @@ export const RenderPeaSignaturesSection: React.FC<PeaBlockProps> = ({
                         <td className="p-1 border-r border-black">
                             <input
                                 type="text"
-                                value={c.fechaElaborado ?? ''}
+                                value={c.fechaElaborado ?? getFechaActualFormat()}
                                 onChange={e => updateField('fechaElaborado', e.target.value)}
                                 placeholder="DD/MM/AAAA"
                                 className="w-full text-center text-[8px] text-slate-600 bg-transparent border border-transparent hover:border-slate-300 focus:border-[#0070f3] rounded-xs py-0.5 outline-none font-mono"

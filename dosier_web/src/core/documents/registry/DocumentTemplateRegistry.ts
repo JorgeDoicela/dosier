@@ -462,7 +462,7 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                                     { '0': 'FIRMA', '1': '', '2': '', '3': '', '4': '' },
                                     { '0': 'NOMBRE', '1': '', '2': '', '3': '', '4': '' },
                                     { '0': 'CARGO', '1': 'Docente', '2': 'Coordinador de Carrera', '3': 'Coordinador Académico', '4': 'Vicerrectorado' },
-                                    { '0': 'FECHA', '1': '', '2': '', '3': '', '4': '' }
+                                    { '0': 'FECHA', '1': '{{fecha_elaborado}}', '2': '', '3': '', '4': '' }
                                 ]
                             }
                         }

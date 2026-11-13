@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
     X, ChevronLeft, ChevronRight, Video, Image as ImageIcon,
     Trash2, Monitor, Cpu, Wifi, Globe, Terminal, Copy, Check,
-    Layers
+    Layers, ImageOff, VideoOff, ExternalLink, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../../../api/AuthContext';
 import { 
@@ -71,6 +71,9 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const [copiedDiag, setCopiedDiag] = useState<boolean>(false);
     const [showFullUa, setShowFullUa] = useState<boolean>(false);
+    const [mediaLoaded, setMediaLoaded] = useState<boolean>(false);
+    const [mediaError, setMediaError] = useState<boolean>(false);
+    const [retryNonce, setRetryNonce] = useState<number>(0);
     const dragStartX = useRef<number | null>(null);
 
     useEffect(() => {
@@ -79,7 +82,15 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
         setIsDragging(false);
         setCopiedDiag(false);
         setShowFullUa(false);
+        setMediaLoaded(false);
+        setMediaError(false);
+        setRetryNonce(0);
     }, [initialMediaIndex, report]);
+
+    useEffect(() => {
+        setMediaLoaded(false);
+        setMediaError(false);
+    }, [activeMediaIndex]);
 
     useEffect(() => {
         if (!report) return;
@@ -119,7 +130,10 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
     const activeFiles = report.archivos || [];
     const currentMedia: FeedbackAdjunto | null = activeFiles.length > 0 ? activeFiles[activeMediaIndex] || activeFiles[0] : null;
     const isCurrentVideo = Boolean(currentMedia && (currentMedia.tipo_mime || currentMedia.tipoMime || '').startsWith('video/'));
-    const currentMediaUrl = currentMedia ? getFeedbackMediaUrl(currentMedia.url) : '';
+    const baseMediaUrl = currentMedia ? getFeedbackMediaUrl(currentMedia.url) : '';
+    const currentMediaUrl = baseMediaUrl && retryNonce > 0
+        ? `${baseMediaUrl}${baseMediaUrl.includes('?') ? '&' : '?'}t=${retryNonce}`
+        : baseMediaUrl;
 
     const meta = parseMetadata(report.metadata_navegador || report.metadataNavegador);
 
@@ -209,6 +223,18 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                        {currentMediaUrl && (
+                            <a
+                                href={currentMediaUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-2.5 py-1 text-[11px] font-medium text-text-dim hover:text-text-main hover:bg-zinc-200 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg flex items-center gap-1.5 transition-colors"
+                                title="Abrir archivo original en una nueva pestaña"
+                            >
+                                <ExternalLink size={12} />
+                                <span>Abrir</span>
+                            </a>
+                        )}
                         {isDosierAdmin && onDeleteClick && (
                             <button
                                 type="button"
@@ -240,24 +266,66 @@ export const FeedbackDetailDrawer: React.FC<FeedbackDetailDrawerProps> = ({
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
                             onPointerCancel={handlePointerCancel}
-                            className="relative w-full aspect-video rounded-xl bg-zinc-900 overflow-hidden border border-zinc-200 dark:border-zinc-800 flex items-center justify-center touch-none select-none"
+                            className={`relative rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex items-center justify-center touch-none select-none ${
+                                isCurrentVideo
+                                    ? 'w-full aspect-video bg-zinc-950'
+                                    : mediaLoaded && !mediaError
+                                        ? 'w-fit max-w-full mx-auto bg-white dark:bg-zinc-950'
+                                        : 'w-full min-h-[180px] bg-zinc-100 dark:bg-zinc-900'
+                            }`}
                             style={{
                                 transform: isDragging ? `translateX(${dragOffset}px)` : 'translateX(0)',
                                 transition: isDragging ? 'none' : 'transform 0.2s ease-out'
                             }}
                         >
-                            {isCurrentVideo ? (
+                            {!mediaLoaded && !mediaError && currentMediaUrl && (
+                                <div className={`absolute inset-0 flex items-center justify-center ${isCurrentVideo ? 'bg-zinc-950' : 'bg-zinc-100 dark:bg-zinc-900'}`}>
+                                    <div className="w-6 h-6 rounded-full border-2 border-zinc-300 dark:border-zinc-700 border-t-[#0070f3] animate-spin" />
+                                </div>
+                            )}
+
+                            {mediaError || !currentMediaUrl ? (
+                                <div className="flex flex-col items-center justify-center gap-2.5 p-6 text-center text-slate-500 dark:text-zinc-400">
+                                    {isCurrentVideo ? <VideoOff size={28} /> : <ImageOff size={28} />}
+                                    <div className="space-y-0.5">
+                                        <p className={`text-[12.5px] font-medium ${isCurrentVideo ? 'text-zinc-200' : 'text-slate-800 dark:text-zinc-200'}`}>
+                                            No se pudo cargar el archivo adjunto
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                            El archivo no está disponible en el almacenamiento del servidor.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setMediaError(false);
+                                            setMediaLoaded(false);
+                                            setRetryNonce(n => n + 1);
+                                        }}
+                                        className="mt-1 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-700 text-[11px] font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                                    >
+                                        <RefreshCw size={12} />
+                                        <span>Reintentar</span>
+                                    </button>
+                                </div>
+                            ) : isCurrentVideo ? (
                                 <video 
+                                    key={currentMediaUrl}
                                     src={currentMediaUrl} 
                                     controls 
                                     autoPlay 
-                                    className="max-h-full max-w-full object-contain"
+                                    className={`max-h-full max-w-full object-contain transition-opacity duration-200 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    onLoadedData={() => setMediaLoaded(true)}
+                                    onError={() => setMediaError(true)}
                                 />
                             ) : (
                                 <img 
+                                    key={currentMediaUrl}
                                     src={currentMediaUrl} 
-                                    alt={currentMedia.nombre_original || 'Captura'} 
-                                    className="max-h-full max-w-full object-contain pointer-events-none"
+                                    alt={currentMedia.nombre_original || currentMedia.nombreOriginal || 'Captura'} 
+                                    className={`block max-h-[65vh] max-w-full w-auto h-auto object-contain pointer-events-none transition-opacity duration-200 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    onLoad={() => setMediaLoaded(true)}
+                                    onError={() => setMediaError(true)}
                                 />
                             )}
 

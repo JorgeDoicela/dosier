@@ -1,4 +1,4 @@
-import api from '../api/axios_config';
+import api, { getApiBaseUrl, getApiRootUrl } from '../api/axios_config';
 
 export interface SupportConfig {
     whats_app_number?: string;
@@ -134,15 +134,37 @@ export const sendFeedbackMessage = async (
 };
 
 /**
- * Resuelve la URL correcta para previsualizar capturas o videos adjuntos en el navegador.
+ * Resuelve la URL dinámica para previsualizar capturas o videos adjuntos
+ * tanto en desarrollo local (proxy Vite / VITE_API_BASE_URL) como en producción (IIS /apiDosier/api).
  */
 export const getFeedbackMediaUrl = (url?: string): string => {
     if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
-        return url;
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+
+    if (
+        trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('blob:') ||
+        trimmed.startsWith('data:')
+    ) {
+        return trimmed;
     }
-    if (url.startsWith('/uploads/feedback/')) {
-        return url.replace('/uploads/feedback/', '/api/feedback/attachments/');
+
+    const apiBase = getApiBaseUrl().replace(/\/+$/, '');
+    const apiRoot = getApiRootUrl().replace(/\/+$/, '');
+
+    if (trimmed.startsWith('/uploads/feedback/')) {
+        return `${apiBase}/feedback/attachments/${trimmed.slice('/uploads/feedback/'.length)}`;
     }
-    return url;
+    if (trimmed.startsWith('/api/')) {
+        return `${apiBase}${trimmed.slice(4)}`;
+    }
+    if (trimmed.startsWith('api/')) {
+        return `${apiBase}/${trimmed.slice(4)}`;
+    }
+    if (trimmed.startsWith('/')) {
+        return apiRoot ? `${apiRoot}${trimmed}` : trimmed;
+    }
+    return `${apiBase}/${trimmed}`;
 };

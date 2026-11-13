@@ -2,13 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
     MessageSquare, RefreshCw, Clock, ChevronDown, 
-    Play, Eye, Trash2, FilterX, ArrowLeft, ChevronRight
+    Eye, Trash2, FilterX, ArrowLeft, ChevronRight
 } from 'lucide-react';
 import { 
     getAllFeedback, 
     updateFeedbackStatus, 
     deleteFeedback, 
-    getFeedbackMediaUrl, 
     type FeedbackReporte 
 } from '../../../services/feedbackService';
 import { PageHeader } from '../../../components/Common/PageHeader';
@@ -18,6 +17,7 @@ import { getTipoBadge, ESTADO_ROW_OPTIONS } from '../../Feedback/components/Feed
 import { FeedbackFilterBar } from '../../Feedback/components/FeedbackFilterBar';
 import { FeedbackDetailDrawer } from '../../Feedback/components/FeedbackDetailDrawer';
 import { FeedbackDeleteDrawer } from '../../Feedback/components/FeedbackDeleteDrawer';
+import { FeedbackMediaThumbnails } from '../../Feedback/components/FeedbackMediaThumbnails';
 import { useFeedbackFilters } from '../../Feedback/hooks/useFeedbackFilters';
 import { useFeedbackUnreadMessages } from '../../Feedback/hooks/useFeedbackUnreadMessages';
 
@@ -280,51 +280,11 @@ export const AdminFeedbackPage: React.FC = () => {
                                             </p>
                                         </div>
 
-                                        {r.archivos && r.archivos.length > 0 && (
-                                            <div className="flex items-center gap-2.5 shrink-0 self-start flex-wrap md:flex-nowrap">
-                                                {r.archivos.map((adj, idx) => {
-                                                    const isVideo = (adj.tipo_mime || adj.tipoMime || '').startsWith('video/');
-                                                    const mediaUrl = getFeedbackMediaUrl(adj.url);
-                                                    const fileName = adj.nombre_original || adj.nombreOriginal || 'Adjunto';
-
-                                                    return (
-                                                        <button
-                                                            key={idx}
-                                                            type="button"
-                                                            onClick={() => handleOpenDrawer(r, idx)}
-                                                            className="h-20 sm:h-24 rounded-lg overflow-hidden border border-border-thin hover:border-text-main/70 transition-colors group relative cursor-pointer inline-flex items-center justify-center p-0 bg-transparent shrink-0"
-                                                            title={fileName}
-                                                        >
-                                                            {isVideo ? (
-                                                                <div className="relative h-full flex items-center justify-center">
-                                                                    <video 
-                                                                        src={mediaUrl} 
-                                                                        className="h-full w-auto max-w-[160px] object-contain block" 
-                                                                        muted 
-                                                                        preload="metadata"
-                                                                    />
-                                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
-                                                                        <div className="w-6 h-6 rounded-full bg-surface/90 border border-border-thin flex items-center justify-center text-text-main shadow-sm">
-                                                                            <Play size={10} className="ml-0.5" />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/70 text-white text-[8px] font-mono">
-                                                                        VIDEO
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <img 
-                                                                    src={mediaUrl} 
-                                                                    alt={fileName} 
-                                                                    className="h-full w-auto max-w-[160px] object-contain block" 
-                                                                    loading="lazy"
-                                                                />
-                                                            )}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                        <FeedbackMediaThumbnails
+                                            archivos={r.archivos}
+                                            onSelect={(idx) => handleOpenDrawer(r, idx)}
+                                            className="flex items-center gap-2.5 shrink-0 self-start flex-wrap md:flex-nowrap"
+                                        />
                                     </div>
 
                                     <div className="flex flex-wrap items-center justify-between gap-3 pt-3 text-[11px] text-text-dim border-t border-border-thin">

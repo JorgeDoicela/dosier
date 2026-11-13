@@ -48,7 +48,7 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-text-dim">
                 Firmas del Documento ({signatures.length})
             </h4>
-            <div className="flex flex-col divide-y divide-border-thin/40">
+            <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 divide-y divide-slate-100 dark:divide-zinc-800 overflow-hidden">
                 {signatures.map((sig: any) => {
                     const idFirma = sig.idFirma ?? sig.id_firma;
                     const firmanteNombre = sig.firmanteNombre ?? sig.firmante_nombre ?? sig.firmanteId ?? sig.firmante_id ?? 'Firmante';
@@ -61,14 +61,13 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
                     return (
                         <div 
                             key={idFirma || firmaCode} 
-                            className="py-3.5 first:pt-1 last:pb-1 flex flex-col gap-2"
+                            className="p-4 flex flex-col gap-2.5"
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-xs sm:text-sm font-semibold text-text-main">
                                     {firmanteNombre}
                                 </span>
-                                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${estado === 2 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${estado === 2 ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                                <span className={`text-xs font-semibold ${estado === 2 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                     {estado === 2 ? 'Revocada' : 'Firma Válida'}
                                 </span>
                             </div>

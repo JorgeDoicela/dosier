@@ -499,6 +499,13 @@ export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
             generatedHorasTA: Number(vs?.generated_horas_ta ?? vs?.generatedHorasTA ?? 0),
             generatedTotalHoras: Number(vs?.generated_total_horas ?? vs?.generatedTotalHoras ?? 0),
             isHoursExactMatch: Boolean(vs?.is_hours_exact_match ?? vs?.isHoursExactMatch),
+            isBloomVerbValid: vs?.is_bloom_verb_valid ?? vs?.isBloomVerbValid ?? true,
+            bloomVerbDetected: vs?.bloom_verb_detected ?? vs?.bloomVerbDetected ?? undefined,
+            arePracticesCompliant: vs?.are_practices_compliant ?? vs?.arePracticesCompliant ?? true,
+            isBibliographyCompliant: vs?.is_bibliography_compliant ?? vs?.isBibliographyCompliant ?? true,
+            complianceNotes: Array.isArray(vs?.compliance_notes ?? vs?.complianceNotes)
+                ? (vs?.compliance_notes ?? vs?.complianceNotes)
+                : [],
             generatedSections: Array.isArray(vs?.generated_sections ?? vs?.generatedSections)
                 ? (vs?.generated_sections ?? vs?.generatedSections)
                 : []
@@ -517,6 +524,7 @@ export const savePeaAiConfig = async (req: SavePeaAiConfigRequest): Promise<PeaA
         model: req.model,
         base_url: req.baseUrl,
         api_key: req.apiKey,
+        reasoning_effort: req.reasoningEffort,
         scope: req.scope ?? 'user'
     });
     return normalizeConfigStatus(res.data);
@@ -532,12 +540,43 @@ export const generatePeaAiDraft = async (
         custom_instructions: req.customInstructions,
         provider: req.provider,
         model: req.model,
+        reasoning_effort: req.reasoningEffort,
         base_url_override: req.baseUrlOverride,
         api_key_override: req.apiKeyOverride,
         current_horas_cd: req.currentHorasCD,
         current_horas_ape: req.currentHorasAPE,
         current_horas_ta: req.currentHorasTA,
         current_total_horas: req.currentTotalHoras,
+        current_objetivo: req.currentObjetivo,
+        current_prerrequisitos: req.currentPrerrequisitos?.map(p => ({
+            asignatura: p.asignatura,
+            observacion: p.observacion ?? ''
+        })),
+        current_rda_carrera: req.currentRdaCarrera,
+        current_resultados_aprendizaje: req.currentResultadosAprendizaje,
+        current_metodologia_ensenanza: req.currentMetodologiaEnsenanza,
+        current_recursos_didacticos: req.currentRecursosDidacticos,
+        current_actividades_practicas: req.currentActividadesPracticas?.map(p => ({
+            unidad: p.unidad ?? 1,
+            nombre: p.nombre,
+            horas: p.horas ?? 2,
+            escenario: p.escenario ?? '',
+            producto: p.producto ?? ''
+        })),
+        current_evaluaciones: req.currentEvaluaciones?.map(e => ({
+            nota: e.nota,
+            tipo: e.tipo,
+            calificacion: e.calificacion
+        })),
+        current_bibliografias: req.currentBibliografias?.map(b => ({
+            tipo_bibliografia: b.tipoBibliografia ?? b.tipo_bibliografia ?? 'Basica',
+            autor: b.autor ?? '',
+            titulo_libro: b.tituloLibro ?? b.titulo_libro ?? '',
+            editorial_ciudad: b.editorialCiudad ?? b.editorial_ciudad ?? '',
+            cita_completa_apa: b.citaCompletaApa ?? b.cita_completa_apa ?? ''
+        })),
+        current_bibliografia_basica: req.currentBibliografiaBasica,
+        current_bibliografia_consulta: req.currentBibliografiaConsulta,
         conversation_history: req.conversationHistory?.map(h => ({
             role: h.role,
             content: h.content

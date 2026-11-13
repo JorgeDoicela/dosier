@@ -323,6 +323,10 @@ namespace dosier_infrastructure.Curriculum
                 entity.MetodologiaEnsenanza = dto.MetodologiaEnsenanza;
                 entity.RecursosDidacticos = dto.RecursosDidacticos;
                 entity.EvaluacionAprendizaje = dto.EvaluacionAprendizaje;
+                if (dto.FechaElaborado.HasValue)
+                {
+                    entity.FechaElaborado = dto.FechaElaborado.Value;
+                }
                 entity.FechaModificacion = DateTime.UtcNow;
 
                 _context.DocPeaUnidades.RemoveRange(entity.Unidades);
@@ -343,6 +347,7 @@ namespace dosier_infrastructure.Curriculum
                     IdPeriodo = dto.IdPeriodo,
                     IdAsignacion = dto.IdAsignacion,
                     IdDocenteElaborador = dto.IdDocenteElaborador,
+                    FechaElaborado = dto.FechaElaborado ?? DateTime.UtcNow,
                     Modalidad = dto.Modalidad,
                     UnidadOrganizacion = dto.UnidadOrganizacion,
                     SemestreNivel = dto.SemestreNivel,

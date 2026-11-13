@@ -34,6 +34,8 @@ export interface PeaChatMessage {
     draft?: PeaStructuredDraft;
     applied?: boolean;
     appliedSections?: string[];
+    isLoading?: boolean;
+    isError?: boolean;
 }
 
 export interface PeaAiChatSidebarProps {
@@ -132,11 +134,22 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
             const raw = localStorage.getItem(storageKey);
             if (raw) {
                 const parsed = JSON.parse(raw);
+                const sanitizeLoadedMessages = (list: any[]): PeaChatMessage[] =>
+                    list.map((m: any) =>
+                        m?.isLoading
+                            ? {
+                                  ...m,
+                                  isLoading: false,
+                                  isError: true,
+                                  text: 'La generación fue interrumpida al recargar la página.'
+                              }
+                            : m
+                    );
                 if (Array.isArray(parsed)) {
-                    setMessages(parsed);
+                    setMessages(sanitizeLoadedMessages(parsed));
                 } else if (parsed && typeof parsed === 'object') {
                     if (Array.isArray(parsed.messages)) {
-                        setMessages(parsed.messages);
+                        setMessages(sanitizeLoadedMessages(parsed.messages));
                     }
                     if (parsed.appliedSectionsByMsg && typeof parsed.appliedSectionsByMsg === 'object') {
                         setAppliedSectionsByMsg(parsed.appliedSectionsByMsg);
@@ -202,8 +215,11 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
     };
 
     const sectionButtonLabel = useMemo(() => {
-        if (isAllSelected || selectedSections.length === 0) {
+        if (isAllSelected) {
             return 'Todo el PEA (Secciones 2 — 10)';
+        }
+        if (selectedSections.length === 0) {
+            return 'Todo el PEA (por defecto)';
         }
         if (selectedSections.length === 1) {
             const item = PEA_SECTIONS_CATALOG.find(s => s.id === selectedSections[0]);
@@ -452,7 +468,9 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
         setConfirmOverwriteKey(null);
 
         const targetSec = draft.validationSummary?.targetSection;
-        const selectedSections = targetSec && targetSec !== 'all' ? [targetSec] : undefined;
+        const selectedSections = targetSec && targetSec !== 'all'
+            ? targetSec.split(',').map(s => s.trim()).filter(Boolean)
+            : undefined;
 
         const patch = convertDraftToEditorFields(draft, selectedSections);
         onApplyStructuredDraft(patch);
@@ -561,7 +579,8 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
             id: assistantMsgId,
             sender: 'assistant',
             text: `Formulando propuesta curricular para ${targetLabel}...`,
-            timestamp: new Date()
+            timestamp: new Date(),
+            isLoading: true
         };
 
         setMessages(prev => [...prev, userMsg, assistantMsg]);
@@ -570,12 +589,30 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
         // 3. Ejecutar generación a través del handler principal enviando historial previo
         try {
             if (onTriggerAiGeneration) {
+                const summarizeAssistantTurn = (m: PeaChatMessage): string => {
+                    if (!m.draft) return m.text;
+                    const parts: string[] = [m.text];
+                    if (m.draft.objetivoAsignatura) {
+                        parts.push(`Objetivo propuesto: ${cleanHtmlText(m.draft.objetivoAsignatura).slice(0, 300)}`);
+                    }
+                    if (m.draft.unidades?.length > 0) {
+                        const unitsSum = m.draft.unidades
+                            .map(u => `U${u.num} "${u.titulo}" (${u.horasCD}CD/${u.horasAPE}APE/${u.horasTA}TA)`)
+                            .join('; ');
+                        parts.push(`Unidades propuestas: ${unitsSum}`);
+                    }
+                    if (m.draft.actividadesPracticas?.length > 0) {
+                        parts.push(`Prácticas APE: ${m.draft.actividadesPracticas.map(p => p.nombre).slice(0, 4).join('; ')}`);
+                    }
+                    return parts.join('\n');
+                };
+
                 const historyToSend: Array<{ role: 'user' | 'assistant'; content: string }> = messages
-                    .filter(m => m.text && !m.text.startsWith('Error en la generación'))
+                    .filter(m => m.text && !m.isError && !m.isLoading && !m.text.startsWith('Error en la generación'))
                     .slice(-6)
                     .map(m => ({
                         role: m.sender === 'user' ? 'user' : 'assistant',
-                        content: m.text
+                        content: m.sender === 'user' ? m.text : summarizeAssistantTurn(m)
                     }));
 
                 const res = await onTriggerAiGeneration(
@@ -596,7 +633,9 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                                 ...m,
                                 text: resultText,
                                 draft,
-                                applied: false
+                                applied: false,
+                                isLoading: false,
+                                isError: false
                             };
                         }
                         return m;
@@ -606,7 +645,9 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                         if (m.id === assistantMsgId) {
                             return {
                                 ...m,
-                                text: 'Propuesta generada y lista en el editor.'
+                                text: 'Propuesta generada y lista en el editor.',
+                                isLoading: false,
+                                isError: false
                             };
                         }
                         return m;
@@ -614,18 +655,23 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                 }
             }
         } catch (err: any) {
-            const errorMsg = err?.message || 'Ocurrió un error al procesar la propuesta curricular con el proveedor de IA.';
+            const backendMsg = err?.response?.data?.message || err?.response?.data;
+            const errorMsg = (typeof backendMsg === 'string' && backendMsg.trim())
+                ? backendMsg.trim()
+                : (err?.message || 'Ocurrió un error al procesar la propuesta curricular con el proveedor de IA.');
             setMessages(prev => prev.map(m => {
                 if (m.id === assistantMsgId) {
                     return {
                         ...m,
-                        text: `Error en la generación: ${errorMsg}`
+                        text: `Error en la generación: ${errorMsg}`,
+                        isLoading: false,
+                        isError: true
                     };
                 }
                 return m;
             }));
         }
-    }, [inputPrompt, isAllSelected, selectedSections, selectedModel, isGeneratingAi, aiConfigStatus, onTriggerAiGeneration, onOpenAiConfigModal]);
+    }, [inputPrompt, isAllSelected, selectedSections, selectedModel, isGeneratingAi, aiConfigStatus, messages, onTriggerAiGeneration, onOpenAiConfigModal]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter') {
@@ -797,11 +843,16 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                                             : 'bg-surface border border-border-thin text-text-main max-w-full w-full space-y-3'
                                     }`}
                                 >
-                                    {/* Estado en proceso o Texto del Asistente */}
-                                    {!isUser && !msg.draft ? (
+                                    {/* Estado en proceso, Error o Texto del Asistente */}
+                                    {!isUser && msg.isLoading && !msg.draft ? (
                                         <div className="flex items-center gap-2 text-text-dim py-1 font-medium">
                                             <Loader2 size={13} className="animate-spin text-[#0070f3]" />
                                             <span>{msg.text}</span>
+                                        </div>
+                                    ) : !isUser && (msg.isError || (!msg.draft && msg.text.startsWith('Error en la generación'))) ? (
+                                        <div className="flex items-start gap-2 text-red-600 dark:text-red-400 py-0.5 font-medium">
+                                            <AlertCircle size={13} className="shrink-0 mt-0.5" />
+                                            <p className="whitespace-pre-wrap">{msg.text}</p>
                                         </div>
                                     ) : (
                                         <p className="whitespace-pre-wrap">{msg.text}</p>

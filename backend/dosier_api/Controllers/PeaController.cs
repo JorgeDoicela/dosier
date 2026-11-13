@@ -506,6 +506,10 @@ namespace dosier_api.Controllers
                 ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? User.FindFirstValue("sub");
             int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+            if (idUserInt <= 0)
+            {
+                return Unauthorized(new { message = "Usuario no identificado." });
+            }
 
             try
             {
@@ -515,6 +519,14 @@ namespace dosier_api.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+            catch (TimeoutException ex)
+            {
+                return StatusCode(504, new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -533,6 +545,10 @@ namespace dosier_api.Controllers
                 ?? User.FindFirstValue(ClaimTypes.NameIdentifier)
                 ?? User.FindFirstValue("sub");
             int idUserInt = int.TryParse(userId, out int u) ? u : 0;
+            if (idUserInt <= 0)
+            {
+                return Unauthorized(new { message = "Usuario no identificado." });
+            }
 
             try
             {
@@ -542,6 +558,14 @@ namespace dosier_api.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+            catch (TimeoutException ex)
+            {
+                return StatusCode(504, new { message = ex.Message });
             }
             catch (Exception ex)
             {

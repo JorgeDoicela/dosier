@@ -25,12 +25,16 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
         onUpdateConfig(block.id, 'signatureBoxHeight', 95);
         onUpdateConfig(block.id, 'cargoElaborado', 'Docente');
         onUpdateConfig(block.id, 'nombreElaborado', '{{docente_elaborador}}');
+        onUpdateConfig(block.id, 'fechaElaborado', '{{fecha_elaborado}}');
         onUpdateConfig(block.id, 'cargoRevisado1', 'Coordinador de Carrera');
         onUpdateConfig(block.id, 'nombreRevisado1', '{{coordinador_carrera}}');
+        onUpdateConfig(block.id, 'fechaRevisado1', '{{fecha_revisado_carrera}}');
         onUpdateConfig(block.id, 'cargoRevisado2', 'Coordinador Académico');
         onUpdateConfig(block.id, 'nombreRevisado2', '{{coordinador_academico}}');
+        onUpdateConfig(block.id, 'fechaRevisado2', '{{fecha_revisado_academico}}');
         onUpdateConfig(block.id, 'cargoAprobado', 'Vicerrectorado');
         onUpdateConfig(block.id, 'nombreAprobado', '{{vicerrector}}');
+        onUpdateConfig(block.id, 'fechaAprobado', '{{fecha_aprobado}}');
     };
 
     return (
@@ -126,7 +130,7 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                 </span>
 
                 {/* 1. ELABORADO */}
-                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-1.5">
+                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-2">
                     <span className="text-[10px] font-bold text-text-main block">1. ELABORADO</span>
                     <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -148,10 +152,20 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                             />
                         </div>
                     </div>
+                    <div>
+                        <label className="text-[8.5px] text-text-dim block">Fecha por Defecto</label>
+                        <input
+                            type="text"
+                            placeholder="DD/MM/AAAA o {{fecha_elaborado}}"
+                            value={config.fechaElaborado || ''}
+                            onChange={(e) => onUpdateConfig(block.id, 'fechaElaborado', e.target.value)}
+                            className="w-full bg-surface-hover/30 border border-border-thin rounded px-1.5 py-0.5 text-[9.5px] font-mono text-text-main"
+                        />
+                    </div>
                 </div>
 
                 {/* 2. REVISADO - COORDINADOR DE CARRERA */}
-                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-1.5">
+                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-2">
                     <span className="text-[10px] font-bold text-text-main block">2. REVISADO (Carrera)</span>
                     <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -173,10 +187,20 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                             />
                         </div>
                     </div>
+                    <div>
+                        <label className="text-[8.5px] text-text-dim block">Fecha por Defecto</label>
+                        <input
+                            type="text"
+                            placeholder="DD/MM/AAAA o {{fecha_revisado_carrera}}"
+                            value={config.fechaRevisado1 || ''}
+                            onChange={(e) => onUpdateConfig(block.id, 'fechaRevisado1', e.target.value)}
+                            className="w-full bg-surface-hover/30 border border-border-thin rounded px-1.5 py-0.5 text-[9.5px] font-mono text-text-main"
+                        />
+                    </div>
                 </div>
 
                 {/* 3. REVISADO - COORDINACIÓN ACADÉMICA */}
-                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-1.5">
+                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-2">
                     <span className="text-[10px] font-bold text-text-main block">3. REVISADO (Académico)</span>
                     <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -198,10 +222,20 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                             />
                         </div>
                     </div>
+                    <div>
+                        <label className="text-[8.5px] text-text-dim block">Fecha por Defecto</label>
+                        <input
+                            type="text"
+                            placeholder="DD/MM/AAAA o {{fecha_revisado_academico}}"
+                            value={config.fechaRevisado2 || ''}
+                            onChange={(e) => onUpdateConfig(block.id, 'fechaRevisado2', e.target.value)}
+                            className="w-full bg-surface-hover/30 border border-border-thin rounded px-1.5 py-0.5 text-[9.5px] font-mono text-text-main"
+                        />
+                    </div>
                 </div>
 
                 {/* 4. APROBADO - VICERRECTORADO */}
-                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-1.5">
+                <div className="p-2.5 rounded-lg border border-border-thin bg-surface space-y-2">
                     <span className="text-[10px] font-bold text-text-main block">4. APROBADO</span>
                     <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -222,6 +256,16 @@ export const PeaSignaturesProperties: React.FC<PeaSignaturesPropertiesProps> = (
                                 className="w-full bg-surface-hover/30 border border-border-thin rounded px-1.5 py-0.5 text-[9.5px] font-mono text-text-main"
                             />
                         </div>
+                    </div>
+                    <div>
+                        <label className="text-[8.5px] text-text-dim block">Fecha por Defecto</label>
+                        <input
+                            type="text"
+                            placeholder="DD/MM/AAAA o {{fecha_aprobado}}"
+                            value={config.fechaAprobado || ''}
+                            onChange={(e) => onUpdateConfig(block.id, 'fechaAprobado', e.target.value)}
+                            className="w-full bg-surface-hover/30 border border-border-thin rounded px-1.5 py-0.5 text-[9.5px] font-mono text-text-main"
+                        />
                     </div>
                 </div>
             </div>

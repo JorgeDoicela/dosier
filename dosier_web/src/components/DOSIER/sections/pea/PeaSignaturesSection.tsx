@@ -14,6 +14,14 @@ interface PeaSignaturesSectionProps {
     canSign?: boolean;
 }
 
+const getFechaActualFormat = (): string => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
 export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
     formData,
     cowork,
@@ -29,27 +37,36 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         rolKey: string;
         etiqueta: string;
         cargo: string;
-        nombreField: string;
+        targetField: string;
+        tipo: 'nombre' | 'fecha';
     } | null>(null);
 
-    const handleRequestUnlock = (rolKey: string, etiqueta: string, cargo: string, nombreField: string) => {
+    const handleRequestUnlock = (
+        rolKey: string,
+        etiqueta: string,
+        cargo: string,
+        targetField: string,
+        tipo: 'nombre' | 'fecha' = 'nombre'
+    ) => {
         if (readOnly) return;
         setConfirmModal({
             open: true,
             rolKey,
             etiqueta,
             cargo,
-            nombreField
+            targetField,
+            tipo
         });
     };
 
     const handleConfirmUnlock = () => {
         if (!confirmModal) return;
-        const { rolKey, nombreField } = confirmModal;
-        setUnlockedFields(prev => ({ ...prev, [rolKey]: true }));
+        const { rolKey, targetField, tipo } = confirmModal;
+        const fieldKey = tipo === 'fecha' ? `${rolKey}_fecha` : rolKey;
+        setUnlockedFields(prev => ({ ...prev, [fieldKey]: true }));
         setConfirmModal(null);
         setTimeout(() => {
-            const input = document.querySelector<HTMLInputElement>(`input[name="Firmas_${nombreField}"]`);
+            const input = document.querySelector<HTMLInputElement>(`input[name="Firmas_${targetField}"]`);
             if (input) {
                 input.focus();
                 input.select();
@@ -57,8 +74,8 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         }, 50);
     };
 
-    const handleLockField = (rolKey: string) => {
-        setUnlockedFields(prev => ({ ...prev, [rolKey]: false }));
+    const handleLockField = (key: string) => {
+        setUnlockedFields(prev => ({ ...prev, [key]: false }));
     };
 
     // Sincronización continua de autoridades según datos oficiales de gobernanza institucional
@@ -107,17 +124,44 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
             const docNombre = fActual.DocenteNombre || formData?.DocenteElaborador || formData?.docente || '';
 
+            // Resolución dinámica de fecha de elaboración (por defecto hoy en formato DD/MM/AAAA)
+            const fechaActual = getFechaActualFormat();
+            let docFecha = fActual.DocenteFecha || fActual.docente_fecha;
+            if (!docFecha || String(docFecha).trim() === '') {
+                if (formData?.FechaElaborado || formData?.fecha_elaborado) {
+                    const raw = String(formData?.FechaElaborado || formData?.fecha_elaborado);
+                    if (raw.includes('T') || raw.includes('-')) {
+                        const d = new Date(raw);
+                        if (!isNaN(d.getTime())) {
+                            const day = String(d.getDate()).padStart(2, '0');
+                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                            docFecha = `${day}/${month}/${d.getFullYear()}`;
+                        } else {
+                            docFecha = fechaActual;
+                        }
+                    } else {
+                        docFecha = raw;
+                    }
+                } else {
+                    docFecha = fechaActual;
+                }
+            }
+
             // 3. Regla de inmutabilidad jurídica: Las firmas ya emitidas jamás se sobreescriben; las no firmadas se actualizan a la autoridad vigente
             const firmasActualizadas = {
                 ...fActual,
                 DocenteNombre: isDocenteFirmado ? fActual.DocenteNombre : (fActual.DocenteNombre || docNombre),
                 DocenteCargo: fActual.DocenteCargo || 'Docente',
+                DocenteFecha: isDocenteFirmado ? (fActual.DocenteFecha || docFecha) : docFecha,
                 CoordinadorNombre: isCoordFirmado ? fActual.CoordinadorNombre : (coordCarreraNombre || fActual.CoordinadorNombre || ''),
                 CoordinadorCargo: fActual.CoordinadorCargo || 'Coordinador de Carrera',
+                CoordinadorFecha: fActual.CoordinadorFecha || '',
                 CoordinadorAcadNombre: isCoordAcadFirmado ? fActual.CoordinadorAcadNombre : (coordAcadNombre || fActual.CoordinadorAcadNombre || ''),
                 CoordinadorAcadCargo: fActual.CoordinadorAcadCargo || 'Coordinador Académico',
+                CoordinadorAcadFecha: fActual.CoordinadorAcadFecha || '',
                 VicerrectorNombre: isVicerrectorFirmado ? fActual.VicerrectorNombre : (vicerrectorNombre || fActual.VicerrectorNombre || ''),
-                VicerrectorCargo: fActual.VicerrectorCargo || 'Vicerrectorado'
+                VicerrectorCargo: fActual.VicerrectorCargo || 'Vicerrectorado',
+                VicerrectorFecha: fActual.VicerrectorFecha || ''
             };
 
             // 4. Sembrado reactivo directo en Yjs para sincronización instantánea en CoWorkField
@@ -125,9 +169,13 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                 cowork.ydoc.transact(() => {
                     const pairs: [string, string, boolean][] = [
                         ['Firmas_DocenteNombre', firmasActualizadas.DocenteNombre, isDocenteFirmado],
+                        ['Firmas_DocenteFecha', firmasActualizadas.DocenteFecha, isDocenteFirmado],
                         ['Firmas_CoordinadorNombre', firmasActualizadas.CoordinadorNombre, isCoordFirmado],
+                        ['Firmas_CoordinadorFecha', firmasActualizadas.CoordinadorFecha, isCoordFirmado],
                         ['Firmas_CoordinadorAcadNombre', firmasActualizadas.CoordinadorAcadNombre, isCoordAcadFirmado],
-                        ['Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre, isVicerrectorFirmado]
+                        ['Firmas_CoordinadorAcadFecha', firmasActualizadas.CoordinadorAcadFecha, isCoordAcadFirmado],
+                        ['Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre, isVicerrectorFirmado],
+                        ['Firmas_VicerrectorFecha', firmasActualizadas.VicerrectorFecha, isVicerrectorFirmado]
                     ];
                     for (const [key, val, firmado] of pairs) {
                         if (!firmado && val && String(val).trim() !== '') {
@@ -143,6 +191,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
             const huboCambios =
                 firmasActualizadas.DocenteNombre !== fActual.DocenteNombre ||
+                firmasActualizadas.DocenteFecha !== fActual.DocenteFecha ||
                 firmasActualizadas.CoordinadorNombre !== fActual.CoordinadorNombre ||
                 firmasActualizadas.CoordinadorAcadNombre !== fActual.CoordinadorAcadNombre ||
                 firmasActualizadas.VicerrectorNombre !== fActual.VicerrectorNombre;
@@ -150,6 +199,11 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
             if (huboCambios) {
                 onUpdate('FirmasResponsabilidad', firmasActualizadas);
                 if (firmasActualizadas.DocenteNombre) onUpdate('Firmas_DocenteNombre', firmasActualizadas.DocenteNombre);
+                if (firmasActualizadas.DocenteFecha) {
+                    onUpdate('Firmas_DocenteFecha', firmasActualizadas.DocenteFecha);
+                    onUpdate('FechaElaborado', firmasActualizadas.DocenteFecha);
+                    onUpdate('fecha_elaborado', firmasActualizadas.DocenteFecha);
+                }
                 if (firmasActualizadas.CoordinadorNombre) onUpdate('Firmas_CoordinadorNombre', firmasActualizadas.CoordinadorNombre);
                 if (firmasActualizadas.CoordinadorAcadNombre) onUpdate('Firmas_CoordinadorAcadNombre', firmasActualizadas.CoordinadorAcadNombre);
                 if (firmasActualizadas.VicerrectorNombre) onUpdate('Firmas_VicerrectorNombre', firmasActualizadas.VicerrectorNombre);
@@ -320,7 +374,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                     />
                                     {!isUnlocked && !rol.firmado && !readOnly && (
                                         <div
-                                            onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.nombreField)}
+                                            onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.nombreField, 'nombre')}
                                             className="absolute inset-0 cursor-pointer z-10"
                                             title="Clic para modificar en este documento"
                                         />
@@ -337,6 +391,73 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                     ISTPET
                                 </span>
                             </div>
+
+                            {/* Fecha de Responsabilidad Institucional */}
+                            {(() => {
+                                const isFechaUnlocked = Boolean(unlockedFields[`${rol.key}_fecha`]);
+                                const isFechaReadOnly = readOnly || rol.firmado || !isFechaUnlocked;
+
+                                return (
+                                    <div className="border-t border-border-thin pt-2.5 space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
+                                                Fecha:
+                                            </label>
+                                            {isFechaUnlocked && (
+                                                <span className="text-[10px] text-[#0070f3] dark:text-blue-400 font-semibold">
+                                                    Editando
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div
+                                            className="relative"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Escape' || e.key === 'Enter') {
+                                                    handleLockField(`${rol.key}_fecha`);
+                                                    (e.target as HTMLElement)?.blur();
+                                                }
+                                            }}
+                                        >
+                                            <CoWorkField
+                                                name={`Firmas_${rol.fechaField}`}
+                                                cowork={cowork}
+                                                type="text"
+                                                placeholder="DD/MM/AAAA"
+                                                readOnly={isFechaReadOnly}
+                                                className={`w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-mono text-center outline-none transition-all ${
+                                                    isFechaReadOnly
+                                                        ? 'bg-slate-50 dark:bg-zinc-900 border-border-thin cursor-pointer select-none'
+                                                        : 'bg-surface border-[#0070f3] ring-2 ring-[#0070f3]/15 shadow-xs'
+                                                }`}
+                                                onValueChange={(val) => {
+                                                    updateFirma(rol.fechaField, val);
+                                                    if (rol.key === 'Docente') {
+                                                        onUpdate('FechaElaborado', val);
+                                                        onUpdate('fecha_elaborado', val);
+                                                    } else if (rol.key === 'CoordinadorCarrera') {
+                                                        onUpdate('FechaRevisadoCarrera', val);
+                                                        onUpdate('fecha_revisado_carrera', val);
+                                                    } else if (rol.key === 'CoordinadorAcad') {
+                                                        onUpdate('FechaRevisadoAcademico', val);
+                                                        onUpdate('fecha_revisado_academico', val);
+                                                    } else if (rol.key === 'Vicerrector') {
+                                                        onUpdate('FechaAprobado', val);
+                                                        onUpdate('fecha_aprobado', val);
+                                                    }
+                                                }}
+                                                onBlur={() => handleLockField(`${rol.key}_fecha`)}
+                                            />
+                                            {!isFechaUnlocked && !rol.firmado && !readOnly && (
+                                                <div
+                                                    onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.fechaField, 'fecha')}
+                                                    className="absolute inset-0 cursor-pointer z-10"
+                                                    title="Clic para modificar la fecha en este documento"
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     );
                 })}
@@ -352,10 +473,12 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                             </div>
                             <div className="space-y-1">
                                 <h3 className="text-sm font-bold text-text-main">
-                                    Modificar Autoridad
+                                    {confirmModal.tipo === 'fecha'
+                                        ? `Modificar Fecha: ${confirmModal.cargo}`
+                                        : `Modificar Autoridad: ${confirmModal.cargo}`}
                                 </h3>
                                 <p className="text-xs text-text-dim">
-                                    {confirmModal.cargo}
+                                    {confirmModal.etiqueta} {confirmModal.cargo}
                                 </p>
                             </div>
                         </div>
@@ -365,7 +488,9 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                 Este cambio <span className="font-bold text-[#0070f3]">solo afectará a este documento</span>.
                             </p>
                             <p className="text-[11px] text-text-dim leading-relaxed">
-                                No modificará la asignación central de la carrera en el sistema institucional.
+                                {confirmModal.tipo === 'fecha'
+                                    ? 'Permite ajustar la fecha formal de elaboración o revisión según el calendario institucional sin alterar otros registros.'
+                                    : 'No modificará la asignación central de la carrera en el sistema institucional.'}
                             </p>
                         </div>
 

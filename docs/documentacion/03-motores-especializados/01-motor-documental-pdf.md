@@ -174,4 +174,19 @@ Para garantizar que los archivos PDF exportados por docentes y revisores manteng
    * `GET /api/documents/instances/{uuid}/download`: Devuelve el archivo como adjunto binario forzado (`Content-Disposition: attachment`).
 3. **CORS:** Política institucional configurada con `WithExposedHeaders("Content-Disposition")` para permitir lectura programática del nombre de archivo desde el cliente web.
 
+---
+
+## 9. Gobernanza de Fechas en la Sección 11 (Firmas de Responsabilidad)
+
+Para cumplir con la normativa de auditoría curricular y la Ley 67 de Firmas Electrónicas, la matriz de firmas de responsabilidad institucional (Sección 11 / k) opera bajo un esquema de sincronización dinámica con confirmación:
+
+1. **Resolución y Valor por Defecto:**
+   * La fecha de elaboración (`DocenteFecha`) se inicializa automáticamente con la fecha actual del sistema en formato institucional `DD/MM/AAAA` (o la fecha de creación registrada en `doc_pea.fechaElaborado`), garantizando que la tabla oficial y los documentos exportados nunca presenten celdas de fecha vacías bajo el rol de elaboración.
+2. **Desbloqueo Controlado con Confirmación:**
+   * Al igual que los nombres de las autoridades, el campo de fecha permanece protegido contra ediciones accidentales.
+   * El usuario puede modificar la fecha haciendo clic sobre el campo, lo que despliega un diálogo modal de confirmación informando que la modificación aplica de forma aislada a este instrumento curricular sin alterar los registros globales.
+3. **Sincronización Bidireccional (CoWork Yjs y Motor de Plantillas):**
+   * El valor modificado se propaga en tiempo real a través del proveedor Yjs (`Firmas_DocenteFecha`, `Firmas_CoordinadorFecha`, etc.) y se normaliza en el motor de plantillas (`HandlebarsTemplateEngine`) hacia las variables `FechaElaborado` y `fecha_elaborado`, permitiendo que el visor web, el diseñador de plantillas y la exportación oficial a PDF reflejen exactamente la misma fecha sin requerir nuevas tablas en la base de datos.
+
+
 

@@ -44,7 +44,8 @@ export const PeaAiProposalModal: React.FC<PeaAiProposalModalProps> = ({
     const availableSections = useMemo(() => {
         const allSections = draft?.validationSummary?.generatedSections || [];
         if (targetSection && targetSection !== 'all') {
-            const filtered = allSections.filter(s => s === targetSection);
+            const targets = targetSection.split(',').map(s => s.trim()).filter(Boolean);
+            const filtered = allSections.filter(s => targets.includes(s));
             return filtered.length > 0 ? filtered : allSections;
         }
         return allSections;

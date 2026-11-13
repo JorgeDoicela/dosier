@@ -81,7 +81,9 @@ public class FeedbackService : IFeedbackService
                 throw new InvalidOperationException("Solo se permite un máximo de 1 clip de video por reporte.");
             }
 
-            var basePath = Path.Combine(_environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "uploads", "feedback", DateTime.Now.ToString("yyyyMM"));
+            var yearMonth = DateTime.Now.ToString("yyyyMM");
+            var uploadsRoot = ResolveUploadsRoot();
+            var basePath = Path.Combine(uploadsRoot, "uploads", "feedback", yearMonth);
             if (!Directory.Exists(basePath))
             {
                 Directory.CreateDirectory(basePath);
@@ -118,7 +120,7 @@ public class FeedbackService : IFeedbackService
                     await file.Stream.CopyToAsync(stream);
                 }
 
-                var relativeUrl = $"/api/feedback/attachments/{DateTime.Now:yyyyMM}/{safeFileName}";
+                var relativeUrl = $"/api/feedback/attachments/{yearMonth}/{safeFileName}";
                 adjuntos.Add(new FeedbackAdjuntoDto
                 {
                     NombreOriginal = Path.GetFileName(file.FileName),
@@ -422,6 +424,7 @@ public class FeedbackService : IFeedbackService
 
         // Limpieza de archivos físicos adjuntos
         var (files, _) = ParsePayload(entidad.ArchivosAdjuntosJson);
+        var candidateRoots = GetCandidateUploadRoots();
         foreach (var file in files)
         {
             try
@@ -431,11 +434,14 @@ public class FeedbackService : IFeedbackService
                 {
                     var yearMonth = Path.GetFileName(segments[^2]);
                     var fileName = Path.GetFileName(segments[^1]);
-                    var root = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                    var fullPath = Path.Combine(root, "uploads", "feedback", yearMonth, fileName);
-                    if (File.Exists(fullPath))
+                    foreach (var root in candidateRoots)
                     {
-                        File.Delete(fullPath);
+                        var fullPath = Path.Combine(root, "uploads", "feedback", yearMonth, fileName);
+                        if (File.Exists(fullPath))
+                        {
+                            File.Delete(fullPath);
+                            break;
+                        }
                     }
                 }
             }
@@ -449,6 +455,38 @@ public class FeedbackService : IFeedbackService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    private string ResolveUploadsRoot()
+    {
+        var configured = _configuration["Support:UploadsRootPath"];
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(_environment.WebRootPath))
+        {
+            return _environment.WebRootPath;
+        }
+
+        return Path.Combine(_environment.ContentRootPath, "wwwroot");
+    }
+
+    private IEnumerable<string> GetCandidateUploadRoots()
+    {
+        var roots = new List<string>();
+        var configured = _configuration["Support:UploadsRootPath"];
+        if (!string.IsNullOrWhiteSpace(configured)) roots.Add(configured.Trim());
+        if (!string.IsNullOrWhiteSpace(_environment.WebRootPath)) roots.Add(_environment.WebRootPath);
+        if (!string.IsNullOrWhiteSpace(_environment.ContentRootPath))
+        {
+            roots.Add(Path.Combine(_environment.ContentRootPath, "wwwroot"));
+            roots.Add(_environment.ContentRootPath);
+        }
+        roots.Add(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"));
+        roots.Add(Directory.GetCurrentDirectory());
+        return roots.Distinct(StringComparer.OrdinalIgnoreCase);
     }
 
     private static (List<FeedbackAdjuntoDto> archivos, string? metadata) ParsePayload(string? json)

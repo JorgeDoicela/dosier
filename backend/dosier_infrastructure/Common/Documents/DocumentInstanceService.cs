@@ -853,12 +853,16 @@ namespace Dosier.Infrastructure.Common.Documents
                         {
                             ["DocenteNombre"] = docenteNombre,
                             ["DocenteCargo"] = "Docente Elaborador",
+                            ["DocenteFecha"] = (pea.FechaElaborado ?? DateTime.Now).ToString("dd/MM/yyyy"),
                             ["CoordinadorNombre"] = coordCarrera?.NombreCompleto ?? "",
                             ["CoordinadorCargo"] = "Coordinador de Carrera",
+                            ["CoordinadorFecha"] = pea.FechaRevisadoCoord?.ToString("dd/MM/yyyy") ?? "",
                             ["CoordinadorAcadNombre"] = coordAcad?.NombreCompleto ?? "",
                             ["CoordinadorAcadCargo"] = "Coordinación Académica",
+                            ["CoordinadorAcadFecha"] = pea.FechaRevisadoAcad?.ToString("dd/MM/yyyy") ?? "",
                             ["VicerrectorNombre"] = vicerrector?.NombreCompleto ?? "",
-                            ["VicerrectorCargo"] = "Vicerrectorado Académico"
+                            ["VicerrectorCargo"] = "Vicerrectorado Académico",
+                            ["VicerrectorFecha"] = pea.FechaAprobado?.ToString("dd/MM/yyyy") ?? ""
                         }
                     };
 

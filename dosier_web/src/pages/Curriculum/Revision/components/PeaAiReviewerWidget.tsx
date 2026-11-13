@@ -162,7 +162,14 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (parsed && typeof parsed === 'object') {
-                    if (Array.isArray(parsed.messages)) setMessages(parsed.messages);
+                    if (Array.isArray(parsed.messages)) {
+                        const cleaned = parsed.messages.map((m: any) =>
+                            m?.sender === 'assistant' && !m?.analysis && typeof m?.text === 'string' && m.text.startsWith('Analizando el PEA')
+                                ? { ...m, text: 'Error en el análisis: La consulta fue interrumpida al recargar la página.' }
+                                : m
+                        );
+                        setMessages(cleaned);
+                    }
                     if (parsed.appliedObsKeys && typeof parsed.appliedObsKeys === 'object') {
                         setAppliedObsKeys(parsed.appliedObsKeys);
                     }
@@ -340,12 +347,18 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
             rdaAsigStr = cleanedRdas.length > 0 ? cleanedRdas.join(' | ') : undefined;
         }
 
+        const toOptionalNumber = (val: any): number | undefined => {
+            if (val === undefined || val === null || val === '') return undefined;
+            const n = Number(val);
+            return Number.isFinite(n) ? n : undefined;
+        };
+
         return {
-            currentCreditos: Number(snap.Creditos ?? project.creditos ?? 0) || undefined,
-            currentHorasCD: Number(snap.HorasContactoDocente ?? project.horas_docencia ?? 0) || undefined,
-            currentHorasAPE: Number(snap.HorasPracticoExperimental ?? project.horas_practica ?? 0) || undefined,
-            currentHorasTA: Number(snap.HorasAutonomo ?? project.horas_autonomo ?? 0) || undefined,
-            currentTotalHoras: Number(snap.TotalHorasAsignatura ?? project.horas_totales ?? 0) || undefined,
+            currentCreditos: toOptionalNumber(snap.Creditos ?? project.creditos),
+            currentHorasCD: toOptionalNumber(snap.HorasContactoDocente ?? project.horas_docencia),
+            currentHorasAPE: toOptionalNumber(snap.HorasPracticoExperimental ?? project.horas_practica),
+            currentHorasTA: toOptionalNumber(snap.HorasAutonomo ?? project.horas_autonomo),
+            currentTotalHoras: toOptionalNumber(snap.TotalHorasAsignatura ?? project.horas_totales),
             currentModalidad: String(snap.Modalidad ?? project.modalidad ?? '').trim() || undefined,
             currentUnidadOrganizacion: String(snap.UnidadOrganizacion ?? project.dominio ?? '').trim() || undefined,
             currentNivel: String(snap.Nivel ?? project.semestre_nivel ?? '').trim() || undefined,
@@ -427,7 +440,7 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                 const hasPriorAnalysis = messages.some(m => m.sender === 'assistant' && Boolean(m.analysis));
                 const isConversationalSummary =
                     hasPriorAnalysis &&
-                    !customPromptOverride &&
+                    !customPromptText &&
                     Boolean(promptToSend) &&
                     /resum|explic|trata|sintetiz|cu[aá]l|qu[eé]\s+es/i.test(promptToSend) &&
                     !/revis|audit|observ|evalu|verific|erro/i.test(promptToSend);
@@ -525,8 +538,8 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
     const handleApplyAllObservations = async (msgId: string, observations: PeaReviewSuggestedObservation[]) => {
         if (!onSaveComment || applyingBatchMsgId) return;
         setApplyingBatchMsgId(msgId);
+        const newlyApplied: Record<string, boolean> = {};
         try {
-            const newlyApplied: Record<string, boolean> = {};
             for (let idx = 0; idx < observations.length; idx++) {
                 const key = `${msgId}_${idx}`;
                 if (appliedObsKeys[key]) continue;
@@ -535,12 +548,12 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                 await onSaveComment(targetSectionKey, obs.observationText);
                 newlyApplied[key] = true;
             }
-            if (Object.keys(newlyApplied).length > 0) {
-                setAppliedObsKeys(prev => ({ ...prev, ...newlyApplied }));
-            }
         } catch {
             // El toast de error lo maneja saveCommentForSection
         } finally {
+            if (Object.keys(newlyApplied).length > 0) {
+                setAppliedObsKeys(prev => ({ ...prev, ...newlyApplied }));
+            }
             setApplyingBatchMsgId(null);
         }
     };
@@ -712,6 +725,11 @@ export const PeaAiReviewerWidget: React.FC<PeaAiReviewerWidgetProps> = ({
                                                 <div className="flex items-center gap-2.5 text-slate-600 dark:text-zinc-300 py-1">
                                                     <Loader2 size={14} className="animate-spin text-[#0070f3] shrink-0" />
                                                     <span>{msg.text}</span>
+                                                </div>
+                                            ) : !isUser && msg.text.startsWith('Error en el análisis:') ? (
+                                                <div className="flex items-start gap-2 text-red-600 dark:text-red-400 py-0.5 font-medium">
+                                                    <AlertCircle size={13} className="shrink-0 mt-0.5" />
+                                                    <span className="whitespace-pre-line">{msg.text}</span>
                                                 </div>
                                             ) : (
                                                 <div className="whitespace-pre-line leading-relaxed">{msg.text}</div>

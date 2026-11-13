@@ -5,8 +5,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using dosier_application.Feedback;
 using dosier_application.Feedback.DTOs;
 
@@ -17,10 +19,17 @@ namespace dosier_api.Controllers;
 public class FeedbackController : ControllerBase
 {
     private readonly IFeedbackService _feedbackService;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IConfiguration _configuration;
 
-    public FeedbackController(IFeedbackService feedbackService)
+    public FeedbackController(
+        IFeedbackService feedbackService,
+        IWebHostEnvironment environment,
+        IConfiguration configuration)
     {
         _feedbackService = feedbackService;
+        _environment = environment;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -44,38 +53,44 @@ public class FeedbackController : ControllerBase
         var safeYearMonth = Path.GetFileName(yearMonth);
         var safeFileName = Path.GetFileName(fileName);
 
-        var candidatePaths = new[]
+        if (string.IsNullOrWhiteSpace(safeYearMonth) || string.IsNullOrWhiteSpace(safeFileName))
         {
-            Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName),
-            Path.Combine(Directory.GetCurrentDirectory(), "uploads", "feedback", safeYearMonth, safeFileName),
-            Path.Combine(Directory.GetCurrentDirectory(), "backend", "dosier_api", "uploads", "feedback", safeYearMonth, safeFileName),
-            Path.Combine(Directory.GetCurrentDirectory(), "backend", "dosier_api", "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName),
-            Path.Combine(AppContext.BaseDirectory, "uploads", "feedback", safeYearMonth, safeFileName),
-            Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", "feedback", safeYearMonth, safeFileName)
-        };
+            return BadRequest(new { message = "Ruta de archivo adjunto inválida." });
+        }
 
-        string? finalPath = candidatePaths.FirstOrDefault(p => System.IO.File.Exists(p));
-        var ext = Path.GetExtension(safeFileName).ToLowerInvariant();
-        var isImage = ext is ".png" or ".jpg" or ".jpeg" or ".webp";
+        var candidateRoots = new List<string>();
+        var configuredRoot = _configuration["Support:UploadsRootPath"];
+        if (!string.IsNullOrWhiteSpace(configuredRoot))
+        {
+            candidateRoots.Add(configuredRoot.Trim());
+        }
+        if (!string.IsNullOrWhiteSpace(_environment.WebRootPath))
+        {
+            candidateRoots.Add(_environment.WebRootPath);
+        }
+        if (!string.IsNullOrWhiteSpace(_environment.ContentRootPath))
+        {
+            candidateRoots.Add(Path.Combine(_environment.ContentRootPath, "wwwroot"));
+            candidateRoots.Add(_environment.ContentRootPath);
+        }
+        candidateRoots.Add(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"));
+        candidateRoots.Add(Directory.GetCurrentDirectory());
+        candidateRoots.Add(Path.Combine(Directory.GetCurrentDirectory(), "backend", "dosier_api", "wwwroot"));
+        candidateRoots.Add(Path.Combine(Directory.GetCurrentDirectory(), "backend", "dosier_api"));
+        candidateRoots.Add(Path.Combine(AppContext.BaseDirectory, "wwwroot"));
+        candidateRoots.Add(AppContext.BaseDirectory);
+
+        string? finalPath = candidateRoots
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(root => Path.Combine(root, "uploads", "feedback", safeYearMonth, safeFileName))
+            .FirstOrDefault(System.IO.File.Exists);
 
         if (finalPath == null)
         {
-            if (isImage)
-            {
-                // Responder con SVG institucional de fallback para evitar 404 en consola y miniaturas rotas
-                string svg = @"<svg xmlns=""http://www.w3.org/2000/svg"" width=""320"" height=""180"" viewBox=""0 0 320 180"" fill=""none"">
-                    <rect width=""320"" height=""180"" rx=""8"" fill=""#f8fafc""/>
-                    <rect x=""1"" y=""1"" width=""318"" height=""178"" rx=""7"" stroke=""#e2e8f0""/>
-                    <path d=""M148 76l-8 12h32l-10-15-7 10-7-7z"" fill=""#94a3b8""/>
-                    <circle cx=""168"" cy=""66"" r=""4"" fill=""#94a3b8""/>
-                    <text x=""160"" y=""112"" text-anchor=""middle"" font-family=""system-ui, -apple-system, sans-serif"" font-size=""11"" font-weight=""500"" fill=""#64748b"">Adjunto no disponible</text>
-                    <text x=""160"" y=""128"" text-anchor=""middle"" font-family=""system-ui, -apple-system, sans-serif"" font-size=""9"" fill=""#94a3b8"">Archivo no sincronizado en almacenamiento local</text>
-                </svg>";
-                return Content(svg, "image/svg+xml");
-            }
             return NotFound(new { message = "Archivo adjunto no encontrado." });
         }
 
+        var ext = Path.GetExtension(safeFileName).ToLowerInvariant();
         var contentType = ext switch
         {
             ".png" => "image/png",
@@ -86,6 +101,7 @@ public class FeedbackController : ControllerBase
             _ => "application/octet-stream"
         };
 
+        Response.Headers.CacheControl = "public, max-age=86400";
         return PhysicalFile(Path.GetFullPath(finalPath), contentType, enableRangeProcessing: true);
     }
 

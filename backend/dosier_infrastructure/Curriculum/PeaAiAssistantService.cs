@@ -111,6 +111,7 @@ namespace dosier_infrastructure.Curriculum
 
             string model = string.IsNullOrWhiteSpace(request.Model) ? defaultModel : request.Model.Trim();
             string baseUrl = string.IsNullOrWhiteSpace(request.BaseUrl) ? defaultBaseUrl : request.BaseUrl.Trim();
+            ValidateEndpointUrl(baseUrl);
             bool isGlobalScope = string.Equals(request.Scope, "global", StringComparison.OrdinalIgnoreCase);
 
             if (isGlobalScope)
@@ -240,6 +241,7 @@ namespace dosier_infrastructure.Curriculum
                                        _configuration["AiAssistant:BaseUrl"]));
 
             string baseUrl = ResolveEffectiveBaseUrl(provider, candidateBaseUrl, defaultBaseUrl);
+            ValidateEndpointUrl(baseUrl);
 
             string effectiveEffort = !string.IsNullOrWhiteSpace(request.ReasoningEffort)
                 ? request.ReasoningEffort.Trim().ToLowerInvariant()
@@ -794,7 +796,7 @@ namespace dosier_infrastructure.Curriculum
                     contentsList.Add(new
                     {
                         role = geminiRole,
-                        parts = new[] { new { text = h.Content.Trim() } }
+                        parts = new[] { new { text = TruncateHistoryContent(h.Content) } }
                     });
                 }
             }
@@ -819,14 +821,25 @@ namespace dosier_infrastructure.Curriculum
             };
 
             string jsonPayload = JsonSerializer.Serialize(payload);
-            using var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            using var response = await client.PostAsync(endpoint, content, ct);
+            using var response = await SendWithResilienceAsync(
+                client,
+                () =>
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Post, endpoint)
+                    {
+                        Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+                    };
+                    return req;
+                },
+                "GEMINI",
+                endpoint,
+                ct);
             string responseBody = await response.Content.ReadAsStringAsync(ct);
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("[DOSIER AI] Error de proveedor Gemini ({StatusCode}): {Body}", (int)response.StatusCode, responseBody);
-                throw new InvalidOperationException($"El proveedor Gemini rechazó la solicitud (HTTP {(int)response.StatusCode}). Verifique su API Key o cuota disponible.");
+                throw new InvalidOperationException($"El proveedor Gemini rechazó la solicitud (HTTP {(int)response.StatusCode}). Verifique su API Key, modelo ({cleanModel}) o cuota disponible.");
             }
 
             using var doc = JsonDocument.Parse(responseBody);
@@ -868,10 +881,6 @@ namespace dosier_infrastructure.Curriculum
                 ? "https://api.anthropic.com/v1/messages"
                 : baseUrl.Trim();
 
-            using var req = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            req.Headers.TryAddWithoutValidation("x-api-key", apiKey);
-            req.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
-
             var messagesList = new List<object>();
             if (history != null && history.Count > 0)
             {
@@ -879,7 +888,7 @@ namespace dosier_infrastructure.Curriculum
                 {
                     if (string.IsNullOrWhiteSpace(h.Content)) continue;
                     string role = h.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? "assistant" : "user";
-                    messagesList.Add(new { role = role, content = h.Content.Trim() });
+                    messagesList.Add(new { role = role, content = TruncateHistoryContent(h.Content) });
                 }
             }
             messagesList.Add(new { role = "user", content = userPrompt });
@@ -893,8 +902,20 @@ namespace dosier_infrastructure.Curriculum
                 messages = messagesList
             };
 
-            req.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            using var response = await client.SendAsync(req, ct);
+            string jsonPayload = JsonSerializer.Serialize(payload);
+            using var response = await SendWithResilienceAsync(
+                client,
+                () =>
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                    req.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+                    req.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
+                    req.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                    return req;
+                },
+                "ANTHROPIC",
+                endpoint,
+                ct);
             string responseBody = await response.Content.ReadAsStringAsync(ct);
 
             if (!response.IsSuccessStatusCode)
@@ -958,7 +979,7 @@ namespace dosier_infrastructure.Curriculum
                 {
                     if (string.IsNullOrWhiteSpace(h.Content)) continue;
                     string role = h.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase) ? "assistant" : "user";
-                    messagesList.Add(new { role = role, content = h.Content.Trim() });
+                    messagesList.Add(new { role = role, content = TruncateHistoryContent(h.Content) });
                 }
             }
 
@@ -966,18 +987,6 @@ namespace dosier_infrastructure.Curriculum
 
             async Task<HttpResponseMessage> SendRequestAsync(bool minimalMode)
             {
-                var req = new HttpRequestMessage(HttpMethod.Post, effectiveUrl);
-                if (!string.IsNullOrWhiteSpace(apiKey))
-                {
-                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-                }
-
-                if (provider.Equals("openrouter", StringComparison.OrdinalIgnoreCase))
-                {
-                    req.Headers.TryAddWithoutValidation("HTTP-Referer", "https://dosier.istpet.edu.ec");
-                    req.Headers.TryAddWithoutValidation("X-Title", "DOSIER ISTPET Curriculum Assistant");
-                }
-
                 var payloadDict = new Dictionary<string, object?>
                 {
                     ["model"] = model,
@@ -1003,8 +1012,29 @@ namespace dosier_infrastructure.Curriculum
                     payloadDict["response_format"] = new { type = "json_object" };
                 }
 
-                req.Content = new StringContent(JsonSerializer.Serialize(payloadDict), Encoding.UTF8, "application/json");
-                return await client.SendAsync(req, ct);
+                string serializedBody = JsonSerializer.Serialize(payloadDict);
+                return await SendWithResilienceAsync(
+                    client,
+                    () =>
+                    {
+                        var req = new HttpRequestMessage(HttpMethod.Post, effectiveUrl);
+                        if (!string.IsNullOrWhiteSpace(apiKey))
+                        {
+                            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                        }
+
+                        if (provider.Equals("openrouter", StringComparison.OrdinalIgnoreCase))
+                        {
+                            req.Headers.TryAddWithoutValidation("HTTP-Referer", "https://dosier.istpet.edu.ec");
+                            req.Headers.TryAddWithoutValidation("X-Title", "DOSIER ISTPET Curriculum Assistant");
+                        }
+
+                        req.Content = new StringContent(serializedBody, Encoding.UTF8, "application/json");
+                        return req;
+                    },
+                    provider.ToUpperInvariant(),
+                    effectiveUrl,
+                    ct);
             }
 
             var response = await SendRequestAsync(minimalMode: isReasoner);
@@ -1053,15 +1083,37 @@ namespace dosier_infrastructure.Curriculum
             GeneratePeaDraftRequestDto request)
         {
             var result = new PeaStructuredDraftDto();
-            using var doc = JsonDocument.Parse(rawJson, new JsonDocumentOptions
+            JsonDocument doc;
+            try
             {
-                AllowTrailingCommas = true,
-                CommentHandling = JsonCommentHandling.Skip
-            });
+                doc = JsonDocument.Parse(rawJson, new JsonDocumentOptions
+                {
+                    AllowTrailingCommas = true,
+                    CommentHandling = JsonCommentHandling.Skip
+                });
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException(
+                    $"El modelo {provider.ToUpperInvariant()} ({model}) devolvió una respuesta que no tiene formato JSON válido. Intente nuevamente o cambie a un modelo con mayor adherencia estructural.",
+                    ex);
+            }
+
+            using (doc)
+            {
             var root = doc.RootElement;
 
+            bool includeObjective = isAllSections || requestedSections.Contains("pea_objectives_section");
+            bool includePractices = isAllSections || requestedSections.Contains("pea_resources_section");
+            bool includeBibliography = isAllSections || requestedSections.Contains("pea_bibliography_section");
+
             string rawObj = SanitizeRedundantHeading(TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
-            result.ObjetivoAsignatura = NormalizeAndValidateBloomObjective(rawObj, ctx.NombreCarrera, ctx.NombreAsignatura, out string? detectedBloomVerb, out bool isBloomValid);
+            string? detectedBloomVerb = null;
+            bool isBloomValid = false;
+            if (includeObjective || !string.IsNullOrWhiteSpace(rawObj))
+            {
+                result.ObjetivoAsignatura = NormalizeAndValidateBloomObjective(rawObj, ctx.NombreCarrera, ctx.NombreAsignatura, out detectedBloomVerb, out isBloomValid);
+            }
             result.RdaCarrera = TryGetString(root, "rda_carrera", "RdaCarrera");
             result.ResultadosAprendizaje = TryGetString(root, "resultados_aprendizaje", "ResultadosAprendizaje");
             result.MetodologiaEnsenanza = SanitizeRedundantHeading(TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
@@ -1269,11 +1321,15 @@ namespace dosier_infrastructure.Curriculum
                 }
             }
 
-            // Normalización determinista de prácticas experimentales (escenario y producto acreditable)
-            bool arePracticesCompliant = NormalizeAndValidatePractices(result.ActividadesPracticas, result.Unidades, ctx);
+            // Normalización determinista de prácticas experimentales (solo si se solicitó esta sección o todo el PEA)
+            bool arePracticesCompliant = includePractices || result.ActividadesPracticas.Count > 0
+                ? NormalizeAndValidatePractices(result.ActividadesPracticas, result.Unidades, ctx)
+                : false;
 
-            // Normalización determinista de referencias bibliográficas (APA 7ma, año, editorial, equilibrio 3/3)
-            bool isBibliographyCompliant = NormalizeAndValidateBibliography(result.Bibliografias, ctx);
+            // Normalización determinista de referencias bibliográficas (solo si se solicitó esta sección o todo el PEA)
+            bool isBibliographyCompliant = includeBibliography || result.Bibliografias.Count > 0
+                ? NormalizeAndValidateBibliography(result.Bibliografias, ctx)
+                : false;
 
             // Sincronizar campos HTML BibliografiaBasica y BibliografiaConsulta desde la lista estructurada
             if (result.Bibliografias.Any(b => b.TipoBibliografia == "Basica"))
@@ -1309,9 +1365,47 @@ namespace dosier_infrastructure.Curriculum
             if (result.Evaluaciones.Count > 0) generatedSections.Add("pea_evaluation_section");
             if (!string.IsNullOrWhiteSpace(result.BibliografiaBasica) || !string.IsNullOrWhiteSpace(result.BibliografiaConsulta)) generatedSections.Add("pea_bibliography_section");
 
-            // Si el docente solicitó secciones específicas (!isAllSections), restringir estrictamente las secciones generadas
+            // Si el docente solicitó secciones específicas (!isAllSections), restringir estrictamente las secciones generadas y limpiar campos no solicitados
             if (!isAllSections && requestedSections.Count > 0)
             {
+                bool HasSec(string secId) => requestedSections.Contains(secId);
+
+                if (!HasSec("pea_objectives_section"))
+                {
+                    result.ObjetivoAsignatura = string.Empty;
+                    isBloomValid = true;
+                    detectedBloomVerb = null;
+                }
+                if (!HasSec("pea_prerequisites_section")) result.Prerrequisitos.Clear();
+                if (!HasSec("pea_career_outcomes_section")) result.RdaCarrera = string.Empty;
+                if (!HasSec("pea_subject_outcomes_section")) result.ResultadosAprendizaje = string.Empty;
+                if (!HasSec("pea_contents_section"))
+                {
+                    result.Unidades.Clear();
+                    genCd = 0m;
+                    genApe = 0m;
+                    genTa = 0m;
+                    genTotal = 0m;
+                }
+                if (!HasSec("pea_methodology_section"))
+                {
+                    result.MetodologiaEnsenanza = string.Empty;
+                    result.RecursosDidacticos = string.Empty;
+                }
+                if (!HasSec("pea_resources_section"))
+                {
+                    result.ActividadesPracticas.Clear();
+                    arePracticesCompliant = true;
+                }
+                if (!HasSec("pea_evaluation_section")) result.Evaluaciones.Clear();
+                if (!HasSec("pea_bibliography_section"))
+                {
+                    result.Bibliografias.Clear();
+                    result.BibliografiaBasica = string.Empty;
+                    result.BibliografiaConsulta = string.Empty;
+                    isBibliographyCompliant = true;
+                }
+
                 generatedSections = generatedSections
                     .Where(s => requestedSections.Contains(s.ToLowerInvariant()))
                     .ToList();
@@ -1354,6 +1448,7 @@ namespace dosier_infrastructure.Curriculum
                 ComplianceNotes = complianceNotes,
                 GeneratedSections = generatedSections
             };
+            }
 
             return result;
         }
@@ -1628,6 +1723,98 @@ namespace dosier_infrastructure.Curriculum
             return $"{url}/chat/completions";
         }
 
+        private static void ValidateEndpointUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url) ||
+                !Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                throw new ArgumentException("La URL del endpoint de IA debe ser una dirección HTTP o HTTPS válida.");
+            }
+
+            string host = uri.Host.Trim().ToLowerInvariant();
+            if (host == "169.254.169.254" ||
+                host == "metadata.google.internal" ||
+                host.EndsWith(".internal", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("La URL del endpoint de IA apunta a una dirección de metadatos internos no permitida.");
+            }
+        }
+
+        private static string TruncateHistoryContent(string content)
+        {
+            string trimmed = content.Trim();
+            const int maxChars = 4000;
+            return trimmed.Length <= maxChars ? trimmed : trimmed.Substring(0, maxChars) + "...";
+        }
+
+        private async Task<HttpResponseMessage> SendWithResilienceAsync(
+            HttpClient client,
+            Func<HttpRequestMessage> requestFactory,
+            string providerLabel,
+            string endpointUrl,
+            CancellationToken ct)
+        {
+            const int maxAttempts = 3;
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                using var request = requestFactory();
+                try
+                {
+                    var response = await client.SendAsync(request, ct);
+                    int statusCode = (int)response.StatusCode;
+                    bool isTransient = statusCode == 429 || statusCode == 502 || statusCode == 503 || statusCode == 504;
+
+                    if (isTransient && attempt < maxAttempts)
+                    {
+                        _logger.LogWarning(
+                            "[DOSIER AI] Respuesta transitoria HTTP {StatusCode} de {Provider} (intento {Attempt}/{Max}). Reintentando...",
+                            statusCode, providerLabel, attempt, maxAttempts);
+                        response.Dispose();
+                        await Task.Delay(TimeSpan.FromMilliseconds(400 * attempt + Random.Shared.Next(50, 200)), ct);
+                        continue;
+                    }
+
+                    return response;
+                }
+                catch (TaskCanceledException) when (!ct.IsCancellationRequested)
+                {
+                    if (attempt < maxAttempts)
+                    {
+                        _logger.LogWarning(
+                            "[DOSIER AI] Timeout comunicándose con {Provider} (intento {Attempt}/{Max}). Reintentando...",
+                            providerLabel, attempt, maxAttempts);
+                        await Task.Delay(TimeSpan.FromMilliseconds(350 * attempt), ct);
+                        continue;
+                    }
+
+                    throw new TimeoutException(
+                        $"El proveedor {providerLabel} excedió el tiempo máximo de respuesta. Intente con un modelo más rápido o reduzca el alcance a secciones específicas.");
+                }
+                catch (HttpRequestException ex)
+                {
+                    if (attempt < maxAttempts)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "[DOSIER AI] Error de red comunicándose con {Provider} en {Endpoint} (intento {Attempt}/{Max}). Reintentando...",
+                            providerLabel, endpointUrl, attempt, maxAttempts);
+                        await Task.Delay(TimeSpan.FromMilliseconds(350 * attempt), ct);
+                        continue;
+                    }
+
+                    string hint = providerLabel.Equals("OLLAMA", StringComparison.OrdinalIgnoreCase)
+                        ? " Verifique que el servidor local de Ollama esté ejecutándose y accesible."
+                        : " Verifique la conectividad de red y la URL del endpoint configurado.";
+                    throw new InvalidOperationException(
+                        $"No fue posible conectar con el proveedor {providerLabel} ({ex.Message}).{hint}",
+                        ex);
+                }
+            }
+
+            throw new InvalidOperationException($"No fue posible obtener respuesta del proveedor {providerLabel}.");
+        }
+
         private static string CleanJsonFence(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return "{}";
@@ -1645,16 +1832,64 @@ namespace dosier_infrastructure.Curriculum
                 }
                 else
                 {
+                    // Si <think> quedó abierto sin cerrar, descartar hasta el primer '{' si existe
+                    int braceAfterThink = working.IndexOf('{', thinkStart);
+                    working = braceAfterThink > thinkStart ? working.Substring(braceAfterThink).Trim() : working.Substring(0, thinkStart).Trim();
                     break;
                 }
             }
 
-            // 2. Extraer el objeto JSON raíz { ... } ignorando texto conversacional o bloques ```json
+            // 2. Extraer el primer objeto JSON raíz con llaves balanceadas (respetando strings y escapes)
             int firstBrace = working.IndexOf('{');
-            int lastBrace = working.LastIndexOf('}');
-            if (firstBrace >= 0 && lastBrace > firstBrace)
+            if (firstBrace >= 0)
             {
-                return working.Substring(firstBrace, (lastBrace - firstBrace) + 1).Trim();
+                int depth = 0;
+                bool inString = false;
+                bool escaped = false;
+                for (int i = firstBrace; i < working.Length; i++)
+                {
+                    char ch = working[i];
+                    if (inString)
+                    {
+                        if (escaped)
+                        {
+                            escaped = false;
+                        }
+                        else if (ch == '\\')
+                        {
+                            escaped = true;
+                        }
+                        else if (ch == '"')
+                        {
+                            inString = false;
+                        }
+                        continue;
+                    }
+
+                    if (ch == '"')
+                    {
+                        inString = true;
+                    }
+                    else if (ch == '{')
+                    {
+                        depth++;
+                    }
+                    else if (ch == '}')
+                    {
+                        depth--;
+                        if (depth == 0)
+                        {
+                            return working.Substring(firstBrace, (i - firstBrace) + 1).Trim();
+                        }
+                    }
+                }
+
+                // Fallback si el JSON vino truncado sin llave de cierre final
+                int lastBrace = working.LastIndexOf('}');
+                if (lastBrace > firstBrace)
+                {
+                    return working.Substring(firstBrace, (lastBrace - firstBrace) + 1).Trim();
+                }
             }
 
             return working;
@@ -1889,16 +2124,6 @@ namespace dosier_infrastructure.Curriculum
                     return $"<p>{System.Net.WebUtility.HtmlEncode(capitalizedBody)}</p>";
                 }
 
-                if (firstWord.EndsWith("ar", StringComparison.OrdinalIgnoreCase) ||
-                    firstWord.EndsWith("er", StringComparison.OrdinalIgnoreCase) ||
-                    firstWord.EndsWith("ir", StringComparison.OrdinalIgnoreCase))
-                {
-                    detectedVerb = Capitalize(firstWord);
-                    isCompliant = true;
-                    string capitalizedBody = detectedVerb + cleanedText.Substring(firstWord.Length);
-                    return $"<p>{System.Net.WebUtility.HtmlEncode(capitalizedBody)}</p>";
-                }
-
                 if (firstWord.Equals("conocer", StringComparison.OrdinalIgnoreCase) ||
                     firstWord.Equals("entender", StringComparison.OrdinalIgnoreCase) ||
                     firstWord.Equals("aprender", StringComparison.OrdinalIgnoreCase) ||
@@ -1909,6 +2134,16 @@ namespace dosier_infrastructure.Curriculum
                     isCompliant = true;
                     string adjustedBody = replacement + cleanedText.Substring(firstWord.Length);
                     return $"<p>{System.Net.WebUtility.HtmlEncode(adjustedBody)}</p>";
+                }
+
+                if (firstWord.EndsWith("ar", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.EndsWith("er", StringComparison.OrdinalIgnoreCase) ||
+                    firstWord.EndsWith("ir", StringComparison.OrdinalIgnoreCase))
+                {
+                    detectedVerb = Capitalize(firstWord);
+                    isCompliant = true;
+                    string capitalizedBody = detectedVerb + cleanedText.Substring(firstWord.Length);
+                    return $"<p>{System.Net.WebUtility.HtmlEncode(capitalizedBody)}</p>";
                 }
             }
 
@@ -2320,6 +2555,7 @@ namespace dosier_infrastructure.Curriculum
                                        _configuration["AiAssistant:BaseUrl"]));
 
             string baseUrl = ResolveEffectiveBaseUrl(provider, candidateBaseUrl, defaultBaseUrl);
+            ValidateEndpointUrl(baseUrl);
 
             string effectiveEffort = !string.IsNullOrWhiteSpace(request.ReasoningEffort)
                 ? request.ReasoningEffort.Trim().ToLowerInvariant()
@@ -2452,6 +2688,21 @@ namespace dosier_infrastructure.Curriculum
             return s == "-" ? string.Empty : s;
         }
 
+        private static bool IsPlaceholderNoPrereq(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return true;
+            string t = text.Trim().ToLowerInvariant();
+            return t == "ninguno" ||
+                   t == "ninguna" ||
+                   t == "n/a" ||
+                   t == "na" ||
+                   t == "sin prerrequisitos" ||
+                   t.Contains("no registra", StringComparison.OrdinalIgnoreCase) ||
+                   t.Contains("sin prerrequisito", StringComparison.OrdinalIgnoreCase) ||
+                   t.Contains("nivel inicial", StringComparison.OrdinalIgnoreCase) ||
+                   t.Contains("no aplica", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string BuildReviewUserPrompt(AcademicPromptContext ctx, AnalyzePeaReviewRequestDto req)
         {
             var sb = new StringBuilder();
@@ -2507,7 +2758,7 @@ namespace dosier_infrastructure.Curriculum
                 ? req.CurrentPrerrequisitos
                 : ctx.ExistingPrerequisites;
             var validPrereqs = rawPrereqs
-                .Where(p => !string.IsNullOrWhiteSpace(SanitizePromptField(p.Asignatura)))
+                .Where(p => !IsPlaceholderNoPrereq(SanitizePromptField(p.Asignatura)))
                 .ToList();
 
             if (validPrereqs.Count > 0)
@@ -2593,7 +2844,7 @@ namespace dosier_infrastructure.Curriculum
             return sb.ToString();
         }
 
-        private static PeaAiReviewAnalysisResponseDto ParseAndNormalizeReviewAnalysis(
+        private PeaAiReviewAnalysisResponseDto ParseAndNormalizeReviewAnalysis(
             string rawJson,
             AcademicPromptContext ctx,
             AnalyzePeaReviewRequestDto req,
@@ -2609,7 +2860,11 @@ namespace dosier_infrastructure.Curriculum
             string cleaned = CleanJsonFence(rawJson);
             try
             {
-                using var doc = JsonDocument.Parse(cleaned);
+                using var doc = JsonDocument.Parse(cleaned, new JsonDocumentOptions
+                {
+                    AllowTrailingCommas = true,
+                    CommentHandling = JsonCommentHandling.Skip
+                });
                 var root = doc.RootElement;
 
                 response.AnalysisSummary = TryGetString(root, "analysis_summary", "analysisSummary", "resumen", "explicacion");
@@ -2677,10 +2932,12 @@ namespace dosier_infrastructure.Curriculum
             }
             catch (Exception ex)
             {
-                _loggerFallback(ex);
-                response.AnalysisSummary = !string.IsNullOrWhiteSpace(rawJson)
-                    ? rawJson.Trim()
-                    : $"Se completó la revisión asistida para {ctx.NombreAsignatura} ({ctx.NombreCarrera}).";
+                _logger.LogWarning(ex, "[DOSIER AI] Respuesta no-JSON o truncada en modo revisor ({Provider}/{Model}). Aplicando auditoría determinista de respaldo.", provider, model);
+                string trimmedRaw = (rawJson ?? string.Empty).Trim();
+                bool looksLikeBrokenJson = trimmedRaw.StartsWith("{") || trimmedRaw.StartsWith("[");
+                response.AnalysisSummary = !looksLikeBrokenJson && !string.IsNullOrWhiteSpace(trimmedRaw)
+                    ? trimmedRaw
+                    : $"Se completó la auditoría normativa determinista para {ctx.NombreAsignatura} ({ctx.NombreCarrera}). Revise los criterios verificados y las observaciones sugeridas.";
             }
 
             // Garantizar cálculos deterministas de respaldo si el modelo omitió algún campo
@@ -2691,10 +2948,20 @@ namespace dosier_infrastructure.Curriculum
             int creditos = req.CurrentCreditos ?? (int)Math.Round(declTotal / 48m);
             if (creditos <= 0 && declTotal > 0) creditos = (int)Math.Max(1, Math.Round(declTotal / 48m));
             var units = (req.CurrentUnidades != null && req.CurrentUnidades.Count > 0) ? req.CurrentUnidades : ctx.ExistingUnits;
-            decimal sumUnits = units.Sum(u => u.HorasCD + u.HorasAPE + u.HorasTA);
+            decimal sumUnitsCd = units.Sum(u => u.HorasCD);
+            decimal sumUnitsApe = units.Sum(u => u.HorasAPE);
+            decimal sumUnitsTa = units.Sum(u => u.HorasTA);
+            decimal sumUnits = sumUnitsCd + sumUnitsApe + sumUnitsTa;
 
-            bool hasPeaPrereqs = req.CurrentPrerrequisitos != null &&
-                req.CurrentPrerrequisitos.Any(p => !string.IsNullOrWhiteSpace(SanitizePromptField(p.Asignatura)));
+            var practicasList = (req.CurrentActividadesPracticas != null && req.CurrentActividadesPracticas.Count > 0)
+                ? req.CurrentActividadesPracticas
+                : ctx.ExistingPractices;
+            decimal sumPracticasApe = practicasList.Sum(p => p.Horas);
+
+            var prereqsList = (req.CurrentPrerrequisitos != null && req.CurrentPrerrequisitos.Count > 0)
+                ? req.CurrentPrerrequisitos
+                : ctx.ExistingPrerequisites;
+            bool hasPeaPrereqs = prereqsList.Any(p => !IsPlaceholderNoPrereq(SanitizePromptField(p.Asignatura)));
 
             // Corrección determinista de Sección 3 (Prerrequisitos): si SIGAFI no exige prerrequisitos y el PEA no los registra, siempre CUMPLE
             if (ctx.SigafiPrerequisites.Count == 0 && !hasPeaPrereqs)
@@ -2785,6 +3052,144 @@ namespace dosier_infrastructure.Curriculum
                 response.Checks = filteredChecks;
             }
 
+            // Garantizar determinísticamente los 5 criterios normativos obligatorios y corregir alucinaciones aritméticas del LLM
+            void EnsureOrEnforceCheck(string criterionPrefix, string[] matchKeywords, string status, string detail, bool enforceTruth = false)
+            {
+                var existing = response.Checks.FirstOrDefault(c =>
+                    matchKeywords.Any(k => c.Criterion.Contains(k, StringComparison.OrdinalIgnoreCase)));
+                if (existing == null)
+                {
+                    response.Checks.Add(new PeaReviewCheckItemDto
+                    {
+                        Criterion = criterionPrefix,
+                        Status = status,
+                        Detail = detail
+                    });
+                }
+                else if (enforceTruth)
+                {
+                    existing.Status = status;
+                    existing.Detail = detail;
+                }
+            }
+
+            bool isCreditsMatch = declTotal > 0 && (creditos <= 0 || Math.Abs((creditos * 48m) - declTotal) < 0.01m);
+            bool isSec1SumMatch = declTotal > 0 && Math.Abs((declCd + declApe + declTa) - declTotal) < 0.01m;
+            bool isSec1Valid = isCreditsMatch && isSec1SumMatch;
+            EnsureOrEnforceCheck(
+                "Distribución horaria y créditos (RRA Art. 21)",
+                new[] { "distribución horaria", "distribucion horaria", "crédito", "credito", "rra" },
+                isSec1Valid ? "cumple" : "observado",
+                isSec1Valid
+                    ? $"Cuadre exacto: {creditos} crédito(s) = {declTotal}h ({declCd}h CD + {declApe}h APE + {declTa}h TA)."
+                    : $"Desfase en Sección 1: Total={declTotal}h, Créditos={creditos} ({creditos * 48}h esperadas), Suma CD+APE+TA={declCd + declApe + declTa}h.",
+                enforceTruth: true);
+            if (!isSec1Valid && !response.SuggestedObservations.Any(o => o.SectionKey == "NombreAsignatura"))
+            {
+                response.SuggestedObservations.Add(new PeaReviewSuggestedObservationDto
+                {
+                    SectionKey = "NombreAsignatura",
+                    SectionLabel = GetReviewSectionLabel("NombreAsignatura"),
+                    Severity = "alta",
+                    ObservationText = $"Corregir el desglose horario en Datos Generales (Sección 1): actualmente suma {declCd + declApe + declTa}h frente a {declTotal}h totales ({creditos} créditos / {creditos * 48}h RRA)."
+                });
+            }
+
+            bool isUnitsMatch = units.Count > 0 &&
+                Math.Abs(sumUnitsCd - declCd) < 0.01m &&
+                Math.Abs(sumUnitsApe - declApe) < 0.01m &&
+                Math.Abs(sumUnitsTa - declTa) < 0.01m;
+            EnsureOrEnforceCheck(
+                "Suma de horas en unidades vs Sección 1",
+                new[] { "suma de horas en unidades", "unidades vs", "unidades temáticas" },
+                isUnitsMatch ? "cumple" : "observado",
+                isUnitsMatch
+                    ? $"Las {units.Count} unidades suman exactamente {sumUnits}h ({sumUnitsCd}h CD, {sumUnitsApe}h APE, {sumUnitsTa}h TA)."
+                    : $"Desfase en Sección 6: las unidades suman {sumUnits}h ({sumUnitsCd}h CD, {sumUnitsApe}h APE, {sumUnitsTa}h TA) frente a {declTotal}h ({declCd}h CD, {declApe}h APE, {declTa}h TA) en Sección 1.",
+                enforceTruth: true);
+            if (isUnitsMatch)
+            {
+                response.SuggestedObservations.RemoveAll(o =>
+                    o.SectionKey == "Unidades" &&
+                    (o.ObservationText.Contains("hora", StringComparison.OrdinalIgnoreCase) ||
+                     o.ObservationText.Contains("desfase", StringComparison.OrdinalIgnoreCase) ||
+                     o.ObservationText.Contains("coincid", StringComparison.OrdinalIgnoreCase)));
+            }
+            else if (!response.SuggestedObservations.Any(o => o.SectionKey == "Unidades"))
+            {
+                response.SuggestedObservations.Add(new PeaReviewSuggestedObservationDto
+                {
+                    SectionKey = "Unidades",
+                    SectionLabel = GetReviewSectionLabel("Unidades"),
+                    Severity = "alta",
+                    ObservationText = $"Ajustar las horas de las unidades temáticas en la Sección 6 (actualmente suman {sumUnitsCd}h CD, {sumUnitsApe}h APE, {sumUnitsTa}h TA) para que coincidan exactamente con la Sección 1 ({declCd}h CD, {declApe}h APE, {declTa}h TA)."
+                });
+            }
+
+            bool isApeCovered = declApe <= 0 || (practicasList.Count > 0 && Math.Abs(sumPracticasApe - declApe) < 0.01m);
+            EnsureOrEnforceCheck(
+                "Cobertura de prácticas experimentales (APE)",
+                new[] { "prácticas experimentales", "practicas experimentales", "cobertura de prácticas", "ape" },
+                isApeCovered ? "cumple" : (practicasList.Count == 0 ? "observado" : "alerta"),
+                isApeCovered
+                    ? $"Las {practicasList.Count} práctica(s) experimental(es) cubren exactamente las {declApe}h APE declaradas."
+                    : $"Las actividades prácticas suman {sumPracticasApe}h frente a {declApe}h APE declaradas en Sección 1.",
+                enforceTruth: true);
+            if (isApeCovered)
+            {
+                response.SuggestedObservations.RemoveAll(o =>
+                    o.SectionKey == "ActividadesPracticas" &&
+                    (o.ObservationText.Contains("hora", StringComparison.OrdinalIgnoreCase) ||
+                     o.ObservationText.Contains("cubr", StringComparison.OrdinalIgnoreCase) ||
+                     o.ObservationText.Contains("ape", StringComparison.OrdinalIgnoreCase)));
+            }
+            else if (!response.SuggestedObservations.Any(o => o.SectionKey == "ActividadesPracticas"))
+            {
+                response.SuggestedObservations.Add(new PeaReviewSuggestedObservationDto
+                {
+                    SectionKey = "ActividadesPracticas",
+                    SectionLabel = GetReviewSectionLabel("ActividadesPracticas"),
+                    Severity = "alta",
+                    ObservationText = $"Completar o ajustar las prácticas experimentales de la Sección 8 (actualmente {sumPracticasApe}h en {practicasList.Count} práctica(s)) para cubrir las {declApe}h APE declaradas en la Sección 1."
+                });
+            }
+
+            bool hasObjAndRda = !string.IsNullOrWhiteSpace(SanitizePromptField(req.CurrentObjetivo ?? ctx.ExistingObjetivo)) &&
+                                !string.IsNullOrWhiteSpace(SanitizePromptField(req.CurrentResultadosAprendizaje ?? ctx.ExistingResultadosAprendizaje));
+            EnsureOrEnforceCheck(
+                "Alineación con el perfil de egreso de la carrera",
+                new[] { "perfil de egreso", "alineación", "alineacion" },
+                hasObjAndRda ? "cumple" : "alerta",
+                hasObjAndRda
+                    ? $"Objetivo y resultados de aprendizaje formulados para {ctx.NombreAsignatura} en la carrera {ctx.NombreCarrera}."
+                    : "Se recomienda verificar que el objetivo general y los resultados de aprendizaje estén completos y alineados al perfil de egreso.");
+
+            bool prereqCoherent = ctx.SigafiPrerequisites.Count == 0 ? !hasPeaPrereqs : hasPeaPrereqs;
+            EnsureOrEnforceCheck(
+                "Coherencia de prerrequisitos con malla SIGAFI",
+                new[] { "prerrequisito", "prerequisito", "malla" },
+                prereqCoherent ? "cumple" : "observado",
+                prereqCoherent
+                    ? (ctx.SigafiPrerequisites.Count == 0
+                        ? "Coincide con la malla curricular oficial en SIGAFI (esta asignatura no registra prerrequisitos obligatorios)."
+                        : $"Coincide con los prerrequisitos oficiales de SIGAFI ({string.Join(", ", ctx.SigafiPrerequisites)}).")
+                    : (ctx.SigafiPrerequisites.Count == 0
+                        ? "El PEA declara prerrequisitos que no constan en la malla oficial de SIGAFI."
+                        : $"Inconsistencia con la malla SIGAFI: SIGAFI exige [{string.Join(", ", ctx.SigafiPrerequisites)}] y el PEA no los registra."),
+                enforceTruth: true);
+            if (!prereqCoherent && !response.SuggestedObservations.Any(o => o.SectionKey == "Prerrequisitos"))
+            {
+                response.SuggestedObservations.Add(new PeaReviewSuggestedObservationDto
+                {
+                    SectionKey = "Prerrequisitos",
+                    SectionLabel = GetReviewSectionLabel("Prerrequisitos"),
+                    Severity = "alta",
+                    ObservationText = ctx.SigafiPrerequisites.Count > 0
+                        ? $"Registrar en la Sección 3 los prerrequisitos oficiales establecidos en la malla curricular SIGAFI: {string.Join(", ", ctx.SigafiPrerequisites)}."
+                        : "Verificar los prerrequisitos declarados en la Sección 3, ya que la malla oficial en SIGAFI no registra asignaturas previas obligatorias."
+                });
+            }
+
             // Consolidar observaciones repetidas para la misma sección en una sola tarjeta ordenada (1..10)
             var sectionOrder = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
@@ -2838,11 +3243,6 @@ namespace dosier_infrastructure.Curriculum
             }
 
             return response;
-        }
-
-        private static void _loggerFallback(Exception _)
-        {
-            // No-op static helper for graceful JSON fallback
         }
 
         private static string NormalizeReviewSectionKey(string rawKey)
