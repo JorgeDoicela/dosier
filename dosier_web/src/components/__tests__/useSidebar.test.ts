@@ -92,11 +92,11 @@ describe("filtrarInstrumentosRevision — universo de revisión curricular", () 
 });
 
 describe("getPeaStatusDescriptor — semántica diferenciada coordinador vs docente", () => {
-    it("presenta 'En Revisión Técnica' al coordinador para evitar confusiones en la mesa de supervisión", async () => {
+    it("presenta 'En Subsanación Docente' al coordinador para clarificar que el PEA fue devuelto", async () => {
         const { getPeaStatusDescriptor } = await import("../../pages/Curriculum/utils/peaStatusWorkflow");
         
         const descSupervisor = getPeaStatusDescriptor("Observado", { esSupervisor: true });
-        expect(descSupervisor.label).toBe("En Revisión Técnica");
+        expect(descSupervisor.label).toBe("En Subsanación Docente");
         expect(descSupervisor.dotClass).toContain("bg-amber-500");
 
         const descDocente = getPeaStatusDescriptor("Observado", { esSupervisor: false });

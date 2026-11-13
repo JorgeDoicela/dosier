@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
-    Bell, ExternalLink, Mail, Info, AlertTriangle,
+    Bell, ExternalLink, Mail, Info, AlertTriangle, BookOpen,
     CheckCheck, Search, Inbox, Trash2, Users, UserCheck, UserX, Check, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { ConfirmarRespuestaColaboracionModal } from '../Curriculum/components/Co
 type NotificationItem = NotificationDto;
 
 const categoryConfig: Record<string, { icon: typeof Info; color: string; bg: string; label: string }> = {
+    CURRICULUM: { icon: BookOpen, color: 'text-[#0070f3] dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20', label: 'Curricular (PEA)' },
     INVESTIGACION: { icon: ExternalLink, color: 'text-info', bg: 'bg-info/10', label: 'Investigación' },
     SISTEMA: { icon: Info, color: 'text-text-dim', bg: 'bg-text-main/5', label: 'Sistema' },
     URGENTE: { icon: AlertTriangle, color: 'text-error', bg: 'bg-error/10', label: 'Urgente' },
@@ -26,7 +27,7 @@ const NotificationsPage = () => {
     const navigate = useNavigate();
     const { notifications, markAsRead, markAllAsRead, fetchNotifications, deleteNotification, clearReadNotifications, addToast } = useNotifications();
     const [allNotifications, setAllNotifications] = useState<NotificationItem[]>([]);
-    const [filter, setFilter] = useState<'all' | 'unread' | 'colaboracion' | 'investigacion' | 'sistema' | 'urgente'>('all');
+    const [filter, setFilter] = useState<'all' | 'unread' | 'curriculum' | 'colaboracion' | 'investigacion' | 'sistema' | 'urgente'>('all');
     const [search, setSearch] = useState('');
     const [loadingAll, setLoadingAll] = useState(false);
 
@@ -263,9 +264,10 @@ const NotificationsPage = () => {
         let list = allNotifications;
 
         if (filter === 'unread') list = list.filter(n => !n.leido);
+        else if (filter === 'curriculum') list = list.filter(n => n.categoria === 'CURRICULUM');
+        else if (filter === 'colaboracion') list = list.filter(n => n.categoria === 'COLABORACION');
         else if (filter === 'investigacion') list = list.filter(n => n.categoria === 'INVESTIGACION');
         else if (filter === 'sistema') list = list.filter(n => n.categoria === 'SISTEMA');
-        else if (filter === 'colaboracion') list = list.filter(n => n.categoria === 'COLABORACION');
         else if (filter === 'urgente') list = list.filter(n => n.categoria === 'URGENTE');
 
         if (search.trim()) {
@@ -329,6 +331,7 @@ const NotificationsPage = () => {
     const filters = [
         { key: 'all' as const, label: 'Todas' },
         { key: 'unread' as const, label: 'Sin leer', count: unreadCount },
+        { key: 'curriculum' as const, label: 'Curricular (PEA)' },
         { key: 'colaboracion' as const, label: 'Colaboración PEA' },
         { key: 'investigacion' as const, label: 'Investigación' },
         { key: 'sistema' as const, label: 'Sistema' },

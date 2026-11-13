@@ -114,7 +114,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
             )}
 
             {/* Banner de Correcciones Requeridas para el Docente/Investigador */}
-            {!isAdmin && currentProject.status === 'En Corrección' && (
+            {!isAdmin && (currentProject.status === 'En Corrección' || currentProject.status === 'Observado') && (
                 <div className="bg-surface border border-slate-200/90 dark:border-zinc-800 rounded-lg p-5 flex flex-col justify-between shadow-xs animate-fade-in group">
                     <div>
                         <div className="flex items-center gap-2 mb-1.5">

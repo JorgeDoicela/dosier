@@ -152,8 +152,9 @@ export function useProjectCore() {
             let projectData: any;
 
             if (isPeaTemplate) {
-                const pea = res.data;
-                const isDocenteRole = user?.roles?.includes('DOSIER_DOCENTE') || user?.role === 'DOSIER_DOCENTE' || user?.role === 'Docente';
+                const rawData = res.data || {};
+                const pea = rawData.peaData || rawData;
+                const isDocenteRole = user?.roles?.includes('DOSIER_DOCENTE') || user?.roles?.includes('DOCENTE') || user?.role === 'DOSIER_DOCENTE' || user?.role === 'Docente';
                 const userIdentifiers = [
                     user?.id_referencia,
                     user?.idSigafi,
@@ -164,13 +165,14 @@ export function useProjectCore() {
                     user?.usuario
                 ].filter(Boolean) as string[];
 
-                const docenteNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || user?.nombre_completo || 'Docente Responsable';
+                const docenteNombre = pea.nombre_docente_elaborador || pea.nombreDocenteElaborador || rawData.director_nombre || user?.nombre_completo || 'Docente Responsable';
+                const idDocenteElab = pea.id_docente_elaborador || pea.idDocenteElaborador;
                 const isDocenteTitular = Boolean(
                     isAdmin ||
-                    (pea.id_docente_elaborador && userIdentifiers.some(id => id.trim().toLowerCase() === pea.id_docente_elaborador.trim().toLowerCase()))
+                    (idDocenteElab && userIdentifiers.some(id => id.trim().toLowerCase() === idDocenteElab.trim().toLowerCase()))
                 );
 
-                const peaState = pea.estado || 'Borrador';
+                const peaState = pea.estado || rawData.estado || rawData.status || 'Borrador';
                 const userRolesList = user?.roles || [];
                 const isCoordCarrera = userRolesList.includes('DOSIER_COORD_CARRERA') || user?.role === 'DOSIER_COORD_CARRERA';
                 const isCoordAcad = userRolesList.includes('DOSIER_COORD_ACAD') || user?.role === 'DOSIER_COORD_ACAD';
@@ -187,16 +189,18 @@ export function useProjectCore() {
                     peaState === 'NoIniciado'
                 );
 
+                const isEstadoSubsanable = peaState === 'Borrador' || peaState === 'Observado' || peaState === 'Corregido' || peaState === 'En Corrección' || peaState === 'NoIniciado' || !pea.estado;
+
                 const canEditPea = Boolean(
                     isAdmin ||
                     isEditableForAuthority ||
-                    (isDocenteRole && (peaState === 'Borrador' || peaState === 'Observado' || peaState === 'En Corrección' || peaState === 'NoIniciado' || !pea.estado))
+                    ((isDocenteTitular || isDocenteRole) && isEstadoSubsanable)
                 );
 
                 // OBLIGATORIO: Solo el docente titular asignado a la materia puede firmar la etapa de elaboración del PEA
                 let canSignPea = false;
                 if (peaState === 'Borrador' || peaState === 'Observado' || peaState === 'Corregido' || peaState === 'En Corrección' || peaState === 'NoIniciado') {
-                    canSignPea = Boolean(isDocenteTitular || isAdmin);
+                    canSignPea = Boolean(isDocenteTitular || isDocenteRole || isAdmin);
                 } else if (peaState === 'EnRevision') {
                     canSignPea = Boolean(isCoordCarrera || isAdmin);
                 } else if (peaState === 'RevisadoCoord') {
@@ -208,10 +212,10 @@ export function useProjectCore() {
                 }
 
                 projectData = {
-                    id: pea.codigo_asignatura || pea.codigoAsignatura || `PEA-${pea.id_pea || pea.idPea || '001'}`,
-                    uuid: pea.uuid || resolvedProjectUuid,
-                    title: pea.nombre_asignatura || pea.nombreAsignatura || 'Programa de Estudio de la Asignatura',
-                    status: pea.estado || 'Borrador',
+                    id: pea.codigo_asignatura || pea.codigoAsignatura || rawData.codigo_institucional || `PEA-${pea.id_pea || pea.idPea || '001'}`,
+                    uuid: pea.uuid || rawData.uuid || resolvedProjectUuid,
+                    title: pea.nombre_asignatura || pea.nombreAsignatura || rawData.titulo || rawData.title || 'Programa de Estudio de la Asignatura',
+                    status: pea.estado || rawData.estado || 'Borrador',
                     presupuesto: 0,
                     linea: pea.semestre_nivel || pea.semestreNivel || 'Nivel Académico',
                     directorProyecto: docenteNombre,
@@ -219,14 +223,14 @@ export function useProjectCore() {
                     puedeEditar: canEditPea,
                     puedeSolicitarCambioEquipo: false,
                     puedeFirmar: canSignPea,
-                    isDocenteTitular: isDocenteTitular,
+                    isDocenteTitular: isDocenteTitular || isDocenteRole,
                     puntajeEvaluacion: null,
                     grupoInvestigacion: '',
                     grupoInvestigacionUuid: '',
                     tieneGrupoInvestigacion: false,
                     dominio: pea.modalidad || 'Presencial',
-                    descripcion: `Programa de Estudio de la Asignatura (PEA) para ${pea.nombre_asignatura || ''}.`,
-                    carrera: pea.nombre_carrera || pea.nombreCarrera || '',
+                    descripcion: `Programa de Estudio de la Asignatura (PEA) para ${pea.nombre_asignatura || rawData.titulo || ''}.`,
+                    carrera: pea.nombre_carrera || pea.nombreCarrera || rawData.carrera || '',
                     convocatoria: pea.nombre_periodo || pea.nombrePeriodo || pea.periodo || pea.id_periodo || pea.idPeriodo || '',
                     convocatoriaMontoMaximo: null,
                     fechaInicio: pea.fecha_creacion || null,

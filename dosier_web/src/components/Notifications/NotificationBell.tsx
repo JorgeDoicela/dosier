@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, ExternalLink, Mail, Info, AlertTriangle } from 'lucide-react';
+import { Bell, ExternalLink, Mail, Info, AlertTriangle, BookOpen, Users } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useNotifications } from '../../api/NotificationsContext';
 import { stripHtmlToText } from '../../utils/notificationText';
@@ -39,6 +39,8 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ size = 'sm' }) => {
 
     const getIcon = (category: string) => {
         switch (category) {
+            case 'CURRICULUM': return <BookOpen size={12} className="text-[#0070f3]" />;
+            case 'COLABORACION': return <Users size={12} className="text-indigo-500" />;
             case 'INVESTIGACION': return <ExternalLink size={12} className="text-info" />;
             case 'SISTEMA': return <Info size={12} className="text-text-dim" />;
             case 'URGENTE': return <AlertTriangle size={12} className="text-error" />;

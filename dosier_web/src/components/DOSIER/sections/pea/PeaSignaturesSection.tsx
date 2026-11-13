@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Lock } from 'lucide-react';
 import { CoWorkField } from '../../../../core/cowork/components/CoWorkField';
+import { GeistDatePicker } from '../../../../components/Common/GeistDatePicker';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
 import usersService from '../../../../services/usersService';
 
@@ -63,20 +64,64 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         if (!confirmModal) return;
         const { rolKey, targetField, tipo } = confirmModal;
         const fieldKey = tipo === 'fecha' ? `${rolKey}_fecha` : rolKey;
-        setUnlockedFields(prev => ({ ...prev, [fieldKey]: true }));
+        // Solo un campo desbloqueado a la vez
+        setUnlockedFields({ [fieldKey]: true });
         setConfirmModal(null);
         setTimeout(() => {
-            const input = document.querySelector<HTMLInputElement>(`input[name="Firmas_${targetField}"]`);
-            if (input) {
-                input.focus();
-                input.select();
+            if (tipo === 'fecha') {
+                const card = document.querySelector(`[data-editable-field="${rolKey}_fecha"]`);
+                const input = card?.querySelector<HTMLInputElement>('input');
+                if (input) {
+                    input.click();
+                }
+            } else {
+                const input = document.querySelector<HTMLInputElement>(`input[name="Firmas_${targetField}"]`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
             }
         }, 50);
     };
 
-    const handleLockField = (key: string) => {
-        setUnlockedFields(prev => ({ ...prev, [key]: false }));
-    };
+    const handleLockField = useCallback((key: string) => {
+        setUnlockedFields(prev => {
+            if (!prev[key]) return prev;
+            const updated = { ...prev };
+            delete updated[key];
+            return updated;
+        });
+    }, []);
+
+    // Detección reactiva de clics exteriores para cerrar automáticamente la edición
+    useEffect(() => {
+        const hayDesbloqueados = Object.values(unlockedFields).some(Boolean);
+        if (!hayDesbloqueados) return;
+
+        const handleOutsideClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+
+            // Ignorar clics en el diálogo modal de confirmación
+            if (target.closest('[data-confirm-modal]')) {
+                return;
+            }
+
+            // Para cada campo en edición, si el clic fue fuera de su contenedor, bloquearlo
+            Object.entries(unlockedFields).forEach(([fieldKey, isUnlocked]) => {
+                if (!isUnlocked) return;
+                const container = document.querySelector(`[data-editable-field="${fieldKey}"]`);
+                if (container && !container.contains(target)) {
+                    handleLockField(fieldKey);
+                }
+            });
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, [unlockedFields, handleLockField]);
 
     // Sincronización continua de autoridades según datos oficiales de gobernanza institucional
     const sincronizarAutoridades = useCallback(async (forzar = false) => {
@@ -87,8 +132,10 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
             const isCoordAcadFirmado = Boolean(fActual.CoordinadorAcadFirmado || fActual.coordinador_acad_firmado);
             const isVicerrectorFirmado = Boolean(fActual.VicerrectorFirmado || fActual.vicerrector_firmado);
 
-            // Si no se fuerza y ya están todos los nombres completos o ya se autoguardaron, evitar consultas redundantes
-            if (!forzar && !(!fActual.DocenteNombre) && !(!fActual.CoordinadorNombre) && !(!fActual.CoordinadorAcadNombre) && !(!fActual.VicerrectorNombre)) {
+            const faltaFechaDocente = !fActual.DocenteFecha || String(fActual.DocenteFecha).trim() === '';
+
+            // Si no se fuerza y ya están todos los nombres completos y la fecha de docente definida, evitar consultas redundantes
+            if (!forzar && !faltaFechaDocente && !(!fActual.DocenteNombre) && !(!fActual.CoordinadorNombre) && !(!fActual.CoordinadorAcadNombre) && !(!fActual.VicerrectorNombre)) {
                 return;
             }
 
@@ -216,10 +263,30 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
         }
     }, [formData?.FirmasResponsabilidad, formData?.DocenteElaborador, formData?.docente, formData?.CoordinadorCarrera, formData?.coordinador_carrera, formData?.nombre_coordinador_carrera, formData?.CoordinadorAcademico, formData?.coordinador_academico, formData?.nombre_coordinador_academico, formData?.Vicerrector, formData?.vicerrector, formData?.nombre_vicerrector, formData?.IdPeriodo, formData?.id_periodo, formData?.IdCarrera, formData?.id_carrera, formData?.Carrera, formData?.carrera, onUpdate, cowork]);
 
-    // Ejecución inicial al montar
+    // Ejecución inicial al montar: sembrar fecha docente por defecto en edición y sincronizar autoridades
     useEffect(() => {
+        const fActual = formData?.FirmasResponsabilidad || {};
+        const isDocenteFirmado = Boolean(fActual.DocenteFirmado || fActual.docente_firmado);
+        if (!readOnly && !isDocenteFirmado && (!fActual.DocenteFecha || String(fActual.DocenteFecha).trim() === '')) {
+            const fechaDefecto = getFechaActualFormat();
+            const firmasConFecha = {
+                ...fActual,
+                DocenteFecha: fechaDefecto
+            };
+            onUpdate('FirmasResponsabilidad', firmasConFecha);
+            onUpdate('Firmas_DocenteFecha', fechaDefecto);
+            onUpdate('FechaElaborado', fechaDefecto);
+            onUpdate('fecha_elaborado', fechaDefecto);
+            if (cowork?.ydoc) {
+                const ytext = cowork.ydoc.getText('Firmas_DocenteFecha');
+                if (ytext.toString().trim() !== fechaDefecto) {
+                    ytext.delete(0, ytext.length);
+                    ytext.insert(0, fechaDefecto);
+                }
+            }
+        }
         sincronizarAutoridades(false);
-    }, [sincronizarAutoridades]);
+    }, [sincronizarAutoridades, readOnly, onUpdate, cowork]);
 
     // Sincronización autónoma silenciosa en segundo plano:
     // 1. Al recuperar foco o visibilidad de pestaña (ej. tras asignar autoridades en otra vista)
@@ -350,6 +417,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                     Nombres y Título:
                                 </label>
                                 <div
+                                    data-editable-field={rol.key}
                                     className="relative"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Escape' || e.key === 'Enter') {
@@ -395,7 +463,11 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                             {/* Fecha de Responsabilidad Institucional */}
                             {(() => {
                                 const isFechaUnlocked = Boolean(unlockedFields[`${rol.key}_fecha`]);
-                                const isFechaReadOnly = readOnly || rol.firmado || !isFechaUnlocked;
+                                const isFechaReadOnly = readOnly || rol.firmado;
+                                let valorFecha = firmas[rol.fechaField] || '';
+                                if (rol.key === 'Docente' && (!valorFecha || String(valorFecha).trim() === '')) {
+                                    valorFecha = getFechaActualFormat();
+                                }
 
                                 return (
                                     <div className="border-t border-border-thin pt-2.5 space-y-1.5">
@@ -403,58 +475,85 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
                                             <label className="text-xs font-semibold text-text-dim uppercase tracking-wider block">
                                                 Fecha:
                                             </label>
-                                            {isFechaUnlocked && (
-                                                <span className="text-[10px] text-[#0070f3] dark:text-blue-400 font-semibold">
-                                                    Editando
-                                                </span>
+                                            {isFechaUnlocked && !isFechaReadOnly && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] text-[#0070f3] dark:text-blue-400 font-semibold">
+                                                        Editando
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleLockField(`${rol.key}_fecha`)}
+                                                        className="text-[11px] font-bold text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer"
+                                                    >
+                                                        Listo
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
-                                        <div
-                                            className="relative"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Escape' || e.key === 'Enter') {
-                                                    handleLockField(`${rol.key}_fecha`);
-                                                    (e.target as HTMLElement)?.blur();
-                                                }
-                                            }}
-                                        >
-                                            <CoWorkField
-                                                name={`Firmas_${rol.fechaField}`}
-                                                cowork={cowork}
-                                                type="text"
-                                                placeholder="DD/MM/AAAA"
-                                                readOnly={isFechaReadOnly}
-                                                className={`w-full border rounded-lg px-3 py-2 text-xs sm:text-sm text-text-main font-mono text-center outline-none transition-all ${
-                                                    isFechaReadOnly
-                                                        ? 'bg-slate-50 dark:bg-zinc-900 border-border-thin cursor-pointer select-none'
-                                                        : 'bg-surface border-[#0070f3] ring-2 ring-[#0070f3]/15 shadow-xs'
-                                                }`}
-                                                onValueChange={(val) => {
-                                                    updateFirma(rol.fechaField, val);
-                                                    if (rol.key === 'Docente') {
-                                                        onUpdate('FechaElaborado', val);
-                                                        onUpdate('fecha_elaborado', val);
-                                                    } else if (rol.key === 'CoordinadorCarrera') {
-                                                        onUpdate('FechaRevisadoCarrera', val);
-                                                        onUpdate('fecha_revisado_carrera', val);
-                                                    } else if (rol.key === 'CoordinadorAcad') {
-                                                        onUpdate('FechaRevisadoAcademico', val);
-                                                        onUpdate('fecha_revisado_academico', val);
-                                                    } else if (rol.key === 'Vicerrector') {
-                                                        onUpdate('FechaAprobado', val);
-                                                        onUpdate('fecha_aprobado', val);
+
+                                        {isFechaUnlocked && !isFechaReadOnly ? (
+                                            <div
+                                                data-editable-field={`${rol.key}_fecha`}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Escape' || e.key === 'Enter') {
+                                                        handleLockField(`${rol.key}_fecha`);
                                                     }
                                                 }}
-                                                onBlur={() => handleLockField(`${rol.key}_fecha`)}
-                                            />
-                                            {!isFechaUnlocked && !rol.firmado && !readOnly && (
-                                                <div
-                                                    onClick={() => handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.fechaField, 'fecha')}
-                                                    className="absolute inset-0 cursor-pointer z-10"
-                                                    title="Clic para modificar la fecha en este documento"
+                                            >
+                                                <GeistDatePicker
+                                                    value={valorFecha}
+                                                    inputReadOnly={true}
+                                                    onChange={(newDate) => {
+                                                        updateFirma(rol.fechaField, newDate);
+                                                        if (rol.key === 'Docente') {
+                                                            onUpdate('FechaElaborado', newDate);
+                                                            onUpdate('fecha_elaborado', newDate);
+                                                        } else if (rol.key === 'CoordinadorCarrera') {
+                                                            onUpdate('FechaRevisadoCarrera', newDate);
+                                                            onUpdate('fecha_revisado_carrera', newDate);
+                                                        } else if (rol.key === 'CoordinadorAcad') {
+                                                            onUpdate('FechaRevisadoAcademico', newDate);
+                                                            onUpdate('fecha_revisado_academico', newDate);
+                                                        } else if (rol.key === 'Vicerrector') {
+                                                            onUpdate('FechaAprobado', newDate);
+                                                            onUpdate('fecha_aprobado', newDate);
+                                                        }
+                                                        if (cowork?.ydoc) {
+                                                            const ytext = cowork.ydoc.getText(`Firmas_${rol.fechaField}`);
+                                                            if (ytext.toString() !== newDate) {
+                                                                ytext.delete(0, ytext.length);
+                                                                ytext.insert(0, newDate);
+                                                            }
+                                                        }
+                                                        // Cerrar y bloquear automáticamente al seleccionar una fecha
+                                                        handleLockField(`${rol.key}_fecha`);
+                                                    }}
+                                                    placeholder="DD/MM/AAAA"
+                                                    className="!py-2 !px-3 text-xs sm:text-sm font-mono text-center !bg-surface !border-[#0070f3] ring-2 ring-[#0070f3]/15 shadow-xs"
                                                 />
-                                            )}
-                                        </div>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                onClick={() => {
+                                                    if (!readOnly && !rol.firmado) {
+                                                        handleRequestUnlock(rol.key, rol.etiqueta, rol.cargo, rol.fechaField, 'fecha');
+                                                    }
+                                                }}
+                                                className={`w-full border rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-center relative flex items-center justify-center transition-all ${
+                                                    !readOnly && !rol.firmado
+                                                        ? 'bg-slate-50 dark:bg-zinc-900 border-border-thin hover:border-slate-300 dark:hover:border-zinc-700 cursor-pointer select-none text-text-main'
+                                                        : 'bg-slate-50 dark:bg-zinc-900 border-border-thin opacity-80 cursor-default select-none text-text-main'
+                                                }`}
+                                                title={!readOnly && !rol.firmado ? "Clic para modificar la fecha en este documento" : undefined}
+                                            >
+                                                <span className={valorFecha ? 'font-medium' : 'text-text-dim/50'}>
+                                                    {valorFecha || 'DD/MM/AAAA'}
+                                                </span>
+                                                {!readOnly && !rol.firmado && (
+                                                    <Lock size={13} className="text-zinc-400 absolute right-3 pointer-events-none" />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })()}
@@ -465,7 +564,7 @@ export const PeaSignaturesSection: React.FC<PeaSignaturesSectionProps> = ({
 
             {/* MODAL DE CONFIRMACIÓN DE MODIFICACIÓN MANUAL (Teletransportado a body para oscurecer cabecera y barra lateral) */}
             {confirmModal && confirmModal.open && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 animate-fade-in">
+                <div data-confirm-modal="true" className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 animate-fade-in">
                     <div className="w-full max-w-md rounded-xl bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl p-6 space-y-5 animate-scale-in">
                         <div className="flex items-start gap-3">
                             <div className="p-2.5 rounded-lg bg-blue-500/10 text-[#0070f3] dark:text-blue-400 shrink-0">

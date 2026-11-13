@@ -184,15 +184,13 @@ export const PeaSupervisionTray: React.FC = () => {
             if (workflowTab === 'por_revisar') {
                 matchWorkflow = isPeaPendienteParaRol(p.estado, roleContext);
             } else if (workflowTab === 'en_redaccion') {
-                matchWorkflow = isPeaBorrador(p.estado);
+                matchWorkflow = isPeaBorrador(p.estado) || normalizePeaStatus(p.estado) === 'Observado';
             } else if (workflowTab === 'aprobados') {
                 matchWorkflow = isPeaAprobadoParaRol(p.estado, roleContext);
             }
 
             const matchEstado = selectedEstado === 'todos' ||
-                (selectedEstado === 'EnRevision'
-                    ? (normalizePeaStatus(p.estado) === 'EnRevision' || normalizePeaStatus(p.estado) === 'Observado')
-                    : normalizePeaStatus(p.estado) === normalizePeaStatus(selectedEstado));
+                normalizePeaStatus(p.estado) === normalizePeaStatus(selectedEstado);
 
             return matchSearch && matchCarrera && matchWorkflow && matchEstado;
         });
@@ -282,6 +280,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                     { value: 'Corregido', label: 'Corregido por Docente' }
                                 ] : workflowTab === 'en_redaccion' ? [
                                     { value: 'Borrador', label: 'En Redacción (Borrador)' },
+                                    { value: 'Observado', label: 'En Subsanación Docente' },
                                     { value: 'NoIniciado', label: 'Sin Inicializar' }
                                 ] : workflowTab === 'aprobados' ? [
                                     { value: 'RevisadoCoord', label: 'Aprobación de Carrera' },
@@ -290,6 +289,7 @@ export const PeaSupervisionTray: React.FC = () => {
                                 ] : [
                                     ...(isAdmin ? [{ value: 'Borrador', label: 'Borrador Docente' }] : []),
                                     { value: 'EnRevision', label: 'En Revisión Técnica' },
+                                    { value: 'Observado', label: 'En Subsanación Docente' },
                                     { value: 'Corregido', label: 'Corregido por Docente' },
                                     { value: 'RevisadoCoord', label: 'Aprobación de Carrera' },
                                     { value: 'RevisadoAcad', label: 'Aprobación Académica' },

@@ -36,7 +36,7 @@ import {
 import type { CoWorkHandle } from '../../core/cowork/types';
 import api from '../../api/axios_config';
 import { collaborationService } from '../../services/collaborationService';
-import { getPeaByUuid } from '../../services/peaService';
+import { getPeaByUuid, getObservacionesPea, subsanarObservacionPea } from '../../services/peaService';
 import { curriculumProjectService } from '../../services/curriculumProjectService';
 import { useAuth } from '../../api/AuthContext';
 import { useConfirm } from '../../api/ConfirmContext';
@@ -195,7 +195,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     }, [templateCode]);
 
     const isObservado = useMemo(() => {
-        return projectStatus === 'En Corrección' || projectStatus === 'Observado';
+        return projectStatus === 'En Corrección' || projectStatus === 'Observado' || projectStatus === 'Corregido';
     }, [projectStatus]);
 
     const isEnRevision = useMemo(() => {
@@ -215,7 +215,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             return 'revision';
         }
         if (isProtocolDocument && isObservado) {
-            return isReviewer ? 'revision' : 'correcciones';
+            return 'correcciones';
         }
         const saved = localStorage.getItem('document_sidebar_tab') as any;
         if (saved === 'ai' && !isAiAvailable) {
@@ -247,18 +247,28 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         setActiveTabState(tab);
     }, []);
 
+    const [peaObservaciones, setPeaObservaciones] = useState<any[]>([]);
+
+    const hasAutoSwitchedToCorreccionesRef = useRef(false);
+    useEffect(() => {
+        if (isProtocolDocument && (isObservado || peaObservaciones.some(o => o.estado === 'Pendiente')) && !hasAutoSwitchedToCorreccionesRef.current) {
+            hasAutoSwitchedToCorreccionesRef.current = true;
+            setActiveTabState('correcciones');
+        }
+    }, [isProtocolDocument, isObservado, peaObservaciones]);
+
     // Sincronizar activeTab cuando cambie el estado del documento o la pestaña activa ya no sea aplicable
     useEffect(() => {
         if (activeTab === 'ai' && !isAiAvailable) {
             setActiveTab('comments');
         } else if (activeTab === 'import' && !isImportAvailable) {
             setActiveTab('comments');
-        } else if (activeTab === 'correcciones' && (!isProtocolDocument || !isObservado)) {
+        } else if (activeTab === 'correcciones' && (!isProtocolDocument || (!isObservado && peaObservaciones.length === 0))) {
             setActiveTab('comments');
         } else if (activeTab === 'revision' && (!isProtocolDocument || !isReviewer || !isEnRevision)) {
             setActiveTab('comments');
         }
-    }, [isAiAvailable, isImportAvailable, isObservado, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
+    }, [isAiAvailable, isImportAvailable, isObservado, peaObservaciones.length, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
 
     // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
     const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
@@ -330,55 +340,211 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     const [trazabilidad, setTrazabilidad] = useState<any[]>([]);
     const [isLoadingTrazabilidad, setIsLoadingTrazabilidad] = useState(false);
     const [projectDeadline, setProjectDeadline] = useState<string | null>(null);
-    const lastFetchedEntityUuidRef = useRef<string | null>(null);
+    const [subsanandoObsId, setSubsanandoObsId] = useState<number | null>(null);
+    const [subsanacionTextMap, setSubsanacionTextMap] = useState<Record<number, string>>({});
+    const [submittingObsId, setSubmittingObsId] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (!entityUuid) return;
-        if (lastFetchedEntityUuidRef.current === entityUuid) return;
-        lastFetchedEntityUuidRef.current = entityUuid;
+    const resolveObservationTarget = useCallback((rawSection?: string): { label: string; sectionId?: string } => {
+        const key = (rawSection || 'General').trim();
+        const lower = key.toLowerCase();
 
-        const fetchProjectDetails = async () => {
-            setIsLoadingTrazabilidad(true);
-            try {
-                if (templateCode === 'PEA_OFICIAL') {
-                    const peaRes: any = await getPeaByUuid(entityUuid).catch(() => null);
-                    const peaData = peaRes?.data || peaRes;
-                    if (peaData) {
-                        const traceList = (peaData.trazabilidades || peaData.Trazabilidades || []).map((t: any) => ({
-                            id: t.id_trazabilidad ?? t.idTrazabilidad,
-                            estadoAnterior: t.estado_anterior ?? t.estadoAnterior,
-                            estadoNuevo: t.estado_nuevo ?? t.estadoNuevo,
-                            motivo: t.motivo ?? t.Motivo,
-                            observacion: t.motivo ?? t.Motivo,
-                            usuario: t.nombre_usuario ?? t.nombreUsuario ?? 'Sistema Curricular',
-                            fecha: t.fecha_transicion ?? t.fechaTransicion
-                        }));
-                        setTrazabilidad(traceList);
-                        const deadline = peaData.fecha_limite_subsanacion || peaData.fechaLimiteSubsanacion;
-                        setProjectDeadline(deadline || null);
-                    }
-                    return;
-                }
+        const MAP: Array<{ match: string[]; defaultId: string; label: string; keywords: string[] }> = [
+            {
+                match: ['nombreasignatura', 'codigoasignatura', 'carrera', 'codigocarrera', 'modalidad', 'unidadorganizacion', 'periodo', 'nivel', 'totalhorasasignatura', 'creditos', 'horascontactodocente', 'horaspracticoexperimental', 'horasautonomo', 'docenteelaborador', 'pea_general_section', 'sección a: datos generales', 'datos generales'],
+                defaultId: 'pea_general_section',
+                label: '1. Datos Generales de la Asignatura',
+                keywords: ['general', 'datos']
+            },
+            {
+                match: ['objetivoasignatura', 'pea_objectives_section', 'sección b: objetivo', 'objetivo'],
+                defaultId: 'pea_objectives_section',
+                label: '2. Objetivo de la Asignatura',
+                keywords: ['objetiv']
+            },
+            {
+                match: ['prerrequisitos', 'pea_prerequisites_section', 'sección c: prerrequisitos'],
+                defaultId: 'pea_prerequisites_section',
+                label: '3. Prerrequisitos Curriculares',
+                keywords: ['prerrequisit']
+            },
+            {
+                match: ['rdacarrera', 'pea_career_outcomes_section', 'rda de carrera'],
+                defaultId: 'pea_career_outcomes_section',
+                label: '4. RDA de Carrera (Perfil de Egreso)',
+                keywords: ['carrera', 'egreso']
+            },
+            {
+                match: ['resultadosaprendizaje', 'pea_subject_outcomes_section', 'pea_learning_results_section', 'sección d: rda'],
+                defaultId: 'pea_subject_outcomes_section',
+                label: '5. Resultados de Aprendizaje de la Asignatura',
+                keywords: ['resultados', 'aprendizaje', 'subject_outcomes']
+            },
+            {
+                match: ['unidades', 'pea_contents_section', 'sección e: contenidos', 'contenidos'],
+                defaultId: 'pea_contents_section',
+                label: '6. Contenidos de Enseñanza (Unidades)',
+                keywords: ['contenido', 'unidad']
+            },
+            {
+                match: ['metodologiaensenanza', 'recursosdidacticos', 'pea_methodology_section', 'sección f: metodología', 'metodología'],
+                defaultId: 'pea_methodology_section',
+                label: '7. Metodología y Recursos Didácticos',
+                keywords: ['metodolog']
+            },
+            {
+                match: ['actividadespracticas', 'pea_resources_section', 'pea_practices_section', 'sección g: prácticas ape', 'prácticas ape'],
+                defaultId: 'pea_resources_section',
+                label: '8. Actividades Prácticas (APE)',
+                keywords: ['práctic', 'practic', 'ape', 'resources']
+            },
+            {
+                match: ['evaluaciones', 'evaluacionaprendizaje', 'pea_evaluation_section', 'sección h: evaluación', 'evaluación'],
+                defaultId: 'pea_evaluation_section',
+                label: '9. Evaluación del Aprendizaje',
+                keywords: ['evaluac']
+            },
+            {
+                match: ['bibliografiabasica', 'bibliografiaconsulta', 'bibliografias', 'pea_bibliography_section', 'sección i: bibliografía', 'bibliografía'],
+                defaultId: 'pea_bibliography_section',
+                label: '10. Bibliografía',
+                keywords: ['bibliograf']
+            },
+            {
+                match: ['firmasresponsabilidad', 'firmasresponsabilidaddetalle', 'pea_signatures_section', 'sección j: firmas', 'firmas'],
+                defaultId: 'pea_signatures_section',
+                label: '11. Firmas de Responsabilidad',
+                keywords: ['firma', 'responsabilidad']
+            }
+        ];
 
-                const [traceRes, projectRes]: [any, any] = await Promise.all([
-                    curriculumProjectService.getTraceability(entityUuid).catch(() => []),
-                    curriculumProjectService.getProjectDetail(entityUuid).catch(() => null)
+        for (const entry of MAP) {
+            if (entry.match.includes(lower) || entry.match.some(m => lower.includes(m))) {
+                const matchedItem = sectionItems?.find(
+                    s => s.id.toLowerCase() === entry.defaultId || entry.keywords.some(kw => s.id.toLowerCase().includes(kw) || s.label.toLowerCase().includes(kw))
+                );
+                return {
+                    label: matchedItem?.label || entry.label,
+                    sectionId: matchedItem?.id || entry.defaultId
+                };
+            }
+        }
+
+        const directMatch = sectionItems?.find(s => s.id.toLowerCase() === lower || s.label.toLowerCase() === lower);
+        if (directMatch) {
+            return { label: directMatch.label, sectionId: directMatch.id };
+        }
+
+        if (lower === 'general') {
+            return { label: 'Observación General del PEA', sectionId: sectionItems?.[0]?.id || 'pea_general_section' };
+        }
+
+        return { label: key, sectionId: undefined };
+    }, [sectionItems]);
+
+    const formatRoleLabel = (rol?: string): string => {
+        if (!rol) return 'Coordinación Curricular';
+        const lower = rol.toLowerCase();
+        if (lower.includes('acad')) return 'Coordinación Académica';
+        if (lower.includes('vicer')) return 'Vicerrectorado Académico';
+        if (lower.includes('carrera') || lower.includes('coord')) return 'Coordinación de Carrera';
+        if (lower.includes('admin')) return 'Administración Curricular';
+        return rol;
+    };
+
+    const targetEntityUuid = entityUuid || resolvedPeaUuid || peaData?.uuid || peaData?.Uuid || '';
+
+    const fetchProjectDetails = useCallback(async () => {
+        if (!targetEntityUuid) return;
+        setIsLoadingTrazabilidad(true);
+        try {
+            if (!templateCode || templateCode === 'PEA_OFICIAL') {
+                const [peaRes, obsRes]: [any, any] = await Promise.all([
+                    getPeaByUuid(targetEntityUuid).catch(() => null),
+                    getObservacionesPea(targetEntityUuid).catch(() => null)
                 ]);
-                const traceList = Array.isArray(traceRes) ? traceRes : (traceRes?.data || []);
-                setTrazabilidad(traceList);
-                const pData = projectRes?.data || projectRes;
-                if (pData) {
-                    const deadline = pData.fechaLimiteSubsanacion || pData.fecha_limite_subsanacion || pData.fechaLimiteSubsanacionFinal || pData.fecha_limite_subsanacion_final;
+                const resolvedPea = peaRes?.data || peaRes;
+                if (resolvedPea) {
+                    const traceList = (resolvedPea.trazabilidades || resolvedPea.Trazabilidades || []).map((t: any) => ({
+                        id: t.id_trazabilidad ?? t.idTrazabilidad,
+                        estadoAnterior: t.estado_anterior ?? t.estadoAnterior,
+                        estadoNuevo: t.estado_nuevo ?? t.estadoNuevo,
+                        motivo: t.motivo ?? t.Motivo,
+                        observacion: t.motivo ?? t.Motivo,
+                        usuario: t.nombre_usuario ?? t.nombreUsuario ?? 'Coordinación Curricular',
+                        fecha: t.fecha_transicion ?? t.fechaTransicion
+                    }));
+                    setTrazabilidad(traceList);
+                    const deadline = resolvedPea.fecha_limite_subsanacion || resolvedPea.fechaLimiteSubsanacion;
                     setProjectDeadline(deadline || null);
                 }
-            } catch (e) {
-                console.error("Error al cargar la información en Sidebar", e);
-            } finally {
-                setIsLoadingTrazabilidad(false);
+
+                const rawObsList = Array.isArray(obsRes)
+                    ? obsRes
+                    : Array.isArray(obsRes?.data)
+                        ? obsRes.data
+                        : (resolvedPea?.observaciones || resolvedPea?.Observaciones || []);
+
+                const normalizedObs = (Array.isArray(rawObsList) ? rawObsList : []).map((o: any) => ({
+                    id: o.id_observacion ?? o.idObservacion,
+                    uuid: o.uuid ?? o.Uuid,
+                    rolObservador: o.rol_observador ?? o.rolObservador ?? 'CoordinadorCarrera',
+                    nombreObservador: o.nombre_observador ?? o.nombreObservador,
+                    seccionAfectada: o.seccion_afectada ?? o.seccionAfectada ?? 'General',
+                    textoObservacion: o.texto_observacion ?? o.textoObservacion ?? o.texto ?? '',
+                    estado: o.estado ?? o.Estado ?? 'Pendiente',
+                    respuestaDocente: o.respuesta_docente ?? o.respuestaDocente ?? '',
+                    fechaObservacion: o.fecha_observacion ?? o.fechaObservacion,
+                    fechaResolucion: o.fecha_resolucion ?? o.fechaResolucion
+                }));
+                setPeaObservaciones(normalizedObs);
+                return;
             }
-        };
+
+            const [traceRes, projectRes]: [any, any] = await Promise.all([
+                curriculumProjectService.getTraceability(targetEntityUuid).catch(() => []),
+                curriculumProjectService.getProjectDetail(targetEntityUuid).catch(() => null)
+            ]);
+            const traceList = Array.isArray(traceRes) ? traceRes : (traceRes?.data || []);
+            setTrazabilidad(traceList);
+            const pData = projectRes?.data || projectRes;
+            if (pData) {
+                const deadline = pData.fechaLimiteSubsanacion || pData.fecha_limite_subsanacion || pData.fechaLimiteSubsanacionFinal || pData.fecha_limite_subsanacion_final;
+                setProjectDeadline(deadline || null);
+            }
+        } catch (e) {
+            console.error("Error al cargar la información en Sidebar", e);
+        } finally {
+            setIsLoadingTrazabilidad(false);
+        }
+    }, [targetEntityUuid, templateCode]);
+
+    useEffect(() => {
         fetchProjectDetails();
-    }, [entityUuid, templateCode]);
+    }, [fetchProjectDetails, projectStatus]);
+
+    useEffect(() => {
+        if (activeTab === 'correcciones' && targetEntityUuid) {
+            fetchProjectDetails();
+        }
+    }, [activeTab, targetEntityUuid, fetchProjectDetails]);
+
+    const handleSubsanarObs = async (idObs: number) => {
+        if (!idObs) return;
+        const customReply = (subsanacionTextMap[idObs] || '').trim() || 'Ajuste realizado y subsanado en la sección correspondiente del PEA.';
+        setSubmittingObsId(idObs);
+        try {
+            await subsanarObservacionPea(idObs, customReply);
+            setPeaObservaciones(prev =>
+                prev.map(o => o.id === idObs ? { ...o, estado: 'Subsanada', respuestaDocente: customReply, fechaResolucion: new Date().toISOString() } : o)
+            );
+            setSubsanandoObsId(null);
+            window.dispatchEvent(new CustomEvent('dosier-projects-changed'));
+        } catch (err) {
+            console.error('[DOSIER] Error al subsanar observación:', err);
+        } finally {
+            setSubmittingObsId(null);
+        }
+    };
 
     const deadlineBadge = useMemo(() => {
         if (!projectDeadline) return null;
@@ -421,12 +587,31 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     }, [projectDeadline]);
 
     const ultimaObservacion = useMemo(() => {
-        if (isLoadingTrazabilidad) return "Cargando observaciones...";
-        const lastCorrection = [...trazabilidad]
-            .reverse()
-            .find((t: any) => (t.estadoNuevo || t.EstadoNuevo) === 'En Corrección');
-        return lastCorrection ? (lastCorrection.observacion || lastCorrection.Observacion || lastCorrection.motivo || lastCorrection.Motivo) : null;
-    }, [trazabilidad, isLoadingTrazabilidad]);
+        if (isLoadingTrazabilidad && trazabilidad.length === 0) return null;
+        const sorted = [...trazabilidad].sort((a, b) => {
+            const tA = a.fecha ? new Date(a.fecha).getTime() : 0;
+            const tB = b.fecha ? new Date(b.fecha).getTime() : 0;
+            if (tB !== tA) return tB - tA;
+            return (Number(b.id) || 0) - (Number(a.id) || 0);
+        });
+        const lastCorrection = sorted.find((t: any) => {
+            const st = String(t.estadoNuevo || t.EstadoNuevo || '').trim();
+            return st === 'Observado' || st === 'En Corrección';
+        });
+        if (!lastCorrection) return null;
+        let rawText = String(lastCorrection.observacion || lastCorrection.Observacion || lastCorrection.motivo || lastCorrection.Motivo || '').trim();
+        if (!rawText) return null;
+
+        // Si existen tarjetas individuales de sección abajo, limpiar el bloque autogenerado de viñetas para no duplicar texto
+        if (peaObservaciones.length > 0) {
+            if (rawText.includes('\n\nDetalle por Sección:')) {
+                rawText = rawText.split('\n\nDetalle por Sección:')[0].trim();
+            } else if (rawText.startsWith('Correcciones requeridas:\n•')) {
+                return null;
+            }
+        }
+        return rawText || null;
+    }, [trazabilidad, isLoadingTrazabilidad, peaObservaciones.length]);
 
     const commentsEndRef = useRef<HTMLDivElement>(null);
 
@@ -810,12 +995,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         </button>
                     )}
 
-                    {/* Tab de Ajustes / Observaciones para Docentes cuando el PEA está observado */}
-                    {isProtocolDocument && (projectStatus === 'En Corrección' || projectStatus === 'Observado') && !isReviewer && (
+                    {/* Tab de Ajustes / Observaciones para cuando el PEA está observado o tiene observaciones registradas */}
+                    {isProtocolDocument && (isObservado || peaObservaciones.length > 0) && (
                         <button
                             type="button"
                             onClick={() => setActiveTab('correcciones')}
-                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
+                            className={`relative flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
                                 activeTab === 'correcciones'
                                     ? 'border-amber-500 text-amber-500 bg-amber-500/5'
                                     : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
@@ -824,6 +1009,11 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             aria-label="Ajustes y Observaciones"
                         >
                             <Shield size={20} strokeWidth={1.75} className="text-amber-500" />
+                            {peaObservaciones.length > 0 && (
+                                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500 text-white leading-tight">
+                                    {peaObservaciones.filter(o => o.estado === 'Pendiente').length || peaObservaciones.length}
+                                </span>
+                            )}
                         </button>
                     )}
 
@@ -1528,18 +1718,20 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         )}
 
                         {activeTab === 'correcciones' && (
-                            <div className="flex flex-col h-full flex-1 overflow-hidden space-y-5">
+                            <div className="flex flex-col h-full flex-1 overflow-hidden space-y-4">
                                 {/* Observación General de la Coordinación y Plazo */}
                                 {ultimaObservacion && (
-                                    <div className="p-4 rounded-xl border border-error/20 bg-error/[0.02] space-y-2.5 animate-fade-in shadow-inner">
+                                    <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950 space-y-2.5 animate-fade-in">
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-2">
-                                                <Shield size={13} className="text-error shrink-0" />
-                                                <span className="text-[10px] font-bold text-error uppercase tracking-widest block">Observación Curricular de la Coordinación</span>
+                                                <Shield size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                                                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-widest block">
+                                                    Observación Curricular de la Coordinación
+                                                </span>
                                             </div>
                                         </div>
-                                        <p className="text-[11px] text-text-main font-medium italic font-mono leading-relaxed break-words pl-5">
-                                            "{ultimaObservacion}"
+                                        <p className="text-xs text-slate-800 dark:text-zinc-200 font-medium leading-relaxed break-words whitespace-pre-wrap">
+                                            {ultimaObservacion}
                                         </p>
                                         {deadlineBadge && (
                                             <div className={`mt-2 flex items-center justify-between px-3 py-2 rounded-lg border text-[10px] font-mono font-bold ${deadlineBadge.colorClass}`}>
@@ -1555,54 +1747,180 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
                                 {/* Checklist de correcciones por sección */}
                                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-                                    <div className="pb-1.5 border-b border-border-thin flex justify-between items-center">
-                                        <h4 className="text-[9px] font-bold text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
-                                        <span className="text-[8px] font-mono font-bold text-text-dim/60">
-                                            {comments.filter(c => parseAuditComment(c.contenido) !== null).length} Observaciones
-                                        </span>
-                                    </div>
-
                                     {(() => {
                                         const auditItems = comments
                                             .map(c => ({ comment: c, audit: parseAuditComment(c.contenido) }))
                                             .filter((item): item is { comment: any; audit: { seccion: string; estado: string; texto: string } } => item.audit !== null);
 
-                                        if (auditItems.length === 0) {
-                                            return (
-                                                <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
-                                                    <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
-                                                        <CheckCircle size={20} className="text-emerald-500" />
-                                                    </div>
-                                                    <p className="text-[9px] font-bold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
-                                                    <p className="text-[8px] text-text-dim mt-1 max-w-[180px] leading-relaxed">La coordinación no ha registrado observaciones específicas en los campos del PEA.</p>
-                                                </div>
-                                            );
-                                        }
+                                        const totalObsCount = peaObservaciones.length + auditItems.length;
+                                        const pendingObsCount = peaObservaciones.filter(o => o.estado === 'Pendiente').length;
 
                                         return (
-                                            <div className="space-y-2.5 pt-1.5">
-                                                {auditItems.map((item, idx) => {
-                                                    const isAprobado = item.audit.estado === 'Aprobado';
-                                                    return (
-                                                        <div key={idx} className="p-3.5 rounded-2xl border border-border-thin bg-surface hover:border-border-hover transition-all space-y-2 shadow-sm">
-                                                            <div className="flex justify-between items-center gap-2">
-                                                                <span className="text-[9px] font-bold text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
-                                                                    {item.audit.seccion}
-                                                                </span>
-                                                                <span className={`text-[8px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0 ${isAprobado
-                                                                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                                                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                                                    }`}>
-                                                                    {item.audit.estado}
-                                                                </span>
-                                                            </div>
-                                                            <p className="text-[11px] text-text-dim font-medium leading-relaxed">
-                                                                {item.audit.texto}
-                                                            </p>
+                                            <>
+                                                <div className="pb-2 border-b border-border-thin flex justify-between items-center">
+                                                    <h4 className="text-[10px] font-bold text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
+                                                    <span className="text-[10px] font-mono font-semibold text-text-dim">
+                                                        {totalObsCount} {totalObsCount === 1 ? 'Observación' : 'Observaciones'}
+                                                        {pendingObsCount > 0 ? ` (${pendingObsCount} pendientes)` : ''}
+                                                    </span>
+                                                </div>
+
+                                                {totalObsCount === 0 ? (
+                                                    <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
+                                                        <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
+                                                            <CheckCircle size={20} className="text-emerald-500" />
                                                         </div>
-                                                    );
-                                                })}
-                                            </div>
+                                                        <p className="text-[10px] font-bold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
+                                                        <p className="text-[11px] text-text-dim mt-1 max-w-[200px] leading-relaxed">
+                                                            La coordinación no ha registrado observaciones específicas en los campos del PEA.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3 pt-1">
+                                                        {/* 1. Observaciones Oficiales Estructuradas (doc_pea_observaciones) */}
+                                                        {peaObservaciones.map((obs, idx) => {
+                                                            const isSubsanada = obs.estado === 'Subsanada' || obs.estado === 'Resuelta';
+                                                            const target = resolveObservationTarget(obs.seccionAfectada);
+                                                            const obsDateStr = obs.fechaObservacion
+                                                                ? new Date(obs.fechaObservacion).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
+                                                                : '';
+                                                            const isReplyingThis = subsanandoObsId === obs.id;
+
+                                                            return (
+                                                                <div
+                                                                    key={obs.id || obs.uuid || `pea-obs-${idx}`}
+                                                                    className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all space-y-2.5 shadow-2xs"
+                                                                >
+                                                                    <div className="flex items-start justify-between gap-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                if (target.sectionId && onSelectSection) {
+                                                                                    onSelectSection(target.sectionId);
+                                                                                }
+                                                                            }}
+                                                                            className={`text-left text-[11px] font-bold tracking-tight leading-snug ${
+                                                                                target.sectionId && onSelectSection
+                                                                                    ? 'text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer'
+                                                                                    : 'text-slate-900 dark:text-zinc-100'
+                                                                            }`}
+                                                                            title={target.sectionId ? 'Haga clic para ir directamente a esta sección en el editor' : target.label}
+                                                                        >
+                                                                            {target.label}
+                                                                        </button>
+                                                                        <span
+                                                                            className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 border ${
+                                                                                isSubsanada
+                                                                                    ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                                                                                    : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                                                            }`}
+                                                                        >
+                                                                            <span className={`w-1.5 h-1.5 rounded-full ${isSubsanada ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                                                            {isSubsanada ? 'Subsanada' : 'Pendiente'}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+                                                                        <span className="truncate">
+                                                                            {obs.nombreObservador ? `${obs.nombreObservador} · ` : ''}
+                                                                            {formatRoleLabel(obs.rolObservador)}
+                                                                        </span>
+                                                                        {obsDateStr && <span className="font-mono shrink-0 ml-2">{obsDateStr}</span>}
+                                                                    </div>
+
+                                                                    <p className="text-xs text-slate-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap break-words bg-slate-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-slate-100 dark:border-zinc-800">
+                                                                        {obs.textoObservacion}
+                                                                    </p>
+
+                                                                    {obs.respuestaDocente && (
+                                                                        <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-0.5">
+                                                                            <span className="font-bold block text-[10px] uppercase tracking-wider">Respuesta de subsanación:</span>
+                                                                            <p className="leading-relaxed break-words">{obs.respuestaDocente}</p>
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                                                        {target.sectionId && onSelectSection && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => onSelectSection(target.sectionId!)}
+                                                                                className="text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
+                                                                            >
+                                                                                Ir a la sección
+                                                                            </button>
+                                                                        )}
+
+                                                                        {!isSubsanada && !readOnly && obs.id && (
+                                                                            !isReplyingThis ? (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setSubsanandoObsId(obs.id)}
+                                                                                    className="ml-auto px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer"
+                                                                                >
+                                                                                    Marcar subsanada
+                                                                                </button>
+                                                                            ) : null
+                                                                        )}
+                                                                    </div>
+
+                                                                    {isReplyingThis && !readOnly && (
+                                                                        <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-2">
+                                                                            <textarea
+                                                                                value={subsanacionTextMap[obs.id] || ''}
+                                                                                onChange={e => setSubsanacionTextMap(prev => ({ ...prev, [obs.id]: e.target.value }))}
+                                                                                placeholder="Detalle brevemente el ajuste realizado (opcional)..."
+                                                                                rows={2}
+                                                                                className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-[#0070f3] resize-none"
+                                                                            />
+                                                                            <div className="flex items-center justify-end gap-2">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setSubsanandoObsId(null)}
+                                                                                    disabled={submittingObsId === obs.id}
+                                                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
+                                                                                >
+                                                                                    Cancelar
+                                                                                </button>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => handleSubsanarObs(obs.id)}
+                                                                                    disabled={submittingObsId === obs.id}
+                                                                                    className="px-3 py-1 rounded-md text-[11px] font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer disabled:opacity-50"
+                                                                                >
+                                                                                    {submittingObsId === obs.id ? 'Guardando...' : 'Confirmar subsanación'}
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+
+                                                        {/* 2. Comentarios de Auditoría Legados (si existieran) */}
+                                                        {auditItems.map((item, idx) => {
+                                                            const isAprobado = item.audit.estado === 'Aprobado';
+                                                            return (
+                                                                <div key={`legacy-audit-${idx}`} className="p-3.5 rounded-xl border border-border-thin bg-surface hover:border-border-hover transition-all space-y-2 shadow-2xs">
+                                                                    <div className="flex justify-between items-center gap-2">
+                                                                        <span className="text-[10px] font-bold text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
+                                                                            {item.audit.seccion}
+                                                                        </span>
+                                                                        <span className={`text-[9px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-md shrink-0 ${isAprobado
+                                                                                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                                                                                : 'bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                                                                            }`}>
+                                                                            {item.audit.estado}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-xs text-text-dim font-medium leading-relaxed">
+                                                                        {item.audit.texto}
+                                                                    </p>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </>
                                         );
                                     })()}
                                 </div>

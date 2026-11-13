@@ -10,6 +10,7 @@ export interface GeistDatePickerProps {
     error?: string;
     disabled?: boolean;
     readOnly?: boolean;
+    inputReadOnly?: boolean;
     minDate?: string;
     maxDate?: string;
     className?: string;
@@ -24,6 +25,7 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
     error,
     disabled = false,
     readOnly = false,
+    inputReadOnly = false,
     minDate,
     maxDate,
     className = '',
@@ -108,14 +110,20 @@ export const GeistDatePicker: React.FC<GeistDatePickerProps> = ({
                 <input
                     type="text"
                     value={value}
-                    onChange={handleInputChange}
+                    onChange={inputReadOnly ? undefined : handleInputChange}
+                    onClick={inputReadOnly && !disabled && !readOnly ? () => setIsOpen(prev => !prev) : undefined}
+                    onKeyDown={inputReadOnly ? (e) => {
+                        if (e.key !== 'Tab' && e.key !== 'Escape' && e.key !== 'Enter') {
+                            e.preventDefault();
+                        }
+                    } : undefined}
                     placeholder={placeholder}
                     disabled={disabled}
-                    readOnly={readOnly}
+                    readOnly={readOnly || inputReadOnly}
                     maxLength={10}
                     className={`w-full bg-bg-deep border rounded-lg sm:rounded-xl px-3.5 py-3 sm:px-5 sm:py-4 text-xs sm:text-sm font-bold text-text-main placeholder:text-text-dim/30 focus:ring-2 focus:ring-text-main/20 outline-none transition-all pr-10 ${
                         error ? 'border-red-500/60 focus:border-red-500' : 'border-border-thin focus:border-text-main'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${inputReadOnly && !disabled && !readOnly ? 'cursor-pointer select-none' : ''} ${className}`}
                 />
 
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">

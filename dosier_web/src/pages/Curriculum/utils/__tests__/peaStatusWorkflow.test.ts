@@ -88,9 +88,9 @@ describe('Dominio Curricular: Reglas de Negocio Centrales del PEA (ISTPET)', () 
             expect(isPeaPendienteParaRol('Aprobado', 'DOSIER_VICERRECTOR')).toBe(false);
         });
 
-        it('Coordinación de Carrera tiene pendiente EnRevision, Observado y Corregido', () => {
+        it('Coordinación de Carrera tiene pendiente EnRevision y Corregido', () => {
             expect(isPeaPendienteParaRol('EnRevision', 'DOSIER_COORD_CARRERA')).toBe(true);
-            expect(isPeaPendienteParaRol('Observado', 'DOSIER_COORD_CARRERA')).toBe(true);
+            expect(isPeaPendienteParaRol('Observado', 'DOSIER_COORD_CARRERA')).toBe(false);
             expect(isPeaPendienteParaRol('Corregido', 'DOSIER_COORD_CARRERA')).toBe(true);
             expect(isPeaPendienteParaRol('RevisadoCoord', 'DOSIER_COORD_CARRERA')).toBe(false);
             expect(isPeaPendienteParaRol('Borrador', 'DOSIER_COORD_CARRERA')).toBe(false);

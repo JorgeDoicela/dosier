@@ -62,8 +62,8 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
     const statusKey = normalizePeaStatus(projectStatus);
     const isAuditActive = isAuthority && !isReadonly && (
         isAdmin ||
-        (isCoordCarrera && (statusKey === 'EnRevision' || statusKey === 'Corregido' || statusKey === 'Observado')) ||
-        (isCoordAcad && (statusKey === 'RevisadoCoord' || statusKey === 'EnRevision' || statusKey === 'Corregido' || statusKey === 'Observado')) ||
+        (isCoordCarrera && (statusKey === 'EnRevision' || statusKey === 'Corregido')) ||
+        (isCoordAcad && (statusKey === 'RevisadoCoord' || (isCoordCarrera && (statusKey === 'EnRevision' || statusKey === 'Corregido')))) ||
         (isVicerrector && statusKey === 'RevisadoAcad')
     );
 
@@ -104,8 +104,8 @@ export const RevisionHeader: React.FC<RevisionHeaderProps> = ({
 
     const getActionButtonLabel = () => {
         if (isVicerrector) return 'Legalizar y dictaminar';
-        if (isCoordAcad) return 'Aprobar (Coordinación Académica)';
-        if (isCoordCarrera) return 'Aprobar (Coordinación de Carrera)';
+        if (isCoordAcad) return 'Evaluar (Coordinación Académica)';
+        if (isCoordCarrera) return 'Evaluar (Coordinación de Carrera)';
         return 'Emitir dictamen';
     };
 

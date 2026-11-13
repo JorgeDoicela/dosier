@@ -220,6 +220,22 @@ namespace dosier_infrastructure.Curriculum
                 throw new UnauthorizedAccessException("Acceso restringido: No cuenta con permisos jerárquicos para visualizar este PEA en su estado actual.");
             }
 
+            // Si el PEA está en formulación o subsanación docente, garantizar que la instancia documental esté en estado editable (Draft)
+            if ((pea.Estado == "Observado" || pea.Estado == "Borrador" || pea.Estado == "Corregido") && pea.Activo)
+            {
+                var signedInstances = await _context.DocumentInstances
+                    .Where(di => di.EntityUuid == pea.Uuid && di.State == Dosier.Domain.Common.Documents.DocumentState.Signed)
+                    .ToListAsync();
+                if (signedInstances.Count > 0)
+                {
+                    foreach (var si in signedInstances)
+                    {
+                        si.ReopenForRevision();
+                    }
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             return await MapToDtoAsync(pea);
         }
 
@@ -243,6 +259,22 @@ namespace dosier_infrastructure.Curriculum
             if (idUsuario.HasValue && !await CanUserAccessPeaEntityAsync(pea, idUsuario.Value))
             {
                 throw new UnauthorizedAccessException("Acceso restringido: No cuenta con permisos jerárquicos para visualizar este PEA en su estado actual.");
+            }
+
+            // Si el PEA está en formulación o subsanación docente, garantizar que la instancia documental esté en estado editable (Draft)
+            if ((pea.Estado == "Observado" || pea.Estado == "Borrador" || pea.Estado == "Corregido") && pea.Activo)
+            {
+                var signedInstances = await _context.DocumentInstances
+                    .Where(di => di.EntityUuid == pea.Uuid && di.State == Dosier.Domain.Common.Documents.DocumentState.Signed)
+                    .ToListAsync();
+                if (signedInstances.Count > 0)
+                {
+                    foreach (var si in signedInstances)
+                    {
+                        si.ReopenForRevision();
+                    }
+                    await _context.SaveChangesAsync();
+                }
             }
 
             return await MapToDtoAsync(pea);
@@ -511,7 +543,7 @@ namespace dosier_infrastructure.Curriculum
             // Control de Transiciones: Nadie salta fases ni actúa fuera de su nivel de autoridad
             if (!isAdmin && userActuante != null)
             {
-                if (nuevoEstado == "EnRevision")
+                if (nuevoEstado == "EnRevision" || nuevoEstado == "Corregido")
                 {
                     bool esDocenteTitular = !string.IsNullOrEmpty(entity.IdDocenteElaborador) && 
                                            string.Equals(entity.IdDocenteElaborador.Trim(), userActuante.IdSigafi?.Trim(), StringComparison.OrdinalIgnoreCase);
@@ -519,9 +551,9 @@ namespace dosier_infrastructure.Curriculum
                     {
                         throw new UnauthorizedAccessException("Solo el docente titular asignado puede remitir el PEA a revisión.");
                     }
-                    if (entity.Estado != "Borrador" && entity.Estado != "Corregido")
+                    if (entity.Estado != "Borrador" && entity.Estado != "Corregido" && entity.Estado != "Observado")
                     {
-                        throw new InvalidOperationException($"Transición inválida: No se puede remitir a EnRevision desde el estado '{entity.Estado}'.");
+                        throw new InvalidOperationException($"Transición inválida: No se puede remitir a {nuevoEstado} desde el estado '{entity.Estado}'.");
                     }
                 }
                 else if (nuevoEstado == "RevisadoCoord")
@@ -530,9 +562,9 @@ namespace dosier_infrastructure.Curriculum
                     {
                         throw new UnauthorizedAccessException("Solo el Coordinador de Carrera puede emitir el Aval de Carrera.");
                     }
-                    if (entity.Estado != "EnRevision")
+                    if (entity.Estado != "EnRevision" && entity.Estado != "Corregido")
                     {
-                        throw new InvalidOperationException($"Transición inválida: Solo se puede emitir Aval de Carrera si el PEA está en estado 'EnRevision'. Estado actual: '{entity.Estado}'.");
+                        throw new InvalidOperationException($"Transición inválida: Solo se puede emitir Aval de Carrera si el PEA está en estado 'EnRevision' o 'Corregido'. Estado actual: '{entity.Estado}'.");
                     }
                 }
                 else if (nuevoEstado == "RevisadoAcad")
@@ -560,7 +592,7 @@ namespace dosier_infrastructure.Curriculum
                 else if (nuevoEstado == "Observado")
                 {
                     bool puedeObservar = false;
-                    if (entity.Estado == "EnRevision" && userRoles.Contains("DOSIER_COORD_CARRERA")) puedeObservar = true;
+                    if ((entity.Estado == "EnRevision" || entity.Estado == "Corregido") && userRoles.Contains("DOSIER_COORD_CARRERA")) puedeObservar = true;
                     if (entity.Estado == "RevisadoCoord" && userRoles.Contains("DOSIER_COORD_ACAD")) puedeObservar = true;
                     if (entity.Estado == "RevisadoAcad" && userRoles.Contains("DOSIER_VICERRECTOR")) puedeObservar = true;
 
@@ -603,6 +635,16 @@ namespace dosier_infrastructure.Curriculum
                 entity.FechaRevisadoCoord = null;
                 entity.FirmaRevisadoAcad = null;
                 entity.FechaRevisadoAcad = null;
+
+                // Re-habilitar las instancias documentales para subsanación activa por el docente
+                var instancias = await _context.DocumentInstances
+                    .Where(di => di.EntityUuid == entity.Uuid)
+                    .ToListAsync();
+
+                foreach (var inst in instancias)
+                {
+                    inst.ReopenForRevision();
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -1398,20 +1440,24 @@ namespace dosier_infrastructure.Curriculum
                     .ToList();
 
                 // 4. Resolver autoridades académicas institucionales (Vicerrectorado y Coordinación Académica)
-                var autoridadesAcad = await _context.Users.AsNoTracking()
+                var autoridadesAcad = (await _context.Users.AsNoTracking()
                     .Where(u => u.Activo && u.UserRoles.Any(ur => 
                         (ur.Role.CodigoRol == "DOSIER_VICERRECTOR" || ur.Role.CodigoRol == "DOSIER_COORD_ACAD") && 
                         (ur.EsActivo ?? true)))
+                    .ToListAsync(cancellationToken))
                     .DistinctBy(u => u.IdUsuario)
-                    .ToListAsync(cancellationToken);
+                    .ToList();
 
                 // 5. Administradores de respaldo
-                var adminUsers = await _context.Users.AsNoTracking()
+                var adminUsers = (await _context.Users.AsNoTracking()
                     .Where(u => u.Activo && (u.Administrador || u.UserRoles.Any(ur => ur.Role.CodigoRol == "DOSIER_ADMIN" && (ur.EsActivo ?? true))))
+                    .ToListAsync(cancellationToken))
                     .DistinctBy(u => u.IdUsuario)
-                    .ToListAsync(cancellationToken);
+                    .ToList();
 
-                string urlPea = $"/documentacion/workspace/pea-oficial/{pea.Uuid}";
+                string urlDocenteEdicion = $"/documentacion/mis-proyectos/workspace/pea-oficial/{pea.Uuid}?edit=pea-oficial";
+                string urlDocenteLectura = $"/documentacion/mis-proyectos/workspace/pea-oficial/{pea.Uuid}";
+                string urlRevisionTecnica = $"/documentacion/revision-tecnica/{pea.Uuid}";
 
                 var baseExtraData = new Dictionary<string, string>
                 {
@@ -1445,7 +1491,7 @@ namespace dosier_infrastructure.Curriculum
                                 titulo,
                                 mensaje,
                                 "CURRICULUM",
-                                urlPea,
+                                urlRevisionTecnica,
                                 new Dictionary<string, string>(baseExtraData));
                         }
                         break;
@@ -1470,18 +1516,27 @@ namespace dosier_infrastructure.Curriculum
                             (string.IsNullOrWhiteSpace(motivo) ? "" : $" Requerimiento: {motivo}.") +
                             " Ingrese al editor microcurricular para subsanar los puntos observados.";
 
-                        // En ambos casos se notifica tanto al docente elaborador como a los coordinadores de carrera
-                        var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
-                            .DistinctBy(u => u.IdUsuario);
+                        // Notificar al docente titular para que subsane en el editor
+                        if (userDocente != null)
+                        {
+                            await notifService.NotifyUserAsync(
+                                userDocente.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlDocenteEdicion,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
 
-                        foreach (var dest in destinatarios)
+                        // Notificar a los coordinadores de carrera para seguimiento en mesa de revisión
+                        foreach (var dest in destinatariosCoord.Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario))
                         {
                             await notifService.NotifyUserAsync(
                                 dest.IdUsuario,
                                 titulo,
                                 mensaje,
                                 "CURRICULUM",
-                                urlPea,
+                                urlRevisionTecnica,
                                 new Dictionary<string, string>(baseExtraData));
                         }
                         break;
@@ -1506,7 +1561,7 @@ namespace dosier_infrastructure.Curriculum
                                 titulo,
                                 mensaje,
                                 "CURRICULUM",
-                                urlPea,
+                                urlRevisionTecnica,
                                 new Dictionary<string, string>(baseExtraData));
                         }
                         break;
@@ -1527,7 +1582,7 @@ namespace dosier_infrastructure.Curriculum
                                 tituloDocente,
                                 mensajeDocente,
                                 "CURRICULUM",
-                                urlPea,
+                                urlDocenteLectura,
                                 new Dictionary<string, string>(baseExtraData));
                         }
 
@@ -1546,7 +1601,7 @@ namespace dosier_infrastructure.Curriculum
                                 tituloAutoridades,
                                 mensajeAutoridades,
                                 "CURRICULUM",
-                                urlPea,
+                                urlRevisionTecnica,
                                 new Dictionary<string, string>(baseExtraData));
                         }
                         break;
@@ -1559,17 +1614,25 @@ namespace dosier_infrastructure.Curriculum
                         string titulo = $"Revisión Académica Completada: {nombreAsignatura}";
                         string mensaje = $"El PEA de '{nombreAsignatura}' ({nombreCarrera}) ha sido aprobado por la Coordinación Académica y espera la firma final de Vicerrectorado.";
 
-                        var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
-                            .DistinctBy(u => u.IdUsuario);
+                        if (userDocente != null)
+                        {
+                            await notifService.NotifyUserAsync(
+                                userDocente.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlDocenteLectura,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
 
-                        foreach (var dest in destinatarios)
+                        foreach (var dest in destinatariosCoord.Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario))
                         {
                             await notifService.NotifyUserAsync(
                                 dest.IdUsuario,
                                 titulo,
                                 mensaje,
                                 "CURRICULUM",
-                                urlPea,
+                                urlRevisionTecnica,
                                 new Dictionary<string, string>(baseExtraData));
                         }
                         break;
@@ -1582,8 +1645,19 @@ namespace dosier_infrastructure.Curriculum
                         string titulo = $"PEA Aprobado Oficialmente: {nombreAsignatura}";
                         string mensaje = $"El Programa de Estudio de la Asignatura (PEA) de '{nombreAsignatura}' ({nombreCarrera}) ha sido formalmente APROBADO por Vicerrectorado Académico con firma digital y sellado criptográfico institucional bajo Ley 67.";
 
-                        var destinatarios = (userDocente != null ? new[] { userDocente }.Concat(destinatariosCoord) : destinatariosCoord)
-                            .Concat(adminUsers)
+                        if (userDocente != null)
+                        {
+                            await notifService.NotifyUserAsync(
+                                userDocente.IdUsuario,
+                                titulo,
+                                mensaje,
+                                "CURRICULUM",
+                                urlDocenteLectura,
+                                new Dictionary<string, string>(baseExtraData));
+                        }
+
+                        var destinatarios = destinatariosCoord.Concat(adminUsers).Concat(autoridadesAcad)
+                            .Where(u => userDocente == null || u.IdUsuario != userDocente.IdUsuario)
                             .DistinctBy(u => u.IdUsuario);
 
                         foreach (var dest in destinatarios)
@@ -1593,7 +1667,7 @@ namespace dosier_infrastructure.Curriculum
                                 titulo,
                                 mensaje,
                                 "CURRICULUM",
-                                urlPea,
+                                urlRevisionTecnica,
                                 new Dictionary<string, string>(baseExtraData));
                         }
                         break;

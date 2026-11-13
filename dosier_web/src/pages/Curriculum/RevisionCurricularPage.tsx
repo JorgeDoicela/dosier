@@ -39,10 +39,10 @@ export const RevisionCurricularPage: React.FC = () => {
     // - Coord. Carrera: en enrevision, corregido, observado
     // - Coord. Académica: en revisadocoord (y fases previas si coordina la carrera)
     // - Vicerrectorado: en revisadoacad
-    const isAuditActive = isAuthority && (
+    const isAuditActive = isAuthority && !isObservado && (
         isAdmin ||
-        (isCoordCarrera && ['enviado', 'enrevision', 'corregido', 'observado'].includes(normalizedStatus)) ||
-        (isCoordAcad && ['revisadocoord', 'enrevision', 'corregido', 'observado'].includes(normalizedStatus)) ||
+        (isCoordCarrera && ['enviado', 'enrevision', 'corregido'].includes(normalizedStatus)) ||
+        (isCoordAcad && ['revisadocoord', 'enrevision', 'corregido'].includes(normalizedStatus)) ||
         (isVicerrector && ['revisadoacad'].includes(normalizedStatus))
     );
     const isReadonlyResult = !isAuditActive;

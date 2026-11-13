@@ -274,7 +274,7 @@ export const isPeaPendienteParaRol = (
             return key === 'RevisadoCoord';
 
         case 'DOSIER_COORD_CARRERA':
-            return key === 'EnRevision' || key === 'Observado' || key === 'Corregido';
+            return key === 'EnRevision' || key === 'Corregido';
 
         case 'DOSIER_DOCENTE':
             return key === 'Borrador' || key === 'NoIniciado' || key === 'Observado';
@@ -282,7 +282,6 @@ export const isPeaPendienteParaRol = (
         case 'DOSIER_ADMIN':
             return (
                 key === 'EnRevision' ||
-                key === 'Observado' ||
                 key === 'Corregido' ||
                 key === 'RevisadoCoord' ||
                 key === 'RevisadoAcad'
@@ -409,7 +408,7 @@ export const getPeaMetricsForRole = (
         if (isPeaAprobadoParaRol(estado, role)) {
             aprobados++;
         }
-        if (isPeaBorrador(estado)) {
+        if (isPeaBorrador(estado) || normalizePeaStatus(estado) === 'Observado') {
             enElaboracion++;
         }
         if (isPeaRezagado(p)) {
@@ -537,15 +536,15 @@ export const getPeaStatusDescriptor = (
             if (esSupervisor) {
                 return {
                     key,
-                    label: 'En Revisión Técnica',
-                    sublabel: 'En proceso de dictamen curricular con observaciones',
+                    label: 'En Subsanación Docente',
+                    sublabel: 'Devuelto al docente con observaciones para subsanación',
                     dotClass: 'bg-amber-500',
                     textClass: 'text-amber-800 dark:text-amber-300',
                     borderClass: 'border-amber-200 dark:border-amber-900/60',
                     badgeBgClass: 'bg-amber-50 dark:bg-amber-950/80',
-                    canAudit: true,
-                    primaryActionLabel: 'Revisión Técnica',
-                    primaryActionVariant: 'primary'
+                    canAudit: false,
+                    primaryActionLabel: 'Ver Observaciones',
+                    primaryActionVariant: 'secondary'
                 };
             }
             return {
