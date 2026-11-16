@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ProjectDetail, SectionComment } from '../types/revisionTecnicaTypes';
 import { Info, SquarePen, Check, Loader2, Scale, AlertCircle, CheckCircle2, X, Plus, Trash2 } from 'lucide-react';
-import { isPeaBorrador, getPeaStatusDescriptor } from '../../utils/peaStatusWorkflow';
+import { isPeaBorrador, getPeaStatusDescriptor, normalizePeaStatus } from '../../utils/peaStatusWorkflow';
 import { SectionObservationColumn } from './SectionObservationColumn';
 import { useAuth } from '../../../../api/AuthContext';
 import { GeistSelect, type GeistSelectOption } from '../../../../components/Common/GeistSelect';
@@ -106,6 +106,17 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     const statusDescriptor = getPeaStatusDescriptor(project.status, { esSupervisor: true });
     const statusLabel = statusDescriptor.key === 'EnRevision' ? 'En Revisión' : statusDescriptor.label;
 
+    const statusKey = normalizePeaStatus(project?.status);
+    const isApprovedOrSealed = statusKey === 'Aprobado' || statusKey === 'Publicado';
+    const isPhaseApprovedForUser =
+        isApprovedOrSealed ||
+        (isCoordCarrera && !isAdmin && (statusKey === 'RevisadoCoord' || statusKey === 'RevisadoAcad')) ||
+        (isCoordAcad && !isAdmin && statusKey === 'RevisadoAcad');
+
+    // La edición directa de secciones solo está permitida si la fase está activa para el usuario,
+    // no está en modo solo lectura, no ha sido aprobada previamente y existen callbacks de guardado.
+    const canEditSections = !readOnly && canAudit && !isPhaseApprovedForUser && Boolean(onUpdateSection || onUpdateDatosGenerales);
+
     // Estado local para edición directa in-situ de Datos Generales
     const [isEditingGeneral, setIsEditingGeneral] = useState<boolean>(false);
     const [editModalidad, setEditModalidad] = useState<string>('Presencial');
@@ -138,6 +149,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     const [editBioConsulta, setEditBioConsulta] = useState<string>('');
 
     const handleStartEditGeneral = () => {
+        if (!canEditSections) return;
         let mod = snap.Modalidad || project.modalidad || 'Presencial';
         if (mod.toLowerCase() === 'en linea' || mod.toLowerCase() === 'en línea') {
             mod = 'En Línea';
@@ -275,6 +287,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     };
 
     const handleStartEditSection = (key: string) => {
+        if (!canEditSections) return;
         if (key === 'ObjetivoAsignatura') {
             setEditObjetivo(stripHtml(snap.ObjetivoAsignatura || snap.objetivo_asignatura || snap.objetivoAsignatura || project.descripcion || ''));
         } else if (key === 'Prerrequisitos') {
@@ -432,7 +445,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
     };
 
     const renderSectionAction = (key: string, title: string) => {
-        if (!isAuthority || readOnly || (!onUpdateSection && !onUpdateDatosGenerales)) return null;
+        if (!canEditSections) return null;
 
         if (editingSectionId === key) {
             return (
@@ -725,7 +738,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 '1. Datos Generales de la Asignatura',
                                 'Metadatos curriculares institucionales, distribución horaria y créditos oficiales',
                                 'NombreAsignatura',
-                                (isAuthority || canAudit) && (
+                                canEditSections && (
                                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                         {isEditingGeneral ? (
                                             <>
@@ -763,7 +776,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
                                 )
                             )}
 
-                            {isEditingGeneral ? (
+                            {isEditingGeneral && canEditSections ? (
                                 /* ── MODO EDICIÓN IN-SITU DIRECTA ── */
                                 <div className="space-y-4 pt-1" onClick={(e) => e.stopPropagation()}>
                                     <dl className="divide-y divide-slate-100 dark:divide-zinc-800/80">
@@ -1893,7 +1906,7 @@ export const InteractiveSections: React.FC<InteractiveSectionsProps> = ({
             </div>
 
             {/* Modal de Confirmación para Habilitar Edición de Cualquier Sección */}
-            {pendingEditSection && (
+            {pendingEditSection && canEditSections && (
                 <div 
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
                     onClick={() => setPendingEditSection(null)}

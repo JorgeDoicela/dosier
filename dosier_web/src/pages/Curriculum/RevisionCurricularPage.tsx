@@ -33,13 +33,14 @@ export const RevisionCurricularPage: React.FC = () => {
     const isAuthority = isAdmin || isCoordCarrera || isCoordAcad || isVicerrector;
     const normalizedStatus = (data.project?.status || '').replace(/\s+/g, '').toLowerCase();
     const isObservado = normalizedStatus === 'observado' || normalizedStatus === 'encorrección' || normalizedStatus === 'encorreccion';
+    const isFinalizado = normalizedStatus === 'aprobado' || normalizedStatus === 'publicado';
     
     // Todos los revisores tienen auditoría y Asistente IA activo en la fase que les compete:
     // - Admin: en cualquier fase previa a legalización definitiva
-    // - Coord. Carrera: en enrevision, corregido, observado
+    // - Coord. Carrera: en enrevision, corregido
     // - Coord. Académica: en revisadocoord (y fases previas si coordina la carrera)
     // - Vicerrectorado: en revisadoacad
-    const isAuditActive = isAuthority && !isObservado && (
+    const isAuditActive = isAuthority && !isObservado && !isFinalizado && (
         isAdmin ||
         (isCoordCarrera && ['enviado', 'enrevision', 'corregido'].includes(normalizedStatus)) ||
         (isCoordAcad && ['revisadocoord', 'enrevision', 'corregido'].includes(normalizedStatus)) ||
