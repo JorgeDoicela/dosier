@@ -165,15 +165,17 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                                     setActiveObsId(prev => prev === obsId ? null : obsId);
                                 }}
                                 className="group relative flex items-center justify-center p-1 rounded-full hover:scale-125 transition-transform duration-150 cursor-pointer focus:outline-hidden"
-                                title={`Observación ${idx + 1}: ${formatRolObservador(obs.rolObservador, obs.nombreUsuario)}`}
+                                title={`${isPending ? 'Observación actual (Pendiente)' : 'Revisión anterior (Subsanada)'} · ${formatRolObservador(obs.rolObservador, obs.nombreUsuario)}`}
                                 aria-label={`Ver observación ${idx + 1}`}
                             >
                                 <span className={`inline-flex rounded-full h-[19px] w-[19px] shadow-sm transition-all ${
-                                    isActive
-                                        ? 'bg-[#0070f3] ring-2 ring-blue-300 dark:ring-blue-700'
-                                        : isPending
-                                        ? 'bg-amber-500'
-                                        : 'bg-emerald-500'
+                                    isPending
+                                        ? isActive
+                                            ? 'bg-amber-500 ring-2 ring-amber-300 dark:ring-amber-700'
+                                            : 'bg-amber-500'
+                                        : isActive
+                                            ? 'bg-emerald-600 ring-2 ring-emerald-300 dark:ring-emerald-700'
+                                            : 'bg-emerald-500'
                                 }`} />
                             </button>
                         );
@@ -214,14 +216,21 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                     <div className="rounded-2xl overflow-hidden">
                         <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain py-3.5 pl-4 pr-2 space-y-2">
                             <div className="flex items-center justify-between gap-2">
-                                <div className="min-w-0">
-                                    <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 truncate block">
+                                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                    <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 truncate">
                                         {formatRolObservador(activeObs.rolObservador, activeObs.nombreUsuario)}
+                                    </span>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                                        activeObs.status === 'Pendiente'
+                                            ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                                            : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                                    }`}>
+                                        {activeObs.status === 'Pendiente' ? 'Observación actual' : 'Revisión anterior · Subsanada'}
                                     </span>
                                 </div>
 
                                 <div className="flex items-center gap-2 shrink-0">
-                                    {canAudit && !readOnly && (
+                                    {canAudit && !readOnly && activeObs.status === 'Pendiente' && (
                                         <button
                                             type="button"
                                             onClick={() => {

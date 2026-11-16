@@ -607,10 +607,22 @@ namespace dosier_infrastructure.Curriculum
             entity.Estado = nuevoEstado;
             entity.FechaModificacion = DateTime.UtcNow;
 
-            if (nuevoEstado == "EnRevision" && !string.IsNullOrEmpty(firmaDocente))
+            if (nuevoEstado == "EnRevision")
             {
-                entity.FirmaElaboradoDocente = firmaDocente;
-                entity.FechaElaborado = DateTime.UtcNow;
+                if (!string.IsNullOrEmpty(firmaDocente))
+                {
+                    entity.FirmaElaboradoDocente = firmaDocente;
+                    entity.FechaElaborado = DateTime.UtcNow;
+                }
+
+                var obsPendientes = await _context.DocPeaObservaciones
+                    .Where(o => o.IdPea == idPea && o.Estado == "Pendiente")
+                    .ToListAsync();
+                foreach (var obs in obsPendientes)
+                {
+                    obs.Estado = "Subsanada";
+                    obs.FechaResolucion = DateTime.UtcNow;
+                }
             }
             else if (nuevoEstado == "RevisadoCoord")
             {
@@ -993,6 +1005,15 @@ namespace dosier_infrastructure.Curriculum
                 pea.FechaRevisadoAcad = null;
                 pea.FirmaAprobadoVicerrector = null;
                 pea.FechaAprobado = null;
+
+                if (pea.Observaciones != null)
+                {
+                    foreach (var obs in pea.Observaciones.Where(o => o.Estado == "Pendiente"))
+                    {
+                        obs.Estado = "Subsanada";
+                        obs.FechaResolucion = firmadoEn;
+                    }
+                }
             }
             else if (estadoNuevo == "RevisadoCoord")
             {
