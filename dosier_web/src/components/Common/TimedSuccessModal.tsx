@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowRight } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export interface TimedSuccessModalDetail {
     label: string;
@@ -24,9 +24,9 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
     isOpen,
     onClose,
     durationMs = 5000,
-    title = 'Documento Firmado Exitosamente',
+    title = 'Documento firmado exitosamente',
     subtitle = 'Su firma institucional ha sido estampada y certificada en el documento oficial con trazabilidad inmutable.',
-    badgeText = 'Firma Electrónica Certificada',
+    badgeText = 'Firma electrónica certificada',
     details,
     showProgress = true,
     primaryButtonText = 'Entendido',
@@ -87,7 +87,7 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                 aria-hidden="true"
             />
 
-            {/* Modal Centrado 100% Sólido */}
+            {/* Modal Centrado 100% Sólido sin cajas anidadas */}
             <div
                 className="relative flex w-full max-w-lg max-h-[90vh] bg-surface border border-border-thin rounded-xl shadow-2xl flex-col z-10 animate-in zoom-in-95 duration-200 overflow-hidden font-sans"
                 onClick={e => e.stopPropagation()}
@@ -104,13 +104,13 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                     </div>
                 )}
 
-                {/* Cabecera Minimalista del Drawer */}
+                {/* Cabecera Minimalista */}
                 <div className="border-b border-border-thin flex justify-between items-start p-5 sm:p-6 shrink-0 bg-surface">
-                    <div className="flex flex-col gap-1 min-w-0 pr-4">
+                    <div className="flex flex-col gap-0.5 min-w-0 pr-4">
                         <h3 className="text-base sm:text-lg font-bold tracking-tight text-text-main font-sans truncate">
                             {title}
                         </h3>
-                        <p className="section-label text-text-dim">
+                        <p className="text-xs text-text-dim">
                             {badgeText} — DOSIER
                         </p>
                     </div>
@@ -119,72 +119,76 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                         type="button"
                         onClick={onClose}
                         className="p-1.5 hover:bg-surface-hover rounded-xl text-text-dim hover:text-text-main transition-all cursor-pointer shrink-0"
-                        title="Cerrar panel"
+                        title="Cerrar modal"
                     >
                         <X size={18} />
                     </button>
                 </div>
 
-                {/* Cuerpo del Drawer con Scroll */}
-                <div className="flex-1 p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-5">
-                    {/* Bloque 1: Metadatos del Documento y Firma */}
+                {/* Cuerpo del Modal: presentación directa sin cajas anidadas */}
+                <div className="flex-1 p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-6">
+                    {/* Información del Documento y Firma */}
                     {details && details.length > 0 && (
                         <div className="space-y-2">
-                            <span className="section-label">Información de Firma</span>
-                            <div className="w-full bg-bg-deep/60 border border-border-thin rounded-2xl p-4 space-y-3">
+                            <h4 className="text-xs font-semibold text-text-dim">
+                                Información de firma
+                            </h4>
+                            <dl className="divide-y divide-border-thin">
                                 {details.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-xs gap-3 border-b border-border-thin/40 pb-2.5 last:border-0 last:pb-0">
-                                        <span className="text-[10px] font-medium uppercase tracking-wider text-text-dim shrink-0">
-                                            {item.label}:
-                                        </span>
-                                        <span className="font-semibold text-text-main text-right truncate font-mono text-[11.5px]">
+                                    <div key={idx} className="flex justify-between items-center py-2 text-xs gap-4 first:pt-0">
+                                        <dt className="text-text-dim font-normal">
+                                            {item.label}
+                                        </dt>
+                                        <dd className="font-medium text-text-main text-right truncate font-mono text-[11.5px]">
                                             {item.value}
-                                        </span>
+                                        </dd>
                                     </div>
                                 ))}
-                            </div>
+                            </dl>
                         </div>
                     )}
 
-                    {/* Bloque 2: Estado del Certificado y Seguridad */}
-                    <div className="space-y-2">
-                        <span className="section-label">Certificación y Seguridad</span>
-                        <div className="w-full bg-bg-deep/60 border border-border-thin rounded-2xl p-4 space-y-3">
-                            <div className="flex justify-between items-center text-xs border-b border-border-thin/40 pb-2.5">
-                                <span className="text-[10px] font-medium uppercase tracking-wider text-text-dim">
-                                    Estado del Certificado:
-                                </span>
-                                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    Firmado y Certificado
-                                </span>
+                    {/* Certificación y Seguridad */}
+                    <div className="space-y-2 pt-4 border-t border-border-thin">
+                        <h4 className="text-xs font-semibold text-text-dim">
+                            Certificación y seguridad
+                        </h4>
+                        <dl className="divide-y divide-border-thin">
+                            <div className="flex justify-between items-center py-2 text-xs first:pt-0">
+                                <dt className="text-text-dim font-normal">
+                                    Estado del certificado
+                                </dt>
+                                <dd className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    Firmado y certificado
+                                </dd>
                             </div>
-                            <div className="flex justify-between items-center text-xs border-b border-border-thin/40 pb-2.5">
-                                <span className="text-[10px] font-medium uppercase tracking-wider text-text-dim">
-                                    Estándar Criptográfico:
-                                </span>
-                                <span className="font-mono text-[11px] font-semibold text-text-main">
+                            <div className="flex justify-between items-center py-2 text-xs">
+                                <dt className="text-text-dim font-normal">
+                                    Estándar criptográfico
+                                </dt>
+                                <dd className="font-mono text-[11px] font-medium text-text-main">
                                     PKI X.509 / SHA-256
-                                </span>
+                                </dd>
                             </div>
-                            <div className="flex justify-between items-center text-xs border-b border-border-thin/40 pb-2.5">
-                                <span className="text-[10px] font-medium uppercase tracking-wider text-text-dim">
-                                    Trazabilidad CACES:
-                                </span>
-                                <span className="font-mono text-[11px] font-semibold text-text-main">
-                                    Inmutable y Auditada
-                                </span>
+                            <div className="flex justify-between items-center py-2 text-xs">
+                                <dt className="text-text-dim font-normal">
+                                    Trazabilidad CACES
+                                </dt>
+                                <dd className="font-medium text-text-main">
+                                    Inmutable y auditada
+                                </dd>
                             </div>
-                            <div className="pt-1">
-                                <p className="text-[11px] text-text-dim leading-relaxed">
-                                    {subtitle}
-                                </p>
-                            </div>
-                        </div>
+                        </dl>
+                        {subtitle && (
+                            <p className="text-xs text-text-dim leading-relaxed pt-2">
+                                {subtitle}
+                            </p>
+                        )}
                     </div>
                 </div>
 
-                {/* Footer Fijo con Acciones */}
+                {/* Footer con Acciones */}
                 <div className="p-4 sm:p-5 border-t border-border-thin bg-surface shrink-0 flex items-center justify-end gap-3">
                     <button
                         type="button"
@@ -196,10 +200,9 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                     <button
                         type="button"
                         onClick={handleAction}
-                        className="py-2 px-5 btn-vercel-primary text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                        className="py-2 px-5 btn-vercel-primary text-xs font-semibold rounded-xl transition-all shadow-sm cursor-pointer"
                     >
-                        <span>{primaryButtonText}</span>
-                        <ArrowRight size={14} />
+                        {primaryButtonText}
                     </button>
                 </div>
             </div>

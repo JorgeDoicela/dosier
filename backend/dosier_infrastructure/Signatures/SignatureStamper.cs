@@ -206,6 +206,41 @@ public class SignatureStamper
 
     // ── CONSTRUCTORES DE BLOQUES VISUALES ──────────────────────────────
 
+    private static byte[]? ResolveImageBytes(string? rawImage)
+    {
+        if (string.IsNullOrWhiteSpace(rawImage)) return null;
+        try
+        {
+            if (File.Exists(rawImage))
+            {
+                return File.ReadAllBytes(rawImage);
+            }
+
+            var possiblePaths = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, rawImage),
+                Path.Combine(Directory.GetCurrentDirectory(), rawImage),
+                Path.Combine(Directory.GetCurrentDirectory(), "uploads", rawImage),
+                Path.Combine(AppContext.BaseDirectory, "uploads", rawImage)
+            };
+
+            foreach (var p in possiblePaths)
+            {
+                if (File.Exists(p))
+                {
+                    return File.ReadAllBytes(p);
+                }
+            }
+
+            string cleanB64 = rawImage.Contains(',') ? rawImage.Split(',')[1] : rawImage;
+            return Convert.FromBase64String(cleanB64.Trim());
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Construye el estampado limpio de 'Solo Firma' para la matriz curricular PEA,
     /// renderizando únicamente el trazo manuscrito en alta definición sin bordes,
@@ -231,15 +266,11 @@ public class SignatureStamper
             .SetTextAlignment(TextAlignment.CENTER);
 
         bool imageAdded = false;
-        if (!string.IsNullOrWhiteSpace(firmaImagenB64))
+        var imgBytes = ResolveImageBytes(firmaImagenB64);
+        if (imgBytes != null)
         {
             try
             {
-                byte[] imgBytes = Convert.FromBase64String(
-                    firmaImagenB64.Contains(',')
-                        ? firmaImagenB64.Split(',')[1]
-                        : firmaImagenB64);
-
                 var imgData = ImageDataFactory.Create(imgBytes);
                 var img = new iText.Layout.Element.Image(imgData)
                     .ScaleToFit(stampWidth - 4.0f, stampHeight - 4.0f)
@@ -287,15 +318,11 @@ public class SignatureStamper
             .SetTextAlignment(TextAlignment.CENTER);
 
         bool imageAdded = false;
-        if (!string.IsNullOrWhiteSpace(firmaImagenB64))
+        var imgBytes = ResolveImageBytes(firmaImagenB64);
+        if (imgBytes != null)
         {
             try
             {
-                byte[] imgBytes = Convert.FromBase64String(
-                    firmaImagenB64.Contains(',')
-                        ? firmaImagenB64.Split(',')[1]
-                        : firmaImagenB64);
-
                 var imgData = ImageDataFactory.Create(imgBytes);
                 var img = new iText.Layout.Element.Image(imgData)
                     .ScaleToFit(canvasWidth - 10.0f, canvasHeight - 6.0f)
@@ -366,15 +393,11 @@ public class SignatureStamper
             .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
         bool qrAdded = false;
-        if (!string.IsNullOrWhiteSpace(firmaImagenB64))
+        var imgBytes = ResolveImageBytes(firmaImagenB64);
+        if (imgBytes != null)
         {
             try
             {
-                byte[] imgBytes = Convert.FromBase64String(
-                    firmaImagenB64.Contains(',')
-                        ? firmaImagenB64.Split(',')[1]
-                        : firmaImagenB64);
-
                 var imgData = ImageDataFactory.Create(imgBytes);
                 var img = new iText.Layout.Element.Image(imgData)
                     .ScaleToFit(24, 18)
@@ -514,15 +537,11 @@ public class SignatureStamper
             .SetVerticalAlignment(VerticalAlignment.MIDDLE)
             .SetHorizontalAlignment(HorizontalAlignment.CENTER);
 
-        if (!string.IsNullOrWhiteSpace(firmaImagenB64))
+        var imgBytes = ResolveImageBytes(firmaImagenB64);
+        if (imgBytes != null)
         {
             try
             {
-                byte[] imgBytes = Convert.FromBase64String(
-                    firmaImagenB64.Contains(',')
-                        ? firmaImagenB64.Split(',')[1]
-                        : firmaImagenB64);
-
                 var imgData = ImageDataFactory.Create(imgBytes);
                 var img = new iText.Layout.Element.Image(imgData)
                     .ScaleToFit(45, 16)

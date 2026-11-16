@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { documentInstanceService } from '../../../../services/documentInstanceService';
 import { getPeaByUuid, firmarPea } from '../../../../services/peaService';
 import { signDocumentWithDosier, signDocumentWithP12, getSignatureProfile } from '../../../../services/signaturesService';
@@ -40,6 +40,7 @@ export const useBuilderPdfAndSign = ({
 
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const isDirectApiUrl = useRef(false);
     const [resolvedFilename, setResolvedFilename] = useState<string>(() =>
         computeInstitutionalFilename(templateCode, formData)
     );
@@ -108,6 +109,12 @@ export const useBuilderPdfAndSign = ({
             return;
         }
 
+        // Si fue establecido explícitamente desde la API oficial, preservarla
+        if (isDirectApiUrl.current) {
+            isDirectApiUrl.current = false;
+            return;
+        }
+
         // Si pdfUrl ya es una ruta API directa con nomenclatura institucional, preservarla para visor
         if (pdfUrl && !pdfUrl.startsWith('blob:')) {
             return;
@@ -122,6 +129,7 @@ export const useBuilderPdfAndSign = ({
 
     // ── Generación de PDF ──
     const handleGeneratePdf = useCallback(async (blind = false) => {
+        isDirectApiUrl.current = false;
         setIsGenerating(true);
         addAudit(blind ? 'Generando vista previa sin identidades...' : 'Generando vista previa del documento...');
         try {
@@ -193,13 +201,15 @@ export const useBuilderPdfAndSign = ({
                         ? filename
                         : computeInstitutionalFilename(templateCode, formData, instanceData?.title);
 
+                    isDirectApiUrl.current = true;
                     setResolvedFilename(finalFilename);
                     setPdfBlob(blob);
                     setIsDraftMode(false);
 
-                    // Establecer URL directa al endpoint oficial para que el visor PDF del navegador use el nombre institucional
+                    // Establecer URL directa al endpoint oficial con bust-cache para que el visor cargue el PDF firmado actualizado
                     const directUrl = documentInstanceService.getInstancePdfUrl(docInstanceUuid, finalFilename);
-                    setPdfUrl(directUrl);
+                    const cacheBusterUrl = directUrl.includes('?') ? `${directUrl}&t=${Date.now()}` : `${directUrl}?t=${Date.now()}`;
+                    setPdfUrl(cacheBusterUrl);
                     return true;
                 }
             }
@@ -264,12 +274,22 @@ export const useBuilderPdfAndSign = ({
                     reader.readAsDataURL(signatureCertFile);
                 });
 
-                await firmarPea(idPea, {
+                const signRes = await firmarPea(idPea, {
                     tipoFirma: 'FirmaEC',
                     certificadoP12Base64: base64Cert,
                     contraseniaP12: signaturePassword,
                     rolFirmante: peaRoleInfo.codigo as any
                 });
+
+                if (formData && signRes) {
+                    const nextStatus = signRes.estadoNuevo || signRes.estado_nuevo || 'EnRevision';
+                    formData.estado = nextStatus;
+                    formData.status = nextStatus;
+                    if (signRes.firmaCode || signRes.firma_code) {
+                        formData.FirmaElaboradoDocente = signRes.firmaCode || signRes.firma_code;
+                        formData.firma_elaborado_docente = signRes.firmaCode || signRes.firma_code;
+                    }
+                }
             }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;
@@ -389,11 +409,21 @@ export const useBuilderPdfAndSign = ({
                 if (!idPea) {
                     throw new Error('No se pudo resolver el identificador oficial del PEA para firmar.');
                 }
-                await firmarPea(idPea, {
+                const signRes = await firmarPea(idPea, {
                     tipoFirma: 'DOSIER',
                     password: institutionalPassword ? institutionalPassword : undefined,
                     rolFirmante: peaRoleInfo.codigo as any
                 });
+
+                if (formData && signRes) {
+                    const nextStatus = signRes.estadoNuevo || signRes.estado_nuevo || 'EnRevision';
+                    formData.estado = nextStatus;
+                    formData.status = nextStatus;
+                    if (signRes.firmaCode || signRes.firma_code) {
+                        formData.FirmaElaboradoDocente = signRes.firmaCode || signRes.firma_code;
+                        formData.firma_elaborado_docente = signRes.firmaCode || signRes.firma_code;
+                    }
+                }
             }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;

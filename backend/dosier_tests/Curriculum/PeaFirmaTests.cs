@@ -123,6 +123,7 @@ namespace dosier_tests.Curriculum
                 IdCarrera = 5,
                 IdAsignatura = 12,
                 IdPeriodo = "2026-1",
+                IdDocenteElaborador = "1712345678",
                 TotalHorasAsignatura = 160,
                 Creditos = 3.5m,
                 HorasContactoDocente = 64,
@@ -241,8 +242,15 @@ namespace dosier_tests.Curriculum
             var coord = new User
             {
                 IdUsuario = 201,
-                Nombre = "Coordinador Académico",
+                Nombre = "Coordinador de Carrera",
                 Contrasenia = BCrypt.Net.BCrypt.HashPassword("Coord123!", 11),
+                Activo = true
+            };
+            var coordAcad = new User
+            {
+                IdUsuario = 202,
+                Nombre = "Coordinador Académico",
+                Contrasenia = BCrypt.Net.BCrypt.HashPassword("Acad123!", 11),
                 Activo = true
             };
             var vicerrector = new User
@@ -252,14 +260,16 @@ namespace dosier_tests.Curriculum
                 Contrasenia = BCrypt.Net.BCrypt.HashPassword("Vice123!", 11),
                 Activo = true
             };
-            context.Users.AddRange(coord, vicerrector);
+            context.Users.AddRange(coord, coordAcad, vicerrector);
             AssignRole(context, 201, "DOSIER_COORD_CARRERA");
+            AssignRole(context, 202, "DOSIER_COORD_ACAD");
             AssignRole(context, 301, "DOSIER_VICERRECTOR");
 
             var pea = new DocPea
             {
                 IdPea = 3,
                 Uuid = Guid.NewGuid().ToString(),
+                IdDocenteElaborador = "1712345678",
                 TotalHorasAsignatura = 160,
                 HorasContactoDocente = 64,
                 HorasPracticoExperimental = 32,
@@ -273,7 +283,7 @@ namespace dosier_tests.Curriculum
 
             var service = CreatePeaService(context, config);
 
-            // 1. Coordinador revisa y firma
+            // 1. Coordinador de carrera revisa y firma
             var dtoCoord = new FirmarPeaDto
             {
                 Password = "Coord123!",
@@ -286,7 +296,20 @@ namespace dosier_tests.Curriculum
             Assert.Equal("RevisadoCoord", resCoord.EstadoNuevo);
             Assert.StartsWith("DFRM-", resCoord.FirmaCode);
 
-            // 2. Vicerrector aprueba y firma
+            // 2. Coordinación académica revisa y emite aval
+            var dtoAcad = new FirmarPeaDto
+            {
+                Password = "Acad123!",
+                RolFirmante = "CoordinadorAcademico",
+                TipoFirma = "DOSIER"
+            };
+            var resAcad = await service.FirmarPeaAsync(pea.IdPea, coordAcad.IdUsuario, dtoAcad, "127.0.0.1", "TestAgent");
+
+            Assert.True(resAcad.Exito);
+            Assert.Equal("RevisadoAcad", resAcad.EstadoNuevo);
+            Assert.StartsWith("DFRM-", resAcad.FirmaCode);
+
+            // 3. Vicerrector aprueba y firma
             var dtoVice = new FirmarPeaDto
             {
                 Password = "Vice123!",
@@ -303,6 +326,7 @@ namespace dosier_tests.Curriculum
             var peaAprobado = await context.DocPeas.FindAsync(3);
             Assert.Equal("Aprobado", peaAprobado!.Estado);
             Assert.Equal(resCoord.FirmaCode, peaAprobado.FirmaRevisadoCoord);
+            Assert.Equal(resAcad.FirmaCode, peaAprobado.FirmaRevisadoAcad);
             Assert.Equal(resVice.FirmaCode, peaAprobado.FirmaAprobadoVicerrector);
             Assert.NotNull(peaAprobado.FechaAprobado);
         }
@@ -331,6 +355,7 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 4,
                 Uuid = Guid.NewGuid().ToString(),
+                IdDocenteElaborador = "0987654321",
                 TotalHorasAsignatura = 160,
                 HorasContactoDocente = 64,
                 HorasPracticoExperimental = 32,
@@ -388,6 +413,7 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 10,
                 Uuid = Guid.NewGuid().ToString(),
+                IdDocenteElaborador = "1799999999",
                 TotalHorasAsignatura = 160,
                 HorasContactoDocente = 64,
                 HorasPracticoExperimental = 32,
@@ -425,6 +451,7 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 11,
                 Uuid = Guid.NewGuid().ToString(),
+                IdDocenteElaborador = "1799999999",
                 TotalHorasAsignatura = 160,
                 HorasContactoDocente = 64,
                 HorasPracticoExperimental = 32,
@@ -482,6 +509,7 @@ namespace dosier_tests.Curriculum
             {
                 IdPea = 20,
                 Uuid = Guid.NewGuid().ToString(),
+                IdDocenteElaborador = "1788888888",
                 TotalHorasAsignatura = 160,
                 HorasContactoDocente = 64,
                 HorasPracticoExperimental = 32,
@@ -603,6 +631,7 @@ namespace dosier_tests.Curriculum
                 IdCarrera = 5,
                 IdAsignatura = 12,
                 IdPeriodo = "2026-1",
+                IdDocenteElaborador = "1720477031",
                 TotalHorasAsignatura = 160,
                 Creditos = 3.5m,
                 HorasContactoDocente = 64,

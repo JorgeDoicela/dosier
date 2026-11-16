@@ -657,7 +657,7 @@ namespace Dosier.Infrastructure.Common.Documents
                                 var sigProfileSub = _serviceProvider.GetService<dosier_infrastructure.Signatures.Subservices.ISignatureProfileSubservice>();
                                 if (sigProfileSub != null)
                                 {
-                                    var pDto = sigProfileSub.GetProfileAsync(uid).GetAwaiter().GetResult();
+                                    var pDto = await sigProfileSub.GetProfileAsync(uid);
                                     if (pDto != null)
                                     {
                                         firmaImagenB64 = pDto.FirmaImagenB64;
@@ -698,7 +698,7 @@ namespace Dosier.Infrastructure.Common.Documents
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[DOSIER Autosanación] Error al intentar autosanar el PDF firmado: {ex.Message}");
+                        Console.WriteLine($"[DOSIER Autosanación] Error al intentar autosanar el PDF firmado: {ex}");
                     }
                 }
                 else if (!string.IsNullOrWhiteSpace(instance.FinalPdfPath))

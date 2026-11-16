@@ -472,7 +472,12 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                             ]}
                         />
                     ) : pdfUrl ? (
-                        <iframe src={pdfUrl} className="flex-1 w-full bg-white rounded-xl border-none shadow-2xl" title={`Vista previa — ${title}`} />
+                        <iframe
+                            key={`${pdfUrl || 'no-pdf'}_${signatureRefreshTrigger}_${isOfficialDocument ? 'official' : 'draft'}`}
+                            src={pdfUrl}
+                            className="flex-1 w-full bg-white rounded-xl border-none shadow-2xl"
+                            title={`Vista previa — ${title}`}
+                        />
                     ) : (
                         <div className="flex-1 flex flex-col items-center justify-center text-text-dim/20 p-8">
                             <FileText size={80} strokeWidth={0.5} className="mb-6 lg:mb-8 md:w-[120px]" />
@@ -572,13 +577,13 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                     isOpen={isSignedModalOpen}
                     onClose={() => setIsSignedModalOpen(false)}
                     durationMs={4500}
-                    title="¡Documento Firmado Exitosamente!"
+                    title="¡Documento firmado exitosamente!"
                     subtitle="Su firma institucional ha sido estampada y certificada en el documento oficial con trazabilidad inmutable."
-                    badgeText="Firma Electrónica Certificada"
+                    badgeText="Firma electrónica certificada"
                     details={[
                         { label: 'Documento', value: signedModalData?.documentTitle || title },
-                        { label: 'Rol Firmante', value: signedModalData?.rolFirmante || 'Firmante Autorizado' },
-                        { label: 'Fecha y Hora', value: signedModalData?.fechaFirma || new Date().toLocaleString() }
+                        { label: 'Rol firmante', value: signedModalData?.rolFirmante || 'Firmante autorizado' },
+                        { label: 'Fecha y hora', value: signedModalData?.fechaFirma || new Date().toLocaleString() }
                     ]}
                 />
             )}
