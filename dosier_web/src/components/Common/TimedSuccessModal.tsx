@@ -125,17 +125,24 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                     </button>
                 </div>
 
-                {/* Cuerpo del Modal: presentación directa sin cajas anidadas */}
-                <div className="flex-1 p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-6">
+                {/* Cuerpo del Modal: presentación limpia sin líneas divisorias excesivas */}
+                <div className="flex-1 p-5 sm:p-6 overflow-y-auto custom-scrollbar space-y-5">
+                    {/* Mensaje descriptivo */}
+                    {subtitle && (
+                        <p className="text-xs text-text-dim leading-relaxed">
+                            {subtitle}
+                        </p>
+                    )}
+
                     {/* Información del Documento y Firma */}
                     {details && details.length > 0 && (
-                        <div className="space-y-2">
-                            <h4 className="text-xs font-semibold text-text-dim">
+                        <div className="space-y-2.5">
+                            <h4 className="text-xs font-semibold text-text-main">
                                 Información de firma
                             </h4>
-                            <dl className="divide-y divide-border-thin">
+                            <dl className="space-y-2">
                                 {details.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center py-2 text-xs gap-4 first:pt-0">
+                                    <div key={idx} className="flex justify-between items-baseline gap-4 text-xs">
                                         <dt className="text-text-dim font-normal">
                                             {item.label}
                                         </dt>
@@ -149,29 +156,29 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                     )}
 
                     {/* Certificación y Seguridad */}
-                    <div className="space-y-2 pt-4 border-t border-border-thin">
-                        <h4 className="text-xs font-semibold text-text-dim">
+                    <div className="space-y-2.5">
+                        <h4 className="text-xs font-semibold text-text-main">
                             Certificación y seguridad
                         </h4>
-                        <dl className="divide-y divide-border-thin">
-                            <div className="flex justify-between items-center py-2 text-xs first:pt-0">
+                        <dl className="space-y-2">
+                            <div className="flex justify-between items-baseline gap-4 text-xs">
                                 <dt className="text-text-dim font-normal">
                                     Estado del certificado
                                 </dt>
                                 <dd className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                                     Firmado y certificado
                                 </dd>
                             </div>
-                            <div className="flex justify-between items-center py-2 text-xs">
+                            <div className="flex justify-between items-baseline gap-4 text-xs">
                                 <dt className="text-text-dim font-normal">
                                     Estándar criptográfico
                                 </dt>
-                                <dd className="font-mono text-[11px] font-medium text-text-main">
+                                <dd className="font-mono text-[11.5px] font-medium text-text-main">
                                     PKI X.509 / SHA-256
                                 </dd>
                             </div>
-                            <div className="flex justify-between items-center py-2 text-xs">
+                            <div className="flex justify-between items-baseline gap-4 text-xs">
                                 <dt className="text-text-dim font-normal">
                                     Trazabilidad CACES
                                 </dt>
@@ -180,23 +187,20 @@ export const TimedSuccessModal: React.FC<TimedSuccessModalProps> = ({
                                 </dd>
                             </div>
                         </dl>
-                        {subtitle && (
-                            <p className="text-xs text-text-dim leading-relaxed pt-2">
-                                {subtitle}
-                            </p>
-                        )}
                     </div>
                 </div>
 
                 {/* Footer con Acciones */}
                 <div className="p-4 sm:p-5 border-t border-border-thin bg-surface shrink-0 flex items-center justify-end gap-3">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="py-2 px-4 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all cursor-pointer"
-                    >
-                        Cerrar
-                    </button>
+                    {onPrimaryClick && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="py-2 px-4 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                        >
+                            Cerrar
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={handleAction}

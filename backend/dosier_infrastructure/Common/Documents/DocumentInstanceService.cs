@@ -80,7 +80,15 @@ namespace Dosier.Infrastructure.Common.Documents
 
         public async Task<DocumentInstance?> GetByUuidAsync(string uuid, CancellationToken ct = default)
         {
-            var instance = await ResolveEditableInstanceAsync(uuid, ct);
+            // 1. Buscar primero por UUID exacto de la instancia para respetar la versión requerida
+            var instance = await _context.DocumentInstances
+                .FirstOrDefaultAsync(i => i.Uuid == uuid, ct);
+
+            // 2. Si no se encontró por UUID de instancia, resolver por EntityUuid (identificador de entidad o proyecto)
+            if (instance == null)
+            {
+                instance = await ResolveEditableInstanceAsync(uuid, ct);
+            }
 
             if (instance != null)
                 await SyncFromProjectAsync(instance, ct);
@@ -550,7 +558,10 @@ namespace Dosier.Infrastructure.Common.Documents
         {
             var normalizedCode = templateCode == "PRE_PEA" ? "PEA_OFICIAL" : templateCode;
             var existing = await _context.DocumentInstances
-                .FirstOrDefaultAsync(i => i.EntityUuid == entityUuid && (i.TemplateCode == normalizedCode || i.TemplateCode == templateCode), ct);
+                .Where(i => i.EntityUuid == entityUuid && (i.TemplateCode == normalizedCode || i.TemplateCode == templateCode))
+                .OrderByDescending(i => i.State == DocumentState.Signed)
+                .ThenByDescending(i => i.CreatedAt)
+                .FirstOrDefaultAsync(ct);
 
             if (existing != null)
             {

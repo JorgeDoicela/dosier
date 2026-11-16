@@ -979,7 +979,10 @@ namespace dosier_infrastructure.Curriculum
             _context.DocPeaTrazabilidades.Add(traza);
 
             // 8. Sincronizar instancia documental para autosanación y estampado inmediato del PDF firmado
-            var docInstancia = await _context.DocumentInstances.FirstOrDefaultAsync(d => d.EntityUuid == pea.Uuid);
+            var docInstancia = await _context.DocumentInstances
+                .Where(d => d.EntityUuid == pea.Uuid)
+                .OrderByDescending(d => d.CreatedAt)
+                .FirstOrDefaultAsync();
             if (docInstancia != null)
             {
                 docInstancia.SetFinalPdfPath(null);

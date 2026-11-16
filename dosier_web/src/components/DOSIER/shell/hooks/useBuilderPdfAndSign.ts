@@ -58,17 +58,18 @@ export const useBuilderPdfAndSign = ({
         fechaFirma?: string;
     } | null>(null);
 
-    const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
-    const isCorrectionState = ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(statusNormalized);
+    const [localStatus, setLocalStatus] = useState<string | null>(null);
+    const effectiveStatus = (localStatus || formData?.estado || formData?.status || projectStatus || '').toString().toLowerCase();
+    const isCorrectionState = ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(effectiveStatus);
     const isAlreadySubmitted = !isCorrectionState && (
-        statusNormalized === 'enrevision' ||
-        statusNormalized === 'en revisión' ||
-        statusNormalized === 'en_revision' ||
-        statusNormalized === 'revisadocoord' ||
-        statusNormalized === 'revisadoacad' ||
-        statusNormalized === 'aprobado' ||
-        statusNormalized === 'finalizado' ||
-        statusNormalized === 'signed' ||
+        effectiveStatus === 'enrevision' ||
+        effectiveStatus === 'en revisión' ||
+        effectiveStatus === 'en_revision' ||
+        effectiveStatus === 'revisadocoord' ||
+        effectiveStatus === 'revisadoacad' ||
+        effectiveStatus === 'aprobado' ||
+        effectiveStatus === 'finalizado' ||
+        effectiveStatus === 'signed' ||
         !!formData?.FirmaElaboradoDocente ||
         !!formData?.firma_elaborado_docente
     );
@@ -164,9 +165,9 @@ export const useBuilderPdfAndSign = ({
     }, [templateCode, isDraftMode, isAlreadySubmitted, formData, documentUuid, entityUuid, addAudit]);
 
     // ── Cargar PDF firmado u oficial ──
-    const fetchSignedPdf = useCallback(async (): Promise<boolean> => {
-        // En estado de corrección / subsanación, nunca se debe cargar el PDF congelado anterior
-        if (isCorrectionState) return false;
+    const fetchSignedPdf = useCallback(async (force: boolean = false): Promise<boolean> => {
+        // En estado de corrección / subsanación, nunca se debe cargar el PDF congelado anterior salvo forzado post-firma
+        if (!force && isCorrectionState) return false;
 
         const targetUuid = entityUuid || documentUuid || formData?.Uuid || formData?.uuid;
         if (!targetUuid || targetUuid.startsWith('temp_')) return false;
@@ -283,6 +284,7 @@ export const useBuilderPdfAndSign = ({
 
                 if (formData && signRes) {
                     const nextStatus = signRes.estadoNuevo || signRes.estado_nuevo || 'EnRevision';
+                    setLocalStatus(nextStatus);
                     formData.estado = nextStatus;
                     formData.status = nextStatus;
                     if (signRes.firmaCode || signRes.firma_code) {
@@ -316,7 +318,7 @@ export const useBuilderPdfAndSign = ({
             }
 
             setIsDraftMode(false);
-            const loaded = await fetchSignedPdf();
+            const loaded = await fetchSignedPdf(true);
             if (!loaded) {
                 await handleGeneratePdf(false);
             }
@@ -417,6 +419,7 @@ export const useBuilderPdfAndSign = ({
 
                 if (formData && signRes) {
                     const nextStatus = signRes.estadoNuevo || signRes.estado_nuevo || 'EnRevision';
+                    setLocalStatus(nextStatus);
                     formData.estado = nextStatus;
                     formData.status = nextStatus;
                     if (signRes.firmaCode || signRes.firma_code) {
@@ -450,7 +453,7 @@ export const useBuilderPdfAndSign = ({
             }
 
             setIsDraftMode(false);
-            const loaded = await fetchSignedPdf();
+            const loaded = await fetchSignedPdf(true);
             if (!loaded) {
                 await handleGeneratePdf(false);
             }
