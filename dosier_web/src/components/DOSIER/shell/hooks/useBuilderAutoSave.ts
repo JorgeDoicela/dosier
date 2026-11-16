@@ -62,6 +62,16 @@ export const useBuilderAutoSave = ({
     const formDataRef = useRef(formData);
     const onSaveRef = useRef(onSave);
     const isSavingRef = useRef(false);
+    const isSealedRef = useRef(false);
+
+    const markAsSealed = useCallback(() => {
+        isSealedRef.current = true;
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
+        lastSavedSnapshotRef.current = snapshotForm(formDataRef.current);
+    }, []);
 
     const currentSnapshot = snapshotForm(formData);
     const isDirty = currentSnapshot !== lastSavedSnapshotRef.current;
@@ -79,15 +89,21 @@ export const useBuilderAutoSave = ({
     }, [remoteChangeCount]);
 
     const saveDirtyData = useCallback(async (isUnmounting = false) => {
-        if (readOnly) {
-            coworkLog("[DOSIER] saveDirtyData: Documento es sólo lectura, omitiendo guardado.");
+        if (readOnly || isSealedRef.current) {
+            coworkLog("[DOSIER] saveDirtyData: Documento es sólo lectura o sellado, omitiendo guardado.");
+            return;
+        }
+        const data = formDataRef.current;
+        const rawEstado = String(data?.estado || data?.status || '').toLowerCase().trim();
+        if (['enrevision', 'en revisión', 'en_revision', 'revisadocoord', 'revisadoacad', 'aprobado', 'finalizado', 'signed'].includes(rawEstado)) {
+            coworkLog("[DOSIER] saveDirtyData: Documento en estado oficial bloqueado, omitiendo autoguardado.");
+            lastSavedSnapshotRef.current = snapshotForm(data);
             return;
         }
         if (isSavingRef.current) {
             coworkLog("[DOSIER] saveDirtyData: Guardado ya en curso, omitiendo.");
             return;
         }
-        const data = formDataRef.current;
         const saveFn = onSaveRef.current;
         if (!saveFn) {
             console.warn("[DOSIER] saveDirtyData: onSave no está definido.");
@@ -185,6 +201,7 @@ export const useBuilderAutoSave = ({
 
     useEffect(() => {
         return () => {
+            if (isSealedRef.current) return;
             coworkLog("[DOSIER] DOSIERBuilderShell desmontándose (unmount cleanup)...");
             const data = formDataRef.current;
             const currentSnap = snapshotForm(data);
@@ -199,7 +216,7 @@ export const useBuilderAutoSave = ({
 
     const handleClose = async () => {
         coworkLog("[DOSIER] handleClose: Iniciando cierre.");
-        if (!readOnly && saveTimeoutRef.current) {
+        if (!readOnly && !isSealedRef.current && saveTimeoutRef.current) {
             coworkLog("[DOSIER] handleClose: Limpiando timeout y forzando handleSave.");
             clearTimeout(saveTimeoutRef.current);
             try {
@@ -218,6 +235,7 @@ export const useBuilderAutoSave = ({
         handleSave,
         handleClose,
         handleToggleSectionLock,
+        markAsSealed,
         addAudit
     };
 };

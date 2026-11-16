@@ -169,15 +169,25 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
         return () => { isMounted = false; };
     }, [projectUuid, projectStatus, signatureRefreshTrigger]);
 
-    const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
-    const isCorrectionState = ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(statusNormalized);
+    const statusNormalized = (formData?.estado || formData?.status || projectStatus || '').toString().toLowerCase();
+    const isCorrectionState = !isAlreadySubmitted && ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(statusNormalized);
 
-    const activeSignatures = signatures.filter(s =>
-        (s.esValida !== false && (s as any).es_valida !== false) &&
-        (s.estado !== 2 && (s as any).estado !== 2) &&
-        !s.revocadaEn &&
-        !(s as any).revocada_en
-    );
+    const activeSignatures = React.useMemo(() => {
+        const valid = signatures.filter(s =>
+            (s.esValida !== false && (s as any).es_valida !== false) &&
+            (s.estado !== 2 && (s as any).estado !== 2) &&
+            !s.revocadaEn &&
+            !(s as any).revocada_en
+        );
+        const byRole = new Map<string, any>();
+        for (const sig of valid) {
+            const roleKey = String(sig.firmanteRol || sig.firmante_rol || 'Docente').toLowerCase().trim();
+            if (!byRole.has(roleKey)) {
+                byRole.set(roleKey, sig);
+            }
+        }
+        return Array.from(byRole.values());
+    }, [signatures]);
     const isDocumentSigned = !isCorrectionState && activeSignatures.length > 0;
     const isSubmittedOrApproved = !isCorrectionState && ([
         'enrevision', 'en revisión', 'en_revision',

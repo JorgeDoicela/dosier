@@ -53,7 +53,9 @@ export const useDOSIERBuilderShell = (props: UseDOSIERBuilderShellProps) => {
         entityUuid: props.entityUuid,
         projectStatus: props.projectStatus,
         signatureType: props.signatureType,
-        addAudit: autoSave.addAudit
+        addAudit: autoSave.addAudit,
+        onBeforeSign: autoSave.handleSave,
+        onAfterSign: autoSave.markAsSealed
     });
 
     const network = useBuilderNetworkMonitor({

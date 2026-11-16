@@ -639,18 +639,6 @@ namespace dosier_infrastructure.Curriculum
                 entity.FirmaElaboradoDocente = null;
                 entity.FechaElaborado = null;
 
-                // Revocar firmas previas en doc_documentos_firmas por reapertura para subsanación
-                var firmasPrevias = await _context.DocDocumentoFirmas
-                    .Where(f => f.DocumentoUuid == entity.Uuid && f.EsValida)
-                    .ToListAsync();
-
-                foreach (var firma in firmasPrevias)
-                {
-                    firma.EsValida = false;
-                    firma.RevocadaEn = DateTime.UtcNow;
-                    firma.MotivoRevocacion = "Reapertura para subsanación de observaciones curriculares.";
-                }
-
                 // Re-habilitar las instancias documentales para subsanación activa por el docente
                 var instancias = await _context.DocumentInstances
                     .Where(di => di.EntityUuid == entity.Uuid)
@@ -659,6 +647,25 @@ namespace dosier_infrastructure.Curriculum
                 foreach (var inst in instancias)
                 {
                     inst.ReopenForRevision();
+                }
+
+                var targetDocUuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { entity.Uuid };
+                foreach (var inst in instancias)
+                {
+                    if (!string.IsNullOrEmpty(inst.Uuid))
+                        targetDocUuids.Add(inst.Uuid);
+                }
+
+                // Revocar firmas previas en doc_documentos_firmas por reapertura para subsanación
+                var firmasPrevias = await _context.DocDocumentoFirmas
+                    .Where(f => targetDocUuids.Contains(f.DocumentoUuid) && f.EsValida)
+                    .ToListAsync();
+
+                foreach (var firma in firmasPrevias)
+                {
+                    firma.EsValida = false;
+                    firma.RevocadaEn = DateTime.UtcNow;
+                    firma.MotivoRevocacion = "Reapertura para subsanación de observaciones curriculares.";
                 }
             }
 
@@ -828,7 +835,10 @@ namespace dosier_infrastructure.Curriculum
 
                 // Sincronizar exhaustivamente la última versión del snapshot del docente antes del sellado criptográfico
                 var instanciaDocente = await _context.DocumentInstances
-                    .FirstOrDefaultAsync(d => d.EntityUuid == pea.Uuid && d.TemplateCode == "PEA_OFICIAL");
+                    .Where(d => d.EntityUuid == pea.Uuid && d.TemplateCode == "PEA_OFICIAL")
+                    .OrderByDescending(d => d.UpdatedAt)
+                    .ThenByDescending(d => d.Id)
+                    .FirstOrDefaultAsync();
                 if (instanciaDocente != null && !string.IsNullOrWhiteSpace(instanciaDocente.DataSnapshotJson))
                 {
                     await SincronizarMetadataAsync(pea.Uuid, instanciaDocente.DataSnapshotJson);
@@ -920,7 +930,37 @@ namespace dosier_infrastructure.Curriculum
                 institucion = "Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET)"
             });
 
-            // 5. Registro en doc_documentos_firmas (Módulo Transversal Oficial)
+            // 5. Revocar firmas anteriores obsoletas y registrar nueva firma en doc_documentos_firmas
+            var instanciasPea = await _context.DocumentInstances
+                .Where(d => d.EntityUuid == pea.Uuid)
+                .OrderByDescending(d => d.UpdatedAt)
+                .ThenByDescending(d => d.Id)
+                .ToListAsync();
+
+            var targetDocUuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { pea.Uuid };
+            foreach (var inst in instanciasPea)
+            {
+                if (!string.IsNullOrEmpty(inst.Uuid))
+                    targetDocUuids.Add(inst.Uuid);
+            }
+
+            var firmasActivasPrevias = await _context.DocDocumentoFirmas
+                .Where(f => targetDocUuids.Contains(f.DocumentoUuid) && f.EsValida)
+                .ToListAsync();
+
+            foreach (var firmaPrevia in firmasActivasPrevias)
+            {
+                // Si el Docente entrega (EnRevision), invalida todo el ciclo previo; si es otro rol, invalida previas de su mismo rol
+                if (estadoNuevo == "EnRevision" || string.Equals(firmaPrevia.FirmanteRol, rol, StringComparison.OrdinalIgnoreCase))
+                {
+                    firmaPrevia.EsValida = false;
+                    firmaPrevia.RevocadaEn = firmadoEn;
+                    firmaPrevia.MotivoRevocacion = estadoNuevo == "EnRevision"
+                        ? "Reemplazada por nueva entrega firmada tras subsanación o actualización curricular."
+                        : $"Reemplazada por nueva firma del rol {rol}.";
+                }
+            }
+
             var registroFirma = new DocDocumentoFirma
             {
                 Uuid = Guid.NewGuid().ToString(),
@@ -947,6 +987,12 @@ namespace dosier_infrastructure.Curriculum
             {
                 pea.FirmaElaboradoDocente = firmaCode;
                 pea.FechaElaborado = firmadoEn;
+                pea.FirmaRevisadoCoord = null;
+                pea.FechaRevisadoCoord = null;
+                pea.FirmaRevisadoAcad = null;
+                pea.FechaRevisadoAcad = null;
+                pea.FirmaAprobadoVicerrector = null;
+                pea.FechaAprobado = null;
             }
             else if (estadoNuevo == "RevisadoCoord")
             {
@@ -979,10 +1025,7 @@ namespace dosier_infrastructure.Curriculum
             _context.DocPeaTrazabilidades.Add(traza);
 
             // 8. Sincronizar instancia documental para autosanación y estampado inmediato del PDF firmado
-            var docInstancia = await _context.DocumentInstances
-                .Where(d => d.EntityUuid == pea.Uuid)
-                .OrderByDescending(d => d.CreatedAt)
-                .FirstOrDefaultAsync();
+            var docInstancia = instanciasPea.FirstOrDefault();
             if (docInstancia != null)
             {
                 docInstancia.SetFinalPdfPath(null);
@@ -993,7 +1036,7 @@ namespace dosier_infrastructure.Curriculum
                     var instanceService = (Dosier.Application.Common.Documents.IDocumentInstanceService?)_serviceProvider?.GetService(typeof(Dosier.Application.Common.Documents.IDocumentInstanceService));
                     if (instanceService != null)
                     {
-                        await instanceService.ValidateStorageIntegrityAsync(docInstancia);
+                        await instanceService.ValidateStorageIntegrityAsync(docInstancia, force: true);
                     }
                 }
                 catch (Exception ex)

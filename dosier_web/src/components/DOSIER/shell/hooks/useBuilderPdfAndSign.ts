@@ -13,6 +13,8 @@ export interface UseBuilderPdfAndSignProps {
     projectStatus?: string;
     signatureType?: string;
     addAudit: (msg: string, type?: string) => void;
+    onBeforeSign?: () => Promise<void>;
+    onAfterSign?: () => void;
 }
 
 export const computeInstitutionalFilename = (tmplCode: string, data: any, defaultTitle?: string): string => {
@@ -33,7 +35,9 @@ export const useBuilderPdfAndSign = ({
     documentUuid,
     entityUuid,
     projectStatus,
-    addAudit
+    addAudit,
+    onBeforeSign,
+    onAfterSign
 }: UseBuilderPdfAndSignProps) => {
     const { addToast } = useNotifications();
     const { roles = [] } = useAuth();
@@ -59,9 +63,10 @@ export const useBuilderPdfAndSign = ({
     } | null>(null);
 
     const [localStatus, setLocalStatus] = useState<string | null>(null);
+    const isSignedInSessionRef = useRef(false);
     const effectiveStatus = (localStatus || formData?.estado || formData?.status || projectStatus || '').toString().toLowerCase();
-    const isCorrectionState = ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(effectiveStatus);
-    const isAlreadySubmitted = !isCorrectionState && (
+    const isCorrectionState = !isSignedInSessionRef.current && ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(effectiveStatus);
+    const isAlreadySubmitted = isSignedInSessionRef.current || (!isCorrectionState && (
         effectiveStatus === 'enrevision' ||
         effectiveStatus === 'en revisión' ||
         effectiveStatus === 'en_revision' ||
@@ -72,7 +77,7 @@ export const useBuilderPdfAndSign = ({
         effectiveStatus === 'signed' ||
         !!formData?.FirmaElaboradoDocente ||
         !!formData?.firma_elaborado_docente
-    );
+    ));
 
     const isPea = templateCode === 'PEA_OFICIAL';
 
@@ -129,12 +134,12 @@ export const useBuilderPdfAndSign = ({
     }, [pdfBlob]);
 
     // ── Generación de PDF ──
-    const handleGeneratePdf = useCallback(async (blind = false) => {
+    const handleGeneratePdf = useCallback(async (blind = false, forceOfficial = false) => {
         isDirectApiUrl.current = false;
         setIsGenerating(true);
         addAudit(blind ? 'Generando vista previa sin identidades...' : 'Generando vista previa del documento...');
         try {
-            const draftMode = isDraftMode && !isAlreadySubmitted;
+            const draftMode = (forceOfficial || isSignedInSessionRef.current || isAlreadySubmitted) ? false : isDraftMode;
             const payload = {
                 ...formData,
                 uuid: documentUuid || formData?.Uuid || formData?.uuid,
@@ -167,7 +172,7 @@ export const useBuilderPdfAndSign = ({
     // ── Cargar PDF firmado u oficial ──
     const fetchSignedPdf = useCallback(async (force: boolean = false): Promise<boolean> => {
         // En estado de corrección / subsanación, nunca se debe cargar el PDF congelado anterior salvo forzado post-firma
-        if (!force && isCorrectionState) return false;
+        if (!force && !isSignedInSessionRef.current && isCorrectionState) return false;
 
         const targetUuid = entityUuid || documentUuid || formData?.Uuid || formData?.uuid;
         if (!targetUuid || targetUuid.startsWith('temp_')) return false;
@@ -222,8 +227,10 @@ export const useBuilderPdfAndSign = ({
         }
     }, [entityUuid, documentUuid, formData, templateCode, isCorrectionState]);
 
-    // Autocargar PDF firmado si existe; si no, mantener estado inicial en borrador
+    // Autocargar PDF firmado si existe al montar o cambiar de documento; si no, mantener estado inicial en borrador
     useEffect(() => {
+        if (isSignedInSessionRef.current) return;
+
         let isMounted = true;
         const initPdf = async () => {
             if (isCorrectionState) {
@@ -237,7 +244,7 @@ export const useBuilderPdfAndSign = ({
             if (!hasSigned && isMounted) {
                 if (isAlreadySubmitted) {
                     setIsDraftMode(false);
-                    await handleGeneratePdf(false);
+                    await handleGeneratePdf(false, true);
                 } else {
                     setIsDraftMode(true);
                 }
@@ -245,7 +252,8 @@ export const useBuilderPdfAndSign = ({
         };
         initPdf();
         return () => { isMounted = false; };
-    }, [entityUuid, documentUuid, projectStatus, signatureRefreshTrigger, fetchSignedPdf, isAlreadySubmitted, handleGeneratePdf, isCorrectionState]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [entityUuid, documentUuid, projectStatus, templateCode]);
 
     // ── Firma Electrónica PAdES — Upload-on-Demand ──
     const handleSign = async () => {
@@ -257,6 +265,12 @@ export const useBuilderPdfAndSign = ({
         setIsSigning(true);
         addAudit('Iniciando proceso de firma electrónica...');
         try {
+            if (onBeforeSign) {
+                try {
+                    await onBeforeSign();
+                } catch {}
+            }
+
             const peaRoleInfo = getPeaRol();
             const calculatedRol = isPea ? peaRoleInfo.label : 'Director de Proyecto';
 
@@ -282,6 +296,7 @@ export const useBuilderPdfAndSign = ({
                     rolFirmante: peaRoleInfo.codigo as any
                 });
 
+                isSignedInSessionRef.current = true;
                 if (formData && signRes) {
                     const nextStatus = signRes.estadoNuevo || signRes.estado_nuevo || 'EnRevision';
                     setLocalStatus(nextStatus);
@@ -292,6 +307,7 @@ export const useBuilderPdfAndSign = ({
                         formData.firma_elaborado_docente = signRes.firmaCode || signRes.firma_code;
                     }
                 }
+                if (onAfterSign) onAfterSign();
             }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;
@@ -315,12 +331,14 @@ export const useBuilderPdfAndSign = ({
                 formDataObj.append('rolFirmante', calculatedRol);
 
                 await signDocumentWithP12(formDataObj).catch(() => {});
+                isSignedInSessionRef.current = true;
+                if (onAfterSign) onAfterSign();
             }
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf(true);
             if (!loaded) {
-                await handleGeneratePdf(false);
+                await handleGeneratePdf(false, true);
             }
 
             setSignatureCertFile(null);
@@ -403,6 +421,12 @@ export const useBuilderPdfAndSign = ({
                 return;
             }
 
+            if (onBeforeSign) {
+                try {
+                    await onBeforeSign();
+                } catch {}
+            }
+
             const peaRoleInfo = getPeaRol();
             const calculatedRol = isPea ? peaRoleInfo.label : 'Director de Proyecto';
 
@@ -417,6 +441,7 @@ export const useBuilderPdfAndSign = ({
                     rolFirmante: peaRoleInfo.codigo as any
                 });
 
+                isSignedInSessionRef.current = true;
                 if (formData && signRes) {
                     const nextStatus = signRes.estadoNuevo || signRes.estado_nuevo || 'EnRevision';
                     setLocalStatus(nextStatus);
@@ -427,6 +452,7 @@ export const useBuilderPdfAndSign = ({
                         formData.firma_elaborado_docente = signRes.firmaCode || signRes.firma_code;
                     }
                 }
+                if (onAfterSign) onAfterSign();
             }
 
             let targetDocUuid = documentUuid || formData?.Uuid || formData?.uuid;
@@ -450,12 +476,14 @@ export const useBuilderPdfAndSign = ({
                 };
 
                 await signDocumentWithDosier(dto as any).catch(() => {});
+                isSignedInSessionRef.current = true;
+                if (onAfterSign) onAfterSign();
             }
 
             setIsDraftMode(false);
             const loaded = await fetchSignedPdf(true);
             if (!loaded) {
-                await handleGeneratePdf(false);
+                await handleGeneratePdf(false, true);
             }
 
             setInstitutionalPassword('');

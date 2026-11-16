@@ -41,13 +41,29 @@ public class SignatureVerificationSubservice : ISignatureVerificationSubservice
             }
         }
 
+        var peaEstado = await _context.DocPeas
+            .AsNoTracking()
+            .Where(p => matchingDocUuids.Contains(p.Uuid) && p.Activo)
+            .Select(p => p.Estado)
+            .FirstOrDefaultAsync();
+
+        if (peaEstado is "Borrador" or "Observado" or "Corregido")
+        {
+            return Enumerable.Empty<SignatureRecordDto>();
+        }
+
         var firmas = await _context.DocDocumentoFirmas
             .AsNoTracking()
             .Where(f => matchingDocUuids.Contains(f.DocumentoUuid) && f.EsValida)
             .OrderByDescending(f => f.FechaFirma)
             .ToListAsync();
 
-        return firmas.Select(MapToRecordDto);
+        var deduplicated = firmas
+            .GroupBy(f => (f.FirmanteRol ?? "Docente").Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
+            .OrderByDescending(f => f.FechaFirma);
+
+        return deduplicated.Select(MapToRecordDto);
     }
 
     public async Task<SignatureVerificationDto> VerifyAsync(string firmaCode)

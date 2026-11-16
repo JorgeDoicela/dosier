@@ -441,9 +441,30 @@ namespace Dosier.Infrastructure.Common.Documents
                 throw new KeyNotFoundException($"La instancia o proyecto '{uuid}' no existe.");
             }
 
-            // Si la instancia resuelta sigue siendo inmutable (solo-Signed sin Draft disponible),
-            // crear un nuevo Draft que herede el snapshot actual.
-            if (IsImmutable(instance))
+            // Para PEA_OFICIAL, validar estado normativo del PEA antes de mutar o clonar instancias
+            if (instance.TemplateCode == "PEA_OFICIAL" && !string.IsNullOrWhiteSpace(instance.EntityUuid))
+            {
+                var peaEstado = await _context.DocPeas
+                    .AsNoTracking()
+                    .Where(p => p.Uuid == instance.EntityUuid && p.Activo)
+                    .Select(p => p.Estado)
+                    .FirstOrDefaultAsync(ct);
+
+                if (!string.IsNullOrEmpty(peaEstado) &&
+                    !string.Equals(peaEstado, "Borrador", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(peaEstado, "Observado", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(peaEstado, "Corregido", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] PEA '{instance.EntityUuid}' en estado '{peaEstado}' (bloqueado). Omitiendo autoguardado tardío.");
+                    return instance;
+                }
+
+                if (IsImmutable(instance))
+                {
+                    instance.ReopenForRevision();
+                }
+            }
+            else if (IsImmutable(instance))
             {
                 Console.WriteLine($"[DOSIER] [UpdateMetadataAsync] Instancia sellada. Creando nuevo Draft para '{instance.EntityUuid}'.");
                 instance = DocumentInstance.Create(
@@ -559,8 +580,8 @@ namespace Dosier.Infrastructure.Common.Documents
             var normalizedCode = templateCode == "PRE_PEA" ? "PEA_OFICIAL" : templateCode;
             var existing = await _context.DocumentInstances
                 .Where(i => i.EntityUuid == entityUuid && (i.TemplateCode == normalizedCode || i.TemplateCode == templateCode))
-                .OrderByDescending(i => i.State == DocumentState.Signed)
-                .ThenByDescending(i => i.CreatedAt)
+                .OrderByDescending(i => i.UpdatedAt)
+                .ThenByDescending(i => i.Id)
                 .FirstOrDefaultAsync(ct);
 
             if (existing != null)
@@ -581,6 +602,26 @@ namespace Dosier.Infrastructure.Common.Documents
 
         public async Task ValidateStorageIntegrityAsync(DocumentInstance instance, bool force, CancellationToken ct = default)
         {
+            // Para PEA_OFICIAL en fase de elaboración o subsanación, impedir sellado automático y asegurar estado editable
+            if (instance.TemplateCode == "PEA_OFICIAL" && !string.IsNullOrWhiteSpace(instance.EntityUuid))
+            {
+                var peaEstado = await _context.DocPeas
+                    .AsNoTracking()
+                    .Where(p => p.Uuid == instance.EntityUuid && p.Activo)
+                    .Select(p => p.Estado)
+                    .FirstOrDefaultAsync(ct);
+
+                if (peaEstado is "Borrador" or "Observado" or "Corregido")
+                {
+                    if (instance.State == DocumentState.Signed || !string.IsNullOrWhiteSpace(instance.FinalPdfPath))
+                    {
+                        instance.ReopenForRevision();
+                        await _context.SaveChangesAsync(ct);
+                    }
+                    return;
+                }
+            }
+
             // 0. Detectar contaminación cruzada: Si otra instancia de diferente plantilla para la misma entidad tiene exactamente la misma ruta de PDF
             if (!string.IsNullOrWhiteSpace(instance.EntityUuid) && !string.IsNullOrWhiteSpace(instance.FinalPdfPath))
             {
@@ -606,10 +647,16 @@ namespace Dosier.Infrastructure.Common.Documents
                 }
             }
 
-            var firmasDb = await _context.DocDocumentoFirmas
+            var rawFirmasDb = await _context.DocDocumentoFirmas
                 .Where(f => (f.DocumentoUuid == instance.Uuid || f.DocumentoUuid == instance.EntityUuid) && f.EsValida)
                 .OrderBy(f => f.FechaFirma)
                 .ToListAsync(ct);
+
+            var firmasDb = rawFirmasDb
+                .GroupBy(f => (f.FirmanteRol ?? "Docente").Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.Last())
+                .OrderBy(f => f.FechaFirma)
+                .ToList();
 
             var lastFirma = firmasDb.LastOrDefault();
             bool isFileMissing = string.IsNullOrWhiteSpace(instance.FinalPdfPath) || !_storageService.FileExists(instance.FinalPdfPath);
