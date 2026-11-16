@@ -1116,7 +1116,119 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 }
             }
 
-            // 7. Normalizar Código de Carrera (resiliencia institucional CACES / SIGAFI)
+            // 7. Normalizar Resultados de Aprendizaje y Perfil de Egreso (Prevenir impresión de objetos en Handlebars)
+            if (dict.TryGetValue("ResultadosAprendizaje", out var rawRda) || dict.TryGetValue("resultados_aprendizaje", out rawRda))
+            {
+                if (rawRda is System.Collections.IEnumerable enumRda && !(rawRda is string))
+                {
+                    var rdaLines = new List<string>();
+                    int idx = 1;
+                    foreach (var item in enumRda)
+                    {
+                        if (item == null) continue;
+                        string code = $"RDA {idx}";
+                        string desc = "";
+                        string tipo = "";
+                        if (item is IDictionary<string, object?> rDict)
+                        {
+                            object? cv = null, dv = null, tv = null;
+                            rDict.TryGetValue("CodigoRda", out cv);
+                            if (cv == null) rDict.TryGetValue("codigo_rda", out cv);
+                            code = cv?.ToString() ?? code;
+
+                            rDict.TryGetValue("Descripcion", out dv);
+                            if (dv == null) rDict.TryGetValue("descripcion", out dv);
+                            desc = dv?.ToString() ?? "";
+
+                            rDict.TryGetValue("TipoRda", out tv);
+                            if (tv == null) rDict.TryGetValue("tipo_rda", out tv);
+                            tipo = tv?.ToString() ?? "";
+                        }
+                        else if (item is JsonElement je && je.ValueKind == JsonValueKind.Object)
+                        {
+                            if (je.TryGetProperty("CodigoRda", out var cp) || je.TryGetProperty("codigo_rda", out cp)) code = cp.GetString() ?? code;
+                            if (je.TryGetProperty("Descripcion", out var dp) || je.TryGetProperty("descripcion", out dp)) desc = dp.GetString() ?? "";
+                            if (je.TryGetProperty("TipoRda", out var tp) || je.TryGetProperty("tipo_rda", out tp)) tipo = tp.GetString() ?? "";
+                        }
+                        else
+                        {
+                            desc = item.ToString() ?? "";
+                        }
+
+                        // Si por error se coló el RDA de carrera aquí, moverlo a RdaCarrera si está vacío
+                        if (string.Equals(tipo, "Carrera", StringComparison.OrdinalIgnoreCase) || code == "RDA-EGRESO")
+                        {
+                            if ((!dict.ContainsKey("RdaCarrera") || string.IsNullOrWhiteSpace(dict["RdaCarrera"]?.ToString())) && !string.IsNullOrWhiteSpace(desc))
+                            {
+                                dict["RdaCarrera"] = desc;
+                                dict["rda_carrera"] = desc;
+                            }
+                            continue;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(desc))
+                        {
+                            rdaLines.Add($"<p><strong>{code}:</strong> {desc}</p>");
+                            idx++;
+                        }
+                    }
+
+                    if (rdaLines.Count > 0)
+                    {
+                        var html = string.Join("", rdaLines);
+                        dict["ResultadosAprendizaje"] = html;
+                        dict["resultados_aprendizaje"] = html;
+                        dict["rda_asignatura"] = html;
+                    }
+                }
+                else if (rawRda is string strRda && strRda.TrimStart().StartsWith("[{"))
+                {
+                    try
+                    {
+                        using var rdaDoc = JsonDocument.Parse(strRda);
+                        if (rdaDoc.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            var rdaLines = new List<string>();
+                            int idx = 1;
+                            foreach (var el in rdaDoc.RootElement.EnumerateArray())
+                            {
+                                string code = $"RDA {idx}";
+                                if (el.TryGetProperty("CodigoRda", out var cp) || el.TryGetProperty("codigo_rda", out cp)) code = cp.GetString() ?? code;
+                                string desc = "";
+                                if (el.TryGetProperty("Descripcion", out var dp) || el.TryGetProperty("descripcion", out dp)) desc = dp.GetString() ?? "";
+                                string tipo = "";
+                                if (el.TryGetProperty("TipoRda", out var tp) || el.TryGetProperty("tipo_rda", out tp)) tipo = tp.GetString() ?? "";
+
+                                if (string.Equals(tipo, "Carrera", StringComparison.OrdinalIgnoreCase) || code == "RDA-EGRESO")
+                                {
+                                    if ((!dict.ContainsKey("RdaCarrera") || string.IsNullOrWhiteSpace(dict["RdaCarrera"]?.ToString())) && !string.IsNullOrWhiteSpace(desc))
+                                    {
+                                        dict["RdaCarrera"] = desc;
+                                        dict["rda_carrera"] = desc;
+                                    }
+                                    continue;
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(desc))
+                                {
+                                    rdaLines.Add($"<p><strong>{code}:</strong> {desc}</p>");
+                                    idx++;
+                                }
+                            }
+                            if (rdaLines.Count > 0)
+                            {
+                                var html = string.Join("", rdaLines);
+                                dict["ResultadosAprendizaje"] = html;
+                                dict["resultados_aprendizaje"] = html;
+                                dict["rda_asignatura"] = html;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+
+            // 8. Normalizar Código de Carrera (resiliencia institucional CACES / SIGAFI)
             string? codCarrera = dict.GetValueOrDefault("CodigoCarrera")?.ToString()
                 ?? dict.GetValueOrDefault("codigo_carrera")?.ToString()
                 ?? dict.GetValueOrDefault("codigo_cases")?.ToString()

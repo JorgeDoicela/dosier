@@ -201,7 +201,7 @@ public interface IDosierSignatureService
 }
 ```
 
-* **Firma Institucional DOSIER:** Requiere re-autenticación obligatoria con contraseña para garantizar no-repudio. Genera código de trazabilidad con formato `DFRM-{AÑO}-{UUID8}`, firma HMAC-SHA256, hash SHA-256 del binario y estampa visual en el PDF.
+* **Firma Institucional DOSIER:** Valida la identidad del firmante mediante la sesión activa autenticada (con re-autenticación de contraseña opcional). Genera código de trazabilidad con formato `DFRM-{AÑO}-{UUID8}`, firma HMAC-SHA256, hash SHA-256 del binario y estampa visual en el PDF.
 * **Firma con Certificado PKCS#12 (.p12 / FirmaEC):** Valida la vigencia de la cadena de confianza y la clave privada del certificado del docente o autoridad.
 * **Verificación Pública (`VerifyAsync`):** Endpoint de libre acceso (sin sesión requerida) consumido desde el código QR impreso en el documento para certificar la validez de la firma.
 

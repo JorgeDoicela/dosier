@@ -283,7 +283,23 @@ export const FinalizeAuditModal: React.FC<FinalizeAuditModalProps> = ({
 
                 {/* ── PESTAÑA 2: DEVOLVER AL DOCENTE ── */}
                 {activeTab === 'devolver' && (
-                    <div className="space-y-6 pt-3">
+                    <div className="space-y-4 pt-3">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-700 dark:text-zinc-300 block">
+                                Instrucciones y observaciones generales de subsanación
+                            </label>
+                            <textarea
+                                value={generalFeedback}
+                                onChange={(e) => setGeneralFeedback(e.target.value)}
+                                rows={4}
+                                placeholder="Escriba las observaciones generales, motivos de la devolución o requerimientos que el docente debe subsanar..."
+                                className="w-full rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all custom-scrollbar resize-y"
+                            />
+                            <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                Esta indicación será visible de inmediato para el docente en el panel de revisiones curriculares.
+                            </p>
+                        </div>
+
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-slate-700 dark:text-zinc-300 block">
                                 Plazo límite de entrega

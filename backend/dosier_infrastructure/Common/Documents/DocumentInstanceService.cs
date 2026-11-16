@@ -799,17 +799,11 @@ namespace Dosier.Infrastructure.Common.Documents
                             ["Observacion"] = p.Observacion ?? ""
                         }).ToList(),
                         ["RdaCarrera"] = pea.ResultadosAprendizaje
-                            .FirstOrDefault(r => string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase))?.Descripcion ?? "",
-                        ["ResultadosAprendizaje"] = pea.ResultadosAprendizaje
-                            .Where(r => !string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase))
+                            .FirstOrDefault(r => string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase) || r.CodigoRda == "RDA-EGRESO")?.Descripcion ?? "",
+                        ["ResultadosAprendizaje"] = string.Join("", pea.ResultadosAprendizaje
+                            .Where(r => !string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase) && r.CodigoRda != "RDA-EGRESO")
                             .OrderBy(r => r.Orden)
-                            .Select(r => new Dictionary<string, string>
-                            {
-                                ["TipoRda"] = r.TipoRda ?? "Asignatura",
-                                ["CodigoRda"] = r.CodigoRda ?? "",
-                                ["Descripcion"] = r.Descripcion ?? "",
-                                ["NivelDesarrollo"] = r.NivelDesarrollo ?? ""
-                            }).ToList(),
+                            .Select((r, idx) => $"<p><strong>{(!string.IsNullOrWhiteSpace(r.CodigoRda) ? r.CodigoRda : $"RDA {idx + 1}")}:</strong> {r.Descripcion}</p>")),
                         ["Unidades"] = pea.Unidades.OrderBy(u => u.Orden).Select(u => new Dictionary<string, object?>
                         {
                             ["NumeroUnidad"] = u.NumeroUnidad,

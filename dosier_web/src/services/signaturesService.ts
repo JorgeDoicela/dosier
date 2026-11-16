@@ -30,7 +30,7 @@ export interface UpdateSignatureProfileDto {
 
 export interface SignDocumentDto {
     documentoUuid: string;
-    password: string;
+    password?: string;
     rolFirmante?: string;
 }
 

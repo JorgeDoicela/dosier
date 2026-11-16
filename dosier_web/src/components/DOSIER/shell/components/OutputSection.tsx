@@ -1,6 +1,7 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Settings, FileText, Shield, CheckCircle, Clock, ArrowRight, AlertCircle } from 'lucide-react';
+import { Settings, FileText, Shield, CheckCircle, Clock, ArrowRight, AlertCircle, X } from 'lucide-react';
 import { FullscreenLoader } from '../../../Common/FullscreenLoader';
 import { TimedSuccessModal } from '../../../Common/TimedSuccessModal';
 import { getDocumentSignatures, getSignatureProfile, type UserSignatureProfileDto } from '../../../../services/signaturesService';
@@ -71,13 +72,26 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
     setIsSignedModalOpen,
     signedModalData
 }) => {
-    const { isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
+    const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const isReviewer = Boolean(isAdmin || isRevisor || isCoordCarrera || isCoordAcad || isVicerrector);
     const navigate = useNavigate();
     const [signatures, setSignatures] = React.useState<any[]>([]);
     const [isProtocoloSigned, setIsProtocoloSigned] = React.useState<boolean | null>(null);
     const [signatureProfile, setSignatureProfile] = React.useState<UserSignatureProfileDto | null>(null);
     const [isLoadingProfile, setIsLoadingProfile] = React.useState<boolean>(true);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = React.useState<boolean>(false);
+
+    // Cerrar modal de confirmación con Escape
+    React.useEffect(() => {
+        if (!isConfirmModalOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && !isSigning) {
+                setIsConfirmModalOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isConfirmModalOpen, isSigning]);
 
     const projectUuid = formData?.EntityUuid || formData?.entityUuid || formData?.Uuid || formData?.uuid;
     const directDocId = documentUuid || formData?.Uuid || formData?.uuid;
@@ -93,7 +107,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                         entityUuid: projectUuid
                     });
                     targetDocId = instRes?.uuid || (instRes as any)?.Uuid;
-                } catch {}
+                } catch { }
             }
 
             if (targetDocId && !targetDocId.startsWith('temp_')) {
@@ -150,22 +164,29 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                     setIsProtocoloSigned(isDocValidlySigned(protoDoc));
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
 
         return () => { isMounted = false; };
     }, [projectUuid, projectStatus, signatureRefreshTrigger]);
 
-    const activeSignatures = signatures.filter(s => (s.esValida !== false && (s as any).es_valida !== false) && (s.estado !== 2 && (s as any).estado !== 2));
-    const isDocumentSigned = activeSignatures.length > 0;
     const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
-    const isSubmittedOrApproved = [
+    const isCorrectionState = ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(statusNormalized);
+
+    const activeSignatures = signatures.filter(s =>
+        (s.esValida !== false && (s as any).es_valida !== false) &&
+        (s.estado !== 2 && (s as any).estado !== 2) &&
+        !s.revocadaEn &&
+        !(s as any).revocada_en
+    );
+    const isDocumentSigned = !isCorrectionState && activeSignatures.length > 0;
+    const isSubmittedOrApproved = !isCorrectionState && ([
         'enrevision', 'en revisión', 'en_revision',
         'revisadocoord', 'revisado_coord', 'revisado coordinación',
         'revisadoacad', 'revisado_acad', 'revisado vicerrectorado', 'revisado vicerrector',
         'aprobado', 'en ejecucion', 'en ejecución', 'finalizado', 'firmado', 'signed'
-    ].includes(statusNormalized) || Boolean(formData?.FirmaElaboradoDocente || formData?.firma_elaborado_docente) || Boolean(isAlreadySubmitted);
+    ].includes(statusNormalized) || Boolean(formData?.FirmaElaboradoDocente || formData?.firma_elaborado_docente) || Boolean(isAlreadySubmitted));
 
-    const isOfficialDocument = isDocumentSigned || isSubmittedOrApproved || Boolean(isProtocoloSigned);
+    const isOfficialDocument = !isCorrectionState && (isDocumentSigned || isSubmittedOrApproved || Boolean(isProtocoloSigned));
 
     // Autocargar vista previa con pantalla de carga al entrar a la sección
     const hasInitialGeneratedRef = React.useRef(false);
@@ -206,30 +227,43 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                 const pId = projectUuid || documentUuid;
                                                 if (pId) navigate(`/documentacion/revision-tecnica/${pId}`);
                                             }}
-                                            className="w-full py-2.5 px-3 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                            className="w-full py-2.5 px-3 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer"
                                         >
-                                            <Shield size={14} />
                                             <span>Ir a Revisión Técnica</span>
-                                            <ArrowRight size={13} />
                                         </button>
                                     )}
 
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            const url = new URL(window.location.href);
-                                            url.searchParams.delete('edit');
-                                            url.searchParams.delete('section');
-                                            navigate(url.pathname);
+                                            const params = new URLSearchParams(window.location.search);
+                                            if (params.get('from') === 'revision') {
+                                                const pId = projectUuid || documentUuid;
+                                                if (pId) {
+                                                    navigate(`/documentacion/revision-tecnica/${pId}`);
+                                                    return;
+                                                }
+                                            }
+                                            if (params.get('from') === 'sala') {
+                                                const carreraId = params.get('carrera');
+                                                const perId = params.get('periodo');
+                                                if (carreraId) {
+                                                    navigate(`/documentacion/carrera/${carreraId}/sala-curricular${perId ? `?periodo=${encodeURIComponent(perId)}` : ''}`);
+                                                    return;
+                                                }
+                                                navigate('/salas-curriculares');
+                                                return;
+                                            }
+                                            navigate('/documentacion/mis-proyectos');
                                         }}
-                                        className="w-full py-2.5 px-3 btn-vercel-secondary text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                        className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-xs"
                                     >
-                                        <span>Ver Asignatura</span>
+                                        <span>Volver a Mis Asignaturas</span>
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            /* Vista Borrador: Selector de Marca de Agua y Generación de Vista Previa */
+                            /* Vista Borrador / Subsanación: Selector de Marca de Agua y Generación de Vista Previa */
                             <div className="p-5 sm:p-6 flex flex-col gap-4 shrink-0">
                                 <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border-thin">
                                     <div className="flex flex-col gap-0.5">
@@ -263,7 +297,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                         {!isDocumentSigned && (
                             <>
                                 <div className="h-[1px] bg-border-thin/60 w-full shrink-0" />
-                                <div className="p-5 sm:p-6 flex-1 flex flex-col gap-5 overflow-y-auto custom-scrollbar">
+                                <div className="p-5 sm:p-6 flex flex-col gap-5 shrink-0">
                                     <div className="space-y-4">
                                         {!canSign ? (
                                             <div className="p-5 bg-surface border border-border-thin rounded-xl text-center space-y-2.5">
@@ -315,31 +349,28 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                         </div>
                                                     ) : (
                                                         <div className="flex flex-col gap-3.5 p-5 border border-border-thin rounded-xl bg-surface">
-                                                            <div className="flex items-center gap-2 mb-0.5">
-                                                                <Shield size={18} className="text-[#0070f3]" />
+                                                            <div className="mb-0.5">
                                                                 <h4 className="text-xs sm:text-sm font-bold text-text-main">Firma Institucional DOSIER</h4>
                                                             </div>
-                                                            <div className="space-y-1.5">
-                                                                <label className="text-xs font-medium text-text-dim block">Contraseña Institucional</label>
-                                                                <input
-                                                                    type="password"
-                                                                    placeholder="Ingresa la contraseña de tu cuenta"
-                                                                    value={institutionalPassword}
-                                                                    onChange={(e) => setInstitutionalPassword(e.target.value)}
-                                                                    className="w-full bg-bg-deep border border-border-thin rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all placeholder:text-text-dim/40"
-                                                                />
-                                                            </div>
+
+                                                            <p className="text-xs text-text-dim leading-relaxed">
+                                                                Se aplicará el sello de firma digital institucional vinculado a su cuenta activa y perfil configurado.
+                                                            </p>
 
                                                             <button
                                                                 type="button"
-                                                                onClick={handleSignDosier}
-                                                                disabled={isSigning || !institutionalPassword}
-                                                                className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!institutionalPassword || isSigning)
-                                                                        ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
-                                                                        : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
-                                                                    }`}
+                                                                onClick={() => setIsConfirmModalOpen(true)}
+                                                                disabled={isSigning}
+                                                                className="w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center transition-all cursor-pointer bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs disabled:opacity-50"
                                                             >
-                                                                {isSigning ? <><Clock size={15} className="animate-spin" /> Firmando documento...</> : <><Shield size={15} /> Aplicar firma institucional</>}
+                                                                {isSigning ? (
+                                                                    <span className="flex items-center gap-2">
+                                                                        <Clock size={15} className="animate-spin" />
+                                                                        <span>Firmando documento...</span>
+                                                                    </span>
+                                                                ) : (
+                                                                    <span>Aplicar firma institucional</span>
+                                                                )}
                                                             </button>
                                                         </div>
                                                     )
@@ -355,8 +386,8 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                             <label className="text-xs font-medium text-text-dim block">Certificado .p12</label>
                                                             <label
                                                                 className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all gap-1.5 ${signatureCertFile
-                                                                        ? 'border-emerald-500/50 bg-emerald-500/5'
-                                                                        : 'border-border-thin hover:border-[#0070f3]/50 bg-bg-deep'
+                                                                    ? 'border-emerald-500/50 bg-emerald-500/5'
+                                                                    : 'border-border-thin hover:border-[#0070f3]/50 bg-bg-deep'
                                                                     }`}
                                                             >
                                                                 <input
@@ -397,8 +428,8 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                                             onClick={handleSign}
                                                             disabled={isSigning || !signatureCertFile}
                                                             className={`w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${(!signatureCertFile || isSigning)
-                                                                    ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
-                                                                    : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
+                                                                ? 'bg-surface border border-border-thin text-text-dim cursor-not-allowed opacity-60'
+                                                                : 'bg-[#0070f3] hover:bg-[#005bb5] text-white shadow-xs'
                                                                 }`}
                                                         >
                                                             {isSigning ? <><Clock size={15} className="animate-spin" /> Firmando documento...</> : <><Shield size={15} /> Aplicar firma electrónica</>}
@@ -413,10 +444,10 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                         )}
 
                         {signatures.length > 0 && (
-                            <div className="border-t border-border-thin/60 p-5 sm:p-6 flex-1 overflow-y-auto custom-scrollbar">
-                                <SignatureBlock 
-                                    documentoUuid={documentUuid || formData.Uuid || formData.uuid || ''} 
-                                    refreshTrigger={signatureRefreshTrigger} 
+                            <div className="border-t border-border-thin/60 p-5 sm:p-6 shrink-0">
+                                <SignatureBlock
+                                    documentoUuid={documentUuid || formData.Uuid || formData.uuid || ''}
+                                    refreshTrigger={signatureRefreshTrigger}
                                 />
                             </div>
                         )}
@@ -426,8 +457,8 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                 {/* Visor de PDF */}
                 <div className="col-span-1 lg:col-span-8 bg-bg-deep border border-border-thin rounded-2xl flex flex-col shadow-inner relative overflow-hidden h-[85vh] sm:h-[88vh] min-h-[750px] lg:h-full lg:min-h-0">
                     {isGenerating ? (
-                        <FullscreenLoader 
-                            fullscreen={false} 
+                        <FullscreenLoader
+                            fullscreen={false}
                             message={isOfficialDocument ? [
                                 "Obteniendo documento oficial...",
                                 "Cargando archivo firmado...",
@@ -438,7 +469,7 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                                 "Preparando vista previa...",
                                 "Compilando plantilla PDF...",
                                 "Cargando firmas registradas..."
-                            ]} 
+                            ]}
                         />
                     ) : pdfUrl ? (
                         <iframe src={pdfUrl} className="flex-1 w-full bg-white rounded-xl border-none shadow-2xl" title={`Vista previa — ${title}`} />
@@ -457,6 +488,83 @@ export const OutputSection: React.FC<OutputSectionProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* Modal de Confirmación de Firma Institucional (Portal al Body para cobertura total de viewport) */}
+            {isConfirmModalOpen && typeof document !== 'undefined' && createPortal(
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={() => !isSigning && setIsConfirmModalOpen(false)}
+                    className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 font-sans p-4 animate-fade-in"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full max-w-md bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-scale-up"
+                    >
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-zinc-950">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                                Confirmar Firma Institucional
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => !isSigning && setIsConfirmModalOpen(false)}
+                                disabled={isSigning}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer disabled:opacity-50"
+                                title="Cerrar"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 space-y-4 bg-white dark:bg-zinc-950">
+                            <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
+                                ¿Deseas firmar este documento? Al hacerlo, pasará a revisión.
+                            </p>
+
+                            <div className="space-y-2 text-xs">
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-slate-500 dark:text-zinc-400">Firmante:</span>
+                                    <span className="font-semibold text-slate-900 dark:text-zinc-100">
+                                        {user?.nombre_completo || 'Usuario activo'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-slate-500 dark:text-zinc-400">Cargo:</span>
+                                    <span className="font-medium text-slate-800 dark:text-zinc-200">
+                                        {signatureProfile?.cargo || 'Docente'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsConfirmModalOpen(false)}
+                                disabled={isSigning}
+                                className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsConfirmModalOpen(false);
+                                    handleSignDosier().catch(() => {});
+                                }}
+                                disabled={isSigning}
+                                className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-xs disabled:opacity-50"
+                            >
+                                <span>Confirmar y firmar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* Modal Reutilizable de Éxito de Firma */}
             {isSignedModalOpen && setIsSignedModalOpen && (

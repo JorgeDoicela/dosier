@@ -58,7 +58,9 @@ export const useBuilderPdfAndSign = ({
     } | null>(null);
 
     const statusNormalized = (projectStatus || formData?.estado || formData?.status || '').toString().toLowerCase();
-    const isAlreadySubmitted = statusNormalized === 'enrevision' ||
+    const isCorrectionState = ['observado', 'corregido', 'encorrección', 'encorreccion'].includes(statusNormalized);
+    const isAlreadySubmitted = !isCorrectionState && (
+        statusNormalized === 'enrevision' ||
         statusNormalized === 'en revisión' ||
         statusNormalized === 'en_revision' ||
         statusNormalized === 'revisadocoord' ||
@@ -67,7 +69,8 @@ export const useBuilderPdfAndSign = ({
         statusNormalized === 'finalizado' ||
         statusNormalized === 'signed' ||
         !!formData?.FirmaElaboradoDocente ||
-        !!formData?.firma_elaborado_docente;
+        !!formData?.firma_elaborado_docente
+    );
 
     const isPea = templateCode === 'PEA_OFICIAL';
 
@@ -154,6 +157,9 @@ export const useBuilderPdfAndSign = ({
 
     // ── Cargar PDF firmado u oficial ──
     const fetchSignedPdf = useCallback(async (): Promise<boolean> => {
+        // En estado de corrección / subsanación, nunca se debe cargar el PDF congelado anterior
+        if (isCorrectionState) return false;
+
         const targetUuid = entityUuid || documentUuid || formData?.Uuid || formData?.uuid;
         if (!targetUuid || targetUuid.startsWith('temp_')) return false;
 
@@ -203,12 +209,19 @@ export const useBuilderPdfAndSign = ({
         } finally {
             setIsGenerating(false);
         }
-    }, [entityUuid, documentUuid, formData, templateCode]);
+    }, [entityUuid, documentUuid, formData, templateCode, isCorrectionState]);
 
     // Autocargar PDF firmado si existe; si no, mantener estado inicial en borrador
     useEffect(() => {
         let isMounted = true;
         const initPdf = async () => {
+            if (isCorrectionState) {
+                // En subsanación: generar vista previa preliminar de trabajo con los cambios recientes
+                setIsDraftMode(true);
+                await handleGeneratePdf(false);
+                return;
+            }
+
             const hasSigned = await fetchSignedPdf();
             if (!hasSigned && isMounted) {
                 if (isAlreadySubmitted) {
@@ -221,7 +234,7 @@ export const useBuilderPdfAndSign = ({
         };
         initPdf();
         return () => { isMounted = false; };
-    }, [entityUuid, documentUuid, projectStatus, signatureRefreshTrigger, fetchSignedPdf, isAlreadySubmitted, handleGeneratePdf]);
+    }, [entityUuid, documentUuid, projectStatus, signatureRefreshTrigger, fetchSignedPdf, isAlreadySubmitted, handleGeneratePdf, isCorrectionState]);
 
     // ── Firma Electrónica PAdES — Upload-on-Demand ──
     const handleSign = async () => {
@@ -349,11 +362,6 @@ export const useBuilderPdfAndSign = ({
     };
 
     const handleSignDosier = async () => {
-        if (!institutionalPassword.trim()) {
-            addAudit('Debe ingresar su contraseña institucional para firmar.', 'warning');
-            return;
-        }
-
         setIsSigning(true);
         addAudit('Iniciando proceso de firma institucional DOSIER...');
         try {
@@ -383,7 +391,7 @@ export const useBuilderPdfAndSign = ({
                 }
                 await firmarPea(idPea, {
                     tipoFirma: 'DOSIER',
-                    password: institutionalPassword,
+                    password: institutionalPassword ? institutionalPassword : undefined,
                     rolFirmante: peaRoleInfo.codigo as any
                 });
             }
@@ -405,7 +413,7 @@ export const useBuilderPdfAndSign = ({
                 const dto = {
                     documento_uuid: targetDocUuid || '',
                     rol_firmante: calculatedRol,
-                    password: institutionalPassword
+                    password: institutionalPassword ? institutionalPassword : undefined
                 };
 
                 await signDocumentWithDosier(dto as any).catch(() => {});

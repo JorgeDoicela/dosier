@@ -462,11 +462,13 @@ export const useRevisionTecnicaData = ({
                 })
                 .join('\n');
 
-            const motivoFull = generalFeedback.trim()
-                ? `${generalFeedback.trim()}${sectionIssues ? `\n\nDetalle por Sección:\n${sectionIssues}` : ''}`
+            const cleanFeedback = generalFeedback.trim();
+            const plazoTexto = fechaLimite ? ` con plazo hasta ${fechaLimite}` : '';
+            const motivoFull = cleanFeedback
+                ? `${cleanFeedback}${plazoTexto}${sectionIssues ? `\n\nDetalle por Sección:\n${sectionIssues}` : ''}`
                 : sectionIssues
-                    ? `Correcciones requeridas:\n${sectionIssues}`
-                    : `Devuelto para revisión y subsanación${fechaLimite ? ` con plazo hasta ${fechaLimite}` : ''}.`;
+                    ? `Correcciones requeridas${plazoTexto}:\n${sectionIssues}`
+                    : `Devuelto para revisión y subsanación${plazoTexto}.`;
 
             await cambiarEstadoPea(projectUuid, 'Observado', undefined, motivoFull);
 

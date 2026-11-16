@@ -671,6 +671,110 @@ namespace Dosier.Infrastructure.Common.Documents
                             if (NeedsField("RecursosDidacticos")) Put("RecursosDidacticos", pea.RecursosDidacticos);
                             if (NeedsField("EvaluacionAprendizaje")) Put("EvaluacionAprendizaje", pea.EvaluacionAprendizaje);
 
+                            // d) Resultado de Aprendizaje de Carrera (Perfil de Egreso)
+                            var rdaCarreraEntity = pea.ResultadosAprendizaje
+                                .FirstOrDefault(r => string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase) || r.CodigoRda == "RDA-EGRESO");
+
+                            if (NeedsField("RdaCarrera") && rdaCarreraEntity != null && !string.IsNullOrWhiteSpace(rdaCarreraEntity.Descripcion))
+                            {
+                                string cDesc = rdaCarreraEntity.Descripcion.Trim();
+                                if (!cDesc.StartsWith("<p", StringComparison.OrdinalIgnoreCase) &&
+                                    !cDesc.StartsWith("<div", StringComparison.OrdinalIgnoreCase) &&
+                                    !cDesc.StartsWith("<ul", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var lines = cDesc.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                                    cDesc = string.Join("", lines.Select(l => $"<p>{l.Trim()}</p>"));
+                                }
+                                Put("RdaCarrera", cDesc);
+                                dataDict["rda_carrera"] = cDesc;
+                            }
+
+                            // e) Resultados de Aprendizaje de la Asignatura (HTML String)
+                            // En PEA_OFICIAL.html se renderiza con {{{default ResultadosAprendizaje (default rda_asignatura "---")}}}
+                            // Por lo tanto, DEBE ser una cadena HTML con formato <p><strong>RDA:</strong> ...</p>, JAMÁS una List<object>.
+                            string FormatSubjectRdas(IEnumerable<dosier_domain.Curriculum.Entities.DocPeaResultadoAprendizaje> list)
+                            {
+                                var filtered = list
+                                    .Where(r => !string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase) && r.CodigoRda != "RDA-EGRESO")
+                                    .OrderBy(r => r.Orden)
+                                    .ToList();
+
+                                if (!filtered.Any()) return "";
+                                return string.Join("", filtered.Select((r, idx) =>
+                                {
+                                    string code = !string.IsNullOrWhiteSpace(r.CodigoRda) ? r.CodigoRda : $"RDA {idx + 1}";
+                                    return $"<p><strong>{code}:</strong> {r.Descripcion}</p>";
+                                }));
+                            }
+
+                            bool rdaAsigNeedsEnrich = NeedsField("ResultadosAprendizaje");
+                            if (!rdaAsigNeedsEnrich && dataDict.TryGetValue("ResultadosAprendizaje", out var existingRda))
+                            {
+                                if (existingRda == null) rdaAsigNeedsEnrich = true;
+                                else if (existingRda is System.Collections.IEnumerable enumerable && !(existingRda is string))
+                                {
+                                    var itemsList = new List<string>();
+                                    int idx = 1;
+                                    foreach (var item in enumerable)
+                                    {
+                                        if (item == null) continue;
+                                        string code = $"RDA {idx}";
+                                        string desc = "";
+                                        if (item is IDictionary<string, object?> dict)
+                                        {
+                                            object? codeVal = null, descVal = null, tipoVal = null;
+                                            dict.TryGetValue("CodigoRda", out codeVal);
+                                            if (codeVal == null) dict.TryGetValue("codigo_rda", out codeVal);
+                                            code = codeVal?.ToString() ?? code;
+
+                                            dict.TryGetValue("Descripcion", out descVal);
+                                            if (descVal == null) dict.TryGetValue("descripcion", out descVal);
+                                            desc = descVal?.ToString() ?? "";
+
+                                            dict.TryGetValue("TipoRda", out tipoVal);
+                                            if (tipoVal == null) dict.TryGetValue("tipo_rda", out tipoVal);
+                                            var tipo = tipoVal?.ToString();
+                                            if (string.Equals(tipo, "Carrera", StringComparison.OrdinalIgnoreCase) || code == "RDA-EGRESO") continue;
+                                        }
+                                        else
+                                        {
+                                            desc = item.ToString() ?? "";
+                                        }
+                                        if (!string.IsNullOrWhiteSpace(desc))
+                                        {
+                                            itemsList.Add($"<p><strong>{code}:</strong> {desc}</p>");
+                                            idx++;
+                                        }
+                                    }
+                                    if (itemsList.Any())
+                                    {
+                                        var htmlStr = string.Join("", itemsList);
+                                        Put("ResultadosAprendizaje", htmlStr);
+                                        dataDict["rda_asignatura"] = htmlStr;
+                                        dataDict["resultados_aprendizaje"] = htmlStr;
+                                    }
+                                    else
+                                    {
+                                        rdaAsigNeedsEnrich = true;
+                                    }
+                                }
+                                else if (existingRda is string strVal && strVal.Trim().StartsWith("[{"))
+                                {
+                                    rdaAsigNeedsEnrich = true;
+                                }
+                            }
+
+                            if (rdaAsigNeedsEnrich && pea.ResultadosAprendizaje.Any())
+                            {
+                                var formatted = FormatSubjectRdas(pea.ResultadosAprendizaje);
+                                if (!string.IsNullOrWhiteSpace(formatted))
+                                {
+                                    Put("ResultadosAprendizaje", formatted);
+                                    dataDict["rda_asignatura"] = formatted;
+                                    dataDict["resultados_aprendizaje"] = formatted;
+                                }
+                            }
+
                             if (NeedsList("Unidades") && pea.Unidades.Any())
                             {
                                 dataDict["Unidades"] = pea.Unidades.OrderBy(u => u.Orden).Select(u => new
@@ -687,16 +791,6 @@ namespace Dosier.Infrastructure.Common.Documents
                                         TituloTema = t.TituloTema,
                                         DescripcionSubtemas = t.DescripcionSubtemas
                                     }).ToList()
-                                }).ToList();
-                            }
-
-                            if (NeedsList("ResultadosAprendizaje") && pea.ResultadosAprendizaje.Any())
-                            {
-                                dataDict["ResultadosAprendizaje"] = pea.ResultadosAprendizaje.OrderBy(r => r.Orden).Select(r => new
-                                {
-                                    CodigoRda = r.CodigoRda,
-                                    Descripcion = r.Descripcion,
-                                    NivelDesarrollo = r.NivelDesarrollo
                                 }).ToList();
                             }
 

@@ -123,15 +123,40 @@ export const DocumentWorkspace: React.FC = () => {
             base.EvaluacionAprendizaje = pea.evaluacion_aprendizaje || pea.evaluacionAprendizaje || '';
             base.Unidades = pea.unidades || pea.Unidades || [];
             const rawRdas = pea.resultados_aprendizaje || pea.resultadosAprendizaje || pea.ResultadosAprendizaje;
+
+            // 1. Resolver Resultado de Aprendizaje de Carrera (Perfil de Egreso)
+            let rdaCarreraStr = pea.rda_carrera || pea.rdaCarrera || pea.RdaCarrera || '';
+            if (!rdaCarreraStr && Array.isArray(rawRdas)) {
+                const rdaCarreraItem = rawRdas.find((r: any) => 
+                    (r.tipo_rda || r.tipoRda || r.TipoRda || '').toLowerCase() === 'carrera' ||
+                    (r.codigo_rda || r.codigoRda || r.CodigoRda) === 'RDA-EGRESO'
+                );
+                if (rdaCarreraItem) {
+                    rdaCarreraStr = rdaCarreraItem.descripcion || rdaCarreraItem.Descripcion || rdaCarreraItem.descripcion_rda || '';
+                }
+            }
+            base.RdaCarrera = rdaCarreraStr;
+            base.rda_carrera = rdaCarreraStr;
+
+            // 2. Resolver Resultados de Aprendizaje de Asignatura (excluyendo Carrera)
             if (typeof rawRdas === 'string') {
                 base.ResultadosAprendizaje = rawRdas;
             } else if (Array.isArray(rawRdas) && rawRdas.length > 0) {
-                base.ResultadosAprendizaje = rawRdas
-                    .map((r: any, idx: number) => `<p>${idx + 1}. ${r.descripcion_rda || r.descripcionRda || r.descripcion || r.Descripcion || ''}</p>`)
+                const subjectRdas = rawRdas.filter((r: any) => 
+                    (r.tipo_rda || r.tipoRda || r.TipoRda || '').toLowerCase() !== 'carrera' &&
+                    (r.codigo_rda || r.codigoRda || r.CodigoRda) !== 'RDA-EGRESO'
+                );
+                base.ResultadosAprendizaje = subjectRdas
+                    .map((r: any, idx: number) => {
+                        const code = r.codigo_rda || r.codigoRda || r.CodigoRda || `RDA ${idx + 1}`;
+                        const desc = r.descripcion_rda || r.descripcionRda || r.descripcion || r.Descripcion || '';
+                        return `<p><strong>${code}:</strong> ${desc}</p>`;
+                    })
                     .join('');
             } else {
                 base.ResultadosAprendizaje = '';
             }
+            base.resultados_aprendizaje = base.ResultadosAprendizaje;
             base.ActividadesPracticas = pea.actividades_practicas || pea.actividadesPracticas || pea.ActividadesPracticas || [];
             base.Bibliografias = pea.bibliografias || pea.Bibliografias || [];
             if (!base.BibliografiaBasica && !base.bibliografia_basica && Array.isArray(base.Bibliografias)) {

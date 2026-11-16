@@ -983,11 +983,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         <button
                             type="button"
                             onClick={() => setActiveTab('revision')}
-                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                                activeTab === 'revision'
-                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
-                                    : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                            }`}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'revision'
+                                ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                                }`}
                             title="Revisión y Auditoría CACES"
                             aria-label="Revisión y Auditoría CACES"
                         >
@@ -1000,20 +999,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         <button
                             type="button"
                             onClick={() => setActiveTab('correcciones')}
-                            className={`relative flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                                activeTab === 'correcciones'
-                                    ? 'border-amber-500 text-amber-500 bg-amber-500/5'
-                                    : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                            }`}
+                            className={`relative flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'correcciones'
+                                ? 'border-amber-500 text-amber-500 bg-amber-500/5'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                                }`}
                             title="Ajustes y Observaciones"
                             aria-label="Ajustes y Observaciones"
                         >
                             <Shield size={20} strokeWidth={1.75} className="text-amber-500" />
-                            {peaObservaciones.length > 0 && (
-                                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-amber-500 text-white leading-tight">
-                                    {peaObservaciones.filter(o => o.estado === 'Pendiente').length || peaObservaciones.length}
-                                </span>
-                            )}
                         </button>
                     )}
 
@@ -1021,11 +1014,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     <button
                         type="button"
                         onClick={() => setActiveTab('comments')}
-                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                            activeTab === 'comments'
-                                ? 'border-text-main text-text-main bg-surface/50'
-                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                        }`}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'comments'
+                            ? 'border-text-main text-text-main bg-surface/50'
+                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                            }`}
                         title="Chat colegiado"
                         aria-label="Chat colegiado"
                     >
@@ -1036,11 +1028,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     <button
                         type="button"
                         onClick={() => setActiveTab('status')}
-                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                            activeTab === 'status'
-                                ? 'border-text-main text-text-main bg-surface/50'
-                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                        }`}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'status'
+                            ? 'border-text-main text-text-main bg-surface/50'
+                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                            }`}
                         title="Estado de secciones"
                         aria-label="Estado de secciones"
                     >
@@ -1052,11 +1043,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         <button
                             type="button"
                             onClick={() => setActiveTab('import')}
-                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                                activeTab === 'import'
-                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
-                                    : 'border-transparent text-text-dim hover:text-[#0070f3] dark:hover:text-blue-400 hover:bg-surface/30'
-                            }`}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'import'
+                                ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                : 'border-transparent text-text-dim hover:text-[#0070f3] dark:hover:text-blue-400 hover:bg-surface/30'
+                                }`}
                             title="Importar y Extraer PEA (PDF / Word)"
                             aria-label="Importar y Extraer PEA (PDF / Word)"
                         >
@@ -1069,11 +1059,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         <button
                             type="button"
                             onClick={() => setActiveTab('ai')}
-                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                                activeTab === 'ai'
-                                    ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
-                                    : 'border-transparent text-text-dim hover:text-[#0070f3] dark:hover:text-blue-400 hover:bg-surface/30'
-                            }`}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'ai'
+                                ? 'border-[#0070f3] text-[#0070f3] bg-[#0070f3]/5'
+                                : 'border-transparent text-text-dim hover:text-[#0070f3] dark:hover:text-blue-400 hover:bg-surface/30'
+                                }`}
                             title="Asistente de formulación con IA"
                             aria-label="Asistente de formulación con IA"
                         >
@@ -1085,11 +1074,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     <button
                         type="button"
                         onClick={() => setActiveTab('activity')}
-                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${
-                            activeTab === 'activity'
-                                ? 'border-text-main text-text-main bg-surface/50'
-                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                        }`}
+                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'activity'
+                            ? 'border-text-main text-text-main bg-surface/50'
+                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                            }`}
                         title="Actividad reciente"
                         aria-label="Actividad reciente"
                     >
@@ -1159,17 +1147,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                         <div
                                                             key={c.idComentario || c.uuid || i}
                                                             id={`comment-${c.idComentario}`}
-                                                            className={`group flex flex-col min-w-0 ${
-                                                                isEditingThis ? 'w-full max-w-full' : 'max-w-[85%]'
-                                                            } ${
-                                                                isMe ? 'ml-auto items-end' : 'mr-auto items-start'
-                                                            } animate-fade-up`}
+                                                            className={`group flex flex-col min-w-0 ${isEditingThis ? 'w-full max-w-full' : 'max-w-[85%]'
+                                                                } ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'
+                                                                } animate-fade-up`}
                                                         >
                                                             {/* Nombre de remitente para mensajes de terceros */}
                                                             {!isMe && (
-                                                                <span className={`text-[10px] font-semibold mb-1 px-1 tracking-tight truncate max-w-full ${
-                                                                    isMsgFromAdmin ? 'text-amber-500 dark:text-amber-400' : 'text-text-main dark:text-zinc-300'
-                                                                }`}>
+                                                                <span className={`text-[10px] font-semibold mb-1 px-1 tracking-tight truncate max-w-full ${isMsgFromAdmin ? 'text-amber-500 dark:text-amber-400' : 'text-text-main dark:text-zinc-300'
+                                                                    }`}>
                                                                     {c.nombreUsuario}
                                                                 </span>
                                                             )}
@@ -1214,13 +1199,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                 )}
 
                                                                 {/* Burbuja Principal */}
-                                                                <div className={`p-2.5 rounded-2xl border text-xs shadow-xs transition-all w-fit max-w-full min-w-0 ${
-                                                                    isMe
-                                                                        ? 'bg-text-main text-bg-deep border-transparent rounded-tr-xs'
-                                                                        : isMsgFromAdmin
-                                                                            ? 'bg-surface border-amber-500/30 text-text-main rounded-tl-xs shadow-amber-500/5'
-                                                                            : 'bg-surface border-border-thin text-text-main rounded-tl-xs'
-                                                                }`}>
+                                                                <div className={`p-2.5 rounded-2xl border text-xs shadow-xs transition-all w-fit max-w-full min-w-0 ${isMe
+                                                                    ? 'bg-text-main text-bg-deep border-transparent rounded-tr-xs'
+                                                                    : isMsgFromAdmin
+                                                                        ? 'bg-surface border-amber-500/30 text-text-main rounded-tl-xs shadow-amber-500/5'
+                                                                        : 'bg-surface border-border-thin text-text-main rounded-tl-xs'
+                                                                    }`}>
                                                                     {/* Mensaje Padre si es una respuesta */}
                                                                     {c.idPadre && (() => {
                                                                         const parentComment = comments.find(p => p.idComentario === c.idPadre);
@@ -1234,11 +1218,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                                     el?.classList.add('ring-2', 'ring-brand', 'ring-offset-2');
                                                                                     setTimeout(() => el?.classList.remove('ring-2', 'ring-brand', 'ring-offset-2'), 1500);
                                                                                 }}
-                                                                                className={`mb-1.5 px-2 py-1 rounded-lg text-[10px] cursor-pointer border-l-2 transition-all ${
-                                                                                    isMe
-                                                                                        ? 'bg-bg-deep/15 border-bg-deep/60 text-bg-deep/90 hover:bg-bg-deep/25'
-                                                                                        : 'bg-bg-deep/50 border-border-hover text-text-dim hover:bg-bg-deep'
-                                                                                }`}
+                                                                                className={`mb-1.5 px-2 py-1 rounded-lg text-[10px] cursor-pointer border-l-2 transition-all ${isMe
+                                                                                    ? 'bg-bg-deep/15 border-bg-deep/60 text-bg-deep/90 hover:bg-bg-deep/25'
+                                                                                    : 'bg-bg-deep/50 border-border-hover text-text-dim hover:bg-bg-deep'
+                                                                                    }`}
                                                                             >
                                                                                 <div className="font-bold flex items-center gap-1 mb-0.5">
                                                                                     <Reply size={9} className="opacity-75" />
@@ -1256,11 +1239,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                             <textarea
                                                                                 value={editingCommentText}
                                                                                 onChange={(e) => setEditingCommentText(e.target.value)}
-                                                                                className={`w-full p-2 text-xs rounded-lg border outline-none resize-none h-16 transition-colors custom-scrollbar font-sans ${
-                                                                                    isMe
-                                                                                        ? 'bg-bg-deep text-text-main border-bg-deep/30 focus:border-bg-deep'
-                                                                                        : 'bg-bg-deep border-border-thin text-text-main focus:border-border-hover'
-                                                                                }`}
+                                                                                className={`w-full p-2 text-xs rounded-lg border outline-none resize-none h-16 transition-colors custom-scrollbar font-sans ${isMe
+                                                                                    ? 'bg-bg-deep text-text-main border-bg-deep/30 focus:border-bg-deep'
+                                                                                    : 'bg-bg-deep border-border-thin text-text-main focus:border-border-hover'
+                                                                                    }`}
                                                                             />
                                                                             <div className="flex justify-end gap-1.5">
                                                                                 <button
@@ -1268,11 +1250,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                                         setEditingCommentId(null);
                                                                                         setEditingCommentText('');
                                                                                     }}
-                                                                                    className={`px-2.5 py-1 rounded-lg text-[8.5px] font-bold uppercase tracking-wider transition-all active:scale-95 ${
-                                                                                        isMe
-                                                                                            ? 'border border-bg-deep/25 bg-bg-deep/10 text-bg-deep hover:bg-bg-deep/20'
-                                                                                            : 'border border-border-thin bg-surface hover:bg-surface-hover text-text-dim hover:text-text-main'
-                                                                                    }`}
+                                                                                    className={`px-2.5 py-1 rounded-lg text-[8.5px] font-bold uppercase tracking-wider transition-all active:scale-95 ${isMe
+                                                                                        ? 'border border-bg-deep/25 bg-bg-deep/10 text-bg-deep hover:bg-bg-deep/20'
+                                                                                        : 'border border-border-thin bg-surface hover:bg-surface-hover text-text-dim hover:text-text-main'
+                                                                                        }`}
                                                                                 >
                                                                                     Cancelar
                                                                                 </button>
@@ -1284,11 +1265,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                                         }
                                                                                         handleUpdateComment(c.idComentario, updatedContent);
                                                                                     }}
-                                                                                    className={`px-3.5 py-1 rounded-lg text-[8.5px] font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 ${
-                                                                                        isMe
-                                                                                            ? 'bg-bg-deep text-text-main hover:opacity-90'
-                                                                                            : 'bg-text-main text-bg-deep hover:opacity-90'
-                                                                                    }`}
+                                                                                    className={`px-3.5 py-1 rounded-lg text-[8.5px] font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 ${isMe
+                                                                                        ? 'bg-bg-deep text-text-main hover:opacity-90'
+                                                                                        : 'bg-text-main text-bg-deep hover:opacity-90'
+                                                                                        }`}
                                                                                 >
                                                                                     Guardar
                                                                                 </button>
@@ -1552,12 +1532,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                         key={s.value}
                                                         onClick={() => handleUpdateStatus(s.value)}
                                                         className={`w-full flex items-center justify-between px-4.5 py-4 rounded-xl text-sm border transition-all cursor-pointer ${isActive
-                                                                ? 'bg-surface border-border-thin shadow-xs'
-                                                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50 font-normal'
+                                                            ? 'bg-surface border-border-thin shadow-xs'
+                                                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface-hover/50 font-normal'
                                                             }`}
                                                     >
                                                         <div className="flex items-center gap-3.5">
-                                                             <span className={isActive ? s.activeColor : 'text-text-dim transition-colors'}>
+                                                            <span className={isActive ? s.activeColor : 'text-text-dim transition-colors'}>
                                                                 {s.icon}
                                                             </span>
                                                             <span className={`tracking-wide ${isActive ? s.activeText : ''}`}>
@@ -1651,17 +1631,15 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                                     key={secKey}
                                                                     type="button"
                                                                     onClick={() => onSelectSection?.(secKey)}
-                                                                    className={`w-full text-left flex items-center justify-between py-2.5 px-3.5 text-xs transition-all cursor-pointer group ${
-                                                                        isCurrent 
-                                                                            ? 'bg-surface font-semibold text-text-main shadow-2xs' 
-                                                                            : 'hover:bg-surface/60 text-text-dim hover:text-text-main'
-                                                                    }`}
+                                                                    className={`w-full text-left flex items-center justify-between py-2.5 px-3.5 text-xs transition-all cursor-pointer group ${isCurrent
+                                                                        ? 'bg-surface font-semibold text-text-main shadow-2xs'
+                                                                        : 'hover:bg-surface/60 text-text-dim hover:text-text-main'
+                                                                        }`}
                                                                     title={`Ir a ${title}`}
                                                                 >
                                                                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                                                            st === 'Completado' ? 'bg-emerald-500' : st === 'Por revisar' ? 'bg-amber-500' : 'bg-border-hover'
-                                                                        }`} />
+                                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st === 'Completado' ? 'bg-emerald-500' : st === 'Por revisar' ? 'bg-amber-500' : 'bg-border-hover'
+                                                                            }`} />
                                                                         <span className={`truncate text-[11px] ${isCurrent ? 'font-bold text-[#0070f3] dark:text-blue-400' : 'group-hover:text-text-main'}`}>
                                                                             {title}
                                                                         </span>
@@ -1718,212 +1696,200 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         )}
 
                         {activeTab === 'correcciones' && (
-                            <div className="flex flex-col h-full flex-1 overflow-hidden space-y-4">
-                                {/* Observación General de la Coordinación y Plazo */}
+                            <div className="flex flex-col h-full flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
+                                {/* Dictamen General de la Coordinación */}
                                 {ultimaObservacion && (
-                                    <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950 space-y-2.5 animate-fade-in">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <div className="flex items-center gap-2">
-                                                <Shield size={13} className="text-amber-600 dark:text-amber-400 shrink-0" />
-                                                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-widest block">
-                                                    Observación Curricular de la Coordinación
+                                    <div className="py-2 px-1 space-y-1.5">
+                                        <div className="flex items-center justify-between text-xs font-semibold text-text-main">
+                                            <span>Dictamen de Coordinación</span>
+                                            {deadlineBadge && (
+                                                <span className="text-[11px] font-normal text-text-dim">
+                                                    Plazo: {deadlineBadge.date}
                                                 </span>
-                                            </div>
+                                            )}
                                         </div>
-                                        <p className="text-xs text-slate-800 dark:text-zinc-200 font-medium leading-relaxed break-words whitespace-pre-wrap">
+                                        <p className="text-xs text-text-dim leading-relaxed whitespace-pre-wrap break-words">
                                             {ultimaObservacion}
                                         </p>
-                                        {deadlineBadge && (
-                                            <div className={`mt-2 flex items-center justify-between px-3 py-2 rounded-lg border text-[10px] font-mono font-bold ${deadlineBadge.colorClass}`}>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Clock size={12} className="shrink-0" />
-                                                    <span>{deadlineBadge.text}</span>
-                                                </div>
-                                                <span className="opacity-80">{deadlineBadge.date}</span>
-                                            </div>
-                                        )}
+                                        <div className="mx-3 my-2 border-t border-slate-200 dark:border-zinc-800" />
                                     </div>
                                 )}
 
                                 {/* Checklist de correcciones por sección */}
-                                <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-                                    {(() => {
-                                        const auditItems = comments
-                                            .map(c => ({ comment: c, audit: parseAuditComment(c.contenido) }))
-                                            .filter((item): item is { comment: any; audit: { seccion: string; estado: string; texto: string } } => item.audit !== null);
+                                {(() => {
+                                    const auditItems = comments
+                                        .map(c => ({ comment: c, audit: parseAuditComment(c.contenido) }))
+                                        .filter((item): item is { comment: any; audit: { seccion: string; estado: string; texto: string } } => item.audit !== null);
 
-                                        const totalObsCount = peaObservaciones.length + auditItems.length;
-                                        const pendingObsCount = peaObservaciones.filter(o => o.estado === 'Pendiente').length;
+                                    const totalObsCount = peaObservaciones.length + auditItems.length;
+                                    const pendingObsCount = peaObservaciones.filter(o => o.estado === 'Pendiente').length;
+
+                                    if (totalObsCount === 0) {
+                                        if (ultimaObservacion) {
+                                            return (
+                                                <div className="p-3.5 rounded-xl border border-border-thin bg-surface text-xs text-text-dim leading-relaxed space-y-1">
+                                                    <p className="font-semibold text-text-main text-xs">
+                                                        Sin observaciones puntuales por campo
+                                                    </p>
+                                                    <p className="text-xs">
+                                                        La coordinación emitió un dictamen general. Atienda las indicaciones solicitadas arriba en las secciones correspondientes del editor.
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
 
                                         return (
-                                            <>
-                                                <div className="pb-2 border-b border-border-thin flex justify-between items-center">
-                                                    <h4 className="text-[10px] font-bold text-text-dim uppercase tracking-widest">Ajustes Solicitados</h4>
-                                                    <span className="text-[10px] font-mono font-semibold text-text-dim">
-                                                        {totalObsCount} {totalObsCount === 1 ? 'Observación' : 'Observaciones'}
-                                                        {pendingObsCount > 0 ? ` (${pendingObsCount} pendientes)` : ''}
-                                                    </span>
+                                            <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
+                                                <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
+                                                    <Shield size={20} className="text-text-dim" />
                                                 </div>
+                                                <p className="text-xs font-semibold text-text-main">Sin observaciones activas</p>
+                                                <p className="text-xs text-text-dim mt-1 max-w-[200px] leading-relaxed">
+                                                    El documento se encuentra al día con los requerimientos curriculares.
+                                                </p>
+                                            </div>
+                                        );
+                                    }
 
-                                                {totalObsCount === 0 ? (
-                                                    <div className="text-center py-12 opacity-60 flex flex-col items-center justify-center">
-                                                        <div className="p-3 bg-surface rounded-full border border-border-thin mb-3">
-                                                            <CheckCircle size={20} className="text-emerald-500" />
-                                                        </div>
-                                                        <p className="text-[10px] font-bold text-text-main uppercase tracking-wider">Sin observaciones de sección</p>
-                                                        <p className="text-[11px] text-text-dim mt-1 max-w-[200px] leading-relaxed">
-                                                            La coordinación no ha registrado observaciones específicas en los campos del PEA.
-                                                        </p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-3 pt-1">
-                                                        {/* 1. Observaciones Oficiales Estructuradas (doc_pea_observaciones) */}
-                                                        {peaObservaciones.map((obs, idx) => {
-                                                            const isSubsanada = obs.estado === 'Subsanada' || obs.estado === 'Resuelta';
-                                                            const target = resolveObservationTarget(obs.seccionAfectada);
-                                                            const obsDateStr = obs.fechaObservacion
-                                                                ? new Date(obs.fechaObservacion).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
-                                                                : '';
-                                                            const isReplyingThis = subsanandoObsId === obs.id;
+                                    return (
+                                        <div className="flex flex-col space-y-1">
+                                            {deadlineBadge && (
+                                                <div className="flex items-center justify-end gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 px-1 pb-1">
+                                                    <Clock size={11} className="shrink-0" />
+                                                    <span>{deadlineBadge.text}</span>
+                                                </div>
+                                            )}
 
-                                                            return (
-                                                                <div
-                                                                    key={obs.id || obs.uuid || `pea-obs-${idx}`}
-                                                                    className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all space-y-2.5 shadow-2xs"
-                                                                >
-                                                                    <div className="flex items-start justify-between gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                if (target.sectionId && onSelectSection) {
-                                                                                    onSelectSection(target.sectionId);
-                                                                                }
-                                                                            }}
-                                                                            className={`text-left text-[11px] font-bold tracking-tight leading-snug ${
-                                                                                target.sectionId && onSelectSection
-                                                                                    ? 'text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer'
-                                                                                    : 'text-slate-900 dark:text-zinc-100'
-                                                                            }`}
-                                                                            title={target.sectionId ? 'Haga clic para ir directamente a esta sección en el editor' : target.label}
-                                                                        >
-                                                                            {target.label}
-                                                                        </button>
+                                            {/* 1. Observaciones Oficiales Estructuradas (doc_pea_observaciones) */}
+                                            {peaObservaciones.map((obs, idx) => {
+                                                    const isSubsanada = obs.estado === 'Subsanada' || obs.estado === 'Resuelta';
+                                                    const target = resolveObservationTarget(obs.seccionAfectada);
+                                                    const obsDateStr = obs.fechaObservacion
+                                                        ? new Date(obs.fechaObservacion).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' })
+                                                        : '';
+                                                    const isReplyingThis = subsanandoObsId === obs.id;
+
+                                                    return (
+                                                        <React.Fragment key={obs.id || obs.uuid || `pea-obs-${idx}`}>
+                                                            {idx > 0 && (
+                                                                <div className="mx-3 my-2 border-t border-slate-200 dark:border-zinc-800" />
+                                                            )}
+                                                            <div className="py-2.5 px-1 space-y-2">
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            if (target.sectionId && onSelectSection) {
+                                                                                onSelectSection(target.sectionId);
+                                                                            }
+                                                                        }}
+                                                                        className={`text-left text-xs font-semibold leading-snug ${target.sectionId && onSelectSection
+                                                                            ? 'text-[#0070f3] dark:text-blue-400 hover:underline cursor-pointer'
+                                                                            : 'text-text-main'
+                                                                        }`}
+                                                                        title={target.sectionId ? 'Haga clic para ir directamente a esta sección en el editor' : target.label}
+                                                                    >
+                                                                        {target.label}
+                                                                    </button>
+                                                                    <div className="flex items-center gap-2 shrink-0 text-[11px]">
+                                                                        {obsDateStr && <span className="text-text-dim">{obsDateStr}</span>}
                                                                         <span
-                                                                            className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 border ${
-                                                                                isSubsanada
-                                                                                    ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                                                                                    : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                                                            className={`font-medium ${isSubsanada
+                                                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                                                : 'text-amber-600 dark:text-amber-400'
                                                                             }`}
                                                                         >
-                                                                            <span className={`w-1.5 h-1.5 rounded-full ${isSubsanada ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                                                             {isSubsanada ? 'Subsanada' : 'Pendiente'}
                                                                         </span>
                                                                     </div>
+                                                                </div>
 
-                                                                    <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
-                                                                        <span className="truncate">
-                                                                            {obs.nombreObservador ? `${obs.nombreObservador} · ` : ''}
-                                                                            {formatRoleLabel(obs.rolObservador)}
-                                                                        </span>
-                                                                        {obsDateStr && <span className="font-mono shrink-0 ml-2">{obsDateStr}</span>}
+                                                                <p className="text-xs text-text-main leading-relaxed whitespace-pre-wrap break-words">
+                                                                    <span className="text-text-dim font-medium">{formatRoleLabel(obs.rolObservador)}: </span>
+                                                                    {obs.textoObservacion}
+                                                                </p>
+
+                                                                {obs.respuestaDocente && (
+                                                                    <div className="p-2.5 rounded-md bg-emerald-50/60 dark:bg-emerald-950/40 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-0.5">
+                                                                        <span className="font-semibold block text-[10px] uppercase tracking-wider">Respuesta:</span>
+                                                                        <p className="leading-relaxed break-words">{obs.respuestaDocente}</p>
                                                                     </div>
+                                                                )}
 
-                                                                    <p className="text-xs text-slate-800 dark:text-zinc-200 leading-relaxed whitespace-pre-wrap break-words bg-slate-50 dark:bg-zinc-950 p-2.5 rounded-lg border border-slate-100 dark:border-zinc-800">
-                                                                        {obs.textoObservacion}
-                                                                    </p>
+                                                                {!isSubsanada && !readOnly && obs.id && !isReplyingThis && (
+                                                                    <div className="flex justify-end pt-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setSubsanandoObsId(obs.id)}
+                                                                            className="px-3 py-1 rounded-md text-xs font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer"
+                                                                        >
+                                                                            Marcar subsanada
+                                                                        </button>
+                                                                    </div>
+                                                                )}
 
-                                                                    {obs.respuestaDocente && (
-                                                                        <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-0.5">
-                                                                            <span className="font-bold block text-[10px] uppercase tracking-wider">Respuesta de subsanación:</span>
-                                                                            <p className="leading-relaxed break-words">{obs.respuestaDocente}</p>
-                                                                        </div>
-                                                                    )}
-
-                                                                    <div className="flex items-center justify-between gap-2 pt-1">
-                                                                        {target.sectionId && onSelectSection && (
+                                                                {isReplyingThis && !readOnly && (
+                                                                    <div className="pt-2 space-y-2">
+                                                                        <textarea
+                                                                            value={subsanacionTextMap[obs.id] || ''}
+                                                                            onChange={e => setSubsanacionTextMap(prev => ({ ...prev, [obs.id]: e.target.value }))}
+                                                                            placeholder="Detalle brevemente el ajuste realizado (opcional)..."
+                                                                            rows={2}
+                                                                            className="w-full p-2 text-xs rounded-md border border-border-thin bg-surface text-text-main focus:outline-none focus:border-[#0070f3] resize-none"
+                                                                        />
+                                                                        <div className="flex items-center justify-end gap-2">
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={() => onSelectSection(target.sectionId!)}
-                                                                                className="text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer"
+                                                                                onClick={() => setSubsanandoObsId(null)}
+                                                                                disabled={submittingObsId === obs.id}
+                                                                                className="px-2.5 py-1 rounded-md text-xs font-medium border border-border-thin text-text-dim hover:text-text-main hover:bg-surface/50 cursor-pointer"
                                                                             >
-                                                                                Ir a la sección
+                                                                                Cancelar
                                                                             </button>
-                                                                        )}
-
-                                                                        {!isSubsanada && !readOnly && obs.id && (
-                                                                            !isReplyingThis ? (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => setSubsanandoObsId(obs.id)}
-                                                                                    className="ml-auto px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer"
-                                                                                >
-                                                                                    Marcar subsanada
-                                                                                </button>
-                                                                            ) : null
-                                                                        )}
-                                                                    </div>
-
-                                                                    {isReplyingThis && !readOnly && (
-                                                                        <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 space-y-2">
-                                                                            <textarea
-                                                                                value={subsanacionTextMap[obs.id] || ''}
-                                                                                onChange={e => setSubsanacionTextMap(prev => ({ ...prev, [obs.id]: e.target.value }))}
-                                                                                placeholder="Detalle brevemente el ajuste realizado (opcional)..."
-                                                                                rows={2}
-                                                                                className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-[#0070f3] resize-none"
-                                                                            />
-                                                                            <div className="flex items-center justify-end gap-2">
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => setSubsanandoObsId(null)}
-                                                                                    disabled={submittingObsId === obs.id}
-                                                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
-                                                                                >
-                                                                                    Cancelar
-                                                                                </button>
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => handleSubsanarObs(obs.id)}
-                                                                                    disabled={submittingObsId === obs.id}
-                                                                                    className="px-3 py-1 rounded-md text-[11px] font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer disabled:opacity-50"
-                                                                                >
-                                                                                    {submittingObsId === obs.id ? 'Guardando...' : 'Confirmar subsanación'}
-                                                                                </button>
-                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleSubsanarObs(obs.id)}
+                                                                                disabled={submittingObsId === obs.id}
+                                                                                className="px-3 py-1 rounded-md text-xs font-semibold bg-[#0070f3] hover:bg-[#005bb5] text-white transition-colors cursor-pointer disabled:opacity-50"
+                                                                            >
+                                                                                {submittingObsId === obs.id ? 'Guardando...' : 'Confirmar subsanación'}
+                                                                            </button>
                                                                         </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-
-                                                        {/* 2. Comentarios de Auditoría Legados (si existieran) */}
-                                                        {auditItems.map((item, idx) => {
-                                                            const isAprobado = item.audit.estado === 'Aprobado';
-                                                            return (
-                                                                <div key={`legacy-audit-${idx}`} className="p-3.5 rounded-xl border border-border-thin bg-surface hover:border-border-hover transition-all space-y-2 shadow-2xs">
-                                                                    <div className="flex justify-between items-center gap-2">
-                                                                        <span className="text-[10px] font-bold text-text-main uppercase tracking-wider truncate" title={item.audit.seccion}>
-                                                                            {item.audit.seccion}
-                                                                        </span>
-                                                                        <span className={`text-[9px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-md shrink-0 ${isAprobado
-                                                                                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-                                                                                : 'bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-                                                                            }`}>
-                                                                            {item.audit.estado}
-                                                                        </span>
                                                                     </div>
-                                                                    <p className="text-xs text-text-dim font-medium leading-relaxed">
-                                                                        {item.audit.texto}
-                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+
+                                                {/* 2. Comentarios de Auditoría Legados (si existieran) */}
+                                                {auditItems.map((item, idx) => {
+                                                    const isAprobado = item.audit.estado === 'Aprobado';
+                                                    return (
+                                                        <React.Fragment key={`legacy-audit-${idx}`}>
+                                                            <div className="mx-3 my-2 border-t border-slate-200 dark:border-zinc-800" />
+                                                            <div className="py-2.5 px-1 space-y-1.5">
+                                                                <div className="flex justify-between items-center gap-2">
+                                                                    <span className="text-xs font-semibold text-text-main truncate" title={item.audit.seccion}>
+                                                                        {item.audit.seccion}
+                                                                    </span>
+                                                                    <span className={`text-[11px] font-medium shrink-0 ${isAprobado
+                                                                        ? 'text-emerald-600 dark:text-emerald-400'
+                                                                        : 'text-amber-600 dark:text-amber-400'
+                                                                    }`}>
+                                                                        {item.audit.estado}
+                                                                    </span>
                                                                 </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </>
-                                        );
-                                    })()}
-                                </div>
+                                                                <p className="text-xs text-text-dim leading-relaxed">
+                                                                    {item.audit.texto}
+                                                                </p>
+                                                            </div>
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
 
@@ -1965,11 +1931,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                     const file = e.dataTransfer.files?.[0];
                                                     if (file) validateAndSelectSidebarFile(file);
                                                 }}
-                                                className={`border-2 border-dashed rounded-2xl py-14 px-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] ${
-                                                    sidebarIsDragOver
-                                                        ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
-                                                        : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
-                                                }`}
+                                                className={`border-2 border-dashed rounded-2xl py-14 px-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] ${sidebarIsDragOver
+                                                    ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
+                                                    : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
+                                                    }`}
                                             >
                                                 <div className="w-14 h-14 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-4">
                                                     <FileUp size={26} strokeWidth={1.75} />

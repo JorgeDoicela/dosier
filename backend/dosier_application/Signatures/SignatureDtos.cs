@@ -73,8 +73,8 @@ public class SignDocumentDto
     /// <summary>UUID del documento a firmar.</summary>
     public required string DocumentoUuid  { get; init; }
 
-    /// <summary>Contraseña DOSIER del usuario (re-autenticación para no repudio).</summary>
-    public required string Password       { get; init; }
+    /// <summary>Contraseña DOSIER del usuario (re-autenticación opcional; si se omite, se autoriza por sesión JWT activa).</summary>
+    public string? Password               { get; init; }
 
     /// <summary>Rol del firmante en este documento (ej: "Director", "Co-investigador").</summary>
     public string? RolFirmante            { get; init; }

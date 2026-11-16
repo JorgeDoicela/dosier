@@ -630,11 +630,26 @@ namespace dosier_infrastructure.Curriculum
             else if (nuevoEstado == "Observado")
             {
                 // Si el instrumento es devuelto con observaciones (por Coord. Carrera o Coord. Académica),
-                // se anulan los avales posteriores ya que el documento debe ser subsanado y re-evaluado formalmente.
+                // se anulan los avales posteriores y la firma de elaboración, ya que el contenido
+                // será modificado y requiere un nuevo sellado criptográfico al subsanarse.
                 entity.FirmaRevisadoCoord = null;
                 entity.FechaRevisadoCoord = null;
                 entity.FirmaRevisadoAcad = null;
                 entity.FechaRevisadoAcad = null;
+                entity.FirmaElaboradoDocente = null;
+                entity.FechaElaborado = null;
+
+                // Revocar firmas previas en doc_documentos_firmas por reapertura para subsanación
+                var firmasPrevias = await _context.DocDocumentoFirmas
+                    .Where(f => f.DocumentoUuid == entity.Uuid && f.EsValida)
+                    .ToListAsync();
+
+                foreach (var firma in firmasPrevias)
+                {
+                    firma.EsValida = false;
+                    firma.RevocadaEn = DateTime.UtcNow;
+                    firma.MotivoRevocacion = "Reapertura para subsanación de observaciones curriculares.";
+                }
 
                 // Re-habilitar las instancias documentales para subsanación activa por el docente
                 var instancias = await _context.DocumentInstances
@@ -805,8 +820,8 @@ namespace dosier_infrastructure.Curriculum
                     }
                 }
 
-                if (pea.Estado != "Borrador" && pea.Estado != "Corregido")
-                    throw new InvalidOperationException($"El docente solo puede firmar PEAs en estado Borrador o Corregido. Estado actual: {pea.Estado}");
+                if (pea.Estado != "Borrador" && pea.Estado != "Corregido" && pea.Estado != "Observado")
+                    throw new InvalidOperationException($"El docente solo puede firmar PEAs en estado Borrador, Observado o Corregido. Estado actual: {pea.Estado}");
 
                 estadoNuevo = "EnRevision";
                 rol = "Docente";

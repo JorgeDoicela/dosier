@@ -65,7 +65,8 @@ public class DosierInternalSignerSubservice : IDosierInternalSignerSubservice
             _logger.LogWarning("[DOSIER Firma] ADVERTENCIA: Firma:SkipCertificateValidation=true — modo de desarrollo, sin verificación de contraseña.");
         }
 
-        if (!skipAuth)
+        // Si se suministra contraseña se valida formalmente; si se omite, se autoriza por sesión activa.
+        if (!skipAuth && !string.IsNullOrWhiteSpace(dto.Password))
         {
             if (string.IsNullOrWhiteSpace(user.Contrasenia))
                 throw new UnauthorizedAccessException("El usuario no tiene contraseña configurada.");

@@ -58,6 +58,8 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
                     const estado = sig.estado ?? 1;
                     const motivoRevocacion = sig.motivoRevocacion ?? sig.motivo_revocacion;
 
+                    const isRevocada = sig.esValida === false || sig.es_valida === false || estado === 2 || Boolean(sig.revocadaEn || sig.revocada_en);
+
                     return (
                         <div 
                             key={idFirma || firmaCode} 
@@ -67,8 +69,8 @@ export const SignatureBlock: React.FC<SignatureBlockProps> = ({
                                 <span className="text-xs sm:text-sm font-semibold text-text-main">
                                     {firmanteNombre}
                                 </span>
-                                <span className={`text-xs font-semibold ${estado === 2 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                                    {estado === 2 ? 'Revocada' : 'Firma Válida'}
+                                <span className={`text-xs font-semibold ${isRevocada ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                    {isRevocada ? 'Firma Revocada (Por Subsanar)' : 'Firma Válida'}
                                 </span>
                             </div>
 
