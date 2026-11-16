@@ -62,10 +62,20 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
     const [activeObsId, setActiveObsId] = useState<string | number | null>(null);
     const composerRef = useRef<HTMLTextAreaElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
-    const dotsContainerRef = useRef<HTMLDivElement>(null);
+    const pendingDotsRef = useRef<HTMLDivElement>(null);
+    const subsanatedDotsRef = useRef<HTMLDivElement>(null);
 
-    const activeObsIndex = comments.findIndex(c => (c.id ?? c.uuid) === activeObsId);
-    const activeObs = activeObsIndex >= 0 ? comments[activeObsIndex] : null;
+    const pendingComments = comments.filter(c => c.status === 'Pendiente');
+    const subsanatedComments = comments.filter(c => c.status !== 'Pendiente');
+
+    const activeObs = comments.find(c => (c.id ?? c.uuid) === activeObsId) ?? null;
+    const isPendingActive = activeObs?.status === 'Pendiente';
+    const activePendingIndex = isPendingActive
+        ? pendingComments.findIndex(c => (c.id ?? c.uuid) === activeObsId)
+        : -1;
+    const activeSubsanatedIndex = !isPendingActive && activeObs
+        ? subsanatedComments.findIndex(c => (c.id ?? c.uuid) === activeObsId)
+        : -1;
 
     // Control de eventos: cerrar al hacer clic afuera, presionar Escape o hacer scroll en la página principal
     useEffect(() => {
@@ -82,8 +92,8 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
             if (
                 popoverRef.current &&
                 !popoverRef.current.contains(target) &&
-                dotsContainerRef.current &&
-                !dotsContainerRef.current.contains(target)
+                (!pendingDotsRef.current || !pendingDotsRef.current.contains(target)) &&
+                (!subsanatedDotsRef.current || !subsanatedDotsRef.current.contains(target))
             ) {
                 setActiveObsId(null);
             }
@@ -149,12 +159,11 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
             }}
             className="relative w-full select-text min-w-0"
         >
-            {/* Indicadores Desacoplados: Múltiples puntos a la derecha para cada observación */}
-            {comments.length > 0 && (
-                <div ref={dotsContainerRef} className="absolute bottom-full mb-2 left-2 z-20 flex items-center gap-3">
-                    {comments.map((obs, idx) => {
+            {/* Indicadores de Observaciones Actuales (Pendientes) - Arriba del Compositor */}
+            {pendingComments.length > 0 && (
+                <div ref={pendingDotsRef} className="absolute bottom-full mb-2 left-2 z-20 flex items-center gap-3">
+                    {pendingComments.map((obs, idx) => {
                         const obsId = obs.id ?? obs.uuid ?? idx;
-                        const isPending = obs.status === 'Pendiente';
                         const isActive = activeObsId === obsId;
                         return (
                             <button
@@ -165,17 +174,42 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                                     setActiveObsId(prev => prev === obsId ? null : obsId);
                                 }}
                                 className="group relative flex items-center justify-center p-1 rounded-full hover:scale-125 transition-transform duration-150 cursor-pointer focus:outline-hidden"
-                                title={`${isPending ? 'Observación actual (Pendiente)' : 'Revisión anterior (Subsanada)'} · ${formatRolObservador(obs.rolObservador, obs.nombreUsuario)}`}
-                                aria-label={`Ver observación ${idx + 1}`}
+                                title={`Observación actual (Pendiente) · ${formatRolObservador(obs.rolObservador, obs.nombreUsuario)}`}
+                                aria-label={`Ver observación actual ${idx + 1}`}
                             >
                                 <span className={`inline-flex rounded-full h-[19px] w-[19px] shadow-sm transition-all ${
-                                    isPending
-                                        ? isActive
-                                            ? 'bg-amber-500 ring-2 ring-amber-300 dark:ring-amber-700'
-                                            : 'bg-amber-500'
-                                        : isActive
-                                            ? 'bg-emerald-600 ring-2 ring-emerald-300 dark:ring-emerald-700'
-                                            : 'bg-emerald-500'
+                                    isActive
+                                        ? 'bg-amber-500 ring-2 ring-amber-300 dark:ring-amber-700'
+                                        : 'bg-amber-500'
+                                }`} />
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Indicadores de Observaciones Anteriores (Subsanadas) - Debajo del Compositor */}
+            {subsanatedComments.length > 0 && (
+                <div ref={subsanatedDotsRef} className="absolute top-full mt-2 left-2 z-20 flex items-center gap-3">
+                    {subsanatedComments.map((obs, idx) => {
+                        const obsId = obs.id ?? obs.uuid ?? idx;
+                        const isActive = activeObsId === obsId;
+                        return (
+                            <button
+                                key={obsId}
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveObsId(prev => prev === obsId ? null : obsId);
+                                }}
+                                className="group relative flex items-center justify-center p-1 rounded-full hover:scale-125 transition-transform duration-150 cursor-pointer focus:outline-hidden"
+                                title={`Revisión anterior (Subsanada) · ${formatRolObservador(obs.rolObservador, obs.nombreUsuario)}`}
+                                aria-label={`Ver observación anterior subsanada ${idx + 1}`}
+                            >
+                                <span className={`inline-flex rounded-full h-[19px] w-[19px] shadow-sm transition-all ${
+                                    isActive
+                                        ? 'bg-emerald-600 ring-2 ring-emerald-300 dark:ring-emerald-700'
+                                        : 'bg-emerald-500'
                                 }`} />
                             </button>
                         );
@@ -188,26 +222,26 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                 <div
                     key={`obs-popover-${activeObsId}`}
                     ref={popoverRef}
-                    className={`absolute bottom-full mb-11 left-0 right-0 z-50 rounded-2xl animate-mac-popover shadow-[0_16px_36px_-10px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] select-text ${
-                        activeObs.status === 'Pendiente'
-                            ? 'bg-amber-50 dark:bg-[#1a1610] border border-amber-200 dark:border-amber-900/80'
-                            : 'bg-emerald-50 dark:bg-[#0f1f17] border border-emerald-200 dark:border-emerald-900/80'
+                    className={`absolute left-0 right-0 z-50 rounded-2xl animate-mac-popover shadow-[0_16px_36px_-10px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] select-text ${
+                        isPendingActive
+                            ? 'bottom-full mb-11 bg-amber-50 dark:bg-[#1a1610] border border-amber-200 dark:border-amber-900/80'
+                            : 'top-full mt-10 bg-emerald-50 dark:bg-[#0f1f17] border border-emerald-200 dark:border-emerald-900/80'
                     }`}
                     style={{
-                        transformOrigin: `${21.5 + (activeObsIndex >= 0 ? activeObsIndex : 0) * 39}px bottom`
+                        transformOrigin: `${21.5 + (isPendingActive ? Math.max(0, activePendingIndex) : Math.max(0, activeSubsanatedIndex)) * 39}px ${isPendingActive ? 'bottom' : 'top'}`
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Flecha o colita apuntando al punto activo de origen */}
-                    {activeObsIndex >= 0 && (
+                    {/* Flecha apuntando al punto activo de origen (arriba o abajo según corresponda) */}
+                    {((isPendingActive && activePendingIndex >= 0) || (!isPendingActive && activeSubsanatedIndex >= 0)) && (
                         <div
-                            className={`absolute -bottom-1.5 w-3 h-3 rotate-45 border-b border-r z-10 ${
-                                activeObs.status === 'Pendiente'
-                                    ? 'bg-amber-50 dark:bg-[#1a1610] border-amber-200 dark:border-amber-900/80'
-                                    : 'bg-emerald-50 dark:bg-[#0f1f17] border-emerald-200 dark:border-emerald-900/80'
+                            className={`absolute w-3 h-3 rotate-45 z-10 ${
+                                isPendingActive
+                                    ? '-bottom-1.5 border-b border-r bg-amber-50 dark:bg-[#1a1610] border-amber-200 dark:border-amber-900/80'
+                                    : '-top-1.5 border-t border-l bg-emerald-50 dark:bg-[#0f1f17] border-emerald-200 dark:border-emerald-900/80'
                             }`}
                             style={{
-                                left: `${15.5 + activeObsIndex * 39}px`
+                                left: `${15.5 + (isPendingActive ? activePendingIndex : activeSubsanatedIndex) * 39}px`
                             }}
                             aria-hidden="true"
                         />
@@ -216,14 +250,15 @@ export const SectionObservationColumn: React.FC<SectionObservationColumnProps> =
                     <div className="rounded-2xl overflow-hidden">
                         <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain py-3.5 pl-4 pr-2 space-y-2">
                             <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                                <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                                     <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 truncate">
                                         {formatRolObservador(activeObs.rolObservador, activeObs.nombreUsuario)}
                                     </span>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                                    <span className="text-slate-300 dark:text-zinc-700 select-none">·</span>
+                                    <span className={`text-[11px] font-medium ${
                                         activeObs.status === 'Pendiente'
-                                            ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                                            : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                                            ? 'text-amber-700 dark:text-amber-400'
+                                            : 'text-emerald-700 dark:text-emerald-400'
                                     }`}>
                                         {activeObs.status === 'Pendiente' ? 'Observación actual' : 'Revisión anterior · Subsanada'}
                                     </span>
