@@ -237,6 +237,12 @@ export function useProjectCore() {
                     fechaFin: null,
                     fechaLimiteSubsanacion: null,
                     isPea: true,
+                    esColaborativo: Boolean(
+                        rawData.es_colaborativo ??
+                        pea.es_colaborativo ??
+                        pea.esColaborativo ??
+                        ((pea.estado_colaboracion ?? pea.estadoColaboracion) === 'Aprobada')
+                    ),
                     peaData: pea
                 };
             } else {
@@ -286,7 +292,8 @@ export function useProjectCore() {
                     convocatoriaMontoMaximo: null,
                     fechaInicio: res.data.fecha_inicio || res.data.fechaInicio || null,
                     fechaFin: res.data.fecha_fin || res.data.fechaFin || null,
-                    fechaLimiteSubsanacion: res.data.fecha_limite_subsanacion || res.data.fechaLimiteSubsanacion || null
+                    fechaLimiteSubsanacion: res.data.fecha_limite_subsanacion || res.data.fechaLimiteSubsanacion || null,
+                    esColaborativo: Array.isArray(res.data.investigadores) && res.data.investigadores.length > 1
                 };
             }
 

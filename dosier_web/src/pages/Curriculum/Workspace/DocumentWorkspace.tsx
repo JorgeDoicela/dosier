@@ -420,6 +420,12 @@ export const DocumentWorkspace: React.FC = () => {
         }
 
         const canSignDocument = currentProject.puedeFirmar;
+        const isCollaborativeDoc = Boolean(
+            currentProject.esColaborativo ||
+            currentProject.peaData?.es_colaborativo ||
+            currentProject.peaData?.esColaborativo ||
+            (currentProject.peaData?.estado_colaboracion ?? currentProject.peaData?.estadoColaboracion) === 'Aprobada'
+        );
 
         return (
             <DocumentEditor
@@ -431,6 +437,7 @@ export const DocumentWorkspace: React.FC = () => {
                 readOnlyReason={readOnlyReason}
                 projectStatus={currentProject.status}
                 canSign={canSignDocument}
+                isCollaborative={isCollaborativeDoc}
             />
         );
     }

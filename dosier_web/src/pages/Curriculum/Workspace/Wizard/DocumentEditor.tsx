@@ -107,9 +107,10 @@ interface DocumentEditorProps {
     readOnlyReason?: string;
     projectStatus?: string;
     canSign?: boolean;
+    isCollaborative?: boolean;
 }
 
-const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialData, entityUuid, onClose, readOnly = false, readOnlyReason, projectStatus, canSign = true }) => {
+const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialData, entityUuid, onClose, readOnly = false, readOnlyReason, projectStatus, canSign = true, isCollaborative }) => {
     const { isAdmin } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [templateConfig, setTemplateConfig] = useState<any>(null);
@@ -381,6 +382,7 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             readOnlyReason={readOnly ? readOnlyReason : (isInstanceSigned ? 'El documento ya ha sido firmado digitalmente y se encuentra en modo de sólo lectura.' : undefined)}
             projectStatus={projectStatus}
             canSign={canSign && !isInstanceSigned}
+            isCollaborative={isCollaborative}
         />
     );
 };
@@ -403,6 +405,7 @@ interface DocumentEditorCoreProps {
     readOnlyReason?: string;
     projectStatus?: string;
     canSign?: boolean;
+    isCollaborative?: boolean;
 }
 
 const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
@@ -416,7 +419,8 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
     readOnly = false,
     readOnlyReason,
     projectStatus,
-    canSign = true
+    canSign = true,
+    isCollaborative
 }) => {
     const navigate = useNavigate();
     const { user, isAdmin } = useAuth();
@@ -736,6 +740,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             projectStatus={projectStatus}
             entityUuid={entityUuid}
             canSign={canSign}
+            isCollaborative={isCollaborative}
             onUpdateField={updateField}
             onApplyStructuredDraft={applyStructuredDraft}
             signatureType={templateConfig?.signatureType || 'DOSIER'}

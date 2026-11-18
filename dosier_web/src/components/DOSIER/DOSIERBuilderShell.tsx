@@ -53,6 +53,7 @@ export interface DOSIERBuilderShellProps {
     templateVersion?: number;
     onUpgradeTemplate?: () => Promise<void>;
     isUpgrading?: boolean;
+    isCollaborative?: boolean;
 }
 
 const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
@@ -77,7 +78,8 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         instanceVersion,
         templateVersion,
         onUpgradeTemplate,
-        isUpgrading = false
+        isUpgrading = false,
+        isCollaborative
     } = props;
 
     const { isAdmin } = useAuth();
@@ -577,6 +579,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 projectStatus={projectStatus}
                                                 templateCode={templateCode}
                                                 peaData={formData}
+                                                isCollaborative={isCollaborative}
                                                 onClose={handleCloseSidebar}
                                                 sectionStatuses={layout.sectionStatuses}
                                                 onSectionStatusChange={layout.setSectionStatus}

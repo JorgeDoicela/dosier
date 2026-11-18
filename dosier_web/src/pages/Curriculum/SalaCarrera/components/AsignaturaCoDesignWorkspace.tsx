@@ -301,6 +301,7 @@ export const AsignaturaCoDesignWorkspace: React.FC<AsignaturaCoDesignWorkspacePr
                 onSave={handleSaveBorrador}
                 onClose={onVolver}
                 canSign={false}
+                isCollaborative={true}
                 projectStatus={asignatura.estadoPea || 'Borrador'}
                 entityUuid={asignatura.peaUuid || asignatura.expedienteUuid || String(asignatura.idExpediente || '')}
                 documentUuid={asignatura.peaUuid || asignatura.expedienteUuid || String(asignatura.idExpediente || '')}

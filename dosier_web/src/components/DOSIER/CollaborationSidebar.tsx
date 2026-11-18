@@ -105,6 +105,7 @@ export interface CollaborationSidebarProps {
     resolvedPeaUuid?: string;
     formData?: any;
     readOnly?: boolean;
+    isCollaborative?: boolean;
 }
 
 const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
@@ -131,7 +132,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     aiConfigVersion = 0,
     resolvedPeaUuid,
     formData,
-    readOnly = false
+    readOnly = false,
+    isCollaborative: isCollaborativeProp
 }) => {
     const { user, isAdmin, isRevisor, isCoordCarrera, isCoordAcad, isVicerrector } = useAuth();
     const confirm = useConfirm();
@@ -209,6 +211,31 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     // Disponible en fase de redacción activa; se oculta formalmente en revisión, firmado o solo lectura
     const isAiAvailable = !readOnly && !isEnRevision && !isSignedOrFinal;
     const isImportAvailable = !readOnly && !isEnRevision && !isSignedOrFinal && Boolean(onOpenImportModal || onTriggerDocExtraction);
+    const [fetchedIsCollaborative, setFetchedIsCollaborative] = useState<boolean | null>(null);
+
+    const isChatAvailable = useMemo(() => {
+        if (isCollaborativeProp === true || fetchedIsCollaborative === true) return true;
+
+        const isColabByData = Boolean(
+            peaData?.es_colaborativo ||
+            peaData?.esColaborativo ||
+            peaData?.EsColaborativo ||
+            peaData?.estado_colaboracion === 'Aprobada' ||
+            peaData?.estadoColaboracion === 'Aprobada' ||
+            peaData?.EstadoColaboracion === 'Aprobada'
+        );
+        const isSalaRoute = typeof window !== 'undefined' && (
+            window.location.pathname.includes('salas-curriculares') ||
+            window.location.pathname.includes('sala-curricular') ||
+            new URLSearchParams(window.location.search).get('from') === 'sala'
+        );
+        const hasMultipleConnected = (cowork?.session?.connectedUsers?.length ?? 0) > 1;
+
+        if (isColabByData || isSalaRoute || hasMultipleConnected) return true;
+        return false;
+    }, [isCollaborativeProp, fetchedIsCollaborative, peaData, cowork?.session?.connectedUsers]);
+
+    const defaultFallbackTab = isChatAvailable ? 'comments' : 'status';
 
     const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import'>(() => {
         if (isProtocolDocument && isReviewer && isEnRevision) {
@@ -218,11 +245,14 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             return 'correcciones';
         }
         const saved = localStorage.getItem('document_sidebar_tab') as any;
+        if (saved === 'comments' && !isChatAvailable) {
+            return 'status';
+        }
         if (saved === 'ai' && !isAiAvailable) {
-            return 'comments';
+            return defaultFallbackTab;
         }
         if (saved === 'import' && !isImportAvailable) {
-            return 'comments';
+            return defaultFallbackTab;
         }
         const validGeneralTabs = ['comments', 'status', 'activity', 'ai', 'import'];
         if (validGeneralTabs.includes(saved)) {
@@ -231,12 +261,12 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         // Si había una pestaña contextual legada (correcciones/revisión) almacenada en localStorage, purgarla
         if (saved === 'correcciones' || saved === 'revision') {
             try {
-                localStorage.setItem('document_sidebar_tab', 'comments');
+                localStorage.setItem('document_sidebar_tab', defaultFallbackTab);
             } catch {
                 // Ignore storage errors
             }
         }
-        return 'comments';
+        return defaultFallbackTab;
     });
 
     const setActiveTab = useCallback((tab: 'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import') => {
@@ -259,16 +289,18 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     // Sincronizar activeTab cuando cambie el estado del documento o la pestaña activa ya no sea aplicable
     useEffect(() => {
-        if (activeTab === 'ai' && !isAiAvailable) {
-            setActiveTab('comments');
+        if (activeTab === 'comments' && !isChatAvailable) {
+            setActiveTabState('status');
+        } else if (activeTab === 'ai' && !isAiAvailable) {
+            setActiveTab(defaultFallbackTab);
         } else if (activeTab === 'import' && !isImportAvailable) {
-            setActiveTab('comments');
+            setActiveTab(defaultFallbackTab);
         } else if (activeTab === 'correcciones' && (!isProtocolDocument || (!isObservado && peaObservaciones.length === 0))) {
-            setActiveTab('comments');
+            setActiveTab(defaultFallbackTab);
         } else if (activeTab === 'revision' && (!isProtocolDocument || !isReviewer || !isEnRevision)) {
-            setActiveTab('comments');
+            setActiveTab(defaultFallbackTab);
         }
-    }, [isAiAvailable, isImportAvailable, isObservado, peaObservaciones.length, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
+    }, [isChatAvailable, defaultFallbackTab, isAiAvailable, isImportAvailable, isObservado, peaObservaciones.length, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
 
     // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
     const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
@@ -464,6 +496,13 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                 ]);
                 const resolvedPea = peaRes?.data || peaRes;
                 if (resolvedPea) {
+                    const colabFlag = Boolean(
+                        resolvedPea.es_colaborativo ??
+                        resolvedPea.esColaborativo ??
+                        ((resolvedPea.estado_colaboracion ?? resolvedPea.estadoColaboracion) === 'Aprobada')
+                    );
+                    setFetchedIsCollaborative(colabFlag);
+
                     const traceList = (resolvedPea.trazabilidades || resolvedPea.Trazabilidades || []).map((t: any) => ({
                         id: t.id_trazabilidad ?? t.idTrazabilidad,
                         estadoAnterior: t.estado_anterior ?? t.estadoAnterior,
@@ -1010,19 +1049,21 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         </button>
                     )}
 
-                    {/* 1. Chat / Mensajes */}
-                    <button
-                        type="button"
-                        onClick={() => setActiveTab('comments')}
-                        className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'comments'
-                            ? 'border-text-main text-text-main bg-surface/50'
-                            : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
-                            }`}
-                        title="Chat colegiado"
-                        aria-label="Chat colegiado"
-                    >
-                        <MessageSquare size={20} strokeWidth={1.75} />
-                    </button>
+                    {/* 1. Chat / Mensajes (visible únicamente en documentos colaborativos / en conjunto) */}
+                    {isChatAvailable && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('comments')}
+                            className={`flex-1 min-w-0 py-3.5 px-2 transition-all border-b-2 flex items-center justify-center cursor-pointer ${activeTab === 'comments'
+                                ? 'border-text-main text-text-main bg-surface/50'
+                                : 'border-transparent text-text-dim hover:text-text-main hover:bg-surface/30'
+                                }`}
+                            title="Chat colegiado"
+                            aria-label="Chat colegiado"
+                        >
+                            <MessageSquare size={20} strokeWidth={1.75} />
+                        </button>
+                    )}
 
                     {/* 2. Check / Estado de Secciones */}
                     <button
@@ -1118,7 +1159,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             </div>
                         )}
 
-                        {activeTab === 'comments' && (
+                        {activeTab === 'comments' && isChatAvailable && (
                             <div className="flex flex-col h-full flex-1 overflow-hidden">
                                 <div className="flex-1 overflow-y-auto space-y-3 mb-2 px-1 pt-3.5 pb-1 custom-scrollbar">
                                     {(() => {

@@ -81,6 +81,13 @@ export const curriculumProjectService = {
                 descripcion_proyecto: data.objetivo_asignatura || data.objetivoAsignatura || '',
                 codigo_institucional: data.codigo_asignatura || data.codigoAsignatura || '',
                 id_carrera: data.id_carrera || data.idCarrera,
+                es_colaborativo: Boolean(
+                    data.es_colaborativo ??
+                    data.esColaborativo ??
+                    ((data.estado_colaboracion ?? data.estadoColaboracion) === 'Aprobada')
+                ),
+                estado_colaboracion: data.estado_colaboracion ?? data.estadoColaboracion ?? null,
+                nombre_docente_colaborador: data.nombre_docente_colaborador ?? data.nombreDocenteColaborador ?? null,
                 peaData: data,
                 docentes: []
             };

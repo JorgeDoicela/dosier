@@ -25,6 +25,10 @@ namespace dosier_application.Curriculum.Dtos
         public string? FuenteMalla { get; set; }
         public string? IdDocenteElaborador { get; set; }
         public string? NombreDocenteElaborador { get; set; }
+        public bool EsColaborativo { get; set; }
+        public string? EstadoColaboracion { get; set; }
+        public string? IdDocenteColaborador { get; set; }
+        public string? NombreDocenteColaborador { get; set; }
         public string Modalidad { get; set; } = "Presencial";
         public string? UnidadOrganizacion { get; set; }
         public string? SemestreNivel { get; set; }

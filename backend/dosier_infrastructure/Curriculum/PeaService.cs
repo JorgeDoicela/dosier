@@ -163,6 +163,41 @@ namespace dosier_infrastructure.Curriculum
                 return true;
             }
 
+            // Docente colaborador con solicitud aprobada por el titular
+            if (!string.IsNullOrEmpty(user.IdSigafi))
+            {
+                bool esColaboradorDirecto = string.Equals(pea.EstadoColaboracion, "Aprobada", StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrEmpty(pea.IdDocenteColaborador) &&
+                    string.Equals(pea.IdDocenteColaborador.Trim(), user.IdSigafi.Trim(), StringComparison.OrdinalIgnoreCase);
+
+                if (esColaboradorDirecto)
+                {
+                    return true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(pea.ColaboradoresJson))
+                {
+                    try
+                    {
+                        var colabList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(pea.ColaboradoresJson);
+                        bool esColaboradorJson = colabList?.Any(c =>
+                            c.TryGetValue("id_docente", out var id) &&
+                            string.Equals(id?.ToString()?.Trim(), user.IdSigafi.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                            c.TryGetValue("estado", out var st) &&
+                            string.Equals(st?.ToString(), "Aprobada", StringComparison.OrdinalIgnoreCase)) == true;
+
+                        if (esColaboradorJson)
+                        {
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignorar JSON malformado en historial heredado
+                    }
+                }
+            }
+
             // Coordinador de Carrera: acceso exclusivo a los PEAs de sus carreras asignadas
             if (userRoles.Contains("DOSIER_COORD_CARRERA") && !string.IsNullOrEmpty(user.IdSigafi))
             {
@@ -1909,6 +1944,22 @@ namespace dosier_infrastructure.Curriculum
                 horasTa = totalHoras - horasCd - horasApe;
             }
 
+            bool tieneColaboracionAprobada = string.Equals(pea.EstadoColaboracion, "Aprobada", StringComparison.OrdinalIgnoreCase);
+            if (!tieneColaboracionAprobada && !string.IsNullOrWhiteSpace(pea.ColaboradoresJson))
+            {
+                try
+                {
+                    var colabList = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(pea.ColaboradoresJson);
+                    tieneColaboracionAprobada = colabList?.Any(c =>
+                        c.TryGetValue("estado", out var st) &&
+                        string.Equals(st?.ToString(), "Aprobada", StringComparison.OrdinalIgnoreCase)) == true;
+                }
+                catch
+                {
+                    // Ignorar JSON malformado en historial heredado
+                }
+            }
+
             return new PeaDto
             {
                 IdPea = pea.IdPea,
@@ -1932,6 +1983,10 @@ namespace dosier_infrastructure.Curriculum
                 FuenteMalla = pea.FuenteMalla,
                 IdDocenteElaborador = pea.IdDocenteElaborador,
                 NombreDocenteElaborador = docente != null ? $"{docente.Nombres} {docente.Apellidos}".Trim() : null,
+                EsColaborativo = tieneColaboracionAprobada,
+                EstadoColaboracion = pea.EstadoColaboracion,
+                IdDocenteColaborador = pea.IdDocenteColaborador,
+                NombreDocenteColaborador = pea.NombreDocenteColaborador,
                 Modalidad = modalidad,
                 UnidadOrganizacion = unidadOrg,
                 SemestreNivel = semestreNivel,
