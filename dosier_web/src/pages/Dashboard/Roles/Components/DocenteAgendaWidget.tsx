@@ -47,11 +47,13 @@ export const DocenteAgendaWidget: React.FC = () => {
         };
 
         window.addEventListener('focus', handleRevalidate);
+        window.addEventListener('dosier-projects-changed', cargar);
         document.addEventListener('visibilitychange', handleRevalidate);
 
         return () => {
             isMounted = false;
             window.removeEventListener('focus', handleRevalidate);
+            window.removeEventListener('dosier-projects-changed', cargar);
             document.removeEventListener('visibilitychange', handleRevalidate);
         };
     }, []);

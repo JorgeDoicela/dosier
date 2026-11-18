@@ -131,3 +131,58 @@ export const sortSubjectsByRecentOpen = <T extends SubjectIdentifiable>(subjects
     });
 };
 
+export interface OtherPeaSortable extends SubjectIdentifiable {
+    nombre_asignatura?: string;
+    nombre_carrera?: string;
+    estado_colaboracion?: string;
+}
+
+/**
+ * Ordena inteligentemente la bandeja de PEAs de otros docentes (algoritmo invisible sin botones extra):
+ * 1. Recientemente abiertos / interactuados por el docente (de más reciente a más antiguo).
+ * 2. PEAs con colaboración ya aprobada ('Aprobada') para acceso directo a co-redacción.
+ * 3. PEAs con solicitud de colaboración pendiente de aprobación ('Pendiente').
+ * 4. PEAs que pertenecen a las carreras donde el docente dicta clases (afinidad curricular).
+ * 5. Orden alfabético por nombre de asignatura.
+ */
+export const sortOtherPeasIntelligently = <T extends OtherPeaSortable>(
+    peas: T[],
+    carrerasDocente?: Set<string> | string[]
+): T[] => {
+    const carrerasSet = carrerasDocente instanceof Set
+        ? carrerasDocente
+        : new Set(carrerasDocente || []);
+
+    return [...peas].sort((a, b) => {
+        const timeA = getSubjectLastOpenedAt(a);
+        const timeB = getSubjectLastOpenedAt(b);
+
+        // 1. Recientemente abierto por el usuario (más reciente primero)
+        if (timeA > 0 || timeB > 0) {
+            if (timeB !== timeA) return timeB - timeA;
+        }
+
+        // 2. Prioridad por estado de colaboración (Aprobada > Pendiente > Sin solicitud / Rechazada)
+        const colabPriority = (estado?: string): number => {
+            if (estado === 'Aprobada') return 1;
+            if (estado === 'Pendiente') return 2;
+            return 3;
+        };
+        const prioColabA = colabPriority(a.estado_colaboracion);
+        const prioColabB = colabPriority(b.estado_colaboracion);
+        if (prioColabA !== prioColabB) return prioColabA - prioColabB;
+
+        // 3. Afinidad por carrera del docente
+        const carreraA = a.nombre_carrera?.trim();
+        const carreraB = b.nombre_carrera?.trim();
+        const esMismaCarreraA = carreraA && carrerasSet.has(carreraA) ? 0 : 1;
+        const esMismaCarreraB = carreraB && carrerasSet.has(carreraB) ? 0 : 1;
+        if (esMismaCarreraA !== esMismaCarreraB) return esMismaCarreraA - esMismaCarreraB;
+
+        // 4. Orden alfabético natural
+        const nomA = (a.nombre_asignatura || '').trim();
+        const nomB = (b.nombre_asignatura || '').trim();
+        return nomA.localeCompare(nomB, 'es', { sensitivity: 'base' });
+    });
+};
+

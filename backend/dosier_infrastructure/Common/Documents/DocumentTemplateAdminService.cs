@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Dosier.Application.Common.Documents;
+using Dosier.Domain.Common.Documents;
 using dosier_infrastructure.Collaboration;
 using dosier_infrastructure.data.models;
 using Microsoft.AspNetCore.SignalR;
@@ -122,6 +123,41 @@ namespace Dosier.Infrastructure.Common.Documents
                 updated_by = updatedBy,
                 timestamp = DateTime.UtcNow
             }, ct);
+        }
+
+        public async Task<DocumentTemplate> CreateTemplateAsync(
+            string code, string name, string? description,
+            DocumentCategory category, bool requiresSignature, bool requiresLopdp,
+            string createdBy, CancellationToken ct = default)
+        {
+            var cleanCode = code.Trim().ToUpperInvariant();
+            var existing = await _db.Set<DocumentTemplate>()
+                .FirstOrDefaultAsync(t => t.Code == cleanCode, ct);
+
+            if (existing != null)
+            {
+                throw new InvalidOperationException($"Ya existe una plantilla institucional con el código '{cleanCode}'.");
+            }
+
+            var placeholderHtml = $"<!-- Plantilla oficial {cleanCode} ISTPET -->";
+            var template = DocumentTemplate.Create(
+                code: cleanCode,
+                name: name.Trim(),
+                htmlContent: placeholderHtml,
+                category: category,
+                description: description?.Trim(),
+                requiresLopdp: requiresLopdp,
+                supportsBlind: false,
+                requiresTraceability: true,
+                requiresSignature: requiresSignature,
+                signatureType: requiresSignature ? "DOSIER" : "NONE",
+                collaborativeFields: "[]",
+                version: 1);
+
+            _db.Set<DocumentTemplate>().Add(template);
+            await _db.SaveChangesAsync(ct);
+
+            return template;
         }
     }
 }

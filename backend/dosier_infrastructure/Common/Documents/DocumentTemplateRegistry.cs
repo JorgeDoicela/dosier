@@ -41,8 +41,9 @@ namespace Dosier.Infrastructure.Common.Documents
 
 
             // ══════════════════════════════════════════════════════════════
-            // ÁREA: CURRÍCULO ACADÉMICO (PEA OFICIAL)
+            // ÁREA: CURRÍCULO ACADÉMICO (PEA Y PLAN ANALÍTICO OFICIAL 2026)
             // ══════════════════════════════════════════════════════════════
+            // 1. PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)
             yield return DocumentTemplate.Create(
                 code: "PEA_OFICIAL",
                 name: "Programa de Estudio de la Asignatura (PEA)",
@@ -55,6 +56,51 @@ namespace Dosier.Infrastructure.Common.Documents
                 requiresSignature: true,
                 signatureType: "DOSIER",
                 collaborativeFields: "[\"objetivo_asignatura\", \"prerrequisitos\", \"rdas_carrera\", \"rdas_asignatura\", \"contenidos_unidades\", \"metodologia_propuesta\", \"recursos_didacticos\", \"actividades_practicas\", \"sistema_evaluacion\", \"bibliografia_basica\", \"bibliografia_consulta\"]",
+                version: 1);
+
+            // 2. FORMATO PLAN ANALÍTICO 2026
+            yield return DocumentTemplate.Create(
+                code: "PLAN_ANALITICO",
+                name: "2. Formato Plan Analítico 2026",
+                description: "Formato institucional oficial del Plan Analítico de la Asignatura 2026 para carreras del ISTPET.",
+                category: DocumentCategory.PeaCurricular,
+                htmlContent: "<!-- Plantilla oficial de fábrica Plan Analítico 2026 ISTPET -->",
+                requiresLopdp: true,
+                supportsBlind: false,
+                requiresTraceability: true,
+                requiresSignature: true,
+                signatureType: "DOSIER",
+                collaborativeFields: "[\"datos_informativos\", \"objetivo_general\", \"resultados_aprendizaje\"]",
+                version: 1);
+
+            // 3. FORMATO SEGUIMIENTO DE TUTORÍAS ACADÉMICAS 2026
+            yield return DocumentTemplate.Create(
+                code: "SEGUIMIENTO_TUTORIAS",
+                name: "3. Formato Seguimiento de Tutorías Académicas 2026",
+                description: "Formato institucional oficial para el registro, acompañamiento y seguimiento de tutorías académicas del ISTPET.",
+                category: DocumentCategory.PeaCurricular,
+                htmlContent: "<!-- Plantilla oficial de fábrica Seguimiento de Tutorías Académicas 2026 ISTPET -->",
+                requiresLopdp: true,
+                supportsBlind: false,
+                requiresTraceability: true,
+                requiresSignature: true,
+                signatureType: "DOSIER",
+                collaborativeFields: "[\"cabecera_docente\", \"matriz_tutorias\", \"firmas_responsabilidad\"]",
+                version: 1);
+
+            // 4. FORMATO INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA 26-26
+            yield return DocumentTemplate.Create(
+                code: "INFORME_ACOMPANAMIENTO_CARRERA",
+                name: "6. Informe de Acompañamiento Académico de Carrera 26-26",
+                description: "Formato institucional oficial para el informe de acompañamiento académico de carrera de la Unidad Académica del ISTPET.",
+                category: DocumentCategory.PeaCurricular,
+                htmlContent: "<!-- Plantilla oficial de fábrica Informe de Acompañamiento Académico de Carrera 26-26 ISTPET -->",
+                requiresLopdp: true,
+                supportsBlind: false,
+                requiresTraceability: true,
+                requiresSignature: true,
+                signatureType: "DOSIER",
+                collaborativeFields: "[\"datos_informativos\", \"nomina_tutores\", \"nomina_docentes_aporte\", \"gestion_academica\", \"conclusiones\", \"firmas_responsabilidad\"]",
                 version: 1);
 
 

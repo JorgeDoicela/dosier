@@ -68,6 +68,37 @@ export const BlockPalette: React.FC<BlockPaletteProps> = ({
             ]
         },
         {
+            title: 'Bloques Plan Analítico (Formato Oficial 2026)',
+            items: [
+                { type: 'plan_analitico_general_section', icon: GraduationCap, label: '1. Datos Informativos', desc: 'Cabecera oficial y tabla de información general.', color: 'text-blue-600 bg-blue-600/5' },
+                { type: 'plan_analitico_objective_section', icon: Target, label: '2. Objetivo General', desc: 'Meta formativa y propósito de la asignatura.', color: 'text-blue-600 bg-blue-600/5' },
+                { type: 'plan_analitico_outcomes_section', icon: CheckSquare, label: '3. Resultados de Aprendizaje', desc: 'Matriz con ID, capacidades y nivel (Inicial/Medio/Alto).', color: 'text-blue-600 bg-blue-600/5' },
+                { type: 'plan_analitico_methodology_matrix_section', icon: Layers, label: '4. Matriz de Aprendizaje (19 Sem)', desc: 'Matriz semanal de metodología, contenidos, horas y evaluaciones.', color: 'text-blue-600 bg-blue-600/5' },
+                { type: 'plan_analitico_resources_section', icon: Lightbulb, label: '5. Recursos & Adaptación', desc: 'Recursos didácticos, TIC y adaptación curricular (Aplica / No aplica).', color: 'text-blue-600 bg-blue-600/5' },
+                { type: 'plan_analitico_evaluation_section', icon: CheckSquare, label: '6. Evaluación Oficial', desc: 'Matriz oficial de 3 notas: Parcial 1, Parcial 2 y Examen Final (10.00 pts).', color: 'text-blue-600 bg-blue-600/5' },
+                { type: 'plan_analitico_signatures_section', icon: ShieldCheck, label: '7. Firmas de Responsabilidad', desc: 'Circuito institucional de 3 firmas: Elaborado, Revisado y Aprobado.', color: 'text-blue-600 bg-blue-600/5' }
+            ]
+        },
+        {
+            title: 'Bloques Seguimiento de Tutorías (Formato Oficial 2026)',
+            items: [
+                { type: 'tutorias_header_section', icon: GraduationCap, label: '1. Cabecera y Docente', desc: 'Logo ISTPET, títulos oficiales y tabla de horario del docente.', color: 'text-emerald-600 bg-emerald-600/5' },
+                { type: 'tutorias_matrix_section', icon: Layers, label: '2. Matriz de Tutorías (12 Col)', desc: 'Registro de fecha, semana, estudiantes, asignatura, modalidad y convocatoria.', color: 'text-emerald-600 bg-emerald-600/5' },
+                { type: 'tutorias_signatures_section', icon: ShieldCheck, label: '3. Firmas de Validación', desc: 'Firmas de Docente y Revisado: Coordinador de Carrera.', color: 'text-emerald-600 bg-emerald-600/5' }
+            ]
+        },
+        {
+            title: 'Bloques Informe Acompañamiento Carrera (2026)',
+            items: [
+                { type: 'informe_acomp_datos_informativos_section', icon: GraduationCap, label: '1. Datos Informativos', desc: 'Coordinador, carrera, periodo, parcial (rojo), reporta a y fecha.', color: 'text-cyan-600 bg-cyan-600/5' },
+                { type: 'informe_acomp_nomina_tutores_section', icon: Users, label: '2. Docentes Tutores', desc: 'Tabla: Tutor, Nivel, Actividad y Medio de verificación.', color: 'text-cyan-600 bg-cyan-600/5' },
+                { type: 'informe_acomp_nomina_docentes_section', icon: Layers, label: '3. Docentes que Aportan', desc: 'Tabla: Nómina, Asignaturas, Nivel, Jornada, Acciones de mejora y correctivas.', color: 'text-cyan-600 bg-cyan-600/5' },
+                { type: 'informe_acomp_gestion_academica_section', icon: CheckSquare, label: '4. Gestión Académica (5 Sub-Secciones)', desc: 'Reuniones, actividades coordinador, estudiantes, gestión docente y observaciones.', color: 'text-cyan-600 bg-cyan-600/5' },
+                { type: 'informe_acomp_conclusiones_section', icon: FileText, label: '5. Conclusiones y Recomendaciones', desc: 'Conclusión y recomendación por cada punto tratado.', color: 'text-cyan-600 bg-cyan-600/5' },
+                { type: 'informe_acomp_firmas_section', icon: ShieldCheck, label: '6. Firmas de Responsabilidad', desc: 'Doble matriz: Tutores por nivel y Coordinación/Autoridades.', color: 'text-cyan-600 bg-cyan-600/5' }
+            ]
+        },
+        {
             title: 'Bloques Estructurales & Contenido',
             items: [
                 { type: 'cover', icon: Image, label: 'Portada Institucional', desc: 'Portada del PDF con logos y título.', color: 'text-blue-500 bg-blue-500/5' },

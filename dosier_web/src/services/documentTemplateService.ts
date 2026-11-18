@@ -21,11 +21,26 @@ export interface TemplateUsageCountDto {
     [key: string]: any;
 }
 
+export interface CreateTemplateDto {
+    code: string;
+    name: string;
+    description?: string;
+    category?: number;
+    requiresSignature?: boolean;
+    requiresLopdp?: boolean;
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Servicio de Gestión de Plantillas Documentales y Tema Global
 // ─────────────────────────────────────────────────────────────
 
 export const documentTemplateService = {
+    /**
+     * Registra una nueva plantilla institucional en el catálogo maestro.
+     */
+    createTemplate: (payload: CreateTemplateDto): Promise<DocumentTemplateDto> =>
+        api.post<DocumentTemplateDto>('/admin/templates', payload).then(r => r.data),
+
     /**
      * Obtiene el catálogo completo de plantillas documentales institucionales.
      */

@@ -238,13 +238,16 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({
                         <div className="space-y-8 flex flex-col items-center">
                             {pages.map((page, pIdx) => {
                                 const isCoverPage = page.blocks.some(b => b.block.type === 'cover');
+                                const isLandscape = page.blocks.some(b => b.block.type.startsWith('tutorias_')) ||
+                                    selectedTemplate?.code?.toUpperCase().includes('TUTORIA') ||
+                                    themeConfig?.layout?.orientation === 'landscape';
                                 const bgImg = !isCoverPage && themeConfig?.brand?.backgroundImage;
                                 const bgOpacity = parseFloat(themeConfig?.brand?.backgroundOpacity ?? '0.12');
                                 const bgFit = themeConfig?.brand?.backgroundFit || 'contain';
-                                const marginTop = themeConfig?.layout?.marginTop || '3cm';
-                                const marginBottom = themeConfig?.layout?.marginBottom || '2cm';
-                                const marginLeft = themeConfig?.layout?.marginLeft || '2cm';
-                                const marginRight = themeConfig?.layout?.marginRight || '2cm';
+                                const marginTop = themeConfig?.layout?.marginTop || (isLandscape ? '1.5cm' : '3cm');
+                                const marginBottom = themeConfig?.layout?.marginBottom || (isLandscape ? '1.5cm' : '2cm');
+                                const marginLeft = themeConfig?.layout?.marginLeft || (isLandscape ? '1.5cm' : '2cm');
+                                const marginRight = themeConfig?.layout?.marginRight || (isLandscape ? '1.5cm' : '2cm');
 
                                 return (
                                     <React.Fragment key={pIdx}>
@@ -265,8 +268,11 @@ export const BlockCanvas: React.FC<BlockCanvasProps> = ({
                                                 paddingLeft: isCoverPage ? '0' : marginLeft,
                                                 paddingRight: isCoverPage ? '0' : marginRight,
                                             }}
-                                            className={`force-light-theme max-w-[794px] w-full bg-white text-slate-950 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-zinc-200 min-h-[1123px] rounded-sm relative flex flex-col transition-all cursor-default ${isCoverPage ? 'gap-0' : 'gap-2'
-                                                }`}
+                                            className={`force-light-theme ${
+                                                isLandscape ? 'max-w-[1123px] min-h-[794px]' : 'max-w-[794px] min-h-[1123px]'
+                                            } w-full bg-white text-slate-950 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-zinc-200 rounded-sm relative flex flex-col transition-all cursor-default ${
+                                                isCoverPage ? 'gap-0' : 'gap-2'
+                                            }`}
                                         >
                                             {bgImg && (
                                                 <div

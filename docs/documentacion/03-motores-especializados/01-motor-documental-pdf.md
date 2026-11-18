@@ -5,10 +5,13 @@
 El motor documental de DOSIER (`DocumentEngine`) es el subsistema de infraestructura encargado de transformar estructuras de datos curriculares y plantillas HTML en documentos PDF de validez legal e institucional.
 
 El motor estandariza la producción de los entregables oficiales del Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET):
-1. **Programa de Estudio de la Asignatura (PEA):** Formato institucional reglamentario en sus 11 secciones (a - k), con desglose por unidades, temas, aporte al perfil de egreso, prácticas, evaluación y firmas.
-2. **Plan Analítico o Sílabo (19 Semanas):** Matriz semanal articulada por unidades, estrategias y evaluaciones.
-3. **Guía de Prácticas de Aprendizaje Práctico-Experimental (Guías APE):** Planificación micro-curricular de talleres y laboratorios.
-4. **Guía de Estudio Institucional:** Compendio teórico estructurado para el autoaprendizaje.
+1. **Programa de Estudio de la Asignatura (PEA - `PEA_OFICIAL`):** Formato institucional reglamentario en sus 11 bloques normados (datos generales, objetivos, prerrequisitos, RDA carrera y asignatura, unidades temáticas, metodología, actividades prácticas APE, sistema de evaluación, bibliografía y firmas de responsabilidad).
+2. **Guía de Práctica de Laboratorio y Taller (Guías APE - `GUIA_PRACTICA_LAB`):** Formato micro-curricular para diseño, ejecución experimental, instrumental y evaluación de prácticas de aplicación y experimentación de los aprendizajes.
+3. **Acta de Revisión y Validación Curricular (`ACTA_APROBACION_PEA`):** Acta oficial colegiada de verificación técnico-normativa, consistencia horaria y aprobación definitiva suscrita por Docente, Coordinación de Carrera y Vicerrectorado.
+4. **Rúbrica Institucional de Evaluación por Competencias (`RUBRICA_EVALUACION`):** Matriz estandarizada de criterios y niveles de desempeño para evaluación diagnóstica, formativa y sumativa articulada a los RDA.
+5. **Plan de Acompañamiento y Tutoría Académica (`PLAN_TUTORIA_ACADEMICA`):** Instrumento pedagógico de refuerzo curricular, cronograma de tutorías y seguimiento de acuerdos con estudiantes.
+6. **Informe Final de Cumplimiento Curricular de Asignatura (`INFORME_CUMPLIMIENTO_PEA`):** Informe de fin de ciclo académico sobre avance del sílabo, porcentaje de contenidos impartidos, prácticas ejecutadas y evidencias CACES.
+7. **Plantillas Institucionales Dinámicas:** Capacidad de alta en caliente desde la consola de administración (`POST /api/admin/templates`) con auto-generación de bloques por defecto según la categoría de negocio.
 
 ---
 
@@ -187,6 +190,19 @@ Para cumplir con la normativa de auditoría curricular y la Ley 67 de Firmas Ele
    * El usuario puede modificar la fecha haciendo clic sobre el campo, lo que despliega un diálogo modal de confirmación informando que la modificación aplica de forma aislada a este instrumento curricular sin alterar los registros globales.
 3. **Sincronización Bidireccional (CoWork Yjs y Motor de Plantillas):**
    * El valor modificado se propaga en tiempo real a través del proveedor Yjs (`Firmas_DocenteFecha`, `Firmas_CoordinadorFecha`, etc.) y se normaliza en el motor de plantillas (`HandlebarsTemplateEngine`) hacia las variables `FechaElaborado` y `fecha_elaborado`, permitiendo que el visor web, el diseñador de plantillas y la exportación oficial a PDF reflejen exactamente la misma fecha sin requerir nuevas tablas en la base de datos.
+
+---
+
+## 10. Soporte para Orientación Horizontal (Landscape A4) en Formatos Extensos
+
+Para instrumentos de gestión curricular que demandan alta densidad tabular por columnas (como el formato oficial `SEGUIMIENTO_TUTORIAS` con 12 columnas normadas o la matriz semanal de 19 semanas del Plan Analítico), el motor documental y el lienzo de diseño implementan soporte nativo de orientación apaisada:
+
+1. **Directiva de Impresión PDF (`@page`):**
+   * El compilador inyecta `@page { size: A4 landscape; margin: 1cm 1.5cm; }`, reorientando el viewport a 297mm x 210mm (1123px x 794px a 96 DPI).
+2. **Adaptación Reactiva en el Lienzo (`BlockCanvas.tsx`):**
+   * El lienzo detecta automáticamente la presencia de bloques apaisados (`tutorias_*`) o metadatos de plantilla, redimensionando la hoja A4 visual a `max-w-[1123px]` con altura mínima de `794px`.
+3. **Control de Desbordamiento:**
+   * Las tablas horizontales se configuran con `width: 100%`, `table-layout: fixed` o porcentajes de celda estrictamente acotados (sumatoria exacta al 100%), garantizando que ninguna columna sufra corte ni pérdida visual al compilar con iText 9 o exportar a PDF.
 
 
 

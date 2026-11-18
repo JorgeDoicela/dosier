@@ -65,7 +65,23 @@ export type BlockType =
     | 'pea_resources_section'
     | 'pea_evaluation_section'
     | 'pea_bibliography_section'
-    | 'pea_signatures_section';
+    | 'pea_signatures_section'
+    | 'plan_analitico_general_section'
+    | 'plan_analitico_objective_section'
+    | 'plan_analitico_outcomes_section'
+    | 'plan_analitico_methodology_matrix_section'
+    | 'plan_analitico_resources_section'
+    | 'plan_analitico_evaluation_section'
+    | 'plan_analitico_signatures_section'
+    | 'tutorias_header_section'
+    | 'tutorias_matrix_section'
+    | 'tutorias_signatures_section'
+    | 'informe_acomp_datos_informativos_section'
+    | 'informe_acomp_nomina_tutores_section'
+    | 'informe_acomp_nomina_docentes_section'
+    | 'informe_acomp_gestion_academica_section'
+    | 'informe_acomp_conclusiones_section'
+    | 'informe_acomp_firmas_section';
 
 export interface BlockMetaInfo {
     label: string;
@@ -99,7 +115,23 @@ export const BLOCK_METADATA: Record<BlockType, BlockMetaInfo> = {
     pea_resources_section: { label: '8. Actividades Prácticas (APE)', defaultTitle: '8. ACTIVIDADES PRÁCTICAS', category: 'Curricular (PEA)' },
     pea_evaluation_section: { label: '9. Evaluación del Aprendizaje', defaultTitle: '9. EVALUACIÓN DEL APRENDIZAJE', category: 'Curricular (PEA)' },
     pea_bibliography_section: { label: '10. Bibliografía', defaultTitle: '10. BIBLIOGRAFÍA', category: 'Curricular (PEA)' },
-    pea_signatures_section: { label: '11. Firmas de Responsabilidad', defaultTitle: '11. FIRMAS DE RESPONSABILIDAD', category: 'Curricular (PEA)' }
+    pea_signatures_section: { label: '11. Firmas de Responsabilidad', defaultTitle: '11. FIRMAS DE RESPONSABILIDAD', category: 'Curricular (PEA)' },
+    plan_analitico_general_section: { label: '1. Datos Informativos (Información General)', defaultTitle: '1. DATOS INFORMATIVOS', category: 'Plan Analítico (2026)' },
+    plan_analitico_objective_section: { label: '2. Objetivo General', defaultTitle: '2. OBJETIVO GENERAL', category: 'Plan Analítico (2026)' },
+    plan_analitico_outcomes_section: { label: '3. Resultados de Aprendizaje', defaultTitle: '3. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA', category: 'Plan Analítico (2026)' },
+    plan_analitico_methodology_matrix_section: { label: '4. Metodología, Contenidos y RDAs (19 Semanas)', defaultTitle: '4. METODOLOGÍA, CONTENIDOS, RESULTADOS DE APRENDIZAJE', category: 'Plan Analítico (2026)' },
+    plan_analitico_resources_section: { label: '5. Recursos Didácticos & Adaptación Curricular', defaultTitle: '5. RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE', category: 'Plan Analítico (2026)' },
+    plan_analitico_evaluation_section: { label: '6. Evaluación del Aprendizaje', defaultTitle: '6. EVALUACIÓN', category: 'Plan Analítico (2026)' },
+    plan_analitico_signatures_section: { label: '7. Firmas de Responsabilidad (3 Firmas)', defaultTitle: '7. FIRMAS DE RESPONSABILIDAD', category: 'Plan Analítico (2026)' },
+    tutorias_header_section: { label: '1. Cabecera y Datos del Docente', defaultTitle: '1. CABECERA Y DATOS DEL DOCENTE', category: 'Tutorías Académicas (2026)' },
+    tutorias_matrix_section: { label: '2. Matriz de Registro de Tutorías (12 Columnas)', defaultTitle: '2. MATRIZ DE REGISTRO DE TUTORÍAS', category: 'Tutorías Académicas (2026)' },
+    tutorias_signatures_section: { label: '3. Firmas de Responsabilidad (Docente y Coordinador)', defaultTitle: '3. FIRMAS DE RESPONSABILIDAD', category: 'Tutorías Académicas (2026)' },
+    informe_acomp_datos_informativos_section: { label: '1. Datos Informativos', defaultTitle: '1. Datos informativos:', category: 'Informe Acompañamiento Carrera (2026)' },
+    informe_acomp_nomina_tutores_section: { label: '2. Nómina de Docentes Tutores', defaultTitle: '2. Nómina de docentes tutores:', category: 'Informe Acompañamiento Carrera (2026)' },
+    informe_acomp_nomina_docentes_section: { label: '3. Nómina de Docentes que Aportan a la Carrera', defaultTitle: '3. Nómina de docentes que aportan a la carrera:', category: 'Informe Acompañamiento Carrera (2026)' },
+    informe_acomp_gestion_academica_section: { label: '4. Gestión Académica de la Carrera (5 Sub-Secciones)', defaultTitle: '4.  Gestión Académica de la carrera', category: 'Informe Acompañamiento Carrera (2026)' },
+    informe_acomp_conclusiones_section: { label: '5. Conclusiones y Recomendaciones', defaultTitle: '5.  Conclusiones y Recomendaciones', category: 'Informe Acompañamiento Carrera (2026)' },
+    informe_acomp_firmas_section: { label: '6. Firmas de Responsabilidad (Tutores y Autoridades)', defaultTitle: '6.  Firmas de responsabilidad.', category: 'Informe Acompañamiento Carrera (2026)' }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,6 +347,201 @@ export interface DocumentBlock {
         textAchievement?: string;
         projectTitle?: string;
         completionDate?: string;
+
+        // ── tutorias blocks (2026) ──────────────────────────────────────────
+        docenteNombre?: string;
+        horarioTutoria?: string;
+        periodoAcademico?: string;
+        coordinadorNombre?: string;
+        coordinadorCargo?: string;
+        tutoriaRows?: TutoriaRowItem[];
+
+        // ── informe acompañamiento carrera blocks (2026) ───────────────────
+        informeTitulo?: string;
+        informeCoordinador?: string;
+        informeCarrera?: string;
+        informePeriodo?: string;
+        informeParcial?: string;
+        informeReportaA?: string;
+        informeFechaPresentacion?: string;
+        tutoresRows?: DocenteTutorRowItem[];
+        docentesAporteRows?: DocenteAporteRowItem[];
     };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Estructuras de datos para Informe de Acompañamiento Académico de Carrera
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DocenteTutorRowItem {
+    id: string;
+    tutor: string;
+    nivel: string;
+    actividad: string;
+    medioVerificacion: string;
+}
+
+export interface DocenteAporteRowItem {
+    id: string;
+    nomina: string;
+    asignaturas: string;
+    nivel: string;
+    jornadaTrabajo: string;
+    accionesMejora: string;
+    accionesCorrectivas: string;
+}
+
+export interface InformeAcompDatosInformativosConfig {
+    informeTitulo?: string;
+    informeCoordinador?: string;
+    informeCarrera?: string;
+    informePeriodo?: string;
+    informeParcial?: string;
+    informeReportaA?: string;
+    informeFechaPresentacion?: string;
+}
+
+export interface InformeAcompNominaTutoresConfig {
+    tutoresRows?: DocenteTutorRowItem[];
+}
+
+export interface InformeAcompNominaDocentesConfig {
+    docentesAporteRows?: DocenteAporteRowItem[];
+}
+
+export interface ReunionCarreraConfig {
+    horarioReunion?: string;
+    numeroReuniones?: string | number;
+    principalesAspectos?: string;
+    principalesAcuerdos?: string;
+}
+
+export interface ActividadCoordinadorRowItem {
+    id: string;
+    actividad: string;
+    productoEsperado: string;
+    estado: string;
+}
+
+export interface EstudianteNivelRowItem {
+    id: string;
+    nivel: string;
+    matriculados: string | number;
+    retirados: string | number;
+    problemasAsistencia: string | number;
+    problemasRendimiento: string | number;
+    noRindieronExamen: string | number;
+    bienestarInstitucional: string | number;
+    becados: string | number;
+}
+
+export interface GestionDocenteRowItem {
+    id: string;
+    docente: string;
+    horasContacto: string;
+    evaPermanente: string;
+    horasTutoria: string;
+    estudiantesTutoria: string;
+    horasVinculacion: string;
+    horasInvestigacion: string;
+    horasPracticas: string;
+    horasTitulacion: string;
+    asignaturas: string;
+    estudiantesProblemasRendimiento: string;
+}
+
+export interface AcompanamientoObservacionRowItem {
+    id: string;
+    estudiante: string;
+    nivel: string;
+    resultado: string;
+}
+
+export interface InformeAcompGestionAcademicaConfig {
+    sectionTitle?: string;
+    reuniones?: ReunionCarreraConfig;
+    actividadesCoordinador?: ActividadCoordinadorRowItem[];
+    estudiantesNivel?: EstudianteNivelRowItem[];
+    gestionDocentes?: GestionDocenteRowItem[];
+    observaciones?: AcompanamientoObservacionRowItem[];
+}
+
+export interface ConclusionRecomendacionItem {
+    id: string;
+    punto: string;
+    conclusion: string;
+    recomendacion: string;
+}
+
+export interface InformeAcompConclusionesConfig {
+    sectionTitle?: string;
+    bannerText?: string;
+    items?: ConclusionRecomendacionItem[];
+    rawText?: string;
+}
+
+export interface FirmaTutorNivelItem {
+    id: string;
+    label: string;
+    nombre: string;
+    cargo: string;
+    fecha: string;
+}
+
+export interface FirmaAutoridadItem {
+    id: string;
+    label: string;
+    nombre: string;
+    cargo: string;
+    fecha: string;
+}
+
+export interface InformeAcompFirmasConfig {
+    sectionTitle?: string;
+    headerColor?: string;
+    firmasTutores?: FirmaTutorNivelItem[];
+    firmasAutoridades?: FirmaAutoridadItem[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Estructuras de datos para Tutorías Académicas (Formato Oficial ISTPET)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface TutoriaRowItem {
+    id: string;
+    num: number;
+    fecha: string;
+    semana: string | number;
+    estudiantesConvocados: string;
+    nivel: string;
+    asignatura: string;
+    carrera: string;
+    modalidadTutoria: string;
+    tipoTutoria: string;
+    razonTutoria: string;
+    observaciones: string;
+    formaConvocatoria: string;
+}
+
+export interface TutoriasHeaderConfig {
+    institutionName?: string;
+    documentTitle?: string;
+    periodoAcademico?: string;
+    docenteNombre?: string;
+    horarioTutoria?: string;
+    headerColor?: string;
+}
+
+export interface TutoriasMatrixConfig {
+    headerColor?: string;
+    rows?: TutoriaRowItem[];
+}
+
+export interface TutoriasSignaturesConfig {
+    docenteNombre?: string;
+    docenteCargo?: string;
+    coordinadorNombre?: string;
+    coordinadorCargo?: string;
+}
+
 

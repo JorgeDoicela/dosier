@@ -290,6 +290,327 @@ export function createPeaDefaultBlocks(): DocumentBlock[] {
 }
 
 /**
+ * Genera la estructura de bloques oficiales de fábrica para el Formato Plan Analítico 2026.
+ * Sigue con máxima fidelidad la estructura editorial y visual del formato institucional oficial del ISTPET.
+ */
+export function createPlanAnaliticoDefaultBlocks(): DocumentBlock[] {
+    return [
+        {
+            id: 'block-plan-analitico-general',
+            type: 'plan_analitico_general_section' as BlockType,
+            title: '1. DATOS INFORMATIVOS',
+            isActive: true,
+            config: {
+                documentTitle: 'PLAN ANALÍTICO DE LA ASIGNATURA: NOMBRE DE LA ASIGNATURA',
+                sectionTitle: '1.  DATOS INFORMATIVOS',
+                headerText: 'Información General',
+                headerColor: '#1e2a4a',
+                fields: [
+                    { key: 'codigo_carrera', label: 'Código de Carrera:', value: '' },
+                    { key: 'asignatura', label: 'Asignatura:', value: '' },
+                    { key: 'carrera', label: 'Carrera', value: '' },
+                    { key: 'periodo', label: 'Periodo Académico:', value: '' },
+                    { key: 'modalidad', label: 'Modalidad:', value: '' },
+                    { key: 'nivel', label: 'Nivel:', value: '' },
+                    { key: 'creditos', label: 'Créditos:', value: '' },
+                    { key: 'profesor_responsable', label: 'Profesor Responsable de la Asignatura:', value: '' },
+                    { key: 'horario_tutoria', label: 'Horario de tutoría académica:', value: '' },
+                    { key: 'email_docente', label: 'E-mail del docente', value: '' }
+                ]
+            }
+        },
+        {
+            id: 'block-plan-analitico-objective',
+            type: 'plan_analitico_objective_section' as BlockType,
+            title: '2. OBJETIVO GENERAL',
+            isActive: true,
+            config: {
+                title: '2.  OBJETIVO GENERAL',
+                titleColor: '#1e40af',
+                html: '<p>Desarrollar competencias profesionales y destrezas técnicas en el estudiantado mediante la aplicación de metodologías activas, prácticas experimentales e investigación aplicada alineadas a las necesidades del entorno productivo y los lineamientos del ISTPET.</p>',
+                placeholder: 'Redacte el objetivo general de la asignatura orientado al desarrollo de competencias profesionales...'
+            }
+        },
+        {
+            id: 'block-plan-analitico-outcomes',
+            type: 'plan_analitico_outcomes_section' as BlockType,
+            title: '3. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA',
+            isActive: true,
+            config: {
+                title: '3.  RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA',
+                titleColor: '#1e40af',
+                headerColor: '#1e2a4a',
+                outcomes: [
+                    { id: '1', description: 'Analizar los fundamentos teóricos y metodológicos de la asignatura.', level: 'Medio' },
+                    { id: '2', description: 'Desarrollar soluciones prácticas contextualizadas al perfil profesional.', level: 'Alto' },
+                    { id: '3', description: 'Evaluar resultados técnico-académicos con criterios de rigor e integridad.', level: 'Alto' }
+                ]
+            }
+        },
+
+        // ── SALTO DE PÁGINA (PÁGINA 1 → PÁGINA 2) ───────────────────────────
+        {
+            id: 'block-plan-analitico-break-1',
+            type: 'page_break' as BlockType,
+            title: 'Salto de Página A4 (Página 1 → Página 2)',
+            isActive: true,
+            config: {}
+        },
+
+        // ── PÁGINA 2: METODOLOGÍA, CONTENIDOS Y RDAS (MATRIZ SEMANAL 19 SEMANAS) ─
+        {
+            id: 'block-plan-analitico-matrix',
+            type: 'plan_analitico_methodology_matrix_section' as BlockType,
+            title: '4. METODOLOGÍA, CONTENIDOS, RESULTADOS DE APRENDIZAJE',
+            isActive: true,
+            config: {
+                title: '4.  METODOLOGÍA, CONTENIDOS, RESULTADOS DE APRENDIZAJE',
+                headerColor: '#1e2a4a',
+                weeksLabel: '19 SEMANAS'
+            }
+        },
+
+        // ── SALTO DE PÁGINA (PÁGINA 2 → PÁGINA 3) ───────────────────────────
+        {
+            id: 'block-plan-analitico-break-2',
+            type: 'page_break' as BlockType,
+            title: 'Salto de Página A4 (Página 2 → Página 3)',
+            isActive: true,
+            config: {}
+        },
+
+        // ── PÁGINA 3: RECURSOS DIDÁCTICOS, EVALUACIÓN Y FIRMAS ────────────────
+        {
+            id: 'block-plan-analitico-resources',
+            type: 'plan_analitico_resources_section' as BlockType,
+            title: '5. RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE',
+            isActive: true,
+            config: {
+                title: '5.  RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE',
+                adaptacionCurricular: 'no_aplica',
+                html: '<p>Entorno virtual institucional (Moodle / Teams), proyectores multimedia, laboratorios de cómputo especializados, herramientas de desarrollo colaborativo y software bajo licenciamiento educativo.</p>'
+            }
+        },
+        {
+            id: 'block-plan-analitico-evaluation',
+            type: 'plan_analitico_evaluation_section' as BlockType,
+            title: '6. EVALUACIÓN',
+            isActive: true,
+            config: {
+                title: '6.  EVALUACIÓN',
+                headerColor: '#1e2a4a',
+                items: [
+                    { id: 'eval-1', notaLabel: 'NOTA PARCIAL 1', tipoEvaluacion: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', calificacion: '10.00' },
+                    { id: 'eval-2', notaLabel: 'NOTA PARCIAL 2', tipoEvaluacion: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', calificacion: '10.00' },
+                    { id: 'eval-3', notaLabel: 'NOTA EXAMEN FINAL', tipoEvaluacion: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', calificacion: '10.00' }
+                ]
+            }
+        },
+        {
+            id: 'block-plan-analitico-signatures',
+            type: 'plan_analitico_signatures_section' as BlockType,
+            title: '7. FIRMAS DE RESPONSABILIDAD',
+            isActive: true,
+            config: {
+                title: '7.  FIRMAS DE RESPONSABILIDAD',
+                headerColor: '#1e2a4a',
+                signatureBoxHeight: 80,
+                signatories: [
+                    { key: 'elaborado', header: 'ELABORADO', nombre: '', cargo: 'Docente', fecha: '' },
+                    { key: 'revisado', header: 'REVISADO', nombre: '', cargo: 'Coordinador de Carrera', fecha: '' },
+                    { key: 'aprobado', header: 'APROBADO', nombre: '', cargo: 'Coordinador Académico', fecha: '' }
+                ]
+            }
+        }
+    ];
+}
+
+/**
+ * Genera la estructura de bloques oficiales de fábrica para el Formato de Seguimiento de Tutorías Académicas 2026.
+ * Formato apaisado (Landscape A4) con matriz de 12 columnas y circuito de firmas de validación.
+ */
+export function createTutoriasDefaultBlocks(): DocumentBlock[] {
+    return [
+        {
+            id: 'block-tutorias-header',
+            type: 'tutorias_header_section' as BlockType,
+            title: '1. CABECERA Y DATOS DEL DOCENTE',
+            isActive: true,
+            config: {
+                institutionName: 'INSTITUTO SUPERIOR TECNOLÓGICO MAYOR PEDRO TRAVERSARI',
+                documentTitle: 'SEGUIMIENTO DE TUTORÍAS ACADÉMICAS',
+                periodoAcademico: 'PERIODO ACADEMICO ABRIL - SEPTIEMBRE 2026',
+                docenteNombre: '',
+                horarioTutoria: '',
+                headerColor: '#1e2a4a'
+            }
+        },
+        {
+            id: 'block-tutorias-matrix',
+            type: 'tutorias_matrix_section' as BlockType,
+            title: '2. MATRIZ DE REGISTRO DE TUTORÍAS',
+            isActive: true,
+            config: {
+                title: 'REGISTRO DE ACOMPAÑAMIENTO Y TUTORÍAS ACADÉMICAS',
+                headerColor: '#1e2a4a',
+                tutoriaRows: Array.from({ length: 7 }, (_, i) => ({
+                    id: `tutoria-row-${i + 1}`,
+                    num: i + 1,
+                    fecha: '',
+                    semana: '',
+                    estudiantesConvocados: '',
+                    nivel: '',
+                    asignatura: '',
+                    carrera: '',
+                    modalidadTutoria: '',
+                    tipoTutoria: '',
+                    razonTutoria: '',
+                    observaciones: '',
+                    formaConvocatoria: ''
+                }))
+            }
+        },
+        {
+            id: 'block-tutorias-signatures',
+            type: 'tutorias_signatures_section' as BlockType,
+            title: '3. FIRMAS DE RESPONSABILIDAD',
+            isActive: true,
+            config: {
+                docenteCargo: 'DOCENTE:',
+                docenteNombre: '',
+                coordinadorCargo: 'REVISADO: COORDINADOR DE CARRERA',
+                coordinadorNombre: ''
+            }
+        }
+    ];
+}
+
+/**
+ * Genera la estructura oficial del Formato Informe de Acompañamiento Académico de Carrera (2026).
+ * Cada punto del documento normativo constituye un bloque modular e interactivo independiente.
+ */
+export function createInformeAcompanamientoDefaultBlocks(): DocumentBlock[] {
+    return [
+        {
+            id: 'block-informe-1-datos',
+            type: 'informe_acomp_datos_informativos_section',
+            title: '1. Datos informativos:',
+            isActive: true,
+            config: {
+                informeTitulo: 'INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA',
+                informeCoordinador: '',
+                informeCarrera: '',
+                informePeriodo: '',
+                informeParcial: 'Parcial 1/ Modular',
+                informeReportaA: 'UNIDAD ACADÉMICA',
+                informeFechaPresentacion: ''
+            }
+        },
+        {
+            id: 'block-informe-2-tutores',
+            type: 'informe_acomp_nomina_tutores_section',
+            title: '2. Nómina de docentes tutores:',
+            isActive: true,
+            config: {
+                tutoresRows: [
+                    { id: '1', tutor: '', nivel: '', actividad: '', medioVerificacion: '' },
+                    { id: '2', tutor: '', nivel: '', actividad: '', medioVerificacion: '' },
+                    { id: '3', tutor: '', nivel: '', actividad: '', medioVerificacion: '' },
+                    { id: '4', tutor: '', nivel: '', actividad: '', medioVerificacion: '' },
+                    { id: '5', tutor: '', nivel: '', actividad: '', medioVerificacion: '' }
+                ]
+            }
+        },
+        {
+            id: 'block-informe-3-docentes',
+            type: 'informe_acomp_nomina_docentes_section',
+            title: '3. Nómina de docentes que aportan a la carrera:',
+            isActive: true,
+            config: {
+                docentesAporteRows: [
+                    { id: '1', nomina: '', asignaturas: '', nivel: '', jornadaTrabajo: '', accionesMejora: '', accionesCorrectivas: '' },
+                    { id: '2', nomina: '', asignaturas: '', nivel: '', jornadaTrabajo: '', accionesMejora: '', accionesCorrectivas: '' },
+                    { id: '3', nomina: '', asignaturas: '', nivel: '', jornadaTrabajo: '', accionesMejora: '', accionesCorrectivas: '' },
+                    { id: '4', nomina: '', asignaturas: '', nivel: '', jornadaTrabajo: '', accionesMejora: '', accionesCorrectivas: '' }
+                ]
+            }
+        },
+        {
+            id: 'block-informe-4-gestion-academica',
+            type: 'informe_acomp_gestion_academica_section',
+            title: '4.  Gestión Académica de la carrera',
+            isActive: true,
+            config: {
+                reuniones: {
+                    horarioReunion: '',
+                    numeroReuniones: '',
+                    principalesAspectos: '',
+                    principalesAcuerdos: ''
+                },
+                actividadesCoordinador: [
+                    { id: '1', actividad: '', productoEsperado: '', estado: '' },
+                    { id: '2', actividad: '', productoEsperado: '', estado: '' },
+                    { id: '3', actividad: '', productoEsperado: '', estado: '' },
+                    { id: '4', actividad: '', productoEsperado: '', estado: '' }
+                ],
+                estudiantesNivel: [
+                    { id: '1', nivel: '1º Nivel', matriculados: '', retirados: '', problemasAsistencia: '', problemasRendimiento: '', noRindieronExamen: '', bienestarInstitucional: '', becados: '' },
+                    { id: '2', nivel: '2º Nivel', matriculados: '', retirados: '', problemasAsistencia: '', problemasRendimiento: '', noRindieronExamen: '', bienestarInstitucional: '', becados: '' },
+                    { id: '3', nivel: '3º Nivel', matriculados: '', retirados: '', problemasAsistencia: '', problemasRendimiento: '', noRindieronExamen: '', bienestarInstitucional: '', becados: '' },
+                    { id: '4', nivel: '4º Nivel', matriculados: '', retirados: '', problemasAsistencia: '', problemasRendimiento: '', noRindieronExamen: '', bienestarInstitucional: '', becados: '' },
+                    { id: '5', nivel: '5º Nivel', matriculados: '', retirados: '', problemasAsistencia: '', problemasRendimiento: '', noRindieronExamen: '', bienestarInstitucional: '', becados: '' }
+                ],
+                gestionDocentes: [
+                    { id: '1', docente: '', horasContacto: '', evaPermanente: '', horasTutoria: '', estudiantesTutoria: '', horasVinculacion: '', horasInvestigacion: '', horasPracticas: '', horasTitulacion: '', asignaturas: '', estudiantesProblemasRendimiento: '' },
+                    { id: '2', docente: '', horasContacto: '', evaPermanente: '', horasTutoria: '', estudiantesTutoria: '', horasVinculacion: '', horasInvestigacion: '', horasPracticas: '', horasTitulacion: '', asignaturas: '', estudiantesProblemasRendimiento: '' },
+                    { id: '3', docente: '', horasContacto: '', evaPermanente: '', horasTutoria: '', estudiantesTutoria: '', horasVinculacion: '', horasInvestigacion: '', horasPracticas: '', horasTitulacion: '', asignaturas: '', estudiantesProblemasRendimiento: '' }
+                ],
+                observaciones: [
+                    { id: '1', estudiante: '', nivel: '1º', resultado: '' },
+                    { id: '2', estudiante: '', nivel: '2º', resultado: '' },
+                    { id: '3', estudiante: '', nivel: '3º', resultado: '' }
+                ]
+            }
+        },
+        {
+            id: 'block-informe-5-conclusiones',
+            type: 'informe_acomp_conclusiones_section',
+            title: '5.  Conclusiones y Recomendaciones',
+            isActive: true,
+            config: {
+                bannerText: 'CONCLUSIÓN Y RECOMENDACIÓN POR CADA UNO DE LOS PUNTOS TRATADOS.',
+                items: [
+                    { id: '1', punto: '1. Sobre la coordinación y datos informativos', conclusion: '', recomendacion: '' },
+                    { id: '2', punto: '2. Sobre la nómina de docentes tutores y medios de verificación', conclusion: '', recomendacion: '' },
+                    { id: '3', punto: '3. Sobre los docentes que aportan a la carrera y acciones de mejora', conclusion: '', recomendacion: '' },
+                    { id: '4', punto: '4. Sobre la gestión académica, reuniones, rendimiento estudiantil y EVA', conclusion: '', recomendacion: '' }
+                ]
+            }
+        },
+        {
+            id: 'block-informe-6-firmas',
+            type: 'informe_acomp_firmas_section',
+            title: '6.  Firmas de responsabilidad.',
+            isActive: true,
+            config: {
+                headerColor: '#1e2a4a',
+                firmasTutores: [
+                    { id: '1', label: 'ELABORADO', nombre: '', cargo: 'Tutor de Primer Nivel', fecha: '' },
+                    { id: '2', label: 'ELABORADO', nombre: '', cargo: 'Tutor de Segundo Nivel', fecha: '' },
+                    { id: '3', label: 'ELABORADO', nombre: '', cargo: 'Tutor de Tercer Nivel', fecha: '' },
+                    { id: '4', label: 'ELABORADO', nombre: '', cargo: 'Tutor de Cuarto Nivel', fecha: '' }
+                ],
+                firmasAutoridades: [
+                    { id: '1', label: 'ELABORADO', nombre: '', cargo: 'Coordinador de Carrera', fecha: '' },
+                    { id: '2', label: '', nombre: '', cargo: 'Bienestar Institucional', fecha: '' },
+                    { id: '3', label: 'APROBADO', nombre: '', cargo: 'Coordinador Académico', fecha: '' }
+                ]
+            }
+        }
+    ];
+}
+
+/**
  * Fábrica principal de bloques por defecto.
  */
 export function generateDefaultBlocksForTemplate(
@@ -302,83 +623,22 @@ export function generateDefaultBlocksForTemplate(
     // 1. ESTRATEGIAS PARA PLANTILLAS INSTITUCIONALES CONOCIDAS
     // ─────────────────────────────────────────────────────────────────────────
 
-    // B. GUÍA DE PRÁCTICA DE LABORATORIO / TALLER
-    if (code === 'GUIA_PRACTICA_LAB' || code === 'GUIA_PRACTICA' || code.includes('PRÁCTICA') || code.includes('PRACTICA')) {
-        return [
-            createBaseCoverBlock('GUÍA DE PRÁCTICA DE LABORATORIO / TALLER', { colorTitle: 'navy', showInstitution: true }),
-            {
-                id: 'block-guia-identificacion',
-                type: 'agnostic_section' as BlockType,
-                title: '1. DATOS INFORMATIVOS DE LA PRÁCTICA',
-                isActive: true,
-                config: {
-                    title: '1. Datos Informativos',
-                    fields: [
-                        { name: 'TituloPractica', label: 'Tema / Título de la Práctica', type: 'text', collaborative: true },
-                        { name: 'NumeroPractica', label: 'Número de Práctica', type: 'number', collaborative: false },
-                        { name: 'LaboratorioEspacio', label: 'Laboratorio / Taller Asignado', type: 'text', collaborative: true },
-                        { name: 'DuracionHoras', label: 'Duración Estimada (Horas Pedagógicas)', type: 'number', collaborative: false }
-                    ]
-                }
-            },
-            {
-                id: 'block-guia-objetivos',
-                type: 'rich_text' as BlockType,
-                title: '2. OBJETIVOS Y RESULTADOS DE APRENDIZAJE',
-                isActive: true,
-                config: {
-                    title: '2. Objetivos y Resultados de Aprendizaje',
-                    placeholder: 'Defina los objetivos formativos y resultados de aprendizaje que el estudiante alcanzará...'
-                }
-            },
-            {
-                id: 'block-guia-fundamento',
-                type: 'rich_text' as BlockType,
-                title: '3. MARCO CONCEPTUAL Y MEDIDAS DE SEGURIDAD',
-                isActive: true,
-                config: {
-                    title: '3. Marco Conceptual y Bioseguridad',
-                    placeholder: 'Detalle el sustento teórico y normas de seguridad en laboratorio...'
-                }
-            },
-            {
-                id: 'block-guia-recursos',
-                type: 'rich_text' as BlockType,
-                title: '4. EQUIPAMIENTO, MATERIALES E INSUMOS',
-                isActive: true,
-                config: {
-                    title: '4. Equipamiento e Insumos',
-                    placeholder: 'Listado de equipos, instrumental, simuladores o licencias requeridas...'
-                }
-            },
-            {
-                id: 'block-guia-procedimiento',
-                type: 'rich_text' as BlockType,
-                title: '5. PROCEDIMIENTO METODOLÓGICO PASO A PASO',
-                isActive: true,
-                config: {
-                    title: '5. Procedimiento Metodológico',
-                    placeholder: 'Instrucciones paso a paso, diagrama de conexión o capturas de referencia...'
-                }
-            },
-            {
-                id: 'block-guia-evaluacion',
-                type: 'rich_text' as BlockType,
-                title: '6. CRITERIOS DE EVALUACIÓN Y BIBLIOGRAFÍA',
-                isActive: true,
-                config: {
-                    title: '6. Evaluación y Bibliografía',
-                    placeholder: 'Rúbrica de calificación del informe y bibliografía de consulta técnica...'
-                }
-            },
-            createBaseSignaturesBlock([
-                { label: 'Docente Responsable', name: '{{docente_elaborador}}', role: 'Docente de la Asignatura' },
-                { label: 'Coordinación de Carrera', name: '{{coordinador_carrera}}', role: 'Coordinador de Carrera' }
-            ])
-        ];
+    // A. FORMATO PLAN ANALÍTICO 2026
+    if (code === 'PLAN_ANALITICO' || code.includes('PLAN_ANALITICO') || code.includes('ANALITICO')) {
+        return createPlanAnaliticoDefaultBlocks();
     }
 
-    // C. PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)
+    // B. FORMATO SEGUIMIENTO DE TUTORÍAS ACADÉMICAS 2026
+    if (code === 'SEGUIMIENTO_TUTORIAS' || code.includes('TUTORIA') || code.includes('TUTORÍAS')) {
+        return createTutoriasDefaultBlocks();
+    }
+
+    // C. INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA 2026
+    if (code === 'INFORME_ACOMPANAMIENTO' || code === 'INFORME_ACOMPANAMIENTO_CARRERA' || code.includes('ACOMPANAMIENTO') || code.includes('ACOMPAÑAMIENTO')) {
+        return createInformeAcompanamientoDefaultBlocks();
+    }
+
+    // D. PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)
     if (code === 'PEA_OFICIAL' || code === 'PEA' || code.includes('PROGRAMA DE ESTUDIO') || template.category === 90) {
         return createPeaDefaultBlocks();
     }

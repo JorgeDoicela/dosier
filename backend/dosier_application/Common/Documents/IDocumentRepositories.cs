@@ -10,6 +10,7 @@ namespace Dosier.Application.Common.Documents
     {
         Task<DocumentTemplate?> FindByCodeAsync(string code, CancellationToken cancellationToken = default);
         Task<IEnumerable<DocumentTemplate>> GetAllActiveAsync(CancellationToken cancellationToken = default);
+        Task AddAsync(DocumentTemplate template, CancellationToken cancellationToken = default);
         Task SaveAsync(DocumentTemplate template, CancellationToken cancellationToken = default);
     }
 

@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/AuthContext';
 import { useConfirm } from '../../../api/ConfirmContext';
+import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import {
     getEventos,
     createEvento,
@@ -100,7 +101,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     }, []);
 
     const handleEditEventClick = (ev: Evento) => {
-        const isNorm = ev.categoria_global === 'Normativo' || ev.tipo_entidad_origen === 'CALENDARIO_NORMATIVO';
+        const isNorm = ev.categoria_global === 'Normativo';
         setFormTitulo(ev.titulo);
         setFormDescripcion(ev.descripcion || '');
         setFormTipo(ev.subcategoria || (isNorm ? 'Normativo' : 'Personal'));
@@ -165,7 +166,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     };
 
     const handleDeleteEvent = async (uuid: string) => {
-        const isNorm = selectedEvent?.categoria_global === 'Normativo' || selectedEvent?.tipo_entidad_origen === 'CALENDARIO_NORMATIVO';
+        const isNorm = selectedEvent?.categoria_global === 'Normativo';
         const ok = await confirm({
             title: isNorm ? 'Eliminar Hito Institucional' : 'Eliminar Evento',
             message: isNorm
@@ -329,6 +330,12 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         fetchEventos(currentDate);
     }, [currentDate, fetchEventos]);
 
+    useRealtimeSync({
+        onSync: () => fetchEventos(currentDate),
+        events: ['dosier-projects-changed'],
+        intervalMs: 0,
+    });
+
     const handleNavigate = (newDate: Date) => setCurrentDate(newDate);
     const handleSelectEvent = (event: CalendarEventExtended) => setSelectedEvent(event.resource);
 
@@ -387,9 +394,13 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         setCategoriasVisibles(prev => ({ ...prev, [cat]: !prev[cat] }));
     };
 
-    const filteredEventos = eventos.filter(ev =>
-        categoriasVisibles[ev.resource.categoria_global] !== false
-    );
+    const isCategoriaVisible = (ev: Evento) => {
+        const catOk = categoriasVisibles[ev.categoria_global] !== false;
+        const subOk = !ev.subcategoria || !(ev.subcategoria in categoriasVisibles) || categoriasVisibles[ev.subcategoria] !== false;
+        return catOk && subOk;
+    };
+
+    const filteredEventos = eventos.filter(ev => isCategoriaVisible(ev.resource));
 
     const hoy = startOfDay(new Date());
     const proximosEventos = [...eventos]

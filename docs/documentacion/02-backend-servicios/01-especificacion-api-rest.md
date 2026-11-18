@@ -200,6 +200,7 @@ Administración y diseño de plantillas HTML institucionales en base de datos.
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Lista todas las plantillas institucionales activas. |
+| `POST`| `/` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Registra una nueva plantilla institucional en el catálogo maestro. |
 | `GET` | `/{code}` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Detalle y código HTML/Scriban de una plantilla por código. |
 | `PUT` | `/{code}` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Actualiza el marcado HTML, CSS y campos colaborativos de una plantilla. |
 | `POST`| `/{code}/reset-to-default` | `DOSIER_ADMIN, DOSIER_COORD_ACAD, DOSIER_VICERRECTOR` | Restablece la plantilla a sus archivos oficiales de fábrica. |

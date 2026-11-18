@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { documentTemplateService } from '../../../../services/documentTemplateService';
+import { documentTemplateService, type CreateTemplateDto } from '../../../../services/documentTemplateService';
 import { notifyTemplatePublished } from '../../../../core/events/templateEvents';
 import {
     KeyboardSensor,
@@ -81,6 +81,7 @@ export const useDocumentTemplatesPage = () => {
 
     const [previewModalOpen, setPreviewModalOpen] = useState(false);
     const [previewingTemplate, setPreviewingTemplate] = useState<DocumentTemplateDto | null>(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     useEffect(() => {
         const handleStateChange = (e: Event) => {
@@ -230,6 +231,23 @@ export const useDocumentTemplatesPage = () => {
     useEffect(() => {
         fetchTemplates();
     }, [isAdmin]);
+
+    const handleCreateTemplate = async (data: CreateTemplateDto) => {
+        try {
+            setLoading(true);
+            const newTmpl = await documentTemplateService.createTemplate(data);
+            addToast("Plantilla Creada", `La plantilla '${newTmpl.name}' ha sido registrada con éxito.`, "success");
+            await fetchTemplates();
+            await handleSelectTemplate(newTmpl);
+            setIsDirty(true);
+        } catch (err: any) {
+            console.error(err);
+            addToast("Error al Crear", err.response?.data?.error || "No se pudo registrar la plantilla.", "error");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAddBlock = (type: BlockType) => {
         const newId = `block-${Date.now()}`;
@@ -470,6 +488,88 @@ export const useDocumentTemplatesPage = () => {
                 newBlock = {
                     id: newId, type, title: BLOCK_METADATA.pea_signatures_section.defaultTitle, isActive: true,
                     config: { headerColor: '#1e2a4a' }
+                };
+                break;
+            case 'plan_analitico_general_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_general_section.defaultTitle, isActive: true,
+                    config: {
+                        documentTitle: 'PLAN ANALÍTICO DE LA ASIGNATURA: {{asignatura_nombre}}',
+                        sectionTitle: '1.  DATOS INFORMATIVOS',
+                        headerText: 'Información General',
+                        headerColor: '#1e2a4a'
+                    }
+                };
+                break;
+            case 'plan_analitico_objective_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_objective_section.defaultTitle, isActive: true,
+                    config: {
+                        title: '2.  OBJETIVO GENERAL',
+                        html: '<p>{{objetivo_general}}</p>'
+                    }
+                };
+                break;
+            case 'plan_analitico_outcomes_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_outcomes_section.defaultTitle, isActive: true,
+                    config: {
+                        title: '3.  RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA',
+                        headerColor: '#1e2a4a',
+                        outcomes: [
+                            { id: '1', description: 'Analizar los fundamentos teóricos y metodológicos de la asignatura.', level: 'Medio' },
+                            { id: '2', description: 'Desarrollar soluciones técnicas aplicadas con apego a los estándares vigentes.', level: 'Alto' }
+                        ]
+                    }
+                };
+                break;
+            case 'plan_analitico_methodology_matrix_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_methodology_matrix_section.defaultTitle, isActive: true,
+                    config: {
+                        title: '4.  METODOLOGÍA, CONTENIDOS, RESULTADOS DE APRENDIZAJE',
+                        headerColor: '#1e2a4a',
+                        weeksLabel: '19 SEMANAS'
+                    }
+                };
+                break;
+            case 'plan_analitico_resources_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_resources_section.defaultTitle, isActive: true,
+                    config: {
+                        title: '5.  RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE',
+                        adaptacionCurricular: 'no_aplica',
+                        html: '<p>Entorno virtual institucional (Moodle / Teams), proyectores multimedia, laboratorios de cómputo especializados, herramientas de desarrollo colaborativo y software bajo licenciamiento educativo.</p>'
+                    }
+                };
+                break;
+            case 'plan_analitico_evaluation_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_evaluation_section.defaultTitle, isActive: true,
+                    config: {
+                        title: '6.  EVALUACIÓN',
+                        headerColor: '#1e2a4a',
+                        items: [
+                            { id: 'eval-1', notaLabel: 'NOTA PARCIAL 1', tipoEvaluacion: 'ACTIVIDADES AUTÓNOMAS Y PRÁCTICO EXPERIMENTALES (FRECUENTES)', calificacion: '10.00' },
+                            { id: 'eval-2', notaLabel: 'NOTA PARCIAL 2', tipoEvaluacion: 'EVALUACIONES SUMATIVAS DE LAS UNIDADES DE ESTUDIO (PARCIAL)', calificacion: '10.00' },
+                            { id: 'eval-3', notaLabel: 'NOTA EXAMEN FINAL', tipoEvaluacion: 'EVALUACIÓN FINAL DE LA ASIGNATURA (EXAMEN)', calificacion: '10.00' }
+                        ]
+                    }
+                };
+                break;
+            case 'plan_analitico_signatures_section':
+                newBlock = {
+                    id: newId, type, title: BLOCK_METADATA.plan_analitico_signatures_section.defaultTitle, isActive: true,
+                    config: {
+                        title: '7.  FIRMAS DE RESPONSABILIDAD',
+                        headerColor: '#1e2a4a',
+                        signatureBoxHeight: 80,
+                        signatories: [
+                            { key: 'elaborado', header: 'ELABORADO', nombre: '{{docente_elaborador}}', cargo: 'Docente', fecha: '{{fecha_elaborado}}' },
+                            { key: 'revisado', header: 'REVISADO', nombre: '{{coordinador_carrera}}', cargo: 'Coordinador de Carrera', fecha: '{{fecha_revisado}}' },
+                            { key: 'aprobado', header: 'APROBADO', nombre: '{{coordinador_academico}}', cargo: 'Coordinador Académico', fecha: '{{fecha_aprobado}}' }
+                        ]
+                    }
                 };
                 break;
             default:
@@ -838,9 +938,12 @@ export const useDocumentTemplatesPage = () => {
         activeBlock,
         previewModalOpen,
         previewingTemplate,
+        isCreateModalOpen,
+        setIsCreateModalOpen,
         handleOpenPreview,
         handleClosePreview,
         handleQuickDownloadPdf,
+        handleCreateTemplate,
         fetchTemplates,
         handleSelectTemplate,
         handleAddBlock,

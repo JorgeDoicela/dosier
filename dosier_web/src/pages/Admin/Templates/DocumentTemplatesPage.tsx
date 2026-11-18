@@ -30,6 +30,7 @@ import { BlockProperties } from './components/BlockProperties';
 import { BlockPalette } from './components/BlockPalette';
 import { OfficialTemplatesCatalogView } from './components/OfficialTemplatesCatalogView';
 import { TemplatePreviewModal } from './components/TemplatePreviewModal';
+import { CreateTemplateModal } from './components/CreateTemplateModal';
 import { useDocumentTemplatesPage } from './hooks/useDocumentTemplatesPage';
 import { generateHtmlFromBlocks } from './utils/HtmlGenerator';
 import { mergeWithDefaults } from './utils/theme-schema';
@@ -85,9 +86,12 @@ export const DocumentTemplatesPage: React.FC = () => {
         activeBlock,
         previewModalOpen,
         previewingTemplate,
+        isCreateModalOpen,
+        setIsCreateModalOpen,
         handleOpenPreview,
         handleClosePreview,
         handleQuickDownloadPdf,
+        handleCreateTemplate,
         handleSelectTemplate,
         handleAddBlock,
         handleDuplicateBlock,
@@ -292,6 +296,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                             onToggleSidebar={toggleSidebar}
                             headerCollapsed={headerCollapsed}
                             onReorderTemplates={handleReorderTemplates}
+                            onOpenCreateModal={() => setIsCreateModalOpen(true)}
                         />
                     </div>
 
@@ -352,6 +357,13 @@ export const DocumentTemplatesPage: React.FC = () => {
                         ? mergeWithDefaults(selectedTemplate.themeConfigJson)
                         : undefined
                 }
+            />
+
+            {/* Modal de Registro de Nueva Plantilla Institucional */}
+            <CreateTemplateModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSubmit={handleCreateTemplate}
             />
         </main>
     );

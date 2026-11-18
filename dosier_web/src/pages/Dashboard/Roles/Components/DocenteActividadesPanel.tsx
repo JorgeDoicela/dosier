@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { DocenteAsignaturaDto } from '../../../../services/docenteAsignaturasService';
 import { Loader2 } from 'lucide-react';
 import { recordRecentSubjectOpen } from '../../../../utils/recentSubjectStorage';
+import { isPeaPendienteParaRol } from '../../../Curriculum/utils/peaStatusWorkflow';
 
 interface Props {
     materias: DocenteAsignaturaDto[];
@@ -80,28 +81,24 @@ export const DocenteActividadesPanel: React.FC<Props> = ({
     onContinuarPea,
     creatingPeaId
 }) => {
-    // Ordenar materias por prioridad de acción:
-    // 1. Observadas, 2. No iniciadas, 3. Borradores, 4. En revisión, 5. Aprobadas
+    // Filtrar asignaturas pendientes de formulación/corrección y ordenar por prioridad de acción:
+    // 1. Observadas, 2. No iniciadas, 3. Borradores
     const materiasOrdenadas = useMemo(() => {
         const priorityOrder: Record<string, number> = {
             'Observado': 1,
             'NoIniciado': 2,
             '': 2,
-            'Borrador': 3,
-            'Corregido': 3,
-            'EnRevision': 4,
-            'RevisadoCoord': 5,
-            'RevisadoAcad': 6,
-            'Aprobado': 7,
-            'Publicado': 7
+            'Borrador': 3
         };
 
-        return [...materias].sort((a, b) => {
-            const pA = priorityOrder[a.estado_pea || ''] ?? 99;
-            const pB = priorityOrder[b.estado_pea || ''] ?? 99;
-            if (pA !== pB) return pA - pB;
-            return a.nombre_asignatura.localeCompare(b.nombre_asignatura);
-        });
+        return materias
+            .filter(m => isPeaPendienteParaRol(m.estado_pea, 'DOSIER_DOCENTE'))
+            .sort((a, b) => {
+                const pA = priorityOrder[a.estado_pea || ''] ?? 99;
+                const pB = priorityOrder[b.estado_pea || ''] ?? 99;
+                if (pA !== pB) return pA - pB;
+                return a.nombre_asignatura.localeCompare(b.nombre_asignatura);
+            });
     }, [materias]);
 
     return (
@@ -122,7 +119,9 @@ export const DocenteActividadesPanel: React.FC<Props> = ({
                 </div>
             ) : materiasOrdenadas.length === 0 ? (
                 <div className="py-10 text-center text-zinc-500 text-xs rounded-lg border border-dashed border-slate-200 dark:border-zinc-800">
-                    No se registran asignaturas asignadas en el período seleccionado.
+                    {materias.length > 0
+                        ? 'Todas tus asignaturas asignadas ya fueron enviadas a revisión o aprobadas.'
+                        : 'No se registran asignaturas asignadas en el período seleccionado.'}
                 </div>
             ) : (
                 <div className="divide-y divide-slate-100 dark:divide-zinc-900 -mx-2">

@@ -140,8 +140,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .sticky-floating-header h3 {

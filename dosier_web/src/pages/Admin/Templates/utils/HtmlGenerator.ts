@@ -34,6 +34,28 @@ import {
     generatePeaBibliographyHtml,
     generatePeaSignaturesHtml,
 } from './htmlGenerators/peaGenerators';
+import {
+    generatePlanAnaliticoGeneralHtml,
+    generatePlanAnaliticoObjectiveHtml,
+    generatePlanAnaliticoOutcomesHtml,
+    generatePlanAnaliticoMatrixHtml,
+    generatePlanAnaliticoResourcesHtml,
+    generatePlanAnaliticoEvaluationHtml,
+    generatePlanAnaliticoSignaturesHtml,
+} from './htmlGenerators/planAnaliticoGenerators';
+import {
+    generateTutoriasHeaderHtml,
+    generateTutoriasMatrixHtml,
+    generateTutoriasSignaturesHtml,
+} from './htmlGenerators/tutoriasGenerators';
+import {
+    generateInformeAcompDatosInformativosHtml,
+    generateInformeAcompNominaTutoresHtml,
+    generateInformeAcompNominaDocentesHtml,
+    generateInformeAcompGestionAcademicaHtml,
+    generateInformeAcompConclusionesHtml,
+    generateInformeAcompFirmasHtml,
+} from './htmlGenerators/informeAcompanamientoGenerators';
 
 export { renderSection };
 
@@ -127,6 +149,57 @@ export const generateHtmlFromBlocks = (blockList: DocumentBlock[], themeConfig?:
                 break;
             case 'pea_signatures_section':
                 html += generatePeaSignaturesHtml(block);
+                break;
+            // ── BLOQUES PLAN ANALÍTICO (FORMATO OFICIAL 2026) ──
+            case 'plan_analitico_general_section':
+                html += generatePlanAnaliticoGeneralHtml(block);
+                break;
+            case 'plan_analitico_objective_section':
+                html += generatePlanAnaliticoObjectiveHtml(block);
+                break;
+            case 'plan_analitico_outcomes_section':
+                html += generatePlanAnaliticoOutcomesHtml(block);
+                break;
+            case 'plan_analitico_methodology_matrix_section':
+                html += generatePlanAnaliticoMatrixHtml(block);
+                break;
+            case 'plan_analitico_resources_section':
+                html += generatePlanAnaliticoResourcesHtml(block);
+                break;
+            case 'plan_analitico_evaluation_section':
+                html += generatePlanAnaliticoEvaluationHtml(block);
+                break;
+            case 'plan_analitico_signatures_section':
+                html += generatePlanAnaliticoSignaturesHtml(block);
+                break;
+            // ── BLOQUES SEGUIMIENTO DE TUTORÍAS ACADÉMICAS (2026) ──
+            case 'tutorias_header_section':
+                html += generateTutoriasHeaderHtml(block);
+                break;
+            case 'tutorias_matrix_section':
+                html += generateTutoriasMatrixHtml(block);
+                break;
+            case 'tutorias_signatures_section':
+                html += generateTutoriasSignaturesHtml(block);
+                break;
+            // ── BLOQUES INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA (2026) ──
+            case 'informe_acomp_datos_informativos_section':
+                html += generateInformeAcompDatosInformativosHtml(block);
+                break;
+            case 'informe_acomp_nomina_tutores_section':
+                html += generateInformeAcompNominaTutoresHtml(block);
+                break;
+            case 'informe_acomp_nomina_docentes_section':
+                html += generateInformeAcompNominaDocentesHtml(block);
+                break;
+            case 'informe_acomp_gestion_academica_section':
+                html += generateInformeAcompGestionAcademicaHtml(block);
+                break;
+            case 'informe_acomp_conclusiones_section':
+                html += generateInformeAcompConclusionesHtml(block);
+                break;
+            case 'informe_acomp_firmas_section':
+                html += generateInformeAcompFirmasHtml(block);
                 break;
             default:
                 break;

@@ -64,116 +64,6 @@ export interface DocumentSchema {
 }
 
 export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
-    GUIA_PRACTICA_LAB: {
-        title: "Guía de Práctica de Laboratorio / Taller",
-        subtitle: "Formato Institucional de Prácticas Experimentales y de Taller - ISTPET",
-        schema: {
-            // Sección 1: Identificación
-            NumeroPractica: 1,
-            TituloPractica: '',
-            NombreAsignatura: '',
-            Carrera: '',
-            Periodo: '',
-            Docente: '',
-            LaboratorioEspacio: '',
-            DuracionHoras: 2,
-
-            // Sección 2: Objetivos
-            ObjetivoPractica: '',
-            ResultadosAprendizaje: '',
-
-            // Sección 3: Fundamento y Seguridad
-            FundamentoTeorico: '',
-            NormasSeguridad: '',
-
-            // Sección 4: Recursos
-            EquiposMateriales: '',
-            SoftwareHerramientas: '',
-
-            // Sección 5: Procedimiento
-            ProcedimientoMetodologico: '',
-
-            // Sección 6: Conclusiones
-            CriteriosEvaluacion: '',
-            BibliografiaRecomendada: ''
-        },
-        lists: [],
-        sections: [
-            {
-                id: 'guia_identificacion',
-                label: '1. Datos Informativos de la Práctica',
-                iconName: 'FileText',
-                componentName: 'AgnosticSection',
-                config: {
-                    fields: [
-                        { name: 'TituloPractica', label: 'Tema / Título de la Práctica', type: 'text', collaborative: true, placeholder: 'Ej. Configuración de VLANs y Enrutamiento Inter-VLAN...' },
-                        { name: 'NumeroPractica', label: 'Número de Práctica', type: 'number', collaborative: false, min: 1, max: 50 },
-                        { name: 'LaboratorioEspacio', label: 'Laboratorio / Taller Asignado', type: 'text', collaborative: true, placeholder: 'Ej. Laboratorio de Redes y Telecomunicaciones...' },
-                        { name: 'DuracionHoras', label: 'Duración Estimada (Horas Pedagógicas)', type: 'number', collaborative: false, min: 1, max: 20 }
-                    ]
-                }
-            },
-            {
-                id: 'guia_objetivos',
-                label: '2. Objetivos y Resultados de Aprendizaje',
-                iconName: 'Target',
-                componentName: 'AgnosticSection',
-                config: {
-                    fields: [
-                        { name: 'ObjetivoPractica', label: 'Objetivo General de la Práctica', type: 'rich-text', collaborative: true, placeholder: 'Defina el objetivo observable y procedimental que el estudiante alcanzará...' },
-                        { name: 'ResultadosAprendizaje', label: 'Resultado de Aprendizaje Asociado (del PEA)', type: 'rich-text', collaborative: true, placeholder: 'Copie o vincule el RDA correspondiente del PEA de la asignatura...' }
-                    ]
-                }
-            },
-            {
-                id: 'guia_fundamento',
-                label: '3. Marco Conceptual y Medidas de Seguridad',
-                iconName: 'ShieldAlert',
-                componentName: 'AgnosticSection',
-                config: {
-                    fields: [
-                        { name: 'FundamentoTeorico', label: 'Fundamento Teórico Resumido', type: 'rich-text', collaborative: true, placeholder: 'Conceptos clave, fórmulas o diagramas base para la práctica...' },
-                        { name: 'NormasSeguridad', label: 'Normas de Bioseguridad y Operación del Laboratorio', type: 'rich-text', collaborative: true, placeholder: 'Reglas de protección personal, manejo de instrumental y prevención de riesgos...' }
-                    ]
-                }
-            },
-            {
-                id: 'guia_recursos',
-                label: '4. Equipamiento, Materiales e Insumos',
-                iconName: 'Wrench',
-                componentName: 'AgnosticSection',
-                config: {
-                    fields: [
-                        { name: 'EquiposMateriales', label: 'Equipos, Dispositivos e Instrumentos', type: 'rich-text', collaborative: true, placeholder: 'Detalle el instrumental de hardware o componentes requeridos...' },
-                        { name: 'SoftwareHerramientas', label: 'Software, Simuladores o Licencias', type: 'rich-text', collaborative: true, placeholder: 'Versiones de software, entornos de desarrollo o simuladores...' }
-                    ]
-                }
-            },
-            {
-                id: 'guia_procedimiento',
-                label: '5. Procedimiento Metodológico Paso a Paso',
-                iconName: 'ListOrdered',
-                componentName: 'AgnosticSection',
-                config: {
-                    fields: [
-                        { name: 'ProcedimientoMetodologico', label: 'Guía de Desarrollo Experimental Paso a Paso', type: 'rich-text', collaborative: true, placeholder: 'Instrucciones ordenadas, capturas de referencia, tablas de registro de datos...' }
-                    ]
-                }
-            },
-            {
-                id: 'guia_evaluacion',
-                label: '6. Criterios de Evaluación y Bibliografía',
-                iconName: 'CheckSquare',
-                componentName: 'AgnosticSection',
-                config: {
-                    fields: [
-                        { name: 'CriteriosEvaluacion', label: 'Criterios y Rúbrica de Calificación', type: 'rich-text', collaborative: true, placeholder: 'Puntaje asignado al informe, desempeño práctico y cuestionario...' },
-                        { name: 'BibliografiaRecomendada', label: 'Bibliografía de Consulta Práctica', type: 'rich-text', collaborative: true, placeholder: 'Manuales técnicos, normas técnicas y referencias...' }
-                    ]
-                }
-            }
-        ]
-    },
     PEA_OFICIAL: {
         title: "Programa de Estudio de la Asignatura (PEA)",
         subtitle: "Formato Curricular Oficial Normalizado - ISTPET",
@@ -466,6 +356,339 @@ export const DocumentTemplateRegistry: Record<string, DocumentSchema> = {
                                 ]
                             }
                         }
+                    ]
+                }
+            }
+        ]
+    },
+    PLAN_ANALITICO: {
+        title: "2. Formato Plan Analítico 2026",
+        subtitle: "Planificación Curricular Normalizada - ISTPET",
+        schema: {
+            CodigoCarrera: '',
+            NombreAsignatura: '',
+            Carrera: '',
+            PeriodoAcademico: '',
+            Modalidad: 'Presencial',
+            Nivel: '',
+            Creditos: '',
+            ProfesorResponsable: '',
+            HorarioTutoria: '',
+            EmailDocente: '',
+            ObjetivoGeneral: '',
+            ResultadosAprendizaje: []
+        },
+        lists: ['ResultadosAprendizaje'],
+        sections: [
+            {
+                id: 'plan_analitico_datos_informativos',
+                label: '1. Datos Informativos',
+                iconName: 'GraduationCap',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'CodigoCarrera', label: 'Código de Carrera', type: 'text', collaborative: true },
+                        { name: 'NombreAsignatura', label: 'Asignatura', type: 'text', collaborative: true },
+                        { name: 'Carrera', label: 'Carrera', type: 'text', collaborative: true },
+                        { name: 'PeriodoAcademico', label: 'Periodo Académico', type: 'text', collaborative: true },
+                        { name: 'Modalidad', label: 'Modalidad', type: 'text', collaborative: true },
+                        { name: 'Nivel', label: 'Nivel', type: 'text', collaborative: true },
+                        { name: 'Creditos', label: 'Créditos', type: 'text', collaborative: true },
+                        { name: 'ProfesorResponsable', label: 'Profesor Responsable de la Asignatura', type: 'text', collaborative: true },
+                        { name: 'HorarioTutoria', label: 'Horario de tutoría académica', type: 'text', collaborative: true },
+                        { name: 'EmailDocente', label: 'E-mail del docente', type: 'text', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'plan_analitico_objetivo_general',
+                label: '2. Objetivo General',
+                iconName: 'Target',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'ObjetivoGeneral', label: 'Objetivo General de la Asignatura', type: 'rich-text', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'plan_analitico_rdas',
+                label: '3. Resultados de Aprendizaje de la Asignatura',
+                iconName: 'CheckSquare',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        {
+                            name: 'ResultadosAprendizaje',
+                            label: 'Resultados de Aprendizaje de la Asignatura',
+                            type: 'table',
+                            collaborative: true,
+                            config: {
+                                columns: ['ID', 'Al finalizar el curso, el/la estudiante estará en capacidad de', 'Nivel de desarrollo de los resultados de aprendizaje (Inicial / Medio / Alto)'],
+                                allowDynamicRows: true,
+                                headerStyle: 'blue'
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'plan_analitico_metodologia_matriz',
+                label: '4. Metodología, Contenidos, Resultados de Aprendizaje',
+                iconName: 'Layers',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        {
+                            name: 'MatrizAprendizaje19Semanas',
+                            label: 'Matriz Semanal de Organización del Aprendizaje (19 Semanas)',
+                            type: 'table',
+                            collaborative: true,
+                            config: {
+                                columns: ['Contenidos (Unidades y Temas)', 'Semana', 'Docencia', 'Práctico Experimental', 'Actividades Autónomas', 'ID RDAs', 'Calificación'],
+                                allowDynamicRows: true,
+                                headerStyle: 'blue'
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'plan_analitico_recursos',
+                label: '5. Recursos Didácticos / Informatización del Aprendizaje',
+                iconName: 'Lightbulb',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'AdaptacionCurricular', label: 'Adaptación Curricular', type: 'select', options: ['Aplica', 'No aplica'], collaborative: true },
+                        { name: 'RecursosDidacticos', label: 'Recursos Didácticos e Informatización', type: 'rich-text', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'plan_analitico_evaluacion',
+                label: '6. Evaluación',
+                iconName: 'CheckSquare',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        {
+                            name: 'MatrizEvaluacion',
+                            label: 'Matriz Oficial de Evaluación',
+                            type: 'table',
+                            collaborative: true,
+                            config: {
+                                columns: ['Notas', 'Tipo de Evaluación', 'Calificación'],
+                                allowDynamicRows: false,
+                                headerStyle: 'blue'
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'plan_analitico_firmas',
+                label: '7. Firmas de Responsabilidad',
+                iconName: 'ShieldCheck',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'FirmaElaboradoDocente', label: 'Docente (Elaborado)', type: 'text', collaborative: true },
+                        { name: 'FirmaRevisadoCoord', label: 'Coordinador de Carrera (Revisado)', type: 'text', collaborative: true },
+                        { name: 'FirmaAprobadoAcad', label: 'Coordinador Académico (Aprobado)', type: 'text', collaborative: true }
+                    ]
+                }
+            }
+        ]
+    },
+    SEGUIMIENTO_TUTORIAS: {
+        title: "3. Formato Seguimiento de Tutorías Académicas 2026",
+        subtitle: "Acompañamiento y Nivelación Curricular - ISTPET",
+        schema: {
+            DocenteNombre: '',
+            HorarioTutoria: '',
+            PeriodoAcademico: 'ABRIL - SEPTIEMBRE 2026',
+            TutoriasRegistros: [],
+            FirmaDocente: '',
+            FirmaCoordinador: ''
+        },
+        lists: ['TutoriasRegistros'],
+        sections: [
+            {
+                id: 'tutorias_header_section',
+                label: '1. Cabecera y Datos del Docente',
+                iconName: 'GraduationCap',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'DocenteNombre', label: 'Nombre del Docente', type: 'text', collaborative: true },
+                        { name: 'HorarioTutoria', label: 'Horario de Tutoría', type: 'text', collaborative: true },
+                        { name: 'PeriodoAcademico', label: 'Periodo Académico', type: 'text', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'tutorias_matrix_section',
+                label: '2. Matriz de Registro de Tutorías (12 Columnas)',
+                iconName: 'Layers',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        {
+                            name: 'TutoriasRegistros',
+                            label: 'Matriz de Registro de Tutorías',
+                            type: 'table',
+                            collaborative: true,
+                            config: {
+                                columns: [
+                                    'Nº',
+                                    'Fecha',
+                                    'Semana',
+                                    'Nombres y Apellidos Estudiantes Convocados',
+                                    'Nivel',
+                                    'Asignatura',
+                                    'Carrera',
+                                    'Modalidad de Tutoría',
+                                    'Tipos de Tutoría',
+                                    'Razón de Tutoría',
+                                    'Observaciones',
+                                    'Forma de Convocatoria'
+                                ],
+                                allowDynamicRows: true,
+                                headerStyle: 'blue'
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'tutorias_signatures_section',
+                label: '3. Firmas de Responsabilidad',
+                iconName: 'ShieldCheck',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'FirmaDocente', label: 'Docente', type: 'text', collaborative: true },
+                        { name: 'FirmaCoordinador', label: 'Revisado: Coordinador de Carrera', type: 'text', collaborative: true }
+                    ]
+                }
+            }
+        ]
+    },
+    INFORME_ACOMPANAMIENTO_CARRERA: {
+        title: "6. Informe de Acompañamiento Académico de Carrera 26-26",
+        subtitle: "Coordinación de Carrera y Unidad Académica - ISTPET",
+        schema: {
+            InformeTitulo: 'INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA',
+            CoordinadorNombre: '',
+            CarreraNombre: '',
+            PeriodoAcademico: '',
+            Parcial: 'Parcial 1/ Modular',
+            ReportaA: 'UNIDAD ACADÉMICA',
+            FechaPresentacion: '',
+            DocentesTutores: [],
+            DocentesAporteCarrera: []
+        },
+        lists: ['DocentesTutores', 'DocentesAporteCarrera'],
+        sections: [
+            {
+                id: 'informe_acomp_datos_informativos_section',
+                label: '1. Datos Informativos',
+                iconName: 'GraduationCap',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'CoordinadorNombre', label: 'Nombre del Coordinador', type: 'text', collaborative: true },
+                        { name: 'CarreraNombre', label: 'Carrera', type: 'text', collaborative: true },
+                        { name: 'PeriodoAcademico', label: 'Periodo Académico', type: 'text', collaborative: true },
+                        { name: 'Parcial', label: 'Parcial', type: 'text', collaborative: true },
+                        { name: 'ReportaA', label: 'Reporta a', type: 'text', collaborative: true },
+                        { name: 'FechaPresentacion', label: 'Fecha de Presentación', type: 'text', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'informe_acomp_nomina_tutores_section',
+                label: '2. Nómina de Docentes Tutores',
+                iconName: 'Users',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        {
+                            name: 'DocentesTutores',
+                            label: 'Nómina de Docentes Tutores',
+                            type: 'table',
+                            collaborative: true,
+                            config: {
+                                columns: ['Tutor', 'Nivel', 'Actividad', 'Medio de verificación'],
+                                allowDynamicRows: true
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'informe_acomp_nomina_docentes_section',
+                label: '3. Nómina de Docentes que Aportan a la Carrera',
+                iconName: 'Layers',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        {
+                            name: 'DocentesAporteCarrera',
+                            label: 'Nómina de Docentes que Aportan a la Carrera',
+                            type: 'table',
+                            collaborative: true,
+                            config: {
+                                columns: [
+                                    'Nómina',
+                                    'Asignaturas',
+                                    'Nivel',
+                                    'Jornada de trabajo',
+                                    'Acciones de mejora (dentro del periodo)',
+                                    'Acciones correctivas (final del periodo)'
+                                ],
+                                allowDynamicRows: true
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                id: 'informe_acomp_gestion_academica_section',
+                label: '4. Gestión Académica de la Carrera',
+                iconName: 'CheckSquare',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'ReunionesCarrera', label: '4.1 Reuniones de Carrera', type: 'textarea', collaborative: true },
+                        { name: 'ActividadesCoordinador', label: '4.2 Actividades Coordinador', type: 'table', collaborative: true },
+                        { name: 'EstudiantesMetricas', label: '4.3 Métricas Estudiantes por Nivel', type: 'table', collaborative: true },
+                        { name: 'GestionDocente', label: '4.4 Indicadores de Gestión Docente', type: 'table', collaborative: true },
+                        { name: 'ObservacionesAcompanamiento', label: '4.5 Observaciones de Acompañamiento', type: 'table', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'informe_acomp_conclusiones_section',
+                label: '5. Conclusiones y Recomendaciones',
+                iconName: 'FileText',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'ConclusionesRecomendaciones', label: 'Conclusiones y Recomendaciones por Punto', type: 'textarea', collaborative: true }
+                    ]
+                }
+            },
+            {
+                id: 'informe_acomp_firmas_section',
+                label: '6. Firmas de Responsabilidad',
+                iconName: 'ShieldCheck',
+                componentName: 'AgnosticSection',
+                config: {
+                    fields: [
+                        { name: 'FirmasTutores', label: 'Firmas de Tutores por Nivel', type: 'table', collaborative: true },
+                        { name: 'FirmasAutoridades', label: 'Firmas de Coordinación y Autoridades', type: 'table', collaborative: true }
                     ]
                 }
             }

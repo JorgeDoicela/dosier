@@ -605,5 +605,75 @@ public class CalendarioServiceTests
         Assert.Contains(eventosU1, e => e.Uuid == "privado-u1");
         Assert.DoesNotContain(eventosU2, e => e.Uuid == "privado-u1");
     }
+
+    [Fact]
+    [Trait("Category", "Unit")]
+    [Trait("Feature", "Calendario")]
+    public async Task GetEventosAsync_DocenteExclusivo_OcultaPeasEnRevisionOAprobadosYUsaRutaValida()
+    {
+        // Arrange
+        var dbName = nameof(GetEventosAsync_DocenteExclusivo_OcultaPeasEnRevisionOAprobadosYUsaRutaValida);
+        await using var context = CreateInMemoryContext(dbName);
+
+        context.Users.Add(new User
+        {
+            IdUsuario = 30,
+            IdSigafi = "PROF-030",
+            Administrador = false,
+            Nombre = "Docente Treinta"
+        });
+
+        var estados = new[]
+        {
+            ("pea-borrador", "Borrador"),
+            ("pea-observado", "Observado"),
+            ("pea-enrevision", "EnRevision"),
+            ("pea-corregido", "Corregido"),
+            ("pea-revisadocoord", "RevisadoCoord"),
+            ("pea-revisadoacad", "RevisadoAcad"),
+            ("pea-aprobado", "Aprobado"),
+            ("pea-publicado", "Publicado")
+        };
+
+        int id = 200;
+        foreach (var (uuid, estado) in estados)
+        {
+            context.DocPeas.Add(new DocPea
+            {
+                IdPea = id++,
+                Uuid = uuid,
+                IdAsignatura = 1,
+                IdCarrera = 1,
+                IdDocenteElaborador = "PROF-030",
+                Estado = estado,
+                Activo = true,
+                FechaModificacion = DateTime.UtcNow,
+                FechaElaborado = DateTime.UtcNow,
+                FechaRevisadoCoord = DateTime.UtcNow,
+                FechaRevisadoAcad = DateTime.UtcNow,
+                FechaAprobado = DateTime.UtcNow
+            });
+        }
+
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Act
+        var eventos = (await sut.GetEventosAsync(hoy.AddDays(-5), hoy.AddDays(5), "DOSIER_DOCENTE", idUsuario: 30))
+            .Where(e => e.TipoEntidadOrigen == "PEA")
+            .ToList();
+
+        // Assert: solo Borrador y Observado deben aparecer al docente
+        Assert.Equal(2, eventos.Count);
+        Assert.Contains(eventos, e => e.Uuid == "pea-borrador" && e.UrlAccion == "/documentacion/mis-proyectos/workspace/pea-oficial/pea-borrador?edit=pea-oficial");
+        Assert.Contains(eventos, e => e.Uuid == "pea-observado" && e.UrlAccion == "/documentacion/mis-proyectos/workspace/pea-oficial/pea-observado?edit=pea-oficial");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-enrevision");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-corregido");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-revisadocoord");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-revisadoacad");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-aprobado");
+        Assert.DoesNotContain(eventos, e => e.Uuid == "pea-publicado");
+    }
 }
 

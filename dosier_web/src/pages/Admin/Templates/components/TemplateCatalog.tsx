@@ -7,7 +7,8 @@ import {
     GraduationCap,
     Award,
     Eye,
-    Download
+    Download,
+    Plus
 } from 'lucide-react';
 import {
     DndContext,
@@ -38,20 +39,27 @@ interface TemplateCatalogProps {
     onToggleSidebar?: () => void;
     headerCollapsed?: boolean;
     onReorderTemplates?: (newTemplates: DocumentTemplateDto[]) => void;
+    onOpenCreateModal?: () => void;
 }
 
 type TemplateCategoryKey = 'CURRICULAR' | 'ACREDITACION' | 'REPORTES' | 'INSTITUCIONAL';
 
-function getTemplateCategory(code: string): TemplateCategoryKey {
+function getTemplateCategory(code: string, categoryId?: number): TemplateCategoryKey {
     const c = (code || '').toUpperCase();
-    if (c.includes('PEA') || c.includes('CURRICULUM') || c.includes('ESTUDIO') || c.includes('ASIGNATURA')) return 'CURRICULAR';
-    if (c.includes('CACES') || c.includes('ACREDIT') || c.includes('ACTA') || c.includes('CERTIF')) return 'ACREDITACION';
-    if (c.startsWith('REPORTE') || c.includes('ANALITICA') || c.includes('SEGUIMIENTO')) return 'REPORTES';
+    if (categoryId === 90 || c.includes('PEA') || c.includes('ANALITIC') || c.includes('CURRICULUM') || c.includes('ESTUDIO') || c.includes('ASIGNATURA')) {
+        return 'CURRICULAR';
+    }
+    if (categoryId === 60 || categoryId === 61 || categoryId === 62 || categoryId === 63 || c.startsWith('REPORTE') || c.includes('INFORME') || c.includes('ANALITICA') || c.includes('SEGUIMIENTO')) {
+        return 'REPORTES';
+    }
+    if (categoryId === 2 || categoryId === 5 || c.includes('ACTA') || c.includes('CACES') || c.includes('ACREDIT') || c.includes('CERTIF') || c.includes('RUBRICA')) {
+        return 'ACREDITACION';
+    }
     return 'INSTITUCIONAL';
 }
 
-function getTemplateIcon(code: string) {
-    const cat = getTemplateCategory(code);
+function getTemplateIcon(code: string, categoryId?: number) {
+    const cat = getTemplateCategory(code, categoryId);
     switch (cat) {
         case 'CURRICULAR':
             return <GraduationCap className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" strokeWidth={1.5} />;
@@ -115,14 +123,9 @@ const TemplateItem: React.FC<TemplateItemProps> = ({
                 </div>
                 
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                        <span className={`text-xs leading-snug transition-colors break-words ${isSelected ? 'font-semibold text-slate-900 dark:text-zinc-100' : 'font-medium text-slate-700 dark:text-zinc-300'}`}>
-                            {template.name}
-                        </span>
-                        <span className="text-[9px] bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-slate-500 dark:text-zinc-400 shrink-0">
-                            v{template.version}
-                        </span>
-                    </div>
+                    <span className={`text-xs leading-snug transition-colors break-words block ${isSelected ? 'font-semibold text-slate-900 dark:text-zinc-100' : 'font-medium text-slate-700 dark:text-zinc-300'}`}>
+                        {template.name}
+                    </span>
                 </div>
             </button>
 
@@ -210,7 +213,8 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
     isSidebarCollapsed,
     onToggleSidebar,
     headerCollapsed,
-    onReorderTemplates
+    onReorderTemplates,
+    onOpenCreateModal
 }) => {
     const [activeId, setActiveId] = React.useState<string | null>(null);
 
@@ -250,10 +254,10 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
     const activeTemplate = templates.find(t => t.code === activeId);
 
     // Agrupación de plantillas oficiales
-    const curricularTemplates = templates.filter(t => getTemplateCategory(t.code) === 'CURRICULAR');
-    const acreditacionTemplates = templates.filter(t => getTemplateCategory(t.code) === 'ACREDITACION');
-    const reportesTemplates = templates.filter(t => getTemplateCategory(t.code) === 'REPORTES');
-    const institucionalTemplates = templates.filter(t => getTemplateCategory(t.code) === 'INSTITUCIONAL');
+    const curricularTemplates = templates.filter(t => getTemplateCategory(t.code, t.category) === 'CURRICULAR');
+    const acreditacionTemplates = templates.filter(t => getTemplateCategory(t.code, t.category) === 'ACREDITACION');
+    const reportesTemplates = templates.filter(t => getTemplateCategory(t.code, t.category) === 'REPORTES');
+    const institucionalTemplates = templates.filter(t => getTemplateCategory(t.code, t.category) === 'INSTITUCIONAL');
 
     return (
         <div className="w-full h-full border border-zinc-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-950 flex flex-col overflow-hidden min-h-0">
@@ -274,6 +278,17 @@ export const TemplateCatalog: React.FC<TemplateCatalogProps> = ({
                         Plantillas Oficiales ({templates.length})
                     </span>
                 </div>
+                {onOpenCreateModal && (
+                    <button
+                        type="button"
+                        onClick={onOpenCreateModal}
+                        title="Registrar una nueva plantilla oficial"
+                        className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-[#0070f3] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition-colors cursor-pointer shrink-0"
+                    >
+                        <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+                        <span>Nueva</span>
+                    </button>
+                )}
             </div>
             
             {/* Lista dividida por categorías institucionales con scroll fluido */}

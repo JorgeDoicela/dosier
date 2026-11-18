@@ -34,11 +34,17 @@ interface OfficialTemplatesCatalogViewProps {
 
 type TemplateCategoryFilter = 'ALL' | 'CURRICULAR' | 'ACREDITACION' | 'REPORTES';
 
-function getTemplateCategory(code: string): 'CURRICULAR' | 'ACREDITACION' | 'REPORTES' | 'INSTITUCIONAL' {
+function getTemplateCategory(code: string, categoryId?: number): 'CURRICULAR' | 'ACREDITACION' | 'REPORTES' | 'INSTITUCIONAL' {
     const c = (code || '').toUpperCase();
-    if (c.includes('PEA') || c.includes('CURRICULUM') || c.includes('ESTUDIO') || c.includes('ASIGNATURA')) return 'CURRICULAR';
-    if (c.includes('CACES') || c.includes('ACREDIT') || c.includes('ACTA') || c.includes('CERTIF')) return 'ACREDITACION';
-    if (c.startsWith('REPORTE') || c.includes('ANALITICA') || c.includes('SEGUIMIENTO')) return 'REPORTES';
+    if (categoryId === 90 || c.includes('PEA') || c.includes('ANALITIC') || c.includes('CURRICULUM') || c.includes('ESTUDIO') || c.includes('ASIGNATURA')) {
+        return 'CURRICULAR';
+    }
+    if (categoryId === 60 || categoryId === 61 || categoryId === 62 || categoryId === 63 || c.startsWith('REPORTE') || c.includes('INFORME') || c.includes('ANALITICA') || c.includes('SEGUIMIENTO')) {
+        return 'REPORTES';
+    }
+    if (categoryId === 2 || categoryId === 5 || c.includes('ACTA') || c.includes('CACES') || c.includes('ACREDIT') || c.includes('CERTIF') || c.includes('RUBRICA')) {
+        return 'ACREDITACION';
+    }
     return 'INSTITUCIONAL';
 }
 
@@ -72,17 +78,32 @@ function getCategoryBadge(category: 'CURRICULAR' | 'ACREDITACION' | 'REPORTES' |
 }
 
 function getTemplateDescription(tmpl: DocumentTemplateDto): string {
+    if (tmpl.description && tmpl.description.trim().length > 0) {
+        return tmpl.description;
+    }
     const c = (tmpl.code || '').toUpperCase();
-    if (c.includes('PEA')) {
+    if (c === 'PEA_OFICIAL' || c.includes('PROGRAMA DE ESTUDIO')) {
         return 'Estructura oficial del Programa de Estudio de la Asignatura en sus 11 bloques normados (datos generales, objetivos, prerrequisitos, RDA, unidades temáticas, metodología, evaluación y firmas de responsabilidad).';
     }
+    if (c === 'PLAN_ANALITICO' || c.includes('ANALITICO')) {
+        return 'Formato institucional oficial del Plan Analítico de la Asignatura 2026 articulado a los resultados de aprendizaje y distribución de cátedra.';
+    }
+    if (c.includes('PRACTICA') || c.includes('LAB') || c.includes('GUIA')) {
+        return 'Guía oficial para planificación, ejecución experimental y evaluación de prácticas de aplicación y experimentación (APE).';
+    }
     if (c.includes('ACTA')) {
-        return 'Acta formal de revisión, validación y aprobación del PEA entre Docente, Coordinador de Carrera y Vicerrectorado.';
+        return 'Acta formal colegiada de revisión, validación y aprobación del PEA entre Docente, Coordinador de Carrera y Vicerrectorado.';
     }
-    if (c.includes('REPORTE') || c.includes('CACES')) {
-        return 'Matriz estandarizada de seguimiento curricular y evidencias de cumplimiento para procesos de aseguramiento de la calidad CACES.';
+    if (c.includes('RUBRICA')) {
+        return 'Matriz estandarizada de criterios y niveles de desempeño para evaluación diagnóstica, formativa y sumativa por competencias.';
     }
-    return tmpl.description || 'Estructura documental oficial normada y estandarizada por el Vicerrectorado Académico del ISTPET.';
+    if (c.includes('TUTORIA')) {
+        return 'Plan de seguimiento pedagógico, cronograma de refuerzo académico y registro de acuerdos con estudiantes.';
+    }
+    if (c.includes('INFORME') || c.includes('REPORTE') || c.includes('CACES')) {
+        return 'Informe de seguimiento curricular, porcentaje de avance de sílabo y evidencias para procesos de calidad CACES.';
+    }
+    return 'Estructura documental oficial normada y estandarizada por el Vicerrectorado Académico del ISTPET.';
 }
 
 export const OfficialTemplatesCatalogView: React.FC<OfficialTemplatesCatalogViewProps> = ({

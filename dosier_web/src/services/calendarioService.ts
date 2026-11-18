@@ -1,4 +1,5 @@
 import api from '../api/axios_config';
+import { buildWorkspacePath } from '../core/documents/templateUrl';
 
 // ─────────────────────────────────────────────────────────────
 //  Tipos
@@ -252,7 +253,7 @@ export const resolveEventUrl = (ev: {
             if (ev.subcategoria === 'RevisionCoordinacion' || ev.subcategoria === 'RevisionTecnica') {
                 return `/documentacion/revision-tecnica/${projectUuid}`;
             }
-            return `${prefix}/workspace/PEA_OFICIAL/${projectUuid}`;
+            return buildWorkspacePath('PEA_OFICIAL', projectUuid, '?edit=pea-oficial', prefix);
         }
         case 'REVISION':
         case 'PEER_REVIEW':
@@ -268,7 +269,7 @@ export const resolveEventUrl = (ev: {
 
     // 3. Fallbacks por categoría global
     if ((ev.categoria_global === 'EntregaPea' || ev.categoria_global === 'Proyecto') && projectUuid) {
-        return `${prefix}/workspace/PEA_OFICIAL/${projectUuid}`;
+        return buildWorkspacePath('PEA_OFICIAL', projectUuid, '?edit=pea-oficial', prefix);
     }
     if ((ev.categoria_global === 'Revision' || ev.categoria_global === 'PeerReview') && projectUuid) {
         return `/documentacion/revision-tecnica/${projectUuid}`;

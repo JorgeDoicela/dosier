@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Dosier.Domain.Common.Documents;
 
 namespace Dosier.Application.Common.Documents
 {
@@ -12,5 +13,6 @@ namespace Dosier.Application.Common.Documents
         Task SaveGlobalThemeConfigAsync(string themeConfigJson, CancellationToken ct = default);
         Task<int> GetUsageCountAsync(string templateCode, CancellationToken ct = default);
         Task PublishTemplateAsync(string code, string htmlContent, string? customCss, string? collaborativeFieldsJson, string? themeConfigJson, string updatedBy, CancellationToken ct = default);
+        Task<DocumentTemplate> CreateTemplateAsync(string code, string name, string? description, DocumentCategory category, bool requiresSignature, bool requiresLopdp, string createdBy, CancellationToken ct = default);
     }
 }

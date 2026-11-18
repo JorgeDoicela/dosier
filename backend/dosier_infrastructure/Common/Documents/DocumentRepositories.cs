@@ -42,6 +42,12 @@ namespace Dosier.Infrastructure.Common.Documents
             return existing.OrderBy(t => t.Category);
         }
 
+        public async Task AddAsync(DocumentTemplate template, CancellationToken ct = default)
+        {
+            _context.Set<DocumentTemplate>().Add(template);
+            await _context.SaveChangesAsync(ct);
+        }
+
         public async Task SaveAsync(DocumentTemplate template, CancellationToken ct = default)
         {
             if (_context.Entry(template).State == EntityState.Detached)

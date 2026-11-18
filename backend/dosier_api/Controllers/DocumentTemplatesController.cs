@@ -111,6 +111,64 @@ namespace dosier_api.Controllers
         }
 
         /// <summary>
+        /// Registra una nueva plantilla institucional en el catálogo maestro.
+        /// </summary>
+        [HttpPost]
+        [Authorize(Roles = "DOSIER_ADMIN,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR")]
+        public async Task<IActionResult> Create([FromBody] CreateTemplateRequest request, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.Name))
+            {
+                return BadRequest(new { error = "El código y el nombre de la plantilla son obligatorios." });
+            }
+
+            var cleanCode = System.Text.RegularExpressions.Regex.Replace(request.Code.Trim().ToUpperInvariant(), @"[^A-Z0-9_]", "_");
+
+            try
+            {
+                var createdBy = User.Identity?.Name ?? "admin";
+                var categoryEnum = Enum.IsDefined(typeof(Dosier.Domain.Common.Documents.DocumentCategory), request.Category)
+                    ? (Dosier.Domain.Common.Documents.DocumentCategory)request.Category
+                    : Dosier.Domain.Common.Documents.DocumentCategory.PeaCurricular;
+
+                var template = await _templateAdminService.CreateTemplateAsync(
+                    cleanCode,
+                    request.Name,
+                    request.Description,
+                    categoryEnum,
+                    request.RequiresSignature,
+                    request.RequiresLopdp,
+                    createdBy,
+                    ct);
+
+                return CreatedAtAction(nameof(GetByCode), new { code = template.Code }, new
+                {
+                    template.Id,
+                    template.Code,
+                    template.Name,
+                    template.Description,
+                    template.Category,
+                    template.Version,
+                    template.IsActive,
+                    template.RequiresLopdpClause,
+                    template.SupportsBlindMode,
+                    RequiresElectronicSignature = template.RequiresElectronicSignature,
+                    SignatureType = template.SignatureType,
+                    template.FilenamePattern,
+                    template.CollaborativeFieldsJson,
+                    template.ThemeConfigJson,
+                    template.HtmlContent,
+                    template.CustomCss,
+                    template.UpdatedAt
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Obtiene el detalle de una plantilla por su código único.
         /// </summary>
         [HttpGet("{code}")]
@@ -676,5 +734,26 @@ namespace dosier_api.Controllers
 
         [JsonPropertyName("sampleData")]
         public object? SampleData { get; set; }
+    }
+
+    public class CreateTemplateRequest
+    {
+        [JsonPropertyName("code")]
+        public string Code { get; set; } = string.Empty;
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+
+        [JsonPropertyName("category")]
+        public int Category { get; set; } = 90;
+
+        [JsonPropertyName("requiresSignature")]
+        public bool RequiresSignature { get; set; } = true;
+
+        [JsonPropertyName("requiresLopdp")]
+        public bool RequiresLopdp { get; set; } = true;
     }
 }

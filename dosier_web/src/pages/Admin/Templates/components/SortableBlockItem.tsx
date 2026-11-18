@@ -36,6 +36,28 @@ import {
     RenderPeaBibliographySection,
     RenderPeaSignaturesSection,
 } from './canvasRenderers/RenderPeaSections';
+import {
+    RenderPlanAnaliticoGeneral,
+    RenderPlanAnaliticoObjective,
+    RenderPlanAnaliticoOutcomes,
+    RenderPlanAnaliticoMatrix,
+    RenderPlanAnaliticoResources,
+    RenderPlanAnaliticoEvaluation,
+    RenderPlanAnaliticoSignatures,
+} from './canvasRenderers/planAnalitico';
+import {
+    RenderTutoriasHeader,
+    RenderTutoriasMatrix,
+    RenderTutoriasSignatures,
+} from './canvasRenderers/tutorias';
+import {
+    RenderInformeAcompDatosInformativos,
+    RenderInformeAcompNominaTutores,
+    RenderInformeAcompNominaDocentes,
+    RenderInformeAcompGestionAcademica,
+    RenderInformeAcompConclusiones,
+    RenderInformeAcompFirmas,
+} from './canvasRenderers/informeAcompanamiento';
 
 /** Tipos de bloques de los que solo se permite una única instancia */
 const UNIQUE_BLOCK_TYPES: BlockType[] = [
@@ -59,6 +81,16 @@ const UNIQUE_BLOCK_TYPES: BlockType[] = [
     'pea_evaluation_section',
     'pea_bibliography_section',
     'pea_signatures_section',
+    'plan_analitico_general_section',
+    'plan_analitico_objective_section',
+    'plan_analitico_outcomes_section',
+    'plan_analitico_methodology_matrix_section',
+    'plan_analitico_resources_section',
+    'plan_analitico_evaluation_section',
+    'plan_analitico_signatures_section',
+    'tutorias_header_section',
+    'tutorias_matrix_section',
+    'tutorias_signatures_section',
 ];
 
 interface SortableBlockItemProps {
@@ -155,6 +187,38 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
                 return <RenderPeaBibliographySection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'pea_signatures_section':
                 return <RenderPeaSignaturesSection config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_general_section':
+                return <RenderPlanAnaliticoGeneral config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_objective_section':
+                return <RenderPlanAnaliticoObjective config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_outcomes_section':
+                return <RenderPlanAnaliticoOutcomes config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_methodology_matrix_section':
+                return <RenderPlanAnaliticoMatrix config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_resources_section':
+                return <RenderPlanAnaliticoResources config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_evaluation_section':
+                return <RenderPlanAnaliticoEvaluation config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'plan_analitico_signatures_section':
+                return <RenderPlanAnaliticoSignatures config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'tutorias_header_section':
+                return <RenderTutoriasHeader config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'tutorias_matrix_section':
+                return <RenderTutoriasMatrix config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'tutorias_signatures_section':
+                return <RenderTutoriasSignatures config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'informe_acomp_datos_informativos_section':
+                return <RenderInformeAcompDatosInformativos config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'informe_acomp_nomina_tutores_section':
+                return <RenderInformeAcompNominaTutores config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'informe_acomp_nomina_docentes_section':
+                return <RenderInformeAcompNominaDocentes config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'informe_acomp_gestion_academica_section':
+                return <RenderInformeAcompGestionAcademica config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'informe_acomp_conclusiones_section':
+                return <RenderInformeAcompConclusiones config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
+            case 'informe_acomp_firmas_section':
+                return <RenderInformeAcompFirmas config={block.config} title={block.title} blockId={block.id} onUpdateConfig={onUpdateConfig} />;
             case 'page_break':
                 return (
                     <div className="w-full flex items-center justify-between py-2 select-none">
@@ -171,6 +235,7 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
     };
 
     const isCover = block.type === 'cover';
+    const isCurricularBlock = block.type.startsWith('plan_analitico_') || block.type.startsWith('pea_') || block.type.startsWith('tutorias_') || block.type.startsWith('informe_acomp_') || isCover;
 
     return (
         <div
@@ -179,12 +244,21 @@ export const SortableBlockItem: React.FC<SortableBlockItemProps> = ({
             {...attributes}
             {...listeners}
             onClick={() => onSelectBlock(block.id)}
-            className={`group relative cursor-grab active:cursor-grabbing rounded-xs transition-all ${isCover ? 'p-0 border-none w-full flex-1 flex flex-col' : 'p-2 border border-slate-200 bg-white hover:border-slate-300'
+            className={`group relative cursor-grab active:cursor-grabbing rounded-xs transition-all ${
+                isCover
+                    ? 'p-0 border-none w-full flex-1 flex flex-col'
+                    : isCurricularBlock
+                        ? 'p-0 border border-transparent bg-transparent'
+                        : 'p-2 border border-slate-200 bg-white hover:border-slate-300'
                 } ${isDragging
                     ? 'shadow-[0_20px_40px_rgba(0,0,0,0.12)] border-slate-300 opacity-80 scale-[0.97] rotate-[-0.5deg] z-[999]'
                     : isActive
-                        ? 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/10'
-                        : 'hover:ring-1 hover:ring-indigo-300/40'
+                        ? isCurricularBlock
+                            ? 'ring-1 ring-blue-500/80 shadow-xs'
+                            : 'ring-2 ring-indigo-500 border-indigo-500 bg-indigo-50/10'
+                        : isCurricularBlock
+                            ? 'hover:ring-1 hover:ring-blue-300/40'
+                            : 'hover:ring-1 hover:ring-indigo-300/40'
                 }`}
         >
             {/* Toolbar flotante superior Notion-style para reordenamiento y acciones */}

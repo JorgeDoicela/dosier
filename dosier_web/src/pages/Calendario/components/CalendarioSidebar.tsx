@@ -147,10 +147,10 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                             stickyNotes.map(note => {
                                 const contextoChip = (() => {
                                     const url = note.url_accion || '';
-                                    if (url.startsWith('/curriculum')) return { label: 'Curricular / PEA', icon: BookOpen };
-                                    if (url.startsWith('/coordinacion')) return { label: 'Coordinación', icon: Folder };
-                                    if (url.startsWith('/vicerrectoria')) return { label: 'Vicerrectoría', icon: BarChart3 };
-                                    if (url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
+                                    if (url.startsWith('/documentacion/mis-proyectos') || url.startsWith('/curriculum')) return { label: 'Curricular / PEA', icon: BookOpen };
+                                    if (url.startsWith('/documentacion/revision-tecnica') || url.startsWith('/coordinacion')) return { label: 'Revisión Técnica', icon: Folder };
+                                    if (url.startsWith('/documentacion') || url.startsWith('/vicerrectoria')) return { label: 'Gestión Curricular', icon: BarChart3 };
+                                    if (url.startsWith('/calendario') || url.startsWith('/agenda')) return { label: 'Agenda', icon: CalendarIcon };
                                     if (url.startsWith('/admin')) return { label: 'Directiva / Admin', icon: Folder };
                                     return null;
                                 })();

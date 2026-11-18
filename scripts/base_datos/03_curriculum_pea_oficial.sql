@@ -343,4 +343,79 @@ INSERT INTO doc_document_templates (
     collaborative_fields_json = VALUES(collaborative_fields_json),
     is_active = 1;
 
+-- 2. FORMATO PLAN ANALÍTICO 2026
+INSERT INTO doc_document_templates (
+    code, name, description, html_content, category, version,
+    requires_lopdp, supports_blind_mode, requires_traceability, requires_signature,
+    signature_type, filename_pattern, collaborative_fields_json, is_active
+) VALUES (
+    'PLAN_ANALITICO',
+    '2. Formato Plan Analítico 2026',
+    'Formato institucional oficial del Plan Analítico de la Asignatura 2026 para carreras del ISTPET.',
+    '<!-- Plantilla oficial de fábrica Plan Analítico 2026 ISTPET -->',
+    90, -- DocumentCategory.PeaCurricular
+    1, 1, 0, 1, 1, 'DOSIER',
+    'PLAN_ANALITICO_{carrera}_{asignatura}_{periodo}',
+    '["datos_informativos", "objetivo_general", "resultados_aprendizaje"]',
+    1
+) ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    description = VALUES(description),
+    category = VALUES(category),
+    requires_lopdp = VALUES(requires_lopdp),
+    requires_signature = VALUES(requires_signature),
+    filename_pattern = VALUES(filename_pattern),
+    collaborative_fields_json = VALUES(collaborative_fields_json),
+    is_active = 1;
+
+-- 3. FORMATO SEGUIMIENTO DE TUTORÍAS ACADÉMICAS 2026
+INSERT INTO doc_document_templates (
+    code, name, description, html_content, category, version,
+    requires_lopdp, supports_blind_mode, requires_traceability, requires_signature,
+    signature_type, filename_pattern, collaborative_fields_json, is_active
+) VALUES (
+    'SEGUIMIENTO_TUTORIAS',
+    '3. Formato Seguimiento de Tutorías Académicas 2026',
+    'Formato institucional oficial para el registro, acompañamiento y seguimiento de tutorías académicas del ISTPET.',
+    '<!-- Plantilla oficial de fábrica Seguimiento de Tutorías Académicas 2026 ISTPET -->',
+    90, -- DocumentCategory.PeaCurricular
+    1, 1, 0, 1, 1, 'DOSIER',
+    'TUTORIAS_{carrera}_{docente}_{periodo}',
+    '["cabecera_docente", "matriz_tutorias", "firmas_responsabilidad"]',
+    1
+) ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    description = VALUES(description),
+    category = VALUES(category),
+    requires_lopdp = VALUES(requires_lopdp),
+    requires_signature = VALUES(requires_signature),
+    filename_pattern = VALUES(filename_pattern),
+    collaborative_fields_json = VALUES(collaborative_fields_json),
+    is_active = 1;
+
+-- 4. FORMATO INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA 26-26
+INSERT INTO doc_document_templates (
+    code, name, description, html_content, category, version,
+    requires_lopdp, supports_blind_mode, requires_traceability, requires_signature,
+    signature_type, filename_pattern, collaborative_fields_json, is_active
+) VALUES (
+    'INFORME_ACOMPANAMIENTO_CARRERA',
+    '6. Informe de Acompañamiento Académico de Carrera 26-26',
+    'Formato institucional oficial para el informe de acompañamiento académico de carrera de la Unidad Académica del ISTPET.',
+    '<!-- Plantilla oficial de fábrica Informe de Acompañamiento Académico de Carrera 26-26 ISTPET -->',
+    90, -- DocumentCategory.PeaCurricular
+    1, 1, 0, 1, 1, 'DOSIER',
+    'INFORME_ACOMPANAMIENTO_{carrera}_{periodo}',
+    '["datos_informativos", "nomina_tutores", "nomina_docentes_aporte", "gestion_academica", "conclusiones", "firmas_responsabilidad"]',
+    1
+) ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    description = VALUES(description),
+    category = VALUES(category),
+    requires_lopdp = VALUES(requires_lopdp),
+    requires_signature = VALUES(requires_signature),
+    filename_pattern = VALUES(filename_pattern),
+    collaborative_fields_json = VALUES(collaborative_fields_json),
+    is_active = 1;
+
 SET FOREIGN_KEY_CHECKS = 1;

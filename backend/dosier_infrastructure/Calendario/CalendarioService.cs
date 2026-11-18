@@ -54,13 +54,20 @@ public class CalendarioService : ICalendarioService
 
         // 1. INSTRUMENTOS CURRICULARES (PEA) Y SUS HITOS DE CICLO DE VIDA
         var peasQuery = _context.DocPeas.AsNoTracking().Where(p => p.Activo);
+        bool esDocenteExclusivo = !isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera;
 
-        if (!isAdmin && !isVicerrector && !isCoordAcad && !isCoordCarrera)
+        if (esDocenteExclusivo)
         {
-            // Docente exclusivo: solo ve los PEAs que elabora
+            // Docente exclusivo: solo ve sus PEAs pendientes de acción (Borrador, Observado, NoIniciado)
             if (user != null && !string.IsNullOrEmpty(user.IdSigafi))
             {
-                peasQuery = peasQuery.Where(p => p.IdDocenteElaborador == user.IdSigafi);
+                peasQuery = peasQuery.Where(p =>
+                    p.IdDocenteElaborador == user.IdSigafi &&
+                    (p.Estado == "Borrador" || p.Estado == "Observado" || p.Estado == "NoIniciado" || string.IsNullOrEmpty(p.Estado)));
+            }
+            else
+            {
+                peasQuery = peasQuery.Where(_ => false);
             }
         }
         else if (isCoordCarrera && !isAdmin && !isVicerrector && !isCoordAcad && user != null && !string.IsNullOrEmpty(user.IdSigafi))
@@ -163,6 +170,13 @@ public class CalendarioService : ICalendarioService
                 string estadoKanban;
                 string urlAccion;
 
+                var esPropio = user != null && !string.IsNullOrEmpty(user.IdSigafi) &&
+                    string.Equals(p.IdDocenteElaborador, user.IdSigafi, StringComparison.OrdinalIgnoreCase);
+                var workspaceUrl = esPropio
+                    ? $"/documentacion/mis-proyectos/workspace/pea-oficial/{p.Uuid}?edit=pea-oficial"
+                    : $"/documentacion/workspace/pea-oficial/{p.Uuid}?edit=pea-oficial";
+                var revisionUrl = $"/documentacion/revision-tecnica/{p.Uuid}";
+
                 switch (p.Estado)
                 {
                     case "Observado":
@@ -182,7 +196,7 @@ public class CalendarioService : ICalendarioService
                         colorHex = "#EF4444";
                         prioridad = "Alta";
                         estadoKanban = "Pendiente";
-                        urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        urlAccion = workspaceUrl;
                         break;
 
                     case "EnRevision":
@@ -196,7 +210,7 @@ public class CalendarioService : ICalendarioService
                             colorHex = "#8B5CF6";
                             prioridad = "Alta";
                             estadoKanban = "Pendiente";
-                            urlAccion = "/coordinacion-carrera";
+                            urlAccion = revisionUrl;
                         }
                         else
                         {
@@ -207,7 +221,33 @@ public class CalendarioService : ICalendarioService
                             colorHex = "#8B5CF6";
                             prioridad = "Media";
                             estadoKanban = "Pendiente";
-                            urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                            urlAccion = workspaceUrl;
+                        }
+                        break;
+
+                    case "Corregido":
+                        fechaEvento = p.FechaElaborado.HasValue ? DateOnly.FromDateTime(p.FechaElaborado.Value) : DateOnly.FromDateTime(p.FechaModificacion);
+                        if (isCoordCarrera)
+                        {
+                            titulo = $"Revisión Disciplinar (Corregido): {nombreAsignatura}";
+                            descripcion = $"Observaciones subsanadas por {nombreDocente} ({nombreCarrera}). Pendiente de segunda revisión.";
+                            categoriaGlobal = "Revision";
+                            subcategoria = "Revision";
+                            colorHex = "#8B5CF6";
+                            prioridad = "Alta";
+                            estadoKanban = "Pendiente";
+                            urlAccion = revisionUrl;
+                        }
+                        else
+                        {
+                            titulo = $"PEA Corregido: {nombreAsignatura}";
+                            descripcion = $"Correcciones remitidas a Coordinación de Carrera para segunda revisión.";
+                            categoriaGlobal = "Curricular";
+                            subcategoria = "Revision";
+                            colorHex = "#8B5CF6";
+                            prioridad = "Media";
+                            estadoKanban = "EnProgreso";
+                            urlAccion = workspaceUrl;
                         }
                         break;
 
@@ -222,7 +262,7 @@ public class CalendarioService : ICalendarioService
                             colorHex = "#3B82F6";
                             prioridad = "Alta";
                             estadoKanban = "Pendiente";
-                            urlAccion = "/coordinacion-academica";
+                            urlAccion = revisionUrl;
                         }
                         else
                         {
@@ -233,7 +273,7 @@ public class CalendarioService : ICalendarioService
                             colorHex = "#3B82F6";
                             prioridad = "Media";
                             estadoKanban = "EnProgreso";
-                            urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                            urlAccion = workspaceUrl;
                         }
                         break;
 
@@ -248,7 +288,7 @@ public class CalendarioService : ICalendarioService
                             colorHex = "#10B981";
                             prioridad = "Alta";
                             estadoKanban = "Pendiente";
-                            urlAccion = "/vicerrectoria";
+                            urlAccion = revisionUrl;
                         }
                         else
                         {
@@ -259,11 +299,12 @@ public class CalendarioService : ICalendarioService
                             colorHex = "#3B82F6";
                             prioridad = "Baja";
                             estadoKanban = "EnProgreso";
-                            urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                            urlAccion = workspaceUrl;
                         }
                         break;
 
                     case "Aprobado":
+                    case "Publicado":
                         fechaEvento = p.FechaAprobado.HasValue ? DateOnly.FromDateTime(p.FechaAprobado.Value) : DateOnly.FromDateTime(p.FechaModificacion);
                         titulo = $"PEA Aprobado: {nombreAsignatura}";
                         descripcion = $"Instrumento curricular legalizado y oficializado para el período. Docente: {nombreDocente}.";
@@ -272,10 +313,10 @@ public class CalendarioService : ICalendarioService
                         colorHex = "#10B981";
                         prioridad = "Baja";
                         estadoKanban = "Completado";
-                        urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        urlAccion = workspaceUrl;
                         break;
 
-                    default: // Borrador
+                    default: // Borrador / NoIniciado
                         fechaEvento = DateOnly.FromDateTime(p.FechaModificacion);
                         titulo = $"Elaboración PEA: {nombreAsignatura}";
                         descripcion = $"Instrumento curricular de {nombreAsignatura} ({nombreCarrera}) en formulación.";
@@ -284,7 +325,7 @@ public class CalendarioService : ICalendarioService
                         colorHex = "#F59E0B";
                         prioridad = "Media";
                         estadoKanban = "EnProgreso";
-                        urlAccion = $"/curriculum/workspace/PEA_OFICIAL/{p.Uuid}";
+                        urlAccion = workspaceUrl;
                         break;
                 }
 

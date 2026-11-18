@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     AlertCircle,
     Search,
@@ -30,9 +30,11 @@ import { SolicitarColaboracionModal } from './components/SolicitarColaboracionMo
 import { CancelarColaboracionModal } from './components/CancelarColaboracionModal';
 import {
     recordRecentSubjectOpen,
-    sortSubjectsByRecentOpen
+    sortSubjectsByRecentOpen,
+    sortOtherPeasIntelligently
 } from '../../utils/recentSubjectStorage';
 import { useRealtimeSync } from '../../hooks/useRealtimeSync';
+import { isPeaPendienteParaRol } from './utils/peaStatusWorkflow';
 
 const formatModalidad = (mod?: string, idModalidad?: number): string => {
     if (mod && mod.trim()) {
@@ -75,7 +77,38 @@ export const MisAsignaturasPage: React.FC = () => {
         }
     }, [isVicerrectorMode, navigate]);
 
-    const [vistaActiva, setVistaActiva] = useState<'mis_asignaturas' | 'otros_docentes'>('mis_asignaturas');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    const [vistaActiva, setVistaActiva] = useState<'mis_asignaturas' | 'otros_docentes'>(() => {
+        return (tabParam === 'otros-docentes' || tabParam === 'otros_docentes')
+            ? 'otros_docentes'
+            : 'mis_asignaturas';
+    });
+
+    // Sincronizar estado si cambia el query param en la URL (por navegación Atrás/Adelante)
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab === 'otros-docentes' || tab === 'otros_docentes') {
+            setVistaActiva('otros_docentes');
+        } else if (tab === 'mis-asignaturas' || tab === 'mis_asignaturas' || !tab) {
+            setVistaActiva('mis_asignaturas');
+        }
+    }, [searchParams]);
+
+    const handleTabChange = useCallback((nuevaVista: 'mis_asignaturas' | 'otros_docentes') => {
+        setVistaActiva(nuevaVista);
+        if (nuevaVista === 'mis_asignaturas') {
+            setFilterDocente('todos');
+        }
+        const newParams = new URLSearchParams(searchParams);
+        if (nuevaVista === 'otros_docentes') {
+            newParams.set('tab', 'otros-docentes');
+        } else {
+            newParams.delete('tab');
+        }
+        setSearchParams(newParams, { replace: true });
+    }, [searchParams, setSearchParams]);
+
     const [materias, setMaterias] = useState<DocenteAsignaturaDto[]>([]);
     const [otrosPeas, setOtrosPeas] = useState<PeaBandejaItemDto[]>([]);
     const [periodos, setPeriodos] = useState<PeriodoAcademicoDto[]>([]);
@@ -402,22 +435,37 @@ export const MisAsignaturasPage: React.FC = () => {
         return labels[estado] || estado;
     }, [workflowEstados]);
 
+    // Asignaturas pendientes de formulación o corrección según la regla única del workflow docente
+    const materiasPendientes = useMemo(
+        () => materias.filter(m => isPeaPendienteParaRol(m.estado_pea, 'DOSIER_DOCENTE')),
+        [materias]
+    );
+
+    // Conjunto de carreras en las que el docente tiene carga académica asignada
+    const carrerasPropiasDocente = useMemo(() => {
+        const set = new Set<string>();
+        materias.forEach(m => {
+            if (m.nombre_carrera) set.add(m.nombre_carrera.trim());
+        });
+        return set;
+    }, [materias]);
+
     // Lista única de carreras para filtro combinando materias propias y de otros docentes
     const carrerasDisponibles = useMemo(() => {
         const unique = new Set<string>();
-        materias.forEach(m => {
+        materiasPendientes.forEach(m => {
             if (m.nombre_carrera) unique.add(m.nombre_carrera);
         });
         otrosPeas.forEach(p => {
             if (p.nombre_carrera) unique.add(p.nombre_carrera);
         });
         return Array.from(unique).sort();
-    }, [materias, otrosPeas]);
+    }, [materiasPendientes, otrosPeas]);
 
     // Lista única de modalidades normalizadas para filtro
     const modalidadesDisponibles = useMemo(() => {
         const unique = new Set<string>();
-        materias.forEach(m => {
+        materiasPendientes.forEach(m => {
             const mod = formatModalidad(m.nombre_modalidad, m.id_modalidad);
             if (mod) unique.add(mod);
         });
@@ -426,7 +474,7 @@ export const MisAsignaturasPage: React.FC = () => {
             if (mod) unique.add(mod);
         });
         return Array.from(unique).sort();
-    }, [materias, otrosPeas]);
+    }, [materiasPendientes, otrosPeas]);
 
     // Lista única y dinámica de estados presentes
         // Lista única de docentes disponibles para filtro (PEAs de otros docentes)
@@ -447,11 +495,8 @@ export const MisAsignaturasPage: React.FC = () => {
 
     const estadosDisponibles = useMemo(() => {
         const unique = new Set<string>();
-        materias.forEach(m => {
+        materiasPendientes.forEach(m => {
             if (m.estado_pea) unique.add(m.estado_pea);
-        });
-        otrosPeas.forEach(p => {
-            if (p.estado) unique.add(p.estado);
         });
         return Array.from(unique)
             .map(estado => ({
@@ -459,7 +504,7 @@ export const MisAsignaturasPage: React.FC = () => {
                 label: getEstadoLabel(estado)
             }))
             .sort((a, b) => a.label.localeCompare(b.label));
-    }, [materias, otrosPeas, getEstadoLabel]);
+    }, [materiasPendientes, getEstadoLabel]);
 
     // Resetear filtros si la selección previa ya no existe en el conjunto disponible
     useEffect(() => {
@@ -482,7 +527,7 @@ export const MisAsignaturasPage: React.FC = () => {
 
     // Filtrado en vivo y ordenamiento invisible por más recientemente abierto (Mis Asignaturas)
     const materiasFiltradas = useMemo(() => {
-        const filtradas = materias.filter(m => {
+        const filtradas = materiasPendientes.filter(m => {
             const modNombre = formatModalidad(m.nombre_modalidad, m.id_modalidad);
             const estadoLabel = getEstadoLabel(m.estado_pea || '');
 
@@ -513,7 +558,7 @@ export const MisAsignaturasPage: React.FC = () => {
 
         // Algoritmo invisible: ubica de primero la materia más recientemente abierta, sea del estado que sea
         return sortSubjectsByRecentOpen(filtradas);
-    }, [materias, search, filterEstado, filterCarrera, filterModalidad, getEstadoLabel, recentsVersion]);
+    }, [materiasPendientes, search, filterEstado, filterCarrera, filterModalidad, filterDocente, getEstadoLabel, recentsVersion]);
 
     // Filtrado en vivo y ordenamiento invisible para PEAs de otros docentes (para solicitar colaboración)
     const otrosPeasFiltrados = useMemo(() => {
@@ -540,14 +585,22 @@ export const MisAsignaturasPage: React.FC = () => {
             return matchesSearch && matchesCarrera && matchesModalidad && matchesDocente;
         });
 
-        // Ordenamiento invisible por uso reciente
-        return sortSubjectsByRecentOpen(filtrados.map(p => ({
-            ...p,
-            id_asignacion: p.id_asignacion ?? p.id_pea,
-            uuid_pea: p.uuid,
-            id_pea: p.id_pea
-        })));
-    }, [otrosPeas, search, filterCarrera, filterModalidad, filterDocente, recentsVersion]);
+        // Algoritmo Inteligente Invisible (sin botones extra):
+        // 1. Recientemente abiertos por el docente (de más reciente a más antiguo)
+        // 2. Colaboraciones ya aprobadas ("Colaborar / Ver PEA")
+        // 3. Solicitudes de colaboración en trámite ("Solicitud Pendiente")
+        // 4. Afinidad por carrera del docente (materias de la misma carrera que dicta)
+        // 5. Alfabético por nombre de asignatura
+        return sortOtherPeasIntelligently(
+            filtrados.map(p => ({
+                ...p,
+                id_asignacion: p.id_asignacion ?? p.id_pea,
+                uuid_pea: p.uuid,
+                id_pea: p.id_pea
+            })),
+            carrerasPropiasDocente
+        );
+    }, [otrosPeas, search, filterCarrera, filterModalidad, filterDocente, carrerasPropiasDocente, recentsVersion]);
 
     const renderEstadoBadge = (estado: string) => {
         const label = getEstadoLabel(estado);
@@ -661,10 +714,7 @@ export const MisAsignaturasPage: React.FC = () => {
                 <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar">
                     <button
                         type="button"
-                        onClick={() => {
-                            setVistaActiva('mis_asignaturas');
-                            setFilterDocente('todos');
-                        }}
+                        onClick={() => handleTabChange('mis_asignaturas')}
                         className={`py-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                             vistaActiva === 'mis_asignaturas'
                                 ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400'
@@ -677,12 +727,12 @@ export const MisAsignaturasPage: React.FC = () => {
                                 ? 'bg-blue-50 text-[#0070f3] dark:bg-blue-950/50 dark:text-blue-400'
                                 : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
                         }`}>
-                            {materias.length}
+                            {materiasPendientes.length}
                         </span>
                     </button>
                     <button
                         type="button"
-                        onClick={() => setVistaActiva('otros_docentes')}
+                        onClick={() => handleTabChange('otros_docentes')}
                         className={`py-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                             vistaActiva === 'otros_docentes'
                                 ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400'
@@ -815,7 +865,9 @@ export const MisAsignaturasPage: React.FC = () => {
                         <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
                             {search || filterEstado !== 'todos' || filterCarrera !== 'todas' || filterModalidad !== 'todas' || filterDocente !== 'todos'
                                 ? 'No hay materias que coincidan con los filtros aplicados en el período actual.'
-                                : 'No existen materias asignadas para su perfil docente en este período lectivo.'}
+                                : materias.length > 0
+                                    ? 'Todas tus asignaturas asignadas en este período ya fueron enviadas a revisión o aprobadas.'
+                                    : 'No existen materias asignadas para su perfil docente en este período lectivo.'}
                         </p>
                     </div>
                 ) : (
@@ -948,6 +1000,7 @@ export const MisAsignaturasPage: React.FC = () => {
                             const isRequesting = requestingColabId === pea.id_asignacion;
                             const tienePea = Boolean(pea.id_pea && pea.id_pea > 0 && pea.uuid);
                             const estadoColab = pea.estado_colaboracion;
+                            const tieneAccesoColab = estadoColab === 'Aprobada';
 
                             const keyIdentifier = (pea.id_pea && pea.id_pea > 0)
                                 ? `pea-${pea.id_pea}`
@@ -957,23 +1010,55 @@ export const MisAsignaturasPage: React.FC = () => {
                                         ? `asig-${pea.id_asignacion}`
                                         : `asig-${pea.id_carrera}-${pea.id_asignatura}-${pea.id_docente_elaborador || 'doc'}-${pea.paralelo || 'U'}`;
 
+                            const handleCardClick = () => {
+                                if (tieneAccesoColab && !isCreating) {
+                                    handleColaborarPea(pea);
+                                }
+                            };
+
                             return (
                                 <div
                                     key={keyIdentifier}
-                                    className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 flex flex-col justify-between space-y-4 text-left"
+                                    role={tieneAccesoColab ? 'button' : undefined}
+                                    tabIndex={tieneAccesoColab ? 0 : undefined}
+                                    onClick={handleCardClick}
+                                    onKeyDown={tieneAccesoColab ? (e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleCardClick();
+                                        }
+                                    } : undefined}
+                                    className={`group rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 flex flex-col justify-between space-y-4 text-left transition-all ${
+                                        tieneAccesoColab
+                                            ? 'hover:border-[#0070f3] dark:hover:border-blue-500 hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:ring-offset-2 dark:focus:ring-offset-zinc-950'
+                                            : ''
+                                    }`}
                                 >
-                                    {/* Top: Carrera */}
+                                    {/* Top: Carrera e Indicador de Colaboración */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between gap-2">
-                                            {carrerasDisponibles.length > 1 && (
+                                            {carrerasDisponibles.length > 1 ? (
                                                 <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium truncate">
                                                     <span className="truncate">{pea.nombre_carrera || 'Carrera Institucional'}</span>
                                                 </div>
-                                            )}
+                                            ) : <div />}
+                                            {estadoColab === 'Aprobada' ? (
+                                                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    <span>Colaborador</span>
+                                                </div>
+                                            ) : estadoColab === 'Pendiente' ? (
+                                                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                    <span>Solicitud enviada</span>
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         {/* Título de la Asignatura */}
-                                        <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2">
+                                        <h2 className={`text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2 ${
+                                            tieneAccesoColab ? 'group-hover:text-[#0070f3] dark:group-hover:text-blue-400 transition-colors' : ''
+                                        }`}>
                                             {pea.nombre_asignatura}
                                         </h2>
 
@@ -996,14 +1081,17 @@ export const MisAsignaturasPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Botón de Acción Principal - Solo aquí se ejecutan las acciones */}
+                                    {/* Botón de Acción Principal - Con aislamiento de eventos */}
                                     <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-zinc-900">
                                         {estadoColab === 'Aprobada' ? (
                                             <button
                                                 type="button"
-                                                onClick={() => handleColaborarPea(pea)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleColaborarPea(pea);
+                                                }}
                                                 disabled={isCreating}
-                                                className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                                                className="bg-[#0070f3] group-hover:bg-[#0060df] text-white shadow-xs inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                             >
                                                 <span>
                                                     {isCreating
@@ -1014,14 +1102,17 @@ export const MisAsignaturasPage: React.FC = () => {
                                                 </span>
                                             </button>
                                         ) : estadoColab === 'Pendiente' ? (
-                                            <div className="flex flex-wrap items-center justify-end gap-2">
+                                            <div className="flex flex-wrap items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60">
                                                     <Clock className="w-3.5 h-3.5 animate-pulse text-amber-500" />
                                                     <span>Solicitud Pendiente</span>
                                                 </span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setCancelarModalPea(pea)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCancelarModalPea(pea);
+                                                    }}
                                                     className="text-xs text-slate-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer font-medium"
                                                     title="Retirar o anular la solicitud de colaboración pendiente"
                                                 >
@@ -1031,7 +1122,10 @@ export const MisAsignaturasPage: React.FC = () => {
                                         ) : (
                                             <button
                                                 type="button"
-                                                onClick={() => handleSolicitarColaborar(pea)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSolicitarColaborar(pea);
+                                                }}
                                                 disabled={isRequesting}
                                                 className="bg-[#0070f3] hover:bg-[#0060df] text-white shadow-xs inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                                             >

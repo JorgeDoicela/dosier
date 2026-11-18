@@ -49,7 +49,55 @@ Para dar cumplimiento estricto a las directrices de modularización (< 700 líne
 
 ---
 
-## 3. Diagrama de Flujo de Extensibilidad de Bloques
+## 3. Bloques Oficiales del Formato Plan Analítico 2026 (`planAnalitico/`)
+
+Para extender el catálogo documental sin alterar ni colisionar con los bloques del PEA oficial, se introdujo el conjunto de bloques modulares específicos para el **2. Formato Plan Analítico 2026** (`PLAN_ANALITICO`):
+
+| Sección | Bloque (`BlockType`) | Título Canónico | Renderizador Modular | Estructura Oficial |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | `plan_analitico_general_section` | 1. DATOS INFORMATIVOS | `RenderPlanAnaliticoGeneral.tsx` | Cabecera superior centrada del documento, título en cursiva azul `#1e40af`, franja institucional azul marino `#1e2a4a` ("Información General") y tabla de 2 columnas clave-valor (10 campos normados). |
+| **2** | `plan_analitico_objective_section` | 2. OBJETIVO GENERAL | `RenderPlanAnaliticoObjective.tsx` | Título en cursiva azul `#1e40af` y contenedor colaborativo enriquecido para redacción de la meta formativa de cátedra. |
+| **3** | `plan_analitico_outcomes_section` | 3. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA | `RenderPlanAnaliticoOutcomes.tsx` | Tabla formal con cabecera de doble nivel en azul marino `#1e2a4a` (ID, Al finalizar el curso el/la estudiante estará en capacidad de, Nivel de desarrollo: Inicial/Medio/Alto) con botones in-situ de adición y eliminación. |
+| **4** | `plan_analitico_methodology_matrix_section` | 4. METODOLOGÍA, CONTENIDOS, RESULTADOS DE APRENDIZAJE | `RenderPlanAnaliticoMatrix.tsx` | Matriz horizontal extensa para 19 semanas de clase dividida por unidades (1, 2, 3...), con desglose de Organización del Aprendizaje (Docencia, Práctico Experimental, Actividades Autónomas), horas semanales, vinculación con RDAs de la Sección 3 e hitos de evaluación parcial (E.1, E.2) y final (E.3). Soporta expansión multipágina automática en PDF. |
+| **5** | `plan_analitico_resources_section` | 5. RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE | `RenderPlanAnaliticoResources.tsx` | Indicador selector interactivo de Adaptación Curricular (*Aplica / No aplica*) y contenedor colaborativo enriquecido para equipamiento, software y plataformas TIC. |
+| **6** | `plan_analitico_evaluation_section` | 6. EVALUACIÓN | `RenderPlanAnaliticoEvaluation.tsx` | Matriz oficial con 3 notas ponderadas: Nota Parcial 1 (Actividades Autónomas y Práctico Experimentales), Nota Parcial 2 (Evaluaciones Sumativas de Unidades) y Nota Examen Final sobre 10.00 pts cada una. |
+| **7** | `plan_analitico_signatures_section` | 7. FIRMAS DE RESPONSABILIDAD | `RenderPlanAnaliticoSignatures.tsx` | Circuito institucional de 3 firmas (Elaborado: Docente, Revisado: Coordinador de Carrera, Aprobado: Coordinador Académico) con soporte para sellado digital DFRM / P12. |
+
+### 3.1. Aislamiento y Organización en la Paleta de Bloques (`BlockPalette.tsx`)
+
+En la paleta de inserción de bloques, estos componentes se agrupan en una categoría independiente y de fábrica:
+* **Bloques Plan Analítico (Formato Oficial 2026):** Permite construir y personalizar la plantilla del Plan Analítico sin mezclar ni alterar los 11 bloques curriculares del PEA ni los bloques estructurales base.
+
+---
+
+## 4. Bloques Oficiales del Formato Seguimiento de Tutorías Académicas 2026 (`tutorias/`)
+
+Para dar soporte normativo al acompañamiento y nivelación académica del estudiante bajo orientación horizontal (**Landscape A4**), se integró el conjunto de bloques de la plantilla `SEGUIMIENTO_TUTORIAS`:
+
+| Sección | Bloque (`BlockType`) | Título Canónico | Renderizador Modular | Estructura Oficial |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | `tutorias_header_section` | 1. CABECERA Y DATOS DEL DOCENTE | `RenderTutoriasHeader.tsx` | Logotipo institucional ISTPET a la izquierda, títulos jerárquicos centrados (*INSTITUTO SUPERIOR TECNOLÓGICO MAYOR PEDRO TRAVERSARI*, *SEGUIMIENTO DE TUTORÍAS ACADÉMICAS*, *PERIODO ACADEMICO ABRIL - SEPTIEMBRE 2026*) y ficha estructurada para `DOCENTE:` y `HORARIO DE TUTORÍA:`. |
+| **2** | `tutorias_matrix_section` | 2. MATRIZ DE REGISTRO DE TUTORÍAS | `RenderTutoriasMatrix.tsx` | Matriz horizontal de 12 columnas oficiales con cabecera en azul marino `#1e2a4a` (Nº, Fecha, Semana, Nombres y Apellidos Estudiantes Convocados, Nivel, Asignatura, Carrera, Modalidad de Tutoría, Tipos de Tutoría, Razón de Tutoría, Observaciones, Forma de Convocatoria). Incluye edición celda a celda y adición/eliminación de registros dinámicos. |
+| **3** | `tutorias_signatures_section` | 3. FIRMAS DE RESPONSABILIDAD | `RenderTutoriasSignatures.tsx` | Circuito institucional de validación al pie con 2 firmas: `DOCENTE:` (izquierda) y `REVISADO: COORDINADOR DE CARRERA` (derecha). |
+
+---
+
+## 5. Bloques Oficiales del Formato Informe de Acompañamiento Académico de Carrera 2026 (`informeAcompanamiento/`)
+
+Para dar soporte normativo al informe semestral y modular de acompañamiento académico de carrera presentado a la Unidad Académica bajo orientación vertical (**Portrait A4**), cada punto del documento oficial se implementa como un bloque modular independiente (`INFORME_ACOMPANAMIENTO_CARRERA`):
+
+| Sección | Bloque (`BlockType`) | Título Canónico | Renderizador Modular | Estructura Oficial |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | `informe_acomp_datos_informativos_section` | 1. Datos informativos: | `RenderInformeAcompDatosInformativos.tsx` | Título centrado institucional, lista viñeteada: Nombre del coordinador, Carrera, Periodo académico, Parcial (`Parcial 1/ Modular` en color rojo normativo), Reporta a (`UNIDAD ACADÉMICA`) y Fecha de presentación. |
+| **2** | `informe_acomp_nomina_tutores_section` | 2. Nómina de docentes tutores: | `RenderInformeAcompNominaTutores.tsx` | Tabla formal de 4 columnas (Tutor, Nivel, Actividad, Medio de verificación) con bordes negros simples, edición celda a celda y filas dinámicas. |
+| **3** | `informe_acomp_nomina_docentes_section` | 3. Nómina de docentes que aportan a la carrera: | `RenderInformeAcompNominaDocentes.tsx` | Tabla formal de 6 columnas (Nómina, Asignaturas, Nivel, Jornada de trabajo, Acciones de mejora [dentro del periodo], Acciones correctivas [final del periodo]) con textareas multilínea y filas dinámicas. |
+| **4** | `informe_acomp_gestion_academica_section` | 4. Gestión Académica de la carrera | `RenderInformeAcompGestionAcademica.tsx` | Bloque unificado integral con 5 sub-secciones normadas: 4.1 Reuniones de carrera (clave-valor), 4.2 Actividades realizadas por el coordinador (3 cols), 4.3 Estudiantes (8 cols), 4.4 Gestión docente (11 cols) y 4.5 Observaciones (3 cols), todas con filas y celdas dinámicas. |
+| **5** | `informe_acomp_conclusiones_section` | 5. Conclusiones y Recomendaciones | `RenderInformeAcompConclusiones.tsx` | Bloque con banner normativo amarillo (`CONCLUSIÓN Y RECOMENDACIÓN POR CADA UNO DE LOS PUNTOS TRATADOS`) y lista estructurada de conclusiones y recomendaciones por punto tratado. |
+| **6** | `informe_acomp_firmas_section` | 6. Firmas de responsabilidad. | `RenderInformeAcompFirmas.tsx` | Doble matriz con cabecera en azul corporativo (`#1e2a4a`): Tabla 1 para Tutores de 1er a 4to nivel y Tabla 2 para Coordinador de Carrera, Bienestar Institucional y Coordinador Académico. |
+
+---
+
+## 6. Diagrama de Flujo de Extensibilidad de Bloques
 
 A continuación se detalla el procedimiento técnico para incorporar un nuevo bloque curricular (por ejemplo, `cur_rubrica_evaluacion_practica`):
 
