@@ -1,5 +1,4 @@
 import api from '../api/axios_config';
-import type { PeaUnidadDto, PeaResultadoAprendizajeDto, PeaActividadPracticaDto, PeaDto } from './peaService';
 
 // ─────────────────────────────────────────────────────────────
 //  Tipos y Contratos de la Sala Curricular Colegiada por Carrera
@@ -32,10 +31,6 @@ export interface SalaAsignaturaItemDto {
     peaUuid?: string;
     estado_pea?: string;
     estadoPea?: string;
-    tiene_borrador_sala?: boolean;
-    tieneBorradorSala?: boolean;
-    ultima_actualizacion_borrador?: string;
-    ultimaActualizacionBorrador?: string;
 }
 
 export interface SalaCarreraEstadoDto {
@@ -56,39 +51,7 @@ export interface SalaCarreraEstadoDto {
     temaPrincipal?: string;
     total_asignaturas?: number;
     totalAsignaturas?: number;
-    asignaturas_con_borrador?: number;
-    asignaturasConBorrador?: number;
     asignaturas: SalaAsignaturaItemDto[];
-}
-
-export interface BorradorPrePeaDto {
-    id_expediente?: number;
-    idExpediente?: number;
-    id_asignatura?: number;
-    idAsignatura?: number;
-    nombre_asignatura?: string;
-    nombreAsignatura?: string;
-    objetivo_asignatura?: string;
-    objetivoAsignatura?: string;
-    metodologia_ensenanza?: string;
-    metodologiaEnsenanza?: string;
-    recursos_didacticos?: string;
-    recursosDidacticos?: string;
-    evaluacion_aprendizaje?: string;
-    evaluacionAprendizaje?: string;
-    justificacion_cambios_malla?: string;
-    justificacionCambiosMalla?: string;
-    notas_lluvia_ideas?: string;
-    notasLluviaIdeas?: string;
-    unidades?: PeaUnidadDto[];
-    resultados_aprendizaje?: PeaResultadoAprendizajeDto[];
-    resultadosAprendizaje?: PeaResultadoAprendizajeDto[];
-    actividades_practicas?: PeaActividadPracticaDto[];
-    actividadesPracticas?: PeaActividadPracticaDto[];
-    actualizado_en?: string;
-    actualizadoEn?: string;
-    actualizado_por?: string;
-    actualizadoPor?: string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -110,32 +73,7 @@ export const salaCarreraService = {
         api.post<{ success: boolean; activa: boolean }>(`/expedientes-curriculares/sala-carrera/${idCarrera}/${encodeURIComponent(idPeriodo)}/conmutar`, {
             activar,
             temaPrincipal
-        }).then(r => r.data),
-
-    /**
-     * Obtiene el borrador y acuerdos pre-PEA formulados para un expediente curricular.
-     */
-    getBorrador: (idExpediente: number): Promise<BorradorPrePeaDto> =>
-        api.get<BorradorPrePeaDto>(`/expedientes-curriculares/${idExpediente}/borrador-pre-pea`)
-            .then(r => r.data),
-
-    /**
-     * Guarda o actualiza los acuerdos y propuesta de borrador en el expediente.
-     */
-    guardarBorrador: (idExpediente: number, borrador: BorradorPrePeaDto): Promise<BorradorPrePeaDto> =>
-        api.put<BorradorPrePeaDto>(`/expedientes-curriculares/${idExpediente}/borrador-pre-pea`, {
-            borrador
-        }).then(r => r.data),
-
-    /**
-     * Traspasa e inyecta el borrador pre-PEA directamente en el PEA oficial de la asignatura.
-     */
-    aplicarAlPea: (idExpediente: number, idPea?: number): Promise<{ success: boolean; pea: PeaDto; message: string }> => {
-        const query = idPea ? `?idPea=${idPea}` : '';
-        return api.post<{ success: boolean; pea: PeaDto; message: string }>(`/expedientes-curriculares/${idExpediente}/aplicar-borrador-pea${query}`)
-            .then(r => r.data);
-    }
+        }).then(r => r.data)
 };
 
 export default salaCarreraService;
-

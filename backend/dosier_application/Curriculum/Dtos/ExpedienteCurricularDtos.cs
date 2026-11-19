@@ -159,7 +159,7 @@ namespace dosier_application.Curriculum.Dtos
     }
 
     // =========================================================================
-    // DTOs DE SALA CURRICULAR COLEGIADA POR CARRERA Y PRE-PEA
+    // DTOs DE SALA CURRICULAR COLEGIADA POR CARRERA
     // =========================================================================
 
     public class SalaCarreraEstadoDto
@@ -173,7 +173,6 @@ namespace dosier_application.Curriculum.Dtos
         public DateTime? FechaApertura { get; set; }
         public string? TemaPrincipal { get; set; }
         public int TotalAsignaturas { get; set; }
-        public int AsignaturasConBorrador { get; set; }
         public List<SalaAsignaturaItemDto> Asignaturas { get; set; } = new List<SalaAsignaturaItemDto>();
     }
 
@@ -192,36 +191,11 @@ namespace dosier_application.Curriculum.Dtos
         public int? IdPea { get; set; }
         public string? PeaUuid { get; set; }
         public string? EstadoPea { get; set; }
-        public bool TieneBorradorSala { get; set; }
-        public DateTime? UltimaActualizacionBorrador { get; set; }
-    }
-
-    public class BorradorPrePeaDto
-    {
-        public int IdExpediente { get; set; }
-        public int IdAsignatura { get; set; }
-        public string? NombreAsignatura { get; set; }
-        public string? ObjetivoAsignatura { get; set; }
-        public string? MetodologiaEnsenanza { get; set; }
-        public string? RecursosDidacticos { get; set; }
-        public string? EvaluacionAprendizaje { get; set; }
-        public string? JustificacionCambiosMalla { get; set; }
-        public string? NotasLluviaIdeas { get; set; }
-        public List<PeaUnidadDto> Unidades { get; set; } = new List<PeaUnidadDto>();
-        public List<PeaResultadoAprendizajeDto> ResultadosAprendizaje { get; set; } = new List<PeaResultadoAprendizajeDto>();
-        public List<PeaActividadPracticaDto> ActividadesPracticas { get; set; } = new List<PeaActividadPracticaDto>();
-        public DateTime ActualizadoEn { get; set; } = DateTime.UtcNow;
-        public string? ActualizadoPor { get; set; }
     }
 
     public class ConmutarSalaCarreraRequest
     {
         public bool Activar { get; set; }
         public string? TemaPrincipal { get; set; }
-    }
-
-    public class GuardarBorradorPrePeaRequest
-    {
-        public BorradorPrePeaDto Borrador { get; set; } = new BorradorPrePeaDto();
     }
 }

@@ -84,45 +84,5 @@ namespace dosier_api.Controllers
             var resultado = await _expedienteService.ConmutarEstadoSalaCarreraAsync(idCarrera, idPeriodo, request.Activar, request.TemaPrincipal, userId);
             return Ok(new { success = resultado, activa = request.Activar });
         }
-
-        /// <summary>
-        /// Obtiene el borrador pre-PEA y acuerdos registrados para una asignatura en su expediente.
-        /// </summary>
-        [HttpGet("{idExpediente:int}/borrador-pre-pea")]
-        public async Task<IActionResult> GetBorradorPrePea(int idExpediente)
-        {
-            var borrador = await _expedienteService.GetBorradorPrePeaAsync(idExpediente);
-            if (borrador == null) return NotFound("Expediente no encontrado.");
-            return Ok(borrador);
-        }
-
-        /// <summary>
-        /// Guarda o actualiza los acuerdos y borrador pre-PEA formulados en la sala de carrera.
-        /// </summary>
-        [HttpPut("{idExpediente:int}/borrador-pre-pea")]
-        public async Task<IActionResult> GuardarBorradorPrePea(int idExpediente, [FromBody] GuardarBorradorPrePeaRequest request)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("id_sigafi") ?? "0";
-            var borradorActualizado = await _expedienteService.GuardarBorradorPrePeaAsync(idExpediente, request.Borrador, userId);
-            return Ok(borradorActualizado);
-        }
-
-        /// <summary>
-        /// Inyecta los acuerdos y borrador pre-PEA directamente en el PEA oficial de la asignatura.
-        /// </summary>
-        [HttpPost("{idExpediente:int}/aplicar-borrador-pea")]
-        public async Task<IActionResult> AplicarBorradorASalaPea(int idExpediente, [FromQuery] int? idPea)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("id_sigafi") ?? "0";
-            try
-            {
-                var peaActualizado = await _expedienteService.AplicarBorradorASalaPeaAsync(idExpediente, idPea, userId);
-                return Ok(new { success = true, pea = peaActualizado, message = "Borrador de la Sala Curricular aplicado con éxito al PEA oficial." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
-        }
     }
 }

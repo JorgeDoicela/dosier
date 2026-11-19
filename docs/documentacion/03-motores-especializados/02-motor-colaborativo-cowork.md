@@ -67,12 +67,12 @@ Cuando se solicita la emisión o compilación oficial en PDF, `DocumentDataOrche
 
 ---
 
-## 5. Salas Curriculares por Carrera y Sincronización Pre-PEA
+## 5. Salas Curriculares por Carrera y Armonización Colegiada
 
-### 5.1. Ámbito de Sala Curricular (`carrera_{idCarrera}_{idPeriodo}`)
+### 5.1. Ámbito de Sala Curricular (`sala_carrera_{idCarrera}_{idPeriodo}`)
 El motor colaborativo amplía su alcance de la asignatura individual a la **Sala Curricular de Carrera**:
-* **Topología de Grupo:** Los docentes de la carrera y el Coordinador se conectan en una sala única con clave polimórfica `carrera_{idCarrera}_{idPeriodo}`.
+* **Topología de Grupo:** Los docentes de la carrera y el Coordinador se conectan en una sala única con clave polimórfica `sala_carrera_{idCarrera}_{idPeriodo}`.
 * **Control de Sesión:** El Coordinador modera la sala abriendo o pausando la sesión colaborativa (`sala_colaborativa_activa` en `doc_expedientes_curriculares`).
-* **Co-diseño Pre-PEA:** Permite estructurar de forma previa y conjunta la justificación curricular, articulación de asignaturas con el Perfil de Egreso CES, unidades curriculares y metodologías sugeridas.
-* **Inyección de Borrador al PEA:** Con un solo clic (`POST /api/expedientes-curriculares/carrera/{id}/periodo/{p}/asignatura/{m}/aplicar-pea`), el borrador acordado en la sala se mapea e inyecta directamente como versión base en las secciones correspondientes del PEA oficial (`doc_peas`), preservando auditoría y trazabilidad completa.
+* **Documentos Compartidos de Carrera:** Permite la co-redacción y firma institucional de actas, resoluciones de armonización y documentos curriculares colectivos.
+* **Pizarra Colegiada en Tiempo Real:** Espacio libre para intercambio de acuerdos metodológicos, criterios de evaluación y notas colegiadas con persistencia reactiva vía CRDTs (Yjs).
 

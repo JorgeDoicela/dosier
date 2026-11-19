@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, FileText, Sparkles, Shield, Layers, Plus, Target } from 'lucide-react';
+import { Loader2, FileText, Sparkles, Shield, Layers, Plus } from 'lucide-react';
 import DOSIERBuilderShell, { type BuilderSection } from '../../../components/DOSIER/DOSIERBuilderShell';
 import { useCoWork, coworkUserFromAuth } from '../../../core/cowork';
 import { salaCarreraService, type SalaCarreraEstadoDto } from '../../../services/salaCarreraService';
@@ -11,10 +11,9 @@ import { documentTemplateService, type DocumentTemplateDto } from '../../../serv
 import { GeistSelect } from '../../../components/Common/GeistSelect';
 import DocumentEditor from '../Workspace/Wizard/DocumentEditor';
 import { PerfilEgresoPopover } from './components/PerfilEgresoPopover';
+import { MallaDocentesPopover } from './components/MallaDocentesPopover';
 import { SalaDocumentosPanel } from './components/SalaDocumentosPanel';
 import { SalaPizarraColegiada } from './components/SalaPizarraColegiada';
-import { SalaMallaDocentesPanel } from './components/SalaMallaDocentesPanel';
-import { AsignaturaCoDesignPanel } from './components/AsignaturaCoDesignPanel';
 import { NuevoDocumentoSalaModal } from './components/NuevoDocumentoSalaModal';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { useAuth } from '../../../api/AuthContext';
@@ -184,40 +183,7 @@ export const SalaCarreraPage: React.FC = () => {
         return () => clearInterval(timer);
     }, [idCarrera, periodoActual, cargarEstadoAsignaturas]);
 
-    // 5. Asignatura activa para Co-Diseño
-    const idAsignaturaParam = searchParams.get('asignatura');
-    const idExpedienteParam = searchParams.get('expediente');
-
-    const asignaturaActiva = useMemo(() => {
-        if (!estadoSala?.asignaturas || estadoSala.asignaturas.length === 0) return null;
-        if (idExpedienteParam) {
-            const buscada = estadoSala.asignaturas.find(a =>
-                (a.idExpediente === Number(idExpedienteParam) || a.id_expediente === Number(idExpedienteParam))
-            );
-            if (buscada) return buscada;
-        }
-        if (idAsignaturaParam) {
-            const buscada = estadoSala.asignaturas.find(a =>
-                (a.idAsignatura === Number(idAsignaturaParam) || a.id_asignatura === Number(idAsignaturaParam))
-            );
-            if (buscada) return buscada;
-        }
-        return estadoSala.asignaturas[0];
-    }, [idExpedienteParam, idAsignaturaParam, estadoSala?.asignaturas]);
-
-    const handleCambiarAsignatura = (targetId: number, isExpediente: boolean = false) => {
-        const params = new URLSearchParams(searchParams);
-        if (isExpediente) {
-            params.set('expediente', String(targetId));
-            params.delete('asignatura');
-        } else {
-            params.set('asignatura', String(targetId));
-            params.delete('expediente');
-        }
-        navigate({ search: params.toString() }, { replace: true });
-    };
-
-    // 6. Navegación entre carreras y períodos
+    // 5. Navegación entre carreras y períodos
     const handleCambiarCarrera = (nuevaIdCarrera: number) => {
         navigate(`/salas-curriculares/${nuevaIdCarrera}?periodo=${encodeURIComponent(periodoActual)}`);
     };
@@ -273,7 +239,7 @@ export const SalaCarreraPage: React.FC = () => {
         }
     };
 
-    // Secciones de trabajo de la Sala de Carrera
+    // Secciones de trabajo de la Sala de Carrera (operativas en sidebar)
     const sections: BuilderSection[] = useMemo(() => [
         {
             id: 'documentos',
@@ -284,18 +250,8 @@ export const SalaCarreraPage: React.FC = () => {
             id: 'acuerdos',
             label: '2. Acuerdos y Pizarra Colegiada',
             icon: <Sparkles size={14} />
-        },
-        {
-            id: 'malla',
-            label: `3. Malla y Docentes (${estadoSala?.asignaturas?.length || 0})`,
-            icon: <Layers size={14} />
-        },
-        {
-            id: 'codesign',
-            label: '4. Co-Diseño de Asignaturas',
-            icon: <Target size={14} />
         }
-    ], [documentosSala.length, estadoSala?.asignaturas?.length]);
+    ], [documentosSala.length]);
 
     const opcionesCarrera = useMemo(() => {
         return carrerasDisponibles.map((c) => {
@@ -372,14 +328,23 @@ export const SalaCarreraPage: React.FC = () => {
                 entityUuid={salaEntityUuid}
                 documentUuid={salaEntityUuid}
                 extraActions={
-                    <PerfilEgresoPopover
-                        carreraNombre={carreraNombre}
-                        idCarrera={idCarrera}
-                        idMalla={23}
-                        periodoActual={periodoActual}
-                        periodosDisponibles={periodosDisponibles}
-                        onSincronizarPeriodoSala={handleCambiarPeriodo}
-                    />
+                    <div className="flex items-center gap-2">
+                        <PerfilEgresoPopover
+                            carreraNombre={carreraNombre}
+                            idCarrera={idCarrera}
+                            idMalla={23}
+                            periodoActual={periodoActual}
+                            periodosDisponibles={periodosDisponibles}
+                            onSincronizarPeriodoSala={handleCambiarPeriodo}
+                        />
+                        <MallaDocentesPopover
+                            asignaturas={estadoSala?.asignaturas || []}
+                            carreraNombre={carreraNombre}
+                            periodoActual={periodoActual}
+                            periodosDisponibles={periodosDisponibles}
+                            onSincronizarPeriodoSala={handleCambiarPeriodo}
+                        />
+                    </div>
                 }
             >
                 {(activeTab) => (
@@ -444,39 +409,6 @@ export const SalaCarreraPage: React.FC = () => {
                                 periodoActual={periodoActual}
                                 salaEntityUuid={salaEntityUuid}
                             />
-                        )}
-
-                        {/* SECCIÓN 3: MALLA Y DOCENTES DE LA CARRERA */}
-                        {activeTab === 'malla' && (
-                            <SalaMallaDocentesPanel
-                                asignaturas={estadoSala?.asignaturas || []}
-                                carreraNombre={carreraNombre}
-                                periodoActual={periodoActual}
-                            />
-                        )}
-
-                        {/* SECCIÓN 4: CO-DISEÑO DE ASIGNATURAS */}
-                        {activeTab === 'codesign' && (
-                            asignaturaActiva && estadoSala?.asignaturas && estadoSala.asignaturas.length > 0 ? (
-                                <AsignaturaCoDesignPanel
-                                    asignatura={asignaturaActiva}
-                                    asignaturas={estadoSala.asignaturas}
-                                    onCambiarAsignatura={handleCambiarAsignatura}
-                                    idCarrera={idCarrera}
-                                    idPeriodo={periodoActual}
-                                    carreraNombre={carreraNombre}
-                                    onBorradorActualizado={cargarEstadoAsignaturas}
-                                />
-                            ) : (
-                                <div className="rounded-xl border border-dashed border-border-thin bg-surface p-10 text-center space-y-2">
-                                    <p className="text-sm font-semibold text-text-main">
-                                        No se detectaron asignaturas para co-diseño en este período
-                                    </p>
-                                    <p className="text-xs text-text-dim max-w-md mx-auto">
-                                        Verifica la asignación de distributivo y período académico en SIGAFI.
-                                    </p>
-                                </div>
-                            )
                         )}
                     </div>
                 )}

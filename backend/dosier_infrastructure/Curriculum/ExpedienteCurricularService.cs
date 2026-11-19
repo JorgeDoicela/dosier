@@ -247,7 +247,7 @@ namespace dosier_infrastructure.Curriculum
         {
             var carrera = await _context.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == exp.IdCarrera);
             var asignatura = await _context.Asignaturas.AsNoTracking().FirstOrDefaultAsync(a => a.IdAsignatura == exp.IdAsignatura);
-            
+
             string? nombreDocente = null;
             if (!string.IsNullOrEmpty(exp.IdDocenteResponsable))
             {
@@ -377,7 +377,6 @@ namespace dosier_infrastructure.Curriculum
                 .Where(c => nivelIds.Contains(c.IdNivel))
                 .ToDictionaryAsync(c => c.IdNivel, c => c.Nivel ?? string.Empty);
 
-            int conBorradorCount = 0;
             foreach (var exp in expedientes)
             {
                 dictAsignaturas.TryGetValue(exp.IdAsignatura, out var asig);
@@ -425,27 +424,6 @@ namespace dosier_infrastructure.Curriculum
                     await _context.SaveChangesAsync();
                 }
 
-                bool tieneBorrador = false;
-                DateTime? ultActBorrador = null;
-
-                if (!string.IsNullOrEmpty(exp.SalaSesionMetadataJson) && exp.SalaSesionMetadataJson.Contains("\"borrador\""))
-                {
-                    tieneBorrador = true;
-                    conBorradorCount++;
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(exp.SalaSesionMetadataJson);
-                        if (doc.RootElement.TryGetProperty("borrador", out var bEl) && bEl.TryGetProperty("actualizado_en", out var actEl))
-                        {
-                            if (actEl.TryGetDateTime(out var dtAct)) ultActBorrador = dtAct;
-                        }
-                    }
-                    catch
-                    {
-                        // Fallback
-                    }
-                }
-
                 asignaturasDto.Add(new SalaAsignaturaItemDto
                 {
                     IdExpediente = exp.IdExpediente,
@@ -460,9 +438,7 @@ namespace dosier_infrastructure.Curriculum
                     IdMalla = exp.IdMalla,
                     IdPea = peaVigente?.IdPea,
                     PeaUuid = peaVigente?.Uuid,
-                    EstadoPea = peaVigente?.Estado,
-                    TieneBorradorSala = tieneBorrador,
-                    UltimaActualizacionBorrador = ultActBorrador
+                    EstadoPea = peaVigente?.Estado
                 });
             }
 
@@ -477,7 +453,6 @@ namespace dosier_infrastructure.Curriculum
                 FechaApertura = fechaApertura,
                 TemaPrincipal = temaPrincipal,
                 TotalAsignaturas = asignaturasDto.Count,
-                AsignaturasConBorrador = conBorradorCount,
                 Asignaturas = asignaturasDto.OrderBy(a => a.IdNivel).ThenBy(a => a.NombreAsignatura).ToList()
             };
         }
@@ -510,350 +485,11 @@ namespace dosier_infrastructure.Curriculum
             foreach (var exp in expedientes)
             {
                 exp.SalaColaborativaActiva = activar;
-
-                if (!string.IsNullOrEmpty(exp.SalaSesionMetadataJson) && exp.SalaSesionMetadataJson.Contains("\"borrador\""))
-                {
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(exp.SalaSesionMetadataJson);
-                        if (doc.RootElement.TryGetProperty("borrador", out var borradorProp))
-                        {
-                            var updatedMeta = new
-                            {
-                                moderador_id = idUsuario,
-                                moderador_nombre = moderadorNombre ?? idUsuario,
-                                tema_principal = tema ?? "Armonización Curricular y Análisis de Malla",
-                                fecha_apertura = activar ? DateTime.UtcNow : (DateTime?)null,
-                                activa = activar,
-                                borrador = JsonSerializer.Deserialize<object>(borradorProp.GetRawText())
-                            };
-                            exp.SalaSesionMetadataJson = JsonSerializer.Serialize(updatedMeta);
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        // Fallback
-                    }
-                }
-
                 exp.SalaSesionMetadataJson = metaJson;
             }
 
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<BorradorPrePeaDto?> GetBorradorPrePeaAsync(int idExpediente)
-        {
-            var exp = await _context.DocExpedientesCurriculares
-                .AsNoTracking()
-                .Include(e => e.Peas.Where(p => p.Activo))
-                .FirstOrDefaultAsync(e => e.IdExpediente == idExpediente);
-
-            if (exp == null) return null;
-
-            var asig = await _context.Asignaturas.AsNoTracking().FirstOrDefaultAsync(a => a.IdAsignatura == exp.IdAsignatura);
-
-            if (!string.IsNullOrEmpty(exp.SalaSesionMetadataJson) && exp.SalaSesionMetadataJson.Contains("\"borrador\""))
-            {
-                try
-                {
-                    using var doc = JsonDocument.Parse(exp.SalaSesionMetadataJson);
-                    if (doc.RootElement.TryGetProperty("borrador", out var bEl))
-                    {
-                        var dto = JsonSerializer.Deserialize<BorradorPrePeaDto>(bEl.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        if (dto != null)
-                        {
-                            dto.IdExpediente = exp.IdExpediente;
-                            dto.IdAsignatura = exp.IdAsignatura;
-                            dto.NombreAsignatura = asig?.Asignatura1 ?? "Asignatura";
-                            return dto;
-                        }
-                    }
-                }
-                catch
-                {
-                    // Fallback
-                }
-            }
-
-            var pea = exp.Peas?.OrderByDescending(p => p.Version).FirstOrDefault();
-            return new BorradorPrePeaDto
-            {
-                IdExpediente = exp.IdExpediente,
-                IdAsignatura = exp.IdAsignatura,
-                NombreAsignatura = asig?.Asignatura1 ?? "Asignatura",
-                ObjetivoAsignatura = CleanHtmlToText(pea?.ObjetivoAsignatura),
-                MetodologiaEnsenanza = CleanHtmlToText(pea?.MetodologiaEnsenanza),
-                RecursosDidacticos = CleanHtmlToText(pea?.RecursosDidacticos),
-                EvaluacionAprendizaje = CleanHtmlToText(pea?.EvaluacionAprendizaje),
-                ActualizadoEn = DateTime.UtcNow
-            };
-        }
-
-        private static string CleanHtmlToText(string? html)
-        {
-            if (string.IsNullOrWhiteSpace(html)) return string.Empty;
-            var cleaned = System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", " ");
-            cleaned = System.Net.WebUtility.HtmlDecode(cleaned);
-            return System.Text.RegularExpressions.Regex.Replace(cleaned, @"\s+", " ").Trim();
-        }
-
-        public async Task<BorradorPrePeaDto> GuardarBorradorPrePeaAsync(int idExpediente, BorradorPrePeaDto dto, string idUsuario)
-        {
-            var exp = await _context.DocExpedientesCurriculares.FirstOrDefaultAsync(e => e.IdExpediente == idExpediente);
-            if (exp == null) throw new InvalidOperationException($"Expediente {idExpediente} no encontrado.");
-
-            dto.IdExpediente = exp.IdExpediente;
-            dto.IdAsignatura = exp.IdAsignatura;
-            dto.ActualizadoEn = DateTime.UtcNow;
-            dto.ActualizadoPor = idUsuario;
-
-            string moderadorId = idUsuario;
-            string moderadorNombre = idUsuario;
-            string temaPrincipal = "Armonización Curricular";
-            bool activa = exp.SalaColaborativaActiva;
-
-            if (!string.IsNullOrEmpty(exp.SalaSesionMetadataJson))
-            {
-                try
-                {
-                    using var doc = JsonDocument.Parse(exp.SalaSesionMetadataJson);
-                    if (doc.RootElement.TryGetProperty("moderador_id", out var mId)) moderadorId = mId.GetString() ?? moderadorId;
-                    if (doc.RootElement.TryGetProperty("moderador_nombre", out var mNom)) moderadorNombre = mNom.GetString() ?? moderadorNombre;
-                    if (doc.RootElement.TryGetProperty("tema_principal", out var tPr)) temaPrincipal = tPr.GetString() ?? temaPrincipal;
-                    if (doc.RootElement.TryGetProperty("activa", out var act)) activa = act.GetBoolean();
-                }
-                catch
-                {
-                    // Fallback
-                }
-            }
-
-            var updatedPayload = new
-            {
-                moderador_id = moderadorId,
-                moderador_nombre = moderadorNombre,
-                tema_principal = temaPrincipal,
-                activa = activa,
-                borrador = dto
-            };
-
-            exp.SalaSesionMetadataJson = JsonSerializer.Serialize(updatedPayload);
-            await _context.SaveChangesAsync();
-
-            try
-            {
-                string docUuid = $"expediente_{exp.IdExpediente}_prepea";
-                var coworkDoc = await _context.DocCoworkDocumentos.FirstOrDefaultAsync(d => d.Uuid == docUuid);
-                if (coworkDoc == null)
-                {
-                    coworkDoc = new DocCoworkDocumento
-                    {
-                        Uuid = docUuid,
-                        EntidadUuid = exp.Uuid,
-                        CampoNombre = "pre_pea",
-                        EntidadTipo = "EXPEDIENTE_SALA",
-                        CreadoEn = DateTime.UtcNow
-                    };
-                    _context.DocCoworkDocumentos.Add(coworkDoc);
-                }
-                coworkDoc.ContentJson = JsonSerializer.Serialize(dto);
-                coworkDoc.ActualizadoEn = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-            }
-            catch
-            {
-                // Non-blocking best effort
-            }
-
-            return dto;
-        }
-
-        public async Task<PeaDto> AplicarBorradorASalaPeaAsync(int idExpediente, int? idPea, string idUsuario)
-        {
-            var exp = await _context.DocExpedientesCurriculares
-                .Include(e => e.Peas)
-                .FirstOrDefaultAsync(e => e.IdExpediente == idExpediente);
-
-            if (exp == null) throw new InvalidOperationException($"Expediente {idExpediente} no encontrado.");
-
-            var borrador = await GetBorradorPrePeaAsync(idExpediente);
-            if (borrador == null) throw new InvalidOperationException("No se encontró ningún borrador registrado en la Sala Curricular para este expediente.");
-
-            DocPea? pea = null;
-            if (idPea.HasValue)
-            {
-                pea = await _context.DocPeas
-                    .Include(p => p.Unidades)
-                        .ThenInclude(u => u.Temas)
-                    .Include(p => p.ResultadosAprendizaje)
-                    .Include(p => p.ActividadesPracticas)
-                    .FirstOrDefaultAsync(p => p.IdPea == idPea.Value && p.Activo);
-            }
-
-            if (pea == null)
-            {
-                pea = exp.Peas.OrderByDescending(p => p.Version).FirstOrDefault(p => p.Activo);
-            }
-
-            if (pea == null)
-            {
-                // Crear PEA inicial si no existía aún
-                pea = new DocPea
-                {
-                    Uuid = Guid.NewGuid().ToString(),
-                    IdExpediente = exp.IdExpediente,
-                    IdCarrera = exp.IdCarrera,
-                    IdAsignatura = exp.IdAsignatura,
-                    IdPeriodo = exp.IdPeriodo,
-                    IdAsignacion = exp.IdAsignacion,
-                    IdMalla = exp.IdMalla,
-                    IdDetalleMalla = exp.IdDetalleMalla,
-                    IdNivel = exp.IdNivel,
-                    IdModalidad = exp.IdModalidad,
-                    IdSeccion = exp.IdSeccion,
-                    Paralelo = exp.Paralelo,
-                    IdDocenteElaborador = exp.IdDocenteResponsable ?? idUsuario,
-                    Estado = "Borrador",
-                    Version = 1,
-                    Activo = true,
-                    FechaCreacion = DateTime.UtcNow,
-                    FechaModificacion = DateTime.UtcNow
-                };
-                _context.DocPeas.Add(pea);
-                await _context.SaveChangesAsync();
-            }
-
-            // Inyectar datos del borrador acordado en la sala
-            if (!string.IsNullOrWhiteSpace(borrador.ObjetivoAsignatura))
-                pea.ObjetivoAsignatura = borrador.ObjetivoAsignatura;
-
-            if (!string.IsNullOrWhiteSpace(borrador.MetodologiaEnsenanza))
-                pea.MetodologiaEnsenanza = borrador.MetodologiaEnsenanza;
-
-            if (!string.IsNullOrWhiteSpace(borrador.RecursosDidacticos))
-                pea.RecursosDidacticos = borrador.RecursosDidacticos;
-
-            if (!string.IsNullOrWhiteSpace(borrador.EvaluacionAprendizaje))
-                pea.EvaluacionAprendizaje = borrador.EvaluacionAprendizaje;
-
-            pea.FechaModificacion = DateTime.UtcNow;
-
-            // Inyectar Unidades Temáticas si existen en el borrador
-            if (borrador.Unidades != null && borrador.Unidades.Any())
-            {
-                var unidadesExistentes = await _context.DocPeaUnidades
-                    .Where(u => u.IdPea == pea.IdPea)
-                    .ToListAsync();
-
-                if (unidadesExistentes.Any())
-                {
-                    _context.DocPeaUnidades.RemoveRange(unidadesExistentes);
-                }
-
-                int ordenU = 1;
-                foreach (var uDto in borrador.Unidades)
-                {
-                    var nuevaUnidad = new DocPeaUnidad
-                    {
-                        Uuid = Guid.NewGuid().ToString(),
-                        IdPea = pea.IdPea,
-                        NumeroUnidad = uDto.NumeroUnidad > 0 ? uDto.NumeroUnidad : ordenU,
-                        NombreUnidad = uDto.NombreUnidad,
-                        TotalHorasUnidad = uDto.TotalHorasUnidad,
-                        HorasDocencia = uDto.HorasDocencia,
-                        HorasPracticoExp = uDto.HorasPracticoExp,
-                        HorasAutonomo = uDto.HorasAutonomo,
-                        Orden = ordenU++
-                    };
-
-                    if (uDto.Temas != null && uDto.Temas.Any())
-                    {
-                        int ordenT = 1;
-                        foreach (var tDto in uDto.Temas)
-                        {
-                            nuevaUnidad.Temas.Add(new DocPeaTema
-                            {
-                                Uuid = Guid.NewGuid().ToString(),
-                                NumeroTema = tDto.NumeroTema > 0 ? tDto.NumeroTema : ordenT,
-                                TituloTema = tDto.TituloTema,
-                                DescripcionSubtemas = tDto.DescripcionSubtemas,
-                                Orden = ordenT++
-                            });
-                        }
-                    }
-
-                    _context.DocPeaUnidades.Add(nuevaUnidad);
-                }
-            }
-
-            // Inyectar Resultados de Aprendizaje si existen en el borrador
-            if (borrador.ResultadosAprendizaje != null && borrador.ResultadosAprendizaje.Any())
-            {
-                var rdasExistentes = await _context.DocPeaResultadosAprendizaje
-                    .Where(r => r.IdPea == pea.IdPea)
-                    .ToListAsync();
-
-                if (rdasExistentes.Any())
-                {
-                    _context.DocPeaResultadosAprendizaje.RemoveRange(rdasExistentes);
-                }
-
-                int ordenR = 1;
-                foreach (var rDto in borrador.ResultadosAprendizaje)
-                {
-                    _context.DocPeaResultadosAprendizaje.Add(new DocPeaResultadoAprendizaje
-                    {
-                        Uuid = Guid.NewGuid().ToString(),
-                        IdPea = pea.IdPea,
-                        IdResultadoPerfil = rDto.IdResultadoPerfil,
-                        TipoRda = string.IsNullOrWhiteSpace(rDto.TipoRda) ? "Asignatura" : rDto.TipoRda,
-                        CodigoRda = rDto.CodigoRda,
-                        Descripcion = rDto.Descripcion,
-                        NivelDesarrollo = string.IsNullOrWhiteSpace(rDto.NivelDesarrollo) ? "Medio" : rDto.NivelDesarrollo,
-                        Orden = ordenR++
-                    });
-                }
-            }
-
-            // Registrar trazabilidad forense
-            _context.DocPeaTrazabilidades.Add(new DocPeaTrazabilidad
-            {
-                Uuid = Guid.NewGuid().ToString(),
-                IdPea = pea.IdPea,
-                EstadoAnterior = pea.Estado,
-                EstadoNuevo = pea.Estado,
-                Motivo = $"Borrador importado y aplicado con éxito desde la Sala Colegiada de Carrera por {idUsuario}.",
-                FechaTransicion = DateTime.UtcNow
-            });
-
-            await _context.SaveChangesAsync();
-
-            // Mapear y retornar
-            var carrera = await _context.Carreras.AsNoTracking().FirstOrDefaultAsync(c => c.IdCarrera == pea.IdCarrera);
-            var asignatura = await _context.Asignaturas.AsNoTracking().FirstOrDefaultAsync(a => a.IdAsignatura == pea.IdAsignatura);
-
-            return new PeaDto
-            {
-                IdPea = pea.IdPea,
-                Uuid = pea.Uuid,
-                IdCarrera = pea.IdCarrera,
-                NombreCarrera = carrera?.Carrera1 ?? string.Empty,
-                IdAsignatura = pea.IdAsignatura,
-                NombreAsignatura = asignatura?.Asignatura1 ?? string.Empty,
-                CodigoAsignatura = asignatura?.Codigo,
-                IdPeriodo = pea.IdPeriodo,
-                IdExpediente = pea.IdExpediente,
-                ObjetivoAsignatura = pea.ObjetivoAsignatura,
-                MetodologiaEnsenanza = pea.MetodologiaEnsenanza,
-                RecursosDidacticos = pea.RecursosDidacticos,
-                EvaluacionAprendizaje = pea.EvaluacionAprendizaje,
-                Estado = pea.Estado,
-                Version = pea.Version,
-                Activo = pea.Activo
-            };
         }
     }
 }
