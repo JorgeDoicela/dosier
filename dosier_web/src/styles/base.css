@@ -129,6 +129,18 @@ select:focus-visible {
     outline: none !important;
     box-shadow: none !important;
 }
+/* Evitar outline o sombras en notas y elementos del lienzo interactivo */
+.pizarra-textarea,
+.pizarra-textarea:focus,
+.pizarra-textarea:focus-visible,
+.pizarra-input,
+.pizarra-input:focus,
+.pizarra-input:focus-visible {
+    outline: none !important;
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
 
 /* Scrollbars base (Webkit) */
 ::-webkit-scrollbar {

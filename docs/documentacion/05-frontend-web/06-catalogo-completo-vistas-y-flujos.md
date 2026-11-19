@@ -222,15 +222,16 @@ Portal unificado y canal institucional para la tramitación de requerimientos, s
 
 ### 2.9. Módulo de Salas Compartidas de Carrera (`/salas-curriculares` y `/salas-curriculares/:idCarrera`)
 
-Espacio colaborativo de trabajo e instrumentos compartidos entre los docentes, coordinadores y administradores de una carrera y período académico, montado directamente sobre el shell de colaboración en tiempo real (`DOSIERBuilderShell`):
+Espacio colaborativo de trabajo colegiado en tiempo real entre los docentes, coordinadores y administradores de una carrera y período académico, montado sobre el shell de colaboración `DOSIERBuilderShell`:
 
 * **Acceso Inmersivo Directo a Pantalla Completa (`SalaCarreraPage.tsx`):**
   * Sin pantallas intermedias ni anidamientos de scroll: al ingresar a "Salas Curriculares" se inicializa directamente el espacio colaborativo de la carrera con sockets de SignalR y CRDTs Yjs compartidos (`sala_carrera_{idCarrera}_{idPeriodo}`).
-  * **Barra de Navegación Lateral (`BuilderNavigationSidebar`):** Enfocada en la gestión documental colegiada:
-    * **Documentos de Carrera:** Repositorio de instrumentos y documentos compartidos de la sala (actas de reunión de área, informes de seguimiento, planificaciones semestrales) con creación mediante modal (`NuevoDocumentoSalaModal`), descarga de PDF y edición colaborativa con `DocumentEditor`.
-  * **Herramientas de Consulta Global Ancladas en Cabecera (`BuilderHeader`):**
-    * **Inspector Popover de Perfil de Egreso (`PerfilEgresoPopover.tsx`):** Botón superior de acceso directo que despliega una tarjeta anclada con viñeta conectora y animación suave nativa tipo macOS, selector de período y descripción completa de los RDAs oficiales de la carrera.
-    * **Directorio Popover de Malla y Docentes (`MallaDocentesPopover.tsx`):** Botón superior anclado con viñeta conectora y animación macOS que presenta la nómina completa de asignaturas por niveles semestrales (`Primero`, `Segundo`, `Tercero`...) sobre un riel plano continuo, docente responsable y estado de avance del PEA, permitiendo su consulta en cualquier momento sin abandonar el flujo de edición activo.
+  * **Lienzo de Pizarra Interactiva (`SalaPizarraCanvas.tsx`):** Espacio visual a pantalla completa (`fullBleed`) para ideación, coordinación de cátedra, notas adhesivas, acuerdos y textos en tiempo real con pan y zoom.
+  * **Persistencia Dual en Base de Datos:** Guardado automático y bajo demanda sobre la tabla existente `doc_cowork_documentos` con ámbito polimórfico por carrera y período (`contentJson` y snapshot `yjsState`).
+  * **Herramientas de Consulta y Contexto en Cabecera (`BuilderHeader`):**
+    * **Selectores de Carrera y Período:** Desplegables inmediatos mediante `GeistSelect` para alternar de carrera o ciclo académico.
+    * **Inspector Popover de Perfil de Egreso (`PerfilEgresoPopover.tsx`):** Botón superior de acceso directo que despliega los resultados de aprendizaje (RDAs) oficiales de la carrera.
+    * **Directorio Popover de Malla y Docentes (`MallaDocentesPopover.tsx`):** Botón superior que presenta la nómina completa de asignaturas por niveles semestrales, docentes responsables y estado del PEA.
   * **Barra de Colaboración Lateral (`CollaborationSidebar`):** Canal de chat en vivo y presencia de los profesores de la carrera conectados en la sala.
 * **Gobernanza RBAC de Acceso:**
   * Exclusivo para docentes autores (`DOSIER_DOCENTE`) y moderadores de carrera (`DOSIER_COORD_CARRERA`, `DOSIER_ADMIN`).

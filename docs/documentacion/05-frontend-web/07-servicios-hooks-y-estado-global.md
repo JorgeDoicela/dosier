@@ -200,6 +200,13 @@ Conecta con `/api/pea/ai` y `/api/pea/uuid/{uuid}/ai`:
 Conecta con `/api/pea/uuid/{uuid}/importar-documento`:
 * `extractPeaFromDocument(peaUuid, file, options)`: Realiza el envío multipart/form-data de archivos digitales (`.pdf` o `.docx`) de hasta 15 MB para extracción sintáctica de unidades temáticas, horas, actividades prácticas y bibliografía, preservando inmutables los datos generales institucionales.
 
+### 2.25. `salaCarreraService.ts`: Salas Curriculares Colegiadas y Pizarra CoWork
+Conecta con `/api/expedientes-curriculares/sala-carrera`:
+* `getEstado(idCarrera, idPeriodo)`: Consulta el estado de apertura de la sala colegiada, moderador activo y nómina de asignaturas del período lectivo.
+* `conmutarEstado(idCarrera, idPeriodo, activar, temaPrincipal)`: Abre o pausa formalmente la sesión interactiva de la carrera en tiempo real.
+* `getPizarra(idCarrera, idPeriodo)`: Recupera el estado persistido de la pizarra interactiva (nodos, notas adhesivas, acuerdos pedagógicos, textos y estado Yjs serializado).
+* `guardarPizarra(idCarrera, idPeriodo, data)`: Persiste el snapshot JSON y estado binario Base64 de Yjs en la tabla `doc_cowork_documentos`.
+
 ---
 
 ## 3. Contextos Globales del Sistema (`src/api/` y `src/core/`)
@@ -260,12 +267,16 @@ Elimina la necesidad de botones de recarga manual en todas las bandejas y panele
 * **`useBuilderPdfAndSign.ts`:**
   * Orquesta el renderizado en segundo plano del PDF oficial vía `/api/documents/preview`, cálculo del hash y despliegue del modal de firma.
 
-### 4.3. Hooks del Subsistema CoWork (`src/core/cowork/hooks/`)
+### 4.3. Hooks del Subsistema CoWork (`src/core/cowork/hooks/` y `pizarra/`)
 * **`useCoWork.ts`:**
   * Suscribe un campo de texto al tipo compartido Yjs (`Y.Text`).
   * Emite y recibe actualizaciones delta en formato binario comprimido mediante WebSocket SignalR.
 * **`useCoWorkPresence.ts`:**
   * Mantiene la lista de docentes activos concurrentes en el mismo PEA, con indicadores de color y nombres en cursores remotos.
+* **`usePizarraCoWork.ts` (`src/pages/Curriculum/SalaCarrera/pizarra/`):**
+  * Orquesta la sincronización en tiempo real del lienzo infinito y elementos compartidos (notas adhesivas, tarjetas de acuerdos pedagógicos, cajas de texto libre) sobre un `Y.Array` compartido.
+  * Transmite awareness espacial (cursores remotos con coordenadas normalizadas en canvas, nombre e iniciales del participante).
+  * Implementa persistencia periódica con debounce hacia el backend mediante `salaCarreraService.guardarPizarra`, salvaguardando snapshots JSON y binarios Base64 de Yjs sin interrupción visual.
 
 ### 4.4. `peaStatusWorkflow.ts`: Gobernanza Central de Reglas de Negocio del PEA (`src/pages/Curriculum/utils/`)
 Constituye el **módulo único y centralizado** de reglas de negocio para el ciclo de vida curricular del PEA, eliminando la dispersión lógica entre vistas:

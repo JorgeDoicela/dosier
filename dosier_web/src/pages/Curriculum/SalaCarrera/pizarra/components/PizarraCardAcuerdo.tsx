@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Trash2, Copy, GripHorizontal, CheckCircle2, Bookmark } from 'lucide-react';
 import type { PizarraElement } from '../types';
+import { GeistSelect, type GeistSelectOption } from '../../../../../components/Common/GeistSelect';
 
 interface PizarraCardAcuerdoProps {
     element: PizarraElement;
@@ -14,6 +15,11 @@ interface PizarraCardAcuerdoProps {
 }
 
 const CATEGORIAS = ['Metodología', 'Evaluación', 'Proyectos de Aula', 'Infraestructura / TIC', 'General'];
+
+const OPCIONES_CATEGORIA: GeistSelectOption[] = CATEGORIAS.map((cat) => ({
+    value: cat,
+    label: cat,
+}));
 
 export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
     element,
@@ -139,18 +145,14 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
 
             {/* Categoría y Título */}
             <div className="py-2 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                    <select
+                <div className="w-full" onMouseDown={(e) => e.stopPropagation()}>
+                    <GeistSelect
                         value={element.category || 'General'}
-                        onChange={(e) => onUpdate({ category: e.target.value })}
-                        className="text-[10px] font-medium text-text-dim bg-bg-deep border border-border-thin rounded px-2 py-0.5 focus:outline-none focus:border-[#0070f3]"
-                    >
-                        {CATEGORIAS.map((cat) => (
-                            <option key={cat} value={cat}>
-                                {cat}
-                            </option>
-                        ))}
-                    </select>
+                        options={OPCIONES_CATEGORIA}
+                        onChange={(val) => onUpdate({ category: String(val) })}
+                        size="sm"
+                        className="w-full text-xs"
+                    />
                 </div>
 
                 <input
@@ -159,7 +161,8 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
                     onChange={(e) => setLocalTitle(e.target.value)}
                     onBlur={handleBlur}
                     placeholder="Título del acuerdo o compromiso..."
-                    className="w-full bg-transparent border-b border-border-thin focus:border-[#0070f3] pb-1 text-xs font-semibold text-text-main placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none"
+                    className="pizarra-input w-full bg-transparent border-b border-border-thin focus:border-[#0070f3] pb-1 text-xs font-semibold text-text-main placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none"
+                    style={{ outline: 'none', boxShadow: 'none' }}
                 />
 
                 <textarea
@@ -168,7 +171,8 @@ export const PizarraCardAcuerdo: React.FC<PizarraCardAcuerdoProps> = ({
                     onBlur={handleBlur}
                     placeholder="Detalles del acuerdo consensuado entre los docentes..."
                     rows={3}
-                    className="w-full bg-transparent resize-none border-none focus:outline-none text-xs text-text-dim placeholder:text-zinc-400 dark:placeholder:text-zinc-600 leading-relaxed"
+                    style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                    className="pizarra-textarea w-full bg-transparent resize-none border-0 !border-none !outline-none !shadow-none !ring-0 focus:!border-none focus:!outline-none focus:!shadow-none focus:!ring-0 text-xs text-text-dim placeholder:text-zinc-400 dark:placeholder:text-zinc-600 leading-relaxed"
                 />
             </div>
 

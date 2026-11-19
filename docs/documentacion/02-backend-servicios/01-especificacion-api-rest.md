@@ -131,6 +131,8 @@ Gestión del Expediente Curricular Maestro por Asignatura y Período.
 | `POST`| `/asegurar/asignacion/{idAsignacion:int}` | Autenticado | Obtiene o crea automáticamente el expediente curricular maestro para la asignatura. |
 | `GET` | `/sala-carrera/{idCarrera:int}/{idPeriodo}` | Autenticado | Obtiene estado de la Sala Curricular por carrera y nómina de asignaturas del período. |
 | `POST`| `/sala-carrera/{idCarrera:int}/{idPeriodo}/conmutar` | Coordinador / Vicerrector | Abre o cierra formalmente la sala de armonización curricular por carrera en tiempo real. |
+| `GET` | `/sala-carrera/{idCarrera:int}/{idPeriodo}/pizarra` | Autenticado | Obtiene el snapshot persistido de la pizarra interactiva (elementos, notas, acuerdos, textos y viewport). |
+| `PUT` | `/sala-carrera/{idCarrera:int}/{idPeriodo}/pizarra` | Autenticado | Actualiza y persiste el snapshot de elementos y configuración de la pizarra interactiva en base de datos (`doc_cowork_documentos`). |
 
 ---
 

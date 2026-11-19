@@ -184,7 +184,8 @@ export const PizarraStickyNote: React.FC<PizarraStickyNoteProps> = ({
                     onFocus={onSelect}
                     placeholder="Escribe un acuerdo o idea..."
                     rows={4}
-                    className={`w-full bg-transparent resize-none border-none focus:outline-none text-xs font-normal leading-relaxed ${colorConfig.text} placeholder:text-zinc-400 dark:placeholder:text-zinc-600`}
+                    style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                    className={`pizarra-textarea w-full bg-transparent resize-none border-0 !border-none !outline-none !shadow-none !ring-0 focus:!border-none focus:!outline-none focus:!shadow-none focus:!ring-0 text-xs font-normal leading-relaxed ${colorConfig.text} placeholder:text-zinc-400 dark:placeholder:text-zinc-600`}
                 />
             </div>
 

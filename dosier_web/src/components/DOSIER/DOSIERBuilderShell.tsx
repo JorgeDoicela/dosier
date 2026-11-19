@@ -84,6 +84,8 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         extraActions,
     } = props;
 
+    const hasMultipleSections = sections.length > 1;
+
     const { isAdmin } = useAuth();
     const { addToast } = useNotifications();
     const resolvedPeaUuid = entityUuid || documentUuid || formData?.EntityUuid || formData?.Uuid || '';
@@ -495,16 +497,18 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 {children(layout.activeTab, cowork)}
 
                                                 {/* ── Navegación Inteligente al Pie de Sección ── */}
-                                                <BuilderSectionFooterNav
-                                                    sections={sections}
-                                                    activeTab={layout.activeTab}
-                                                    setActiveTab={layout.setActiveTab}
-                                                    canSign={canSign}
-                                                    readOnly={readOnly}
-                                                    onNavigate={() => {
-                                                        contentScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                                                    }}
-                                                />
+                                                {(hasMultipleSections || canSign) && (
+                                                    <BuilderSectionFooterNav
+                                                        sections={sections}
+                                                        activeTab={layout.activeTab}
+                                                        setActiveTab={layout.setActiveTab}
+                                                        canSign={canSign}
+                                                        readOnly={readOnly}
+                                                        onNavigate={() => {
+                                                            contentScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                         </div>
                                         )

@@ -295,7 +295,6 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
                 onZoomIn={handleZoomIn}
                 onZoomOut={handleZoomOut}
                 onResetZoom={handleResetZoom}
-                onClearAll={clearCanvas}
             />
 
             {/* Rejilla de Fondo Técnica (Dot Grid) */}
@@ -358,30 +357,22 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
                 </div>
             </div>
 
-            {/* Estado Vacío / Ayuda Inicial */}
+            {/* Indicador Sutil cuando la Pizarra está vacía (Limpio, sin cajas ni bordes pesados) */}
             {elements.length === 0 && (
                 <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
-                    <div className="max-w-md text-center p-6 rounded-2xl border border-dashed border-border-thin bg-surface/80 backdrop-blur-xs space-y-2 pointer-events-auto">
-                        <p className="text-xs font-semibold text-text-main">
-                            Pizarra Interactiva de {carreraNombre}
-                        </p>
-                        <p className="text-[11px] text-text-dim leading-relaxed">
-                            Espacio colaborativo en tiempo real para el período {periodoActual}. Haz clic en <span className="font-semibold text-text-main">+ Nota</span> o <span className="font-semibold text-text-main">+ Acuerdo</span> en la barra superior para comenzar a proponer ideas conjuntas.
-                        </p>
-                        <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[10px] text-text-dim font-mono">
-                            <span className="bg-bg-deep px-2 py-0.5 rounded border border-border-thin">
-                                Rueda / Shift: Mover lienzo
-                            </span>
-                            <span className="bg-bg-deep px-2 py-0.5 rounded border border-border-thin">
-                                Ctrl + Rueda: Zoom
-                            </span>
-                            <span className="bg-bg-deep px-2 py-0.5 rounded border border-border-thin">
-                                Supr: Eliminar
-                            </span>
-                        </div>
-                    </div>
+                    <p className="text-xs text-text-dim/50 font-medium select-none tracking-wide text-center">
+                        Lienzo en blanco para {carreraNombre}
+                    </p>
+                    <p className="text-[11px] text-text-dim/40 mt-1 select-none">
+                        Haz clic en Nota o Acuerdo en la barra superior para comenzar
+                    </p>
                 </div>
             )}
+
+            {/* Atajos de teclado en una sola línea discreta, sin marcos ni recuadros */}
+            <div className="absolute bottom-3 left-4 pointer-events-none select-none text-[10px] text-text-dim/40 font-mono hidden sm:block">
+                Rueda: Desplazar · Ctrl + Rueda: Zoom · Supr: Eliminar
+            </div>
         </div>
     );
 };
