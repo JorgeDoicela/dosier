@@ -55,6 +55,12 @@ export interface DOSIERBuilderShellProps {
     isUpgrading?: boolean;
     isCollaborative?: boolean;
     extraActions?: React.ReactNode;
+    onTriggerAiGeneration?: (
+        targetSection: string,
+        customInstructions: string,
+        customModel?: string,
+        history?: Array<{ role: 'user' | 'assistant'; content: string }>
+    ) => Promise<any>;
 }
 
 const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
@@ -605,7 +611,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 } : undefined}
                                                 onTriggerDocExtraction={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleTriggerDocExtraction : undefined}
                                                 onOpenAiModal={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleOpenAiConfigModal : undefined}
-                                                onTriggerAiGeneration={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleTriggerAiGeneration : undefined}
+                                                onTriggerAiGeneration={props.onTriggerAiGeneration || (templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleTriggerAiGeneration : undefined)}
                                                 onOpenAiConfigModal={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? handleOpenAiConfigModal : undefined}
                                                 onApplyStructuredDraft={templateCode === 'PEA_OFICIAL' && !isLockedOrOfficial ? (patch) => {
                                                     if (onApplyStructuredDraft) {

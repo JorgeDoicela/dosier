@@ -15,6 +15,7 @@ export interface BuilderNavigationSidebarProps {
     setActiveTab: (tabId: string) => void;
     setIsLeftSidebarOpen: (open: boolean) => void;
     setShowMobileSections: (show: boolean) => void;
+    canSign?: boolean;
 }
 
 export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> = ({
@@ -28,7 +29,8 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
     leftSidebarRef,
     setActiveTab,
     setIsLeftSidebarOpen,
-    setShowMobileSections
+    setShowMobileSections,
+    canSign = true
 }) => {
     const count = sections.length;
 
@@ -135,17 +137,19 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
                 </div>
 
                 {/* Botón Finalizar y Firmar anclado al pie del Sidebar estilo DIITRA */}
-                <div className="pt-2 mt-2 shrink-0">
-                    <button
-                        onClick={() => { setActiveTab('output'); setShowMobileSections(false); }}
-                        className={`w-full flex items-center justify-between ${density.itemPx} ${density.itemPy} ${density.rounded} ${density.textSize} font-bold uppercase tracking-widest transition-all border text-left cursor-pointer ${activeTab === 'output'
-                            ? 'bg-text-main text-bg-deep border-text-main shadow-xl'
-                            : 'text-text-dim border-border-thin hover:bg-surface hover:text-text-main'
-                            }`}
-                    >
-                        <span className="text-left leading-snug">Finalizar y Firmar</span>
-                    </button>
-                </div>
+                {canSign && (
+                    <div className="pt-2 mt-2 shrink-0">
+                        <button
+                            onClick={() => { setActiveTab('output'); setShowMobileSections(false); }}
+                            className={`w-full flex items-center justify-between ${density.itemPx} ${density.itemPy} ${density.rounded} ${density.textSize} font-bold uppercase tracking-widest transition-all border text-left cursor-pointer ${activeTab === 'output'
+                                ? 'bg-text-main text-bg-deep border-text-main shadow-xl'
+                                : 'text-text-dim border-border-thin hover:bg-surface hover:text-text-main'
+                                }`}
+                        >
+                            <span className="text-left leading-snug">Finalizar y Firmar</span>
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

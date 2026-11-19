@@ -43,6 +43,7 @@ export interface PeaAiChatSidebarProps {
     resolvedPeaUuid?: string;
     formData?: any;
     sectionItems?: { id: string; label: string }[];
+    templateCode?: string;
     onTriggerAiGeneration?: (
         targetSection: string,
         customInstructions: string,
@@ -91,6 +92,7 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
     resolvedPeaUuid,
     formData,
     sectionItems,
+    templateCode,
     onTriggerAiGeneration,
     onApplyStructuredDraft,
     onOpenAiConfigModal,
@@ -98,6 +100,7 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
     aiConfigVersion = 0
 }) => {
     const { user } = useAuth();
+    const isSalaCarrera = templateCode === 'SALA_CARRERA';
 
     // Clave de almacenamiento local única por PEA / Instancia
     const storageKey = useMemo(() => {
@@ -215,6 +218,9 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
     };
 
     const sectionButtonLabel = useMemo(() => {
+        if (isSalaCarrera) {
+            return 'Toda la Carrera y Perfil';
+        }
         if (isAllSelected) {
             return 'Todo el PEA (Secciones 2 — 10)';
         }
@@ -623,7 +629,20 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                 );
                 const draft = res as PeaStructuredDraft | null;
 
-                if (draft) {
+                const customText = (res as any)?.text;
+                if (customText) {
+                    setMessages(prev => prev.map(m => {
+                        if (m.id === assistantMsgId) {
+                            return {
+                                ...m,
+                                text: customText,
+                                isLoading: false,
+                                isError: false
+                            };
+                        }
+                        return m;
+                    }));
+                } else if (draft) {
                     const sectionCount = draft.validationSummary?.generatedSections?.length || 1;
                     const resultText = `He formulado la propuesta curricular para ${targetLabel}. Se generaron ${sectionCount} sección(es) con horas normadas cuadradas con el distributivo oficial. Puedes revisar el contenido y aplicarlo directamente al documento.`;
 
@@ -811,9 +830,41 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                                 Hola, {user?.nombre_completo || user?.usuario || 'Docente'}
                             </h4>
                             <p className="text-xs text-text-dim leading-relaxed">
-                                ¿En qué puedo ayudarte hoy con tu Programa de Estudio de la Asignatura?
+                                {isSalaCarrera
+                                    ? '¿En qué puedo orientarte hoy con la articulación de materias o perfil de egreso de la carrera?'
+                                    : '¿En qué puedo ayudarte hoy con tu Programa de Estudio de la Asignatura?'}
                             </p>
                         </div>
+
+                        {/* Sugerencias Rápidas para la Sala Colegiada de Carrera */}
+                        {isSalaCarrera && (
+                            <div className="pt-2 flex flex-col gap-1.5 w-full max-w-xs text-left">
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Consultas Frecuentes
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSendMessage('¿Cómo articular las asignaturas del mismo semestre para evitar duplicidad de contenidos?')}
+                                    className="p-2 text-[11px] rounded-lg border border-border-thin bg-surface hover:border-[#0070f3] text-text-dim hover:text-text-main text-left transition-colors cursor-pointer"
+                                >
+                                    Articular asignaturas del mismo semestre
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSendMessage('¿Cómo tributan las materias de la carrera al Perfil de Egreso y sus RDA?')}
+                                    className="p-2 text-[11px] rounded-lg border border-border-thin bg-surface hover:border-[#0070f3] text-text-dim hover:text-text-main text-left transition-colors cursor-pointer"
+                                >
+                                    Tributación al Perfil de Egreso (RDA)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleSendMessage('¿Qué acuerdos metodológicos y de evaluación se recomiendan para esta carrera?')}
+                                    className="p-2 text-[11px] rounded-lg border border-border-thin bg-surface hover:border-[#0070f3] text-text-dim hover:text-text-main text-left transition-colors cursor-pointer"
+                                >
+                                    Sugerir acuerdos para la pizarra
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     messages.map((msg) => {

@@ -2054,6 +2054,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                     resolvedPeaUuid={resolvedPeaUuid || entityUuid}
                                     formData={formData || peaData}
                                     sectionItems={sectionItems}
+                                    templateCode={templateCode}
                                     onTriggerAiGeneration={onTriggerAiGeneration}
                                     onApplyStructuredDraft={onApplyStructuredDraft}
                                     onOpenAiConfigModal={onOpenAiConfigModal || onOpenAiModal}
