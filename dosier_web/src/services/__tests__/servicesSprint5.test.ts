@@ -183,14 +183,6 @@ describe('Sprint 5 Service Layer Tests', () => {
         });
     });
 
-    describe('notificacionesService - subscribeDevice', () => {
-        it('subscribeDevice debe enviar POST a /Admin/notifications/subscribe', async () => {
-            (api.post as any).mockResolvedValueOnce({ data: { success: true } });
-            await notificacionesService.subscribeDevice({ device_token: 'token123', plataforma: 'web_push' });
-            expect(api.post).toHaveBeenCalledWith('/Admin/notifications/subscribe', { device_token: 'token123', plataforma: 'web_push' });
-        });
-    });
-
     describe('signaturesService - signDocumentWithP12', () => {
         it('signDocumentWithP12 debe enviar POST a /signatures/sign-p12', async () => {
             (api.post as any).mockResolvedValueOnce({ data: { signed: true } });

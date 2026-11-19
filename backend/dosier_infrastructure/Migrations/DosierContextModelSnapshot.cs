@@ -2790,51 +2790,6 @@ namespace dosier_infrastructure.Migrations
                     b.ToTable("doc_cronograma", (string)null);
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocDispositivoToken", b =>
-                {
-                    b.Property<int>("IdToken")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idToken");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdToken"));
-
-                    b.Property<string>("DeviceToken")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("varchar(512)")
-                        .HasColumnName("deviceToken");
-
-                    b.Property<int>("IdUsuario")
-                        .HasColumnType("int")
-                        .HasColumnName("idUsuario");
-
-                    b.Property<string>("Plataforma")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("plataforma")
-                        .HasDefaultValueSql("'Web'");
-
-                    b.Property<DateTime?>("UltimaSincronizacion")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("ultimaSincronizacion")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlComputedColumn(b.Property<DateTime?>("UltimaSincronizacion"));
-
-                    b.HasKey("IdToken")
-                        .HasName("PRIMARY");
-
-                    b.HasIndex("DeviceToken")
-                        .IsUnique();
-
-                    b.HasIndex("IdUsuario");
-
-                    b.ToTable("doc_dispositivos_tokens", (string)null);
-                });
-
             modelBuilder.Entity("dosier_infrastructure.data.models.DocDocumentoFirma", b =>
                 {
                     b.Property<int>("IdFirma")
@@ -6274,18 +6229,6 @@ namespace dosier_infrastructure.Migrations
                     b.Navigation("IdObjetivoNavigation");
 
                     b.Navigation("IdProyectoNavigation");
-                });
-
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocDispositivoToken", b =>
-                {
-                    b.HasOne("dosier_domain.Identity.Entities.User", "IdUsuarioNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdUsuario")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_token_usuario");
-
-                    b.Navigation("IdUsuarioNavigation");
                 });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocDominioCarrera", b =>

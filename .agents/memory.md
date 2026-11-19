@@ -522,6 +522,9 @@ Este archivo almacena el contexto operativo, decisiones arquitectónicas consoli
     - **Sidebar de Inspección y Observaciones ([ObservationsSidebar.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Curriculum/Revision/components/ObservationsSidebar.tsx)):** Dropdown de campo bajo inspección, estado vacío exacto a DIITRA (*"SIN OBSERVACIONES"* con check circular verde y aprobación implícita) e input inferior con soporte de transcripción de voz y guardado.
     - **Header Superior ([RevisionHeader.tsx](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/src/pages/Curriculum/Revision/components/RevisionHeader.tsx)):** Título del PEA, badge de estado, subtítulo *"REVISIÓN TÉCNICA DEL PROGRAMA DE ESTUDIO DE LA ASIGNATURA (PEA)"*, selector tri-estado de vistas (*Revisión Contextual*, *Vista PDF*, *Historial & Dictamen*), botón de descarga y badge de *"Consulta"* / *"Emitir Dictamen"*.
   - **Validación:** 283/283 pruebas unitarias superadas en Vitest y TypeScript verificado sin errores (`npx tsc --noEmit`).
+* **Directiva Operativa de Control de Versiones (Git Commits):**
+  - **Instrucción Estricta del Desarrollador:** Queda terminantemente prohibido ejecutar `git commit` o `git push` de forma autónoma. Solo se realizarán commits o pushes cuando el usuario lo ordene explícitamente ("haz commit", "haz push", "guarda en git").
+
 
 
 

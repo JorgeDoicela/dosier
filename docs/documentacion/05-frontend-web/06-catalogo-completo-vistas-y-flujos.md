@@ -1,4 +1,4 @@
-﻿# Catálogo Integral de Vistas, Páginas y Flujos de Usuario (Frontend Web)
+# Catálogo Integral de Vistas, Páginas y Flujos de Usuario (Frontend Web)
 
 ## 1. Visión General del Enrutador y Estructura de Páginas
 

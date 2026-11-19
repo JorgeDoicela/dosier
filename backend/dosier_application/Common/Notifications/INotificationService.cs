@@ -20,8 +20,6 @@ namespace dosier_application.Common.Notifications
         Task MarkAllAsReadAsync(int userId);
         Task<bool> DeleteNotificationAsync(string uuid);
         Task ClearReadNotificationsAsync(int userId);
-        Task SubscribeUserAsync(int userId, string deviceToken, string plataforma);
-        Task UnsubscribeUserAsync(int userId, string deviceToken);
         Task<WelcomeNotificationResult> TriggerWelcomeNotificationAsync(int userId);
     }
 }

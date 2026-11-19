@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 --  SISTEMA DOSIER - MÓDULO DE DOCUMENTACIÓN Y GESTIÓN ACADÉMICA
 --  Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
 --  Diseñado para el despliegue del módulo de DOCUMENTACIÓN.
@@ -34,7 +34,6 @@ DROP TABLE IF EXISTS
     doc_notificaciones,
     doc_tokens_acceso,
     doc_usuarios_metadata,
-    doc_dispositivos_tokens,
     doc_config_general,
     doc_audit_admin,
     doc_email_templates,
@@ -212,15 +211,6 @@ SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 CREATE TRIGGER trg_doc_backup_logs_uuid BEFORE INSERT ON doc_backup_logs FOR EACH ROW
 SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
-
-CREATE TABLE doc_dispositivos_tokens (
-    idToken             INT          AUTO_INCREMENT PRIMARY KEY,
-    idUsuario           INT(11)      NOT NULL,
-    deviceToken         VARCHAR(512) NOT NULL UNIQUE,
-    plataforma          VARCHAR(20)  DEFAULT 'Web', -- Web, iOS, Android
-    ultimaSincronizacion TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[MÓVIL] Almacén de tokens para Push Notifications (FCM)';
 
 CREATE TABLE doc_password_recovery_tokens (
     id_token              INT          AUTO_INCREMENT PRIMARY KEY,

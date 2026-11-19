@@ -104,52 +104,5 @@ namespace dosier_api.Controllers
             await _notificationService.NotifyUserAsync(userId, title, body, "SISTEMA", "/dashboard");
             return Ok(new { message = "Push de prueba encolado y enviado." });
         }
-
-        [HttpPost("subscribe")]
-        public async Task<IActionResult> Subscribe([FromBody] NotificationSubscribeRequest request)
-        {
-            var userIdStr = User.FindFirst("id_usuario")?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
-            {
-                return Unauthorized();
-            }
-
-            if (string.IsNullOrEmpty(request.DeviceToken))
-            {
-                return BadRequest("Device token is required.");
-            }
-
-            await _notificationService.SubscribeUserAsync(userId, request.DeviceToken, request.Plataforma);
-            return Ok(new { message = "Subscribed successfully" });
-        }
-
-        [HttpPost("unsubscribe")]
-        public async Task<IActionResult> Unsubscribe([FromBody] NotificationUnsubscribeRequest request)
-        {
-            var userIdStr = User.FindFirst("id_usuario")?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
-            {
-                return Unauthorized();
-            }
-
-            if (string.IsNullOrEmpty(request.DeviceToken))
-            {
-                return BadRequest("Device token is required.");
-            }
-
-            await _notificationService.UnsubscribeUserAsync(userId, request.DeviceToken);
-            return Ok(new { message = "Unsubscribed successfully" });
-        }
-    }
-
-    public class NotificationSubscribeRequest
-    {
-        public string DeviceToken { get; set; } = null!;
-        public string Plataforma { get; set; } = "web_push";
-    }
-
-    public class NotificationUnsubscribeRequest
-    {
-        public string DeviceToken { get; set; } = null!;
     }
 }

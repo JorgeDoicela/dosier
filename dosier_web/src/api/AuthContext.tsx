@@ -210,29 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         (async () => {
             try {
-                const logoutTasks: Promise<any>[] = [];
-
-                if ('serviceWorker' in navigator && 'PushManager' in window) {
-                    const registration = await navigator.serviceWorker.getRegistration();
-                    if (registration) {
-                        const subscription = await registration.pushManager.getSubscription();
-                        if (subscription) {
-                            const subJson = subscription.toJSON();
-                            const tokenString = `${subJson.endpoint}|${subJson.keys?.p256dh || ''}|${subJson.keys?.auth || ''}`;
-                            logoutTasks.push(
-                                notificacionesService.unsubscribeDevice(tokenString)
-                                    .catch(e => console.error('Error unsubscribing push on server:', e))
-                            );
-                            logoutTasks.push(
-                                subscription.unsubscribe()
-                                    .catch(e => console.error('Error unsubscribing browser push:', e))
-                            );
-                        }
-                    }
-                }
-
-                logoutTasks.push(authService.logout().catch(() => { }));
-                await Promise.all(logoutTasks);
+                await authService.logout().catch(() => { });
             } catch (err) {
                 console.error('Error procesando deslogueo en segundo plano:', err);
             }

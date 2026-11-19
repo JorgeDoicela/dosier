@@ -324,8 +324,6 @@ Centro de notificaciones institucionales e in-app alerts.
 | `POST`| `/mark-all-read` | Autenticado | Marca todas las notificaciones del usuario como leídas. |
 | `DELETE`| `/{uuid}` | Autenticado | Elimina una notificación del buzón del usuario. |
 | `DELETE`| `/clear-read` | Autenticado | Purga todas las notificaciones leídas del buzón. |
-| `POST`| `/subscribe` | Autenticado | Suscripción de token de dispositivo WebPush para notificaciones push web. |
-| `POST`| `/unsubscribe` | Autenticado | Desuscripción de token de dispositivo. |
 
 ---
 

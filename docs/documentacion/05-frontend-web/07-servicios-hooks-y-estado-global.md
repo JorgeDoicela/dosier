@@ -78,8 +78,6 @@ Conecta con `/api/Admin/notifications`:
 * `markAllAsRead()`: Limpieza global de marcas de lectura pendientes.
 * `deleteNotification(uuid)`: Remoción individual de alertas del historial.
 * `clearReadNotifications()`: Vaciado atómico de notificaciones leídas.
-* `subscribeDevice(payload)`: Registro y sincronización de suscripciones Web Push del navegador.
-* `unsubscribeDevice(deviceToken)`: Revocación de tokens Web Push en el servidor.
 
 ### 2.9. `verificationService.ts`: Verificación Forense Pública de Documentos
 Conecta con `/api/documents`:

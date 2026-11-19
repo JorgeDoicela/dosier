@@ -283,7 +283,6 @@ builder.Services.AddScoped<dosier_application.Common.Notifications.IEmailEngineS
 // Notificación Drivers
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.SignalRDriver>();
 builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.EmailDriver>();
-builder.Services.AddScoped<dosier_application.Common.Notifications.INotificationDriver, dosier_infrastructure.Common.Notifications.PushDriver>();
 
 builder.Services.AddScoped<dosier_application.Calendario.ICalendarioService, dosier_infrastructure.Calendario.CalendarioService>();
 builder.Services.AddScoped<IAIAssistantService, AIAssistantService>();

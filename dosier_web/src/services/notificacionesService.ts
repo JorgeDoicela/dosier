@@ -51,18 +51,6 @@ export const notificacionesService = {
      */
     clearReadNotifications: (): Promise<void> =>
         api.delete('/Admin/notifications/clear-read').then(() => undefined),
-
-    /**
-     * Registra o sincroniza la suscripción Web Push o token de dispositivo del usuario.
-     */
-    subscribeDevice: (payload: { device_token: string; plataforma: string }): Promise<any> =>
-        api.post('/Admin/notifications/subscribe', payload).then(r => r.data),
-
-    /**
-     * Da de baja el token o suscripción Web Push en el servidor.
-     */
-    unsubscribeDevice: (deviceToken: string): Promise<void> =>
-        api.post('/Admin/notifications/unsubscribe', { device_token: deviceToken }).then(() => undefined),
 };
 
 export default notificacionesService;

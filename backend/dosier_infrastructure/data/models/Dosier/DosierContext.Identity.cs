@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using dosier_domain.Identity.Entities;
 
 namespace dosier_infrastructure.data.models;
@@ -248,21 +248,6 @@ public partial class DosierContext
                 .HasForeignKey(d => d.IdUsuarioAdmin).OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_audit_admin");
             entity.HasOne(d => d.UserAfectado).WithMany()
                 .HasForeignKey(d => d.IdUsuarioAfectado).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_audit_afectado");
-        });
-
-        modelBuilder.Entity<DocDispositivoToken>(entity =>
-        {
-            entity.HasKey(e => e.IdToken).HasName("PRIMARY");
-            entity.ToTable("doc_dispositivos_tokens");
-            entity.Property(e => e.IdToken).HasColumnName("idToken");
-            entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
-            entity.Property(e => e.DeviceToken).HasColumnName("deviceToken").HasMaxLength(512).IsRequired();
-            entity.HasIndex(e => e.DeviceToken).IsUnique();
-            entity.Property(e => e.Plataforma).HasColumnName("plataforma").HasMaxLength(20).HasDefaultValueSql("'Web'");
-            entity.Property(e => e.UltimaSincronizacion).HasColumnName("ultimaSincronizacion").HasDefaultValueSql("CURRENT_TIMESTAMP").ValueGeneratedOnAddOrUpdate();
-
-            entity.HasOne(d => d.IdUsuarioNavigation).WithMany()
-                .HasForeignKey(d => d.IdUsuario).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_token_usuario");
         });
 
         modelBuilder.Entity<DocPasswordRecoveryToken>(entity =>
