@@ -486,7 +486,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     const targetEntityUuid = entityUuid || resolvedPeaUuid || peaData?.uuid || peaData?.Uuid || '';
 
     const fetchProjectDetails = useCallback(async () => {
-        if (!targetEntityUuid) return;
+        if (!targetEntityUuid || templateCode === 'SALA_CARRERA') {
+            setIsLoadingTrazabilidad(false);
+            return;
+        }
         setIsLoadingTrazabilidad(true);
         try {
             if (!templateCode || templateCode === 'PEA_OFICIAL') {

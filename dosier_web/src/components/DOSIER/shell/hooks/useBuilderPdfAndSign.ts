@@ -135,6 +135,9 @@ export const useBuilderPdfAndSign = ({
 
     // ── Generación de PDF ──
     const handleGeneratePdf = useCallback(async (blind = false, forceOfficial = false) => {
+        if (!templateCode || templateCode === 'SALA_CARRERA' || templateCode === 'NONE') {
+            return;
+        }
         isDirectApiUrl.current = false;
         setIsGenerating(true);
         addAudit(blind ? 'Generando vista previa sin identidades...' : 'Generando vista previa del documento...');
@@ -171,6 +174,7 @@ export const useBuilderPdfAndSign = ({
 
     // ── Cargar PDF firmado u oficial ──
     const fetchSignedPdf = useCallback(async (force: boolean = false): Promise<boolean> => {
+        if (!templateCode || templateCode === 'SALA_CARRERA' || templateCode === 'NONE') return false;
         // En estado de corrección / subsanación, nunca se debe cargar el PDF congelado anterior salvo forzado post-firma
         if (!force && !isSignedInSessionRef.current && isCorrectionState) return false;
 
@@ -230,6 +234,7 @@ export const useBuilderPdfAndSign = ({
     // Autocargar PDF firmado si existe al montar o cambiar de documento; si no, mantener estado inicial en borrador
     useEffect(() => {
         if (isSignedInSessionRef.current) return;
+        if (!templateCode || templateCode === 'SALA_CARRERA' || templateCode === 'NONE') return;
 
         let isMounted = true;
         const initPdf = async () => {

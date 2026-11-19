@@ -220,20 +220,21 @@ Portal unificado y canal institucional para la tramitación de requerimientos, s
 
 ---
 
-### 2.9. Módulo de Salas Curriculares Colegiadas por Carrera (`/salas-curriculares` y `/salas-curriculares/:idCarrera`)
+### 2.9. Módulo de Salas Compartidas de Carrera (`/salas-curriculares` y `/salas-curriculares/:idCarrera`)
 
-Módulo de trabajo cooperativo y armonización curricular colegiada por carrera antes de la formulación individual del PEA institucional:
+Espacio colaborativo de trabajo e instrumentos compartidos entre los docentes, coordinadores y administradores de una carrera y período académico, montado directamente sobre el shell de colaboración en tiempo real (`DOSIERBuilderShell`):
 
-* **Acceso Directo a Pantalla Completa (`SalaCarreraPage.tsx` - `/salas-curriculares`):**
-  * Sin pantallas intermedias: al ingresar a "Salas Curriculares" se carga inmediatamente el espacio de trabajo colegiado a pantalla completa sobre **`DOSIERBuilderShell`**.
-  * Selector superior integrado para alternar de asignatura de la malla en tiempo real y selector de carrera/período.
-* **Estructura Operativa de Co-Diseño (`AsignaturaCoDesignWorkspace.tsx`):**
-  * **Navegación Izquierda (`BuilderNavigationSidebar`):** Se pliega con `<` y se expande mediante la pestaña flotante inteligente (`BuilderFloatingTab`) con las 6 secciones de armonización (Propuesta y Malla, Objetivo, Unidades, RDAs, Metodología y Perfil CES).
-  * **Lienzo Central de Co-Creación:** Espacio amplio de redacción colegiada sin scrolls comprimidos.
-  * **Colaboración Derecha (`CollaborationSidebar`):** Se oculta con `>` y permite debatir en vivo mediante el motor CRDT y sockets de CoWork.
-  * **Gobernanza:** Botón de acción principal para **Aplicar al PEA Oficial** con un solo clic.
+* **Acceso Inmersivo Directo a Pantalla Completa (`SalaCarreraPage.tsx`):**
+  * Sin pantallas intermedias ni anidamientos de scroll: al ingresar a "Salas Curriculares" se inicializa directamente el espacio colaborativo de la carrera con sockets de SignalR y CRDTs Yjs compartidos (`sala_carrera_{idCarrera}_{idPeriodo}`).
+  * **Barra de Navegación Lateral (`BuilderNavigationSidebar`):** Organizada en 4 secciones operativas de trabajo colegiado:
+    1. **1. Documentos de Carrera:** Repositorio de documentos compartidos de la sala (actas de reunión de área, informes de seguimiento, planificaciones semestrales) con creación mediante modal (`NuevoDocumentoSalaModal`), descarga de PDF y edición colaborativa con `DocumentEditor`.
+    2. **2. Acuerdos y Pizarra Colegiada (`SalaPizarraColegiada.tsx`):** Espacio de acuerdos de reunión, articulación de proyectos de aula e infraestructura de laboratorios con autoguardado en tiempo real.
+    3. **3. Malla y Docentes (`SalaMallaDocentesPanel.tsx`):** Directorio de asignaturas por nivel semestral y docentes titulares como referencia panorámica colegiada.
+    4. **4. Co-Diseño de Asignaturas (`AsignaturaCoDesignPanel.tsx`):** Herramienta integrada para consensuar unidades, objetivos y acuerdos específicos de una asignatura antes de inyectarlos al PEA oficial, sin salir de la sala.
+  * **Inspector Popover Anclado de Perfil CES (`PerfilEgresoPopover.tsx`):** Botón de acceso directo en la cabecera superior (`BuilderHeader`) que despliega una tarjeta anclada justo debajo con indicador conector, selectores de período académico y malla curricular, permitiendo a los docentes consultar los RDAs y competencias del perfil de egreso en paralelo mientras redactan actas en la sección 1 o co-diseñan asignaturas en la sección 4 sin desplazamientos erráticos ni perder su posición de trabajo.
+  * **Barra de Colaboración Lateral (`CollaborationSidebar`):** Canal de chat en vivo y presencia de los profesores de la carrera conectados en la sala.
 * **Gobernanza RBAC de Acceso:**
   * Exclusivo para docentes autores (`DOSIER_DOCENTE`) y moderadores de carrera (`DOSIER_COORD_CARRERA`, `DOSIER_ADMIN`).
-  * El Vicerrector (`DOSIER_VICERRECTOR`) queda formalmente excluido de esta vista y de `/documentacion/mis-proyectos`, dado que su función institucional es de supervisión y legalización normativa global, redirigiendo automáticamente a `/documentacion`.
+  * El Vicerrector (`DOSIER_VICERRECTOR`) redirige automáticamente a `/documentacion`.
 
 

@@ -17,6 +17,7 @@ export interface BuilderHeaderProps {
     onSave: () => void;
     toggleTheme: () => void;
     onOpenAiAssistant?: () => void;
+    extraActions?: React.ReactNode;
 }
 
 export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
@@ -33,7 +34,8 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
     onClose,
     onSave,
     toggleTheme,
-    onOpenAiAssistant
+    onOpenAiAssistant,
+    extraActions
 }) => {
     return (
         <div className="px-4 md:px-8 py-3 border-b border-border-thin bg-bg-deep flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 z-[50]">
@@ -50,15 +52,27 @@ export const BuilderHeader: React.FC<BuilderHeaderProps> = ({
                         <span>Volver</span>
                     </button>
 
-                    {/* Divisor Vertical */}
-                    <div className="h-5 w-[1px] bg-border-thin mx-1" />
+                    {/* Divisor Vertical e Identidad */}
+                    {title ? (
+                        <>
+                            <div className="h-5 w-[1px] bg-border-thin mx-1" />
+                            <div className="min-w-0">
+                                <h2 className="text-sm md:text-base font-bold text-text-main tracking-tight uppercase leading-none truncate max-w-[200px] xs:max-w-[280px] sm:max-w-[380px] md:max-w-[480px] lg:max-w-[650px]" title={title}>
+                                    {title}
+                                </h2>
+                            </div>
+                        </>
+                    ) : null}
 
-                    {/* Identidad */}
-                    <div className="min-w-0">
-                        <h2 className="text-sm md:text-base font-bold text-text-main tracking-tight uppercase leading-none truncate max-w-[200px] xs:max-w-[280px] sm:max-w-[380px] md:max-w-[480px] lg:max-w-[650px]" title={title}>
-                            {title}
-                        </h2>
-                    </div>
+                    {/* Acciones y Herramientas Flotantes de Cabecera */}
+                    {extraActions ? (
+                        <>
+                            <div className="h-4 w-[1px] bg-border-thin mx-1 hidden sm:block" />
+                            <div className="flex items-center">
+                                {extraActions}
+                            </div>
+                        </>
+                    ) : null}
                 </div>
             </div>
 

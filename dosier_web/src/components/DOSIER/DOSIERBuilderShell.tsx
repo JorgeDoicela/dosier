@@ -54,6 +54,7 @@ export interface DOSIERBuilderShellProps {
     onUpgradeTemplate?: () => Promise<void>;
     isUpgrading?: boolean;
     isCollaborative?: boolean;
+    extraActions?: React.ReactNode;
 }
 
 const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
@@ -79,7 +80,8 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
         templateVersion,
         onUpgradeTemplate,
         isUpgrading = false,
-        isCollaborative
+        isCollaborative,
+        extraActions,
     } = props;
 
     const { isAdmin } = useAuth();
@@ -352,6 +354,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 onClose={autoSave.handleClose}
                                 onSave={autoSave.handleSave}
                                 toggleTheme={layout.toggleTheme}
+                                extraActions={extraActions}
                             />
 
                             <div className="flex flex-1 overflow-hidden relative" ref={layout.bodyContainerRef}>

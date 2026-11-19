@@ -78,7 +78,8 @@ const DashboardLayout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }
         navigate('/');
     };
 
-    const isWorkspace = location.pathname.includes('/workspace/');
+    const isSala = location.pathname.includes('/salas-curriculares');
+    const isWorkspace = location.pathname.includes('/workspace/') || isSala;
     const isTemplateEditor = (location.pathname === '/plantillas' || location.pathname === '/admin/plantillas') && (isAdmin || isCoordAcad || isVicerrector);
     const isFullHeightPage = isWorkspace || isTemplateEditor;
     const [isHelpOpen, setIsHelpOpen] = useState(false);
