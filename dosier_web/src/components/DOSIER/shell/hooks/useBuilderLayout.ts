@@ -49,7 +49,8 @@ export const useBuilderLayout = ({
     // ── Navegación de Secciones y URL ──
     const sectionParam = queryParams.get('section');
     const defaultTab = (sections && sections.length > 0 && !readOnly) ? sections[0].id : 'output';
-    const activeTab = (readOnly && (sections.length === 0 || !sections.some(s => s.id === sectionParam))) ? 'output' : (sectionParam || defaultTab);
+    const isParamValid = sectionParam ? (sections.some(s => s.id === sectionParam) || sectionParam === 'output') : false;
+    const activeTab = (readOnly && (sections.length === 0 || !isParamValid)) ? 'output' : (isParamValid && sectionParam ? sectionParam : defaultTab);
     const activeSectionIndex = sections.findIndex(s => s.id === activeTab);
     const activeSection = activeSectionIndex >= 0 ? sections[activeSectionIndex] : null;
     const activeSectionLabel = activeSection

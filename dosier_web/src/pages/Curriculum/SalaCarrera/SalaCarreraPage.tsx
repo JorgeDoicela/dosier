@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, FileText, Sparkles, Shield, Layers, Plus } from 'lucide-react';
+import { Loader2, FileText } from 'lucide-react';
 import DOSIERBuilderShell, { type BuilderSection } from '../../../components/DOSIER/DOSIERBuilderShell';
 import { useCoWork, coworkUserFromAuth } from '../../../core/cowork';
 import { salaCarreraService, type SalaCarreraEstadoDto } from '../../../services/salaCarreraService';
@@ -13,7 +13,6 @@ import DocumentEditor from '../Workspace/Wizard/DocumentEditor';
 import { PerfilEgresoPopover } from './components/PerfilEgresoPopover';
 import { MallaDocentesPopover } from './components/MallaDocentesPopover';
 import { SalaDocumentosPanel } from './components/SalaDocumentosPanel';
-import { SalaPizarraColegiada } from './components/SalaPizarraColegiada';
 import { NuevoDocumentoSalaModal } from './components/NuevoDocumentoSalaModal';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { useAuth } from '../../../api/AuthContext';
@@ -243,13 +242,8 @@ export const SalaCarreraPage: React.FC = () => {
     const sections: BuilderSection[] = useMemo(() => [
         {
             id: 'documentos',
-            label: `1. Documentos de Carrera (${documentosSala.length})`,
+            label: `Documentos de Carrera (${documentosSala.length})`,
             icon: <FileText size={14} />
-        },
-        {
-            id: 'acuerdos',
-            label: '2. Acuerdos y Pizarra Colegiada',
-            icon: <Sparkles size={14} />
         }
     ], [documentosSala.length]);
 
@@ -388,8 +382,8 @@ export const SalaCarreraPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* SECCIÓN 1: DOCUMENTOS DE LA CARRERA */}
-                        {activeTab === 'documentos' && (
+                        {/* DOCUMENTOS DE LA CARRERA */}
+                        {(activeTab === 'documentos' || !activeTab) && (
                             <SalaDocumentosPanel
                                 documentos={documentosSala}
                                 templates={templates}
@@ -399,15 +393,6 @@ export const SalaCarreraPage: React.FC = () => {
                                 onOpenDocument={(doc) => setActiveDoc(doc)}
                                 onOpenCreateModal={() => setIsCreateModalOpen(true)}
                                 onDownloadPdf={handleDownloadPdf}
-                            />
-                        )}
-
-                        {/* SECCIÓN 2: ACUERDOS Y PIZARRA COLEGIADA */}
-                        {activeTab === 'acuerdos' && (
-                            <SalaPizarraColegiada
-                                carreraNombre={carreraNombre}
-                                periodoActual={periodoActual}
-                                salaEntityUuid={salaEntityUuid}
                             />
                         )}
                     </div>

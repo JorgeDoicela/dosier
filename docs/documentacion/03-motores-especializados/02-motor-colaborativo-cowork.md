@@ -73,6 +73,5 @@ Cuando se solicita la emisión o compilación oficial en PDF, `DocumentDataOrche
 El motor colaborativo amplía su alcance de la asignatura individual a la **Sala Curricular de Carrera**:
 * **Topología de Grupo:** Los docentes de la carrera y el Coordinador se conectan en una sala única con clave polimórfica `sala_carrera_{idCarrera}_{idPeriodo}`.
 * **Control de Sesión:** El Coordinador modera la sala abriendo o pausando la sesión colaborativa (`sala_colaborativa_activa` en `doc_expedientes_curriculares`).
-* **Documentos Compartidos de Carrera:** Permite la co-redacción y firma institucional de actas, resoluciones de armonización y documentos curriculares colectivos.
-* **Pizarra Colegiada en Tiempo Real:** Espacio libre para intercambio de acuerdos metodológicos, criterios de evaluación y notas colegiadas con persistencia reactiva vía CRDTs (Yjs).
+* **Documentos Compartidos de Carrera:** Permite la co-redacción y firma institucional de actas, resoluciones de armonización y documentos curriculares colectivos con trazabilidad de autoría.
 
