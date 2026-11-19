@@ -1,4 +1,4 @@
-# Catálogo Integral de Vistas, Páginas y Flujos de Usuario (Frontend Web)
+﻿# Catálogo Integral de Vistas, Páginas y Flujos de Usuario (Frontend Web)
 
 ## 1. Visión General del Enrutador y Estructura de Páginas
 
@@ -8,12 +8,12 @@ El cliente web de DOSIER (`dosier_web`) estructura sus vistas dentro del directo
 dosier_web/src/pages/
 ├── Admin/           # Administración general (Usuarios, Auditoría, Plantillas, Emails)
 ├── Analytics/       # Indicadores y tablero CACES
-├── Auth/            # Flujos secundarios de autenticación (Reset password, Magic link)
+├── Auth/            # Flujos secundarios de autenticación (Reset password)
 ├── Calendario/      # Planificador de hitos lectivos y exportación iCalendar
 ├── Curriculum/      # Dominio Curricular ISTPET (Mis Asignaturas PEA, Supervisión, DocumentWorkspace, Monitoreo, Revisión)
 ├── Dashboard/       # Tableros diferenciados por rol (5 roles curriculares) y modales operativos
 ├── Landing/         # Página pública de presentación
-├── Login/           # Autenticación multicanal (Credenciales, SSO, PIN, Magic Link)
+├── Login/           # Autenticación (Credenciales, SSO Microsoft)
 ├── Lopdp/           # Gestión de consentimientos y solicitudes de derechos ARCO
 ├── Notificaciones/  # Centro de notificaciones in-app
 ├── Public/          # Validador público de documentos vía código QR
@@ -156,9 +156,7 @@ Panel directivo para el seguimiento operativo de los Programas de Estudio de la 
 
 * **`src/pages/Login/`:**
   * Acceso por credenciales locales (Usuario/Cédula y contraseña BCrypt).
-  * Acceso rápido por código PIN.
   * Inicio de sesión único (SSO) con Microsoft 365 institucional (`@traversari.edu.ec`).
-  * Solicitud de enlaces de acceso seguro (Magic Links).
 * **`src/pages/Auth/`:**
   * Recuperación y restablecimiento de contraseña olvidada.
   * Verificación de correo electrónico.

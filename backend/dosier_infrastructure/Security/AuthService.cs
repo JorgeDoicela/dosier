@@ -17,7 +17,6 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly IPasswordService _passwordService;
     private readonly IRbacService _rbacService;
-    private readonly IMagicLinkService _magicLinkService;
     private readonly IMicrosoftAuthService _microsoftAuthService;
     private readonly IPasswordRecoveryService _passwordRecoveryService;
     private readonly string _superAdminCedula;
@@ -33,7 +32,6 @@ public class AuthService : IAuthService
         ITokenService tokenService,
         IPasswordService passwordService,
         IRbacService rbacService,
-        IMagicLinkService magicLinkService,
         IMicrosoftAuthService microsoftAuthService,
         IPasswordRecoveryService passwordRecoveryService)
     {
@@ -44,7 +42,6 @@ public class AuthService : IAuthService
         _tokenService = tokenService;
         _passwordService = passwordService;
         _rbacService = rbacService;
-        _magicLinkService = magicLinkService;
         _microsoftAuthService = microsoftAuthService;
         _passwordRecoveryService = passwordRecoveryService;
         _superAdminCedula = configuration["Security:SuperAdminCedula"]?.Trim() ?? string.Empty;
@@ -442,18 +439,6 @@ public class AuthService : IAuthService
     }
 
     // ── DELEGACIÓN DE SUBSERVICIOS (FACHADA) ───────────────────────────────────
-
-    public Task<MagicLoginResponseDto?> ValidateAndConsumeMagicLinkAsync(string tokenHash, string? ipAddress, string? userAgent)
-        => _magicLinkService.ValidateAndConsumeMagicLinkAsync(tokenHash, ipAddress, userAgent);
-
-    public Task<AuthResponse?> ValidateAndConsumeHandoffPinAsync(string pin, string? ipAddress)
-        => _magicLinkService.ValidateAndConsumeHandoffPinAsync(pin, ipAddress);
-
-    public Task<string> CreateMagicLinkAsync(int idUsuario, DateTime expirationDate)
-        => _magicLinkService.CreateMagicLinkAsync(idUsuario, expirationDate);
-
-    public Task<bool> ResendMagicLinkAsync(string email)
-        => _magicLinkService.ResendMagicLinkAsync(email);
 
     public Task<AuthResponse?> LoginWithMicrosoftAsync(MicrosoftLoginRequest request)
         => _microsoftAuthService.LoginWithMicrosoftAsync(request);

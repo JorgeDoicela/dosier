@@ -39,7 +39,7 @@ DROP TABLE IF EXISTS
     doc_audit_admin,
     doc_email_templates,
     doc_email_historial,
-    doc_magic_links,
+    doc_password_recovery_tokens,
 
     -- DOSIER Document Engine (Plantillas y Auditoría)
     doc_document_audit,
@@ -222,8 +222,8 @@ CREATE TABLE doc_dispositivos_tokens (
     FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[MÓVIL] Almacén de tokens para Push Notifications (FCM)';
 
-CREATE TABLE doc_magic_links (
-    id_magic_link         INT          AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE doc_password_recovery_tokens (
+    id_token              INT          AUTO_INCREMENT PRIMARY KEY,
     id_usuario            INT(11)      NOT NULL,
     token_hash            VARCHAR(64)  NOT NULL,
     fecha_creacion        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -231,14 +231,11 @@ CREATE TABLE doc_magic_links (
     utilizado             TINYINT(1)   NOT NULL DEFAULT 0,
     fecha_utilizado       DATETIME     NULL,
     ip_creacion           VARCHAR(45)  NULL,
-    ip_utilizacion        VARCHAR(45)  NULL,
-    user_agent            VARCHAR(255) NULL,
-    codigo_pin_handoff    VARCHAR(12)  NULL,
-    fecha_expiracion_pin  DATETIME     NULL,
-    proposito             VARCHAR(30)  NOT NULL DEFAULT 'MAGIC_LINK' COMMENT 'MAGIC_LINK | PASSWORD_RECOVERY',
-    UNIQUE KEY uk_token_hash (token_hash),
+    ip_utilizado          VARCHAR(45)  NULL,
+    proposito             VARCHAR(30)  NOT NULL DEFAULT 'PASSWORD_RECOVERY' COMMENT 'PASSWORD_RECOVERY | PASSWORD_SECURITY_ALERT',
+    UNIQUE KEY uk_recovery_token_hash (token_hash),
     FOREIGN KEY (id_usuario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Token pool: magic links de autenticación y recuperación de contraseña';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Token pool: tokens de recuperación y seguridad de contraseña';
 
 
 -- CONFIGURACIÓN GENERAL (Llave-Valor)

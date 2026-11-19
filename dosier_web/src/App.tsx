@@ -14,9 +14,6 @@ const UsersPage              = lazy(() => import('./pages/Admin/UsersPage'));
 const Dashboard              = lazy(() => import('./pages/Dashboard/Dashboard'));
 const Landing                = lazy(() => import('./pages/Landing/Landing'));
 const Login                  = lazy(() => import('./pages/Login/Login'));
-const MagicLogin             = lazy(() => import('./pages/Login/MagicLogin'));
-const PinHandoff             = lazy(() => import('./pages/Login/PinHandoff'));
-const MagicResend            = lazy(() => import('./pages/Login/MagicResend'));
 const MicrosoftCallback      = lazy(() => import('./pages/Login/MicrosoftCallback'));
 const RecuperarContrasenia   = lazy(() => import('./pages/Login/RecuperarContrasenia'));
 const VerContrasenia         = lazy(() => import('./pages/Login/VerContrasenia'));
@@ -234,15 +231,6 @@ function App() {
                             <AuthenticatedRedirect>
                                 <Login currentTheme={theme} toggleTheme={toggleTheme} />
                             </AuthenticatedRedirect>
-                        } />
-                        <Route path="/auth/magic-login" element={
-                            <MagicLogin currentTheme={theme} toggleTheme={toggleTheme} />
-                        } />
-                        <Route path="/auth/pin" element={
-                            <PinHandoff currentTheme={theme} toggleTheme={toggleTheme} />
-                        } />
-                        <Route path="/auth/magic-resend" element={
-                            <MagicResend currentTheme={theme} toggleTheme={toggleTheme} />
                         } />
                         <Route path="/auth/microsoft-callback" element={
                             <MicrosoftCallback />

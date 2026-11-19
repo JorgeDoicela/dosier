@@ -112,7 +112,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         // 2. Rate limiting: máximo 3 tokens de recuperación activos en 15 min
         var ventana = DateTime.Now.AddMinutes(-15);
-        var tokensRecientes = await _context.Set<DocMagicLink>()
+        var tokensRecientes = await _context.Set<DocPasswordRecoveryToken>()
             .CountAsync(l => l.IdUsuario == user.IdUsuario
                           && l.Proposito == "PASSWORD_RECOVERY"
                           && l.FechaCreacion >= ventana
@@ -127,7 +127,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         }
 
         // 3. Invalidar tokens anteriores de recuperación activos para este usuario
-        var tokensAnteriores = await _context.Set<DocMagicLink>()
+        var tokensAnteriores = await _context.Set<DocPasswordRecoveryToken>()
             .Where(l => l.IdUsuario == user.IdUsuario && l.Proposito == "PASSWORD_RECOVERY" && !l.Utilizado)
             .ToListAsync();
 
@@ -147,8 +147,8 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         var tokenHashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(plainToken));
         var tokenHash = Convert.ToHexString(tokenHashBytes);
 
-        // 5. Guardar en doc_magic_links con proposito=PASSWORD_RECOVERY
-        var recoveryLink = new DocMagicLink
+        // 5. Guardar en doc_password_recovery_tokens con proposito=PASSWORD_RECOVERY
+        var recoveryLink = new DocPasswordRecoveryToken
         {
             IdUsuario = user.IdUsuario,
             TokenHash = tokenHash,
@@ -159,7 +159,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
             Proposito = "PASSWORD_RECOVERY"
         };
 
-        _context.Set<DocMagicLink>().Add(recoveryLink);
+        _context.Set<DocPasswordRecoveryToken>().Add(recoveryLink);
         await _context.SaveChangesAsync();
 
         // 6. Construir enlace y enviar email
@@ -210,7 +210,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         var tokenHash = Convert.ToHexString(tokenHashBytes);
 
-        var link = await _context.Set<DocMagicLink>()
+        var link = await _context.Set<DocPasswordRecoveryToken>()
             .Include(l => l.Usuario)
             .FirstOrDefaultAsync(l =>
                 l.TokenHash == tokenHash &&
@@ -248,7 +248,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         {
             link.Utilizado = true;
             link.FechaUtilizado = DateTime.Now;
-            link.IpUtilizacion = ipAddress;
+            link.IpUtilizado = ipAddress;
             await _context.SaveChangesAsync();
         }
 
@@ -291,7 +291,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         {
             try
             {
-                var tokensAnteriores = await _context.Set<DocMagicLink>()
+                var tokensAnteriores = await _context.Set<DocPasswordRecoveryToken>()
                     .Where(l => l.IdUsuario == user.IdUsuario && l.Proposito == "PASSWORD_RECOVERY" && !l.Utilizado)
                     .ToListAsync();
 
@@ -310,7 +310,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
                 var tokenHashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(plainToken));
                 var tokenHash = Convert.ToHexString(tokenHashBytes);
 
-                var recoveryLink = new DocMagicLink
+                var recoveryLink = new DocPasswordRecoveryToken
                 {
                     IdUsuario = user.IdUsuario,
                     TokenHash = tokenHash,
@@ -320,7 +320,7 @@ public class PasswordRecoveryService : IPasswordRecoveryService
                     Proposito = "PASSWORD_SECURITY_ALERT"
                 };
 
-                _context.Set<DocMagicLink>().Add(recoveryLink);
+                _context.Set<DocPasswordRecoveryToken>().Add(recoveryLink);
                 await _context.SaveChangesAsync();
 
                 var recoveryUrl = _appUrlService.BuildFrontendUrl($"/auth/reestablecer-alerta?token={plainToken}");
@@ -389,18 +389,18 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         var tokenHashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(plainToken));
         var tokenHash = Convert.ToHexString(tokenHashBytes);
 
-        var magicLink = await _context.Set<DocMagicLink>()
+        var securityToken = await _context.Set<DocPasswordRecoveryToken>()
             .FirstOrDefaultAsync(l => l.TokenHash == tokenHash 
                                    && l.Proposito == "PASSWORD_SECURITY_ALERT" 
                                    && !l.Utilizado 
                                    && l.FechaExpiracion > DateTime.Now);
 
-        if (magicLink == null)
+        if (securityToken == null)
         {
             throw new InvalidOperationException("El enlace de alerta de seguridad ha expirado, ya fue utilizado o es inválido.");
         }
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == magicLink.IdUsuario && u.Activo);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.IdUsuario == securityToken.IdUsuario && u.Activo);
         if (user == null)
         {
             throw new InvalidOperationException("El usuario asociado no existe o está inactivo.");
@@ -413,9 +413,9 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         user.Contrasenia = _passwordService.HashPassword(newPassword);
         
-        magicLink.Utilizado = true;
-        magicLink.FechaUtilizado = DateTime.Now;
-        magicLink.IpUtilizacion = ipAddress;
+        securityToken.Utilizado = true;
+        securityToken.FechaUtilizado = DateTime.Now;
+        securityToken.IpUtilizado = ipAddress;
 
         await _context.SaveChangesAsync();
 
@@ -435,19 +435,19 @@ public class PasswordRecoveryService : IPasswordRecoveryService
         var tokenHashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(plainToken));
         var tokenHash = Convert.ToHexString(tokenHashBytes);
 
-        var magicLink = await _context.Set<DocMagicLink>()
+        var recoveryToken = await _context.Set<DocPasswordRecoveryToken>()
             .Include(l => l.Usuario)
             .FirstOrDefaultAsync(l => l.TokenHash == tokenHash 
                                    && l.Proposito == "PASSWORD_RECOVERY" 
                                    && !l.Utilizado 
                                    && l.FechaExpiracion > DateTime.Now);
 
-        if (magicLink == null)
+        if (recoveryToken == null)
         {
             throw new InvalidOperationException("El enlace de recuperación ha expirado, ya fue utilizado o es inválido.");
         }
 
-        var user = magicLink.Usuario;
+        var user = recoveryToken.Usuario;
         if (user == null || !user.Activo)
         {
             throw new InvalidOperationException("El usuario asociado no existe o está inactivo.");
@@ -460,9 +460,9 @@ public class PasswordRecoveryService : IPasswordRecoveryService
 
         user.Contrasenia = _passwordService.HashPassword(newPassword);
         
-        magicLink.Utilizado = true;
-        magicLink.FechaUtilizado = DateTime.Now;
-        magicLink.IpUtilizacion = ipAddress;
+        recoveryToken.Utilizado = true;
+        recoveryToken.FechaUtilizado = DateTime.Now;
+        recoveryToken.IpUtilizado = ipAddress;
 
         await _context.SaveChangesAsync();
 

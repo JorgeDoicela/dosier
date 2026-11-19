@@ -32,7 +32,7 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocLopdpAuditoriaDatos> DocLopdpAuditoriaDatos  { get; set; }
     public virtual DbSet<DocAuditAdmin>       DocAuditAdmin          { get; set; }
     public virtual DbSet<DocDispositivoToken> DocDispositivosTokens   { get; set; }
-    public virtual DbSet<DocMagicLink>        DocMagicLinks          { get; set; }
+    public virtual DbSet<DocPasswordRecoveryToken> DocPasswordRecoveryTokens { get; set; }
     public virtual DbSet<DocConfigGeneral>    DocConfigsGenerales    { get; set; }
     public virtual DbSet<DocBackupLog>        DocBackupLogs          { get; set; }
     public virtual DbSet<DocFeedbackReporte>  DocFeedbackReportes    { get; set; }

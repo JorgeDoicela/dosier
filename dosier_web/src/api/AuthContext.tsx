@@ -63,9 +63,6 @@ interface AuthContextType {
     isLoading: boolean;
     login: (credentials: any) => Promise<User>;
     loginWithMicrosoft: (idToken: string) => Promise<User>;
-    magicLogin: (token: string) => Promise<{ user: User; pin: string | null; token: string }>;
-    confirmMagicLogin: (user: User, token: string) => Promise<void>;
-    handoffLogin: (pin: string) => Promise<User>;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
     hasPermission: (module: string, operation: string) => boolean;
@@ -205,55 +202,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return normalizedUser;
     };
 
-    const magicLogin = async (token: string) => {
-        const { auth, pin } = await authService.magicLogin(token);
-
-        const normalizedUser: User = {
-            ...auth,
-            roles: auth.role_codes || auth.roles || [],
-            role: auth.role_codes?.[0] || auth.role,
-            acepto_lopdp: auth.acepto_lopdp !== undefined ? auth.acepto_lopdp : auth.aceptoLopdp
-        };
-
-        return { user: normalizedUser, pin: pin || null, token: auth.token };
-    };
-
-    const confirmMagicLogin = async (user: User, token: string) => {
-        await authService.confirmMagicLogin(token);
-        setUser(user);
-        localStorage.setItem('dosier_logged_in', 'true');
-
-        const userRoles = (user.role_codes || user.roles || []).map((r: string) => r.toUpperCase());
-        const userIsAdmin = Boolean(user.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
-        const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
-        if (canonicalRole) {
-            setActiveRoleState(canonicalRole);
-        }
-    };
-
-    const handoffLogin = async (pin: string) => {
-        const data = await authService.handoffLogin(pin);
-
-        const normalizedUser: User = {
-            ...data,
-            roles: data.role_codes || data.roles || [],
-            role: data.role_codes?.[0] || data.role,
-            acepto_lopdp: data.acepto_lopdp !== undefined ? data.acepto_lopdp : data.aceptoLopdp
-        };
-
-        setUser(normalizedUser);
-        localStorage.setItem('dosier_logged_in', 'true');
-
-        const userRoles = (normalizedUser.role_codes || normalizedUser.roles || []).map((r: string) => r.toUpperCase());
-        const userIsAdmin = Boolean(normalizedUser.administrador || userRoles.includes('DOSIER_ADMIN') || userRoles.includes('ADMIN'));
-        const canonicalRole = resolveCanonicalRole(userRoles, userIsAdmin);
-        if (canonicalRole) {
-            setActiveRoleState(canonicalRole);
-        }
-
-        return normalizedUser;
-    };
-
     const logout = async () => {
         setUser(null);
         localStorage.removeItem('dosier_logged_in');
@@ -338,9 +286,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isLoading,
             login,
             loginWithMicrosoft,
-            magicLogin,
-            confirmMagicLogin,
-            handoffLogin,
             logout,
             refreshUser,
             hasPermission,

@@ -269,7 +269,6 @@ builder.Services.AddSingleton<Dosier.Infrastructure.Common.Storage.IFileStorageS
 builder.Services.AddScoped<dosier_application.Security.ITokenService, dosier_infrastructure.Security.TokenService>();
 builder.Services.AddScoped<dosier_application.Security.IPasswordService, dosier_infrastructure.Security.PasswordService>();
 builder.Services.AddScoped<dosier_application.Security.IRbacService, dosier_infrastructure.Security.RbacService>();
-builder.Services.AddScoped<dosier_application.Security.IMagicLinkService, dosier_infrastructure.Security.MagicLinkService>();
 builder.Services.AddScoped<dosier_application.Security.IMicrosoftAuthService, dosier_infrastructure.Security.MicrosoftAuthService>();
 builder.Services.AddScoped<dosier_application.Security.IPasswordRecoveryService, dosier_infrastructure.Security.PasswordRecoveryService>();
 builder.Services.AddScoped<dosier_application.Security.IAuthService, dosier_infrastructure.Security.AuthService>();

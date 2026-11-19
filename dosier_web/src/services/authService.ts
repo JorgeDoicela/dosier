@@ -105,34 +105,10 @@ export const authService = {
         api.post('/auth/microsoft-login', { idToken }).then(r => r.data),
 
     /**
-     * Inicia sesión con token de acceso rápido (Magic Link).
-     */
-    magicLogin: (token: string): Promise<{ auth: any; pin?: string }> =>
-        api.post('/auth/magic-login', { token }).then(r => r.data),
-
-    /**
-     * Confirma la sesión mediante token de enlace mágico.
-     */
-    confirmMagicLogin: (token: string): Promise<void> =>
-        api.post('/auth/magic-confirm', { token }).then(() => undefined),
-
-    /**
-     * Autentica la sesión mediante código PIN de transferencia entre dispositivos (Handoff).
-     */
-    handoffLogin: (pin: string): Promise<any> =>
-        api.post('/auth/magic-handoff', { pin }).then(r => r.data),
-
-    /**
      * Cierra la sesión activa en el servidor e invalida la cookie o estado.
      */
     logout: (): Promise<void> =>
         api.post('/auth/logout').then(() => undefined),
-
-    /**
-     * Reenvía un enlace mágico de autenticación.
-     */
-    magicResend: (email: string): Promise<any> =>
-        api.post('/auth/magic-resend', { email }).then(r => r.data),
 };
 
 export default authService;

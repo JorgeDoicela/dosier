@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from '../../api/axios_config';
 import { collaborationService } from '../collaborationService';
-import { authService } from '../authService';
 import { lopdpService } from '../lopdpService';
 import { documentTemplateService } from '../documentTemplateService';
 import { curriculumProjectService } from '../curriculumProjectService';
@@ -75,15 +74,6 @@ describe('Sprint 5 Service Layer Tests', () => {
             (api.delete as any).mockResolvedValueOnce({ data: { success: true } });
             await collaborationService.deleteImage('/storage/img.png');
             expect(api.delete).toHaveBeenCalledWith('/collaboration/delete-image?url=%2Fstorage%2Fimg.png');
-        });
-    });
-
-    describe('authService - extensions', () => {
-        it('magicResend debe enviar POST a /auth/magic-resend con email', async () => {
-            (api.post as any).mockResolvedValueOnce({ data: { message: 'Enviado' } });
-            const res = await authService.magicResend('usuario@istpet.edu.ec');
-            expect(api.post).toHaveBeenCalledWith('/auth/magic-resend', { email: 'usuario@istpet.edu.ec' });
-            expect(res.message).toBe('Enviado');
         });
     });
 

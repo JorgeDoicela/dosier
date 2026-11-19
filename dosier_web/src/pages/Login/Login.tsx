@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../api/AuthContext';
-import { Loader2, Lock, Sun, Moon, Key, ArrowLeft } from 'lucide-react';
+import { Loader2, Lock, Sun, Moon, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -314,32 +314,20 @@ const Login = ({ currentTheme = 'dark', toggleTheme }: LoginProps) => {
                                 <div className="flex-1 border-t border-border-thin"></div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                                {/* Microsoft Login Button */}
-                                <button
-                                    type="button"
-                                    onClick={handleMicrosoftLogin}
-                                    className="w-full h-10 sm:h-11 flex items-center justify-center gap-1.5 sm:gap-2 bg-transparent hover:bg-surface/30 text-text-main border border-border-thin rounded-lg font-semibold text-[9px] sm:text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-none"
-                                >
-                                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 21 21">
-                                        <rect x="1" y="1" width="9" height="9" fill="#F25022" />
-                                        <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
-                                        <rect x="1" y="11" width="9" height="9" fill="#00A1F1" />
-                                        <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
-                                    </svg>
-                                    <span>Microsoft</span>
-                                </button>
-
-                                {/* Acceso con PIN */}
-                                <Link
-                                    to="/auth/pin"
-                                    className="w-full h-10 sm:h-11 flex items-center justify-center gap-1.5 sm:gap-2 bg-transparent hover:bg-surface/30 text-text-main border border-border-thin rounded-lg font-semibold text-[9px] sm:text-[10px] uppercase tracking-widest transition-all cursor-pointer no-underline shadow-none"
-                                    title="Ingresar con código PIN de handoff"
-                                >
-                                    <Key size={11} className="shrink-0 text-text-dim" />
-                                    <span>Tengo un PIN</span>
-                                </Link>
-                            </div>
+                            {/* Microsoft Login Button */}
+                            <button
+                                type="button"
+                                onClick={handleMicrosoftLogin}
+                                className="w-full h-10 sm:h-11 flex items-center justify-center gap-1.5 sm:gap-2 bg-transparent hover:bg-surface/30 text-text-main border border-border-thin rounded-lg font-semibold text-[9px] sm:text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-none"
+                            >
+                                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" viewBox="0 0 21 21">
+                                    <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+                                    <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+                                    <rect x="1" y="11" width="9" height="9" fill="#00A1F1" />
+                                    <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+                                </svg>
+                                <span>Microsoft</span>
+                            </button>
                         </div>
                     </form>
 

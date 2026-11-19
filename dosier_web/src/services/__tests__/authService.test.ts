@@ -152,31 +152,6 @@ describe('authService', () => {
             expect(result).toEqual(mockRes.data);
         });
 
-        it('magicLogin debe invocar /auth/magic-login con token', async () => {
-            const mockRes = { data: { auth: { token: 'jwt' }, pin: '123456' } };
-            (api.post as any).mockResolvedValueOnce(mockRes);
-
-            const result = await authService.magicLogin('magic-tok');
-            expect(api.post).toHaveBeenCalledWith('/auth/magic-login', { token: 'magic-tok' });
-            expect(result).toEqual(mockRes.data);
-        });
-
-        it('confirmMagicLogin debe invocar /auth/magic-confirm con token', async () => {
-            (api.post as any).mockResolvedValueOnce({ data: {} });
-
-            await authService.confirmMagicLogin('magic-tok');
-            expect(api.post).toHaveBeenCalledWith('/auth/magic-confirm', { token: 'magic-tok' });
-        });
-
-        it('handoffLogin debe invocar /auth/magic-handoff con pin', async () => {
-            const mockRes = { data: { id_referencia: 'ho-1' } };
-            (api.post as any).mockResolvedValueOnce(mockRes);
-
-            const result = await authService.handoffLogin('987654');
-            expect(api.post).toHaveBeenCalledWith('/auth/magic-handoff', { pin: '987654' });
-            expect(result).toEqual(mockRes.data);
-        });
-
         it('logout debe invocar /auth/logout vía POST', async () => {
             (api.post as any).mockResolvedValueOnce({ data: {} });
 

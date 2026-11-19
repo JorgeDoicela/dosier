@@ -1,4 +1,4 @@
-# Arquitectura de Autenticación, SSO y Control de Acceso (RBAC)
+﻿# Arquitectura de Autenticación, SSO y Control de Acceso (RBAC)
 
 ## 1. Visión General de Seguridad
 
@@ -21,9 +21,6 @@ graph TD
 
     AuthType -->|Microsoft 365 / Entra ID| SSOAuth[MicrosoftAuthService]
     SSOAuth -->|Validar OpenID Connect ID Token| TokenGen
-
-    AuthType -->|Enlace de Acceso Seguro / Magic Link| MagicAuth[MagicLinkService]
-    MagicAuth -->|Validar Token Unico de Un Solo Uso| TokenGen
 
     TokenGen --> Response[Respuesta HTTP con AccessToken + RefreshToken]
 ```
@@ -51,12 +48,7 @@ graph TD
 * **Mecanismo:** El cliente React autentica al usuario contra Microsoft Identity Platform (MSAL) y transmite el `id_token` al backend.
 * **Validación Backend:** El servidor valida la firma del token OpenID Connect contra las claves públicas institucionales de Microsoft, verifica el *Audience* (ClientID) y mapea la cuenta del docente en DOSIER.
 
-### 2.3. Acceso Seguro mediante Magic Links
-* **Servicio:** `MagicLinkService`.
-* **Propósito:** Permitir a directivos o docentes acceder a revisiones o firmas específicas sin requerir digitación manual de contraseñas.
-* **Mecanismo:** Generación de un token criptográfico aleatorio de alta entropía asociado a un recurso con tiempo de vida limitado y consumo de un solo uso (*single-use token*), enviado por correo electrónico institucional.
-
-### 2.4. Gestión y Recuperación Universal de Contraseñas
+### 2.3. Gestión y Recuperación Universal de Contraseñas
 * **Servicio:** `PasswordRecoveryService`.
 * **Cambio Directo en Cuenta:** Disponible para todos los usuarios autenticados (docentes, coordinadores, directivos, evaluadores y administradores) a través de `POST /api/auth/cambiar-contrasenia`. Requiere verificación de la contraseña actual, una longitud mínima de 8 caracteres con caracteres alfanuméricos, persistencia con hash BCrypt y despacho asíncrono de notificación por correo electrónico con token de alerta ante accesos no autorizados.
 * **Recuperación y Restablecimiento:** Solicitud pública mediante `POST /api/auth/solicitar-recuperacion` con rate limiting (3 solicitudes / 15 min), emisión de token criptográfico SHA-256 de 30 minutos y restablecimiento mediante `POST /api/auth/restablecer-contrasenia-recuperacion` para cualquier cuenta del sistema.

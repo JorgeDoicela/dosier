@@ -240,15 +240,12 @@ Motor criptográfico de firmas digitales institucionales y certificados PKCS#12.
 ---
 
 ### 3.11. `AuthController` (`/api/auth`)
-Gestión de autenticación, JIT provisioning, SSO Microsoft, Magic Links y recuperación.
+Gestión de autenticación, JIT provisioning, SSO Microsoft y recuperación de contraseñas.
 
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
 | `POST`| `/login` | **Público** | Autenticación con usuario/contraseña, emitiendo JWT y cookie `dosier_auth`. |
 | `POST`| `/microsoft-login` | **Público** | Inicio de sesión federado mediante token de Microsoft Entra ID. |
-| `POST`| `/magic-login` | **Público** | Consumo de enlace temporal firmado para acceso directo sin contraseña. |
-| `POST`| `/magic-login/handoff` | **Público** | Validación de PIN temporal para traspaso de sesión entre estaciones. |
-| `POST`| `/magic-login/resend` | **Público** | Reenvío de enlace mágico a correo institucional. |
 | `POST`| `/password-recovery/request` | **Público** | Solicitud de recuperación de contraseña con respuesta anti-enumeración. |
 | `POST`| `/password-recovery/validate`| **Público** | Validación de token de recuperación. |
 | `POST`| `/password-recovery/reset` | **Público** | Establecimiento de nueva contraseña mediante token. |

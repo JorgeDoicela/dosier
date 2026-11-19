@@ -11,10 +11,6 @@ public interface IAuthService
     Task<dosier_domain.Identity.Entities.User> ProvisionUserAsync(string username, string name, string password, string table, string sigafiId);
     Task<AuthResponse?> RefreshAuthResponseAsync(string username);
     Task<AuthResponse?> GetAuthResponseForUserByIdAsync(int idUsuario);
-    Task<MagicLoginResponseDto?> ValidateAndConsumeMagicLinkAsync(string tokenHash, string? ipAddress, string? userAgent);
-    Task<AuthResponse?> ValidateAndConsumeHandoffPinAsync(string pin, string? ipAddress);
-    Task<string> CreateMagicLinkAsync(int idUsuario, DateTime expirationDate);
-    Task<bool> ResendMagicLinkAsync(string email);
     Task<AuthResponse?> LoginWithMicrosoftAsync(MicrosoftLoginRequest request);
     /// <summary>
     /// Genera un token de recuperación (30 min) y envía el enlace al correo institucional del usuario.

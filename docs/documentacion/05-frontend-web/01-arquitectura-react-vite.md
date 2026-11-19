@@ -1,4 +1,4 @@
-# Arquitectura Frontend Web (React 18 + Vite + TypeScript)
+﻿# Arquitectura Frontend Web (React 18 + Vite + TypeScript)
 
 ## 1. Visión General y Nombre Oficial de la Arquitectura
 
@@ -54,7 +54,7 @@ dosier_web/src/
 │   ├── Curriculum/  # Dominio Curricular ISTPET (Mis Asignaturas PEA, Supervisión, DocumentWorkspace, Monitoreo, Revisión)
 │   ├── Dashboard/   # Panel de control interactivo según el rol autenticado
 │   ├── Landing/     # Página pública institucional
-│   ├── Login/       # Acceso estándar, Magic Links, Microsoft SSO y PIN
+│   ├── Login/       # Acceso estándar y Microsoft SSO
 │   ├── Lopdp/       # Formularios de consentimiento y administración LOPDP
 │   ├── Notificaciones/ # Bandeja de alertas y eventos transaccionales
 │   ├── Public/      # Verificación forense pública de documentos vía código QR
@@ -90,7 +90,7 @@ graph TD
 
 | Ruta Frontend | Rol / Guardia | Funcionalidad Principal |
 | :--- | :--- | :--- |
-| `/login` | Público (`AuthenticatedRedirect`) | Acceso institucional con credenciales locales, Magic Links o Microsoft 365. |
+| `/login` | Público (`AuthenticatedRedirect`) | Acceso institucional con credenciales locales o Microsoft 365. |
 | `/verificacion/:code` | Público | Comprobación forense de autenticidad, firmas y hash SHA-256 mediante código QR. |
 | `/dashboard` | Autenticado | Panel de bienvenida, accesos rápidos y estado institucional. |
 | `/documentacion/mis-proyectos` | `ResearcherRoute` (Docentes) | Listado de asignaturas y expedientes asignados al docente autenticado. |

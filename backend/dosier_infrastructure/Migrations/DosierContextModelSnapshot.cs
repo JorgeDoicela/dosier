@@ -3870,19 +3870,14 @@ namespace dosier_infrastructure.Migrations
                 });
 
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocMagicLink", b =>
+            modelBuilder.Entity("dosier_infrastructure.data.models.DocPasswordRecoveryToken", b =>
                 {
-                    b.Property<int>("IdMagicLink")
+                    b.Property<int>("IdToken")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("id_magic_link");
+                        .HasColumnName("id_token");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdMagicLink"));
-
-                    b.Property<string>("CodigoPinHandoff")
-                        .HasMaxLength(12)
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("codigo_pin_handoff");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdToken"));
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
@@ -3893,10 +3888,6 @@ namespace dosier_infrastructure.Migrations
                     b.Property<DateTime>("FechaExpiracion")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("fecha_expiracion");
-
-                    b.Property<DateTime?>("FechaExpiracionPin")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("fecha_expiracion_pin");
 
                     b.Property<DateTime?>("FechaUtilizado")
                         .HasColumnType("datetime(6)")
@@ -3911,17 +3902,17 @@ namespace dosier_infrastructure.Migrations
                         .HasColumnType("varchar(45)")
                         .HasColumnName("ip_creacion");
 
-                    b.Property<string>("IpUtilizacion")
+                    b.Property<string>("IpUtilizado")
                         .HasMaxLength(45)
                         .HasColumnType("varchar(45)")
-                        .HasColumnName("ip_utilizacion");
+                        .HasColumnName("ip_utilizado");
 
                     b.Property<string>("Proposito")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)")
-                        .HasDefaultValue("MAGIC_LINK")
+                        .HasDefaultValue("PASSWORD_RECOVERY")
                         .HasColumnName("proposito");
 
                     b.Property<string>("TokenHash")
@@ -3930,26 +3921,19 @@ namespace dosier_infrastructure.Migrations
                         .HasColumnType("varchar(64)")
                         .HasColumnName("token_hash");
 
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("user_agent");
-
                     b.Property<bool>("Utilizado")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("utilizado");
 
-                    b.HasKey("IdMagicLink")
+                    b.HasKey("IdToken")
                         .HasName("PRIMARY");
-
-                    b.HasIndex("CodigoPinHandoff");
 
                     b.HasIndex("IdUsuario");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
-                    b.ToTable("doc_magic_links", (string)null);
+                    b.ToTable("doc_password_recovery_tokens", (string)null);
                 });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.DocNotificacion", b =>
@@ -6512,14 +6496,14 @@ namespace dosier_infrastructure.Migrations
                 });
 
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocMagicLink", b =>
+            modelBuilder.Entity("dosier_infrastructure.data.models.DocPasswordRecoveryToken", b =>
                 {
                     b.HasOne("dosier_domain.Identity.Entities.User", "Usuario")
                         .WithMany()
                         .HasForeignKey("IdUsuario")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_magic_link_usuario");
+                        .HasConstraintName("fk_pwd_recovery_usuario");
 
                     b.Navigation("Usuario");
                 });

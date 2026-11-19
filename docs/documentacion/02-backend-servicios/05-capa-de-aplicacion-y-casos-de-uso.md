@@ -1,4 +1,4 @@
-# Capa de Aplicación, Casos de Uso y Servicios de Orquestación (Application Layer)
+﻿# Capa de Aplicación, Casos de Uso y Servicios de Orquestación (Application Layer)
 
 ## 1. Responsabilidad y Arquitectura de la Capa de Aplicación
 
@@ -164,8 +164,7 @@ Centraliza los mecanismos de ingreso y aprovisionamiento de usuarios:
 1. **Login Tradicional:** Validación de credenciales de SIGAFI mediante hashing BCrypt. Implementa bloqueo progresivo por IP o cuenta ante intentos fallidos (`LoginBlockedResponse`).
 2. **JIT Provisioning (Just-In-Time):** Si un docente registrado en SIGAFI ingresa por primera vez a DOSIER, el sistema aprovisiona automáticamente su usuario en el sistema ID 6 y le asigna el rol `DOSIER_DOCENTE`.
 3. **SSO Microsoft 365 (`LoginWithMicrosoftAsync`):** Autenticación federada mediante tokens institucionales de Azure AD / Entra ID.
-4. **Magic Links y Transición de Sesión (`ValidateAndConsumeHandoffPinAsync`):** Acceso seguro sin contraseña mediante enlaces temporales de un solo uso firmados criptográficamente y PIN de traspaso para sincronizar sesión entre navegadores o estaciones de trabajo.
-5. **Recuperación Segura de Contraseña:** Generación de tokens efímeros (30 minutos) con respuesta anti-enumeración de usuarios (retorna siempre confirmación genérica independientemente de si la cédula existe o no).
+4. **Recuperación Segura de Contraseña (`IPasswordRecoveryService`):** Generación de tokens efímeros (30 minutos) con respuesta anti-enumeración de usuarios (retorna siempre confirmación genérica independientemente de si la cédula existe o no).
 
 ### 5.2. Gobernanza de Datos Personales (`ILopdpService`)
 

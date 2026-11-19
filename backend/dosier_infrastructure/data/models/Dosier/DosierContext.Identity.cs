@@ -265,11 +265,11 @@ public partial class DosierContext
                 .HasForeignKey(d => d.IdUsuario).OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_token_usuario");
         });
 
-        modelBuilder.Entity<DocMagicLink>(entity =>
+        modelBuilder.Entity<DocPasswordRecoveryToken>(entity =>
         {
-            entity.HasKey(e => e.IdMagicLink).HasName("PRIMARY");
-            entity.ToTable("doc_magic_links");
-            entity.Property(e => e.IdMagicLink).HasColumnName("id_magic_link");
+            entity.HasKey(e => e.IdToken).HasName("PRIMARY");
+            entity.ToTable("doc_password_recovery_tokens");
+            entity.Property(e => e.IdToken).HasColumnName("id_token");
             entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
             entity.Property(e => e.TokenHash).HasColumnName("token_hash").HasMaxLength(64).IsRequired();
             entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -277,19 +277,15 @@ public partial class DosierContext
             entity.Property(e => e.Utilizado).HasColumnName("utilizado").HasColumnType("tinyint(1)");
             entity.Property(e => e.FechaUtilizado).HasColumnName("fecha_utilizado");
             entity.Property(e => e.IpCreacion).HasColumnName("ip_creacion").HasMaxLength(45);
-            entity.Property(e => e.IpUtilizacion).HasColumnName("ip_utilizacion").HasMaxLength(45);
-            entity.Property(e => e.UserAgent).HasColumnName("user_agent").HasMaxLength(255);
-            entity.Property(e => e.CodigoPinHandoff).HasColumnName("codigo_pin_handoff").HasMaxLength(12);
-            entity.Property(e => e.FechaExpiracionPin).HasColumnName("fecha_expiracion_pin");
-            entity.Property(e => e.Proposito).HasColumnName("proposito").HasMaxLength(30).HasDefaultValue("MAGIC_LINK");
+            entity.Property(e => e.IpUtilizado).HasColumnName("ip_utilizado").HasMaxLength(45);
+            entity.Property(e => e.Proposito).HasColumnName("proposito").HasMaxLength(30).HasDefaultValue("PASSWORD_RECOVERY");
 
             entity.HasIndex(e => e.TokenHash).IsUnique();
-            entity.HasIndex(e => e.CodigoPinHandoff);
 
             entity.HasOne(d => d.Usuario).WithMany()
                 .HasForeignKey(d => d.IdUsuario)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("fk_magic_link_usuario");
+                .HasConstraintName("fk_pwd_recovery_usuario");
         });
 
         modelBuilder.Entity<DocEmailTemplate>(entity =>

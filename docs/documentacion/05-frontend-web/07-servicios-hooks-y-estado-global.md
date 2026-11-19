@@ -1,4 +1,4 @@
-# Servicios, Hooks Especializados y Gestión del Estado Global (Frontend Web)
+﻿# Servicios, Hooks Especializados y Gestión del Estado Global (Frontend Web)
 
 ## 1. Visión General de la Capa de Lógica y Estado
 
@@ -58,9 +58,6 @@ Conecta con `/api/auth`:
 * `getMe()`: Consulta el perfil, permisos y roles del usuario activo en la sesión.
 * `login(credentials)`: Autenticación tradicional mediante usuario institucional y contraseña.
 * `loginWithMicrosoft(idToken)`: Inicio de sesión federado mediante token de Azure AD / Entra ID.
-* `magicLogin(token)`: Inicio de sesión sin contraseña mediante enlace o token de acceso rápido.
-* `confirmMagicLogin(token)`: Confirmación y fijación de la sesión autenticada por enlace mágico.
-* `handoffLogin(pin)`: Autenticación cruzada por PIN entre dispositivos en tiempo real.
 * `logout()`: Cierre de sesión en servidor e invalidación de credenciales activas.
 * `recuperarContrasenia(dto)`: Emite solicitudes de recuperación de contraseña institucional (cédula/correo).
 * `verContrasenia(token)`: Valida el token de un solo uso y entrega la contraseña o delega al restablecimiento por hash.

@@ -1,4 +1,4 @@
-# Centro de Documentación Técnica - DOSIER
+﻿# Centro de Documentación Técnica - DOSIER
 
 Este directorio constituye la fuente oficial y centralizada de conocimiento técnico, arquitectónico y operativo de la plataforma **DOSIER** (*Sistema de Gestión Curricular y Portafolio Docente del Instituto Superior Tecnológico Mayor Pedro Traversari*).
 
@@ -26,7 +26,7 @@ Este directorio constituye la fuente oficial y centralizada de conocimiento téc
 
 ### Sección 02: Backend y Servicios REST
 * [01. Especificación de API REST y Enlace de Datos](./02-backend-servicios/01-especificacion-api-rest.md): Catálogo completo y exhaustivo de los 23 controladores de la API (`PeaController`, `DocumentInstancesController`, `SignaturesController`, `FeedbackController`, etc.), rutas HTTP, DTOs y serialización `snake_case`.
-* [02. Arquitectura de Autenticación, SSO y Control de Acceso (RBAC)](./02-backend-servicios/02-autenticacion-sso-y-rbac.md): Autenticación JWT Bearer, hashing BCrypt, SSO Microsoft 365, Magic Links y los 5 roles curriculares oficiales (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`).
+* [02. Arquitectura de Autenticación, SSO y Control de Acceso (RBAC)](./02-backend-servicios/02-autenticacion-sso-y-rbac.md): Autenticación JWT Bearer, hashing BCrypt, SSO Microsoft 365 y los 5 roles curriculares oficiales (`DOSIER_ADMIN`, `DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`).
 * [03. Gobernanza de Datos, Protección LOPDP y Bitácora de Auditoría](./02-backend-servicios/03-gobernanza-lopdp-y-auditoria.md): Cumplimiento de la Ley Orgánica de Protección de Datos Personales (LOPDP), consentimientos, bitácora inmutable `doc_document_audit` y custodia forense.
 * [04. Ciclo de Vida Curricular, Workflow y Portafolio Docente](./02-backend-servicios/04-ciclo-vida-curricular-y-workflow.md): Circuito colegiado de 4 estados y firmas (`Borrador` -> `EnRevision` -> `RevisadoCoord` -> `RevisadoAcad` -> `Aprobado`), control de observaciones por sección y sellado forense.
 * [05. Capa de Aplicación, Casos de Uso y Servicios de Orquestación](./02-backend-servicios/05-capa-de-aplicacion-y-casos-de-uso.md): Contratos de orquestación (`IPeaService`, `IFeedbackService`, `ICatalogsService`, `ICollaborationService`, `IRecycleBinService`, `IReportsService`, `IBackupAdminService`, `IDocumentVerificationService`, `IDocumentTemplateAdminService`, `IDocumentEngine`, `IDosierSignatureService`, `ICalendarioService`), DTOs de entrada/salida y desacoplamiento 100% puro de los 23 controladores de la API frente a la persistencia relacional.

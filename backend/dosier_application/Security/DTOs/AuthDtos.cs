@@ -38,32 +38,6 @@ public class LoginBlockedResponse
     public int SegundosRestantes { get; set; }
 }
 
-public class MagicLoginRequest
-{
-    public string Token { get; set; } = null!;
-}
-
-public class HandoffLoginRequest
-{
-    public string Pin { get; set; } = null!;
-}
-
-public class MagicLoginResponseDto
-{
-    public AuthResponse Auth { get; set; } = null!;
-    public string? Pin { get; set; }
-}
-
-public class MagicResendRequest
-{
-    public string Email { get; set; } = null!;
-}
-
-public class MagicConfirmRequest
-{
-    public string Token { get; set; } = null!;
-}
-
 public class MicrosoftLoginRequest
 {
     public string IdToken { get; set; } = null!;
