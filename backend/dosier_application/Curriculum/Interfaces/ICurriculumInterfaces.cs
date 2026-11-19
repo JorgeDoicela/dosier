@@ -38,6 +38,8 @@ namespace dosier_application.Curriculum.Interfaces
         // Salas Curriculares de Carrera en Tiempo Real
         Task<SalaCarreraEstadoDto> GetEstadoSalaCarreraAsync(int idCarrera, string idPeriodo, string? idUsuario);
         Task<bool> ConmutarEstadoSalaCarreraAsync(int idCarrera, string idPeriodo, bool activar, string? tema, string idUsuario);
+        Task<PizarraSalaCarreraDto> GetPizarraSalaCarreraAsync(int idCarrera, string idPeriodo);
+        Task<PizarraSalaCarreraDto> GuardarPizarraSalaCarreraAsync(int idCarrera, string idPeriodo, GuardarPizarraSalaCarreraRequest request, string idUsuario);
     }
 
     public interface IPeaService

@@ -12,6 +12,7 @@ export interface BuilderSection {
     icon: React.ReactNode;
     config?: any;
     component?: React.ComponentType<any>;
+    fullBleed?: boolean;
 }
 
 export interface UseBuilderLayoutProps {
@@ -471,6 +472,7 @@ export const useBuilderLayout = ({
         isDarkMode,
         toggleTheme,
         activeTab,
+        activeSection,
         activeSectionLabel,
         isSectionBlocked,
         isDirectorOrAdmin,

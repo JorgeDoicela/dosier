@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, FileText } from 'lucide-react';
+import { Loader2, FileText, LayoutGrid } from 'lucide-react';
 import DOSIERBuilderShell, { type BuilderSection } from '../../../components/DOSIER/DOSIERBuilderShell';
 import { useCoWork, coworkUserFromAuth } from '../../../core/cowork';
 import { salaCarreraService, type SalaCarreraEstadoDto } from '../../../services/salaCarreraService';
@@ -14,6 +14,7 @@ import { PerfilEgresoPopover } from './components/PerfilEgresoPopover';
 import { MallaDocentesPopover } from './components/MallaDocentesPopover';
 import { SalaDocumentosPanel } from './components/SalaDocumentosPanel';
 import { NuevoDocumentoSalaModal } from './components/NuevoDocumentoSalaModal';
+import { SalaPizarraCanvas } from './pizarra/SalaPizarraCanvas';
 import { useNotifications } from '../../../api/NotificationsContext';
 import { useAuth } from '../../../api/AuthContext';
 
@@ -242,8 +243,14 @@ export const SalaCarreraPage: React.FC = () => {
     const sections: BuilderSection[] = useMemo(() => [
         {
             id: 'documentos',
-            label: `Documentos de Carrera (${documentosSala.length})`,
+            label: `1. Documentos de Carrera (${documentosSala.length})`,
             icon: <FileText size={14} />
+        },
+        {
+            id: 'pizarra',
+            label: '2. Pizarra Interactiva',
+            icon: <LayoutGrid size={14} />,
+            fullBleed: true
         }
     ], [documentosSala.length]);
 
@@ -341,49 +348,64 @@ export const SalaCarreraPage: React.FC = () => {
                     </div>
                 }
             >
-                {(activeTab) => (
-                    <div className="w-full max-w-5xl mx-auto py-4 px-4 space-y-6">
-                        {/* Selector Superior de Carrera y Período */}
-                        <div className="rounded-xl border border-border-thin bg-surface p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                {opcionesCarrera.length > 1 && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-mono uppercase text-text-dim font-semibold shrink-0">
-                                            Carrera:
-                                        </span>
-                                        <div className="w-56">
-                                            <GeistSelect
-                                                value={idCarrera}
-                                                options={opcionesCarrera}
-                                                onChange={(val) => handleCambiarCarrera(Number(val))}
-                                                size="sm"
-                                                className="w-full"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                {(activeTab) => {
+                    if (activeTab === 'pizarra') {
+                        return (
+                            <SalaPizarraCanvas
+                                cowork={cowork}
+                                userName={coworkUser.name}
+                                userColor={coworkUser.color}
+                                userRole={coworkUser.role}
+                                userInitials={coworkUser.initials}
+                                idCarrera={idCarrera}
+                                carreraNombre={carreraNombre}
+                                periodoActual={periodoActual}
+                            />
+                        );
+                    }
 
-                                {opcionesPeriodo.length > 0 && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[11px] font-mono uppercase text-text-dim font-semibold shrink-0">
-                                            Período:
-                                        </span>
-                                        <div className="w-40">
-                                            <GeistSelect
-                                                value={periodoActual}
-                                                options={opcionesPeriodo}
-                                                onChange={(val) => handleCambiarPeriodo(String(val))}
-                                                size="sm"
-                                                className="w-full"
-                                            />
+                    return (
+                        <div className="w-full max-w-5xl mx-auto py-4 px-4 space-y-6">
+                            {/* Selector Superior de Carrera y Período */}
+                            <div className="rounded-xl border border-border-thin bg-surface p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {opcionesCarrera.length > 1 && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[11px] font-mono uppercase text-text-dim font-semibold shrink-0">
+                                                Carrera:
+                                            </span>
+                                            <div className="w-56">
+                                                <GeistSelect
+                                                    value={idCarrera}
+                                                    options={opcionesCarrera}
+                                                    onChange={(val) => handleCambiarCarrera(Number(val))}
+                                                    size="sm"
+                                                    className="w-full"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+
+                                    {opcionesPeriodo.length > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[11px] font-mono uppercase text-text-dim font-semibold shrink-0">
+                                                Período:
+                                            </span>
+                                            <div className="w-40">
+                                                <GeistSelect
+                                                    value={periodoActual}
+                                                    options={opcionesPeriodo}
+                                                    onChange={(val) => handleCambiarPeriodo(String(val))}
+                                                    size="sm"
+                                                    className="w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* DOCUMENTOS DE LA CARRERA */}
-                        {(activeTab === 'documentos' || !activeTab) && (
+                            {/* SECCIÓN 1: DOCUMENTOS DE LA CARRERA */}
                             <SalaDocumentosPanel
                                 documentos={documentosSala}
                                 templates={templates}
@@ -394,9 +416,9 @@ export const SalaCarreraPage: React.FC = () => {
                                 onOpenCreateModal={() => setIsCreateModalOpen(true)}
                                 onDownloadPdf={handleDownloadPdf}
                             />
-                        )}
-                    </div>
-                )}
+                        </div>
+                    );
+                }}
             </DOSIERBuilderShell>
 
             <NuevoDocumentoSalaModal

@@ -84,5 +84,27 @@ namespace dosier_api.Controllers
             var resultado = await _expedienteService.ConmutarEstadoSalaCarreraAsync(idCarrera, idPeriodo, request.Activar, request.TemaPrincipal, userId);
             return Ok(new { success = resultado, activa = request.Activar });
         }
+
+        /// <summary>
+        /// Obtiene el estado persistido de la pizarra interactiva de la carrera para el período indicado.
+        /// Tabla: doc_cowork_documentos (Cero tablas nuevas).
+        /// </summary>
+        [HttpGet("sala-carrera/{idCarrera:int}/{idPeriodo}/pizarra")]
+        public async Task<IActionResult> GetPizarraSalaCarrera(int idCarrera, string idPeriodo)
+        {
+            var resultado = await _expedienteService.GetPizarraSalaCarreraAsync(idCarrera, idPeriodo);
+            return Ok(resultado);
+        }
+
+        /// <summary>
+        /// Guarda el estado de la pizarra interactiva (notas, acuerdos y snapshot binario Yjs) por carrera y período.
+        /// </summary>
+        [HttpPut("sala-carrera/{idCarrera:int}/{idPeriodo}/pizarra")]
+        public async Task<IActionResult> GuardarPizarraSalaCarrera(int idCarrera, string idPeriodo, [FromBody] GuardarPizarraSalaCarreraRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("id_sigafi") ?? "0";
+            var resultado = await _expedienteService.GuardarPizarraSalaCarreraAsync(idCarrera, idPeriodo, request, userId);
+            return Ok(resultado);
+        }
     }
 }

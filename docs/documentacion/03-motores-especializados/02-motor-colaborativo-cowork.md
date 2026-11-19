@@ -75,3 +75,9 @@ El motor colaborativo amplía su alcance de la asignatura individual a la **Sala
 * **Control de Sesión:** El Coordinador modera la sala abriendo o pausando la sesión colaborativa (`sala_colaborativa_activa` en `doc_expedientes_curriculares`).
 * **Documentos Compartidos de Carrera:** Permite la co-redacción y firma institucional de actas, resoluciones de armonización y documentos curriculares colectivos con trazabilidad de autoría.
 
+### 5.2. Pizarra Interactiva Colegiada y Persistencia Dual Yjs/JSON
+La sala curricular integra un lienzo interactivo en tiempo real (`SalaPizarraCanvas`) para coordinación de cátedra:
+* **Persistencia sin Nuevas Tablas:** Se reutiliza `doc_cowork_documentos` con `entidadUuid = $"sala_carrera_{idCarrera}_{idPeriodo}"` y `campoNombre = "pizarra_interactiva"`.
+* **Almacenamiento Dual:** `contentJson` preserva la colección estructurada de elementos (notas adhesivas, acuerdos de cátedra y textos libres) para lectura declarativa, mientras `yjsState` (`LONGBLOB`) almacena el snapshot binario del CRDT para reconstrucción concurrente sin pérdida de deltas.
+* **Endpoints REST Dedicados:** `GET` y `PUT` en `/api/expedientes-curriculares/sala-carrera/{idCarrera}/{idPeriodo}/pizarra` con sincronización debounce de 2.5 segundos y control de guardado manual.
+

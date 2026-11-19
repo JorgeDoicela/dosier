@@ -491,5 +491,105 @@ namespace dosier_infrastructure.Curriculum
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<PizarraSalaCarreraDto> GetPizarraSalaCarreraAsync(int idCarrera, string idPeriodo)
+        {
+            string entidadUuid = $"sala_carrera_{idCarrera}_{idPeriodo}";
+            string campoNombre = "pizarra_interactiva";
+            string docUuid = $"{entidadUuid}_pizarra";
+
+            var doc = await _context.DocCoworkDocumentos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => (d.EntidadUuid == entidadUuid && d.CampoNombre == campoNombre) || d.Uuid == docUuid);
+
+            if (doc == null)
+            {
+                return new PizarraSalaCarreraDto
+                {
+                    IdCarrera = idCarrera,
+                    IdPeriodo = idPeriodo,
+                    EntidadUuid = entidadUuid,
+                    ElementsJson = "[]",
+                    Version = 0,
+                    ActualizadoEn = null
+                };
+            }
+
+            string? yjsB64 = doc.YjsState != null && doc.YjsState.Length > 0 ? Convert.ToBase64String(doc.YjsState) : null;
+
+            return new PizarraSalaCarreraDto
+            {
+                IdCarrera = idCarrera,
+                IdPeriodo = idPeriodo,
+                EntidadUuid = entidadUuid,
+                ElementsJson = string.IsNullOrWhiteSpace(doc.ContentJson) ? "[]" : doc.ContentJson,
+                YjsStateBase64 = yjsB64,
+                Version = doc.Version,
+                ActualizadoEn = doc.ActualizadoEn
+            };
+        }
+
+        public async Task<PizarraSalaCarreraDto> GuardarPizarraSalaCarreraAsync(int idCarrera, string idPeriodo, GuardarPizarraSalaCarreraRequest request, string idUsuario)
+        {
+            string entidadUuid = $"sala_carrera_{idCarrera}_{idPeriodo}";
+            string campoNombre = "pizarra_interactiva";
+            string docUuid = $"{entidadUuid}_pizarra";
+
+            var doc = await _context.DocCoworkDocumentos
+                .FirstOrDefaultAsync(d => (d.EntidadUuid == entidadUuid && d.CampoNombre == campoNombre) || d.Uuid == docUuid);
+
+            byte[]? yjsBytes = null;
+            if (!string.IsNullOrWhiteSpace(request.YjsStateBase64))
+            {
+                try
+                {
+                    yjsBytes = Convert.FromBase64String(request.YjsStateBase64);
+                }
+                catch
+                {
+                    // Ignorar error si base64 no es válido
+                }
+            }
+
+            if (doc == null)
+            {
+                doc = new DocCoworkDocumento
+                {
+                    Uuid = docUuid,
+                    EntidadTipo = "SALA_CARRERA",
+                    EntidadUuid = entidadUuid,
+                    CampoNombre = campoNombre,
+                    ContentJson = request.ElementsJson ?? "[]",
+                    YjsState = yjsBytes,
+                    Version = 1,
+                    CreadoEn = DateTime.UtcNow,
+                    ActualizadoEn = DateTime.UtcNow
+                };
+                _context.DocCoworkDocumentos.Add(doc);
+            }
+            else
+            {
+                doc.ContentJson = request.ElementsJson ?? "[]";
+                if (yjsBytes != null)
+                {
+                    doc.YjsState = yjsBytes;
+                }
+                doc.Version += 1;
+                doc.ActualizadoEn = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new PizarraSalaCarreraDto
+            {
+                IdCarrera = idCarrera,
+                IdPeriodo = idPeriodo,
+                EntidadUuid = entidadUuid,
+                ElementsJson = doc.ContentJson,
+                YjsStateBase64 = request.YjsStateBase64,
+                Version = doc.Version,
+                ActualizadoEn = doc.ActualizadoEn
+            };
+        }
     }
 }

@@ -54,6 +54,25 @@ export interface SalaCarreraEstadoDto {
     asignaturas: SalaAsignaturaItemDto[];
 }
 
+export interface PizarraSalaCarreraDto {
+    id_carrera?: number;
+    idCarrera?: number;
+    id_periodo?: string;
+    idPeriodo?: string;
+    elements_json?: string;
+    elementsJson?: string;
+    yjs_state_base64?: string;
+    yjsStateBase64?: string;
+    version?: number;
+    actualizado_en?: string;
+    actualizadoEn?: string;
+}
+
+export interface GuardarPizarraSalaCarreraRequest {
+    elementsJson: string;
+    yjsStateBase64?: string;
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Servicio de Fachada para Salas Curriculares Colegiadas
 // ─────────────────────────────────────────────────────────────
@@ -73,7 +92,21 @@ export const salaCarreraService = {
         api.post<{ success: boolean; activa: boolean }>(`/expedientes-curriculares/sala-carrera/${idCarrera}/${encodeURIComponent(idPeriodo)}/conmutar`, {
             activar,
             temaPrincipal
-        }).then(r => r.data)
+        }).then(r => r.data),
+
+    /**
+     * Consulta el estado persistido de la pizarra interactiva de la carrera y período.
+     */
+    getPizarra: (idCarrera: number, idPeriodo: string): Promise<PizarraSalaCarreraDto> =>
+        api.get<PizarraSalaCarreraDto>(`/expedientes-curriculares/sala-carrera/${idCarrera}/${encodeURIComponent(idPeriodo)}/pizarra`)
+            .then(r => r.data),
+
+    /**
+     * Guarda el estado de la pizarra interactiva de la carrera y período en doc_cowork_documentos.
+     */
+    guardarPizarra: (idCarrera: number, idPeriodo: string, data: GuardarPizarraSalaCarreraRequest): Promise<PizarraSalaCarreraDto> =>
+        api.put<PizarraSalaCarreraDto>(`/expedientes-curriculares/sala-carrera/${idCarrera}/${encodeURIComponent(idPeriodo)}/pizarra`, data)
+            .then(r => r.data)
 };
 
 export default salaCarreraService;

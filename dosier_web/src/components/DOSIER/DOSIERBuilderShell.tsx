@@ -409,6 +409,11 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                 {/* ── Área Principal: Editor & Visor PDF ── */}
                                 <div className="flex-1 bg-bg-deep overflow-hidden flex">
                                     {layout.activeTab !== 'output' ? (
+                                        (layout.activeSection?.fullBleed || sections.some(s => s.id === layout.activeTab && s.fullBleed)) ? (
+                                            <div className="flex-1 w-full h-full overflow-hidden relative">
+                                                {children(layout.activeTab, cowork)}
+                                            </div>
+                                        ) : (
                                         <div ref={contentScrollRef} className="flex-1 pt-4 pb-8 px-3 sm:pt-6 sm:pb-12 sm:px-6 md:pt-8 md:pb-16 md:px-12 overflow-y-auto custom-scrollbar">
                                             <div className="w-full mx-auto max-w-[98%] sm:max-w-[94%] transition-all duration-300">
                                                 <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -502,6 +507,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                                 />
                                             </div>
                                         </div>
+                                        )
                                     ) : (
                                         /* ── Panel de Finalización y Firma ── */
                                         <OutputSection

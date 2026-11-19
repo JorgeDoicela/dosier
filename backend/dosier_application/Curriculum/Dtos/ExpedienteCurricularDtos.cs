@@ -198,4 +198,21 @@ namespace dosier_application.Curriculum.Dtos
         public bool Activar { get; set; }
         public string? TemaPrincipal { get; set; }
     }
+
+    public class PizarraSalaCarreraDto
+    {
+        public int IdCarrera { get; set; }
+        public string IdPeriodo { get; set; } = string.Empty;
+        public string EntidadUuid { get; set; } = string.Empty;
+        public string ElementsJson { get; set; } = "[]";
+        public string? YjsStateBase64 { get; set; }
+        public int Version { get; set; }
+        public DateTime? ActualizadoEn { get; set; }
+    }
+
+    public class GuardarPizarraSalaCarreraRequest
+    {
+        public string ElementsJson { get; set; } = "[]";
+        public string? YjsStateBase64 { get; set; }
+    }
 }
