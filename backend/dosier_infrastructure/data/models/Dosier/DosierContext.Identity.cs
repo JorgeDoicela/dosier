@@ -144,28 +144,6 @@ public partial class DosierContext
             entity.HasOne(d => d.DestinatarioNavigation).WithMany().HasForeignKey(d => d.Destinatario).OnDelete(DeleteBehavior.Restrict).HasConstraintName("fk_notif_usuario");
         });
 
-        modelBuilder.Entity<AccessToken>(entity =>
-        {
-            entity.HasKey(e => e.IdToken).HasName("PRIMARY");
-            entity.ToTable("doc_tokens_acceso");
-            entity.Property(e => e.IdToken).HasColumnName("idToken");
-            entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-            entity.HasIndex(e => e.Uuid).IsUnique().HasDatabaseName("uq_tokens_uuid");
-            entity.Property(e => e.IdProyecto).HasColumnName("idProyecto");
-            entity.Property(e => e.Token).HasColumnName("token").HasMaxLength(255).IsRequired();
-            entity.HasIndex(e => e.Token).IsUnique();
-            entity.Property(e => e.IdReferencia).HasColumnName("idReferencia");
-            entity.Property(e => e.TipoReferencia).HasColumnName("tipoReferencia").HasMaxLength(50).HasDefaultValueSql("'Docente'");
-            entity.Property(e => e.Scopes).HasColumnName("scopes").HasMaxLength(255);
-            entity.Property(e => e.MaxUsos).HasColumnName("maxUsos").HasDefaultValueSql("'1'");
-            entity.Property(e => e.UsosActuales).HasColumnName("usosActuales").HasDefaultValueSql("'0'");
-            entity.Property(e => e.IpOrigen).HasColumnName("ipOrigen").HasMaxLength(50);
-            entity.Property(e => e.Activo).HasColumnType("tinyint(1)").HasDefaultValueSql("'1'").HasSentinel(true);
-            entity.Property(e => e.FechaRegistro).HasColumnName("fechaRegistro").HasDefaultValueSql("CURRENT_TIMESTAMP");
-            entity.Property(e => e.FechaExpiracion).HasColumnName("fechaExpiracion");
-            entity.Property(e => e.Version).HasColumnName("version").HasDefaultValueSql("'1'");
-        });
-
         modelBuilder.Entity<DocUsuarioMetadata>(entity =>
         {
             entity.HasKey(e => e.IdMetadata).HasName("PRIMARY");

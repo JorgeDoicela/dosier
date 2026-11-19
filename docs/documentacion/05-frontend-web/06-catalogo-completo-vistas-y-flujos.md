@@ -9,7 +9,7 @@ dosier_web/src/pages/
 ├── Admin/           # Administración general (Usuarios, Auditoría, Plantillas, Emails)
 ├── Analytics/       # Indicadores y tablero CACES
 ├── Auth/            # Flujos secundarios de autenticación (Reset password)
-├── Calendario/      # Planificador de hitos lectivos y exportación iCalendar
+├── Calendario/      # Planificador de hitos lectivos y agenda institucional
 ├── Curriculum/      # Dominio Curricular ISTPET (Mis Asignaturas PEA, Supervisión, DocumentWorkspace, Monitoreo, Revisión)
 ├── Dashboard/       # Tableros diferenciados por rol (5 roles curriculares) y modales operativos
 ├── Landing/         # Página pública de presentación
@@ -180,7 +180,6 @@ Panel directivo para el seguimiento operativo de los Programas de Estudio de la 
     * *Coordinadores de Carrera (`DOSIER_COORD_CARRERA`):* Vista agregada de todas las asignaturas de su carrera, plazos de revisión y PEAs asignados a sus docentes.
     * *Coordinación Académica y Vicerrectoría (`DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`):* Visión institucional global de todas las carreras, hitos lectivos y avance macro del distributivo.
     * *Administradores y Autoridades:* Capacidad de publicar directivas institucionales con segmentación por roles destino (`roles_visibles`) y privacidad controlada.
-  * **Sincronización Externa iCalendar:** Generación y revocación de tokens privados iCal (`/api/calendario/feed?token=...`) para suscripción en Outlook, Apple Calendar y Google Calendar.
 * **`src/pages/Notificaciones/`:** Bandeja centralizada de alertas transaccionales recibidas por WebSocket SignalR.
 * **`src/pages/RecycleBin/`:** Papelera de reciclaje lógica para recuperación controlada de registros curriculares dados de baja.
 * **`src/pages/Settings/`:** Gestión del perfil docente, actualización de correo, cambio de clave y selector de tema visual (Claro / Oscuro).

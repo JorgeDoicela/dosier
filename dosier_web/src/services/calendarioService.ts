@@ -130,9 +130,6 @@ export const devolverAInbox = (uuid: string): Promise<void> =>
 export const reordenarBandeja = (items: { uuid: string; orden: number }[]): Promise<void> =>
     api.patch('/calendario/usuario/notas/reordenar', items).then(() => undefined);
 
-export const getIcalToken = (): Promise<{ feed_url: string }> =>
-    api.post('/calendario/ical/token').then(r => r.data);
-
 // ─────────────────────────────────────────────────────────────
 //  Helpers de UI
 // ─────────────────────────────────────────────────────────────

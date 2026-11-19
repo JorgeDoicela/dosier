@@ -21,7 +21,6 @@ public partial class DosierContext
 
         // Calendario
         modelBuilder.ApplyConfiguration(new DocCalendarioEventoNormativoConfiguration());
-        modelBuilder.ApplyConfiguration(new DocIcalTokenConfiguration());
         modelBuilder.ApplyConfiguration(new DocCalendarioAlertaEnviadaConfiguration());
 
         // Configuraciones de Workflow y Feedback

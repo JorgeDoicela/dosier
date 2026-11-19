@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 --  SISTEMA DOSIER - MÓDULO DE DOCUMENTACIÓN Y GESTIÓN ACADÉMICA
 --  Base de Datos: sigafi_es | Motor: MySQL 8.0+ / MariaDB 10.5+
 --  Diseñado para el despliegue del módulo de DOCUMENTACIÓN.
@@ -16,13 +16,11 @@ SET SQL_SAFE_UPDATES = 0;
 DROP VIEW IF EXISTS v_doc_calendario_eventos;
 
 DROP TRIGGER IF EXISTS trg_doc_notif_uuid;
-DROP TRIGGER IF EXISTS trg_doc_tokens_uuid;
 DROP TRIGGER IF EXISTS trg_doc_usermeta_uuid;
 DROP TRIGGER IF EXISTS trg_doc_lopdp_auditoria_uuid;
 DROP TRIGGER IF EXISTS trg_doc_backup_logs_uuid;
 DROP TRIGGER IF EXISTS trg_doc_email_tpl_uuid;
 DROP TRIGGER IF EXISTS trg_doc_email_hist_uuid;
-DROP TRIGGER IF EXISTS trg_doc_ical_token_uuid;
 DROP TRIGGER IF EXISTS trg_doc_cal_norm_uuid;
 DROP TRIGGER IF EXISTS trg_doc_feedback_uuid;
 
@@ -32,7 +30,6 @@ DROP TABLE IF EXISTS
     doc_backup_logs,
     doc_lopdp_auditoria_datos,
     doc_notificaciones,
-    doc_tokens_acceso,
     doc_usuarios_metadata,
     doc_config_general,
     doc_audit_admin,
@@ -59,7 +56,6 @@ DROP TABLE IF EXISTS
 
     -- Módulo Calendario (orden inverso por FK)
     doc_calendario_alertas_enviadas,
-    doc_ical_tokens,
     doc_calendario_eventos_normativos,
 
     -- Tablas residuales históricas y modelos deprecados (limpieza total de desarrollo)
@@ -124,32 +120,6 @@ CREATE TABLE doc_notificaciones (
 
 CREATE TRIGGER trg_doc_notif_uuid
 BEFORE INSERT ON doc_notificaciones FOR EACH ROW
-SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
-
-CREATE TABLE doc_tokens_acceso (
-    idToken         INT          AUTO_INCREMENT PRIMARY KEY,
-    uuid            VARCHAR(36)     NOT NULL,
-    idProyecto      INT          NULL,
-    idExpediente    INT          NULL         COMMENT 'Vínculo opcional al expediente curricular',
-    idPea           INT          NULL         COMMENT 'Vínculo opcional al PEA para enlace público/firma',
-    token           VARCHAR(255) NOT NULL UNIQUE,
-    idReferencia    INT          NOT NULL,
-    tipoReferencia  VARCHAR(50)  NOT NULL DEFAULT 'Docente',
-    scopes          VARCHAR(255),
-    maxUsos         INT          DEFAULT 1,
-    usosActuales    INT          DEFAULT 0,
-    ipOrigen        VARCHAR(50)  NULL,
-    activo          TINYINT(1)   DEFAULT 1,
-    fechaRegistro   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    fechaExpiracion TIMESTAMP    NULL,
-    version         INT          DEFAULT 1,
-    UNIQUE KEY uq_tokens_uuid (uuid),
-    INDEX idx_tokens_exp (idExpediente),
-    INDEX idx_tokens_pea (idPea)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='[SISTEMA] Seguridad para Pares Ciegos (Control de IPs y usos)';
-
-CREATE TRIGGER trg_doc_tokens_uuid
-BEFORE INSERT ON doc_tokens_acceso FOR EACH ROW
 SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 CREATE TABLE doc_usuarios_metadata (
@@ -610,29 +580,6 @@ CREATE TABLE doc_calendario_eventos_normativos (
     FOREIGN KEY (creadoPor) REFERENCES usuarios(idUsuario) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   COMMENT 'Hitos normativos y académicos editables por el Admin sin redespliegue';
-
--- =============================================================================
--- TOKENS iCAL: Suscripción al calendario desde Google Calendar / Outlook
--- =============================================================================
--- Cada usuario recibe un token único. Con él, puede suscribirse a la URL:
---   GET /api/calendario/feed/{token}/calendario.ics
--- y su app de calendario sincronizará automáticamente sin requerir login.
--- El token es regenerable por el usuario desde /configuracion.
-CREATE TABLE doc_ical_tokens (
-    idToken           INT           AUTO_INCREMENT PRIMARY KEY,
-    uuid              VARCHAR(36)   NOT NULL UNIQUE,
-    idUsuario         INT(11)       NOT NULL UNIQUE COMMENT 'Un token por usuario',
-    token             VARCHAR(64)   NOT NULL UNIQUE COMMENT 'Token seguro de 32 bytes en hex',
-    activo            TINYINT(1)    NOT NULL DEFAULT 1,
-    fechaGenerado     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fechaUltimoUso    TIMESTAMP     NULL     COMMENT 'Fecha de la última solicitud del feed .ics',
-    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-  COMMENT 'Tokens de suscripción iCal para Google Calendar / Outlook / iPhone';
-
-CREATE TRIGGER trg_doc_ical_token_uuid
-BEFORE INSERT ON doc_ical_tokens FOR EACH ROW
-SET NEW.uuid = IFNULL(NULLIF(NEW.uuid, ''), UUID());
 
 -- =============================================================================
 -- TRAZABILIDAD DE ALERTAS: Evita alertas duplicadas del job diario

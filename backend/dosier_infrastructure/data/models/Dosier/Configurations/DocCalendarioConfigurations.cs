@@ -37,25 +37,6 @@ public class DocCalendarioEventoNormativoConfiguration : IEntityTypeConfiguratio
     }
 }
 
-public class DocIcalTokenConfiguration : IEntityTypeConfiguration<DocIcalToken>
-{
-    public void Configure(EntityTypeBuilder<DocIcalToken> entity)
-    {
-        entity.ToTable("doc_ical_tokens");
-        entity.HasKey(e => e.IdToken);
-        entity.Property(e => e.IdToken).HasColumnName("idToken");
-        entity.Property(e => e.Uuid).HasColumnName("uuid").HasMaxLength(36).IsRequired();
-        entity.HasIndex(e => e.Uuid).IsUnique();
-        entity.Property(e => e.IdUsuario).HasColumnName("idUsuario").IsRequired();
-        entity.HasIndex(e => e.IdUsuario).IsUnique();
-        entity.Property(e => e.Token).HasColumnName("token").HasMaxLength(64).IsRequired();
-        entity.HasIndex(e => e.Token).IsUnique();
-        entity.Property(e => e.Activo).HasColumnName("activo").HasDefaultValue(true);
-        entity.Property(e => e.FechaGenerado).HasColumnName("fechaGenerado").HasColumnType("datetime").HasDefaultValueSql("CURRENT_TIMESTAMP");
-        entity.Property(e => e.FechaUltimoUso).HasColumnName("fechaUltimoUso");
-    }
-}
-
 public class DocCalendarioAlertaEnviadaConfiguration : IEntityTypeConfiguration<DocCalendarioAlertaEnviada>
 {
     public void Configure(EntityTypeBuilder<DocCalendarioAlertaEnviada> entity)

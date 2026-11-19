@@ -14,22 +14,12 @@ import { EventoFormDrawer } from './components/EventoFormDrawer';
 import { EventoDetailDrawer } from './components/EventoDetailDrawer';
 import { PlanificacionPopover } from './components/PlanificacionPopover';
 
-import { useICalSync } from './hooks/useICalSync';
 import { useCalendarioEvents } from './hooks/useCalendarioEvents';
 import { useStickyNotes } from './hooks/useStickyNotes';
 import { useKanbanOrchestration } from './hooks/useKanbanOrchestration';
 
 export const CalendarioPage: React.FC = () => {
-    // 1. Hook de Sincronización iCal
-    const {
-        icalUrl,
-        generatingToken,
-        copied,
-        handleGenerarToken,
-        handleCopyIcal,
-    } = useICalSync();
-
-    // 2. Hook de Notas Adhesivas (Inbox)
+    // 1. Hook de Notas Adhesivas (Inbox)
     const {
         stickyNotes,
         setStickyNotes,
@@ -172,11 +162,6 @@ export const CalendarioPage: React.FC = () => {
                     handleDeleteStickyNote={(uuid) => handleDeleteStickyNote(uuid)}
                     proximosEventos={proximosEventos}
                     setSelectedEvent={setSelectedEvent}
-                    icalUrl={icalUrl}
-                    copied={copied}
-                    generatingToken={generatingToken}
-                    handleCopyIcal={handleCopyIcal}
-                    handleGenerarToken={handleGenerarToken}
                     handleDevolverAInbox={handleDevolverAInbox}
                 />
 

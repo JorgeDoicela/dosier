@@ -45,31 +45,6 @@ public class CalendarioController : ControllerBase
         return Ok(eventos);
     }
 
-    // ── GET /api/calendario/feed ────────────────────────────────────────────
-    // Endpoint público (no requiere JWT). Valida el token iCal interno.
-    [HttpGet("feed")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetIcalFeed([FromQuery] string token)
-    {
-        var ics = await _calendarioService.GenerarIcalFeedAsync(token);
-        if (ics == null) return Unauthorized(new { message = "Token iCal inválido o revocado." });
-        
-        Response.Headers.Append("Content-Disposition", "attachment; filename=\"calendario-institucional-dosier.ics\"");
-        return Content(ics, "text/calendar; charset=utf-8");
-    }
-
-    // ── POST /api/calendario/ical/token ─────────────────────────────────────
-    [HttpPost("ical/token")]
-    public async Task<IActionResult> GenerarTokenIcal()
-    {
-        var idUsuario = await GetCurrentUserIdAsync();
-        if (idUsuario == null) return Unauthorized();
-
-        var token = await _calendarioService.GenerarORegenerarTokenIcalAsync(idUsuario.Value);
-        var feedUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/api/calendario/feed?token={token}";
-        return Ok(new { token, feed_url = feedUrl });
-    }
-
     // ── CRUD Eventos de Usuario (Tareas y Eventos personales/compartidos) ──
     
     // Crear un evento personal de usuario

@@ -27,7 +27,6 @@ public partial class DosierContext : DbContext
     public virtual DbSet<DocNotificacion>       DocNotificaciones      { get; set; }
     public virtual DbSet<DocEmailTemplate>     DocEmailTemplates      { get; set; }
     public virtual DbSet<DocEmailHistorial>    DocEmailHistorials     { get; set; }
-    public virtual DbSet<AccessToken>           DocTokensAcceso        { get; set; }
     public virtual DbSet<DocUsuarioMetadata>    DocUsuariosMetadata    { get; set; }
     public virtual DbSet<DocLopdpAuditoriaDatos> DocLopdpAuditoriaDatos  { get; set; }
     public virtual DbSet<DocAuditAdmin>       DocAuditAdmin          { get; set; }
@@ -38,7 +37,6 @@ public partial class DosierContext : DbContext
 
     // --- Módulo Calendario ---
     public virtual DbSet<DocCalendarioEventoNormativo>  DocCalendarioEventosNormativos  { get; set; }
-    public virtual DbSet<DocIcalToken>                  DocIcalTokens                   { get; set; }
     public virtual DbSet<DocCalendarioAlertaEnviada>    DocCalendarioAlertasEnviadas    { get; set; }
 
     // --- DOSIER Document Engine (Persistence & Audit) ---

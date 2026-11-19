@@ -582,100 +582,6 @@ namespace dosier_infrastructure.Migrations
                     b.ToTable("rbac_usuario_rol", (string)null);
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.AccessToken", b =>
-                {
-                    b.Property<int>("IdToken")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idToken");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdToken"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
-                        .HasDefaultValueSql("'1'");
-
-                    b.Property<DateTime?>("FechaExpiracion")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("fechaExpiracion");
-
-                    b.Property<DateTime>("FechaRegistro")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("fechaRegistro")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int?>("IdProyecto")
-                        .HasColumnType("int")
-                        .HasColumnName("idProyecto");
-
-                    b.Property<int>("IdReferencia")
-                        .HasColumnType("int")
-                        .HasColumnName("idReferencia");
-
-                    b.Property<string>("IpOrigen")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("ipOrigen");
-
-                    b.Property<int>("MaxUsos")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("maxUsos")
-                        .HasDefaultValueSql("'1'");
-
-                    b.Property<string>("Scopes")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("scopes");
-
-                    b.Property<string>("TipoReferencia")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("tipoReferencia")
-                        .HasDefaultValueSql("'Docente'");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("token");
-
-                    b.Property<int>("UsosActuales")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("usosActuales")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<Guid>("Uuid")
-                        .HasMaxLength(36)
-                        .HasColumnType("char(36)")
-                        .HasColumnName("uuid");
-
-                    b.Property<int>("Version")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("version")
-                        .HasDefaultValueSql("'1'");
-
-                    b.HasKey("IdToken")
-                        .HasName("PRIMARY");
-
-                    b.HasIndex("IdProyecto");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("Uuid")
-                        .IsUnique()
-                        .HasDatabaseName("uq_tokens_uuid");
-
-                    b.ToTable("doc_tokens_acceso", (string)null);
-                });
-
             modelBuilder.Entity("dosier_infrastructure.data.models.Alumno", b =>
                 {
                     b.Property<string>("IdAlumno")
@@ -3540,61 +3446,6 @@ namespace dosier_infrastructure.Migrations
                     b.ToTable("doc_grupos_miembros", (string)null);
                 });
 
-            modelBuilder.Entity("dosier_infrastructure.data.models.DocIcalToken", b =>
-                {
-                    b.Property<int>("IdToken")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("idToken");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdToken"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("tinyint(1)")
-                        .HasDefaultValue(true)
-                        .HasColumnName("activo");
-
-                    b.Property<DateTime>("FechaGenerado")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaGenerado")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("FechaUltimoUso")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("fechaUltimoUso");
-
-                    b.Property<int>("IdUsuario")
-                        .HasColumnType("int")
-                        .HasColumnName("idUsuario");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)")
-                        .HasColumnName("token");
-
-                    b.Property<string>("Uuid")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("varchar(36)")
-                        .HasColumnName("uuid");
-
-                    b.HasKey("IdToken");
-
-                    b.HasIndex("IdUsuario")
-                        .IsUnique();
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.HasIndex("Uuid")
-                        .IsUnique();
-
-                    b.ToTable("doc_ical_tokens", (string)null);
-                });
-
             modelBuilder.Entity("dosier_infrastructure.data.models.DocImpactoProyecto", b =>
                 {
                     b.Property<int>("IdImpactoProyecto")
@@ -6067,17 +5918,6 @@ namespace dosier_infrastructure.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("dosier_infrastructure.data.models.AccessToken", b =>
-                {
-                    b.HasOne("dosier_infrastructure.data.models.DocProyecto", "IdProyectoNavigation")
-                        .WithMany()
-                        .HasForeignKey("IdProyecto")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_token_proyecto");
-
-                    b.Navigation("IdProyectoNavigation");
                 });
 
             modelBuilder.Entity("dosier_infrastructure.data.models.Contrato", b =>

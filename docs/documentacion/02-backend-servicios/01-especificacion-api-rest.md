@@ -348,9 +348,6 @@ Planificación académica, hitos lectivos y sincronización de calendario instit
 | Método | Ruta | Autorización | Descripción |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/eventos` | Autenticado | Retorna la agregación de eventos institucionales y curriculares según el rol del usuario (docentes: asignaturas y PEAs propios; coordinadores: carreras asignadas; vicerrector/admin: visión global). Soporta filtrado de normativos por `roles_visibles` y `es_privado`. |
-| `GET` | `/feed` | **Público (Token iCal)** | Feed iCalendar `.ics` para sincronización con Outlook, Google Calendar o Apple Calendar filtrado por la identidad del usuario. |
-| `POST`| `/ical/token` | Autenticado | Genera o renueva el token privado de sincronización iCal del usuario. |
-| `DELETE`| `/ical/token` | Autenticado | Revoca el token privado iCal del usuario. |
 | `POST`| `/normativos` | `DOSIER_ADMIN`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR` | Publica una directiva o hito normativo institucional (CACES, plazos oficiales) con segmentación por `roles_visibles`. |
 | `PUT` | `/normativos/{uuid}` | `DOSIER_ADMIN`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR` | Modifica una directiva o hito normativo existente. |
 | `DELETE`| `/normativos/{uuid}` | `DOSIER_ADMIN`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR` | Elimina lógicamente una directiva institucional. |

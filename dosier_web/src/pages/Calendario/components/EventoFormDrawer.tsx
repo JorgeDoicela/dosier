@@ -165,7 +165,7 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                                         <option value="DOSIER_COORD_CARRERA,DOSIER_COORD_ACAD,DOSIER_VICERRECTOR">Equipo Colegiado / Autoridades</option>
                                     </select>
                                     <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                                        Este hito se publicará en el calendario institucional de los roles seleccionados y se sincronizará con sus suscripciones iCal.
+                                        Este hito se publicará en el calendario institucional de los roles seleccionados.
                                     </p>
                                 </div>
                             )}

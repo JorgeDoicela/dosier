@@ -31,11 +31,6 @@ interface CalendarioSidebarProps {
     handleDeleteStickyNote: (uuid: string) => Promise<void>;
     proximosEventos: CalendarEventExtended[];
     setSelectedEvent: (ev: EventoCalendario) => void;
-    icalUrl: string;
-    copied: boolean;
-    generatingToken: boolean;
-    handleCopyIcal: () => void;
-    handleGenerarToken: () => void;
     handleDevolverAInbox?: (uuid: string) => void;
     onDropEventToInbox?: (uuid: string) => void;
 }
@@ -53,11 +48,6 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
     handleDeleteStickyNote,
     proximosEventos,
     setSelectedEvent,
-    icalUrl,
-    copied,
-    generatingToken,
-    handleCopyIcal,
-    handleGenerarToken,
     handleDevolverAInbox,
     onDropEventToInbox,
 }) => {
@@ -219,37 +209,6 @@ export const CalendarioSidebar: React.FC<CalendarioSidebarProps> = ({
                             </label>
                         ))}
                     </div>
-                </div>
-            )}
-
-            {/* iCal: Solo en vista Calendario */}
-            {viewMode === 'calendar' && (
-                <div className="sidebar-section ical-section">
-                    <h3>Sincronización de Agenda</h3>
-                    <p className="ical-help-text">Integra tus hitos en Google Calendar, Outlook o Apple Calendar.</p>
-                    {icalUrl ? (
-                        <div className="ical-container">
-                            <input
-                                type="text"
-                                readOnly
-                                value={icalUrl}
-                                className="ical-input"
-                                onClick={(e) => (e.target as HTMLInputElement).select()}
-                            />
-                            <div className="ical-buttons">
-                                <button onClick={handleCopyIcal} className="ical-btn primary">
-                                    {copied ? '¡Copiado!' : 'Copiar'}
-                                </button>
-                                <button onClick={handleGenerarToken} className="ical-btn secondary" disabled={generatingToken}>
-                                    {generatingToken ? '...' : 'Regenerar'}
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <button onClick={handleGenerarToken} className="ical-btn generate" disabled={generatingToken}>
-                            {generatingToken ? 'Obtener Enlace iCal' : 'Obtener Enlace iCal'}
-                        </button>
-                    )}
                 </div>
             )}
         </aside>

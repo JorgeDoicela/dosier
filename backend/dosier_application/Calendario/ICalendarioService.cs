@@ -56,12 +56,6 @@ public interface ICalendarioService
     /// <summary>Obtiene todos los eventos del rango indicado, filtrados por rol y idUsuario (para eventos privados).</summary>
     Task<IEnumerable<CalendarioEventoDto>> GetEventosAsync(DateOnly desde, DateOnly hasta, string rolUsuario, int idUsuario);
 
-    /// <summary>Genera el feed .ics (iCalendar RFC 5545) para un token de suscripción dado.</summary>
-    Task<string?> GenerarIcalFeedAsync(string token);
-
-    /// <summary>Genera o regenera el token iCal personal del usuario.</summary>
-    Task<string> GenerarORegenerarTokenIcalAsync(int idUsuario);
-
     // ── CRUD normativos y personales ──────────────────────────────────────────────
     Task<IEnumerable<EventoNormativoDto>> GetNormativosAsync();
     Task<string> CreateNormativoAsync(EventoNormativoDto dto, int idUsuarioAdmin);

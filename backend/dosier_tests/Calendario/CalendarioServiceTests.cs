@@ -19,7 +19,6 @@ namespace dosier_tests.Calendario;
 /// Valida la lógica de negocio de eventos del calendario:
 ///  - CRUD de eventos normativos: CreateNormativo, UpdateNormativo, DeleteNormativo (soft-delete)
 ///  - GetNormativos: solo retorna activos
-///  - iCal token: generación y regeneración
 ///  - DevolverAInbox: limpia fecha y cambia estado a "Inbox"
 /// Se usa InMemoryDatabase de EF Core para aislar de MySQL.
 /// </summary>
@@ -302,67 +301,6 @@ public class CalendarioServiceTests
         Assert.Equal(2, result.Count);
         Assert.Contains(result, r => r.Titulo == "Evento Activo");
         Assert.Contains(result, r => r.Titulo == "Evento Inactivo");
-    }
-
-    // ─── GenerarORegenerarTokenIcalAsync ──────────────────────────────────────
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    [Trait("Feature", "Calendario")]
-    public async Task GenerarORegenerarTokenIcalAsync_NuevoUsuario_GeneraTokenSeguro()
-    {
-        // Arrange
-        var dbName = nameof(GenerarORegenerarTokenIcalAsync_NuevoUsuario_GeneraTokenSeguro);
-        await using var context = CreateInMemoryContext(dbName);
-
-        context.Users.Add(new User { IdUsuario = 7, IdSigafi = "sigafi-ical", Nombre = "Usuario iCal" });
-        await context.SaveChangesAsync();
-
-        var sut = CreateSut(context);
-
-        // Act
-        var token = await sut.GenerarORegenerarTokenIcalAsync(idUsuario: 7);
-
-        // Assert — el token debe ser no-vacío y suficientemente largo para ser seguro
-        Assert.NotNull(token);
-        Assert.NotEmpty(token);
-        Assert.True(token.Length >= 20, "El token iCal debe ser lo suficientemente largo para ser seguro");
-
-        // Verificar que se guardó en la tabla DocIcalTokens
-        var savedToken = context.DocIcalTokens.FirstOrDefault(t => t.IdUsuario == 7);
-        Assert.NotNull(savedToken);
-        Assert.Equal(token, savedToken!.Token);
-    }
-
-    [Fact]
-    [Trait("Category", "Unit")]
-    [Trait("Feature", "Calendario")]
-    public async Task GenerarORegenerarTokenIcalAsync_UsuarioConTokenExistente_RegeneraTokenDistinto()
-    {
-        // Arrange
-        var dbName = nameof(GenerarORegenerarTokenIcalAsync_UsuarioConTokenExistente_RegeneraTokenDistinto);
-        await using var context = CreateInMemoryContext(dbName);
-
-        context.Users.Add(new User { IdUsuario = 8, IdSigafi = "sigafi-ical2", Nombre = "Usuario iCal 2" });
-        context.DocIcalTokens.Add(new DocIcalToken
-        {
-            IdToken = 1,
-            Uuid = Guid.NewGuid().ToString(),
-            IdUsuario = 8,
-            Token = "token-viejo-12345",
-            Activo = true,
-            FechaGenerado = DateTime.UtcNow.AddDays(-30)
-        });
-        await context.SaveChangesAsync();
-
-        var sut = CreateSut(context);
-
-        // Act
-        var newToken = await sut.GenerarORegenerarTokenIcalAsync(idUsuario: 8);
-
-        // Assert — el token regenerado debe ser diferente al anterior
-        Assert.NotEqual("token-viejo-12345", newToken);
-        Assert.NotEmpty(newToken);
     }
 
     // ─── DevolverAInboxAsync ──────────────────────────────────────────────────

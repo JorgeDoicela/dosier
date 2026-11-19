@@ -497,96 +497,6 @@ public class CalendarioService : ICalendarioService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // iCAL FEED — RFC 5545
-    // ─────────────────────────────────────────────────────────────────────────
-    public async Task<string?> GenerarIcalFeedAsync(string token)
-    {
-        var record = await _context.Set<DocIcalToken>()
-            .FirstOrDefaultAsync(t => t.Token == token && t.Activo);
-        if (record == null) return null;
-
-        record.FechaUltimoUso = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        var usuario = await _context.Users.FindAsync(record.IdUsuario);
-        var rol = "DOSIER_DOCENTE";
-        if (usuario != null)
-        {
-            var userRole = await _context.UserRoles
-                .Include(ur => ur.Role)
-                .Where(ur => ur.IdUsuario == usuario.IdUsuario && (ur.EsActivo ?? true))
-                .FirstOrDefaultAsync();
-            if (userRole?.Role != null)
-            {
-                rol = userRole.Role.CodigoRol;
-            }
-        }
-
-        var desde = DateOnly.FromDateTime(DateTime.Today.AddMonths(-1));
-        var hasta = DateOnly.FromDateTime(DateTime.Today.AddMonths(6));
-        var eventos = await GetEventosAsync(desde, hasta, rol, record.IdUsuario);
-
-        var sb = new StringBuilder();
-        sb.AppendLine("BEGIN:VCALENDAR");
-        sb.AppendLine("VERSION:2.0");
-        sb.AppendLine("PRODID:-//DOSIER//IST Traversari//ES");
-        sb.AppendLine("CALSCALE:GREGORIAN");
-        sb.AppendLine("METHOD:PUBLISH");
-        sb.AppendLine("X-WR-CALNAME:DOSIER — Calendario Curricular Institucional");
-        sb.AppendLine("X-WR-TIMEZONE:America/Guayaquil");
-
-        foreach (var ev in eventos)
-        {
-            sb.AppendLine("BEGIN:VEVENT");
-            sb.AppendLine($"UID:{ev.IdEventoCalendario}@dosier.isttraversari.edu.ec");
-            sb.AppendLine($"DTSTART;VALUE=DATE:{ev.FechaInicio:yyyyMMdd}");
-            if (ev.FechaFin.HasValue)
-                sb.AppendLine($"DTEND;VALUE=DATE:{ev.FechaFin.Value.AddDays(1):yyyyMMdd}");
-            else
-                sb.AppendLine($"DTEND;VALUE=DATE:{ev.FechaInicio.AddDays(1):yyyyMMdd}");
-            sb.AppendLine($"SUMMARY:{EscapeIcal(ev.Titulo)}");
-            if (!string.IsNullOrEmpty(ev.Descripcion))
-                sb.AppendLine($"DESCRIPTION:{EscapeIcal(ev.Descripcion)}");
-            if (!string.IsNullOrEmpty(ev.UrlAccion))
-                sb.AppendLine($"URL:https://dosier.isttraversari.edu.ec{ev.UrlAccion}");
-            sb.AppendLine($"CATEGORIES:{ev.CategoriaGlobal}");
-            sb.AppendLine("END:VEVENT");
-        }
-
-        sb.AppendLine("END:VCALENDAR");
-        return sb.ToString();
-    }
-
-    public async Task<string> GenerarORegenerarTokenIcalAsync(int idUsuario)
-    {
-        var existing = await _context.Set<DocIcalToken>()
-            .FirstOrDefaultAsync(t => t.IdUsuario == idUsuario);
-
-        var nuevoToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLower();
-
-        if (existing != null)
-        {
-            existing.Token = nuevoToken;
-            existing.FechaGenerado = DateTime.UtcNow;
-            existing.Activo = true;
-        }
-        else
-        {
-            _context.Set<DocIcalToken>().Add(new DocIcalToken
-            {
-                Uuid = Guid.NewGuid().ToString(),
-                IdUsuario = idUsuario,
-                Token = nuevoToken,
-                Activo = true,
-                FechaGenerado = DateTime.UtcNow
-            });
-        }
-
-        await _context.SaveChangesAsync();
-        return nuevoToken;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
     // CRUD Normativos
     // ─────────────────────────────────────────────────────────────────────────
     public async Task<IEnumerable<EventoNormativoDto>> GetNormativosAsync()
@@ -852,7 +762,4 @@ public class CalendarioService : ICalendarioService
         e.EsPrivado, e.Prioridad, e.Estado,
         e.NotaDetalle, e.OrdenBandeja
     );
-
-    private static string EscapeIcal(string s) =>
-        s.Replace("\\", "\\\\").Replace(";", "\\;").Replace(",", "\\,").Replace("\n", "\\n");
 }
