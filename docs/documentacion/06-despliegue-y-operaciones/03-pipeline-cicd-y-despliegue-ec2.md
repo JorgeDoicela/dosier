@@ -33,7 +33,7 @@ El flujo de trabajo automatizado se estructura en 8 etapas secuenciales y parale
                    (Si backend/**)                                  (Si dosier_web/**)
                              |                                             |
                      [backend-qa]                                    [frontend-qa]
-               (.NET 8 SDK / 80 tests xUnit)                   (Node 22 / 296 tests Vitest)
+               (.NET 8 SDK / 80 tests xUnit)                   (Node 22 / 328 tests Vitest)
                              |                                             |
                      [build-backend]                                 [build-frontend]
                 (Docker Buildx -> GHCR)                         (Docker Buildx -> GHCR)
@@ -54,7 +54,7 @@ El flujo de trabajo automatizado se estructura en 8 etapas secuenciales y parale
 | `quick-restart` | `inputs.restart_only == 'true'` | `ubuntu-latest` | Conexión SSH inmediata al EC2 para ejecutar `docker compose restart`, resolviendo fallos transitorios sin recompilar ni alterar imágenes. |
 | `detect-changes` | `inputs.restart_only != 'true'` | `ubuntu-latest` | Analiza el diff de Git con `paths-filter` para activar condicionalmente los jobs de backend o frontend. |
 | `backend-qa` | Cambios en `backend/**` o `workflow_dispatch` | `ubuntu-latest` | Configura .NET 8 SDK, restaura `dosier.slnx`, compila en Release y ejecuta la suite de 80 pruebas en `dosier_tests.csproj`. |
-| `frontend-qa` | Cambios en `dosier_web/**` o `workflow_dispatch` | `ubuntu-latest` | Configura Node.js 22, instala dependencias con lockfile, ejecuta las 296 pruebas con Vitest y valida la compilación estática de Vite. |
+| `frontend-qa` | Cambios en `dosier_web/**` o `workflow_dispatch` | `ubuntu-latest` | Configura Node.js 22, instala dependencias con lockfile, ejecuta las 328 pruebas (26 archivos) con Vitest y valida la compilación estática de Vite 8. |
 | `build-backend` | `backend-qa` exitoso | `ubuntu-latest` | Construye la imagen Docker del backend mediante Buildx, aplica etiquetas (`latest`, SHA completo, SHA corto) y sube al registro `ghcr.io` con caché GHA. |
 | `build-frontend` | `frontend-qa` exitoso | `ubuntu-latest` | Construye la imagen Docker del frontend SPA + Nginx, aplica etiquetas semánticas y publica en `ghcr.io`. |
 | `deploy-ec2` | Builds exitosos | `ubuntu-latest` | Transfiere `docker-compose.yml` por SCP, realiza limpieza de espacio en disco en el host EC2, descarga imágenes por SHA y ejecuta `docker compose up -d --remove-orphans`. |

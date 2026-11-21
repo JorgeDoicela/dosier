@@ -19,7 +19,7 @@ La tesis de grado implementa, valida y evalúa exhaustivamente el ciclo de vida 
 * Registro y normalización institucional de las **11 secciones reglamentarias (a - k)**.
 * Origen transaccional de solo lectura desde las asignaciones docentes reales de SIGAFI (`AcademicContextResolver`).
 * Co-redacción concurrente multi-docente en tiempo real basada en Conflict-free Replicated Data Types (**CRDT / Yjs**) sobre WebSockets (**SignalR**).
-* Motor de validaciones matemáticas intransigentes (*CurricularValidationEngine*): horas de docencia, práctico-experimental (APE) y autónomo vs. `detallemallas` de SIGAFI.
+* Validación matemática bloqueante en servidor (`PeaService`): horas de docencia, práctico-experimental (APE) y autónomo vs. `detallemallas` de SIGAFI.
 * Articulación directa con los Resultados de Aprendizaje del Perfil de Egreso (RDA Carrera).
 * Circuito colegiado de revisión y firmas de 4 estados institucionales.
 * Emisión oficial de documento PDF vectorial con membrete reglamentario, estampado digital DFRM, firma criptográfica **SHA-256** y **Código QR de verificación pública** sin autenticación.
@@ -74,7 +74,7 @@ dosier/
 |   `-- tesis/                   # Anteproyecto, codex de diagnóstico y formatos institucionales
 `-- scripts/
     |-- base_datos/              # Scripts SQL oficiales (00 a 04) para MySQL sigafi_es
-    |   `-- extensiones/         # Esquemas futuros opcionales (05_extension_futura_...)
+    |   `-- extensiones/         # Esquemas futuros opcionales (99_extension_futura_...)
     `-- despliegue/              # Automatizaciones organizadas por entorno
         |-- docker/              # Arranque local Docker + Cloudflare Quick Tunnel (start-local.ps1)
         `-- iis/                 # Despliegue nativo Windows IIS (deploy_local.ps1) y respaldos

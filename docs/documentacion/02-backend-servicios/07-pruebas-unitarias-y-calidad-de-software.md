@@ -40,7 +40,7 @@ backend/dosier_tests/
     └── TokenServiceTests.cs
 ```
 
-Adicionalmente, el frontend (`dosier_web`) cuenta con **22 suites y 296 pruebas unitarias e integradas (100% aprobadas)** ejecutadas sobre el motor **Vitest**, asegurando una verificación integral de punta a punta en la arquitectura.
+Adicionalmente, el frontend (`dosier_web`) cuenta con **26 archivos de prueba y 328 pruebas unitarias e integradas (100% aprobadas en CI)** ejecutadas sobre el motor **Vitest**, asegurando una verificación integral de punta a punta en la arquitectura.
 
 ---
 

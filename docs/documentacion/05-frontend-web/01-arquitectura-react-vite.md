@@ -6,9 +6,9 @@ El cliente web de DOSIER (`dosier_web`) adopta de manera estricta la arquitectur
 
 ### Stack Tecnológico Oficial
 
-* **Librería Base:** React 19 (`^19.2.5`) con TypeScript 5.x.
+* **Librería Base:** React 19 (`^19.2.5`) con TypeScript (`~6.0.2`).
 * **Enrutamiento:** React Router v7 (`^7.14.1`) con carga diferida (`React.lazy` y `Suspense`).
-* **Empaquetador y Servidor Local:** Vite (`^6.0.1`) con plugin nativo `@tailwindcss/vite` (`^4.2.2`).
+* **Empaquetador y Servidor Local:** Vite 8 (`^8.0.9`) con `@vitejs/plugin-react` (`^6.0.1`) y plugin nativo `@tailwindcss/vite` (`^4.2.2`).
 * **Estilos y Sistema Visual:** Tailwind CSS v4 integrado con variables semánticas en `src/styles/base.css`.
 * **Lenguaje Visual Institucional:** **Modern Enterprise Docs System**, inspirado en la estética técnica de Stripe Docs, Linear y Mintlify. Utiliza tipografía **Inter Puro** (`@fontsource-variable/inter`) con características OpenType documentales (`cv02`, `cv03`, `cv04`, `cv11`), acento corporativo azul técnico `#0070f3`, navegación sobre riel plano continuo y delimitación estricta de folios curriculares.
 * **Colaboración Concurrente:** Motor CRDT en tiempo real basado en Yjs (`^13.6.30`), Tiptap 3 (`3.31.3`) y cliente WebSockets de `@microsoft/signalr` (`^10.0.0`).

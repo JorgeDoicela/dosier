@@ -63,9 +63,9 @@ classDiagram
 
 ---
 
-## 4. Curricular Validation Engine (Motor de Validación Matemática de Horas y Créditos)
+## 4. Validación Matemática de Horas y Créditos (Integrada en `PeaService` y `AcademicContextResolver`)
 
-Para evitar incongruencias en la planificación docente, el sistema incorpora un motor de validación curricular (`CurricularValidationEngine`) que verifica las restricciones académicas antes de permitir el guardado o envío del documento a revisión:
+Para evitar incongruencias en la planificación docente, el sistema incorpora validaciones aritméticas bloqueantes directamente en `PeaService` (`CambiarEstadoAsync` y `FirmarPeaAsync`) y reconciliación horaria en `AcademicContextResolver`, verificando las restricciones académicas antes de permitir el envío a revisión o la firma del documento:
 
 $$\text{Horas Totales Asignatura} = \text{Horas Docencia (CD)} + \text{Horas APE (Prácticas)} + \text{Horas Autónomo (TA)}$$
 $$\sum_{u=1}^{n} (\text{Horas CD}_u + \text{Horas APE}_u + \text{Horas TA}_u) \equiv \text{Total Horas Malla SIGAFI}$$

@@ -48,7 +48,7 @@ En la auditoría técnica exhaustiva del sistema se identificaron y subsanaron l
 | **A05** | Cálculo canónico de Hash SHA-256 | El hash previo solo evaluaba cantidades de unidades. | Implementación de `SignatureHashService` con serialización canónica completa (objetivos, unidades, temas, prácticas, evaluaciones y bibliografía). |
 | **A06** | Separación entre Firma P12 y HMAC | Ambigüedad en el tipo de firma registrado. | Desacople en la fachada `DosierSignatureService`: soporte de certificados PKCS#12 (.p12 / FirmaEC) con BouncyCastle mediante `P12SignatureSubservice` y sellos institucionales HMAC-SHA256 bajo Ley 67 mediante `DosierInternalSignerSubservice`. |
 | **A07** | Inmutabilidad de documentos aprobados | Riesgo de edición de documentos en fases colegiadas. | *State Locking Guard* en frontend y bloqueo transaccional en backend: prohibición estricta de mutación una vez alcanzado el estado `Aprobado`. |
-| **A08** | Balance de horas y créditos (CES RRA) | Omisión de validación horaria en guardado. | *CurricularValidationEngine*: bloqueo matemático automático si $\sum \text{Horas}$ difiere de las horas normadas en `detallemallas` (48 horas por crédito). |
+| **A08** | Balance de horas y créditos (CES RRA) | Omisión de validación horaria en transiciones y firmas. | Validación matemática bloqueante en `PeaService` (`CambiarEstadoAsync` y `FirmarPeaAsync`): bloqueo automático si $\sum \text{Horas}$ difiere de las horas oficiales en `detallemallas` (48 horas por crédito). |
 | **A09** | Fuga de oferta no tecnológica en catálogos | `CatalogsController.GetCarreras` retornaba todas las carreras de la tabla sin discriminar el tipo de entidad educativa. | Inclusión del predicado `.Where(c => c.EsInstituto == 1)` alineándolo con la regla cardinal de gobernanza SIGAFI. |
 
 ---
@@ -57,13 +57,13 @@ En la auditoría técnica exhaustiva del sistema se identificaron y subsanaron l
 
 | Componente | Métrica / Estándar Verificado | Resultado de Auditoría | Estado |
 | :--- | :--- | :--- | :--- |
-| **Backend Suite (`dosier_tests`)** | 80 Pruebas automatizadas en 12 clases (.NET 8) | 79 pruebas unitarias aprobadas en memoria, 1 de integración en base de datos | Certificado |
-| **Frontend Suite (`vitest`)** | 296 Pruebas automatizadas unitarias y de integración | 296 aprobadas (100% éxito) | Certificado |
+| **Backend Suite (`dosier_tests`)** | 80 Pruebas automatizadas en 12 clases (.NET 8) | 79 pruebas unitarias en memoria aprobadas (100%), 1 prueba de integración contra MySQL en vivo | Certificado |
+| **Frontend Suite (`vitest`)** | 328 Pruebas automatizadas en 26 archivos de prueba | 328 aprobadas en 7.63s (100% éxito en CI) | Certificado |
 | **Compilación Backend (`dosier.slnx`)** | Compilación limpia de los 5 proyectos .NET | 0 errores, 0 advertencias | Certificado |
-| **Frontend Web (`dosier_web`)** | Empaquetado de producción (`npm run build`) | Bundle generado exitosamente en Vite | Certificado |
+| **Frontend Web (`dosier_web`)** | Empaquetado de producción (`npm run build`) | Bundle generado exitosamente en Vite 8 (~1.0s) | Certificado |
 | **TypeScript estricto** | Chequeo estático de tipos (`tsc --noEmit`) | 0 errores de tipado en 100% de vistas y modales | Certificado |
-| **Controladores API (`dosier_api`)** | Auditoría integral de los 23 controladores | Endpoints mapeados, autorización RBAC/PBAC y claims | Certificado |
-| **Frontera de Datos (`sigafi_es`)** | Acceso a tablas nativas (`esInstituto = 1`) | Modo solo lectura (`AsNoTracking()`), 0 mutaciones | Certificado |
+| **Controladores API (`dosier_api`)** | Auditoría integral de los 23 archivos de controladores (201 endpoints HTTP) | Endpoints mapeados, autorización RBAC/PBAC y claims | Certificado |
+| **Frontera de Datos (`sigafi_es`)** | Acceso a tablas nativas (`esInstituto = 1`) | Modo solo lectura (`AsNoTracking()`), 0 mutaciones en flujo curricular | Certificado |
 | **Regla de Fondos Sólidos** | Modern Enterprise Docs System | Fondos 100% sólidos, cero transparencias ni sangrado | Certificado |
 | **Estándar Iconográfico** | Prohibición absoluta de emojis | Empleo exclusivo de vectores técnicos Lucide React | Certificado |
 
@@ -82,4 +82,4 @@ Para garantizar un producto de software robusto, auditable y de calidad de produ
    * Aplicación Web SPA (`dosier_web`) en React 19, Vite 8, React Router v7, TypeScript y Modern Enterprise Docs System con regla cardinal de **fondos 100% sólidos sin transparencias**.
    * Web API REST (`dosier_api`) en ASP.NET Core 8 con Clean Architecture y MySQL (`sigafi_es`).
 3. **Reserva para Extensiones Futuras:**
-   * Los módulos de Sílabos Analíticos de 19 semanas y Guías de Prácticas APE quedan respaldados por el script DDL de extensión `05_extension_futura_curriculum_silabo_guias.sql` como segunda etapa post-titulación.
+   * Los módulos de Sílabos Analíticos de 19 semanas y Guías de Prácticas APE quedan respaldados por el script DDL de extensión `scripts/base_datos/extensiones/99_extension_futura_curriculum_silabo_guias.sql` como segunda etapa post-titulación.
