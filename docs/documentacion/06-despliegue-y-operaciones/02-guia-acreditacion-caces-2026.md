@@ -21,8 +21,8 @@ graph TD
     E1 --> ModPEA[Módulo doc_pea Secciones A-K y doc_asignatura_resultado_perfil]
     E2 --> ValMalla[Motor de Validación Horaria CD, APE, TA vs detallemallas]
     E3 --> WFSign[PeaService & doc_pea_trazabilidad / doc_documentos_firmas 4 Firmas]
-    E4 --> HashDB[doc_document_instances con data_snapshot_json y Hash SHA-256]
-    E5 --> QRNode[Endpoint Público /public/verify y Código QR Vectorial]
+    E4 --> HashDB[doc_documentos_instancias con data_snapshot_json y Hash SHA-256]
+    E5 --> QRNode[Endpoint Público /verificar/:uuid y Código QR Vectorial QRCoder]
 ```
 
 ---
@@ -48,19 +48,19 @@ graph TD
     2. **Revisión de Carrera:** Coordinador de Carrera (`DOSIER_COORD_CARRERA`).
     3. **Verificación Académica:** Coordinador Académico (`DOSIER_COORD_ACAD`).
     4. **Aprobación Oficial:** Vicerrectorado (`DOSIER_VICERRECTOR`).
-  * Cada etapa estampa un registro auditable en `doc_pea_trazabilidad` y `doc_documentos_firmas` con marcas de tiempo UTC y certificado criptográfico.
+  * Cada etapa estampa un registro auditable en `doc_pea_trazabilidad` y `doc_documentos_firmas` con marcas de tiempo UTC y certificado criptográfico (PKCS#12 `.p12` / FirmaEC o DFRM institucional HMAC-SHA256).
 
 ### 3.4. Estándar 4: Integridad Criptográfica Forense (*State Locking*)
 * **Exigencia CACES:** Garantizar que los documentos curriculares entregados para auditoría no hayan sido modificados retroactivamente o adulterados con posterioridad a su aprobación.
 * **Respaldo Técnico en DOSIER:**
   * **Bloqueo Inmutable (*State Locking*):** En el instante en que Vicerrectorado estampa la firma final, el estado pasa a `Aprobado` y la capa de servicios prohíbe cualquier mutación sobre las tablas del PEA.
-  * **Snapshot JSON y Hash SHA-256:** El contenido exacto se congela en `doc_document_instances.data_snapshot_json` y se calcula un hash criptográfico SHA-256 sobre la cadena serializada y sobre el binario del PDF generado mediante `iText 9`.
+  * **Snapshot JSON y Hash SHA-256:** El contenido exacto se congela en `doc_documentos_instancias.data_snapshot_json` y se calcula un hash criptográfico SHA-256 sobre la cadena serializada y sobre el binario del PDF generado mediante `iText 9`.
 
 ### 3.5. Estándar 5: Acceso y Verificación Pública para Evaluadores Externos
 * **Exigencia CACES:** Facilitar a los pares evaluadores del CACES mecanismos ágiles para verificar la legitimidad de las evidencias presentadas en los portafolios docentes, tanto en formato digital como en impresiones físicas.
 * **Respaldo Técnico en DOSIER:**
-  * Cada ejemplar oficial emitido lleva embebido un **código QR vectorial** con un código de trazabilidad único.
-  * Al escanear el código QR con cualquier lector estándar o cámara digital, el evaluador es dirigido al portal público `/public/verify/{traceability_code}`.
+  * Cada ejemplar oficial emitido lleva embebido un **código QR vectorial** con un código de trazabilidad único (`DFRM-XXXX`).
+  * Al escanear el código QR con cualquier lector estándar o cámara digital, el evaluador es dirigido al portal público `/verificar/{traceability_code}` (respaldado por `/api/verification/verify/{traceabilityCode}`).
   * El portal consulta directamente la base institucional y certifica ante el evaluador:
     * Nombre oficial de la asignatura y código de malla.
     * Período académico ordinario.
@@ -73,6 +73,6 @@ graph TD
 
 Durante las visitas de inspección técnica del CACES, el administrador de DOSIER o la Coordinación de Aseguramiento de la Calidad puede ejecutar las siguientes acciones:
 
-1. **Exportación Masiva de Expedientes:** Generación de paquetes comprimidos con los PDFs firmados electrónicamente de todas las asignaturas vigentes en el período auditado.
-2. **Reporte Forense de Auditoría:** Extracción de la bitácora `audit_logs` que demuestra las fechas y horas exactas en que cada docente elaboró y cada autoridad revisó el currículo, refutando cualquier sospecha de confección apresurada o extemporánea.
-3. **Validación de Códigos QR:** Demostración en vivo ante el comité evaluador escaneando documentos impresos al azar para corroborar la respuesta inmediata del nodo de verificación pública.
+1. **Exportación Masiva de Expedientes:** Generación de paquetes con los PDFs firmados electrónicamente de todas las asignaturas vigentes en el período auditado.
+2. **Reporte Forense de Auditoría:** Extracción de las bitácoras institucionales `doc_pea_trazabilidad` y `doc_document_audit` que demuestran las fechas y horas exactas en que cada docente elaboró y cada autoridad revisó el currículo, refutando cualquier sospecha de confección apresurada o extemporánea.
+3. **Validación de Códigos QR:** Demostración en vivo ante el comité evaluador escaneando documentos impresos al azar para corroborar la respuesta inmediata del nodo de verificación pública sin requerir credenciales de usuario.

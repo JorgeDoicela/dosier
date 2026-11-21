@@ -2,27 +2,49 @@
 
 ## 1. Arquitectura del Host ASP.NET Core 8.0
 
-El punto de entrada del backend de DOSIER (`dosier_api/Program.cs`) implementa un modelo de host modular monolítico optimizado para alta concurrencia, tolerancia a fallos de red y cumplimiento de normativas de seguridad institucional.
+El punto de entrada del backend de DOSIER (`dosier_api/Program.cs`) implementa un modelo de host modular monolítico optimizado para alta concurrencia, resiliencia ante contingencias de red institucional y cumplimiento de normativas de seguridad y trazabilidad.
 
-El ciclo de procesamiento de solicitudes HTTP sigue una tubería estrictamente ordenada donde la seguridad perimetral, la negociación de políticas CORS, el manejo global de errores y la autenticación dual tienen prioridad absoluta.
+El procesamiento de solicitudes HTTP sigue una tubería estrictamente ordenada donde la captura global de excepciones, la negociación dinámica de políticas de origen cruzado (CORS), la resolución tripartita de credenciales de autenticación y la autorización por permisos (PBAC) operan secuencialmente antes de alcanzar los controladores REST o los concentradores de WebSockets:
 
 ```mermaid
-graph TD
-    Client[Cliente: Web SPA (React 18)] --> CORS[1. Middleware CORS: Dosier_policy]
-    CORS --> Exception[2. Middleware Global de Excepciones: ExceptionMiddleware]
-    Exception --> Auth[3. Autenticación Dual: JWT Bearer / Cookie dosier_auth]
-    Auth --> RBAC[4. Autorización Basada en Políticas y Roles: PBAC]
-    RBAC --> Serialization[5. Model Binding y JSON snake_case]
-    Serialization --> Routing[6. Controladores REST / SignalR Hubs]
+flowchart TD
+    Client["Cliente Web / Agente Externo"] --> M1["1. ExceptionMiddleware (Global Error Handling)"]
+    M1 --> M2["2. CORS Policy: Dosier_policy"]
+    M2 --> M3["3. Swagger / OpenAPI UI"]
+    M3 --> M4["4. Autenticación Dual/Tripartita (JWT / Cookie / Query Token)"]
+    M4 --> M5["5. Autorización Dinámica PBAC (16 Permisos)"]
+    M5 --> M6["6. Model Binding & JSON snake_case (FluentValidation AutoValidation)"]
+    M6 --> Endpoints{"Enrutamiento de Endpoints"}
+    Endpoints -->|Controladores REST| Controllers["Controllers (/api/*)"]
+    Endpoints -->|WebSockets SignalR| Hubs["SignalR Hubs (/hubs/*)"]
+    Endpoints -->|Health Check| Ping["GET /api/ping"]
 ```
 
 ---
 
 ## 2. Configuración y Orden de Middlewares
 
-### 2.1. Política Dinámica de CORS (`Dosier_policy`)
+El orden de registro en `Program.cs` garantiza que ninguna excepción escape a la serialización controlada y que los encabezados de seguridad de red se apliquen antes de procesar cualquier autenticación o payload.
 
-Debido a que DOSIER opera en entornos de desarrollo local, túneles Cloudflare de previsualización, redes internas del campus y producción en AWS EC2, la política de CORS implementa un validador dinámico basado en expresiones de red:
+### 2.1. Manejo Centralizado de Excepciones (`dosier_api/Middleware/ExceptionMiddleware.cs`)
+
+Ubicado como primer eslabón del pipeline, intercepta cualquier excepción no controlada emitida en las capas de aplicación, infraestructura o dominio, transformándola en una respuesta JSON estandarizada bajo convención `lower_snake_case` y codificación directa UTF-8 (`JavaScriptEncoder.UnsafeRelaxedJsonEscaping`):
+
+| Excepción Interceptada | Código HTTP | Formato de Respuesta JSON |
+| :--- | :---: | :--- |
+| `FluentValidation.ValidationException` | **400 Bad Request** | `{ "status_code": 400, "message": "Error de validación en la solicitud.", "errors": [ { "campo": "...", "error": "..." } ] }` |
+| `KeyNotFoundException` | **404 Not Found** | `{ "status_code": 404, "message": "..." }` |
+| `UnauthorizedAccessException` | **401 Unauthorized** | `{ "status_code": 401, "message": "..." }` |
+| `InvalidOperationException` / `ArgumentException` | **400 Bad Request** | `{ "status_code": 400, "message": "..." }` |
+| `DbUpdateConcurrencyException` | **409 Conflict** | `{ "status_code": 409, "message": "Conflicto de edición: El registro ha sido modificado por otro usuario..." }` |
+| `Exception` general no controlada | **500 Internal Server Error** | `{ "status_code": 500, "message": "Error interno del servidor." }` *(traza completa expuesta exclusivamente en ambiente de Desarrollo)* |
+
+* **Desacoplamiento Estricto:** Elimina la necesidad de bloques `try-catch` dispersos en los controladores, permitiendo que la capa de aplicación arroje excepciones semánticas tipadas.
+* **Telemetría Estructurada:** Todo incidente se registra en el subsistema de logging con ruta HTTP, verbo, parámetros y contexto del usuario actor.
+
+### 2.2. Política Dinámica de CORS (`Dosier_policy`)
+
+Debido a la diversidad de entornos donde opera DOSIER (desarrollo local en Vite, túneles Cloudflare de previsualización, redes inalámbricas del campus institucional y producción en AWS/VPS), la política de CORS implementa un evaluador dinámico de expresiones de red:
 
 ```csharp
 builder.Services.AddCors(options =>
@@ -31,71 +53,117 @@ builder.Services.AddCors(options =>
     {
         policy.SetIsOriginAllowed(origin =>
         {
-            // 1. Orígenes locales (localhost, 127.0.0.1 en cualquier puerto)
-            // 2. Origen configurado en FrontendUrl (appsettings.json)
-            // 3. Dominios Cloudflare (*.trycloudflare.com) y producción (*.jorgedoicela.com, *.istpet.edu.ec)
-            // 4. Subredes privadas de red de área local:
-            //    - 192.168.0.0/16
-            //    - 10.0.0.0/8
-            //    - 172.16.0.0/12 (172.16.x.x - 172.31.x.x)
-            // 5. Orígenes explícitos configurados en Cors:AllowedOrigins
+            if (string.IsNullOrWhiteSpace(origin)) return false;
+
+            if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            {
+                // 1. Orígenes locales de desarrollo
+                if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase)) return true;
+
+                // 2. Origen configurado en FrontendUrl (appsettings)
+                if (!string.IsNullOrWhiteSpace(frontendUrl) &&
+                    Uri.TryCreate(frontendUrl, UriKind.Absolute, out var frontUri))
+                {
+                    if (uri.Host.Equals(frontUri.Host, StringComparison.OrdinalIgnoreCase) ||
+                        origin.TrimEnd('/').Equals(frontendUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase)) return true;
+                }
+
+                // 3. Dominios Cloudflare Tunnel y dominios de producción institucionales
+                if (uri.Host.EndsWith(".trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.Equals("trycloudflare.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith("doicela.dev", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith("jorgedoicela.com", StringComparison.OrdinalIgnoreCase) ||
+                    uri.Host.EndsWith("istpet.edu.ec", StringComparison.OrdinalIgnoreCase)) return true;
+
+                // 4. Subredes privadas de red de área local (Wi-Fi institucional, LAN docente)
+                if (IPAddress.TryParse(uri.Host, out var ip))
+                {
+                    var bytes = ip.GetAddressBytes();
+                    if (bytes.Length == 4)
+                    {
+                        if (bytes[0] == 192 && bytes[1] == 168) return true; // 192.168.0.0/16
+                        if (bytes[0] == 10) return true;                     // 10.0.0.0/8
+                        if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true; // 172.16.0.0/12
+                    }
+                }
+            }
+
+            // 5. Orígenes explícitos listados en Cors:AllowedOrigins
+            return configuredOrigins.Any(o => o.TrimEnd('/').Equals(origin.TrimEnd('/'), StringComparison.OrdinalIgnoreCase));
         })
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowCredentials(); // Vital para el handshake WebSocket de SignalR
+        .WithExposedHeaders("Content-Disposition") // Vital para nombres de archivo en descarga de PDFs
+        .AllowCredentials();                       // Obligatorio para handshake SignalR
     });
 });
 ```
 
-### 2.2. Manejo Centralizado de Excepciones (`ExceptionMiddleware`)
+### 2.3. Autenticación Tripartita (`JwtBearerEvents.OnMessageReceived`)
 
-Intercepta cualquier excepción no controlada dentro del pipeline y la transforma en una respuesta HTTP semántica en formato JSON con política `lower_snake_case` y codificación directa UTF-8 (`JavaScriptEncoder.UnsafeRelaxedJsonEscaping`):
+Para garantizar compatibilidad simultánea entre la SPA web, herramientas de desarrollo (Swagger/Postman) y conexiones de WebSockets en tiempo real, el gestor de autenticación JWT inspecciona tres canales de transporte en orden jerárquico:
 
-| Tipo de Excepción | Código HTTP | Estructura de Respuesta |
-| :--- | :---: | :--- |
-| `FluentValidation.ValidationException` | **400 Bad Request** | `{ "status_code": 400, "message": "Error de validación en la solicitud.", "errors": [ { "campo": "...", "error": "..." } ] }` |
-| `KeyNotFoundException` | **404 Not Found** | `{ "status_code": 404, "message": "..." }` |
-| `UnauthorizedAccessException` | **401 Unauthorized** | `{ "status_code": 401, "message": "..." }` |
-| `InvalidOperationException` / `ArgumentException` | **400 Bad Request** | `{ "status_code": 400, "message": "..." }` |
-| `DbUpdateConcurrencyException` | **409 Conflict** | `{ "status_code": 409, "message": "Conflicto de edición: El registro ha sido modificado por otro usuario..." }` |
-| `Exception` general no controlada | **500 Internal Server Error** | `{ "status_code": 500, "message": "Error interno del servidor." }` *(traza detallada solo en ambiente de Desarrollo)* |
-
-* **Logging Estructurado:** Registra el incidente con `_logger.LogError` o `_logger.LogWarning` incluyendo ruta HTTP, método y contexto de usuario.
-* **Desacople en Controladores:** Elimina la necesidad de bloques `try-catch` repetitivos en los controladores, garantizando que la capa de aplicación defina reglas de negocio mediante excepciones tipadas y el host las traduzca limpiamente a códigos de estado REST.
-
-### 2.3. Autenticación Dual: Header Bearer y Cookie HttpOnly
-
-Para asegurar la convivencia fluida entre la SPA de desarrollo local, los túneles temporales y las integraciones de prueba, el handler de JWT inspecciona dos fuentes en orden de precedencia:
-
-1. **Cookie Segura `dosier_auth`:** Emitida durante el login con flags `HttpOnly = true`, `SameSite = Strict` y expiración a 8 horas.
-2. **Encabezado `Authorization: Bearer <token>`:** Empleado por clientes HTTP, herramientas de prueba (Swagger, Postman) e integraciones externas.
+1. **Parámetro Query String (`access_token`):**
+   Utilizado exclusivamente cuando la ruta de la solicitud inicia con `/hubs` (ej. `/hubs/collaboration`, `/hubs/notifications`). Los navegadores web no permiten inyectar cabeceras HTTP personalizadas en la API nativa de WebSockets, por lo que SignalR transporta el token en la URL durante el handshake inicial.
+2. **Cookie Segura (`dosier_auth`):**
+   Inspeccionada para solicitudes de la SPA web en navegadores que configuran cookies HTTP-only con protección contra ataques XSS.
+3. **Encabezado HTTP Estándar (`Authorization: Bearer <token>`):**
+   Utilizado por consumidores REST directos, Swagger UI, aplicaciones móviles y microservicios externos.
 
 ---
 
-## 3. Política Global de Serialización y Model Binding
+## 3. Serialización JSON, Model Binding y Validación Automática
 
-* **Casing Oficial:** `JsonNamingPolicy.SnakeCaseLower`. Todas las propiedades de las respuestas JSON emitidas por los controladores se serializan en `snake_case`.
-* **Case-Insensitive Deserialization:** `PropertyNameCaseInsensitive = true`, permitiendo recibir payloads con tolerancias ante discrepancias menores de casing del cliente.
-* **Production-Lock en Validación:** `SuppressModelStateInvalidFilter = false`. Ante cualquier payload de entrada que viole las anotaciones de datos o reglas de FluentValidation, el framework responde inmediatamente con `400 Bad Request` antes de alcanzar el método del controlador.
+* **Política Global de Serialización:**
+  `JsonNamingPolicy.SnakeCaseLower`. Todas las propiedades devueltas por los controladores REST se transforman automáticamente a `snake_case` (ej. `fecha_registro`, `nombre_completo`).
+* **Deserialización Resiliente:**
+  `PropertyNameCaseInsensitive = true`. Permite aceptar propiedades en cualquier variación de casing enviada por clientes HTTP sin provocar fallos de binding.
+* **Bloqueo Automático en Validación (*Production-Lock*):**
+  `options.SuppressModelStateInvalidFilter = false`. La API intercepta automáticamente cualquier payload que no cumpla las validaciones de `FluentValidation` o anotaciones de datos antes de alcanzar la lógica interna del controlador, respondiendo de inmediato con `400 Bad Request`.
 
 ---
 
-## 4. Servicios en Segundo Plano (Hosted Services / Background Jobs)
+## 4. Concurrencia y Configuración Especializada de SignalR
 
-El host de ASP.NET Core ejecuta 6 tareas en segundo plano (`IHostedService` / `BackgroundService`) para garantizar el mantenimiento continuo del sistema sin intervención humana:
+El subsistema en tiempo real está configurado para permitir la co-redacción concurrente y la transferencia de anexos en el editor:
+* **`MaximumReceiveMessageSize`:** Fijado en `2 * 1024 * 1024` bytes (2 Megabytes) para permitir el transporte de imágenes Base64, diagramas y snapshots de Yjs dentro de los paquetes de WebSocket sin exceder los límites de seguridad contra denegación de servicio (DoS).
+* **Rutas de Hubs Oficiales:**
+  - `/hubs/collaboration`: Sincronización CRDT de documentos microcurriculares, presencia activa de cursores y chat de sección.
+  - `/hubs/notifications`: Despacho multicanal de notificaciones institucionales y alertas de workflow curricular.
 
-| Servicio Hosted | Ciclo / Activación | Responsabilidad Técnica |
+---
+
+## 5. Resiliencia de Persistencia y Auto-Seeding en MySQL
+
+El host de la aplicación incorpora mecanismos de alta disponibilidad contra intermitencias en la red institucional o el servidor de base de datos:
+* **Reintentos Transitorios:**
+  `EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null)`. Si la conexión a MySQL parpadea o sufre latencia, el proveedor ejecuta hasta 5 reintentos automáticos antes de abortar la transacción.
+* **División de Consultas (*Split Query*):**
+  `QuerySplittingBehavior.SplitQuery`. Previene la explosión cartesiana en consultas complejas que involucran colecciones anidadas (ej. PEA con unidades, temas, actividades prácticas y evaluaciones).
+* **Inicializador Resiliente de Base de Datos (*Auto-Seeder*):**
+  Al levantar el servicio, un scope de inicialización ejecuta `DocumentTemplateSeeder.SeedTemplatesAsync` con un bucle de reintento de hasta 10 iteraciones (espera de 2 segundos entre intentos), garantizando que la API espere pacientemente a que MySQL complete su arranque en despliegues con Docker Compose o reinicios de servidor.
+
+---
+
+## 6. Catálogo de Servicios en Segundo Plano (`BackgroundService` / `IHostedService`)
+
+El host ejecuta 6 procesos en segundo plano de manera continua para el mantenimiento, gobernanza y despacho automatizado de tareas:
+
+| Servicio Hosted | Frecuencia / Activación | Responsabilidad Técnica y Operativa |
 | :--- | :--- | :--- |
-| `BackupBackgroundService` | Diario a las 02:00 UTC | Genera un volcado SQL y copia de seguridad de la base de datos `sigafi_es`, registrando el log en `doc_backup_logs`. |
-| `CalendarioAlertasJob` | Cada 15 minutos | Evalúa hitos académicos institucionales y normativas CACES próximas a vencer, despachando recordatorios preventivos a coordinadores y docentes. |
-| `RecycleBinCleanupBackgroundService` | Diario a las 03:00 UTC | Purga definitivamente aquellos registros marcados como eliminados lógicamente de PEAs inactivos (`DocPea`) e instancias de documentos archivadas (`DocumentInstance`) que hayan superado el período de retención legal (30 días). |
-| `DocumentGarbageCollectorBackgroundService` | Diario a las 04:00 UTC | Ejecuta la purga forense de archivos binarios PDF generados con plantillas obsoletas (`IsFilePurged = true`), preservando los hashes SHA-256 en la base de datos. |
-| `EmailBackgroundProcessorService` | Continuo en cola en memoria | Despacha correos transaccionales pendientes en lotes controlados para no saturar el servidor SMTP institucional ni caer en listas de spam. |
-| `EmailBounceListenerService` | Cada 30 minutos | Monitorea rebotes de correo electrónico (Hard/Soft Bounces) para marcar direcciones inválidas en `doc_email_historial`. |
+| `BackupBackgroundService` | Diario a las 02:00 UTC | Genera un respaldo estructural y de datos de la base de datos `sigafi_es`, calcula la suma de verificación SHA-256 del archivo generado y registra la evidencia en `doc_backup_logs`. |
+| `CalendarioAlertasJob` | Cada 15 minutos | Evalúa el cronograma académico institucional y los plazos de entrega del PEA, despachando alertas preventivas por correo a docentes y coordinadores ante vencimientos inminentes. |
+| `RecycleBinCleanupBackgroundService` | Diario a las 03:00 UTC | Ejecuta la purga física y definitiva de registros marcados con borrado suave (*soft-delete*) en PEAs e instancias documentales que hayan superado el período de retención legal institucional (30 días). |
+| `DocumentGarbageCollectorBackgroundService` | Diario a las 04:00 UTC | Realiza la purga forense de archivos binarios PDF antiguos asociados a instancias documentales cuyas plantillas hayan sido actualizadas (`IsFilePurged = true`), preservando los registros de auditoría y hashes SHA-256 en base de datos. |
+| `EmailBackgroundProcessorService` | Continuo (Cola en memoria) | Consume la cola en memoria de correos electrónicos transaccionales pendientes, despachándolos en lotes controlados para optimizar el rendimiento y prevenir bloqueos por tasa de envío (*rate-limiting*) en el servidor SMTP. |
+| `EmailBounceListenerService` | Cada 30 minutos | Monitorea y clasifica rebotes de correo electrónico (Hard Bounces y Soft Bounces), actualizando el estado de entrega en `doc_email_historial` y marcando direcciones inválidas. |
 
 ---
 
-## 5. Endpoints de Diagnóstico y Salud
+## 7. Endpoints de Diagnóstico y Salud del Host
 
-* **`GET /api/ping`:** Endpoint mínimo ultraligero que retorna `{ "status": "healthy", "timestamp": "2026-09-23T19:00:00Z" }`. Utilizado por el Application Load Balancer de AWS o Cloudflare Health Checks para determinar el estado del contenedor.
-* **`GET /api/health`:** Verificación operativa en `HealthController` para pruebas de conectividad de clientes.
+* **`GET /api/ping`:**
+  Endpoint ultraligero mapeado directamente con Minimal APIs que retorna `{ "status": "healthy", "timestamp": "..." }` con código HTTP 200. Utilizado por balanceadores de carga (AWS ALB, Nginx) y monitores de Cloudflare para verificar la disponibilidad inmediata del proceso sin golpear la base de datos.
+* **`GET /api/health`:**
+  Inspección operativa detallada en `HealthController` para pruebas de conectividad de clientes y diagnóstico de dependencias.

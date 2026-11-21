@@ -2,225 +2,206 @@
 
 ## 1. Visión General del Patrón Guiado por Metadatos Curriculares
 
-El sistema de estructuración de documentos de DOSIER opera bajo el patrón de arquitectura guiada por metadatos (*Metadata-Driven Architecture*). Los documentos académicos oficiales (Programa de Estudio de la Asignatura PEA, Sílabos de 19 semanas, Guías APE e Informes de Avance Curricular) se componen a partir de bloques modulares e independientes denominados `DocumentBlock`.
+El sistema de estructuración de documentos de DOSIER opera bajo el patrón de arquitectura guiada por metadatos (*Metadata-Driven Architecture*). Los documentos académicos oficiales (Programa de Estudio de la Asignatura PEA, Plan Analítico 2026, Seguimiento de Tutorías e Informe de Acompañamiento Académico de Carrera) se estructuran a partir de bloques modulares e independientes denominados `DocumentBlock`.
 
-Cada bloque curricular cuenta con:
-* Un identificador de tipo único (`BlockType`).
-* Una configuración en formato JSON (`config`).
-* Un renderizador visual para la vista previa de hoja A4.
-* Un componente de captura de datos con soporte de co-redacción concurrente vía `<CoWorkField>`.
-* Una plantilla de marcado HTML evaluada por el motor de compilación documental.
+La arquitectura separa de forma estricta la definición matemática de los esquemas de datos respecto a los componentes visuales de React:
 
----
+```mermaid
+flowchart TD
+    subgraph DataCore ["src/core/documents/ (Motor de Datos Desacoplado)"]
+        DTR["DocumentTemplateRegistry.ts\n(Esquemas JSON Puros, Cero React,\nschema, lists, sections)"]
+        DCR["DocumentComponentRegistry.ts\n(Catálogo de Componentes React\nFallback: AgnosticSection)"]
+        DDC["DocumentDataContext.ts\n(DocumentDataContext, DocumentMetadataContext,\nSectionLockContext, SectionGuardContext)"]
+        Hook["useDOSIERDocument.ts\n(Hidratación de Instancia, Mutaciones y Guardado)"]
+    end
 
-## 2. Bloques Oficiales del Programa de Estudio de la Asignatura (PEA ISTPET)
+    subgraph TemplateBuilder ["src/pages/Admin/Templates/ (Diseñador Visual de Plantillas)"]
+        Types["types.ts\n(Unión BlockType, BLOCK_METADATA)"]
+        Factory["defaultBlocksFactory.ts\n(Generación de Bloques Predeterminados)"]
+        Canvas["BlockCanvas.tsx\n(Lienzo de Diseño con Drag and Drop)"]
+        Props["BlockProperties.tsx\n(Inspector de Propiedades y Tipografía)"]
+        Generators["utils/htmlGenerators/\n(Compilación de HTML para iText 9)"]
+    end
 
-El formato oficial del PEA institucional del ISTPET se compone de **11 bloques curriculares atómicos e independientes** (Secciones a hasta k) distribuidos en 3 folios normalizados A4, articulados con saltos de página técnicos (`page_break`):
-
-| Sección | Bloque (`BlockType`) | Título Canónico | Inspector de Propiedades | Renderizador A4 | Variables Scriban / Modelo |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **a** | `pea_general_section` | SECCIÓN A: DATOS GENERALES | `PeaGeneralProperties.tsx` | Cabecera institucional ISTPET (Chillogallo) y tabla de 10 campos con desglose CD, APE, TA. | `{{ asignatura.nombre }}`, `{{ periodo.nombre }}`, horas normadas |
-| **b** | `pea_objective_section` | SECCIÓN B: OBJETIVO DE LA ASIGNATURA | `PeaObjectiveProperties.tsx` | Recuadro con barra azul y líneas continuas para objetivo formativo con verbo en infinitivo. | `{{ objetivo_asignatura }}` |
-| **c** | `pea_prerequisites_section` | SECCIÓN C: PRERREQUISITOS | `PeaPrerequisitesProperties.tsx` | Tabla comparativa oficial: Asignatura \| Observación. | `{{ prerrequisitos }}` |
-| **d** | `pea_career_outcomes_section` | SECCIÓN D: RESULTADOS DE CARRERA | `PeaCareerOutcomesProperties.tsx` | Contenedor rayado para aportes al perfil de egreso de la carrera. | `{{ resultados_carrera }}` |
-| **e** | `pea_subject_outcomes_section` | SECCIÓN E: RESULTADOS DE ASIGNATURA | `PeaSubjectOutcomesProperties.tsx` | Contenedor rayado para resultados de aprendizaje específicos de la asignatura. | `{{ resultados_asignatura }}` |
-| **f** | `pea_contents_section` | SECCIÓN F: CONTENIDOS DE ENSEÑANZA | `PeaContentsProperties.tsx` | Tabla No \| UNIDADES DE ESTUDIO con subcabeceras celestes (`#bdd7ee`) y desglose de horas por unidad. | `{{ unidades }}` con horas CD, APE, TA |
-| **g** | `pea_methodology_section` | SECCIÓN G: METODOLOGÍA DE ENSEÑANZA | `PeaMethodologyProperties.tsx` | Bloque dual: Estrategias metodológicas y Recursos didácticos / informatización. | `{{ metodologia.estrategias }}`, `{{ metodologia.recursos }}` |
-| **h** | `pea_resources_section` | SECCIÓN H: ACTIVIDADES PRÁCTICAS | `PeaResourcesProperties.tsx` | Tabla institucional: Unidad \| Nombre de la práctica y caracterización de la actividad. | `{{ actividades_practicas }}` |
-| **i** | `pea_evaluation_section` | SECCIÓN I: EVALUACIÓN DEL APRENDIZAJE | `PeaEvaluationProperties.tsx` | Matriz oficial con fondo celeste: Parcial 1 (10 pts), Parcial 2 (10 pts), Examen Final (10 pts). | `{{ evaluacion.parcial1 }}`, `{{ evaluacion.parcial2 }}`, `{{ evaluacion.final }}` |
-| **j** | `pea_bibliography_section` | SECCIÓN J: BIBLIOGRAFÍA | `PeaBibliographyProperties.tsx` | Esquema estructurado para Bibliografía Básica y Bibliografía de Consulta (Norma APA 7ma). | `{{ bibliografia.basica }}`, `{{ bibliografia.consulta }}` |
-| **k** | `pea_signatures_section` | SECCIÓN K: FIRMAS DE RESPONSABILIDAD | `PeaSignaturesProperties.tsx` | Matriz formal de 4 columnas: Docente, Coordinador de Carrera, Coordinador Académico, Vicerrectorado. | `{{ firmas }}` con sellado DFRM / P12 |
-
-### 2.1. Arquitectura de Renderizadores en Lienzo (`canvasRenderers/pea/`)
-
-Para dar cumplimiento estricto a las directrices de modularización (< 700 líneas por archivo) y a la regla innegociable de interactividad en el lienzo, la suite de renderizadores visuales del PEA se estructura en módulos desacoplados bajo `canvasRenderers/pea/`, orquestados mediante el barrel `RenderPeaSections.tsx`:
-
-* **Tipado Estricto (`types.ts`):** Interfaz tipada `PeaBlockConfig` y contrato `PeaBlockProps` sin recurrencia a tipos `any`.
-* **Datos Generales (`RenderPeaGeneral.tsx`):** Edición in-situ de textos de cabecera institucional y personalización de las 11 etiquetas de campo.
-* **Objetivos y RDAs (`RenderPeaObjectives.tsx`):** Secciones b, d y e con textareas auto-expandibles de redacción directa.
-* **Prerrequisitos (`RenderPeaPrerequisites.tsx`):** Celdas interactivas celda a celda con botón `+ Agregar Prerrequisito` y eliminación por fila.
-* **Contenidos de Enseñanza (`RenderPeaContents.tsx`):** Matriz de unidades con títulos editables, distribución horaria CD/APE/TA reactiva y textarea de temas.
-* **Metodología (`RenderPeaMethodology.tsx`):** Desglose dual para estrategias metodológicas y recursos didácticos.
-* **Actividades Prácticas (`RenderPeaResources.tsx`):** Tabla interactiva con inputs por práctica y botón `+ Agregar Actividad Práctica`.
-* **Evaluación del Aprendizaje (`RenderPeaEvaluation.tsx`):** Matriz oficial con notas parametrizables, ponderaciones y botón `+ Agregar Componente`.
-* **Bibliografía (`RenderPeaBibliography.tsx`):** Entradas auto-expandibles para referencias básicas (APA 7ma) y complementarias.
-* **Firmas de Responsabilidad (`RenderPeaSignatures.tsx`):** Edición directa de nombres, cargos y fechas institucionales.
-* **Compatibilidad Heredada (`RenderPeaLegacy.tsx`):** Soporte retrocompatible para bloques compuestos anteriores.
-
----
-
-## 3. Bloques Oficiales del Formato Plan Analítico 2026 (`planAnalitico/`)
-
-Para extender el catálogo documental sin alterar ni colisionar con los bloques del PEA oficial, se introdujo el conjunto de bloques modulares específicos para el **2. Formato Plan Analítico 2026** (`PLAN_ANALITICO`):
-
-| Sección | Bloque (`BlockType`) | Título Canónico | Renderizador Modular | Estructura Oficial |
-| :--- | :--- | :--- | :--- | :--- |
-| **1** | `plan_analitico_general_section` | 1. DATOS INFORMATIVOS | `RenderPlanAnaliticoGeneral.tsx` | Cabecera superior centrada del documento, título en cursiva azul `#1e40af`, franja institucional azul marino `#1e2a4a` ("Información General") y tabla de 2 columnas clave-valor (10 campos normados). |
-| **2** | `plan_analitico_objective_section` | 2. OBJETIVO GENERAL | `RenderPlanAnaliticoObjective.tsx` | Título en cursiva azul `#1e40af` y contenedor colaborativo enriquecido para redacción de la meta formativa de cátedra. |
-| **3** | `plan_analitico_outcomes_section` | 3. RESULTADOS DE APRENDIZAJE DE LA ASIGNATURA | `RenderPlanAnaliticoOutcomes.tsx` | Tabla formal con cabecera de doble nivel en azul marino `#1e2a4a` (ID, Al finalizar el curso el/la estudiante estará en capacidad de, Nivel de desarrollo: Inicial/Medio/Alto) con botones in-situ de adición y eliminación. |
-| **4** | `plan_analitico_methodology_matrix_section` | 4. METODOLOGÍA, CONTENIDOS, RESULTADOS DE APRENDIZAJE | `RenderPlanAnaliticoMatrix.tsx` | Matriz horizontal extensa para 19 semanas de clase dividida por unidades (1, 2, 3...), con desglose de Organización del Aprendizaje (Docencia, Práctico Experimental, Actividades Autónomas), horas semanales, vinculación con RDAs de la Sección 3 e hitos de evaluación parcial (E.1, E.2) y final (E.3). Soporta expansión multipágina automática en PDF. |
-| **5** | `plan_analitico_resources_section` | 5. RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE | `RenderPlanAnaliticoResources.tsx` | Indicador selector interactivo de Adaptación Curricular (*Aplica / No aplica*) y contenedor colaborativo enriquecido para equipamiento, software y plataformas TIC. |
-| **6** | `plan_analitico_evaluation_section` | 6. EVALUACIÓN | `RenderPlanAnaliticoEvaluation.tsx` | Matriz oficial con 3 notas ponderadas: Nota Parcial 1 (Actividades Autónomas y Práctico Experimentales), Nota Parcial 2 (Evaluaciones Sumativas de Unidades) y Nota Examen Final sobre 10.00 pts cada una. |
-| **7** | `plan_analitico_signatures_section` | 7. FIRMAS DE RESPONSABILIDAD | `RenderPlanAnaliticoSignatures.tsx` | Circuito institucional de 3 firmas (Elaborado: Docente, Revisado: Coordinador de Carrera, Aprobado: Coordinador Académico) con soporte para sellado digital DFRM / P12. |
-
-### 3.1. Aislamiento y Organización en la Paleta de Bloques (`BlockPalette.tsx`)
-
-En la paleta de inserción de bloques, estos componentes se agrupan en una categoría independiente y de fábrica:
-* **Bloques Plan Analítico (Formato Oficial 2026):** Permite construir y personalizar la plantilla del Plan Analítico sin mezclar ni alterar los 11 bloques curriculares del PEA ni los bloques estructurales base.
-
----
-
-## 4. Bloques Oficiales del Formato Seguimiento de Tutorías Académicas 2026 (`tutorias/`)
-
-Para dar soporte normativo al acompañamiento y nivelación académica del estudiante bajo orientación horizontal (**Landscape A4**), se integró el conjunto de bloques de la plantilla `SEGUIMIENTO_TUTORIAS`:
-
-| Sección | Bloque (`BlockType`) | Título Canónico | Renderizador Modular | Estructura Oficial |
-| :--- | :--- | :--- | :--- | :--- |
-| **1** | `tutorias_header_section` | 1. CABECERA Y DATOS DEL DOCENTE | `RenderTutoriasHeader.tsx` | Logotipo institucional ISTPET a la izquierda, títulos jerárquicos centrados (*INSTITUTO SUPERIOR TECNOLÓGICO MAYOR PEDRO TRAVERSARI*, *SEGUIMIENTO DE TUTORÍAS ACADÉMICAS*, *PERIODO ACADEMICO ABRIL - SEPTIEMBRE 2026*) y ficha estructurada para `DOCENTE:` y `HORARIO DE TUTORÍA:`. |
-| **2** | `tutorias_matrix_section` | 2. MATRIZ DE REGISTRO DE TUTORÍAS | `RenderTutoriasMatrix.tsx` | Matriz horizontal de 12 columnas oficiales con cabecera en azul marino `#1e2a4a` (Nº, Fecha, Semana, Nombres y Apellidos Estudiantes Convocados, Nivel, Asignatura, Carrera, Modalidad de Tutoría, Tipos de Tutoría, Razón de Tutoría, Observaciones, Forma de Convocatoria). Incluye edición celda a celda y adición/eliminación de registros dinámicos. |
-| **3** | `tutorias_signatures_section` | 3. FIRMAS DE RESPONSABILIDAD | `RenderTutoriasSignatures.tsx` | Circuito institucional de validación al pie con 2 firmas: `DOCENTE:` (izquierda) y `REVISADO: COORDINADOR DE CARRERA` (derecha). |
-
----
-
-## 5. Bloques Oficiales del Formato Informe de Acompañamiento Académico de Carrera 2026 (`informeAcompanamiento/`)
-
-Para dar soporte normativo al informe semestral y modular de acompañamiento académico de carrera presentado a la Unidad Académica bajo orientación vertical (**Portrait A4**), cada punto del documento oficial se implementa como un bloque modular independiente (`INFORME_ACOMPANAMIENTO_CARRERA`):
-
-| Sección | Bloque (`BlockType`) | Título Canónico | Renderizador Modular | Estructura Oficial |
-| :--- | :--- | :--- | :--- | :--- |
-| **1** | `informe_acomp_datos_informativos_section` | 1. Datos informativos: | `RenderInformeAcompDatosInformativos.tsx` | Título centrado institucional, lista viñeteada: Nombre del coordinador, Carrera, Periodo académico, Parcial (`Parcial 1/ Modular` en color rojo normativo), Reporta a (`UNIDAD ACADÉMICA`) y Fecha de presentación. |
-| **2** | `informe_acomp_nomina_tutores_section` | 2. Nómina de docentes tutores: | `RenderInformeAcompNominaTutores.tsx` | Tabla formal de 4 columnas (Tutor, Nivel, Actividad, Medio de verificación) con bordes negros simples, edición celda a celda y filas dinámicas. |
-| **3** | `informe_acomp_nomina_docentes_section` | 3. Nómina de docentes que aportan a la carrera: | `RenderInformeAcompNominaDocentes.tsx` | Tabla formal de 6 columnas (Nómina, Asignaturas, Nivel, Jornada de trabajo, Acciones de mejora [dentro del periodo], Acciones correctivas [final del periodo]) con textareas multilínea y filas dinámicas. |
-| **4** | `informe_acomp_gestion_academica_section` | 4. Gestión Académica de la carrera | `RenderInformeAcompGestionAcademica.tsx` | Bloque unificado integral con 5 sub-secciones normadas: 4.1 Reuniones de carrera (clave-valor), 4.2 Actividades realizadas por el coordinador (3 cols), 4.3 Estudiantes (8 cols), 4.4 Gestión docente (11 cols) y 4.5 Observaciones (3 cols), todas con filas y celdas dinámicas. |
-| **5** | `informe_acomp_conclusiones_section` | 5. Conclusiones y Recomendaciones | `RenderInformeAcompConclusiones.tsx` | Bloque con banner normativo amarillo (`CONCLUSIÓN Y RECOMENDACIÓN POR CADA UNO DE LOS PUNTOS TRATADOS`) y lista estructurada de conclusiones y recomendaciones por punto tratado. |
-| **6** | `informe_acomp_firmas_section` | 6. Firmas de responsabilidad. | `RenderInformeAcompFirmas.tsx` | Doble matriz con cabecera en azul corporativo (`#1e2a4a`): Tabla 1 para Tutores de 1er a 4to nivel y Tabla 2 para Coordinador de Carrera, Bienestar Institucional y Coordinador Académico. |
-
----
-
-## 6. Diagrama de Flujo de Extensibilidad de Bloques
-
-A continuación se detalla el procedimiento técnico para incorporar un nuevo bloque curricular (por ejemplo, `cur_rubrica_evaluacion_practica`):
-
-### 3.1. Fase 1: Declaración del Tipo en TypeScript
-Ubicación: `dosier_web/src/pages/Admin/Templates/types.ts`
-
-Se añade el identificador del bloque a la unión de tipos `BlockType`:
-
-```typescript
-export type BlockType = 
-    | 'pea_header_institucional'
-    | 'pea_datos_generales'
-    | 'pea_objetivos_competencias'
-    | 'pea_matriz_contenidos'
-    | 'pea_metodologia_recursos'
-    | 'pea_criterios_evaluacion'
-    | 'pea_referencias_bibliograficas'
-    | 'pea_circuito_firmas'
-    | 'cur_rubrica_evaluacion_practica'; // Nuevo bloque curricular
+    DTR --> DCR
+    DCR --> DDC
+    DDC --> Hook
+    Types --> Factory
+    Factory --> Canvas
+    Canvas --> Props
+    Props --> Generators
 ```
 
-### 3.2. Fase 2: Registro en el Catálogo de Bloques Disponibles
-Ubicación: `dosier_web/src/pages/Admin/Templates/utils/availableBlocks.ts`
+---
 
-Se define la configuración inicial, categoría pedagógica, icono de Lucide y metadatos por defecto:
+## 2. Desacoplamiento del Motor Documental (`src/core/documents/`)
 
+### 2.1. Registro Declarativo en JSON Puro (`DocumentTemplateRegistry.ts`)
+Ubicado en `src/core/documents/registry/DocumentTemplateRegistry.ts`, este archivo tiene la responsabilidad única de definir la estructura y campos de cada tipo de documento institucional. **No importa ningún componente de React**. Esto permite su reutilización directa en:
+* Pruebas unitarias sin necesidad de montar un entorno DOM.
+* Generadores y validadores síncronos de esquemas en Node.js o CLI.
+* Generación automatizada de diccionarios de datos.
+
+Cada plantilla declara:
+* `schema`: Objeto inicial clave-valor con todos los campos tipados del documento.
+* `lists`: Arreglo de identificadores de colecciones dinámicas (ej: `['Prerrequisitos', 'Unidades', 'ActividadesPracticas', 'Bibliografias']`).
+* `sections`: Arreglo de secciones con su identificador único (`id`), etiqueta visual (`label`), ícono de Lucide (`iconName`) y configuración de campos dinámicos para `<AgnosticSection>`.
+
+### 2.2. Registro de Componentes React (`DocumentComponentRegistry.ts`)
+Ubicado en `src/core/documents/registry/DocumentComponentRegistry.ts`, vincula los identificadores de sección con sus componentes de renderizado interactivo en React:
+* `COMPONENT_MAP`: Diccionario de nombres string hacia componentes funcionales.
+* `DocumentComponentRegistry`: Diccionario de `sectionId` hacia su componente oficial (ej: `'pea_general_section' -> PeaGeneralSection`, `'pea_contents_section' -> PeaContentsSection`).
+* **Fallback Automático con `<AgnosticSection>`:** Si una sección declarada en `DocumentTemplateRegistry` no posee un componente React específico en `DocumentComponentRegistry`, el motor resuelve automáticamente `<AgnosticSection>`, generando de forma dinámica inputs, textareas, selects o tablas configurables según la metadata declarada en `config.fields`.
+
+### 2.3. Contextos Documentales (`DocumentDataContext.ts`)
+Centraliza cuatro contextos esenciales para el ciclo de vida del documento:
+1. `DocumentDataContext`: Provee el estado reactivo del formulario (`formData`), disparadores de mutación (`onUpdateField`) y estado de solo lectura (`readOnly`).
+2. `DocumentMetadataContext`: Expone metadatos institucionales de la instancia (código de asignatura, carrera, período, versión de plantilla).
+3. `SectionLockContext`: Maneja el mapa de secciones bloqueadas (`formData.BlockedSections[id]`).
+4. `SectionGuardContext`: Inyecta el estado de bloqueo específico a los componentes hijos dentro de `<SectionBlockGuard>`.
+
+---
+
+## 3. Catálogo Oficial de Bloques por Familia Documental (`types.ts`)
+
+La unión tipada `BlockType` en `src/pages/Admin/Templates/types.ts` clasifica todos los bloques reconocidos por el diseñador visual en 5 familias normativas:
+
+### 3.1. Bloques Base y Estructurales
+| Bloque (`BlockType`) | Etiqueta en Inspector | Categoría | Propósito Técnico |
+| :--- | :--- | :--- | :--- |
+| `cover` | Portada Institucional | Estructural | Carátula formal con diseño geométrico institucional ISTPET (rombos). |
+| `title` | Título de Sección | Estructural | Encabezado jerárquico con tipografía personalizable y anclaje visual. |
+| `rich_text` | Párrafo Enriquecido | Contenido | Bloque de texto descriptivo con barra de herramientas Tiptap. |
+| `advanced_table` | Tabla Avanzada | Tablas | Cuadrícula con celdas editables y soporte de filas dinámicas. |
+| `multi_section_table` | Tabla Multi-Sección | Tablas | Matriz compleja con cabeceras agrupadas multidimensionales. |
+| `two_column` | Dos Columnas | Estructural | Disposición en dos columnas paralelas para comparativas o datos duales. |
+| `page_break` | Salto de Página | Estructural | Marcador forzado de corte de página A4 para el compilador PDF. |
+| `gantt` | Cronograma (Gantt) | Planificación | Diagrama de barras temporales por semanas o meses de clase. |
+| `researchers_table` | Tabla de Investigadores / Docentes | Tablas | Nómina de docentes o autores participantes. |
+| `signatures` | Bloque de Firmas Estándar | Legal | Circuito de firmas institucionales con sello y fecha. |
+| `impacts` | Matriz de Impactos | Planificación | Evaluación de impactos académicos, sociales y metodológicos. |
+
+### 3.2. Bloques Oficiales del PEA ISTPET (`pea_*`)
+| Bloque (`BlockType`) | Título Canónico | Componente en Lienzo | Inspector Asociado |
+| :--- | :--- | :--- | :--- |
+| `pea_general_section` | 1. DATOS GENERALES | `RenderPeaGeneral.tsx` | `PeaGeneralProperties.tsx` |
+| `pea_objective_section` | 2. OBJETIVO DE LA ASIGNATURA | `RenderPeaObjectives.tsx` | `PeaObjectiveProperties.tsx` |
+| `pea_prerequisites_section` | 3. PRERREQUISITOS CURRICULARES | `RenderPeaPrerequisites.tsx` | `PeaPrerequisitesProperties.tsx` |
+| `pea_career_outcomes_section` | 4. RESULTADOS DE LA CARRERA | `RenderPeaObjectives.tsx` | `PeaCareerOutcomesProperties.tsx` |
+| `pea_subject_outcomes_section` | 5. RESULTADOS DE LA ASIGNATURA | `RenderPeaObjectives.tsx` | `PeaSubjectOutcomesProperties.tsx` |
+| `pea_characterization_section` | CARACTERIZACIÓN DE LA ASIGNATURA | `RenderPeaObjectives.tsx` | `PeaCharacterizationProperties.tsx` |
+| `pea_competencies_rda_section` | COMPETENCIAS Y RDAs | `RenderPeaObjectives.tsx` | `PeaCompetenciesProperties.tsx` |
+| `pea_contents_section` | 6. CONTENIDOS DE ENSEÑANZA | `RenderPeaContents.tsx` | `PeaContentsProperties.tsx` |
+| `pea_methodology_section` | 7. METODOLOGÍA Y RECURSOS | `RenderPeaMethodology.tsx` | `PeaMethodologyProperties.tsx` |
+| `pea_resources_section` | 8. ACTIVIDADES PRÁCTICAS (APE) | `RenderPeaResources.tsx` | `PeaResourcesProperties.tsx` |
+| `pea_evaluation_section` | 9. EVALUACIÓN DEL APRENDIZAJE | `RenderPeaEvaluation.tsx` | `PeaEvaluationProperties.tsx` |
+| `pea_bibliography_section` | 10. BIBLIOGRAFÍA APA 7.ª | `RenderPeaBibliography.tsx` | `PeaBibliographyProperties.tsx` |
+| `pea_signatures_section` | 11. FIRMAS DE RESPONSABILIDAD | `RenderPeaSignatures.tsx` | `PeaSignaturesProperties.tsx` |
+
+### 3.3. Bloques Oficiales del Plan Analítico 2026 (`plan_analitico_*`)
+Ubicados en `canvasRenderers/planAnalitico/`:
+* `plan_analitico_general_section`: Cabecera institucional con franja azul marino y tabla clave-valor de 10 campos normados.
+* `plan_analitico_objective_section`: Objetivo general de cátedra formativa.
+* `plan_analitico_outcomes_section`: Resultados de aprendizaje con niveles de desarrollo (Inicial, Medio, Alto).
+* `plan_analitico_methodology_matrix_section`: Matriz horizontal de 19 semanas de clase con desglose CD/APE/AA y vinculación a evaluaciones sumativas.
+* `plan_analitico_resources_section`: Equipamiento TIC, software especializado e indicador de adaptación curricular.
+* `plan_analitico_evaluation_section`: Matriz de 3 notas ponderadas sobre 10.00 puntos.
+* `plan_analitico_signatures_section`: Circuito de 3 firmas (Docente, Coordinador de Carrera, Coordinador Académico).
+
+### 3.4. Bloques de Seguimiento de Tutorías Académicas (`tutorias_*`)
+Ubicados en `canvasRenderers/tutorias/` (Orientación Landscape A4):
+* `tutorias_header_section`: Logotipo ISTPET y datos de docente y horario de tutoría.
+* `tutorias_matrix_section`: Matriz horizontal de 12 columnas oficiales para registro individual o grupal de tutorías.
+* `tutorias_signatures_section`: Validación de doble firma (Docente y Coordinador de Carrera).
+
+### 3.5. Bloques de Informe de Acompañamiento Académico (`informe_acomp_*`)
+Ubicados en `canvasRenderers/informeAcompanamiento/` (Orientación Portrait A4):
+* `informe_acomp_datos_informativos_section`: Datos informativos de la carrera y período lectivo.
+* `informe_acomp_nomina_tutores_section`: Nómina formal de tutores por nivel.
+* `informe_acomp_nomina_docentes_section`: Nómina de docentes aportantes con acciones de mejora y correctivas.
+* `informe_acomp_gestion_academica_section`: Matriz comprensiva en 5 subsecciones (Reuniones, Actividades del Coordinador, Estudiantes, Gestión Docente, Observaciones).
+* `informe_acomp_conclusiones_section`: Conclusiones y recomendaciones por cada punto tratado.
+* `informe_acomp_firmas_section`: Doble matriz de firmas (Tutores de 1.º a 4.º nivel, Coordinador de Carrera, Bienestar Institucional y Coordinación Académica).
+
+---
+
+## 4. Procedimiento Técnico para Crear un Nuevo Bloque Curricular
+
+Para incorporar un nuevo bloque (por ejemplo, `cur_rubrica_evaluacion_practica`), se ejecutan las siguientes fases ordenadas:
+
+### Fase 1: Declaración Tipada en TypeScript
+Ubicación: `src/pages/Admin/Templates/types.ts`
+1. Agregar el identificador a la unión de tipos `BlockType`:
+   ```typescript
+   export type BlockType =
+       // ... tipos existentes
+       | 'cur_rubrica_evaluacion_practica';
+   ```
+2. Registrar los metadatos en el diccionario `BLOCK_METADATA`:
+   ```typescript
+   cur_rubrica_evaluacion_practica: {
+       label: 'Rúbrica de Prácticas APE',
+       defaultTitle: 'RÚBRICA DE EVALUACIÓN PRÁCTICO-EXPERIMENTAL',
+       category: 'Evaluación y Acreditación'
+   }
+   ```
+
+### Fase 2: Configuración por Defecto en la Fábrica de Bloques
+Ubicación: `src/pages/Admin/Templates/utils/defaultBlocksFactory.ts`
+Definir los valores iniciales y la estructura base del bloque al ser insertado desde la paleta:
 ```typescript
-{
-    type: 'cur_rubrica_evaluacion_practica',
-    title: 'RÚBRICA DE EVALUACIÓN PRÁCTICO-EXPERIMENTAL',
-    category: 'Evaluación y Acreditación',
-    description: 'Matriz de criterios, niveles de desempeño y ponderaciones para prácticas de laboratorio y talleres.',
-    icon: 'CheckSquare',
-    config: {
-        customTitle: 'RÚBRICA DE EVALUACIÓN DE TALLER / LABORATORIO',
-        scaleType: 'cuantitativa_10_puntos',
-        allowCoWork: true,
-        showBorders: true,
-        minPassingScore: 7.0
-    }
-}
+case 'cur_rubrica_evaluacion_practica':
+    return {
+        id: `block-rubrica-${Date.now()}`,
+        type: 'cur_rubrica_evaluacion_practica',
+        title: 'Rúbrica de Evaluación Práctica',
+        isActive: true,
+        config: {
+            customTitle: 'RÚBRICA DE EVALUACIÓN DE PRÁCTICAS Y LABORATORIOS',
+            escalaMax: 10.0,
+            criterios: [
+                { criterio: 'Fundamentación Teórica', ponderacion: 2.5 },
+                { criterio: 'Ejecución Práctica', ponderacion: 5.0 },
+                { criterio: 'Conclusiones y Reporte', ponderacion: 2.5 }
+            ]
+        }
+    };
 ```
 
-### 3.3. Fase 3: Renderizador Visual para el Lienzo A4 (Canvas Renderer)
-Ubicación: `dosier_web/src/pages/Admin/Templates/components/canvasRenderers/RenderRubricaPractica.tsx`
-
-Se implementa el componente encargado de proyectar la apariencia exacta que tendrá la sección en el diseñador de plantillas, respetando la regla de fondos sólidos sin transparencias:
-
+### Fase 3: Renderizador Visual para el Lienzo A4
+Ubicación: `src/pages/Admin/Templates/components/canvasRenderers/RenderRubricaPractica.tsx`
+Construir el componente con fondo 100% sólido y registrarlo en el evaluador `BlockCanvas.tsx`:
 ```tsx
 import React from 'react';
 
-interface RenderRubricaPracticaProps {
-    config: any;
-}
-
-export const RenderRubricaPractica: React.FC<RenderRubricaPracticaProps> = ({ config }) => {
+export const RenderRubricaPractica: React.FC<{ config: any }> = ({ config }) => {
     const c = config || {};
-    const title = c.customTitle || 'RÚBRICA DE EVALUACIÓN PRÁCTICO-EXPERIMENTAL';
-
     return (
-        <div className="w-full text-zinc-900 font-sans my-2 bg-white">
-            <div className="w-full border border-zinc-900 overflow-hidden rounded-none bg-white p-3 space-y-2">
-                <p className="font-bold text-[10pt] uppercase tracking-wider text-center text-zinc-900 bg-zinc-100 py-1 border-b border-zinc-300">
-                    {title}
-                </p>
-                <div className="border border-zinc-300 p-2 text-[8.5pt] bg-white">
-                    <p className="text-zinc-600 italic">
-                        [Vista previa: Matriz de criterios formativos y ponderación de prácticas APE]
-                    </p>
-                </div>
+        <div className="w-full text-zinc-900 font-sans my-2 bg-white border border-zinc-900 p-3">
+            <h4 className="font-bold text-[10pt] uppercase text-center bg-zinc-100 py-1 border-b border-zinc-300">
+                {c.customTitle || 'RÚBRICA DE EVALUACIÓN PRÁCTICO-EXPERIMENTAL'}
+            </h4>
+            <div className="p-2 text-[8.5pt]">
+                <p className="text-zinc-600 italic">[Matriz de criterios y ponderación evaluativa]</p>
             </div>
         </div>
     );
 };
 ```
-
-Luego se registra en la bifurcación principal de `dosier_web/src/pages/Admin/Templates/components/BlockCanvas.tsx`:
-
+En `BlockCanvas.tsx`:
 ```tsx
 case 'cur_rubrica_evaluacion_practica':
     return <RenderRubricaPractica config={block.config} />;
 ```
 
-### 3.4. Fase 4: Componente de Formulario con Co-Redacción Concurrente
-Ubicación: `dosier_web/src/components/DOSIER/sections/RubricaPracticaSection.tsx`
+### Fase 4: Inspector de Propiedades
+Ubicación: `src/pages/Admin/Templates/components/properties/RubricaPracticaProperties.tsx`
+Construir el formulario para modificar títulos, escalas y opciones del bloque, vinculándolo en `BlockProperties.tsx`.
 
-Se construye la interfaz interactiva donde los docentes de la asignatura definen los criterios. Para campos de texto colaborativo, se integra el componente `<CoWorkField>`:
+### Fase 5: Compilación HTML para el Motor Documental iText 9
+Ubicación: `src/pages/Admin/Templates/utils/htmlGenerators/rubricaGenerator.ts`
+Implementar el generador de marcado HTML estático con estilos CSS inline que consumirá el backend para compilar el PDF oficial sin diferencias visuales con el lienzo web.
 
-```tsx
-import React from 'react';
-import { CoWorkField } from '../CoWorkField';
-
-export const RubricaPracticaSection: React.FC<{ peaId: string; readOnly: boolean }> = ({ peaId, readOnly }) => {
-    return (
-        <div className="space-y-4 p-4 bg-white border border-zinc-200">
-            <h3 className="font-semibold text-zinc-900 text-sm">Criterios de Evaluación Práctica</h3>
-            <CoWorkField
-                documentId={peaId}
-                fieldKey="rubrica_practica_criterios"
-                label="Descripción de Criterios y Niveles de Desempeño"
-                readOnly={readOnly}
-            />
-        </div>
-    );
-};
-```
-
-### 3.5. Fase 5: Registro del Proveedor de Bloque en el Motor Documental
-Ubicación: `backend/dosier_infrastructure/Common/Documents/DocumentTemplateRegistry.cs` y ensambladores de bloque (`IDocumentBlockProvider`).
-
-Se implementa el ensamblador del bloque para que `DocumentDataOrchestrator` inyecte la sección en el marcado HTML compilado por iText 9:
-
-```csharp
-public class RubricaPracticaBlockProvider : IDocumentBlockProvider
-{
-    public string BlockType => "cur_rubrica_evaluacion_practica";
-
-    public async Task<string> RenderHtmlAsync(DocumentBlock block, DocumentContext context)
-    {
-        return $"<section class=\"pea-section rubrica-practica\">" +
-               $"<div class=\"section-header\">{block.Config?.CustomTitle}</div>" +
-               $"<div class=\"section-content\">{block.ContentHtml}</div>" +
-               $"</section>";
-    }
-}
-```
+### Fase 6: Sección Interactiva con CoWork en el Workspace Docente
+Ubicación: `src/components/DOSIER/sections/RubricaPracticaSection.tsx`
+Construir el componente interactivo integrando `<CoWorkField>` desde `src/core/cowork/components/CoWorkField.tsx` y registrarlo en `src/core/documents/registry/DocumentComponentRegistry.ts`.

@@ -8,7 +8,7 @@ Este documento detalla la arquitectura de seguridad perimetral implementada para
 
 En DOSIER se definen dos niveles de conectividad segura según el entorno de ejecución:
 
-### 1.1 Entorno de Produccion (AWS EC2 + Cloudflare Full Strict - dosier.doicela.dev)
+### 1.1 Entorno de Producción (AWS EC2 + Cloudflare Full Strict - dosier.doicela.dev)
 Utiliza certificados Origin CA de Cloudflare instalados en Nginx en el puerto 443 del servidor AWS EC2 bajo el dominio `dosier.doicela.dev`:
 
 ```
@@ -24,7 +24,7 @@ Utiliza certificados Origin CA de Cloudflare instalados en Nginx en el puerto 44
          |
          +--> [ Nginx (Reverse Proxy + Terminacion SSL) ]
                     |
-                    +--> [ dosier_web:80 (React SPA) ]
+                    +--> [ dosier_web:80 (React 19 SPA) ]
                     |
                     +--> [ dosier-backend:5000 (ASP.NET Core API / SignalR) ]
                     |
@@ -34,20 +34,20 @@ Utiliza certificados Origin CA de Cloudflare instalados en Nginx en el puerto 44
 ---
 
 ### 1.2 Entorno de Staging Local (Docker + Cloudflare Named Tunnel - staging-dosier.doicela.dev)
-Para pruebas de integracion, desarrollo activo y revisiones sin costos de infraestructura en AWS:
+Para pruebas de integración, desarrollo activo y revisiones sin costos de infraestructura en AWS:
 
-* **Dominio Asignado:** `staging-dosier.doicela.dev` (se utiliza guion medio `-` por estandar estricto RFC 952 y RFC 1123 de DNS, dado que el guion bajo `_` invalida los certificados SSL de los navegadores y autoridades certificadoras).
-* **Mecanismo:** Servicio `dosier-tunnel` mediante Named Tunnel autenticado con token (`CLOUDFLARE_TUNNEL_TOKEN`) o ejecucion local directa de `cloudflared`.
+* **Dominio Asignado:** `staging-dosier.doicela.dev` (se utiliza guión medio `-` por estándar estricto RFC 952 y RFC 1123 de DNS, dado que el guión bajo `_` invalida los certificados SSL de los navegadores y autoridades certificadoras).
+* **Mecanismo:** Servicio `dosier-tunnel` mediante Named Tunnel autenticado con token (`CLOUDFLARE_TUNNEL_TOKEN`) o ejecución local directa de `cloudflared`.
 * **Persistencia y Base de Datos Local:** El backend de Staging en Docker se conecta mediante `host.docker.internal:3306` directamente a la base de datos local `sigafi_es` en el sistema operativo host (Windows), permitiendo operar con los datos de desarrollo reales sin duplicar instancias de MySQL.
-* **Topologia:** Establece un tunel seguro saliente por QUIC/HTTP2 hacia la red perimetral de Cloudflare sin requerir apertura de puertos en el enrutador local ni asignacion de IP publica fija.
-* **Cifrado y Certificacion:** Cloudflare gestiona la terminacion SSL/TLS 1.3 con certificado oficial emitido para `*.doicela.dev`.
+* **Topología:** Establece un túnel seguro saliente por QUIC/HTTP2 hacia la red perimetral de Cloudflare sin requerir apertura de puertos en el enrutador local ni asignación de IP pública fija.
+* **Cifrado y Certificación:** Cloudflare gestiona la terminación SSL/TLS 1.3 con certificado oficial emitido para `*.doicela.dev`.
 * **Enrutamiento Unificado:**
-  * En entorno de contenedores Docker: El tunel canaliza el trafico hacia `http://dosier-web:8080` (o internamente a `dosier-web:80`), donde Nginx resuelve estaticos, llamadas REST a `/api/` y WebSockets a `/hubs/`.
-* **Compatibilidad de Politicas de Seguridad (CORS):** La capa de backend (`Program.cs`) autoriza explicitamente el dominio raiz y subdominios de `doicela.dev`, admitiendo cabeceras, credenciales de sesion (`withCredentials: true`) y trafico bidireccional de WebSockets para Yjs/SignalR.
+  * En entorno de contenedores Docker: El túnel canaliza el tráfico hacia `http://dosier-web:8080` (o internamente a `dosier-web:80`), donde Nginx resuelve estáticos, llamadas REST a `/api/` y WebSockets a `/hubs/`.
+* **Compatibilidad de Políticas de Seguridad (CORS):** La capa de backend (`Program.cs`) autoriza explícitamente el dominio raíz y subdominios de `doicela.dev`, admitiendo cabeceras, credenciales de sesión (`withCredentials: true`) y tráfico bidireccional de WebSockets para Yjs/SignalR.
 
-#### Comandos de Ejecucion para Staging Local
+#### Comandos de Ejecución para Staging Local
 
-**Opcion A: Ejecucion mediante Docker Compose con Token de Tunel**
+**Opción A: Ejecución mediante Docker Compose con Token de Túnel**
 ```powershell
 # 1. Definir el token en el archivo .env
 # CLOUDFLARE_TUNNEL_TOKEN=<token_obtenido_en_cloudflare_zero_trust>
@@ -56,38 +56,36 @@ Para pruebas de integracion, desarrollo activo y revisiones sin costos de infrae
 docker compose --profile tunnel up -d
 ```
 
-**Opcion B: Ejecucion del Tunel con cloudflared CLI Local**
+**Opción B: Ejecución del Túnel con cloudflared CLI Local (Named Tunnel)**
 ```powershell
 # Apuntar el trafico del subdominio hacia el puerto de Nginx local
 cloudflared tunnel run --token <token_del_tunel>
 ```
 
-**Opción B: Ejecución en Desarrollo Local Nativo en Windows (Sin Docker)**
+**Opción C: Ejecución en Desarrollo Local Nativo con Quick Tunnels (trycloudflare.com)**
 
 1. **Aprovisionamiento del binario `cloudflared.exe`:**
    * Descargar el ejecutable oficial de Windows desde el repositorio de Cloudflare (`cloudflared-windows-amd64.exe`) y renombrarlo a `cloudflared.exe`.
    * Para poder invocarlo globalmente desde cualquier terminal (PowerShell / CMD), registrar el directorio donde reside `cloudflared.exe` en la variable de entorno `PATH` del usuario:
      ```powershell
-     # Ejemplo agregando la carpeta de Descargas/Cloudfare al PATH de usuario:
      [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$HOME\Downloads\Cloudfare", [EnvironmentVariableTarget]::User)
      ```
    * Alternativa directa: Abrir la terminal PowerShell en la carpeta donde reside el ejecutable e invocarlo como `.\cloudflared.exe`.
 
 2. **Arranque del túnel hacia el puerto de Vite:**
    ```powershell
-   # Asegurar que el frontend esté corriendo en dosier_web (puerto 3010)
+   # Asegurar que el frontend esté corriendo en dosier_web (puerto 3010 o 5173)
    npm run dev
 
    # En otra terminal, abrir el túnel temporal hacia Vite:
    cloudflared tunnel --url http://localhost:3010
-   # (O '.\cloudflared.exe tunnel --url http://localhost:3010' si se ejecuta desde su carpeta local)
    ```
-La salida por consola generará la URL pública activa (por ejemplo, `https://nuevo-subdominio.trycloudflare.com`). Al abrir dicha URL con el sufijo `/dashboard` o `/login`, la navegación y las llamadas a la API operarán con cifrado HTTPS completo.
+   La salida por consola generará la URL pública activa (por ejemplo, `https://nuevo-subdominio.trycloudflare.com`). Al abrir dicha URL con el sufijo `/dashboard` o `/login`, la navegación y las llamadas a la API operarán con cifrado HTTPS completo.
 
 #### Criterio de Selección: Terminal vs Contenedor Docker
 
-* **Uso Recomendado de la Terminal (Opción B):** Es la alternativa idónea para pruebas rápidas y demostraciones efímeras. Muestra la URL generada de inmediato en consola, no sobrecarga el archivo `docker-compose.yml` con servicios temporales y permite cerrar la conexión instantáneamente con `Ctrl + C`.
-* **Uso del Contenedor Docker (Opción A):** Reservado para entornos de staging desatendidos o cuando se implementa un **Named Tunnel persistente** vinculado a un dominio oficial mediante token (`tunnel run --token ...`), donde el servicio debe operar de forma ininterrumpida en segundo plano sin intervención manual.
+* **Uso Recomendado de la Terminal (Opción C):** Es la alternativa idónea para pruebas rápidas y demostraciones efímeras. Muestra la URL generada de inmediato en consola, no sobrecarga el archivo `docker-compose.yml` con servicios temporales y permite cerrar la conexión instantáneamente con `Ctrl + C`.
+* **Uso del Contenedor Docker (Opción A/B):** Reservado para entornos de staging desatendidos o cuando se implementa un **Named Tunnel persistente** vinculado a un dominio oficial mediante token (`tunnel run --token ...`), donde el servicio debe operar de forma ininterrumpida en segundo plano sin intervención manual.
 
 ---
 

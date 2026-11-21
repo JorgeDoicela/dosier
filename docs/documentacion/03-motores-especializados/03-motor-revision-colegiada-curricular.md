@@ -2,13 +2,13 @@
 
 ## 1. Visión General del Subsistema
 
-El motor de revisión colegiada curricular administra el proceso institucional de auditoría pedagógica, control de observaciones y emisión de avales formales sobre el **Programa de Estudio de la Asignatura (PEA)** y el portafolio curricular en el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET).
+El motor de revisión colegiada curricular administra el proceso institucional de auditoría pedagógica, control de observaciones y emisión de avales formales sobre el **Programa de Estudio de la Asignatura (PEA)** y el portafolio microcurricular en el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET).
 
-A diferencia de modelos de arbitraje ciego genéricos, en el ISTPET la revisión responde a la cadena de responsabilidades establecida en el **Reglamento del Sistema de Seguimiento, Control y Evaluación del Proceso Docente (Resolución ISTPET-OCS-SE-2022-019)** y en el formato oficial del PEA (Sección k).
+La revisión y legalización responde a la cadena de responsabilidades establecida en el **Reglamento del Sistema de Seguimiento, Control y Evaluación del Proceso Docente (Resolución ISTPET-OCS-SE-2022-019)** y en el formato oficial del PEA (Sección k). El subsistema garantiza que ninguna asignatura sea impartida sin haber superado los tres filtros colegiados de pertinencia disciplinar, consistencia metodológica y legalización institucional.
 
 ---
 
-## 2. Flujo de Revisión y Avales Institucionales
+## 2. Flujo Secuencial de Revisión y Avales Institucionales
 
 ```mermaid
 sequenceDiagram
@@ -18,89 +18,96 @@ sequenceDiagram
     participant CoordAcad as Coordinación Académica (DOSIER_COORD_ACAD)
     participant Vicerrec as Vicerrectorado Académico (DOSIER_VICERRECTOR)
 
-    Docente->>CoordCar: Envía PEA firmado a revisión (EnRevision)
-    Note over CoordCar: 1. Revisión de Coherencia Curricular
+    Docente->>CoordCar: Firma de elaboración y envío formal (Borrador -> EnRevision)
+    Note over CoordCar: 1. Auditoría Disciplinar y Perfil de Egreso
     alt Existen Inconsistencias Disciplinares
-        CoordCar->>Docente: Registra observaciones por sección (Observado)
-        Docente->>Docente: Subsana en el editor y responde observación
-        Docente->>CoordCar: Reenvía PEA corregido (EnRevision)
+        CoordCar->>Docente: Emite dictamen de devolución formal (Observado)
+        Note over Docente: Revocación forense de firmas y apertura de edición
+        Docente->>Docente: Subsana observaciones en el editor
+        Docente->>CoordCar: Re-firma elaboración y reenvía (Corregido -> EnRevision)
     else Coherencia Curricular Conforme
-        CoordCar->>CoordAcad: Emite aval de carrera (RevisadoCoord)
+        CoordCar->>CoordAcad: Firma Aval de Carrera (RevisadoCoord)
     end
 
-    Note over CoordAcad: 2. Revisión Metodológica y Horas
-    alt Inconsistencias de Formato o Cuadre
-        CoordAcad->>Docente: Registra observaciones metodológicas (Observado)
+    Note over CoordAcad: 2. Auditoría Metodológica y Horas CACES
+    alt Inconsistencias de Horas o Formato
+        CoordAcad->>Docente: Emite dictamen de devolución formal (Observado)
     else Estructura Pedagógica Conforme
-        CoordAcad->>Vicerrec: Emite aval metodológico (RevisadoAcad)
+        CoordAcad->>Vicerrec: Firma Aval Académico (RevisadoAcad)
     end
 
-    Note over Vicerrec: 3. Aprobación Oficial y Legalización
-    Vicerrec->>Vicerrec: Firma oficial, congelamiento forense y hash SHA-256 (Aprobado)
-    Vicerrec-->>Docente: Publicación de PDF oficial y QR de verificación pública
+    Note over Vicerrec: 3. Legalización Oficial y Bloqueo Definitivo
+    Vicerrec->>Vicerrec: Firma institucional Vicerrectorado (Aprobado)
+    Note over Vicerrec: Sellado criptográfico SHA-256, State Locking y Código QR
+    Vicerrec-->>Docente: Emisión pública del PDF oficial legalizado
 ```
 
 ---
 
-## 3. Responsabilidades Diferenciadas por Rol Revisor
+## 3. Responsabilidades Diferenciadas por Autoridad Curricular
 
 ### 3.1. Coordinación de Carrera (`DOSIER_COORD_CARRERA`)
-* **Alineación con el Perfil de Egreso:** Verifica que cada Resultado de Aprendizaje (RDA) formulado en la asignatura tribute efectivamente a las competencias profesionales de la carrera.
-* **Prerrequisitos y Contenidos Mínimos:** Comprueba que los temas no se solapen con asignaturas correlacionadas ni omitan los contenidos mínimos del proyecto curricular aprobado por el CES.
-* **Emisión de Aval:** Su firma digital certifica la coherencia técnica del PEA y habilita la transición a `RevisadoCoord`.
+* **Pertinencia Disciplinar:** Verifica la actualidad de los contenidos mínimos aprobados por el CES y la congruencia técnica del campo de formación.
+* **Articulación al Perfil de Egreso:** Comprueba que cada Resultado de Aprendizaje de la Asignatura (RDA) tribute efectivamente a las competencias profesionales de la carrera.
+* **Consistencia de Prerrequisitos:** Valida que las asignaturas antecedentes y simultáneas coincidan con la versión de la malla activa en SIGAFI.
+* **Emisión de Aval:** Su firma digital certifica la coherencia técnica del PEA y habilita la transición al estado `RevisadoCoord`.
 
-### 3.2. Coordinación Académica (`DOSIER_COORD_ACAD`)
-* **Integridad Metodológica:** Verifica que las estrategias pedagógicas coincidan con el Modelo Educativo Institucional.
-* **Cuadre Horario y Créditos:** Valida que la sumatoria de horas de docencia, práctico-experimental (APE) y trabajo autónomo cumpla la equivalencia estricta de 48 horas por crédito académico.
-* **Sistema de Evaluación Continua:** Comprueba que la ponderación de las notas parciales (frecuentes y sumativas) y el examen final sumen 10.0 puntos según el reglamento institucional.
-* **Emisión de Aval:** Su firma digital certifica el cumplimiento normativo y habilita la transición a `RevisadoAcad`.
+### 3.2. Coordinación Académica General (`DOSIER_COORD_ACAD`)
+* **Integridad Metodológica:** Verifica que las estrategias pedagógicas y recursos didácticos se alineen con el Modelo Educativo Institucional del ISTPET.
+* **Cuadre Horario y Créditos (CES Art. 21):** Valida la equivalencia estricta de 48 horas por crédito académico y la distribución de los componentes: docencia (CD), práctico-experimental (APE) y trabajo autónomo (TA).
+* **Mecanismos de Evaluación:** Comprueba que la ponderación de las notas parciales y el examen final sumen 10.0 puntos según el reglamento interno de evaluación.
+* **Emisión de Aval:** Su firma digital certifica el cumplimiento normativo institucional y eleva el PEA a Vicerrectorado bajo el estado `RevisadoAcad`.
 
 ### 3.3. Vicerrectorado Académico (`DOSIER_VICERRECTOR`)
-* **Legalización Institucional:** Ejerce la máxima potestad de aprobación curricular del Instituto.
-* **Firma Oficial y Publicación:** Su firma digital sella la versión inmutable, genera el código DFRM-XXXX, calcula la firma criptográfica SHA-256 y activa la consulta pública vía código QR para auditorías del CACES.
+* **Máxima Legalización Institucional:** Ejerce la potestad legal de aprobación definitiva de los instrumentos microcurriculares del Instituto.
+* **Sello Oficial e Inmutabilidad:** Su firma digital estampa el código de trazabilidad institucional `DFRM-XXXX`, calcula el hash SHA-256 sobre los bytes del PDF y activa el bloqueo permanente de modificación (*State Locking*).
+* **Acreditación CACES:** Autoriza la publicación del documento foliado y habilita la consulta pública mediante código QR para auditorías externas.
 
 ---
 
-## 4. Gestión de Observaciones, Dictamen Formal y Subsanaciones (`doc_pea_observaciones`)
+## 4. Gestión de Observaciones, Dictamen Formal y Reapertura Curricular
 
-Para garantizar la máxima transparencia en el proceso de revisión:
-* **Observación Atómica por Sección:** El revisor redacta requerimientos específicos en la sección correspondiente (`Objetivos`, `Unidades y Temas`, `Actividades Prácticas`, `Evaluación`, etc.). Las notas se guardan en `doc_pea_observaciones` manteniendo el PEA en estado `EnRevision` de manera interna, sin alertar prematuramente al docente durante la sesión de análisis.
-* **Dictamen Formal y Devolución Controlada:** El cambio oficial de estado a `Observado` ocurre exclusivamente cuando la autoridad emite su dictamen formal a través del modal institucional (`FinalizeAuditModal.tsx`), pestaña *"Devolver con Observaciones"*, especificando plazo límite e instrucciones globales de subsanación. Al confirmarse, el sistema notifica al docente y redirige automáticamente a la autoridad a su bandeja de gestión.
-* **Espacio de Revisión Técnica (`/documentacion/revision-curricular/:uuid`):** Interfaz especializada con tres vistas integradas sobre riel plano:
-  1. **Revisión del PEA (Interactivo):** Lectura continua de las 11 secciones oficiales con controles de auditoría e indicadores de consistencia horaria CACES Art. 21.
-  2. **Documento oficial PDF:** Visualizador embebido del PDF institucional legalizado con estampado de sellos en tiempo real.
-  3. **Historial y firmas (`AdminRevisionHistoryPanel.tsx`):** Panel a ancho completo con bitácora forense cronológica, trazabilidad inmutable de transiciones de estado, hashes SHA-256 y auditoría de sellos oficiales DFRM.
-* **Bloqueo de Aprobación:** El sistema impide que un PEA sea avalado o aprobado si mantiene observaciones pendientes de atención (`estado = 'Pendiente'`).
-* **Respuesta del Docente:** El docente registra su justificación o detalle de corrección para marcar la observación como `Subsanada`.
-* **Auditoría Forense:** Cada observación y subsanación queda registrada permanentemente con usuario, cargo, fecha UTC y texto original en `doc_pea_observaciones`.
+Para garantizar la máxima transparencia y evitar revisiones informales en hojas dispersas:
+
+### 4.1. Registro Atómico de Observaciones (`doc_pea_observaciones`)
+El revisor formula observaciones directamente vinculadas a la sección correspondiente (ej. `Objetivos`, `Unidades Temáticas`, `Actividades Prácticas`, `Evaluación`, `Bibliografía`):
+* **Privacidad Preliminar:** Mientras el PEA permanezca en `EnRevision`, las notas registradas son visibles exclusivamente para la autoridad evaluadora, impidiendo que el docente altere el documento antes de que la auditoría haya concluido.
+* **Dictamen Atómico de Devolución:** El cambio de estado a `Observado` ocurre de forma controlada cuando la autoridad confirma el dictamen formal en `FinalizeAuditModal.tsx` vía `PATCH /api/pea/uuid/{uuid}/estado`.
+
+### 4.2. Protocolo de Reapertura y Revocación Forense de Firmas
+Al formalizarse la devolución a `Observado`, el sistema ejecuta un protocolo de reapertura controlada:
+1. **Anulación de Firmas en `doc_pea`:** Se anulan los avales emitidos (`FirmaRevisadoCoord = null`, `FirmaRevisadoAcad = null`) y la firma de elaboración del docente (`FirmaElaboradoDocente = null`, `FechaElaborado = null`).
+2. **Revocación Forense en `doc_documentos_firmas`:** Los registros históricos de firma previa pasan al estado `EsValida = false`, estampando marca temporal de revocación en UTC y motivo normativo (`"Reapertura para subsanación de observaciones curriculares"`).
+3. **Identificación Visual:** En el bloque de firmas (`SignatureBlock.tsx`), las firmas revocadas se señalan inequívocamente como `Firma Revocada (Por Subsanar)`.
+4. **Rehabilitación del Pipeline:** Se desbloquea la edición para el docente titular y se habilita la generación en caliente de un nuevo PDF para re-firma, transitando nuevamente a `EnRevision`.
+
+### 4.3. Bloqueo de Aprobación por Observaciones Pendientes
+La máquina de estados en el backend (`PeaService.cs`) prohíbe terminantemente la emisión de avales o la aprobación final si el documento mantiene observaciones en estado `Pendiente`. El docente debe responder formalmente a cada hallazgo para marcarlo como `Subsanada`.
 
 ---
 
-## 5. Paneles de Control y Herramientas Operativas por Rol
+## 5. Catálogo de Endpoints REST del Motor de Revisión
 
-Para asegurar que cada rol cuente con todas las herramientas necesarias para cumplir a cabalidad su función dentro del circuito, el sistema dispone de paneles de control especializados y un simulador interactivo accesible desde el Dashboard principal:
+El controlador `PeaController` (`dosier_api/Controllers/PeaController.cs`) expone las siguientes rutas dedicadas al circuito colegiado:
 
-### 5.1. Coordinación Académica (`CoordAcadDashboard.tsx`)
-* **Apertura de Convocatoria Institucional (`AperturaConvocatoriaModal.tsx`):** Disparador para fijar plazos y notificar a los 28 docentes asignados en SIGAFI.
-* **Recordatorio Masivo a Rezagados (`RecordatorioDocentesModal.tsx`):** Detección automática de docentes con PEAs en Borrador y envío de alertas por correo electrónico institucional y notificaciones push.
-* **Concesión de Prórroga (`ProrrogaPlazoModal.tsx`):** Extensión de plazos por carrera o institucionalmente con registro del justificativo académico.
-* **Auditoría Normativa CACES (`AuditoriaCacesModal.tsx`):** Verificación automática del Artículo 21 del CES (64h docencia + 32h prácticas + 64h autónomo = 160h), matriz de 30 puntos y bibliografía APA.
-* **Emisión de Aval Académico:** Aprobación formal que eleva el PEA al despacho de Vicerrectorado.
+| Verbo | Ruta HTTP | Autorización RBAC | Propósito Técnico |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/pea/uuid/{uuid}/observaciones` | `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD` | Registra una nueva observación vinculada a una sección específica del PEA. |
+| `GET` | `/api/pea/{idPea}/observaciones` | `DOSIER_DOCENTE`, Coordinadores, Vicerrector | Obtiene la lista completa de observaciones y su estado de subsanación. |
+| `PUT` | `/api/pea/observaciones/{id}/subsanar` | `DOSIER_DOCENTE` | Registra la respuesta y justificación del docente, marcando el hallazgo como `Subsanada`. |
+| `DELETE` | `/api/pea/observaciones/{id}` | `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD` | Permite al revisor retirar una observación preliminar formulada por error. |
+| `PATCH` | `/api/pea/uuid/{uuid}/estado` | Coordinadores, Vicerrector | Aplica transiciones de estado formales (`RevisadoCoord`, `RevisadoAcad`, `Observado`, `Aprobado`). |
+| `POST` | `/api/pea/{idPea}/firmar` | `DOSIER_DOCENTE`, Coordinadores, Vicerrector | Ejecuta la suscripción criptográfica (DFRM o PKCS#12) y avanza el circuito normativo. |
 
-### 5.2. Coordinación de Carrera (`CoordCarreraDashboard.tsx`)
-* **Filtro Disciplinar:** Supervisión focalizada en las asignaturas de su carrera.
-* **Notificación a Docentes de Carrera:** Alerta específica a los docentes de la especialidad.
-* **Solicitud de Correcciones (`ObservacionesDisciplinarModal.tsx`):** Registro de observaciones puntuales por sección con fijación de plazo de subsanación de 48 horas.
-* **Emisión de Aval de Carrera:** Firma técnica que certifica la pertinencia curricular y los contenidos mínimos.
+---
 
-### 5.3. Docente Elaborador (`DocentePeaDashboard.tsx`)
-* **Clonado de PEA de Período Anterior (`ClonarPeaModal.tsx`):** Importación ágil de unidades, metodologías y bibliografía aprobadas del período anterior.
-* **Validador de Horas CES Art. 21:** Semáforo en vivo del cuadre horario normativo.
-* **Acceso a Co-Redacción Concurrente (Yjs):** Editor en tiempo real de las 11 secciones institucionales.
-* **Envío a Revisión Técnica:** Disparo de notificación hacia el Coordinador de Carrera.
+## 6. Entorno de Trabajo de Revisión Técnica (`/documentacion/revision-curricular/:uuid`)
 
-### 5.4. Vicerrectorado Académico (`VicerrectorDashboard.tsx`)
-* **Firma y Legalización Digital Masiva (`LegalizacionFirmaModal.tsx`):** Aprobación y firma en bloque de todos los PEAs avalados de una carrera.
-* **Legalización Unitaria con Sello SHA-256:** Estampado de firma digital, inmutabilidad y generación de código QR.
-* **Generación de Dossier Curricular:** Compendio foliado en formato PDF oficial para auditorías del CACES.
+Para evitar la dispersión de herramientas, DOSIER unifica la auditoría microcurricular en un único entorno de trabajo sobre un riel plano continuo de tres pestañas integradas:
 
+1. **Revisión del PEA (Interactivo):**
+   Renderizado continuo de las 11 secciones oficiales del microcurrículo con validadores matemáticos del Artículo 21 del CES en vivo y formulario flotante para anotación de observaciones por bloque.
+2. **Documento Oficial PDF:**
+   Visor embebido del documento foliado oficial generado por `DocumentEngine`, permitiendo constatar la apariencia exacta de impresión y el membrete institucional.
+3. **Historial y Firmas (`AdminRevisionHistoryPanel.tsx`):**
+   Panel a ancho completo que despliega la bitácora cronológica inmutable de `doc_pea_trazabilidad`, hashes criptográficos SHA-256 de cada versión previa, detalle de firmas digitales emitidas o revocadas y razones técnicas de transiciones.

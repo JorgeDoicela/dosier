@@ -2,132 +2,124 @@
 
 ## 1. Visión General de la Capa de Infraestructura
 
-La capa de infraestructura (`dosier_infrastructure`) implementa los contratos definidos en `dosier_application` y gestiona la interacción con los recursos tecnológicos externos del sistema **DOSIER**:
-* Motor de persistencia relacional **Entity Framework Core 9** con el proveedor optimizado **Pomelo.EntityFrameworkCore.MySql** sobre la base de datos `sigafi_es` (MySQL 8.0, puerto 3306).
-* Hub de comunicación bidireccional en tiempo real **SignalR** (`CollaborationHub`) para la co-redacción concurrente de asignaturas mediante CRDTs (Yjs) con compresión `GZip`.
-* Motor de generación documental y compilación PDF basado en **Scriban** (motor de plantillas) e **iText 9** (manipulación de bajo nivel de flujos PDF y estampados forenses).
-* Motor criptográfico de firmas digitales institucionales (HMAC-SHA256) y certificados electrónicos **PKCS#12 (.p12 / FirmaEC)**.
-* Servicios de comunicación multicanal: WebSockets in-app (SignalRDriver) y despachador de correo institucional (EmailEngineService).
+La capa de infraestructura (`dosier_infrastructure`) implementa los contratos de servicio, repositorios y abstracciones definidos en `dosier_application`, gestionando la comunicación de bajo nivel con los recursos tecnológicos externos del sistema **DOSIER**:
+
+* **Motor de Persistencia Relacional:** **Entity Framework Core 9** con el proveedor optimizado **Pomelo.EntityFrameworkCore.MySql** sobre la base de datos `sigafi_es` (MySQL 8.0 / MariaDB 10.5+, puerto 3306), con resiliencia transitoria (`EnableRetryOnFailure`) y división de consultas (`SplitQuery`).
+* **Hub en Tiempo Real:** **SignalR Core** (`CollaborationHub` y `NotificationHub`) para la co-redacción concurrente de asignaturas mediante CRDTs (Yjs) con compresión `GZip`.
+* **Motor Documental y Compilación PDF:** **Handlebars.Net** (`HandlebarsTemplateEngine`) para la interpolación dinámica e **iText 9** (`iText.Html2pdf` e `iText.Kernel`) para el renderizado vectorial y estampado forense.
+* **Criptografía y Firmas Digitales:** Servicio de firma institucional HMAC-SHA256 y certificados digitales avanzados **PKCS#12 (.p12 / FirmaEC)** con BouncyCastle.
+* **Servicios de Comunicación:** WebSockets in-app (`SignalRDriver`) y despachador de correo institucional transaccional (`EmailDriver` y `EmailSenderSubservice`).
 
 ---
 
-## 2. Arquitectura del Contexto de Datos: `DosierContext`
+## 2. Arquitectura Modular del Contexto de Datos: `DosierContext`
 
-El acceso a datos se centraliza en `DosierContext` (ubicado en `dosier_infrastructure/data/models/Dosier/DosierContext.cs`), el cual estructura de forma limpia la convivencia entre la base de datos preexistente del instituto y el nuevo ecosistema curricular:
+El acceso a datos se centraliza en `DosierContext` (`backend/dosier_infrastructure/data/models/Dosier/DosierContext.cs`), estructurado mediante cuatro archivos parciales (`partial class`) que segregan las responsabilidades del modelo relacional:
 
 ```mermaid
-graph TD
-    subgraph DosierContext [DosierContext - Pomelo MySQL 8.0]
+flowchart TD
+    subgraph DosierContext["DosierContext (Pomelo MySQL 8.0)"]
         direction TB
-        subgraph Frontera SIGAFI [Esquema SIGAFI - Solo Lectura]
-            Carreras[carreras - esInstituto=1]
-            Periodos[periodos]
-            Profesores[profesores]
-            Mallas[mallas y mallas_periodos]
-            Asignaciones[asignaciones_profesores]
-            DetalleMallas[detallemallas y asignaturas]
+        subgraph ModuloSigafi["DosierContext.Sigafi.cs (Frontera Solo Lectura)"]
+            Carreras["carreras (WHERE esInstituto = 1)"]
+            Periodos["periodos (esConduccion = 0)"]
+            Profesores["profesores"]
+            Mallas["mallas y mallas_periodos"]
+            Asignaciones["asignaciones_profesores"]
+            DetalleMallas["detallemallas y asignaturas"]
         end
 
-        subgraph Core Identidad [RBAC Sistema ID 6]
-            Usuarios[usuarios]
-            Roles[rol y usuario_rol]
-            Modulos[sistema, modulos, operaciones]
-            Permisos[modulos_operaciones, rol_modulo_operacion]
+        subgraph ModuloIdentity["DosierContext.Identity.cs (RBAC Sistema ID 6)"]
+            Usuarios["usuarios"]
+            Roles["rbac_rol"]
+            UsuarioRoles["rbac_usuario_rol"]
+            Permisos["rbac_permiso y rbac_rol_permiso"]
         end
 
-        subgraph Esquema DOSIER [Tablas Curriculares y Documentales doc_*]
-            Pea[doc_pea y unidades/temas/rdas]
-            Expedientes[doc_expedientes_curriculares]
-            Normativas[doc_normativas y articulos]
-            Templates[doc_document_templates]
-            Instances[doc_document_instances]
-            Audit[doc_document_audit]
-            Firmas[doc_documento_firmas y perfiles]
-            Cowork[doc_cowork_documentos y updates]
+        subgraph ModuloDoc["DosierContext.Doc.cs (Esquema Propietario doc_*)"]
+            Pea["doc_pea y unidades/temas/rdas/prácticas"]
+            Expedientes["doc_expedientes_curriculares"]
+            Normativas["doc_normativas y articulos"]
+            Templates["doc_document_templates"]
+            Instances["doc_documentos_instancias"]
+            Audit["doc_document_audit y doc_audit_admin"]
+            Firmas["doc_documentos_firmas y perfiles"]
+            Cowork["doc_cowork_documentos"]
         end
     end
 ```
 
-### 2.1. Modularización de Fluent API (`OnModelCreating`)
+### 2.1. Desglose de los 4 Archivos Parciales de `DosierContext`
 
-Para mantener un diseño mantenible y evitar un archivo monolítico inmanejable, `DosierContext` utiliza clases parciales (`partial class`) que segregan las reglas de mapeo:
-
-1. **`OnModelCreatingSigafi(ModelBuilder)`:**
-   * Mapea tablas institucionales de sólo lectura.
-   * Aplica filtros globales de consulta (Query Filters) para aislar las carreras técnicas del ISTPET (`carreras.esInstituto = 1`), excluyendo los registros pertenecientes a la escuela de conducción u otros subsistemas.
-   * Mapea la resolución de mallas por cohorte (`mallas_periodos`) y asignaciones docentes (`asignaciones_profesores`).
-2. **`OnModelCreatingIdentity(ModelBuilder)`:**
-   * Mapea el sistema de control de acceso RBAC unificado en las tablas institucionales `usuarios`, `rol`, `usuario_rol`, `sistema`, `modulos`, `operaciones` y sus tablas intermedias.
-   * Maneja columnas de tipo `DateOnly` para compatibilidad nativa con las columnas `DATE` de MySQL.
-3. **`OnModelCreatingDosier(ModelBuilder)`:**
-   * Configura las tablas propietarias `doc_*` del sistema DOSIER (creadas por los scripts oficiales `01` a `04` en `scripts/base_datos/`).
-   * Establece llaves primarias autoincrementales, índices únicos sobre columnas `uuid`, restricciones de integridad referencial (`ON DELETE RESTRICT` / `CASCADE` según criticidad pedagógica) y relaciones 1:N entre `DocPea`, `DocPeaUnidad`, `DocPeaTema`, `DocPeaActividadPractica`, `DocPeaBibliografia`, `DocPeaObservacion` y `DocPeaTrazabilidad`.
+1. **`DosierContext.cs`:**
+   Declara los `DbSet<T>` institucionales y propietarios, el constructor con `DbContextOptions<DosierContext>` y los métodos de ciclo de vida transaccional.
+2. **`DosierContext.Sigafi.cs` (`OnModelCreatingSigafi`):**
+   * Mapea las tablas preexistentes de SIGAFI consumidas en modo de solo lectura.
+   * Aplica filtros globales de consulta para aislar las carreras del ISTPET (`carreras.esInstituto = 1`), excluyendo a la Escuela de Conducción.
+   * Mapea la resolución de mallas por cohorte (`mallas_periodos`) y distributivos docentes (`asignaciones_profesores`).
+3. **`DosierContext.Identity.cs` (`OnModelCreatingIdentity`):**
+   * Mapea el subsistema de identidad en las tablas institucionales `usuarios`, `rbac_rol` y `rbac_usuario_rol`.
+   * Restringe la resolución de roles al identificador de sistema institucional `idSistema = 6` de DOSIER.
+   * Mapea columnas `DateOnly` para interoperabilidad nativa con columnas `DATE` de MySQL.
+4. **`DosierContext.Doc.cs` (`OnModelCreatingDosier`):**
+   * Registra las configuraciones de entidad Fluent API independientes (`Configurations/Doc*Configuration.cs`) para las tablas del esquema `doc_*`.
+   * Define llaves foráneas, índices únicos en columnas `uuid` y políticas de integridad referencial (`ON DELETE RESTRICT` / `CASCADE` según criticidad pedagógica).
 
 ---
 
-## 3. Implementación de Servicios Curriculares y Académicos
+## 3. Implementación de Servicios Curriculares Transaccionales
 
 ### 3.1. Motor Curricular del PEA (`Curriculum/PeaService.cs`)
 
-Con más de 75 KB de lógica transaccional, `PeaService` es el servicio de persistencia más crítico del backend:
+`PeaService` gestiona la persistencia atómica y el ciclo de vida de las 11 secciones del microcurrículo:
 
 * **Instanciación desde Asignación SIGAFI (`CrearDesdeAsignacionAsync`):**
   1. Invoca `IAcademicContextResolver` para consultar la asignación docente en SIGAFI.
-  2. Extrae las horas de docencia, prácticas (APE) y autónomo oficiales, calculando automáticamente los créditos correspondientes.
+  2. Extrae las horas oficiales de docencia (CD), prácticas (APE) y trabajo autónomo (TA), calculando automáticamente los créditos correspondientes (Art. 21 RRA).
   3. Crea el registro en `doc_pea` con `Version = 1` y estado `Borrador`.
-  4. Crea o vincula el `DocExpedienteCurricular` correspondiente a la asignatura y período.
-* **Persistencia Integral de Secciones (`GuardarPeaAsync`):**
-  1. Ejecuta transacciones atómicas (`using var transaction = await _context.Database.BeginTransactionAsync()`).
-  2. Realiza validación matemática de balance: la suma de horas de las unidades didácticas debe cuadrar exactamente con el total de horas de la asignatura registrado en la malla.
-  3. Sincroniza en cascada colecciones de unidades, temas, RDAs, prácticas de laboratorio, bibliografía formateada en APA y criterios de evaluación.
-  4. Actualiza `FechaModificacion` y notifica al bus de eventos.
-* **Máquina de Estados Curricular y Trazabilidad Forense (`CambiarEstadoAsync`):**
-  1. Valida que la transición solicitada sea legal dentro del circuito:
-     * `Borrador` -> `EnRevision`
-     * `EnRevision` -> `RevisadoCoord` (o retorno a `Borrador` con observaciones)
-     * `RevisadoCoord` -> `RevisadoAcad` (o retorno a `EnRevision` con observaciones)
-     * `RevisadoAcad` -> `Aprobado`
-  2. Genera un snapshot serializado en JSON del estado actual del PEA.
-  3. Calcula el hash criptográfico SHA-256 del contenido.
-  4. Inserta un registro inmutable en `DocPeaTrazabilidad` con el estado anterior, nuevo, usuario y hash de integridad.
+  4. Crea o vincula el `DocExpedienteCurricular` correspondiente a la asignatura y período lectivo.
+* **Persistencia Atómica y Supresión en Dos Fases (`GuardarPeaAsync`):**
+  1. Inicia una transacción explícita (`using var transaction = await _context.Database.BeginTransactionAsync()`).
+  2. Ejecuta la validación matemática de balance: la suma de horas de las unidades didácticas debe cuadrar exactamente con el total de horas de la asignatura registrado en la malla.
+  3. Purga primero los temas dependientes en `doc_pea_temas` antes de sincronizar unidades en `doc_pea_unidades`, eliminando bloqueos de clave foránea (`errno 1451`).
+  4. Sincroniza en cascada unidades, temas, RDAs, actividades prácticas, bibliografía normalizada en APA y criterios de evaluación.
+  5. Confirma la transacción con `await transaction.CommitAsync()`.
+* **Máquina de Estados y Trazabilidad Criptográfica (`CambiarEstadoAsync`):**
+  1. Valida que la transición solicitada cumpla el circuito curricular colegiado (`Borrador` $\to$ `EnRevision` $\to$ `RevisadoCoord` $\to$ `RevisadoAcad` $\to$ `Aprobado`).
+  2. Calcula el hash SHA-256 sobre el contenido pedagógico completo.
+  3. Inserta un registro inmutable en `doc_pea_trazabilidad` con estado anterior, nuevo, usuario actor y hash de integridad.
 
-### 3.2. Resolución de Contexto de Solo Lectura (`Academico/AcademicContextResolver.cs`)
+### 3.2. Capa Anticorrupción de Solo Lectura (`Academico/AcademicContextResolver.cs`)
 
-Resuelve de manera no intrusiva el pensum y los datos del profesor:
 * Ejecuta consultas optimizadas con `.AsNoTracking()` sobre `asignaciones_profesores`, uniendo con `carreras`, `periodos`, `mallas_periodos`, `detallemallas` y `asignaturas`.
-* Aplica la regla cardinal de negocio: **los datos curriculares base provienen de SIGAFI y no pueden ser alterados desde DOSIER**. Cualquier discrepancia detectada entre la carga del profesor y la malla se reporta en la lista `Advertencias` del DTO de contexto.
+* Garantiza que los datos maestros provengan exclusivamente de SIGAFI y no puedan ser manipulados por clientes HTTP. Cualquier discrepancia entre la carga del docente y la malla se registra en la lista de advertencias del DTO de contexto.
 
 ---
 
 ## 4. Motor de Co-Redacción Concurrente (`Collaboration/CollaborationHub.cs`)
 
-El servicio de colaboración implementa la infraestructura de co-redacción multi-docente en tiempo real para asignaturas compartidas:
+Provee la infraestructura de concurrencia en tiempo real sobre WebSockets para docentes co-diseñadores:
 
-* **Protocolo de Mensajería:** WebSocket persistente gestionado mediante SignalR Core bajo la ruta `/hubs/collaboration`.
-* **Sincronización CRDT (Yjs):**
-  * Los clientes envían deltas binarios de actualización Yjs codificados en Base64 o binario plano.
-  * `CollaborationHub` recibe la actualización, valida la membresía del docente en el documento y la retransmite a todos los pares conectados en el canal de la asignatura mediante `Clients.OthersInGroup(docGroup).SendAsync("ReceiveUpdate", update)`.
-* **Compresión GZip (`GZipHelper.cs`):** Para reducir la latencia de red y el consumo de ancho de banda en sesiones con documentos extensos, las actualizaciones de estado se comprimen y descomprimen automáticamente en memoria antes de la persistencia o retransmisión.
-* **Control de Presencia y Bloqueos Suaves:**
-  * Mantiene el registro en memoria de usuarios activos por documento (`doc_id`).
-  * Emite eventos `UserJoined`, `UserLeft` y `AwarenessUpdate` para reflejar qué sección del PEA está editando cada docente, evitando colisiones en campos sensibles.
-* **Persistencia Periódica:** Los deltas se consolidan periódicamente en la tabla `doc_cowork_updates` y se genera el snapshot consolidado en `doc_cowork_documentos`.
+* **Punto de Enlace:** Mapeado en `/hubs/collaboration`.
+* **Sincronización CRDT (Yjs):** Recibe deltas binarios de actualización Yjs y los retransmite a los demás colaboradores del canal mediante `Clients.OthersInGroup(docGroup).SendAsync("ReceiveUpdate", update)`.
+* **Compresión GZip (`GZipHelper.cs`):** Comprime y descomprime en memoria los deltas transmitidos por la red, optimizando la latencia y reduciendo el consumo de ancho de banda hasta en un 85%.
+* **Persistencia Periódica:** Los deltas se consolidan periódicamente en la tabla `doc_cowork_documentos` con almacenamiento dual (HTML para compilación PDF y binario Yjs para reconstrucción concurrente).
 
 ---
 
 ## 5. Subsistema Criptográfico y Motor de Firma Digital (`Signatures/`)
 
-Implementado bajo una arquitectura desacoplada en subsistemas especializados en `dosier_infrastructure/Signatures/Subservices/`:
+Implementa el patrón de diseño Fachada a través de `DosierSignatureService`, coordinando 5 subservicios especializados:
 
 ```mermaid
-graph LR
-    DSS[DosierSignatureService]
-    DIS[DosierInternalSignerSubservice]
-    P12[P12SignatureSubservice]
-    SVS[SignatureVerificationSubservice]
-    SRS[SignatureRevocationSubservice]
-    SPS[SignatureProfileSubservice]
-    STAMP[SignatureStamper]
+flowchart LR
+    DSS["DosierSignatureService (Fachada)"]
+    DIS["DosierInternalSignerSubservice (HMAC-SHA256)"]
+    P12["P12SignatureSubservice (PKCS#12 / BouncyCastle)"]
+    SVS["SignatureVerificationSubservice (Verificación Pública)"]
+    SRS["SignatureRevocationSubservice (Revocación Forense)"]
+    SPS["SignatureProfileSubservice (Perfiles de Firma)"]
+    STAMP["SignatureStamper (Estampado Visual iText 9)"]
 
     DSS --> DIS
     DSS --> P12
@@ -138,50 +130,30 @@ graph LR
     P12 --> STAMP
 ```
 
-### 5.1. Firma Institucional DOSIER (`DosierInternalSignerSubservice.cs`)
-* Valida la re-autenticación del usuario con BCrypt contra la tabla `usuarios`.
-* Emite un código único de firma con nomenclatura formal: `DFRM-{AÑO}-{UUID8}` (ej. `DFRM-2026-A1B2C3D4`).
-* Calcula la prueba criptográfica HMAC-SHA256 combinando: identificador del usuario, UUID del documento, timestamp UTC exacto y la clave secreta institucional.
-* Invoca a `SignatureStamper` para imprimir visualmente el recuadro oficial de firma en el documento PDF y calcula el hash SHA-256 del binario resultante.
-* Persiste el registro en `doc_documento_firmas` con estado `Valid` y registra el evento `DocumentSigned`.
-
-### 5.2. Firma con Certificados PKCS#12 (`P12SignatureSubservice.cs`)
-* Procesa certificados de firma electrónica emitidos por entidades certificadoras autorizadas en el Ecuador (Security Data, Banco Central, Consejo de la Judicatura, ANFAC).
-* Decodifica el contenedor `.p12` mediante `X509Certificate2` utilizando la contraseña suministrada por el docente.
-* Verifica la validez temporal del certificado (no expirado, vigente a la fecha UTC actual).
-* Aplica el sellado y genera el hash de no-repudio.
-
-### 5.3. Estampado Visual en PDF (`SignatureStamper.cs`)
-* Utiliza **iText 9** (`PdfDocument`, `PdfCanvas`, `Paragraph`, `Table`).
-* Posiciona de forma matemática el bloque institucional en la última página o en la sección designada de firmas del PEA:
-  * Inserta el isotipo vectorial institucional.
-  * Imprime nombre del docente, cargo académico, fecha y hora UTC exacta.
-  * Renderiza el código DFRM-XXXX y el enlace/QR público de verificación.
+* **Firma Institucional DOSIER:** Emite código de trazabilidad único con formato `DFRM-{AÑO}-{UUID8}`, calcula la prueba criptográfica HMAC-SHA256 y persiste el registro en `doc_documentos_firmas` con estado válido.
+* **Firma PKCS#12 (.p12 / FirmaEC):** Valida la vigencia temporal y cadena de confianza del certificado X.509 utilizando BouncyCastle, aplicando la firma PAdES sobre el documento.
+* **Estampado Visual iText 9 (`SignatureStamper.cs`):** Adapta la geometría visual del sello a la matriz de 4 firmas de la Sección k (`94.0 pt` $\times$ `44.0 pt`) o bloque horizontal estándar (`190.0 pt` $\times$ `55.0 pt`), incrustando código QR de verificación pública sin sesión.
 
 ---
 
-## 6. Motor Documental y Purga Forense (`Common/Documents/`)
+## 6. Motor Documental y Purga Forense de Almacenamiento (`Common/Documents/`)
 
-### 6.1. Pipeline de Renderizado (`DocumentEngine.cs`)
-* **Compilación Scriban:** Transforma el marcado HTML de `DocumentTemplate` inyectando los datos del DTO curricular.
-* **Ensamblado PDF con iText 9:**
-  * Inyecta hojas de estilo base (`Resources/BaseDocumentStyles.css`) y overrides personalizados (`CustomCss`).
-  * Inyecta encabezados institucionales, número de página dinámico ("Página X de Y") y pie de página legal obligatorio (Cláusula de protección de datos personales LOPDP).
-  * Genera el código QR vectorial apuntando al endpoint de validación pública `/api/documents/verify/{traceabilityCode}`.
-* **Registro Inmutable:** Inserta automáticamente la entrada en `DocumentAuditEntry` con el snapshot JSON de datos y el hash SHA-256 del archivo.
+### 6.1. Pipeline de Compilación (`DocumentEngine.cs`)
+* **Interpolación con Handlebars.Net (`HandlebarsTemplateEngine`):** Normaliza colecciones pedagógicas, genera tablas editoriales de contenidos y sanitiza encabezados redundantes.
+* **Compilación a PDF con iText 9 (`ITextHtmlPdfRenderer`):** Convierte el HTML enriquecido a PDF vectorial, controlando numeración dinámica (`Página X de Y`) y directivas anti-huérfanos mediante `DocumentEventHandler`.
+* **Registro Forense:** Inserta la emisión en `doc_document_audit` con el snapshot de datos y el hash SHA-256 del archivo.
 
-### 6.2. Diagnóstico y Purga de Archivos Obsoletos (`DocumentInstanceService.cs`)
-* **`GetObsoleteDocumentDiagnosisAsync`:** Detecta documentos generados cuya versión de plantilla en `doc_document_instances` sea inferior a la versión activa en `doc_document_templates`.
+### 6.2. Diagnóstico y Purga de Binarios Obsoletos (`DocumentInstanceService.cs`)
+* **`GetObsoleteDocumentDiagnosisAsync`:** Detecta documentos generados con versiones obsoletas de plantillas maestras.
 * **`PurgeObsoleteFileByUuidAsync` / `PurgeAllObsoleteDocumentFilesAsync`:**
-  * Elimina los archivos PDF obsoletos del disco en el servidor para liberar almacenamiento.
-  * **Principio de Custodia Forense:** El registro en base de datos no se elimina; la columna `IsFilePurged` se establece en `true`, se registra la fecha (`PurgedAt`) y el usuario operador (`PurgedBy`), conservando intactos el hash SHA-256 original y la bitácora de auditoría para fines de acreditación CACES.
+  - Elimina físicamente los archivos PDF obsoletos del disco en el servidor para liberar almacenamiento.
+  - **Principio de Custodia Forense CACES:** El registro en base de datos no se elimina; la columna `IsFilePurged` se establece en `true`, registrando la fecha (`PurgedAt`) y el operador (`PurgedBy`), conservando intactos el hash SHA-256 original y la bitácora de auditoría.
 
 ---
 
 ## 7. Notificaciones y Comunicación Multicanal (`Common/Notifications/`)
 
-* **`NotificationService.cs`:** Distribuidor unificado de mensajes. Registra las alertas en `doc_notificaciones` y las envía concurrentemente a los drivers registrados.
-* **`SignalRDriver.cs`:** Notificación instantánea al socket del usuario conectado en la plataforma web.
-* **`EmailEngineService.cs` y `EmailSenderSubservice.cs`:**
-  * Renderiza correos institucionales mediante `EmailMasterLayoutRenderer.cs`.
-  * Despacha correos vía SMTP institucional con reintentos y registra el resultado en `doc_email_historial`.
+* **`NotificationService.cs`:** Distribuidor unificado que registra alertas en `doc_notificaciones` y las despacha a los drivers registrados.
+* **`SignalRDriver.cs`:** Transmisión inmediata vía WebSockets hacia `/hubs/notifications` al grupo del usuario (`User_{idUsuario}`).
+* **`EmailDriver.cs`:** Encola correos en `doc_email_historial` tras renderizar el mensaje con membrete institucional en `EmailMasterLayoutRenderer.cs`.
+* **`EmailBackgroundProcessorService.cs`:** Procesa la cola en segundo plano enviando correos mediante SMTP seguro institucional (`EmailSenderSubservice.cs`).

@@ -1,17 +1,17 @@
 # Motor del Asistente Curricular de Inteligencia Artificial y Extractor Documental
 
-## 1. Proposito y Alcance
+## 1. Propósito y Alcance
 
-El Motor del Asistente Curricular de Inteligencia Artificial de DOSIER proporciona soporte automatizado a los docentes en la estructuración, redacción y coherencia pedagógica del Programa de Estudio de la Asignatura (PEA). Su diseño arquitectónico es agnóstico a proveedores, permitiendo conectarse con cualquier modelo de lenguaje del mercado (DeepSeek, Google Gemini, OpenAI, Anthropic Claude, Groq, OpenRouter o modelos locales desplegados en Ollama/vLLM), garantizando en todo momento la protección criptográfica de las credenciales, el control del esfuerzo de razonamiento (`reasoning_effort`) y el cuadre matemático estricto con la carga horaria oficial del sistema académico SIGAFI.
+El Motor del Asistente Curricular de Inteligencia Artificial de DOSIER proporciona soporte automatizado a los docentes en la estructuración pedagógica, redacción de contenidos y verificación de coherencia del Programa de Estudio de la Asignatura (PEA). Su diseño arquitectónico es agnóstico a proveedores de inferencia, permitiendo interactuar con cualquier modelo de lenguaje de última generación (DeepSeek, Google Gemini, OpenAI, Anthropic Claude, Groq, OpenRouter o modelos locales ejecutados sobre Ollama/vLLM), garantizando la protección criptográfica de credenciales mediante cifrado simétrico AES-256, el control dinámico del esfuerzo de razonamiento (`reasoning_effort`) y el cuadre matemático determinista contra la carga horaria oficial del sistema académico SIGAFI.
 
-Asimismo, integra un subsistema extractor desacoplado (`IPeaDocumentExtractorService`) que analiza sintácticamente documentos digitales preexistentes en formatos Microsoft Word (`.docx`) y Adobe PDF (`.pdf`), extrayendo unidades temáticas, horas, prácticas y bibliografía bajo el principio de fidelidad textual estricta.
+Asimismo, integra un subsistema extractor desacoplado (`IPeaDocumentExtractorService`) que analiza sintácticamente documentos digitales preexistentes en formatos Microsoft Word (`.docx`) y Adobe PDF (`.pdf`), extrayendo unidades temáticas, horas, prácticas y bibliografía bajo el principio innegociable de fidelidad textual estricta.
 
 ```mermaid
 flowchart TD
     Docente["Docente en Editor PEA"] -->|"Solicita propuesta estructurada"| UI["Modal Asistente IA (PeaAiAssistantModal.tsx)"]
     Docente -->|"Chat interactivo en vivo"| ChatUI["Panel Lateral Chat IA (PeaAiChatSidebar.tsx)"]
     Docente -->|"Importar archivo Word/PDF"| ImportUI["Modal Extractor (PeaDocumentImportModal.tsx)"]
-    Revisor["Coordinador / Evaluador en Revisión"] -->|"Auditoría y contraste curricular"| ReviewUI[" Botón y Panel Flotante IA (PeaAiReviewerWidget.tsx)"]
+    Revisor["Coordinador / Evaluador en Revisión"] -->|"Auditoría y contraste curricular"| ReviewUI["Panel Flotante IA (PeaAiReviewerWidget.tsx)"]
 
     UI -->|"POST /api/pea/uuid/{uuid}/ai/generar"| Controller["PeaController"]
     ChatUI -->|"POST /api/pea/uuid/{uuid}/ai/chat"| Controller
@@ -21,13 +21,13 @@ flowchart TD
     Controller -->|"GenerateDraftAsync() / AnalyzeForReviewAsync()"| AIService["PeaAiAssistantService"]
     Controller -->|"ExtractAndMapDocumentAsync()"| ExtractorService["PeaDocumentExtractorService"]
 
-    subgraph ContextoAcademico ["Inyeccion Contextual Institucional"]
+    subgraph ContextoAcademico["Inyección Contextual Institucional"]
         DB_SIGAFI[("sigafi_es (Materias, Horas CD/APE/TA, Nivel)")] --> AIService
         DB_SIGAFI --> ExtractorService
         DB_DOSIER[("doc_perfil_egreso + doc_modelo_educativo")] --> AIService
     end
 
-    subgraph BovedaCriptografica ["Resolucion de Credenciales"]
+    subgraph BovedaCriptografica["Resolución de Credenciales"]
         ConfigGlobal[("doc_config_general (AES-256)")] --> AIService
         ConfigUser[("doc_usuario_metadata (AES-256)")] --> AIService
         AppSettings["appsettings.json (Fallback / Local)"] --> AIService
@@ -47,7 +47,7 @@ flowchart TD
     Reconcile --> Bloom["Evaluador Taxonomía de Bloom & Criterios CACES"]
     Bloom --> DTO["PeaStructuredDraftDto Validado"]
     DTO -->|"Respuesta HTTP"| UI
-    UI -->|"Previsualizacion comparativa"| ProposalModal["PeaAiProposalModal.tsx"]
+    UI -->|"Previsualización comparativa"| ProposalModal["PeaAiProposalModal.tsx"]
     ProposalModal -->|"Aceptar sección / todo"| Hydrate["useDOSIERDocument (applyStructuredDraft)"]
     Hydrate -->|"ydoc.transact() + dosier:hydrate-richtext"| Yjs["Yjs CRDTs + CoWorkEditor TipTap"]
 ```
@@ -57,11 +57,11 @@ flowchart TD
 ## 2. Componentes del Backend
 
 ### 2.1. Bóveda Criptográfica de API Keys (`IDataProtectionProvider`)
-Las credenciales de acceso a las APIs de inteligencia artificial se protegen mediante el subsistema criptográfico de ASP.NET Core (`IDataProtector`) con el propósito `Dosier.PeaAiAssistant.ApiKey.v1`.
+Las credenciales de acceso a las APIs de inteligencia artificial se protegen mediante el subsistema criptográfico de ASP.NET Core (`IDataProtector`) con el propósito específico `Dosier.PeaAiAssistant.ApiKey.v1`:
 
-- **Ámbito Global Institucional (`doc_config_general`)**: Claves administradas exclusivamente por usuarios con rol `DOSIER_ADMIN` (`AI_ASSISTANT_API_KEY`, `AI_ASSISTANT_PROVIDER`, `AI_ASSISTANT_MODEL`, `AI_ASSISTANT_BASE_URL`, `AI_ASSISTANT_REASONING_EFFORT`).
-- **Ámbito Personal por Docente (`doc_usuario_metadata`)**: Almacenadas en la columna JSON `configuracion` bajo las claves `ai_api_key_protected`, `ai_provider`, `ai_model`, `ai_base_url` y `ai_reasoning_effort`.
-- **Ámbito de Infraestructura (`appsettings.json`)**: Configuración directa sin persistencia en base de datos para entornos locales:
+* **Ámbito Global Institucional (`doc_config_general`):** Claves administradas exclusivamente por usuarios con rol `DOSIER_ADMIN` (`AI_ASSISTANT_API_KEY`, `AI_ASSISTANT_PROVIDER`, `AI_ASSISTANT_MODEL`, `AI_ASSISTANT_BASE_URL`, `AI_ASSISTANT_REASONING_EFFORT`).
+* **Ámbito Personal por Docente (`doc_usuario_metadata`):** Almacenadas en la columna JSON `configuracion` bajo las claves `ai_api_key_protected`, `ai_provider`, `ai_model`, `ai_base_url` y `ai_reasoning_effort`.
+* **Ámbito de Infraestructura (`appsettings.json`):** Configuración directa para entornos locales:
   ```json
   "AiAssistant": {
     "Provider": "deepseek",
@@ -86,84 +86,81 @@ El servicio `PeaAiAssistantService` implementa adaptadores de protocolo para gar
 | **Ollama** | `http://localhost:11434/v1/chat/completions` | OpenAI Chat Completions (sin auth obligatoria) | `llama3`, `qwen2.5`, `deepseek-r1` |
 | **Custom** | URL configurable por el usuario | OpenAI Chat Completions | Cualquier modelo compatible |
 
-* **Parámetro `ReasoningEffort` (`low` | `medium` | `high`):** Para modelos con cadena de pensamiento o inferencia extendida (OpenAI o1/o3, DeepSeek R1), el backend inyecta dinámicamente el parámetro de esfuerzo de razonamiento según la configuración del docente o la directiva institucional.
+* **Parámetro `ReasoningEffort` (`low` | `medium` | `high`):** Para modelos con cadena de pensamiento o inferencia extendida (OpenAI o1/o3, DeepSeek R1), el backend inyecta dinámicamente el parámetro de esfuerzo de razonamiento según la configuración institucional o del docente.
 
 ### 2.3. Resiliencia, Sanitización y Conversación Multi-Turno
-1. **Limpieza Quirúrgica de Bloques `<think>`**: En modelos con cadena de pensamiento (DeepSeek R1, QwQ), `CleanJsonFence` remueve bloques `<think>...</think>` (incluidos cierres truncados) y extrae el primer objeto JSON balanceado `{ ... }` respetando escapes de cadenas.
-2. **Memoria Conversacional Continua (`PeaAiChatMessageDto`)**: El endpoint `POST /api/pea/uuid/{uuid}/ai/chat` y el generador admiten `ConversationHistory`, permitiendo que el modelo recuerde ajustes previos solicitados en el chat lateral.
-3. **Reintentos Transitorios y Validación de Endpoints**: `SendWithResilienceAsync` reintenta hasta 3 veces con backoff exponencial y jitter ante respuestas HTTP transitorias (`429`, `502`, `503`, `504`) o fallos de red, traduciendo expiraciones reales a `TimeoutException` (`504 Gateway Timeout`). `ValidateEndpointUrl` restringe los endpoints personalizados a esquemas `http`/`https` válidos.
-4. **Manejo de Fallback ante Error HTTP 400/422 y Auditoría Determinista**: Si un modelo rechaza parámetros auxiliares (`temperature`, `response_format`), reintenta en modo de payload mínimo. En revisión curricular, `ParseAndNormalizeReviewAnalysis` garantiza determinísticamente los 5 criterios normativos obligatorios y detecta desfases horarios reales aun si el proveedor devuelve JSON parcial o malformado.
+1. **Limpieza Quirúrgica de Bloques `<think>`:** En modelos con cadena de pensamiento (DeepSeek R1, QwQ), `CleanJsonFence` remueve bloques `<think>...</think>` y extrae el primer objeto JSON balanceado `{ ... }` respetando escapes de cadenas.
+2. **Memoria Conversacional Continua (`PeaAiChatMessageDto`):** El endpoint `POST /api/pea/uuid/{uuid}/ai/chat` admite el historial conversacional (`ConversationHistory`), permitiendo que el modelo recuerde instrucciones y modificaciones previas formuladas en el panel lateral.
+3. **Reintentos Transitorios y Validación de Endpoints:** `SendWithResilienceAsync` reintenta hasta 3 veces con retroceso exponencial (*exponential backoff*) y fluctuación aleatoria (*jitter*) ante respuestas HTTP transitorias (`429`, `502`, `503`, `504`), traduciendo expiraciones a `TimeoutException` (HTTP 504 Gateway Timeout). `ValidateEndpointUrl` restringe los endpoints personalizados a esquemas válidos `http`/`https`.
+4. **Manejo de Fallback ante Error HTTP 400/422:** Si un modelo rechaza parámetros auxiliares (`temperature`, `response_format`), el servicio reintenta automáticamente en modo de payload mínimo.
 
 ### 2.4. Reconciliación Matemática de Horas SIGAFI (CD, APE, TA)
-La normativa institucional y de acreditación exige que las horas por componente de aprendizaje (Contacto Docente - CD, Aprendizaje Práctico Experimental - APE y Trabajo Autónomo - TA) cuadren de forma exacta con la malla curricular aprobada.
-
-Cuando una asignatura en `detallemallas` de SIGAFI solo registra el total de horas (ej. 96 o 144) con componentes en cero, el motor calcula de manera automática una distribución equitativa en tercios normativos enteros:
-- $\text{Horas CD} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
-- $\text{Horas APE} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
-- $\text{Horas TA} = \text{Horas Totales} - \text{Horas CD} - \text{Horas APE}$
+Cuando una asignatura en `detallemallas` de SIGAFI solo registra el total de horas (ej. 96 o 144) con componentes en cero, el motor calcula automáticamente la distribución en tercios normativos enteros:
+* $\text{Horas CD} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
+* $\text{Horas APE} = \lfloor \frac{\text{Horas Totales}}{3} \rfloor$
+* $\text{Horas TA} = \text{Horas Totales} - \text{Horas CD} - \text{Horas APE}$
 
 Posteriormente, la función `ReconcileUnitHoursWithSigafi` ajusta las horas entre las unidades temáticas bajo un principio no destructivo:
-1. **Preservación de Horas Extraídas**: Si no existe contexto horario estricto en la base de datos (`targetTotal <= 0`), el conciliador respeta íntegramente las horas extraídas del documento original sin forzarlas a cero.
-2. **Distribución Proporcional Entera**: Cuando existe un total objetivo oficial mayor a cero, distribuye el valor equitativamente entre las unidades y asigna el residuo entero a las unidades iniciales mediante `DistributeExactBucket`, asegurando sumas discretas exactas:
+1. **Preservación de Horas Extraídas:** Si no existe contexto horario estricto en la base de datos (`targetTotal <= 0`), respeta íntegramente las horas extraídas del documento original.
+2. **Distribución Proporcional Entera:** Cuando existe un total objetivo oficial mayor a cero, distribuye el valor equitativamente entre las unidades y asigna el residuo entero a las unidades iniciales mediante `DistributeExactBucket`, asegurando sumas discretas exactas:
 $$\sum_{i=1}^{N} \text{HorasUnidad}_{i} \equiv \text{HorasOficialesSIGAFI}$$
 
 ### 2.5. Evaluador de Taxonomía de Bloom y Criterios CACES
 El motor analiza la validez pedagógica del borrador generado antes de retornarlo al cliente:
-1. **Detección de Verbos de Bloom (`IsBloomVerbValid`, `BloomVerbDetected`):** Identifica el verbo de acción en infinitivo con el que inicia el objetivo formativo general y cada resultado de aprendizaje (ej. *Analizar*, *Diseñar*, *Evaluar*, *Implementar*), verificando su correspondencia con el nivel académico de la asignatura.
+1. **Detección de Verbos de Bloom (`IsBloomVerbValid`, `BloomVerbDetected`):** Identifica el verbo de acción en infinitivo con el que inicia el objetivo formativo general y cada resultado de aprendizaje (ej. *Analizar*, *Diseñar*, *Evaluar*, *Implementar*), verificando su correspondencia con el nivel académico técnico o tecnológico de la carrera.
 2. **Conformidad de Prácticas APE (`ArePracticesCompliant`):** Si la asignatura contempla horas prácticas, valida que la matriz contenga talleres o laboratorios con horas y escenarios asignados.
 3. **Conformidad Bibliográfica APA (`IsBibliographyCompliant`):** Verifica que existan referencias básicas y complementarias con estructura formal y fecha de publicación.
 4. **Notas de Cumplimiento (`ComplianceNotes`):** Si se detectan inconsistencias menores, el motor adjunta advertencias pedagógicas en el DTO para orientar al docente sin bloquear el borrador.
 
 ### 2.6. Motor Extractor Desacoplado (`PeaDocumentExtractorService`)
 El procesamiento de archivos preexistentes está desacoplado del asistente generador en su propio servicio e interfaz especializada:
-- **Servicio Backend**: `PeaDocumentExtractorService.cs` implementando `IPeaDocumentExtractorService`.
-- **Ruta Oficial de Ingestión**: `POST /api/pea/uuid/{uuid}/importar-documento` (con alias `/ai/importar-archivo`).
-- **Formatos Digitales Admitidos**:
-  1. **PDF con Texto Digital (`.pdf`)**: Extracción nativa página por página mediante `iText 9` (`PdfTextExtractor` con `SimpleTextExtractionStrategy`).
-  2. **Microsoft Word OpenXML (`.docx`)**: Descompresión nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerárquico de `word/document.xml` con `XDocument`, extrayendo párrafos (`<w:p>`) y celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
-- **Algoritmos Especializados de Sanitización de Tablas**:
+* **Servicio Backend:** `PeaDocumentExtractorService.cs` implementando `IPeaDocumentExtractorService`.
+* **Ruta Oficial de Ingestión:** `POST /api/pea/uuid/{uuid}/importar-documento` (con alias `/ai/importar-archivo`).
+* **Formatos Digitales Admitidos:**
+  1. **PDF con Texto Digital (`.pdf`):** Extracción nativa página por página mediante `iText 9` (`PdfTextExtractor` con `SimpleTextExtractionStrategy`).
+  2. **Microsoft Word OpenXML (`.docx`):** Descompresión nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerárquico de `word/document.xml` con `XDocument`, extrayendo párrafos (`<w:p>`) y celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
+* **Algoritmos Especializados de Sanitización de Tablas:**
   - `CleanContenidosOrphanNumbers`: Remueve numeraciones flotantes huérfanas derivadas de saltos de página en tablas curriculares.
   - `CompleteTruncatedUnitTitle`: Reconstruye títulos de unidades temáticas interrumpidos por celdas combinadas.
   - `SanitizeRedundantHeading`: Elimina encabezados duplicados redundantes mediante expresiones regulares.
-- **Extracción de Carga Horaria y Código de Carrera**: El esquema JSON de extracción y normalización captura de forma explícita tanto los totales de la asignatura (`total_horas_asignatura`, `horas_contacto_docente`, `horas_practico_experimental`, `horas_autonomo`) como el desglose por unidad (`horas_cd`, `horas_ape`, `horas_ta`, `total_horas_unidad`) y el código de carrera institucional (`codigo_carrera`, ej. `DS` o `SOF`), contemplando sinónimos textuales frecuentes en documentos históricos. Si una unidad solo especifica el total de horas acumuladas, se dividen inteligentemente en tres tercios enteros entre CD, APE y TA.
-- **Exclusión Determinista de Imágenes**: Rechaza cualquier archivo `.png`, `.jpg`, `.jpeg`, `.webp` o PDF escaneado sin texto seleccionable (menos de 50 caracteres alfanuméricos extraídos).
-- **Principio de Fidelidad Textual:** El extractor opera estrictamente como analizador sintáctico (Parser) del texto subido. Las cabeceras institucionales de SIGAFI (nombre oficial de materia, código, horas, carrera) se mantienen inmutables y nunca son sobreescritas por el contenido del archivo.
+* **Extracción de Carga Horaria y Código de Carrera:** El esquema JSON de extracción captura tanto los totales de la asignatura (`total_horas_asignatura`, `horas_contacto_docente`, `horas_practico_experimental`, `horas_autonomo`) como el desglose por unidad (`horas_cd`, `horas_ape`, `horas_ta`, `total_horas_unidad`) y el código de carrera institucional (`codigo_carrera`, ej. `DS` o `SOF`). Si una unidad solo especifica el total de horas acumuladas, se dividen inteligentemente en tres tercios enteros entre CD, APE y TA.
+* **Exclusión Determinista de Imágenes:** Rechaza cualquier archivo `.png`, `.jpg`, `.jpeg`, `.webp` o PDF escaneado sin texto seleccionable (menos de 50 caracteres alfanuméricos extraídos).
+* **Principio de Fidelidad Textual:** El extractor opera estrictamente como analizador sintáctico del texto subido. Las cabeceras institucionales de SIGAFI (nombre oficial de materia, código, horas, carrera) se mantienen inmutables y nunca son sobreescritas por el contenido del archivo.
 
 ---
 
 ## 3. Integración en el Frontend
 
 ### 3.1. Servicios Desacoplados (`peaAiService.ts` y `peaDocumentExtractorService.ts`)
-- **`peaAiService.ts`**: Fachada para configuración de API Keys (`/api/pea/ai/config`), generación de borradores pedagógicos (`/api/pea/uuid/{uuid}/ai/generar`), chat interactivo (`/api/pea/uuid/{uuid}/ai/chat`) y auditoría curricular de revisión (`/api/pea/uuid/{uuid}/ai/revisar`). Incluye la función de mapeo reactivo `convertDraftToEditorFields`, la cual sincroniza los totales de horas (`TotalHorasAsignatura`, componentes CD/APE/TA), el código de carrera y aplica distribución equitativa automática sobre las unidades si estas carecen de horas asignadas en el documento de origen.
-- **`peaDocumentExtractorService.ts`**: Módulo especializado para la carga de archivos `multipart/form-data` y extracción de PEAs digitales (`/api/pea/uuid/{uuid}/importar-documento`).
+* **`peaAiService.ts`:** Fachada para configuración de API Keys (`/api/pea/ai/config`), generación de borradores pedagógicos (`/api/pea/uuid/{uuid}/ai/generar`), chat interactivo (`/api/pea/uuid/{uuid}/ai/chat`) y auditoría curricular de revisión (`/api/pea/uuid/{uuid}/ai/revisar`). Incluye la función de mapeo reactivo `convertDraftToEditorFields`, la cual sincroniza los totales de horas (`TotalHorasAsignatura`, componentes CD/APE/TA), el código de carrera y aplica distribución equitativa automática sobre las unidades si estas carecen de horas asignadas en el documento de origen.
+* **`peaDocumentExtractorService.ts`:** Módulo especializado para la carga de archivos `multipart/form-data` y extracción de PEAs digitales (`/api/pea/uuid/{uuid}/importar-documento`).
 
 ### 3.2. Experiencia de Usuario en el Editor (`DOSIERBuilderShell.tsx`)
-1. **"Importar PEA (PDF / Word)"** (icono `FileUp`): Abre `PeaDocumentImportModal.tsx` para docentes que desean migrar un sílabo preexistente con previsualización granular de secciones y desglose analítico de unidades.
-2. **"Autocompletar sección con IA"** (icono `Sparkles`): Abre `PeaAiAssistantModal.tsx` para redactar, proponer y pulir objetivos, unidades temáticas, actividades prácticas y evaluaciones.
-3. **Modal de Propuesta Curricular (`PeaAiProposalModal.tsx`)**: Despliega una comparativa visual clara entre la propuesta de la IA y el estado actual del documento, permitiendo aceptar secciones individuales o el borrador integral.
-4. **Chat Pedagógico en Barra Lateral (`PeaAiChatSidebar.tsx`)**: Asistente conversacional interactivo integrado en el menú derecho con historial contextual sobre la asignatura activa.
-5. **Dropzone Rápido en `CollaborationSidebar.tsx`**: Zona de arrastre ampliada para cargar archivos `.pdf` o `.docx` directamente desde el panel lateral sin salir del lienzo.
-6. **Balance Dinámico y Botón "Distribuir horas" en Sección 6 (`PeaContentsSection.tsx`)**: Panel de verificación horaria con cálculo de desfase en tiempo real. Si existe descuadre entre las horas de las unidades y el total oficial de la asignatura, se presenta el botón interactivo "Distribuir horas", el cual calcula y distribuye la carga horaria exacta entre las unidades registradas y desaparece automáticamente al alcanzar el equilibrio.
+1. **Acción "Importar PEA (PDF / Word)":** Abre `PeaDocumentImportModal.tsx` para docentes que desean migrar un sílabo preexistente con previsualización granular de secciones y desglose analítico de unidades.
+2. **Acción "Autocompletar sección con IA":** Abre `PeaAiAssistantModal.tsx` para redactar, proponer y pulir objetivos, unidades temáticas, actividades prácticas y evaluaciones.
+3. **Modal de Propuesta Curricular (`PeaAiProposalModal.tsx`):** Despliega una comparativa visual clara entre la propuesta de la IA y el estado actual del documento, permitiendo aceptar secciones individuales o el borrador integral.
+4. **Chat Pedagógico en Barra Lateral (`PeaAiChatSidebar.tsx`):** Asistente conversacional interactivo integrado en el menú derecho con historial contextual sobre la asignatura activa.
+5. **Zona de Arrastre Rápida en `CollaborationSidebar.tsx`:** Zona para cargar archivos `.pdf` o `.docx` directamente desde el panel lateral sin salir del lienzo.
+6. **Balance Dinámico en Sección 6 (`PeaContentsSection.tsx`):** Panel de verificación horaria con cálculo de desfase en tiempo real. Si existe descuadre entre las horas de las unidades y el total oficial de la asignatura, se presenta el botón interactivo "Distribuir horas", el cual calcula y distribuye la carga horaria exacta entre las unidades registradas y desaparece automáticamente al alcanzar el equilibrio.
 
 ### 3.3. Asistente Flotante para Revisión Curricular (`PeaAiReviewerWidget.tsx`)
 Para los roles de revisión y aprobación académica (`DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`, `DOSIER_ADMIN`), la vista `RevisionCurricularPage.tsx` incorpora el componente flotante `PeaAiReviewerWidget.tsx`:
-- **Endpoint de Auditoría**: `POST /api/pea/uuid/{uuid}/ai/revisar` (`IPeaAiAssistantService.AnalyzeForReviewAsync`).
-- **Cruce Institucional Automatizado**: El backend cruza en tiempo real el snapshot actual del PEA contra la malla oficial en `sigafi_es` (`Carreras`, `Asignaturas`, `DetalleMallas`, `Prerequisitos`), el Perfil de Egreso de la Carrera (`doc_perfiles_egreso`) y el Modelo Educativo Institucional (`doc_modelos_educativos`).
-- **Enfoques de Auditoría de Alto Valor (`FocusMode`)**:
+* **Endpoint de Auditoría:** `POST /api/pea/uuid/{uuid}/ai/revisar` (`IPeaAiAssistantService.AnalyzeForReviewAsync`).
+* **Cruce Institucional Automatizado:** El backend cruza en tiempo real el snapshot actual del PEA contra la malla oficial en `sigafi_es` (`carreras`, `asignaturas`, `detallemallas`, `prerequisitos`), el Perfil de Egreso de la Carrera (`doc_perfiles_egreso`) y el Modelo Educativo Institucional (`doc_modelos_educativos`).
+* **Enfoques de Auditoría (`FocusMode`):**
   - `overview`: Explicación integral del PEA, propósito pedagógico, progresión de unidades y hallazgos principales antes de emitir aval.
   - `career_profile`: Pertinencia de la asignatura frente a los Resultados de Aprendizaje (RDA) del perfil de egreso de la carrera y verificación de prerrequisitos de malla SIGAFI.
   - `hours_audit`: Auditoría aritmética de horas de Contacto Docente (CD), Aprendizaje Práctico Experimental (APE), Trabajo Autónomo (TA) y créditos (RRA Art. 21) frente a la suma de unidades y la cobertura de talleres prácticos declarados.
-- **5 Criterios Normativos Clave de Auditoría (Semáforo Institucional)**:
+* **5 Criterios Normativos Clave de Auditoría (Semáforo Institucional):**
   1. *Distribución horaria y créditos (RRA Art. 21)*: 1 crédito = 48h y Total = CD + APE + TA.
-  2. *Suma de horas en unidades vs Sección 1*: Concordancia aritmética estricta de componentes.
-  3. *Cobertura de prácticas experimentales (APE)*: Justificación de las 48h de APE en la Sección 8.
+  2. *Suma de horas en unidades vs. Sección 1*: Concordancia aritmética estricta de componentes.
+  3. *Cobertura de prácticas experimentales (APE)*: Justificación de las horas de APE en la matriz de prácticas.
   4. *Alineación con el perfil de egreso de la carrera*: Coherencia con los RDAs institucionales de titulación.
   5. *Coherencia de prerrequisitos con malla SIGAFI*: Validación determinista contra el registro de materias previas.
-- **Inyección Directa de Observaciones**: Devuelve observaciones sugeridas (`SuggestedObservations`) consolidadas por sección canónica. El revisor puede saltar a la sección con un clic, registrar cada observación individualmente o aplicar todas en lote (`Registrar todas`) mediante `saveCommentForSection`.
-- **Diseño Despejado y sin Redundancias**: Se eliminan párrafos intermedios repetitivos en el chat y selectores apretados en el pie, brindando un área de texto amplia para preguntas libres, chips horizontales de consulta rápida y acceso a la configuración del modelo desde la cabecera.
+* **Inyección Directa de Observaciones:** Devuelve observaciones sugeridas (`SuggestedObservations`) consolidadas por sección canónica. El revisor puede saltar a la sección con un clic, registrar cada observación individualmente o aplicar todas en lote (`Registrar todas`) mediante `saveCommentForSection`.
 
 ### 3.4. Hidratación Atómica en Tiempo Real (`useDOSIERDocument.ts`)
 La inyección de los datos generados o importados al editor concurrente se ejecuta en una sola transacción `ydoc.transact()` sobre los tipos compartidos de Yjs:
-- Arreglos estructurados mediante `Y.Array` (`Unidades`, `Prerrequisitos`, `ActividadesPracticas`, `Evaluaciones`, `Bibliografias`).
-- Textos planos mediante `Y.Text`.
-- Editores enriquecidos TipTap (`Y.XmlFragment`): se limpia el fragmento previo y se emite el evento global `dosier:hydrate-richtext` para que los editores activos actualicen el contenido en caliente.
+* Arreglos estructurados mediante `Y.Array` (`Unidades`, `Prerrequisitos`, `ActividadesPracticas`, `Evaluaciones`, `Bibliografias`).
+* Textos planos mediante `Y.Text`.
+* Editores enriquecidos TipTap (`Y.XmlFragment`): se limpia el fragmento previo y se emite el evento global `dosier:hydrate-richtext` para que los editores activos actualicen el contenido en caliente sin provocar parpadeos visuales ni pérdida de cursor.

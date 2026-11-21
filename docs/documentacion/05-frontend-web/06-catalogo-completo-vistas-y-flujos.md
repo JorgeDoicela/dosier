@@ -2,24 +2,27 @@
 
 ## 1. Visión General del Enrutador y Estructura de Páginas
 
-El cliente web de DOSIER (`dosier_web`) estructura sus vistas dentro del directorio `src/pages/`, organizadas en **14 módulos funcionales** que abarcan la gobernanza curricular, formulación pedagógica, co-redacción en tiempo real, revisión colegiada, administración institucional y verificación forense:
+El cliente web de DOSIER (`dosier_web`) estructura sus vistas dentro del directorio `src/pages/`, organizadas en **14 módulos funcionales** que abarcan la gobernanza curricular, formulación pedagógica, co-redacción concurrente, revisión colegiada, administración institucional y verificación forense:
 
 ```text
 dosier_web/src/pages/
-├── Admin/           # Administración general (Usuarios, Auditoría, Plantillas, Emails)
-├── Analytics/       # Indicadores y tablero CACES
-├── Auth/            # Flujos secundarios de autenticación (Reset password)
-├── Calendario/      # Planificador de hitos lectivos y agenda institucional
-├── Curriculum/      # Dominio Curricular ISTPET (Mis Asignaturas PEA, Supervisión, DocumentWorkspace, Monitoreo, Revisión)
+├── Admin/           # Administración general: UsersPage, AuditPage, DocumentMaintenancePage,
+│                    # DocumentTemplatesPage, EmailEnginePage, AdminFeedbackPage
+├── Analytics/       # Indicadores y tablero de acreditación CACES
+├── Auth/            # Flujos secundarios de autenticación (ResetAlertPage)
+├── Calendario/      # Planificador de hitos lectivos, Kanban y notas adhesivas
+├── Curriculum/      # Dominio Curricular ISTPET (Mis Asignaturas, Supervisión, DocumentWorkspace,
+│                    # Monitoreo, Revisión y Salas Curriculares de Carrera)
 ├── Dashboard/       # Tableros diferenciados por rol (5 roles curriculares) y modales operativos
-├── Landing/         # Página pública de presentación
-├── Login/           # Autenticación (Credenciales, SSO Microsoft)
-├── Lopdp/           # Gestión de consentimientos y solicitudes de derechos ARCO
-├── Notificaciones/  # Centro de notificaciones in-app
-├── Public/          # Validador público de documentos vía código QR
-├── RecycleBin/      # Papelera de reciclaje y recuperación de registros
-├── Settings/        # Configuración de cuenta, seguridad y apariencia
-└── Solicitudes/     # Centro de Solicitudes y trámites curriculares por rol
+├── Feedback/        # Buzón del docente e incidencias técnicas (UserFeedbackPage)
+├── Landing/         # Página pública de presentación institucional
+├── Login/           # Autenticación (Credenciales locales, SSO Microsoft 365, Recuperación)
+├── Lopdp/           # Gestión de consentimientos informados y solicitudes de derechos ARCO
+├── Notificaciones/  # Centro unificado de notificaciones in-app vía SignalR
+├── Public/          # Validador forense público de documentos vía código QR
+├── RecycleBin/      # Papelera de reciclaje y recuperación de registros en borrado lógico
+├── Settings/        # Configuración de cuenta, firmas digitales y parámetros normativos
+└── Solicitudes/     # Centro de Solicitudes y trámites curriculares directos
 ```
 
 ---
@@ -27,21 +30,21 @@ dosier_web/src/pages/
 ## 2. Detalle Exhaustivo por Módulo y Vista
 
 ### 2.1. Módulo Dashboard (`src/pages/Dashboard/`)
-Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado dinámicamente según el rol institucional mediante el riel plano de navegación por rol `RoleFlowBanner` (estándar Modern Enterprise Docs con acento `#0070f3` y sin sliders verticales).
+Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado dinámicamente según el rol institucional mediante el riel plano de navegación `RoleFlowBanner` (estándar Modern Enterprise Docs con acento `#0070f3`, eliminando segmented controls y sliders verticales).
 
 #### 2.1.1. Tableros Específicos por Rol (`src/pages/Dashboard/Roles/`)
 * **`DocentePeaDashboard.tsx` (`DOSIER_DOCENTE`):**
-  * **Panel de Actividades y Formulación Curricular (`DocenteActividadesPanel.tsx`):** Lista priorizada de cátedras asignadas para el período activo con avance in-situ desplegado abajo de cada una (`0% Sin Iniciar`, `25% Borrador`, `30% Observado`, `50% En Revisión`, `75% Aval de Carrera`, `90% Aval Académico`, `100% Aprobado Oficial`), con barra de progreso y acciones directas contextuales ("Elaborar PEA", "Continuar PEA", "Corregir PEA", "Ver PEA").
+  * **Panel de Actividades y Formulación Curricular (`DocenteActividadesPanel.tsx`):** Lista priorizada de cátedras asignadas para el período activo con avance in-situ desplegado abajo de cada una (`0% Sin Iniciar`, `25% Borrador`, `30% Observado`, `50% En Revisión`, `75% Aval de Carrera`, `90% Aval Académico`, `100% Aprobado Oficial`), con barra de progreso y acciones directas contextuales (*Elaborar PEA*, *Continuar PEA*, *Corregir PEA*, *Ver PEA*).
   * **Agenda y Calendario Curricular (`DocenteAgendaWidget.tsx`):** Columna lateral de próximos hitos normativos CACES, fechas de entrega institucional y acceso directo al módulo de Calendario.
-  * **Desacople del Distributivo Exhaustivo:** La cuadrícula/tabla completa de exploración de asignaturas se canaliza exclusivamente a través de la *Vista Folio de Proyectos* (`MisAsignaturasPage.tsx` en `/documentacion/mis-proyectos`), eliminando redundancias en el dashboard.
+  * **Desacople del Distributivo Exhaustivo:** La cuadrícula completa de asignaturas se canaliza exclusivamente a través de la vista de asignaturas (`MisAsignaturasPage.tsx` en `/documentacion/mis-proyectos`), eliminando redundancias en el dashboard.
 * **`CoordCarreraDashboard.tsx` (`DOSIER_COORD_CARRERA`):**
-  * **Estructura en Dos Columnas Minimalista:** Idéntica a la vista de docentes para consistencia visual (7 columnas para asignaturas y 5 columnas para agenda y alertas).
-  * **Columna de Asignaturas y Estado Curricular:** Folio continuo sin anidamiento excesivo con subpestañas directas ("Todas", "Pendientes de Aval", "Mis Asignaturas"), buscador ágil, barra de avance por materia y botón de acción contextual ("Revisar", "Ver observaciones", "Ver avance", "Ver PEA").
-  * **Columna Lateral de Rezagados y Agenda:** Bloque compacto de docentes rezagados con acción directa para notificar y widget `DocenteAgendaWidget` con hitos institucionales y fechas de corte.
+  * **Estructura en Dos Columnas Minimalista:** Idéntica a la vista docente para consistencia visual (columna ancha para asignaturas y columna lateral para agenda y alertas).
+  * **Columna de Asignaturas y Estado Curricular:** Folio continuo sin anidamiento excesivo con subpestañas directas (*Todas*, *Pendientes de Aval*, *Mis Asignaturas*), buscador reactivo, barra de avance por materia y botón de acción contextual (*Revisar*, *Ver observaciones*, *Ver avance*, *Ver PEA*).
+  * **Columna Lateral de Rezagados y Agenda:** Bloque compacto de docentes con retraso en entregas con acción directa para despachar recordatorios y widget de hitos institucionales.
   * **Acciones:** Revisión técnica de PEAs en el editor, registro de observaciones disciplinares (`ObservacionesDisciplinarModal.tsx`) y emisión del Aval de Carrera (*RevisadoCoord*).
 * **`CoordAcadDashboard.tsx` (`DOSIER_COORD_ACAD`):**
   * Panel de control metodológico y normativo de todas las carreras del ISTPET.
-  * Detección de inconsistencias con el Artículo 21 del CES (160 horas por 4 créditos).
+  * Detección de inconsistencias con el Artículo 21 del Reglamento de Régimen Académico del CES (160 horas por cada 4 créditos).
   * Acciones institucionales:
     * Apertura formal del período de formulación (`AperturaConvocatoriaModal.tsx`).
     * Emisión de recordatorios masivos a docentes rezagados (`RecordatorioDocentesModal.tsx`).
@@ -50,189 +53,123 @@ Punto de entrada principal para usuarios autenticados (`/dashboard`), adaptado d
     * Emisión de Aval Académico Institucional (*RevisadoAcad*).
 * **`VicerrectorDashboard.tsx` (`DOSIER_VICERRECTOR`):**
   * Despacho de máxima autoridad curricular.
-  * Bandeja de instrumentos con doble aval favorable listos para legalización.
+  * Bandeja de instrumentos con doble aval favorable listos para legalización institucional.
   * Acciones:
     * Firma electrónica y legalización masiva de PEAs por carrera (`LegalizacionFirmaModal.tsx`).
-    * Sellado criptográfico unitario SHA-256 e inmutabilidad forense (*State Locking*).
-    * Generación y descarga del Dossier Curricular Institucional foliado para auditoría CACES.
+    * Sellado criptográfico unitario con hash SHA-256 e inmutabilidad definitiva (*State Locking*).
+    * Descarga del Dossier Curricular Institucional foliado para procesos de acreditación CACES.
 * **`AdminPeaDashboard.tsx` (`DOSIER_ADMIN`):**
-  * Monitor del estado de salud del sistema, métricas globales de avance, configuración de mallas curriculares y sincronización con SIGAFI (Solo Lectura).
-  * Integra el **Simulador del Circuito Curricular Oficial** (`PipelineCurricularStepper`), permitiendo explorar detalladamente las 5 fases del PEA (Apertura, Formulación, Aval de Carrera, Aval Académico y Legalización/Firma), con sus actores, herramientas operativas y la capacidad de conmutar en vivo al rol respectivo para validar el flujo completo.
+  * Monitor del estado de salud del sistema, métricas globales de avance curricular y sincronización con SIGAFI (Solo Lectura).
+  * Integra el simulador de etapas del PEA, permitiendo validar las 5 fases institucionales (Apertura, Formulación, Aval de Carrera, Aval Académico y Legalización) y conmutar en vivo al rol respectivo para auditar el flujo completo.
 
 #### 2.1.2. Modales Operativos Institucionales (`src/pages/Dashboard/Roles/Modals/`)
-1. **`AperturaConvocatoriaModal.tsx`:** Fija fecha de inicio, fecha límite de entrega, período académico y notifica a los docentes vía correo y SignalR.
-2. **`AuditoriaCacesModal.tsx`:** Ejecuta un barrido heurístico sobre los PEAs evaluando cuadre de 160h, inclusión de bibliografía en norma APA 7ma y articulación con el perfil de egreso.
+Todos los modales implementan de forma estricta la **regla de fondos 100% sólidos y opacos**:
+1. **`AperturaConvocatoriaModal.tsx`:** Fija fecha de inicio, fecha límite de entrega y período académico activo, notificando a los docentes vía correo y SignalR.
+2. **`AuditoriaCacesModal.tsx`:** Ejecuta un barrido heurístico sobre los PEAs evaluando cuadre de horas, bibliografía APA 7.ª edición y articulación con el perfil de egreso.
 3. **`ClonarPeaModal.tsx`:** Permite al docente copiar la estructura de unidades, temas y bibliografía de un PEA aprobado en un período anterior hacia su nuevo distributivo.
-4. **`LegalizacionFirmaModal.tsx`:** Permite al Vicerrector legalizar en bloque múltiples asignaturas seleccionadas, aplicando firma digital P12 o HMAC.
+4. **`LegalizacionFirmaModal.tsx`:** Permite al Vicerrectorado legalizar en bloque múltiples asignaturas seleccionadas, aplicando firma digital P12 o institucional.
 5. **`ObservacionesDisciplinarModal.tsx`:** Formulario para registrar observaciones atómicas por sección con plazo estricto de subsanación de 48 horas.
-6. **`ProrrogaPlazoModal.tsx`:** Otorga días adicionales de gracia a una carrera o docente particular con registro del motivo en la bitácora de auditoría.
+6. **`ProrrogaPlazoModal.tsx`:** Otorga días adicionales de gracia a una carrera o docente particular con registro justificado en la bitácora de auditoría.
 7. **`RecordatorioDocentesModal.tsx`:** Envía alertas automatizadas a docentes cuyos PEAs sigan en estado `Borrador` a pocos días del cierre lectivo.
 
 ---
 
-### 2.2. Módulo de Dominio Curricular y Gestión de Documentos Docentes (`src/pages/Curriculum/`)
+### 2.2. Módulo de Dominio Curricular (`src/pages/Curriculum/`)
 
 * **`SupervisionCurricularPage.tsx` (`/documentacion`):**
-  * Vista matriz de supervisión y revisión curricular que despliega el componente `<PeaSupervisionTray>`, permitiendo a coordinadores de carrera, coordinadores académicos y vicerrectorado tramitar los PEAs de sus carreras.
-  * **Regla de Visibilidad Curricular:** Tanto en la bandeja de supervisión `<PeaSupervisionTray>` como en el submenú desplegable de *Revisión Curricular* del Sidebar (`SidebarNav.tsx`), se muestran **exclusivamente aquellos PEAs que los docentes han enviado formalmente a revisión** (`EnRevision`, `Observado`, `Corregido`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`). Los borradores no enviados e instrumentos no iniciados permanecen en el espacio personal de redacción del docente (*Mis Instrumentos PEA*), garantizando que las mesas de revisión curricular gestionen únicamente lo enviado. Al seleccionar un instrumento en el menú lateral de revisión, se navega directamente a su auditoría técnica (`/documentacion/revision-tecnica/:uuid`).
-  * **Semántica Visual y Emisión Formal del Dictamen:** Durante la auditoría, la adición atómica de observaciones técnicas en secciones no muta prematuramente el estado global del PEA; el instrumento permanece en `EnRevision`. Para las autoridades en la bandeja de supervisión, los instrumentos en trámite se visualizan con la etiqueta **"En Revisión Técnica"** (con contador discreto de observaciones pendientes), reservando la etiqueta **"Con Observaciones"** exclusivamente para la vista del docente cuando la autoridad emite formalmente el dictamen de devolución a través de `FinalizeAuditModal.tsx`.
-* **`SalaCarreraPage.tsx` (`/salas-curriculares/:idCarrera` y `/documentacion/carrera/:idCarrera/sala-curricular`):**
-  * Entorno de armonización curricular colegiada y co-diseño en tiempo real para el claustro docente y la Coordinación de Carrera integrado sobre `DOSIERBuilderShell`.
-  * **Navegación Modular por Secciones:**
-    * *1. Pizarra Interactiva (`SalaPizarraCanvas.tsx`):* Lienzo colaborativo infinito en tiempo real (`fullBleed`) impulsado por CRDTs Yjs sobre SignalR WebSockets, con soporte para notas adhesivas, tarjetas de acuerdos pedagógicos con `GeistSelect`, cuadros de texto libre, paneo, zoom y presencia remota de cursores.
-    * *2. Comparador Curricular (`SalaComparadorCurricular.tsx`):* Herramienta de cotejo analítico que permite seleccionar dos cátedras de la carrera para contrastar lado a lado su carga horaria (CD, APE, TA, Total), unidades temáticas, contenidos mínimos y resultados de aprendizaje (RDA), diagnosticando articulación horizontal (mismo nivel semestral) o articulación vertical (niveles correlativos), con botón directo para proponer e insertar acuerdos consensuados en la Pizarra compartida.
-    * *3. Perfil de Egreso y Tributación (`SalaPerfilEgresoSeccion.tsx`):* Matriz oficial del Perfil de Egreso de la carrera aprobado por CES, catálogo de competencias y resultados de aprendizaje del egresado (RDA), y alineación con las asignaturas de la malla, permitiendo formular acuerdos de cátedra específicos vinculados a cada RDA del perfil.
-  * **Asistente Curricular IA Contextualizado:** Barra lateral inteligente (`PeaAiChatSidebar.tsx`) adaptada al contexto colegiado de carrera (`SALA_CARRERA`), ofreciendo orientación pedagógica en articulación curricular, tributación al perfil de egreso y recomendaciones de acuerdos de cátedra.
+  * Vista matriz de supervisión y revisión curricular para directivos (`DOSIER_ADMIN`, `DOSIER_COORD_CARRERA`, `DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`).
+  * **Regla de Visibilidad Curricular:** Muestra exclusivamente aquellos PEAs que los docentes han enviado formalmente a revisión (`EnRevision`, `Observado`, `Corregido`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`). Los borradores no iniciados o no enviados permanecen en el espacio personal del docente (*Mis Instrumentos PEA*).
+  * **Semántica Visual del Dictamen:** Durante la auditoría, la adición de observaciones técnicas mantiene el estado en `EnRevision`. Para las autoridades en la bandeja se visualiza como "En Revisión Técnica", reservando la etiqueta "Con Observaciones" para cuando se emite el dictamen formal de devolución.
 * **`MisAsignaturasPage.tsx` (`/documentacion/mis-proyectos`):**
-  * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI y el estado de formulación de cada PEA.
-  * **Navegación sobre Riel Plano Continuo:** Permite alternar limpiamente entre **Mis Asignaturas** y **PEAs de Otros Docentes** mediante pestañas directas sobre la línea base con contadores de asignaturas en tiempo real.
-  * **Modo de Consulta y Colaboración Colegiada:** Opción para explorar y co-elaborar propuestas pedagógicas en asignaturas formuladas por otros docentes que pertenecen a la(s) misma(s) carrera(s) donde el profesor imparte docencia en el período. Conforme al marco de gobernanza institucional, la firma digital y el envío a revisión quedan blindados exclusivamente para el docente titular asignado (con validación 403 en backend y supresión de acciones de firma en frontend).
-  * **Modales Explicativos de Confirmación de Colaboración:**
-    * *Solicitud (`SolicitarColaboracionModal.tsx`):* Modal centralizado con fondo 100% sólido y opaco montado vía portal en `document.body` (`z-[100]`), con redacción clara orientada a docentes, sin tecnicismos innecesarios, que detalla la asignatura objetivo, docente titular, implicaciones del trabajo colegiado concurrente y campo opcional para justificación antes de despachar la petición.
-    * *Cancelación de Solicitud (`CancelarColaboracionModal.tsx`):* Modal de confirmación para retirar una solicitud de colaboración pendiente antes de su aprobación o rechazo.
-    * *Aceptación / Rechazo (`ConfirmarRespuestaColaboracionModal.tsx`):* Modal centralizado activado desde la bandeja de notificaciones para autorizar o declinar formalmente la incorporación de un docente colaborador con explicación de alcance de permisos e ingreso opcional de indicaciones o motivo del rechazo.
-  * **Blindaje Normativo de Fase Borrador vs Revisión:**
-    * Las tarjetas del PEA en la bandeja de supervisión solo presentan el badge de observaciones pendientes cuando el instrumento ha sido devuelto formalmente en estado `Observado`. En fases previas (`Borrador` o `EnRevision`), las anotaciones de trabajo interno no se exponen como observaciones devueltas al docente.
-    * En el editor de trabajo (`CollaborationSidebar.tsx` y `PeaReviewPanel.tsx`), la pestaña de revisión y los formularios de dictamen técnico se activan exclusivamente cuando el documento entra al circuito de revisión formal (`EnRevision`), blindando la fase de borrador docente donde la única acción aplicable es el envío a revisión.
-  * **Algoritmo Invisible de Apertura Reciente:** Ordenamiento adaptativo que posiciona de forma automática en primer lugar la materia abierta o consultada más recientemente, independientemente de su estado curricular.
-  * **Filtros Dinámicos de Alta Densidad:** Selector oficial de período académico, buscador en vivo (asignatura, código, carrera, docente titular), selector de carreras, modalidades y estados normativos con badges de puntos discretos.
-  * Integra en la Sección 1 del PEA (`PeaGeneralSection.tsx`) la distribución horaria asistida con botón de un clic para cuadre normativo CACES (1/3 docencia, 1/3 prácticas y 1/3 autónomo), permitiendo desbloqueo seguro de edición cuando la base institucional carece de horas desglosadas.
+  * Bandeja personalizada para el docente con sus asignaturas oficiales sincronizadas desde SIGAFI.
+  * **Navegación sobre Riel Plano:** Alterna limpiamente entre *Mis Asignaturas* y *PEAs de Otros Docentes* con contadores en tiempo real.
+  * **Modo de Consulta y Colaboración:** Permite explorar y solicitar co-elaboración en asignaturas de la misma carrera mediante modales opacos (`SolicitarColaboracionModal.tsx`, `CancelarColaboracionModal.tsx`, `ConfirmarRespuestaColaboracionModal.tsx`). La firma digital y el envío a revisión quedan blindados exclusivamente para el docente titular.
+  * **Distribución Horaria Asistida CACES:** Botón de balance asistido para cuadre normativo de horas (1/3 docencia, 1/3 prácticas APE y 1/3 trabajo autónomo).
+* **`SalaCarreraPage.tsx` (`/salas-curriculares` y `/salas-curriculares/:idCarrera`):**
+  * Entorno de armonización curricular colegiada y co-diseño en tiempo real para docentes y coordinadores de carrera.
+  * **Componentes Especializados:**
+    * `SalaPizarraCanvas.tsx`: Pizarra interactiva infinita a pantalla completa (`fullBleed`) con notas adhesivas, acuerdos pedagógicos, paneo y presencia de cursores remotos Yjs sobre WebSockets.
+    * `SalaComparadorCurricular.tsx`: Herramienta de cotejo analítico entre dos asignaturas de la carrera para contrastar cargas horarias, unidades temáticas y resultados de aprendizaje (articulación horizontal y vertical).
+    * `SalaPerfilEgresoSeccion.tsx`: Matriz del perfil de egreso aprobado por CES y competencias CACES para articular acuerdos de cátedra.
+    * `PeaAiChatSidebar.tsx`: Asistente curricular contextualizado a la carrera para sugerir articulaciones pedagógicas.
 * **`RevisionCurricularPage.tsx` (`/documentacion/revision-tecnica/:projectUuid`):**
-  * Entorno de revisión colegiada y disciplinar para coordinadores y comisiones. Permite contrastar el contenido contra el checklist de normativas.
-  * **Edición In-Situ Directa de Datos Generales en Revisión (`InteractiveSections.tsx`):** Permite al coordinador o evaluador conmutar la Sección 1 a modo de edición directa en la misma tarjeta sin modales flotantes (modalidad de estudio, unidad de organización curricular, nivel/semestre y distribución horaria CACES CD/APE/TA con cálculo de balance 1/3) y guardar/cerrar para retornar de inmediato a la visualización formateada sin abandonar la vista de auditoría.
-  * **Acceso Directo al Editor Colaborativo (`Editar PEA` / `Editar en editor`):** La cabecera unificada `RevisionHeader.tsx` y las cabeceras de cada sección integran un acceso directo al editor completo (`DocumentWorkspace`) con retorno automático a la revisión (`from=revision`), habilitando a coordinadores y autoridades curriculares permisos de modificación directa sobre los datos del instrumento mientras se encuentra en fases de revisión o subsanación (`EnRevision`, `Observado`, `Corregido`).
+  * Portal de auditoría colegiada donde los evaluadores contrastan el documento contra las directrices normativas.
+  * Permite la edición in-situ directa de datos generales en la Sección 1 sin modales flotantes (`InteractiveSections.tsx`), cuenta con compositor de observaciones anclado a cada sección y acceso directo al editor colaborativo.
 * **`MonitoreoCurricularPage.tsx` (`/documentacion/monitoreo/:projectUuid`):**
-  * Monitor de avance, trazabilidad y estado de ejecución del documento docente.
-* **`DocumentWorkspace.tsx` (`/documentacion/workspace/:templateCode/:projectUuid`):**
-  * Entorno de trabajo y orquestador del editor. Monta el `<DOSIERBuilderShell>` con:
-    * **`PeaWorkflowBar.tsx`:** Barra superior con semáforo de cuadre horario y botón de firma/transición según el rol autenticado.
-    * **`PeaObservationsDrawer.tsx`:** Panel deslizable lateral para consultar y subsanar observaciones por sección.
-    * **Pestañas Secciones A - K:** Componentes modulares con `<CoWorkField>` para edición concurrente en vivo vía Yjs/SignalR.
-    * **`NormativaDrawer.tsx`:** Asistente lateral de consulta de normativas CES y CACES vigentes.
-    * **Gobernanza de Permisos de Edición:** Concede permisos de escritura tanto al docente responsable como a los coordinadores y autoridades durante los estados de formulación y revisión curricular.
+  * Línea de tiempo visual y seguimiento detallado de estados y transiciones del PEA.
+* **`DocumentWorkspace.tsx` (`/documentacion/workspace/:templateCode/:projectUuid` y `/documentacion/mis-proyectos/workspace/...`):**
+  * Orquestador del espacio de redacción y edición activa. Monta `<DOSIERBuilderShell>` integrando:
+    * `CollaborationSidebar.tsx` (revisión de consistencia, chat colegiado, estado y actividad).
+    * `PeaReviewPanel.tsx` (auditoría CACES en 7 verificadores automáticos y botones de aval).
+    * `OutputSection.tsx` (emisión oficial y visor PDF con iframe compilado).
+    * `<SectionBlockGuard>` (bloqueo reactivo de secciones post-firma y por avance de workflow).
 
 ---
 
 ### 2.3. Módulo de Administración (`src/pages/Admin/`)
 
 * **Gestión de Usuarios (`/usuarios`):**
-  * Navegación por pestañas sincronizada con la URL mediante el parámetro `type`: `/usuarios?type=DOCENTE`, `/usuarios?type=ADMINISTRATIVO` y `/usuarios?type=CARRERAS`.
-  * Catálogo de usuarios institucionales sincronizados desde SIGAFI (Docentes y Administrativos) con paginación, filtros multicriterio y asignación de roles curriculares RBAC (`idSistema = 6`).
-  * **Estructura por Carreras y Gobernanza (`OrganigramaVerticalView.tsx`):**
-    * *Cúspide Institucional:* Enlace jerárquico de supervisión entre Vicerrectorado Académico (cierre PEA) y Coordinación Académica Institucional (cuadre distributivo).
-    * *Árbol de Carreras (Columna Izquierda):* Riel vertical con líneas conectoras de rama, buscador rápido, conteo de docentes y filtro de estado (Todas, Con coordinador titular, Vacantes).
-    * *Detalle y Claustro (Columna Derecha):* Ficha del Coordinador titular de la carrera activa y tabla compacta del claustro docente asignado con horas de carga horaria (`h/sem`), materias en malla, cédula y rol institucional.
-  * Bloqueo y reseteo de credenciales de acceso.
-* **Diseñador de Plantillas / Canvas Builder (`/plantillas`):**
-  * Maquetador visual e interactivo de bloques curriculares (`BlockCanvas.tsx`, `availableBlocks.ts`).
-  * Soporte nativo para la totalidad de bloques del PEA oficial (Secciones a hasta k) con vistas previas idénticas al formato institucional físico del ISTPET.
-  * Inspector lateral reactivo de propiedades (`BlockProperties.tsx`) con 9 formularios específicos para editar parámetros de configuración (horas, unidades temáticas, matrices de evaluación, rúbricas y firmas).
-  * Renderizadores de Lienzo A4 con subcabeceras celestes institucionales (`#bdd7ee`), líneas continuas de escritura y fondos 100% sólidos.
-  * Compilación y exportación de plantillas HTML/PDF mediante generadores modulares (`peaGenerators.ts`, `HtmlGenerator.ts`) con sincronización bidireccional hacia la persistencia del backend (`PEA_OFICIAL.html`).
-* **Bitácora de Auditoría Forense (`/auditoria`):**
-  * Consulta de registros de `doc_audit_logs` con filtros por fecha UTC, usuario, dirección IP y acción.
-* **Motor de Correo Transaccional (`/emails`):**
-  * Editor de plantillas HTML institucionales y visor de cola de envíos SMTP.
+  * Catálogo de usuarios institucionales sincronizados desde SIGAFI (Docentes y Administrativos) con filtros multicriterio, paginación y asignación de roles curriculares institucionales.
+  * **Organigrama Vertical por Carreras (`OrganigramaVerticalView.tsx`):** Representación del árbol institucional con el claustro docente por carrera, horas semanales de carga y coordinadores asignados.
+* **Mantenimiento Documental y Respaldos (`/admin/documentos` - `DocumentMaintenancePage.tsx`):**
+  * Exclusivo para administradores (`DOSIER_ADMIN`).
+  * **Pestaña de Versiones Obsoletas (`ObsoleteVersionsTab.tsx`):** Diagnóstico de almacenamiento físico, conteo de bytes utilizados por instancias no publicadas y purga unitaria o masiva de borradores huérfanos.
+  * **Pestaña de Copias de Seguridad (`BackupsTab.tsx`):** Disparador de respaldos de base de datos bajo demanda, descarga de archivos `.sql.gz`, verificación forense de hash SHA-256 y eliminación controlada de copias históricas.
+* **Diseñador de Plantillas / Canvas Builder (`/plantillas` - `DocumentTemplatesPage.tsx`):**
+  * Diseñador visual con soporte drag and drop (`BlockCanvas.tsx`, `defaultBlocksFactory.ts`).
+  * Inspector de propiedades (`BlockProperties.tsx`) para la personalización de bloques institucionales.
+  * Vista Bento de Formatos Oficiales (`OfficialTemplatesCatalogView.tsx`) para consulta y descarga por parte de la planta docente.
+  * Previsualización PDF en caliente (`TemplatePreviewModal.tsx`) mediante compilación de marcado HTML.
+* **Bitácora de Auditoría Forense (`/auditoria` - `AuditPage.tsx`):**
+  * Consulta de registros de `doc_audit_logs` con filtros por rango de fechas, identificador de usuario, dirección IP de origen y acción realizada.
+* **Motor de Correo Transaccional (`/emails` - `EmailEnginePage.tsx`):**
+  * Gestión de plantillas HTML institucionales y pruebas de despacho SMTP.
+* **Gestión de Incidencias Administrativas (`/admin/incidencias` - `AdminFeedbackPage.tsx`):**
+  * Consola centralizada de soporte técnico con filtros por severidad, estado, visor de capturas de pantalla y chat de resolución con el docente.
 
 ---
 
-### 2.4. Módulo de Seguimiento de PEAs (`src/pages/Analytics/`)
+### 2.4. Módulo de Seguimiento y Analíticas CACES (`src/pages/Analytics/`)
 
-Panel directivo para el seguimiento operativo de los Programas de Estudio de la Asignatura (PEA) por período y carrera:
-
-* **`AnalyticsOverviewTab.tsx`:** Navegación por pestañas sobre riel plano organizada en tres secciones operativas:
-  * **Resumen general:**
-    * **Paso actual del trámite:** Conteo fáctico de materias en cada etapa del proceso (Redacción inicial, Por corregir, En revisión de carrera, En coordinación académica, En vicerrectorado, y Aprobados y firmados) identificando el responsable directo de cada acción.
-    * **Distribución por estado:** Gráfico de distribución y desglose de materias según su estado en el sistema.
-    * **Avance de firmas:** Seguimiento de las 4 firmas institucionales requeridas por PEA (Docente elaborador, Coordinación de carrera, Coordinación académica y Vicerrectorado).
-  * **Por carrera:** Tabla comparativa por carrera con total de materias, porcentaje de avance, materias en trámite, materias con observaciones, materias pendientes y estado operativo (Al día, En proceso, Pendiente), con acceso directo para filtrar la lista.
-  * **Lista de asignaturas:** Nómina completa de cátedras con buscador en tiempo real por materia, código o docente, indicando nivel, modalidad, avance visual de firmas (1 a 4) y estado actual.
-* **`useAnalyticsData.ts`:** Hook que consolida y procesa los datos reales desde la API institucional `/pea/bandeja`, calculando estados y firmas con sincronización reactiva en tiempo real.
-* **`analyticsService.ts`:** Fachada de comunicación tipada para la consulta de datos curriculares y descarga de reportes ejecutivos en PDF.
+Accesible en `/analiticas` para roles de dirección y supervisión:
+* **`AnalyticsOverviewTab.tsx`:**
+  * **Paso actual del trámite:** Conteo exacto de asignaturas en cada etapa del flujo curricular indicando el responsable inmediato.
+  * **Distribución por estado:** Desglose porcentual y numérico del avance general.
+  * **Avance de firmas:** Trazabilidad de las 4 firmas institucionales reglamentarias por cátedra.
+  * **Desglose por carrera:** Matriz comparativa de cumplimiento entre facultades y carreras del instituto.
+* **`AnalyticsProjectsTab.tsx` & `AnalyticsCacesTab.tsx`:** Auditoría de consistencia horaria según el Art. 21 del CES y generación de informes ejecutivos de acreditación.
 
 ---
 
 ### 2.5. Módulos de Autenticación, Seguridad y LOPDP
 
 * **`src/pages/Login/`:**
-  * Acceso por credenciales locales (Usuario/Cédula y contraseña BCrypt).
-  * Inicio de sesión único (SSO) con Microsoft 365 institucional (`@traversari.edu.ec`).
-* **`src/pages/Auth/`:**
-  * Recuperación y restablecimiento de contraseña olvidada.
-  * Verificación de correo electrónico.
+  * Formulario de autenticación con credenciales locales (`Login.tsx`).
+  * Procesamiento de inicio de sesión único institucional (`MicrosoftCallback.tsx`).
+  * Solicitud y formalización de recuperación de contraseña (`RecuperarContrasenia.tsx`, `VerContrasenia.tsx`).
+* **`src/pages/Auth/ResetAlertPage.tsx`:** Pantalla de notificación ante requerimientos de cambio de clave forzado.
 * **`src/pages/Lopdp/`:**
-  * Formulario de consentimiento informado obligatorio previo al primer ingreso.
-  * Portal de ejercicio de derechos ARCO (Acceso, Rectificación, Cancelación, Oposición).
-* **`src/pages/Public/` (`/verificacion/:code`):**
-  * Validador forense público sin requerimiento de inicio de sesión.
-  * Verificación de la firma digital, estampados DFRM y cálculo de hash SHA-256 sobre el documento emitido.
+  * `LopdpConsentPage.tsx`: Formulario de aceptación de términos de tratamiento de datos personales, obligatorio previo al acceso al sistema.
+  * `LopdpAdminPage.tsx`: Administración de consentimientos otorgados y gestión formal de solicitudes de derechos ARCO.
+* **`src/pages/Public/VerifyDocument.tsx` (`/verificacion/:code`):**
+  * Validador forense público accesible sin credenciales mediante escaneo de código QR.
+  * Comprueba la autenticidad del documento, los certificados digitales de los firmantes y el hash criptográfico SHA-256.
 
 ---
 
 ### 2.6. Módulos Complementarios
 
-* **`src/pages/Calendario/` (`/calendario`):** Sistema integral de planificación y seguimiento curricular con triple modalidad de visualización:
-  * **Vista Calendario Mensual / Semanal / Diario:** Rejilla interactiva (`react-big-calendar`) con arrastre de fechas, visualización de hitos CACES, plazos de elaboración del PEA y eventos normativos institucionales.
-  * **Vista Kanban Curricular:** Tablero de flujo de trabajo segmentado en columnas (`Pendiente`, `En Progreso`, `Completado`) con reubicación fluida por *drag and drop* y transición instantánea de estados.
-  * **Vista Notas Adhesivas (Inbox):** Bandeja ágil de captura de notas rápidas y tareas pendientes con filtro por módulos (`Curricular / PEA`, `Coordinación`, `Vicerrectoría`, `Agenda`), código de colores HSL y planificador con anclaje temporal directo a la agenda.
-  * **Gobernanza RBAC por Rol:**
-    * *Docentes (`DOSIER_DOCENTE`):* Visualización exclusiva de asignaturas y PEAs a su cargo, fechas de entrega y directivas CACES visibles para docentes.
-    * *Coordinadores de Carrera (`DOSIER_COORD_CARRERA`):* Vista agregada de todas las asignaturas de su carrera, plazos de revisión y PEAs asignados a sus docentes.
-    * *Coordinación Académica y Vicerrectoría (`DOSIER_COORD_ACAD`, `DOSIER_VICERRECTOR`):* Visión institucional global de todas las carreras, hitos lectivos y avance macro del distributivo.
-    * *Administradores y Autoridades:* Capacidad de publicar directivas institucionales con segmentación por roles destino (`roles_visibles`) y privacidad controlada.
-* **`src/pages/Notificaciones/`:** Bandeja centralizada de alertas transaccionales recibidas por WebSocket SignalR.
-* **`src/pages/RecycleBin/`:** Papelera de reciclaje lógica para recuperación controlada de registros curriculares dados de baja.
-* **`src/pages/Settings/`:** Gestión del perfil docente, actualización de correo, cambio de clave y selector de tema visual (Claro / Oscuro).
-
----
-
-### 2.7. Módulo de Incidencias y Soporte Técnico
-
-* **Modal Global de Captura (`FeedbackModal.tsx`):**
-  * Disparador global accesible desde el encabezado superior (desktop y móvil) y mediante el evento `dosier-open-feedback`.
-  * Captura de capturas de pantalla desde el portapapeles (`Ctrl+V`), arrastre (*drag and drop*) o selector de archivos.
-  * Validación estricta de adjuntos (imágenes hasta 5MB, videos explicativos hasta 15MB).
-  * Recolección automática de metadatos de entorno (navegador, versión, resolución, sistema operativo y ruta activa).
-  * Enlace directo a WhatsApp institucional preformateado con los detalles del reporte.
-* **Buzón del Docente / Usuario (`UserFeedbackPage.tsx` - `/incidencias`):**
-  * Historial de incidencias reportadas por el usuario autenticado con filtros por estado (`Pendiente`, `En Revisión`, `Resuelto`, `Descartado`) y tipo (`Error / Fallo`, `Sugerencia`, `Consulta`, `Otro`).
-  * Indicador de respuestas y mensajes no leídos sincronizado con el centro de notificaciones.
-  * Hilo de conversación interactivo bidireccional con el equipo técnico y de administración.
-  * Edición y eliminación de reportes en estado inicial de espera.
-* **Bandeja Maestra de Administración (`AdminFeedbackPage.tsx` - `/admin/incidencias`):**
-  * Vista centralizada para administradores (`DOSIER_ADMIN`) con tabla interactiva, filtros combinados y buscador de texto completo.
-  * Panel de diagnóstico técnico con visualización de metadatos de máquina, agente de usuario y visor multimedia con navegación por teclado y deslizamiento.
-  * Gestión de ciclo de vida del reporte (transición de estados) y respuesta técnica directa desde el hilo de soporte.
-
----
-
-### 2.8. Módulo Centro de Solicitudes (`src/pages/Solicitudes/` - `/solicitudes`)
-
-Portal unificado y canal institucional para la tramitación de requerimientos, soporte técnico e incidencias:
-
-* **Arquitectura de Maquetación (Modern Enterprise Docs):**
-  * **Encabezado Institucional (`SolicitudesHeader.tsx`):** Título directo con descripción operativa y accesos directos al portafolio y al buzón de incidencias.
-  * **Tarjetas Bento de Trámites (`SolicitudBentoCard.tsx`):** Superficies 100% sólidas sin transparencias, iconografía vectorial desnuda de Lucide, especificación técnica clave-valor (`<dl>`) con SLA de resolución e instancia responsable (cero KPIs gigantes), y botón de ejecución directa.
-* **Canales Operativos:**
-  * **Buzón de Incidencias Curriculares:** Acceso directo a `/incidencias` para tramitar novedades en el distributivo SIGAFI, errores de acreditación CACES o fallas en firmas digitales mediante tickets formales (`INC-XXXX`). El seguimiento completo, el chat bidireccional y las evidencias se gestionan en su vista dedicada.
-
----
-
-### 2.9. Módulo de Salas Compartidas de Carrera (`/salas-curriculares` y `/salas-curriculares/:idCarrera`)
-
-Espacio colaborativo de trabajo colegiado en tiempo real entre los docentes, coordinadores y administradores de una carrera y período académico, montado sobre el shell de colaboración `DOSIERBuilderShell`:
-
-* **Acceso Inmersivo Directo a Pantalla Completa (`SalaCarreraPage.tsx`):**
-  * Sin pantallas intermedias ni anidamientos de scroll: al ingresar a "Salas Curriculares" se inicializa directamente el espacio colaborativo de la carrera con sockets de SignalR y CRDTs Yjs compartidos (`sala_carrera_{idCarrera}_{idPeriodo}`).
-  * **Lienzo de Pizarra Interactiva (`SalaPizarraCanvas.tsx`):** Espacio visual a pantalla completa (`fullBleed`) para ideación, coordinación de cátedra, notas adhesivas, acuerdos y textos en tiempo real con pan y zoom.
-  * **Persistencia Dual en Base de Datos:** Guardado automático y bajo demanda sobre la tabla existente `doc_cowork_documentos` con ámbito polimórfico por carrera y período (`contentJson` y snapshot `yjsState`).
-  * **Herramientas de Consulta y Contexto en Cabecera (`BuilderHeader`):**
-    * **Selectores de Carrera y Período:** Desplegables inmediatos mediante `GeistSelect` para alternar de carrera o ciclo académico.
-    * **Inspector Popover de Perfil de Egreso (`PerfilEgresoPopover.tsx`):** Botón superior de acceso directo que despliega los resultados de aprendizaje (RDAs) oficiales de la carrera.
-    * **Directorio Popover de Malla y Docentes (`MallaDocentesPopover.tsx`):** Botón superior que presenta la nómina completa de asignaturas por niveles semestrales, docentes responsables y estado del PEA.
-  * **Barra de Colaboración Lateral (`CollaborationSidebar`):** Canal de chat en vivo y presencia de los profesores de la carrera conectados en la sala.
-* **Gobernanza RBAC de Acceso:**
-  * Exclusivo para docentes autores (`DOSIER_DOCENTE`) y moderadores de carrera (`DOSIER_COORD_CARRERA`, `DOSIER_ADMIN`).
-  * El Vicerrector (`DOSIER_VICERRECTOR`) redirige automáticamente a `/documentacion`.
-
-
+* **`src/pages/Calendario/CalendarioPage.tsx` (`/calendario`):**
+  * Vista Calendario interactiva con `react-big-calendar` para plazos del PEA y eventos normativos.
+  * Vista Kanban curricular por columnas (*Pendiente*, *En Progreso*, *Completado*) con arrastre fluido.
+  * Vista de notas adhesivas rápidas para anotaciones personales de cátedra.
+* **`src/pages/Notificaciones/NotificationsPage.tsx` (`/notificaciones`):**
+  * Feed documental continuo con divisores finos para revisión de alertas y eventos transaccionales.
+* **`src/pages/RecycleBin/RecycleBinPage.tsx` (`/papelera`):**
+  * Interfaz de restauración para registros eliminados lógicamente en base de datos.
+* **`src/pages/Settings/SettingsPage.tsx` (`/configuracion`):**
+  * Configuración de perfil docente, carga de firmas digitales (DFRM o certificado `.p12`) y parámetros normativos institucionales (`?tab=parametros`).
+* **`src/pages/Solicitudes/SolicitudesPage.tsx` (`/solicitudes`):**
+  * Catálogo Bento de trámites docentes y solicitudes de soporte institucional.
+* **`src/pages/Feedback/UserFeedbackPage.tsx` (`/mis-incidencias` e `/incidencias`):**
+  * Portal del docente para la radicación y seguimiento interactivo de requerimientos técnicos.

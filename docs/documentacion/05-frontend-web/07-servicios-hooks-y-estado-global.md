@@ -1,305 +1,174 @@
-﻿# Servicios, Hooks Especializados y Gestión del Estado Global (Frontend Web)
+# Servicios, Hooks Especializados y Gestión del Estado Global (Frontend Web)
 
 ## 1. Visión General de la Capa de Lógica y Estado
 
 El cliente web de DOSIER (`dosier_web`) implementa una arquitectura desacoplada donde la lógica de negocio, las peticiones HTTP, la sincronización en tiempo real y el ciclo de vida de los componentes se canalizan a través de tres pilares modulares:
 
-1. **Servicios de Dominio REST (`src/services/`):** Clientes fuertemente tipados que consumen los controladores de la Web API.
-2. **Contextos Globales (`src/api/` y `src/core/documents/context/`):** Manejadores del ciclo de vida de la sesión, notificaciones en tiempo real, confirmaciones modulares y datos del documento activo.
-3. **Hooks de Orquestación y Shell (`src/hooks/`, `src/components/DOSIER/shell/hooks/`, `src/core/cowork/hooks/`):** Manejo de estados complejos, autoguardado con debounce, persistencia Yjs CRDT y monitoreo de conectividad.
+1. **Capa de Servicios de Dominio REST (`src/services/`):** 27 clientes fuertemente tipados que encapsulan la comunicación con los controladores de ASP.NET Core Web API, garantizando el cumplimiento estricto del mandato de Service Layer (cero llamadas directas con `fetch` o Axios en el JSX).
+2. **Contextos Globales (`src/api/` y `src/core/documents/context/`):** Proveedores reactivos para la sesión institucional, alertas vía WebSockets SignalR, cuadros de diálogo asíncronos y datos del expediente curricular activo.
+3. **Hooks de Orquestación y Shell (`src/hooks/`, `src/components/DOSIER/shell/hooks/`, `src/core/`):** Custom hooks para autoguardado con retardo (*debounce*), concurrencia CRDT con Yjs, sincronización en tres niveles (*Three-Tier Reactive Sync*) y monitoreo de red.
 
 ---
 
-## 2. Catálogo de Servicios de Dominio (`src/services/`)
+## 2. Catálogo Oficial de los 27 Servicios de Dominio (`src/services/`)
 
-### 2.1. `peaService.ts`: Orquestación Curricular del PEA
-Es el servicio troncal del sistema. Conecta directamente con `/api/pea` e implementa:
-* **Tipado Completo de Secciones (A - K):** DTOs para unidades (`PeaUnidadDto`), subtemas (`PeaTemaDto`), resultados de aprendizaje (`PeaResultadoAprendizajeDto`), actividades prácticas (`PeaActividadPracticaDto`), criterios de evaluación (`PeaEvaluacionDto`), bibliografía APA 7ma (`PeaBibliografiaDto`), observaciones colegiadas (`PeaObservacionDto`) y trazabilidad de firmas.
-* **Operaciones CRUD Curriculares:**
-  * `getPeaById(id: number | string)` / `getPeaByUuid(uuid: string)`: Obtiene el instrumento completo estructurado.
-  * `createPea(payload)`: Inicialización formal del PEA articulado a `detallemallas`.
-  * `updatePeaSection(peaId, sectionName, data)`: Actualización atómica de secciones individuales.
-* **Control de Workflow y Circuitos de Firma:**
-  * `cambiarEstadoPea(id, nuevoEstado, observaciones)`: Transición entre estados de la máquina colegiada.
-  * `firmarPeaDocente(id, payloadFirma)`: Estampado de firma del docente elaborador y envío a revisión.
-  * `emitirAvalCarrera(id, payloadFirma)`: Certificación técnica del Coordinador de Carrera.
-  * `emitirAvalAcademico(id, payloadFirma)`: Certificación metodológica de Coordinación Académica.
-  * `legalizarPeaVicerrector(id, payloadFirma)`: Aprobación final y congelamiento inmutable SHA-256.
-* **Gestión de Observaciones Colegiadas:**
-  * `crearObservacion(peaId, payload)`: Registro de inconsistencias disciplinares o metodológicas.
-  * `subsanarObservacion(observacionId, respuesta)`: Respuesta formal y descargo del docente.
-* **Bandeja de Supervisión y Balance de Horas:**
-  * `getSupervisionTray(filters)`: Consulta optimizada de la nómina de PEAs con paginación, filtros por carrera y avance del circuito de firmas.
-  * `verificarBalanceHoras(id)`: Validación matemática en tiempo real contra `detallemallas`.
+Toda la comunicación de red se canaliza a través de las siguientes fachadas tipadas construidas sobre la instancia centralizada de Axios (`src/api/axios_config.ts`):
 
-### 2.2. `normativaService.ts`: Repositorio de Normativas y Checklist Curricular
-Conecta con `/api/normativas` y provee:
-* `getNormativas()`: Lista de resoluciones de nivel superior (CES, CACES, SENESCYT) y modelos educativos del ISTPET.
-* `getChecklistCurricular()`: Matriz de verificación automática de cumplimiento normativo (Art. 21 y 27 del CES RRA).
-* `getModeloEducativoVigente()`: Directrices pedagógicas activas para la formulación de estrategias didácticas.
+### 2.1. Dominio Curricular y Gestión del PEA
+1. **`peaService.ts` (`/api/pea`):**
+   * Servicio principal para la formulación, revisión y aprobación del PEA.
+   * Administra el tipado de secciones (1 a 11), DTOs de unidades, subtemas, resultados de aprendizaje (RDA), actividades prácticas (APE), criterios de evaluación y bibliografía APA 7.ª edición.
+   * Orquesta las transiciones de estado: `firmarPeaDocente`, `emitirAvalCarrera`, `emitirAvalAcademico`, `legalizarPeaVicerrector` y el circuito de observaciones (`crearObservacion`, `subsanarObservacion`).
+2. **`curriculumProjectService.ts` (`/api/pea`, `/api/docente-asignaturas`, `/api/documents/instances`):**
+   * Resuelve el expediente detallado del PEA o de instrumentos curriculares institucionales.
+   * Recupera nóminas de asignaturas (`getMyProjects`, `getAllProjects`), historial de actividad en el workspace y trazabilidad de cambios de estado.
+3. **`monitoreoService.ts` (`/api/pea`):**
+   * Consulta datos de avance para la vista satélite de monitoreo curricular (`getProjectDetail`), computando horas normadas, avance de unidades y firmas CACES.
+4. **`normativaService.ts` (`/api/normativas`):**
+   * Provee resoluciones del CES (Art. 21 y 27 RRA), criterios de acreditación CACES y directrices del Modelo Educativo Institucional (MED).
+5. **`salaCarreraService.ts` (`/api/expedientes-curriculares/sala-carrera`):**
+   * Gestiona el estado de apertura y moderación de salas curriculares colegiadas, y la persistencia de snapshots JSON y binarios Base64 de Yjs para la pizarra interactiva.
 
-### 2.3. `docenteAsignaturasService.ts`: Contexto Académico SIGAFI
-Conecta con `/api/docente-asignaturas`:
-* `getAsignaturasDocente()`: Recupera la carga horaria, paralelos, mallas y carreras asignadas al docente autenticado directamente desde la base de datos `sigafi_es`.
+### 2.2. Inteligencia Artificial y Extracción Documental
+6. **`peaAiService.ts` (`/api/pea/ai`, `/api/pea/uuid/{uuid}/ai`):**
+   * Configuración y almacenamiento cifrado con AES-256 de proveedores y modelos de IA (DeepSeek, Gemini, OpenAI, Claude, Groq, Ollama).
+   * Generación asistida de propuestas y borradores estructurados con balance normativo de horas (`generatePeaAiDraft`) y conversión a campos reactivos Yjs (`convertDraftToEditorFields`).
+7. **`peaDocumentExtractorService.ts` (`/api/pea/uuid/{uuid}/importar-documento`):**
+   * Procesamiento y extracción sintáctica de archivos `.pdf` o `.docx` de hasta 15 MB para digitalización automática de sílabos existentes.
 
-### 2.4. `signaturesService.ts`: Criptografía y Sellos Digitales
-Conecta con `/api/signatures`:
-* `firmarDocumentoP12(formData)`: Envío del archivo PKCS#12 (`.p12` / `.pfx`) con contraseña para firma avanzada.
-* `firmarDocumentoHMAC(payload)`: Sellado institucional mediante credenciales seguras.
-* `verificarFirmaPublica(traceabilityCode)`: Comprobación forense sin requerimiento de login.
+### 2.3. Autenticación, Seguridad y Datos Personales
+8. **`authService.ts` (`/api/auth`):**
+   * Consulta de perfil y roles activos (`getMe`), inicio de sesión con credenciales locales (`login`), autenticación federada con Azure AD / Microsoft 365 (`loginWithMicrosoft`) y cierre de sesión (`logout`).
+   * Flujos de recuperación, verificación de tokens y actualización segura de contraseñas.
+9. **`lopdpService.ts` (`/api/lopdp`):**
+   * Registro obligatorio e inmutable del consentimiento informado de tratamiento de datos personales y administración de solicitudes de derechos ARCO.
+10. **`verificationService.ts` (`/api/documents`):**
+    * Validación forense pública de autenticidad documental mediante código de trazabilidad, certificados y comprobación del hash SHA-256 sin login.
+11. **`signaturesService.ts` (`/api/signatures`):**
+    * Estampado criptográfico mediante certificado digital PKCS#12 (`.p12` / `.pfx`) y firma electrónica institucional por sesión activa.
 
-### 2.5. `calendarioService.ts`: Cronograma Curricular e iCalendar
-Conecta con `/api/calendario`:
-* `getEventosCalendario()`: Fechas límite de entrega, períodos de subsanación y convocatorias académicas.
-* `exportarICalendar()`: Generación de archivo `.ics` para sincronización con Microsoft Outlook y Google Calendar.
+### 2.4. Colaboración, Concurrencia y Archivos
+12. **`collaborationService.ts` (`/api/collaboration`):**
+    * Hilos de discusión colegiada, comentarios anclados por sección, pulso de actividad en tiempo real, carga segura de adjuntos y notas de voz (`uploadFile`).
+13. **`docenteAsignaturasService.ts` (`/api/docente-asignaturas`):**
+    * Interfaz con la base de datos de solo lectura de SIGAFI (`sigafi_es`), consultando asignaturas, mallas, horas normadas y paralelos del docente autenticado.
 
-### 2.6. `authService.ts`: Autenticación, Credenciales y Sesión Institucional
-Conecta con `/api/auth`:
-* `getMe()`: Consulta el perfil, permisos y roles del usuario activo en la sesión.
-* `login(credentials)`: Autenticación tradicional mediante usuario institucional y contraseña.
-* `loginWithMicrosoft(idToken)`: Inicio de sesión federado mediante token de Azure AD / Entra ID.
-* `logout()`: Cierre de sesión en servidor e invalidación de credenciales activas.
-* `recuperarContrasenia(dto)`: Emite solicitudes de recuperación de contraseña institucional (cédula/correo).
-* `verContrasenia(token)`: Valida el token de un solo uso y entrega la contraseña o delega al restablecimiento por hash.
-* `restablecerContraseniaRecuperacion(dto)`: Restablece la contraseña mediante el token de recuperación de autoservicio.
-* `revertirContraseniaAlerta(dto)`: Reversión de emergencia ante alertas de seguridad y revocación de sesiones.
-* `cambiarContrasenia(dto)`: Actualización de contraseña para usuarios con sesión activa.
+### 2.5. Motor Documental y Diseñador de Plantillas
+14. **`documentTemplateService.ts` (`/api/admin/templates`):**
+    * Catálogo oficial de plantillas, publicación de versiones estructurales, restablecimiento a fábrica y configuración de sellos y firmas digitales.
+15. **`documentInstanceService.ts` (`/api/documents/instances`):**
+    * Creación, resolución perezosa y actualización de snapshots inmutables de instancias documentales.
+    * Compilación en caliente de vistas previas en PDF preliminares o definitivas.
+16. **`documentMaintenanceService.ts` (`/api/documents/instances/maintenance`, `/api/admin/backups`):**
+    * Diagnóstico de ocupación en disco, purga de borradores preliminares obsoletos y generación, verificación de hash y descarga de respaldos de base de datos.
 
-### 2.7. `recycleBinService.ts`: Gestión de Papelera y Restauración
-Conecta con `/api/recyclebin`:
-* `getDeletedProjects()`: Obtiene la nómina de proyectos o instrumentos curriculares archivados/eliminados.
-* `restoreProject(uuid)`: Recupera un instrumento curricular a su estado activo previo.
-* `purgeProject(uuid)`: Purgado irreversible del registro y sus dependencias.
+### 2.6. Soporte Técnico, Solicitudes e Incidencias
+17. **`feedbackService.ts` (`/api/feedback`):**
+    * Radicación de incidencias técnicas con captura de pantalla desde portapapeles, metadatos de máquina y chat interactivo bidireccional entre docente y administradores.
+18. **`solicitudesService.ts` (`/api/solicitudes`):**
+    * Tramitación de requerimientos curriculares, soporte de distributivos y solicitudes institucionales con acuerdos de nivel de servicio (SLA).
 
-### 2.8. `notificacionesService.ts`: Mensajería In-App y Transaccional
-Conecta con `/api/Admin/notifications`:
-* `getMyNotifications(limit)`: Consulta paginada o total de alertas del usuario autenticado.
-* `markAsRead(uuid)`: Actualización del estado de lectura individual.
-* `markAllAsRead()`: Limpieza global de marcas de lectura pendientes.
-* `deleteNotification(uuid)`: Remoción individual de alertas del historial.
-* `clearReadNotifications()`: Vaciado atómico de notificaciones leídas.
-
-### 2.9. `verificationService.ts`: Verificación Forense Pública de Documentos
-Conecta con `/api/documents`:
-* `verifyDocument(code)`: Validación pública sin autenticación previa mediante código de trazabilidad o firma DFRM.
-
-### 2.10. `lopdpService.ts`: Cumplimiento y Protección de Datos Personales
-Conecta con `/api/lopdp`:
-* `registrarConsentimiento(versionPolitica)`: Registro de consentimiento explícito e inmutable.
-* `getConsentimientos()`: Auditoría y trazabilidad histórica de consentimientos para administradores.
-
-### 2.11. `monitoreoService.ts`: Monitoreo y Avance Curricular
-Conecta con `/api/pea`:
-* `getProjectDetail(projectUuid)`: Resuelve el estado técnico, docente elaborador, carga de horas CD/APE/TA, unidades temáticas y estado de firmas institucionales CACES para la vista satélite de monitoreo curricular.
-* `ping(options)`: Verificación de estado del servidor en `/health`.
-
-### 2.12. `analyticsService.ts`: Indicadores y Reportes CACES
-Conecta con `/api/pea` y `/api/catalogs`:
-* `getProjects()`: Datos agregados de PEAs para análisis curricular.
-* `getStats()`: Totales, estados y cumplimiento de horas consolidados.
-* `getCarreras()`: Catálogo de carreras institucionales para segmentación curricular.
-
-### 2.13. `usersService.ts`: Administración de Usuarios y Roles Institucionales
-Conecta con `/api/Admin`:
-* `getUsers(params)`: Consulta paginada, tipada y filtrada de usuarios y docentes.
-* `getUserByUuid(uuid, type)`: Perfil detallado de usuario.
-* `getRoles()`: Catálogo oficial de roles del sistema.
-* `getDepartments()`: Listado de departamentos institucionales.
-* `assignRole(dto)` / `revokeRole(dto)`: Asignación y revocación segura de roles curriculares.
-* `getUserMetadata(uuid)` / `updateUserMetadata(uuid, meta)`: Gestión de metadatos de usuario.
-
-### 2.14. `auditService.ts`: Auditoría Forense y Trazabilidad
-Conecta con `/api/Admin/audit`:
-* `getAuditLogs(params)`: Consulta avanzada con filtros temporales, de módulo, de acción y paginación.
-
-### 2.15. `emailService.ts`: Motor de Correos y Plantillas SMTP
-Conecta con `/api/Admin/email-engine`:
-* `getEmailHistory(limit)`: Bitácora de correos emitidos por el servidor.
-* `getTemplates()`: Catálogo de plantillas institucionales.
-* `createTemplate(dto)` / `updateTemplate(id, dto)` / `deleteTemplate(id)`: Operaciones CRUD sobre plantillas.
-* `sendEmail(payload)`: Despacho manual o programado de notificaciones por correo.
-
-### 2.16. `configuracionService.ts`: Configuración Curricular y Calendario Normativo
-Conecta con `/api/catalogs` y `/api/calendario`:
-* `getPeriodos()` / `createPeriodo(dto)` / `updatePeriodo(id, dto)` / `deletePeriodo(id)`: Ciclo de vida de períodos académicos institucionales.
-* `getEventosNormativos()` / `createEventoNormativo(dto)` / `updateEventoNormativo(uuid, dto)` / `deleteEventoNormativo(uuid)`: Hitos y fechas límite institucionales obligatorias.
-
-### 2.17. `documentMaintenanceService.ts`: Mantenimiento Físico y Copias de Seguridad
-Conecta con `/api/documents/instances/maintenance` y `/api/admin/backups`:
-* `getDiagnosis()`: Detección de versiones preliminares obsoletas en disco.
-* `purgeSingle(uuid)` / `purgeAll()`: Depuración de PDFs físicos respetando la retención de 5 años exigida por CACES.
-* `getBackups()` / `getDiskInfo()` / `triggerBackup()` / `verifyIntegrity(uuid)` / `purgeBackup(uuid)` / `downloadBackup(uuid)`: Gestión de copias de seguridad de base de datos y uploads.
-
-### 2.18. `documentInstanceService.ts`: Instancias Documentales Curriculares
-Conecta con `/api/documents/instances`:
-* `getByEntity(entityUuid)`: Lista de instancias documentales asociadas a una entidad curricular.
-* `getGlobal()`: Nómina de instancias documentales globales no vinculadas a una entidad específica.
-* `resolve(params)`: Resolución dinámica y creación perezosa de la instancia de documento requerida.
-* `getById(instanceUuid)`: Consulta de snapshot y metadatos del expediente.
-* `createInstance(payload)`: Creación manual de un nuevo expediente documental.
-* `updateMetadata(instanceUuid, metadata)`: Actualización del snapshot JSON y metadatos de la instancia.
-* `getUiConfig(instanceUuid)`: Configuración de secciones e interfaz de una instancia activa.
-* `getTemplateUiConfig(templateCode)`: Configuración de bloques por defecto de una plantilla documental.
-* `getCatalogByUrl(url)`: Obtención de catálogos dinámicos vinculados a campos de la plantilla.
-* `upgradeTemplate(instanceUuid)`: Adaptación del expediente a la última versión publicada de la plantilla.
-* `renderDocumentPdf(templateCode, formData, isDraft, isBlind)`: Renderizado preliminar o definitivo de PDF en el motor documental.
-* `getInstancePdf(instanceUuid)`: Descarga del PDF firmado o consolidado del documento.
-* `getStorageFile(cleanPath)`: Descarga de adjuntos binarios desde el almacenamiento institucional.
-
-### 2.19. `curriculumProjectService.ts`: Gestión de Instrumentos Curriculares y Workspace
-Conecta con `/api/pea`, `/api/docente-asignaturas` y `/documents/instances`:
-* `getProjectDetail(uuid, isPeaTemplate)`: Consulta detallada del PEA oficial o instrumento curricular.
-* `getAllProjects()`: Bandeja institucional de PEAs (vista para coordinadores y vicerrectorado).
-* `getMyProjects()`: Nómina de asignaturas y PEAs asignados al docente autenticado.
-* `deleteProject(uuid)`: Envío de instrumento a la papelera curricular.
-* `generatePdf(projectData, isDraft)`: Generación de PDF de borrador o consolidado.
-* `getConvocatorias()`: Nómina de períodos académicos institucionales.
-* `getActivity(uuid, params)`: Bitácora de actividad curricular en el workspace.
-* `getTraceability(uuid)`: Historial de cambios de estado curricular.
-* `transitionState(uuid, newState, observation)`: Transición formal entre etapas con registro de observaciones.
-* `getDocenteCarreras()`: Catálogo de carreras asignadas al docente autenticado.
-
-### 2.20. `documentTemplateService.ts`: Gestión de Plantillas Documentales y Tema Global
-Conecta con `/api/admin/templates`:
-* `getTemplates()`: Catálogo completo de plantillas institucionales habilitadas.
-* `getGlobalTheme()` / `updateGlobalTheme(themeConfigJson)`: Configuración del diseño visual global institucional (portada, colores, tipografía).
-* `getTemplateByCode(code)`: Definición estructural y bloques de la plantilla.
-* `getTemplateUsageCount(code)`: Contador de documentos activos que emplean la plantilla.
-* `publishTemplate(code, payload)`: Publicación oficial de una nueva versión estructural de la plantilla.
-* `resetToDefault(code)`: Restablecimiento de fábrica a los bloques estándar institucionales.
-* `reorderTemplates(codes)`: Persistencia del orden de visualización de plantillas.
-* `updateSignatureConfig(code, signatureConfigJson)`: Configuración de ranuras y requerimientos de firma digital para la plantilla.
-
-### 2.21. `collaborationService.ts`: Colaboración en Tiempo Real, Comentarios y Archivos
-Conecta con `/api/collaboration`:
-* `getComments(entityUuid)`: Lista de comentarios y retroalimentación técnica de una sección o documento.
-* `createComment(payload)`: Creación de nueva observación curricular o nota técnica.
-* `updateComment(id, payload)`: Modificación de contenido de un comentario.
-* `deleteComment(id)`: Eliminación de observación técnica.
-* `getPulse(projectUuid)`: Pulso de concurrencia, comentarios acumulados y estados de secciones.
-* `uploadFile(formData, onProgress)`: Carga segura de adjuntos y notas de voz para retroalimentación curricular.
-* `deleteImage(imageUrl)`: Eliminación física de imágenes embebidas en el editor colaborativo.
-
-### 2.22. `reportService.ts`: Generación y Descarga de Reportes Institucionales
-Conecta con `/api/reports`:
-* `downloadAnalyticsReport(period, carrera)`: Generación en streaming y descarga automatizada de informes analíticos y de cumplimiento institucional en formato PDF.
-
-### 2.23. `peaAiService.ts`: Asistente Curricular y Generación Pedagógica con IA
-Conecta con `/api/pea/ai` y `/api/pea/uuid/{uuid}/ai`:
-* `getPeaAiConfig()`: Consulta el estado de configuración de IA, modelo seleccionado, proveedor activo y presencia de API Key.
-* `savePeaAiConfig(req)`: Almacena la configuración y credenciales del proveedor (DeepSeek, Gemini, OpenAI, Claude, Groq, Ollama) cifradas con AES-256.
-* `generatePeaAiDraft(peaUuid, req)`: Solicita la generación asistida de una sección o del borrador completo del PEA con balanceo de horas normativo.
-* `convertDraftToEditorFields(draft)`: Mapea la estructura jerárquica de la IA a las claves indexadas requeridas por el editor reactivo Yjs.
-
-### 2.24. `peaDocumentExtractorService.ts`: Ingestión y Extracción de Documentos Digitales (PDF y Word)
-Conecta con `/api/pea/uuid/{uuid}/importar-documento`:
-* `extractPeaFromDocument(peaUuid, file, options)`: Realiza el envío multipart/form-data de archivos digitales (`.pdf` o `.docx`) de hasta 15 MB para extracción sintáctica de unidades temáticas, horas, actividades prácticas y bibliografía, preservando inmutables los datos generales institucionales.
-
-### 2.25. `salaCarreraService.ts`: Salas Curriculares Colegiadas y Pizarra CoWork
-Conecta con `/api/expedientes-curriculares/sala-carrera`:
-* `getEstado(idCarrera, idPeriodo)`: Consulta el estado de apertura de la sala colegiada, moderador activo y nómina de asignaturas del período lectivo.
-* `conmutarEstado(idCarrera, idPeriodo, activar, temaPrincipal)`: Abre o pausa formalmente la sesión interactiva de la carrera en tiempo real.
-* `getPizarra(idCarrera, idPeriodo)`: Recupera el estado persistido de la pizarra interactiva (nodos, notas adhesivas, acuerdos pedagógicos, textos y estado Yjs serializado).
-* `guardarPizarra(idCarrera, idPeriodo, data)`: Persiste el snapshot JSON y estado binario Base64 de Yjs en la tabla `doc_cowork_documentos`.
+### 2.7. Administración, Analíticas y Notificaciones
+19. **`usersService.ts` (`/api/Admin`):**
+    * Catálogo de usuarios institucionales, sincronización con SIGAFI y asignación/revocación de roles curriculares (`idSistema = 6`).
+20. **`auditService.ts` (`/api/Admin/audit`):**
+    * Consulta forense de la bitácora `doc_audit_logs` con filtros por fecha UTC, usuario, módulo e IP.
+21. **`emailService.ts` (`/api/Admin/email-engine`):**
+    * Mantenimiento de plantillas HTML institucionales y pruebas de despacho SMTP.
+22. **`configuracionService.ts` (`/api/catalogs`, `/api/calendario`):**
+    * Parámetros normativos del sistema, períodos académicos y fechas límite de formulación.
+23. **`analyticsService.ts` (`/api/pea`, `/api/catalogs`):**
+    * Agregación estadística de cobertura curricular, avance de firmas institucionales y auditoría del Art. 21 CES.
+24. **`calendarioService.ts` (`/api/calendario`):**
+    * Consulta de eventos normativos institucionales y exportación a formato iCalendar (`.ics`).
+25. **`notificacionesService.ts` (`/api/Admin/notifications`):**
+    * Consulta, marcado de lectura y depuración de alertas transaccionales in-app.
+26. **`recycleBinService.ts` (`/api/recyclebin`):**
+    * Consulta y restauración de instrumentos curriculares en borrado lógico.
+27. **`reportService.ts` (`/api/reports`):**
+    * Generación en streaming y descarga automatizada de informes analíticos y consolidados en PDF.
 
 ---
 
 ## 3. Contextos Globales del Sistema (`src/api/` y `src/core/`)
 
 ```mermaid
-graph TD
-    App[App.tsx] --> AuthProvider[AuthProvider\nsrc/api/AuthContext.tsx]
-    AuthProvider --> NotifProvider[NotificationsProvider\nsrc/api/NotificationsContext.tsx]
-    NotifProvider --> ConfirmProvider[ConfirmProvider\nsrc/api/ConfirmContext.tsx]
-    ConfirmProvider --> Router[BrowserRouter & Routes]
-    Router --> DocContext[DocumentDataContext\nsrc/core/documents/context/]
+flowchart TD
+    App["App.tsx"] --> AuthProvider["AuthProvider\n(src/api/AuthContext.tsx)"]
+    AuthProvider --> ConfirmProvider["ConfirmProvider\n(src/api/ConfirmContext.tsx)"]
+    ConfirmProvider --> NotifProvider["NotificationsProvider\n(src/api/NotificationsContext.tsx)"]
+    NotifProvider --> Router["BrowserRouter & Routes"]
+    Router --> DocContext["DocumentDataContext\n(src/core/documents/context/)"]
 ```
 
-### 3.1. `AuthContext.tsx`: Sesión, Tokens JWT y Roles Curriculares
-* **Gestión de Identidad:** Mantiene en memoria el objeto `user` con cédula, nombres, apellidos, correo institucional y el arreglo de roles asignados.
-* **Control de Tokens:** Administra el ciclo de vida del JWT, persistencia segura en `localStorage` y renovación automática contra `/api/auth/refresh-token`.
-* **Guardias y Evaluadores:**
-  * `hasRole(role)`: Comprobación de membresía en roles institucionales (`DOSIER_DOCENTE`, `DOSIER_COORD_CARRERA`, etc.).
-  * `canSignPea(stage)`: Autorización estricta para firma en etapas del workflow.
-* **Gobernanza de Conmutación de Rol Institucional:**
-  * La capacidad de conmutar y alternar entre roles institucionales mediante el menú desplegable en la barra superior y pie del sidebar es **exclusiva del Administrador (`DOSIER_ADMIN`)** para fines de supervisión, auditoría y pruebas integrales de interfaz.
-  * Para todos los demás perfiles institucionales (Vicerrectorado, Coordinación Académica, Coordinación de Carrera y Docente), el rol institucional activo se fija de forma inmutable según la máxima jerarquía normada (`resolveCanonicalRole`), eliminando cualquier interactividad o menú selector de cambio de rol de la interfaz.
-
-### 3.2. `NotificationsContext.tsx`: Alertas en Tiempo Real
-* Conexión con el WebSocket de SignalR (`/collaborationHub`).
-* Despacho de notificaciones emergentes (Toasts) y mantenimiento del contador de alertas no leídas en el encabezado.
-
-### 3.3. `ConfirmContext.tsx`: Diálogos Modales Asíncronos
-* Provee la función `confirm({ title, message, confirmText, cancelText })` retornando una promesa `Promise<boolean>`, sustituyendo diálogos nativos del navegador por modales con diseño Vercel Geist y fondos 100% sólidos.
-
-### 3.4. `DocumentDataContext.ts`: Contexto del Instrumento en Edición
-* Provee a todos los componentes hijos del constructor el snapshot activo del documento, estado de bloqueo (*StateLockingGuard*) y funciones de sincronización hacia el backend.
+* **`AuthContext.tsx`:** Gestiona el token JWT, la hidratación del usuario (`User`), el control de LOPDP (`acepto_lopdp`), la jerarquía ponderada de roles (`ROLE_HIERARCHY_WEIGHT`) y la conmutación de roles activa exclusiva para administradores.
+* **`NotificationsContext.tsx`:** Conexión persistente mediante SignalR hacia `/notificacionesHub`, mantenimiento de alertas no leídas y despacho de Toasts con soporte de reversión (`onUndo`).
+* **`ConfirmContext.tsx`:** Interfaz declarativa `confirm(options) => Promise<boolean>` con modales 100% sólidos y captura de teclado (`Escape`).
+* **`DocumentDataContext.ts`:** Provee el estado reactivo `formData`, funciones de mutación `onUpdateField`, el mapa de `BlockedSections` y el contexto de inmutabilidad `SectionGuardContext`.
 
 ---
 
-## 4. Hooks Especializados del Shell, CoWork y Sincronización Reactiva
+## 4. Hooks Especializados del Sistema
 
-### 4.1. `useRealtimeSync.ts`: Sincronización Continua y Eliminación de Botones de Recarga (`src/hooks/`)
-Elimina la necesidad de botones de recarga manual en todas las bandejas y paneles del sistema (`/dashboard`, `Mis Asignaturas`, `Mantenimiento`, `Analíticas`, `Historial de Correos`, `Actividad`), implementando una arquitectura de actualización en tres niveles (Three-Tier Reactive Sync):
-* **Nivel 1 — Eventos de Dominio en Tiempo Real (SignalR WebSockets):**
-  * Se suscribe al bus de eventos del navegador (`window.addEventListener`) para capturar eventos de dominio despachados por SignalR en `NotificationsContext`: `dosier-projects-changed`, `dosier-emails-changed` y `dosier-activity-updated`.
-  * Ante cualquier cambio de estado curricular (aprobación, devolución con observaciones, firma, asignación), la UI se revalida de inmediato de forma reactiva.
-* **Nivel 2 — Revalidación por Foco y Visibilidad (Stale-While-Revalidate):**
-  * Monitorea `document.visibilityState === 'visible'` y el evento `window.onfocus`.
-  * Cuando el usuario regresa a la pestaña de DOSIER tras interactuar con el correo institucional o el sistema SIGAFI, los datos se sincronizan al instante sin requerir F5 ni clics adicionales.
-* **Nivel 3 — Latido Pasivo Silencioso (Passive Heartbeat):**
-  * Temporizador no invasivo en segundo plano (por defecto cada 30 a 45 segundos) que refresca los datos periódicamente únicamente mientras la pestaña está visible, suspendiendo los ciclos cuando la pestaña está en segundo plano para optimizar el consumo de red y CPU.
-  * Dispone de referencias mutables (`syncRef`) para evitar destrucciones y recreaciones innecesarias de suscripciones ante re-renderizados.
+### 4.1. Sincronización Reactiva (`src/hooks/useRealtimeSync.ts`)
+Elimina la necesidad de botones de recarga manual mediante un modelo de sincronización en tres niveles:
+1. **Nivel 1 (Eventos SignalR en Vivo):** Escucha eventos de dominio en el navegador (`dosier-projects-changed`, `dosier-emails-changed`, `dosier-activity-updated`) disparados por el hub de notificaciones.
+2. **Nivel 2 (Revalidación por Foco):** Sincroniza automáticamente los datos al detectar `document.visibilityState === 'visible'` o `window.onfocus`.
+3. **Nivel 3 (Latido Pasivo Silencioso):** Temporizador periódico en segundo plano (cada 30 a 45 segundos) activo únicamente mientras la pestaña del navegador está visible.
 
 ### 4.2. Hooks del Shell Curricular (`src/components/DOSIER/shell/hooks/`)
-* **`useBuilderAutoSave.ts`:**
-  * Implementa debounce configurable (1.5s a 3s) para guardar cambios automáticamente sin interrumpir la escritura del docente.
-  * Control de bandera `isDirty` para advertir antes de cerrar la ventana con cambios pendientes.
-* **`useBuilderLayout.ts`:**
-  * Controla la visualización en vista de folios A4, alternancia de barras laterales y zoom tipográfico.
-* **`useBuilderNetworkMonitor.ts`:**
-  * Supervisa la latencia y estado de la conexión a internet, disparando avisos si se pierde la sincronización con el servidor.
-* **`useBuilderPdfAndSign.ts`:**
-  * Orquesta el renderizado en segundo plano del PDF oficial vía `/api/documents/preview`, cálculo del hash y despliegue del modal de firma.
+* **`useDOSIERBuilderShell.ts`:** Orquestador principal de la experiencia de edición curricular.
+* **`useBuilderAutoSave.ts`:** Autoguardado silencioso con debounce (1.5s a 3s) y control del estado sucio (`isDirty`).
+* **`useBuilderLayout.ts`:** Alternancia de rieles laterales de navegación, panel colaborativo y zoom.
+* **`useBuilderPdfAndSign.ts`:** Generación de PDF en segundo plano y coordinación de firma digital.
+* **`useBuilderNetworkMonitor.ts`:** Monitoreo de latencia y reconexión ante caídas del WebSocket.
 
-### 4.3. Hooks del Subsistema CoWork (`src/core/cowork/hooks/` y `pizarra/`)
-* **`useCoWork.ts`:**
-  * Suscribe un campo de texto al tipo compartido Yjs (`Y.Text`).
-  * Emite y recibe actualizaciones delta en formato binario comprimido mediante WebSocket SignalR.
-* **`useCoWorkPresence.ts`:**
-  * Mantiene la lista de docentes activos concurrentes en el mismo PEA, con indicadores de color y nombres en cursores remotos.
-* **`usePizarraCoWork.ts` (`src/pages/Curriculum/SalaCarrera/pizarra/`):**
-  * Orquesta la sincronización en tiempo real del lienzo infinito y elementos compartidos (notas adhesivas, tarjetas de acuerdos pedagógicos, cajas de texto libre) sobre un `Y.Array` compartido.
-  * Transmite awareness espacial (cursores remotos con coordenadas normalizadas en canvas, nombre e iniciales del participante).
-  * Implementa persistencia periódica con debounce hacia el backend mediante `salaCarreraService.guardarPizarra`, salvaguardando snapshots JSON y binarios Base64 de Yjs sin interrupción visual.
+### 4.3. Hooks de Motores Auxiliares (`src/core/`)
+* **`useCoWork.ts` (`src/core/cowork/hooks/`):** Conexión con el WebSocket `/collabHub`, sincronización de tipos compartidos de Yjs (`Y.Text`) y conciencia espacial de presencia remota.
+* **`useDOSIERDocument.ts` (`src/core/documents/hooks/`):** Hidratación de la instancia documental, mutación de campos y detección de actualizaciones estructurales de plantilla (`hasTemplateUpdate`).
 
-### 4.4. `peaStatusWorkflow.ts`: Gobernanza Central de Reglas de Negocio del PEA (`src/pages/Curriculum/utils/`)
-Constituye el **módulo único y centralizado** de reglas de negocio para el ciclo de vida curricular del PEA, eliminando la dispersión lógica entre vistas:
-* **Resolución Canónica de Rol (`resolveRoleKey`):** Mapea cualquier entrada de rol (`DOSIER_ADMIN`, `DOSIER_VICERRECTOR`, `DOSIER_COORD_ACAD`, `DOSIER_COORD_CARRERA`, `DOSIER_DOCENTE` o flags de `useAuth()`) a una clave institucional tipada.
-* **Propiedad de Asignaturas (`isPeaPropio`):** Identifica de forma fáctica si una asignatura o PEA pertenece a la carga docente del usuario autenticado, cruzando identificadores (`id_sigafi`, `id_usuario`, `cedula`) y nombres normalizados.
-* **Pendientes según Rol (`isPeaPendienteParaRol`):**
-  * *Vicerrectorado:* `RevisadoAcad` (espera firma y legalización).
-  * *Coordinación Académica:* `RevisadoCoord` (espera aprobación académica CACES).
-  * *Coordinación de Carrera:* `EnRevision`, `Observado`, `Corregido` (espera dictamen disciplinar).
-  * *Docente:* `Borrador`, `NoIniciado`, `Observado` (espera formulación o corrección).
-  * *Administrador:* Cualquier fase activa de revisión.
-* **Aprobados según Rol (`isPeaAprobadoParaRol`):** Determina si el instrumento ya superó la instancia de revisión del rol o está formalmente legalizado.
-* **Navegación Inteligente (`getPeaNavegacion`):** Enruta de forma determinística al editor workspace (`/documentacion/mis-proyectos/workspace/...`) si la asignatura es propia, o a la mesa de supervisión técnica (`/documentacion/revision-tecnica/...`) si se trata de un revisor o autoridad.
-* **Cálculo Unificado de Métricas (`getPeaMetricsForRole`):** Computa en un solo recorrido los totales, pendientes, aprobados, borradores, materias propias y rezagos, garantizando paridad matemática exacta entre `/dashboard`, `/documentacion` y el sidebar.
+### 4.4. Hooks de Vistas Especializadas
+* `useSidebar.ts`: Control de colapso, persistencia de menús desplegables y responsividad.
+* `useAnalyticsData.ts`: Procesamiento de datos de cumplimiento CACES y cálculo de avance.
+* `useDocumentMaintenance.ts`: Diagnóstico de disco físico y ejecución de respaldos de base de datos.
+* `useUsersPage.ts`: Filtrado y asignación de roles curriculares en el organigrama vertical.
+* `useFeedbackPage.ts`: Gestión de incidencias, filtros y canal de soporte técnico.
+* `useCalendarioPage.ts`: Coordinación del calendario mensual, tablero Kanban y notas adhesivas.
 
 ---
 
-## 5. Catálogo de Componentes UI Comunes (`src/components/Common/`)
+## 5. Gobernanza Central de Reglas de Negocio (`peaStatusWorkflow.ts`)
+
+Ubicado en `src/pages/Curriculum/utils/peaStatusWorkflow.ts`, centraliza todas las reglas de negocio del ciclo de vida curricular para evitar discrepancias lógicas entre pantallas:
+
+* **`resolveRoleKey`:** Normaliza cualquier rol institucional (`DOSIER_ADMIN`, `DOSIER_VICERRECTOR`, `DOSIER_COORD_ACAD`, `DOSIER_COORD_CARRERA`, `DOSIER_DOCENTE`) a una clave institucional tipada.
+* **`isPeaPropio`:** Determina de forma fáctica si una asignatura pertenece a la carga lectiva del docente autenticado, cruzando `id_sigafi`, `id_usuario` y cédula.
+* **`isPeaPendienteParaRol`:** Asigna la bandeja de entrada según la responsabilidad de cada autoridad:
+  * *Vicerrectorado:* Instrumentos en `RevisadoAcad` (pendientes de firma y legalización final).
+  * *Coordinación Académica:* Instrumentos en `RevisadoCoord` (pendientes de aval académico CACES).
+  * *Coordinación de Carrera:* Instrumentos en `EnRevision`, `Observado`, `Corregido` (pendientes de dictamen disciplinar).
+  * *Docente:* Instrumentos en `Borrador`, `NoIniciado` u `Observado` (pendientes de formulación o subsanación).
+* **`isPeaAprobadoParaRol`:** Verifica si el instrumento ya superó la fase reglamentaria del rol evaluador o si se encuentra formalmente aprobado.
+* **`getPeaNavegacion`:** Enruta de forma determinística al editor colaborativo (`/documentacion/mis-proyectos/workspace/...`) si la asignatura es propia, o al panel de revisión técnica (`/documentacion/revision-tecnica/...`) si se trata de un coordinador o evaluador.
+* **`getPeaMetricsForRole`:** Calcula en un solo recorrido los totales, pendientes, aprobados, borradores y materias propias, garantizando consistencia matemática exacta entre `/dashboard`, `/documentacion` y la barra lateral de navegación.
+
+---
+
+## 6. Catálogo de Componentes UI Comunes (`src/components/Common/`)
+
+Todos los componentes reutilizables implementan estrictamente la regla de **fondos 100% sólidos y opacos**:
 
 | Componente | Archivo | Funcionalidad y Especificación Visual |
 | :--- | :--- | :--- |
-| **`GeistSelect`** | `GeistSelect.tsx` | Selector desplegable accesible con búsqueda integrada. Menú con **fondo 100% sólido** (`bg-white dark:bg-zinc-950`) y cero transparencias. |
-| **`GeistDatePicker`** | `GeistDatePicker.tsx` | Selector de fechas adaptado al calendario académico del ISTPET con validación de rangos. |
-| **`GeistCalendar`** | `GeistCalendar.tsx` | Calendario mensual interactivo con marcadores visuales para hitos de entrega. |
-| **`CommandPalette`** | `CommandPalette.tsx` | Paleta de comandos rápidos global (`Ctrl + K` / `Cmd + K`) para navegación inmediata a asignaturas, PEAs y configuraciones. |
-| **`MemberSearchSelector`** | `MemberSearchSelector.tsx` | Selector predictivo de docentes de asignatura y miembros de comisiones con búsqueda por cédula o apellido. |
-| **`TimedSuccessModal`** | `TimedSuccessModal.tsx` | Modal con temporizador visual para confirmar el sellado exitoso de un PEA o firma registrada. |
-| **`StickyNotesFloatingButton`** | `StickyNotesFloatingButton.tsx` | Botón flotante para anotaciones rápidas de trabajo docente durante la planificación curricular. |
+| **`GeistSelect`** | `GeistSelect.tsx` | Selector desplegable accesible con búsqueda integrada. Menú con **fondo 100% sólido** (`bg-white dark:bg-zinc-950`) y bordes nítidos. |
+| **`GeistDatePicker`** | `GeistDatePicker.tsx` | Selector de fechas adaptado al calendario académico del ISTPET con paneles opacos. |
+| **`GeistCalendar`** | `GeistCalendar.tsx` | Calendario mensual interactivo con marcadores visuales para hitos y plazos normativos. |
+| **`CommandPalette`** | `CommandPalette.tsx` | Paleta de comandos rápidos (`Ctrl + K` / `Cmd + K`) para navegación inmediata a asignaturas y configuraciones. |
+| **`MemberSearchSelector`** | `MemberSearchSelector.tsx` | Buscador predictivo de co-docentes y revisores institucionales con navegación por teclado. |
+| **`TimedSuccessModal`** | `TimedSuccessModal.tsx` | Modal con temporizador visual opaco para confirmar operaciones exitosas. |
+| **`StickyNotesFloatingButton`** | `StickyNotesFloatingButton.tsx` | Botón flotante para captura rápida de anotaciones docentes de cátedra. |
 | **`ProximosEventosWidget`** | `ProximosEventosWidget.tsx` | Widget de escritorio para visualizar plazos perentorios del cronograma académico. |
-| **`FullscreenLoader`** | `FullscreenLoader.tsx` | Pantalla de carga sobria con diseño editorial para transiciones de lazy loading en React Router. |
-| **`BentoGrid`** | `BentoGrid.tsx` | Cuadrícula modular para distribución uniforme de indicadores y accesos directos. |
+| **`FullscreenLoader`** | `FullscreenLoader.tsx` | Pantalla de carga sobria utilizada como fallback universal de `Suspense`. |
+| **`BentoGrid`** | `BentoGrid.tsx` | Cuadrícula modular para distribución uniforme de indicadores y catálogos. |
+| **`PageHeader`** | `PageHeader.tsx` | Cabecera estandarizada con título, descripción y botones de acción principal. |
+| **`UnderDevelopment`** | `UnderDevelopment.tsx` | Vista de marcador de posición para módulos en fase de homologación. |

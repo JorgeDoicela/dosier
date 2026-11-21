@@ -1,19 +1,19 @@
-# Especificacion Tecnica y Academica: Pipeline CI/CD y Despliegue en AWS EC2
+# Especificación Técnica y Académica: Pipeline CI/CD y Despliegue en AWS EC2
 
 Este documento constituye la memoria técnica formal de la arquitectura de Integración y Entrega Continua (CI/CD), contenerización Docker y despliegue automatizado en servidores AWS EC2 para la plataforma **DOSIER** del Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET).
 
 ---
 
-## 1. Justificacion Ingenieril y DevOps para la Tesis de Grado
+## 1. Justificación Ingenieril y DevOps para la Tesis de Grado
 
 En el desarrollo de software institucional moderno, el despliegue manual por transferencia FTP o acceso interactivo SSH directo introduce graves riesgos de error humano, inconsistencia entre entornos (*environmental drift*), tiempos prolongados de indisponibilidad (*downtime*) y falta de trazabilidad forense exigida por organismos de acreditación como el **CACES**.
 
 La implementación de este pipeline resuelve estas problemáticas mediante cuatro pilares fundamentales:
 
 1. **Inmutabilidad de Artefactos:** El código fuente no se compila en el servidor de producción. Se empaqueta en imágenes de contenedores OCI (Open Container Initiative) idénticas y herméticas, garantizando que el software probado en la fase de CI sea exactamente el que corre en producción.
-2. **Trazabilidad y Auditoria CACES:** Cada despliegue está criptográficamente vinculado al commit SHA exacto de Git, permitiendo saber qué versión del código, qué cambios y qué usuario autorizó la actualización del sistema curricular.
-3. **Eficiencia de Recursos mediante Grafo Aciclico Dirigido (DAG):** El pipeline evalúa los cambios de rutas (`dorny/paths-filter@v3`), evitando compilar el backend .NET 8 cuando solo se modificó el frontend React Vite, y viceversa.
-4. **Resiliencia Operativa y RTO Minimo:** Incorporación de mecanismos de reinicio rápido (*Quick Restart*) para resolución de incidencias 502 en menos de 10 segundos, y flujo de reversión inmediata (*Rollback*) sin requerir recompilación de código.
+2. **Trazabilidad y Auditoría CACES:** Cada despliegue está criptográficamente vinculado al commit SHA exacto de Git, permitiendo saber qué versión del código, qué cambios y qué usuario autorizó la actualización del sistema curricular.
+3. **Eficiencia de Recursos mediante Grafo Acíclico Dirigido (DAG):** El pipeline evalúa los cambios de rutas (`dorny/paths-filter@v3`), evitando compilar el backend .NET 8 cuando solo se modificó el frontend React Vite, y viceversa.
+4. **Resiliencia Operativa y RTO Mínimo:** Incorporación de mecanismos de reinicio rápido (*Quick Restart*) para resolución de incidencias 502 en menos de 10 segundos, y flujo de reversión inmediata (*Rollback*) sin requerir recompilación de código.
 
 ---
 
@@ -33,7 +33,7 @@ El flujo de trabajo automatizado se estructura en 8 etapas secuenciales y parale
                    (Si backend/**)                                  (Si dosier_web/**)
                              |                                             |
                      [backend-qa]                                    [frontend-qa]
-               (.NET 8 SDK / dotnet test)                       (Node 22 / Vitest / Vite)
+               (.NET 8 SDK / 80 tests xUnit)                   (Node 22 / 296 tests Vitest)
                              |                                             |
                      [build-backend]                                 [build-frontend]
                 (Docker Buildx -> GHCR)                         (Docker Buildx -> GHCR)
@@ -53,8 +53,8 @@ El flujo de trabajo automatizado se estructura en 8 etapas secuenciales y parale
 | :--- | :--- | :--- | :--- |
 | `quick-restart` | `inputs.restart_only == 'true'` | `ubuntu-latest` | Conexión SSH inmediata al EC2 para ejecutar `docker compose restart`, resolviendo fallos transitorios sin recompilar ni alterar imágenes. |
 | `detect-changes` | `inputs.restart_only != 'true'` | `ubuntu-latest` | Analiza el diff de Git con `paths-filter` para activar condicionalmente los jobs de backend o frontend. |
-| `backend-qa` | Cambios en `backend/**` o `workflow_dispatch` | `ubuntu-latest` | Configura .NET 8 SDK, restaura `dosier.slnx`, compila en Release y ejecuta la suite de pruebas unitarias `dosier_tests.csproj`. |
-| `frontend-qa` | Cambios en `dosier_web/**` o `workflow_dispatch` | `ubuntu-latest` | Configura Node.js 22, instala dependencias con lockfile, ejecuta pruebas con Vitest y valida la compilación estática de Vite. |
+| `backend-qa` | Cambios en `backend/**` o `workflow_dispatch` | `ubuntu-latest` | Configura .NET 8 SDK, restaura `dosier.slnx`, compila en Release y ejecuta la suite de 80 pruebas en `dosier_tests.csproj`. |
+| `frontend-qa` | Cambios en `dosier_web/**` o `workflow_dispatch` | `ubuntu-latest` | Configura Node.js 22, instala dependencias con lockfile, ejecuta las 296 pruebas con Vitest y valida la compilación estática de Vite. |
 | `build-backend` | `backend-qa` exitoso | `ubuntu-latest` | Construye la imagen Docker del backend mediante Buildx, aplica etiquetas (`latest`, SHA completo, SHA corto) y sube al registro `ghcr.io` con caché GHA. |
 | `build-frontend` | `frontend-qa` exitoso | `ubuntu-latest` | Construye la imagen Docker del frontend SPA + Nginx, aplica etiquetas semánticas y publica en `ghcr.io`. |
 | `deploy-ec2` | Builds exitosos | `ubuntu-latest` | Transfiere `docker-compose.yml` por SCP, realiza limpieza de espacio en disco en el host EC2, descarga imágenes por SHA y ejecuta `docker compose up -d --remove-orphans`. |
@@ -62,7 +62,7 @@ El flujo de trabajo automatizado se estructura en 8 etapas secuenciales y parale
 
 ---
 
-## 3. Especificacion de Contenedores Docker
+## 3. Especificación de Contenedores Docker
 
 ### 3.1 Backend (.NET 8 Web API) - `backend/Dockerfile`
 Implementa el patrón de compilación multi-etapa (*Multi-Stage Build*) para reducir la superficie de ataque y el tamaño final de la imagen:
@@ -71,14 +71,14 @@ Implementa el patrón de compilación multi-etapa (*Multi-Stage Build*) para red
 * **Etapa de Runtime (`mcr.microsoft.com/dotnet/aspnet:8.0`):** Imagen mínima sin herramientas de compilación. Crea las carpetas `/app/uploads` y `/app/backups`, copia los binarios publicados y establece como punto de entrada `dotnet dosier_api.dll`.
 * **Puerto Expuesto:** `5000` (interno en la red bridge de Docker).
 
-### 3.2 Frontend Web (React 18 + Vite + Nginx) - `dosier_web/Dockerfile`
-* **Etapa de Compilación (`node:22-alpine`):** Ejecuta `npm install` y `npm run build`, transformando el código TypeScript/React y estilos Tailwind CSS v4 en artefactos estáticos optimizados en `dist/`.
-* **Etapa de Servidor Web (`nginx:alpine`):** Servidor HTTP/HTTPS ultraligero que copia los archivos estáticos a `/usr/share/nginx/html` y carga la configuración de [nginx.conf](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/dosier_web/nginx.conf).
+### 3.2 Frontend Web (React 19 + Vite 8 + Nginx) - `dosier_web/Dockerfile`
+* **Etapa de Compilación (`node:22-alpine`):** Ejecuta `npm install` y `npm run build`, transformando el código TypeScript/React 19 y estilos Tailwind CSS v4 en artefactos estáticos optimizados en `dist/`.
+* **Etapa de Servidor Web (`nginx:alpine`):** Servidor HTTP/HTTPS ultraligero que copia los archivos estáticos a `/usr/share/nginx/html` y carga la configuración de [`dosier_web/nginx.conf`](../../../dosier_web/nginx.conf).
 * **Puertos Expuestos:** `80` (HTTP con redirección forzada a HTTPS) y `443` (HTTPS con certificados SSL).
 
 ---
 
-## 4. Orquestacion y Persistencia (`docker-compose.yml`)
+## 4. Orquestación y Persistencia (`docker-compose.yml`)
 
 El orquestador define la topología de servicios multi-contenedor en el servidor de producción:
 
@@ -151,7 +151,7 @@ services:
       retries: 3
       start_period: 20s
 
-  # 3. Frontend Web (React 18 + Vite + Nginx SPA + SSL)
+  # 3. Frontend Web (React 19 + Vite 8 + Nginx SPA + SSL)
   dosier-web:
     image: ${FRONTEND_IMAGE:-ghcr.io/jorgedoicela/dosier-web:latest}
     build:
@@ -180,7 +180,7 @@ networks:
     driver: bridge
 ```
 
-### 4.1 Politica de Persistencia y Almacenamiento
+### 4.1 Política de Persistencia y Almacenamiento
 
 * **`./mysql_data:/var/lib/mysql`:** Persistencia física de los archivos de tablas y registros de MySQL 8.0. El pipeline implementa una política dual gobernada por la variable de entorno `RESET_DATABASE_ON_DEPLOY`:
   - **Fase de Pruebas (`RESET_DATABASE_ON_DEPLOY=true` o por defecto):** En cada despliegue genera automáticamente una copia de seguridad comprimida previa en `backups/pre_reset_*.sql.gz` y reinicializa la base de datos limpia con los 5 scripts SQL oficiales (`00_` a `04_`) para garantizar un entorno conocido, predecible y reproducible en cada validación.
@@ -199,7 +199,7 @@ Para operar con alta disponibilidad en instancias AWS EC2 con disco EBS limitado
 
 ---
 
-## 5. Gestion de Secretos y Variables de Entorno
+## 5. Gestión de Secretos y Variables de Entorno
 
 La seguridad del pipeline se rige por el principio de cero credenciales en texto plano en el repositorio:
 
@@ -231,9 +231,9 @@ RESET_DATABASE_ON_DEPLOY=true
 
 ---
 
-## 6. Procedimiento de Rollback y Recuperacion ante Desastres (DRP)
+## 6. Procedimiento de Rollback y Recuperación ante Desastres (DRP)
 
-En caso de que una versión introduzca una regresión crítica o fallo imprevisto en producción, el sistema implementa el workflow [.github/workflows/rollback.yml](file:///c:/Users/DESARROLLADOR/Desktop/Proyectos/dosier/.github/workflows/rollback.yml):
+En caso de que una versión introduzca una regresión crítica o fallo imprevisto en producción, el sistema implementa el workflow [`.github/workflows/rollback.yml`](../../../.github/workflows/rollback.yml):
 
 1. El operador ingresa a GitHub Actions y selecciona el workflow **"Rollback - Instant AWS EC2 Deployment"**.
 2. Ingresa el parámetro `target_sha` (el commit SHA de la versión deseada, ej. `d676b17`).

@@ -66,7 +66,7 @@ dosier/
 |   |-- dosier_domain/           # Entidades del PEA, Constantes de Permisos y Reglas Puras
 |   |-- dosier_infrastructure/   # EF Core 9, Pomelo MySQL, SignalR Hub, Motor PDF y Firmas
 |   `-- dosier_tests/            # Pruebas unitarias de integridad curricular y firmas
-|-- dosier_web/                  # Cliente Web React 18 + Vite + TypeScript (Modern Enterprise Docs)
+|-- dosier_web/                  # Cliente Web React 19 + Vite 8 + TypeScript (Modern Enterprise Docs)
 |   |-- public/                  # Recursos estáticos, marcas y certificados
 |   `-- src/                     # Componentes modulares, Editor PEA, Contextos y API Client
 |-- docs/
@@ -81,8 +81,8 @@ dosier/
 ```
 
 ### 3.1. Tecnologías Principales
-* **Backend:** C# con .NET 8.0, ASP.NET Core Web API, Entity Framework Core 9.0, Pomelo MySQL Provider.
-* **Frontend Web:** React 18, TypeScript, Vite, Tailwind CSS v4, Feature-Based Modular SPA con Service Layer (22 servicios), Modern Enterprise Docs System (Inter Puro, acento #0070f3, fondos 100% sólidos), Lucide Icons.
+* **Backend:** C# con .NET 8.0, ASP.NET Core Web API (23 controladores), Entity Framework Core 9.0, Pomelo MySQL Provider.
+* **Frontend Web:** React 19, TypeScript, Vite 8, Tailwind CSS v4, Feature-Based Modular SPA con Service Layer (27 servicios de dominio), Modern Enterprise Docs System (Inter Puro, acento #0070f3, fondos 100% sólidos), Lucide Icons.
 * **Colaboración en Tiempo Real:** SignalR WebSockets con protocolo binario y sincronización Yjs CRDT.
 * **Generación Documental y Criptografía:** iText 9, Handlebars.Net, QRCoder, SHA-256 y soporte PKCS#12 (.p12).
 * **Base de Datos Institucional:** MySQL 8.0+ / MariaDB en base `sigafi_es`, modo de solo lectura para tablas académicas (`AsNoTracking()`).
@@ -182,11 +182,11 @@ La especificación completa del sistema está organizada en el directorio `docs/
 * [Sección 04: Esquema Relacional de Base de Datos e Integración SIGAFI](docs/documentacion/04-base-de-datos/01-esquema-relacional-sigafi.md)
 * [Sección 04: Catálogos Institucionales y Normativa Curricular](docs/documentacion/04-base-de-datos/02-catalogos-normativa-ecuador.md)
 * [Sección 04: Infraestructura de Persistencia, EF Core y Repositorios](docs/documentacion/04-base-de-datos/03-infraestructura-efcore-y-repositorios.md)
-* [Sección 05: Arquitectura Frontend Web (React + Vite)](docs/documentacion/05-frontend-web/01-arquitectura-react-vite.md)
+* [Sección 05: Arquitectura Frontend Web (React 19 + Vite 8)](docs/documentacion/05-frontend-web/01-arquitectura-react-vite.md)
 * [Sección 05: Componentes UI y Shell del Constructor](docs/documentacion/05-frontend-web/02-componentes-ui-y-builder-shell.md)
 * [Sección 05: Integración con API y Resiliencia](docs/documentacion/05-frontend-web/03-integracion-api-y-resiliencia.md)
 * [Sección 05: Extensibilidad de Bloques Documentales](docs/documentacion/05-frontend-web/04-creacion-y-extensibilidad-de-bloques.md)
-* [Sección 05: Sistema de Diseño Visual Editorial Minimalista](docs/documentacion/05-frontend-web/05-sistema-de-diseno-editorial.md)
+* [Sección 05: Sistema de Diseño Visual: Modern Enterprise Docs](docs/documentacion/05-frontend-web/05-sistema-de-diseno-editorial.md)
 * [Sección 05: Catálogo Integral de Vistas, Páginas y Flujos de Usuario](docs/documentacion/05-frontend-web/06-catalogo-completo-vistas-y-flujos.md)
 * [Sección 05: Servicios, Hooks Especializados y Gestión del Estado Global](docs/documentacion/05-frontend-web/07-servicios-hooks-y-estado-global.md)
 * [Sección 06: Instalación y Configuración Local](docs/documentacion/06-despliegue-y-operaciones/01-instalacion-entorno-local.md)

@@ -7,8 +7,8 @@ Para la puesta en marcha, compilación y ejecución de la plataforma DOSIER en u
 | Componente | Versión Mínima | Propósito |
 | :--- | :--- | :--- |
 | **.NET SDK** | `8.0.x` | Compilación y ejecución de la solución backend (`backend/dosier.slnx`). |
-| **Node.js** | `18.x` o `20.x LTS` | Entorno de ejecución para la SPA React (`dosier_web`). |
-| **npm** | `9.x` o superior | Gestor de paquetes de dependencias del frontend. |
+| **Node.js** | `20.x` o `22.x LTS` | Entorno de ejecución para la SPA React 19 (`dosier_web`). |
+| **npm** | `10.x` o superior | Gestor de paquetes de dependencias del frontend. |
 | **MySQL / MariaDB** | `8.0+` / `10.5+` | Motor de base de datos relacional (Puerto `3306`). |
 
 ---
@@ -18,7 +18,7 @@ Para la puesta en marcha, compilación y ejecución de la plataforma DOSIER en u
 ```mermaid
 graph TD
     Step0[Opción Rápida: Docker Compose\nstart-local.ps1 -Tunnel] -.-> Step4
-    Step1[1. Inicialización de Base de Datos\nEjecutar scripts 00 a 04 en MySQL 3306] --> Step2[2. Configuración del Backend\nVerificar appsettings y dotnet run]
+    Step1[1. Inicialización de Base de Datos\nEjecutar scripts 00 a 04 en MySQL 3306] --> Step2[2. Configuración del Backend\nCrear appsettings desde template y dotnet run]
     Step2 --> Step3[3. Configuración del Frontend\nVerificar .env, npm install y npm run dev]
     Step3 --> Step4[4. Verificación de Servicios\nSwagger REST API & React SPA en navegador]
 ```
@@ -44,16 +44,38 @@ graph TD
    ```bash
    cd backend/dosier_api
    ```
-2. Verifique o ajuste los parámetros de conexión en el archivo `appsettings.Development.json`:
+2. Cree o verifique su archivo `appsettings.Development.json` basándose en la plantilla oficial `appsettings.template.json`:
    ```json
    {
      "ConnectionStrings": {
-       "default_connection": "Server=127.0.0.1;Port=3306;Database=sigafi_es;User=root;Password=12345;"
+       "default_connection": "Server=127.0.0.1;Port=3306;Database=sigafi_es;User=root;Password=TU_PASSWORD_AQUI;"
+     },
+     "Security": {
+       "EncryptionKey": "CLAVE_AES256_EXACTAMENTE_DE_32_CHARS!"
+     },
+     "BackupSettings": {
+       "SourceFolder": "uploads",
+       "DestinationFolder": "backups",
+       "RetentionDays": 30,
+       "AutoScheduleCron": "0 2 * * *",
+       "TablePrefix": "doc_"
+     },
+     "Storage": {
+       "BasePath": "uploads",
+       "DocumentsPath": "uploads/documents"
      },
      "Jwt": {
-       "Secret": "CLAVE_SECRETA_DE_ALTA_ENTROPIA_PARA_DESARROLLO_32_BYTES",
+       "Secret": "CLAVE_SECRETA_JWT_DE_ALTA_ENTROPIA_PARA_DESARROLLO_32_BYTES",
        "Issuer": "dosier.traversari.edu.ec",
-       "Audience": "dosier-clients"
+       "Audience": "dosier-clients",
+       "ExpiryInHours": 12
+     },
+     "Cors": {
+       "AllowedOrigins": [
+         "http://localhost:3010",
+         "http://localhost:5173",
+         "http://localhost:5175"
+       ]
      }
    }
    ```
@@ -67,7 +89,7 @@ graph TD
    http://localhost:5247/swagger
    ```
 
-### Paso 3: Configuración y Ejecución del Frontend (React 18 + Vite)
+### Paso 3: Configuración y Ejecución del Frontend (React 19 + Vite 8)
 
 1. Navegue al directorio del cliente web:
    ```bash
@@ -76,8 +98,8 @@ graph TD
 2. Verifique la configuración en el archivo `.env`:
    ```env
    VITE_API_BASE_URL=http://localhost:5247/api
-   VITE_WS_URL=ws://localhost:5247/collaborationHub
    ```
+   *(Los WebSockets de SignalR para colaboración y notificaciones se conectan dinámicamente a `/hubs/collaboration` y `/hubs/notifications` relativos a la base de la API).*
 3. Instale las dependencias de Node:
    ```bash
    npm install
@@ -86,7 +108,7 @@ graph TD
    ```bash
    npm run dev
    ```
-5. Acceda a la aplicación a través del navegador en la URL indicada por Vite (habitualmente `http://localhost:3010` o `http://localhost:5173`).
+5. Acceda a la aplicación a través del navegador en la URL indicada por Vite (habitualmente `http://localhost:5173` o `http://localhost:3010`).
 
 ---
 
@@ -94,7 +116,7 @@ graph TD
 
 1. **Prueba de Autenticación y RBAC:** Ingrese a la plataforma con una cuenta docente o administrativa. Compruebe que el endpoint `/api/auth/login` emita el JWT y que `AuthContext` active la vista correspondiente a su rol.
 2. **Prueba de Carga Horaria Curricular:** Acceda a la formulación de un PEA. Compruebe que los datos generales y la distribución horaria de docencia (CD), APE y autónomo se precarguen automáticamente desde `detallemallas`.
-3. **Prueba de Co-Redacción Concurrente:** Abra la misma sección de contenidos temáticos del PEA en dos navegadores distintos con credenciales de docentes colaboradores. Verifique que la edición simultánea fluya sin bloqueos mediante SignalR y el componente `<CoWorkField>`.
+3. **Prueba de Co-Redacción Concurrente:** Abra la misma sección de contenidos temáticos del PEA en dos navegadores distintos con credenciales de docentes colaboradores. Verifique que la edición simultánea fluya sin bloqueos mediante SignalR (`/hubs/collaboration`) y el componente `<CoWorkField>`.
 4. **Acceso Remoto Staging (Cloudflare Named Tunnel):** Para compartir o probar la aplicación en dispositivos externos sin exponer puertos en el router:
    * En entorno Docker local: Ejecutar `.\scripts\despliegue\docker\start-local.ps1` para iniciar `dosier-backend` y `dosier-web` en Docker conectados a MySQL nativo de Windows (`host.docker.internal:3306`) en el puerto local `http://localhost:8080`.
    * El túnel central de Cloudflare en el host (`setup_cloudflare_tunnel.ps1`) enruta el tráfico público seguro desde `https://staging-dosier.doicela.dev` directamente hacia `http://localhost:8080`.

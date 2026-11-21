@@ -69,6 +69,9 @@ classDiagram
             +decimal HorasAutonomo
             +string Estado
             +int Version
+            +string IdDocenteColaborador
+            +string EstadoColaboracion
+            +string ColaboradoresJson
         }
         class DocPeaUnidad {
             +int IdUnidad
@@ -137,26 +140,26 @@ classDiagram
 
 ## 3. Subsistema Común y Motor Documental (`Common/`)
 
-### 3.1. Contratos Base y Enumeraciones (`Common/Interfaces.cs`, `Common/Enums.cs`)
+### 3.1. Contratos Base y Enumeraciones (`Common/Interfaces.cs`, `Common/Enums.cs`, `Common/ProyectoBase.cs`)
 
 * **`IEntity<TId>`:** Contrato genérico para toda entidad con clave primaria fuertemente tipada (`TId Id { get; }`).
 * **`IAuditable`:** Contrato de auditoría de modificaciones que impone:
   * `DateTime CreatedAt`, `string? CreatedBy`
   * `DateTime? UpdatedAt`, `string? UpdatedBy`
-* **`EstadoProyecto`:** Enumeración para el flujo de vida de iniciativas académicas e investigación:
+* **`EstadoProyecto`:** Enumeración institucional para flujos de proyectos y planes:
   * `Borrador`, `Enviado`, `BajoRevision`, `Aprobado`, `Rechazado`, `EnEjecucion`, `Finalizado`.
-* **`ProyectoBase`:** Clase abstracta base que implementa `IEntity<int>` y `IAuditable`. Define `Uuid`, `Titulo`, `Resumen`, `Metodologia`, `Justificacion`, presupuestos asignados/ejecutados y control de versión.
+* **`ProyectoBase`:** Clase abstracta base que implementa `IEntity<int>` y `IAuditable`. Define `Uuid`, `Titulo`, `Resumen`, `Metodologia`, `Justificacion` y control de versión.
 
 ### 3.2. Modelo de Plantillas Institucionales (`Common/Documents/DocumentTemplate.cs`)
 
-Modela las plantillas dinámicas gestionadas en base de datos para renderizado PDF con Scriban e iText:
+Modela las plantillas dinámicas gestionadas en base de datos para renderizado PDF con `HandlebarsTemplateEngine` e iText 9:
 
 | Propiedad | Tipo | Restricción / Propósito |
 | :--- | :--- | :--- |
 | `Id` | `int` | Identificador autoincremental de clave primaria. |
-| `Code` | `string` | Código inmutable único del documento (ej. `PROTOCOLO_INVESTIGACION`, `PEA_CURRICULAR`). |
+| `Code` | `string` | Código inmutable único del documento (ej. `PEA_CURRICULAR`, `PROTOCOLO_INVESTIGACION`). |
 | `Name` | `string` | Nombre descriptivo visible para el administrador curricular. |
-| `HtmlContent` | `string` | Marcado HTML semántico que incluye directivas y variables Scriban. |
+| `HtmlContent` | `string` | Marcado HTML semántico evaluado dinámicamente con `Handlebars.Net`. |
 | `Version` | `int` | Versión incremental. Permite coexistencia histórica sin invalidar documentos emitidos. |
 | `Category` | `DocumentCategory` | Clasificación normativa CACES/SERCOP/Curricular. |
 | `RequiresLopdpClause` | `bool` | Inyección forzosa de la cláusula de la Ley Orgánica de Protección de Datos Personales. |
@@ -175,7 +178,11 @@ Modela las plantillas dinámicas gestionadas en base de datos para renderizado P
 * **Presupuesto Público (SERCOP):** `TerminosDeReferencia = 10`, `EspecificacionTecnica = 11`, `CertificacionPresupuestaria = 12`, `ActaRecepcion = 13`.
 * **Comité de Bioética (CEISH):** `ProtocoloBioetico = 20`, `ConsentimientoInformado = 21`, `ActaExencion = 22`.
 * **Propiedad Intelectual (SENADI):** `CesionDerechos = 30`, `SolicitudRegistroSoftware = 31`, `InformeTransferenciaTecnologica = 32`.
+* **Semilleros y Grupos:** `ActaConformacionSemillero = 40`, `PropuestaGrupoInvestigacion = 44`.
+* **Convenios y Redes:** `ConvenioMarco = 50`, `ConvenioEspecifico = 51`.
 * **Acreditación CACES / SENESCYT:** `MatrizIndicadoresCaces = 60`, `ReporteAnualSenescyt = 61`, `ReporteDistributivoCruce = 62`, `ReporteAnaliticas = 63`.
+* **Comité Editorial:** `ActaRevisionEditorial = 70`, `ContratoAutorRevista = 71`.
+* **Administrativos:** `ResolucionCargaHoraria = 80`.
 
 ### 3.3. Instancias Documentales y Snapshots (`Common/Documents/DocumentInstance.cs`)
 
@@ -201,7 +208,7 @@ Este subsistema implementa el diseño curricular del Programa de Estudio de la A
 
 ### 4.1. Entidad Maestra: `DocPea`
 
-Representa el documento central curricular de una asignatura para un período académico determinado:
+Representa el documento central curricular de una asignatura para un período académico determinado, integrando metadatos académicos de SIGAFI, balances horarios y colaboración entre pares:
 
 ```csharp
 public class DocPea
@@ -211,7 +218,7 @@ public class DocPea
     public int? IdExpediente { get; set; }
     public int IdCarrera { get; set; }
     public int IdAsignatura { get; set; }
-    public string IdPeriodo { get; set; }
+    public string IdPeriodo { get; set; } = string.Empty;
     public int? IdAsignacion { get; set; }
     public int? IdMalla { get; set; }
     public int? IdDetalleMalla { get; set; }
@@ -222,7 +229,17 @@ public class DocPea
     public string? FuenteMalla { get; set; }
     public string? SnapshotCurricularJson { get; set; }
     public string? IdDocenteElaborador { get; set; }
-    public string Modalidad { get; set; }
+
+    // Colaboración Colegiada (Workflow entre Docentes)
+    public string? IdDocenteColaborador { get; set; }
+    public string? NombreDocenteColaborador { get; set; }
+    public string? EstadoColaboracion { get; set; } // 'Pendiente', 'Aprobada', 'Rechazada'
+    public DateTime? FechaSolicitudColaboracion { get; set; }
+    public DateTime? FechaRespuestaColaboracion { get; set; }
+    public string? MotivoColaboracion { get; set; }
+    public string? ColaboradoresJson { get; set; }
+
+    public string Modalidad { get; set; } = "Presencial";
     public string? UnidadOrganizacion { get; set; }
     public string? SemestreNivel { get; set; }
     public decimal TotalHorasAsignatura { get; set; }
@@ -243,8 +260,8 @@ public class DocPea
     public string Estado { get; set; } = "Borrador";
     public int Version { get; set; } = 1;
     public bool Activo { get; set; } = true;
-    public DateTime FechaCreacion { get; set; }
-    public DateTime FechaModificacion { get; set; }
+    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public DateTime FechaModificacion { get; set; } = DateTime.UtcNow;
 
     // Circuito de Firmas Colegiadas
     public string? FirmaElaboradoDocente { get; set; }
@@ -255,6 +272,17 @@ public class DocPea
     public DateTime? FechaRevisadoAcad { get; set; }
     public string? FirmaAprobadoVicerrector { get; set; }
     public DateTime? FechaAprobado { get; set; }
+
+    // Navegación Virtual
+    public virtual DocExpedienteCurricular? Expediente { get; set; }
+    public virtual ICollection<DocPeaUnidad> Unidades { get; set; } = new List<DocPeaUnidad>();
+    public virtual ICollection<DocPeaResultadoAprendizaje> ResultadosAprendizaje { get; set; } = new List<DocPeaResultadoAprendizaje>();
+    public virtual ICollection<DocPeaActividadPractica> ActividadesPracticas { get; set; } = new List<DocPeaActividadPractica>();
+    public virtual ICollection<DocPeaBibliografia> Bibliografias { get; set; } = new List<DocPeaBibliografia>();
+    public virtual ICollection<DocPeaObservacion> Observaciones { get; set; } = new List<DocPeaObservacion>();
+    public virtual ICollection<DocPeaTrazabilidad> Trazabilidades { get; set; } = new List<DocPeaTrazabilidad>();
+    public virtual ICollection<DocPeaPrerequisito> Prerrequisitos { get; set; } = new List<DocPeaPrerequisito>();
+    public virtual ICollection<DocPeaEvaluacion> Evaluaciones { get; set; } = new List<DocPeaEvaluacion>();
 }
 ```
 
@@ -314,8 +342,8 @@ public class DocPea
     3. `DOSIER_COORD_CARRERA`: Revisión y emisión de observaciones curriculares de su carrera.
     4. `DOSIER_COORD_ACAD`: Revisión transversal pedagógica y validación institucional.
     5. `DOSIER_VICERRECTOR`: Aprobación definitiva y sellado institucional.
-* **`InvestigationInstitute`:**
-  * Catálogo de instituciones universitarias y centros de investigación nacionales e internacionales para redes académicas.
+* **`InvestigationInstitute` y `ExternalReviewer`:**
+  * Registro de entidades académicas externas y revisores para vinculación interinstitucional.
 
 ### 5.2. Permisos Modulares Jerárquicos
 
@@ -325,7 +353,7 @@ Implementa una estructura de permisos normalizada compuesta por:
 * `IdentityOperation` (`IdOperaciones`, `NombreOperacion`)
 * `ModuleOperation` y `RoleModuleOperation`
 
-#### Catálogo de Permisos del Dominio (`Identity/Enums/Permissions.cs`):
+#### Catálogo Oficial de 16 Permisos PBAC (`Identity/Enums/Permissions.cs`):
 ```csharp
 public static class Permissions
 {
@@ -363,20 +391,12 @@ Define las enumeraciones de dominio para el motor de firma electrónica y audito
 
 * **`SignatureState`:**
   * `Valid = 1`: Firma activa y criptográficamente verificable.
-  * `Revoked = 2`: Anulada explícitamente por el firmante o administrador.
+  * `Revoked = 2`: Anulada explícitamente por el firmante, autoridad o apertura de expediente.
   * `Expired = 3`: Expirada por vencimiento del plazo o revocación de certificado.
 * **`SigningMethod`:**
-  * `DosierBasic = 1`: Firma institucional basada en credenciales auditadas de sesión.
+  * `DosierBasic = 1`: Firma institucional basada en credenciales auditadas de sesión (DFRM HMAC-SHA256).
   * `DosierCanvas = 2`: Firma con trazo manuscrito en canvas vectorizado.
   * `Biometric = 3`: Verificación biométrica (reservado).
   * `MobileOtp = 4`: Confirmación de doble factor mediante Push OTP (reservado).
 * **`SignatureAuditEvent`:**
   * `ProfileCreated = 1`, `ProfileUpdated = 2`, `DocumentSigned = 3`, `SignatureVerified = 4`, `SignatureRevoked = 5`, `SignatureFailed = 6`.
-
----
-
-## 7. Subsistema de Investigación Formativa (`Research/`)
-
-* **`InvestigacionProyecto`:**
-  * Hereda de `ProyectoBase`.
-  * Articula los proyectos formativos de los docentes con el PEA: `LineaInvestigacion`, `CodigoInstitucional`, `AnonimizadoParaRevision`, `PuntajeEvaluacion`, `MetadataCacesJson` y la lista de `RevisoresAsignados`.

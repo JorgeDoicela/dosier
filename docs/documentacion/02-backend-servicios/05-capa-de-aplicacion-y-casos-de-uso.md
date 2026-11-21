@@ -1,229 +1,229 @@
-﻿# Capa de Aplicación, Casos de Uso y Servicios de Orquestación (Application Layer)
+# Capa de Aplicación, Casos de Uso y Servicios de Orquestación (Application Layer)
 
-## 1. Responsabilidad y Arquitectura de la Capa de Aplicación
+## 1. Responsabilidad y Principios de Diseño
 
-La capa de aplicación (`dosier_application`) materializa los casos de uso del sistema **DOSIER**, orquestando el flujo de datos entre el modelo de dominio (`dosier_domain`), los contratos de persistencia de infraestructura (`dosier_infrastructure`) y la capa de exposición web (`dosier_api`).
+La capa de aplicación (`dosier_application`) materializa los casos de uso del sistema **DOSIER**, orquestando el flujo de información entre las entidades de dominio (`dosier_domain`), la persistencia en base de datos (`dosier_infrastructure`) y los controladores de la API REST (`dosier_api`).
 
-Bajo los principios de Clean Architecture, `dosier_application` no contiene detalles tecnológicos de acceso a base de datos (SQL, EF Core) ni protocolos de transporte HTTP (ASP.NET Core Controllers). Su misión radica en:
-* Definir las interfaces de servicios y repositorios.
-* Modelar los Data Transfer Objects (DTOs) para entrada y salida.
-* Implementar las reglas de orquestación, validación de negocio y flujos colegiados (elaboración del PEA, verificación de firmas, sincronización CoWork y control LOPDP).
+Bajo los principios de **Clean Architecture** e inversión de dependencias:
+* `dosier_application` es completamente independiente de tecnologías de infraestructura: no contiene dependencias de Entity Framework Core, comandos SQL, llamadas a sockets ni bibliotecas de renderizado PDF.
+* Define interfaces estrictas (`Contracts`) y objetos de transferencia de datos (`DTOs`) inmutables o fuertemente tipados.
+* Centraliza las reglas de negocio, validaciones cruzadas (como el balance de horas del RRA Art. 21), orquestación de firmas electrónicas, sincronización colaborativa y cumplimiento LOPDP.
+* El 100% de los controladores en `dosier_api` consumen exclusivamente servicios de `dosier_application`, garantizando una separación nítida de responsabilidades.
 
 ---
 
-## 2. Mapa de Subsistemas de Aplicación
+## 2. Mapa Integral de Subsistemas de Aplicación
 
 ```mermaid
-graph TD
-    subgraph dosier_application
-        subgraph Academico & Curricular
-            ACR[IAcademicContextResolver]
-            ADS[IAsignaturasDocenteService]
-            IPS[IPeaService]
-            PAI[IPeaAiAssistantService]
-            PDE[IPeaDocumentExtractorService]
-            ECS[IExpedienteCurricularService]
-            NMS[INormativaService]
-            PES[IPerfilEgresoService]
-            CCS[ICurriculumCatalogService]
+flowchart TD
+    subgraph dosier_application["Capa de Aplicación (dosier_application)"]
+        subgraph ModuloAcademico["1. Académico e Identidad SIGAFI"]
+            IPIR["IPeriodoInstitucionalResolver"]
+            IACR["IAcademicContextResolver"]
+            IADS["IAsignaturasDocenteService"]
         end
 
-        subgraph Motor Documental & CoWork
-            IDE[IDocumentEngine]
-            DIS[IDocumentInstanceService]
-            IDO[IDocumentDataOrchestrator]
-            IDP[IDocumentDataProvider]
+        subgraph ModuloCurricular["2. Microcurrículo y Portafolio (PEA)"]
+            IPS["IPeaService"]
+            IPAI["IPeaAiAssistantService"]
+            IPDE["IPeaDocumentExtractorService"]
+            IECS["IExpedienteCurricularService"]
+            INMS["INormativaService"]
+            IPES["IPerfilEgresoService"]
+            ICCS["ICurriculumCatalogService"]
         end
 
-        subgraph Seguridad & Gobernanza
-            IAS[IAuthService]
-            ADM[IAdminService]
-            AUD[IAuditService]
-            LOP[ILopdpService]
+        subgraph ModuloDocumental["3. Motor Documental y Ciclo de Vida"]
+            IDE["IDocumentEngine"]
+            IDIS["IDocumentInstanceService"]
+            IDTAS["IDocumentTemplateAdminService"]
+            IDVS["IDocumentVerificationService"]
+            IAUS["IAppUrlService"]
         end
 
-        subgraph Criptografía & Firmas
-            DSS[IDosierSignatureService]
+        subgraph ModuloSeguridad["4. Seguridad, RBAC y LOPDP"]
+            IAS["IAuthService"]
+            IMAS["IMicrosoftAuthService"]
+            IPRS["IPasswordRecoveryService"]
+            ILOP["ILopdpService"]
+            IAUD["IAuditService"]
+            IADM["IAdminService"]
+            IBAS["IBackupAdminService"]
         end
 
-        subgraph Comunicación & Notificaciones
-            INS[INotificationService]
-            EES[IEmailEngineService]
+        subgraph ModuloCriptografia["5. Criptografía y Firmas Digitales"]
+            IDSS["IDosierSignatureService"]
+        end
+
+        subgraph ModuloComunicacion["6. Colaboración y Notificaciones"]
+            ICOS["ICollaborationService"]
+            INOS["INotificationService"]
+            IEES["IEmailEngineService"]
+        end
+
+        subgraph ModuloSoporte["7. Gestión y Soporte Operativo"]
+            IFBS["IFeedbackService"]
+            ICAL["ICalendarioService"]
+            ICAT["ICatalogsService"]
+            IREC["IRecycleBinService"]
+            IREP["IReportsService"]
         end
     end
 
-    ACR --> ADS
-    IPS --> ACR
-    IPS --> DSS
-    IPS --> DIS
-    IDO --> IDE
-    IDO --> DIS
+    IACR --> IADS
+    IPS --> IACR
+    IPS --> IPIR
+    IPS --> IDSS
+    IPS --> IDIS
+    IDIS --> IDE
 ```
 
 ---
 
-## 3. Subsistema Académico y Curricular
+## 3. Subsistema Académico y Resolución de Contexto SIGAFI (`Academico/`)
 
-### 3.1. Resolución de Contexto Académico SIGAFI (`Academico/`)
+Garantiza la frontera estricta de solo lectura con la base de datos `sigafi_es`, resolviendo períodos, carreras del instituto y asignaciones docentes con aislamiento de la Escuela de Conducción.
 
-Garantiza la frontera inmutable de solo lectura con el sistema transaccional institucional `sigafi_es`. La plataforma DOSIER prohíbe la alteración de cargas horarias o asignaturas desde la interfaz docente; todo dato curricular se resuelve y valida contra SIGAFI.
+### 3.1. `IPeriodoInstitucionalResolver` (Fuente Única de Verdad de Períodos)
 
-#### `IAcademicContextResolver`
-```csharp
-public interface IAcademicContextResolver
-{
-    Task<AcademicContextDto?> ResolveByAssignmentAsync(
-        int idAsignacion,
-        string? expectedProfessorId = null,
-        CancellationToken cancellationToken = default);
-}
-```
-* **Responsabilidad:** Identifica la asignación docente (`idAsignacion`), verifica la correspondencia con la cédula del docente (`expectedProfessorId`), vincula la carrera institucional (`esInstituto = 1`), resuelve la cohorte de la malla (`mallas_periodos`) y consolida la distribución oficial de horas: docencia, prácticas (APE) y trabajo autónomo.
+Centraliza las reglas institucionales para la determinación de períodos académicos:
+* **Aislamiento de Conducción:** Filtra registros donde `esConduccion == 0` o `null`.
+* **Filtro del Instituto:** Exige carreras con `esInstituto = 1`.
+* **Invariante de Período Activo Único:** Garantiza que exactamente un período lectivo tenga `EsActivo = true` (priorizando `periodoactivoinstituto == 1`).
+* **Métodos Principales:**
+  - `Task<PeriodoAcademicoDto?> GetPeriodoActivoAsync(CancellationToken ct)`
+  - `Task<string> GetIdPeriodoActivoAsync(CancellationToken ct)`
+  - `Task<List<PeriodoAcademicoDto>> GetPeriodosInstitucionalesAsync(int? limite, CancellationToken ct)`
 
-#### `IAsignaturasDocenteService`
-* `GetPeriodoActivoAsync()`: Obtiene el período académico institucional actualmente vigente.
-* `GetPeriodosDisponiblesAsync()`: Histórico de períodos habilitados para consulta y clonación curricular.
-* `GetMisAsignaturasAsync(string idProfesor, string? idPeriodo)`: Carga horaria del profesor con banderas de estado del PEA (`NoIniciado`, `Borrador`, `EnRevision`, `Aprobado`).
-* `GetCurriculoAsignaturaAsync(int idAsignatura, int idCarrera)`: Información oficial del pensum, prerrequisitos y créditos.
+### 3.2. `IAcademicContextResolver`
 
-### 3.2. Gestión Integral del PEA (`Curriculum/Interfaces/ICurriculumInterfaces.cs`)
+Resuelve la integridad académica de una materia previo a su formulación en DOSIER:
+* `Task<AcademicContextDto?> ResolveByAssignmentAsync(int idAsignacion, string? expectedProfessorId, CancellationToken ct)`: Valida la titularidad del docente, resuelve la carrera institucional (`carreras`), la versión de la malla (`mallas_periodos`) y consolida la distribución oficial de horas: docencia (CD), prácticas (APE) y trabajo autónomo (TA).
 
-El servicio `IPeaService` coordina las 11 secciones pedagógicas oficiales del PEA institucional (Secciones a - k), el control de versiones, el flujo de firmas y las observaciones colegiadas.
+### 3.3. `IAsignaturasDocenteService`
 
-#### Catálogo de Operaciones de `IPeaService`:
-
-| Método | Propósito y Reglas de Negocio |
-| :--- | :--- |
-| `GetByIdAsync(int idPea)` | Recupera el PEA con sus unidades, RDAs, prácticas, bibliografía APA, prerrequisitos y evaluaciones. |
-| `GetByUuidAsync(string uuid)` | Consulta segura y desacoplada de IDs secuenciales para el editor web. |
-| `CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)` | Caso de uso de instanciación inicial: resuelve el contexto SIGAFI vía `IAcademicContextResolver`, precarga horas oficiales y crea el registro con versión 1 en estado `Borrador`. |
-| `GuardarPeaAsync(PeaDto dto, string? idUsuarioModificador)` | Persistencia incremental de secciones. Valida que la suma de horas de las unidades coincida exactamente con las horas totales de la asignatura. |
-| `CambiarEstadoAsync(...)` | Transición entre estados de la máquina curricular (`Borrador` -> `EnRevision` -> `RevisadoCoord` -> `RevisadoAcad` -> `Aprobado`), registrando trazabilidad SHA-256. |
-| `ClonarPeaPeriodoAsync(...)` | Permite replicar un PEA aprobado de un período anterior hacia un nuevo período lectivo, conservando unidades y bibliografía pero reiniciando firmas y observaciones. |
-| `FirmarPeaAsync(...)` | Validación de credenciales/certificados, sellado criptográfico y avance del circuito de firmas. |
-| `AgregarObservacionAsync(...)` | Registro de hallazgo de revisión colegiada especificando sección afectada y texto de observación. |
-| `SubsanarObservacionAsync(...)` | Respuesta formal del docente que marca la observación como `Subsanada`. |
-| `ListarBandejaAsync(...)` | Bandeja unificada de supervisión para coordinadores y vicerrectorado, con cálculo de firmas completadas (`TotalFirmasCompletadas`) y conteo de observaciones pendientes. |
-
-### 3.3. Asistente Curricular de Inteligencia Artificial (`IPeaAiAssistantService`)
-
-Proporciona soporte cognitivo automatizado para la redacción pedagógica y formulación de secciones del PEA:
-* **`GetConfigStatusAsync(int idUsuario)`:** Resuelve la configuración criptográfica del docente (proveedor, modelo, base URL y presencia de API Key protegida con AES-256).
-* **`SaveConfigAsync(int idUsuario, bool isAdmin, SavePeaAiConfigRequestDto request)`:** Almacena de forma segura las credenciales y configuración del proveedor a nivel de usuario o institucional global.
-* **`GenerateDraftAsync(string peaUuid, int idUsuario, GeneratePeaDraftRequestDto request)`:** Genera propuestas curriculares completas o por sección (objetivos, unidades, temas, actividades prácticas, evaluaciones y bibliografía APA), limpiando bloques `<think>` y ejecutando la reconciliación matemática estricta de horas (CD, APE, TA) contra SIGAFI.
-
-### 3.4. Motor Extractor de Documentos Digitales (`IPeaDocumentExtractorService`)
-
-Especializado en la ingestión y análisis sintáctico de sílabos o PEAs preexistentes en formatos Word y PDF:
-* **`ExtractAndMapDocumentAsync(string peaUuid, int idUsuario, ImportPeaDocumentRequestDto request)`:** Procesa archivos digitales (`.pdf` mediante iText 9 o `.docx` mediante OpenXML), analizando tablas y párrafos para mapear unidades, temas y horas con fidelidad textual estricta, bloqueando sobreescrituras en datos generales institucionales de SIGAFI.
-
-### 3.5. Servicios de Gobernanza Curricular y Antecedentes
-
-* **`IExpedienteCurricularService`:** Gestiona el expediente curricular maestro por asignatura y período, asociando el proyecto de carrera aprobado por el CES, el perfil de egreso y el modelo educativo vigente.
-* **`INormativaService`:** Provee el catálogo inalterable de resoluciones externas (CES, CACES, SENESCYT) y el checklist de artículos que los docentes deben certificar pedagógicamente en el PEA.
-* **`IPerfilEgresoService`:** Administra los Resultados de Aprendizaje de Carrera (RDA) y la matriz de tributación de las asignaturas (`Introductorio`, `Medio`, `Avanzado`).
+Expone la carga académica y el estado de avance de los instrumentos microcurriculares del profesor:
+* `GetPeriodoActivoAsync()`: Resuelve el período lectivo vigente.
+* `GetMisAsignaturasAsync(string idProfesor, string? idPeriodo)`: Carga horaria docente con banderas calculadas del estado del PEA (`NoIniciado`, `Borrador`, `EnRevision`, `Observado`, `RevisadoCoord`, `RevisadoAcad`, `Aprobado`).
+* `GetCurriculoAsignaturaAsync(int idAsignatura, int idCarrera)`: Contenidos mínimos, créditos y prerrequisitos oficiales de la malla.
 
 ---
 
-## 4. Motor Documental Empresarial y CoWork (`Common/`)
+## 4. Subsistema Curricular y Portafolio Docente (`Curriculum/`)
 
-### 4.1. Orquestación del Motor Documental (`IDocumentEngine`)
+Coordina la formulación, revisión colegiada, firmas digitales, validaciones normativas CACES y co-diseño entre docentes.
 
-Implementa la interfaz unificada del motor de generación de documentos oficiales en formato PDF:
+### 4.1. `IPeaService` (Gestión Integral del PEA)
 
-```csharp
-public interface IDocumentEngine
-{
-    Task<DocumentResult> GenerateAsync(DocumentRequest request, CancellationToken cancellationToken = default);
-    Task<byte[]> MergeDocumentsAsync(IEnumerable<byte[]> pdfDocuments, CancellationToken cancellationToken = default);
-    Task<IEnumerable<DocumentTemplate>> GetAvailableTemplatesAsync(CancellationToken cancellationToken = default);
-    Task UpdateTemplateAsync(string templateCode, string newHtmlContent, string? customCss, string? collaborativeFieldsJson, string? themeConfigJson, string updatedBy, CancellationToken cancellationToken = default);
-    Task ResetTemplateToDefaultAsync(string templateCode, string updatedBy, CancellationToken cancellationToken = default);
-    Task UpdateSignatureConfigAsync(string templateCode, bool requiresSignature, string signatureType, string updatedBy, CancellationToken cancellationToken = default);
-}
-```
+Orquesta el ciclo de vida de las 11 secciones oficiales del microcurrículo:
+* **Lectura e Instanciación:**
+  - `GetByIdAsync(int idPea, int? idUsuario)` y `GetByUuidAsync(string uuid, int? idUsuario)`.
+  - `CanUserAccessPeaAsync(int idPea, int idUsuario)`: Regla de aislamiento temporal por rol.
+  - `CrearDesdeAsignacionAsync(int idAsignacion, string idProfesor)`: Crea el PEA inicializando datos informativos desde SIGAFI en estado `Borrador`.
+  - `ClonarPeaPeriodoAsync(int idPeaOrigen, string nuevoPeriodo, string? idUsuario)`: Reutiliza contenidos de períodos anteriores reiniciando firmas y observaciones.
+* **Persistencia y Sincronización:**
+  - `GuardarPeaAsync(PeaDto dto, string? idUsuarioModificador)`: Almacena cambios en el modelo relacional verificando consistencia horaria.
+  - `SincronizarMetadataAsync(string peaUuid, string snapshotJson)`: Traduce el documento semi-estructurado de CoWork hacia las tablas relacionales (`doc_pea_*`).
+* **Circuito de Firmas y Máquina de Estados:**
+  - `FirmarPeaAsync(int idPea, int idUsuario, FirmarPeaDto dto, string ip, string userAgent)`: Ejecuta firma DFRM o PKCS#12 y avanza el estado curricular (`Borrador` $\to$ `EnRevision` $\to$ `RevisadoCoord` $\to$ `RevisadoAcad` $\to$ `Aprobado`).
+  - `CambiarEstadoAsync(int idPea, string nuevoEstado, string? firmaDocente, string? idUsuario, string? motivo)`: Aplica transiciones directas o dictámenes de devolución a `Observado`.
+* **Observaciones y Subsanaciones:**
+  - `AgregarObservacionAsync` / `AgregarObservacionByUuidAsync`: Registra observaciones por sección curricular.
+  - `SubsanarObservacionAsync(int idObservacion, string respuestaDocente, int? idUsuario)`.
+* **Supervisión y Colaboración entre Docentes:**
+  - `ListarBandejaAsync(...)`: Bandeja consolidada con filtros de alcance institucional y permisos RBAC.
+  - `SolicitarColaboracionAsync`, `ResponderColaboracionAsync`, `CancelarSolicitudColaboracionAsync`: Protocolo de cátedras compartidas y co-redacción.
 
-* **`DocumentRequest`:** Recibe el código de plantilla, la data del documento (cualquier DTO tipado), variables auxiliares, flags de borrador (`IsDraftMode`) o anonimización (`IsBlindMode`) y anexos binarios a concatenar (`AttachmentsToMerge`).
-* **`DocumentResult`:** Devuelve los bytes del PDF, el nombre de archivo, el código de trazabilidad único (`TraceabilityCode`), el hash criptográfico SHA-256 (`FileHash`) y la versión de la plantilla utilizada.
+### 4.2. Asistente Cognitivo e Inteligencia Artificial Curricular
 
-### 4.2. Instancias Documentales y Auditoría (`IDocumentInstanceService`)
+* **`IPeaAiAssistantService`:**
+  - `GetConfigStatusAsync` / `SaveConfigAsync`: Gestión criptográfica de credenciales del LLM (cifradas en base de datos con AES-256).
+  - `GenerateDraftAsync`: Generación de propuestas estructuradas para las 11 secciones con purga de bloques de razonamiento (`<think>`) y conciliación horaria matemática estricta.
+  - `AnalyzeForReviewAsync`: Auditoría previa de cumplimiento de taxonomía de Bloom y normativa CACES antes del envío formal.
+* **`IPeaDocumentExtractorService`:**
+  - `ExtractAndMapDocumentAsync`: Ingestión de sílabos en PDF (vía iText 9) o Word (vía OpenXML), analizando tablas pedagógicas sin sobreescribir datos generales de SIGAFI.
 
-* **Gestión de Instancias:** Vincula plantillas con entidades de negocio (`entityUuid`), versionando snapshots de configuración visual y datos.
-* **Diagnóstico y Purga Forense:**
-  * `GetObsoleteDocumentDiagnosisAsync()`: Detecta PDFs generados con versiones obsoletas de plantillas.
-  * `PurgeObsoleteFileByUuidAsync()` / `PurgeAllObsoleteDocumentFilesAsync()`: Elimina físicamente archivos huérfanos u obsoletos del sistema de archivos, preservando intactos los registros de auditoría y hashes SHA-256 bajo estado `Archived`.
-  * `UpgradeTemplateAsync()`: Actualiza una instancia a la versión más reciente de la plantilla institucional.
+### 4.3. Servicios de Apoyo Curricular y Salas de Carrera
 
----
-
-## 5. Subsistema de Seguridad, Identidad y Gobernanza LOPDP (`Security/`)
-
-### 5.1. Autenticación y Autorización (`IAuthService`)
-
-Centraliza los mecanismos de ingreso y aprovisionamiento de usuarios:
-1. **Login Tradicional:** Validación de credenciales de SIGAFI mediante hashing BCrypt. Implementa bloqueo progresivo por IP o cuenta ante intentos fallidos (`LoginBlockedResponse`).
-2. **JIT Provisioning (Just-In-Time):** Si un docente registrado en SIGAFI ingresa por primera vez a DOSIER, el sistema aprovisiona automáticamente su usuario en el sistema ID 6 y le asigna el rol `DOSIER_DOCENTE`.
-3. **SSO Microsoft 365 (`LoginWithMicrosoftAsync`):** Autenticación federada mediante tokens institucionales de Azure AD / Entra ID.
-4. **Recuperación Segura de Contraseña (`IPasswordRecoveryService`):** Generación de tokens efímeros (30 minutos) con respuesta anti-enumeración de usuarios (retorna siempre confirmación genérica independientemente de si la cédula existe o no).
-
-### 5.2. Gobernanza de Datos Personales (`ILopdpService`)
-
-Cumplimiento estricto de la Ley Orgánica de Protección de Datos Personales del Ecuador:
-* **Registro de Consentimiento Informado:** Almacena la versión de la política de privacidad aceptada, canal, dirección IP y marca de tiempo UTC.
-* **Derechos ARCO (Acceso, Rectificación, Cancelación, Oposición):** Flujo formal para registrar solicitudes ARCO de la comunidad académica (`SolicitudArcoRequest`), con plazo legal perentorio de resolución (`FechaLimiteResolucion`).
-
-### 5.3. Auditoría Forense Administrativa (`IAuditService`)
-
-Registra toda acción sensible efectuada por administradores o coordinadores:
-* Identidad del operador (`AdminName`), usuario afectado (`TargetName`), acción, módulo, dirección IP, User-Agent y deltas exactos en JSON de los valores anteriores (`ValuesBefore`) y posteriores (`ValuesAfter`).
+* **`IExpedienteCurricularService`:** Gestiona el expediente curricular por asignatura y período, coordinando las **Salas Curriculares de Carrera en Tiempo Real** (`GetEstadoSalaCarreraAsync`, `ConmutarEstadoSalaCarreraAsync`, `GetPizarraSalaCarreraAsync`, `GuardarPizarraSalaCarreraAsync`).
+* **`INormativaService`:** Catálogo de resoluciones de organismos rectores (CES, CACES, SENESCYT) y checklist de artículos normativos obligatorios.
+* **`IPerfilEgresoService`:** Matriz de articulación y tributación entre los RDA de las materias y los resultados del perfil de egreso.
+* **`ICurriculumCatalogService`:** Catálogo de carreras y asignaturas del docente.
 
 ---
 
-## 6. Subsistema de Criptografía y Firmas Digitales (`Signatures/`)
+## 5. Subsistema de Motor Documental y Ciclo de Vida (`Common/Documents/`)
 
-### 6.1. Contrato del Servicio de Firma (`IDosierSignatureService`)
+Administra la compilación de documentos PDF oficiales, moldeos HTML/CSS institucionales y diagnóstico forense de almacenamiento.
 
-Implementa el marco legal ecuatoriano (Ley de Comercio Electrónico, Firmas Electrónicas y Mensajes de Datos - Ley 67):
+### 5.1. `IDocumentEngine` (Compilador PDF iText 9)
 
-```csharp
-public interface IDosierSignatureService
-{
-    Task<UserSignatureProfileDto?> GetProfileAsync(int idUsuario);
-    Task<UserSignatureProfileDto> UpsertProfileAsync(int idUsuario, UpdateSignatureProfileDto dto);
-    
-    Task<SignatureResultDto> SignDocumentAsync(int idUsuario, string ipAddress, string userAgent, SignDocumentDto dto);
-    Task<SignatureResultDto> SignDocumentWithP12Async(int idUsuario, string ipAddress, string userAgent, byte[] certificateBytes, string certificatePassword, string documentoUuid, string? rolFirmante);
-    
-    Task<IEnumerable<SignatureRecordDto>> GetByDocumentAsync(string documentoUuid);
-    Task<SignatureVerificationDto> VerifyAsync(string firmaCode);
-    Task<bool> RevokeAsync(int idUsuarioSolicitante, RevokeSignatureDto dto, bool esAdmin = false);
-}
-```
+* `GenerateAsync(DocumentRequest request, CancellationToken ct)`: Recibe la plantilla institucional y el DTO de datos, inyecta variables, genera código de trazabilidad único (`TraceabilityCode`) y produce el PDF final con su hash SHA-256.
+* `MergeDocumentsAsync(IEnumerable<byte[]> pdfDocuments, CancellationToken ct)`: Concatena anexos o evidencias académicas al cuerpo principal.
+* `UpdateTemplateAsync` / `ResetTemplateToDefaultAsync`: Edición dinámica de moldes institucionales.
 
-* **Firma Institucional DOSIER:** Valida la identidad del firmante mediante la sesión activa autenticada (con re-autenticación de contraseña opcional). Genera código de trazabilidad con formato `DFRM-{AÑO}-{UUID8}`, firma HMAC-SHA256, hash SHA-256 del binario y estampa visual en el PDF.
-* **Firma con Certificado PKCS#12 (.p12 / FirmaEC):** Valida la vigencia de la cadena de confianza y la clave privada del certificado del docente o autoridad.
-* **Verificación Pública (`VerifyAsync`):** Endpoint de libre acceso (sin sesión requerida) consumido desde el código QR impreso en el documento para certificar la validez de la firma.
+### 5.2. `IDocumentInstanceService` (Gestión de Instancias y Diagnóstico)
 
----
+* `CreateAsync` / `ResolveAsync`: Instancia un nuevo documento vinculando plantilla y entidad de negocio (`entityUuid`).
+* `FinalizeAsync`: Sella la instancia asociándole los bytes definitivos del PDF, código de trazabilidad y hash criptográfico.
+* `GetObsoleteDocumentDiagnosisAsync`: Analiza la discrepancia entre versiones de plantilla y documentos compilados.
+* `PurgeObsoleteFileByUuidAsync` / `PurgeAllObsoleteDocumentFilesAsync`: Purga de binarios obsoletos del almacenamiento preservando intacto el registro de auditoría.
+* `ValidateStorageIntegrityAsync`: Verificación periódica de integridad física del archivo en disco contra su hash registrado.
 
-## 7. Subsistema de Comunicación y Notificaciones (`Common/Notifications/`)
+### 5.3. Servicios Complementarios del Motor Documental
 
-* **`INotificationService`:** Orquesta la distribución multicanal de alertas institucionales (cambio de estado del PEA, asignación de observaciones, recordatorios de firma). Soporta notificaciones dirigidas a usuarios (`NotifyUserAsync`), difusión por roles (`NotifyByRoleCodesAsync`) y marcas de lectura.
-* **`INotificationDriver`:** Interfaz extensible para proveedores de envío (WebSockets SignalR en tiempo real, WebPush VAPID para navegadores).
-* **`IEmailEngineService`:** Motor de correos electrónicos transaccionales con plantillas dinámicas HTML institucionales (`EmailTemplateDto`), cola de envíos y bitácora de auditoría de entrega (`EmailHistorialDto`).
+* **`IDocumentTemplateAdminService`:** Mantenimiento y personalización de plantillas (`doc_document_templates`), configuraciones de estilo global y campos colaborativos.
+* **`IDocumentVerificationService`:** Servicio de libre acceso público para validar documentos emitidos mediante su código QR o código de trazabilidad DFRM.
+* **`IAppUrlService`:** Fuente Única de Verdad para construir URLs absolutas hacia el frontend (códigos QR, correos transaccionales y links de recuperación).
 
 ---
 
-## 8. Servicios de Orquestación Especializada y Purificación Total de Controladores
+## 6. Subsistema de Seguridad, Identidad y LOPDP (`Security/`)
 
-Para dar cumplimiento estricto al principio de inversión de dependencias y Clean Architecture pura, el 100% de los controladores de la capa `dosier_api` tienen prohibido inyectar `DosierContext` o ejecutar consultas LINQ directas. Todas las operaciones de persistencia y coordinación se desacoplan mediante contratos en `dosier_application`:
+Provee autenticación robusta, gobierno de roles RBAC institucionales y cumplimiento estricto de la legislación ecuatoriana de protección de datos.
 
-* **`ICatalogsService`:** Centraliza la consulta y mutación de catálogos institucionales, carreras activas (`esInstituto = 1`), períodos lectivos, configuraciones generales y estados del workflow.
-* **`ICollaborationService`:** Gestiona el pulso de concurrencia en tiempo real (`GetPulseAsync`), comentarios de retroalimentación (`PostCommentAsync`, `UpdateCommentAsync`, `DeleteCommentAsync`) y retransmisión por WebSockets en `CollaborationHub`.
-* **`IRecycleBinService`:** Aísla la gestión de elementos en papelera de reciclaje (`GetDeletedProjectsAsync`), aplicando de forma controlada `.IgnoreQueryFilters()` en la capa de infraestructura según los roles del solicitante.
-* **`IReportsService`:** Consolida los indicadores agregados CACES (producción científica, semilleros), distribución de estados y generación compilada del PDF del reporte de analíticas institucionales.
-* **`IBackupAdminService`:** Administra la bitácora de copias de seguridad (`DocBackupLogs`), cálculo en caliente de checksum SHA-256 para verificación de integridad física, diagnóstico del volumen de almacenamiento en disco (`GetDiskInfo`) y purga forense.
-* **`IDocumentVerificationService`:** Orquesta la verificación pública de trazabilidad de documentos por código único o código de firma DFRM, resolviendo la cascada de firmas sin exponer el contexto de datos al controlador público.
-* **`IDocumentTemplateAdminService`:** Administra el catálogo de plantillas oficiales, orden personalizado en JSON, tema visual institucional (`Theme.GlobalConfigJson`) y publicación en caliente hacia clientes conectados.
-* **`ICalendarioService`:** Administra los eventos normativos institucionales, notas adhesivas de planificación docente (Inbox), exportación iCalendar (RFC 5545) y tablero Kanban de actividades curriculares.
+### 6.1. Identidad y Control de Acceso
 
+* **`IAuthService`:**
+  - Login local con hash BCrypt y protección progresiva ante fuerza bruta (`LoginBlockedResponse` con HTTP 423 Locked).
+  - Just-In-Time Provisioning (JIT): Aprovisionamiento transparente de docentes provenientes de SIGAFI en el sistema ID 6 con rol `DOSIER_DOCENTE`.
+* **`IMicrosoftAuthService`:** Validación de tokens OAuth2 / OpenID Connect para SSO federado con Microsoft 365 (Entra ID).
+* **`IPasswordRecoveryService`:** Generación y consumo de tokens de recuperación de contraseña con validez efímera (30 minutos) y respuesta anti-enumeración.
+* **`IAdminService`:** Administración de usuarios, asignación/revocación de roles curriculares (`AssignRoleAsync`, `RevokeRoleAsync`), bitácoras administrativas paginadas y tablero de gobernanza curricular.
+* **`IRbacService`, `ITokenService`, `IPasswordService`:** Servicios de bajo nivel para derivación de permisos PBAC (16 permisos), emisión de JWT y verificación de contraseñas.
+
+### 6.2. Gobernanza de Datos y Copias de Seguridad
+
+* **`ILopdpService`:**
+  - `GetTerminoVigenteAsync`: Consulta pública de la política institucional vigente (`pd_terminos_condiciones`).
+  - `RegistrarConsentimientoAsync`: Persistencia del consentimiento en `pd_aceptaciones_usuarios` (`sistema = 'DOSIER'`) y actualización de metadata docente.
+  - `AuditoriaAccesoDatosAsync`: Registro inalterable en `doc_lopdp_auditoria_datos` con mecanismo de contingencia por log crítico.
+  - Flujo de solicitudes ARCO (`SolicitudArcoRequest`, `ResolverSolicitudArcoRequest`).
+* **`IAuditService`:** Bitácora transaccional administrativa en `doc_audit_admin` con instantáneas JSON de valores anteriores (`ValuesBefore`) y posteriores (`ValuesAfter`).
+* **`IBackupAdminService`:** Generación de respaldos automatizados de base de datos MySQL, cálculo de sumas de verificación SHA-256 y telemetría del almacenamiento en disco.
+
+---
+
+## 7. Subsistema de Criptografía y Firmas Digitales (`Signatures/`)
+
+Implementa el marco jurídico de la Ley de Comercio Electrónico y Firmas Digitales del Ecuador:
+
+### `IDosierSignatureService`
+
+* **`SignDocumentAsync` (Firma Institucional DFRM):**
+  Aplica firma electrónica basada en contexto seguro de sesión autenticada con clave HMAC-SHA256, estampando código único con formato `DFRM-{AÑO}-{UUID8}`, marca temporal inmutable y representación visual en el PDF.
+* **`SignDocumentWithP12Async` (Firma PKCS#12 / FirmaEC):**
+  Valida certificados digitales de personas naturales o jurídicas provistos en formato binario (`.p12` / `.pfx`), descifrando la clave privada en memoria y estampando la firma en conformidad con los estándares de interoperabilidad institucional.
+* **`VerifyAsync`:** Verificación criptográfica integral (vigencia del certificado, integridad de bytes contra hash SHA-256 y no-repudio).
+* **`RevokeAsync`:** Revocación auditada de firmas en caso de reaperturas curriculares o anulaciones formales.
+
+---
+
+## 8. Subsistema de Comunicación, Notificaciones y Soporte
+
+* **`ICollaborationService`:** Gestiona el pulso de presencia en tiempo real en los documentos (`GetPulseAsync`), comentarios y retroalimentación colegiada con retransmisión por SignalR.
+* **`INotificationService` & `INotificationDriver`:** Despacho de alertas a nivel de usuario individual (`NotifyUserAsync`) o roles institucionales (`NotifyByRoleCodesAsync`), integrando WebSockets en tiempo real y soporte para notificaciones WebPush (VAPID).
+* **`IEmailEngineService`:** Motor de correos transaccionales con motor de plantillas HTML, soporte para adjuntos y registro de entrega en bitácora histórica.
+* **`IFeedbackService`:** Mesa de ayuda y seguimiento de incidencias técnicas del sistema (creación, seguimiento y mensajes entre usuario y administradores).
+* **`ICalendarioService`:** Administración del cronograma institucional, tablero Kanban de tareas curriculares, notas rápidas (Inbox) y despachador de alertas preventivas por correo electrónico.
+* **`ICatalogsService`, `IRecycleBinService`, `IReportsService`:** Gestión desacoplada de catálogos generales, papelera de reciclaje con borrado suave (*soft-delete*) y consolidación de reportes analíticos para acreditación CACES.

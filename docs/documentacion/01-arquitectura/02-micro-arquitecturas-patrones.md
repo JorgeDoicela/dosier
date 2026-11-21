@@ -12,8 +12,8 @@ El subsistema documental de DOSIER opera de forma agnóstica respecto a las enti
 
 ```mermaid
 graph LR
-    Entity[Entidad Curricular\nPEA / Sílabo 19 Sem / Guías APE / Guía Estudio] --> Orchestrator[DocumentDataOrchestrator]
-    Orchestrator -->|Genera Master JSON Payload| TemplateEngine[Handlebars / Scriban Template Engine]
+    Entity[Entidad Curricular\nDocPea / Snapshot JSON] --> Orchestrator[DocumentDataOrchestrator]
+    Orchestrator -->|Genera Master JSON Payload| TemplateEngine[HandlebarsTemplateEngine\nHandlebars.Net 2.1.6]
     Registry[DocumentTemplateRegistry\nPlantillas HTML + Schema JSON] --> TemplateEngine
     TemplateEngine -->|HTML Enriquecido| LegalInjector[LegalComplianceInjector\nEncabezados + Firmas + QR]
     LegalInjector -->|HTML Final| Renderer[ITextHtmlPdfRenderer\niText 9 Engine]
@@ -21,9 +21,9 @@ graph LR
 ```
 
 ### Componentes Clave
-* **`DocumentTemplateRegistry`:** Registro centralizado de plantillas HTML y esquemas de metadatos para PEA, Sílabo de 19 semanas, Guías APE y Guías de Estudio.
-* **`HandlebarsTemplateEngine` / `Scriban`:** Motores de evaluación que inyectan variables curriculares (prerrequisitos, correquisitos, desglose semanal, resultados de aprendizaje, bibliografía) en el marcado HTML de la plantilla.
-* **Resiliencia y Escalabilidad:** El motor no requiere modificaciones de código C# para incorporar nuevos formatos documentales institucionales; basta con registrar la nueva plantilla HTML y su contrato de metadatos.
+* **`DocumentTemplateRegistry`:** Registro centralizado de plantillas HTML y esquemas de metadatos para el PEA en sus 11 secciones oficiales (a - k).
+* **`HandlebarsTemplateEngine`:** Motor de evaluación que inyecta variables curriculares (prerrequisitos, correquisitos, desglose semanal, resultados de aprendizaje, bibliografía) en el marcado HTML de la plantilla.
+* **Resiliencia y Escalabilidad:** El motor no requiere modificaciones de código C# para incorporar nuevos formatos documentales institucionales; basta con registrar la nueva plantilla HTML y su contrato de metadatos en `doc_document_templates`.
 
 ---
 
@@ -42,24 +42,24 @@ classDiagram
     class DocumentDataOrchestrator {
         -DosierContext _db
         -IEnumerable~IDocumentDataProvider~ _providers
-        +PrepareRequestAsync(string documentInstanceUuid, string requestedBy) Task~DocumentRequest~
+        +PrepareRequestAsync(string documentInstanceUuid, string requestedBy, bool? forceDraftMode, CancellationToken ct) Task~DocumentRequest~
     }
 
-    class ProjectDocumentDataProvider {
-        -IProjectOrchestrator _projectOrchestrator
-        +CanHandle("Proyecto") bool
+    class PeaDocumentDataProvider {
+        -DosierContext _db
+        +CanHandle("PEA" | "PEA_OFICIAL" | "PeaCurricular") bool
         +GetDocumentDataAsync(string entityUuid, CancellationToken ct) Task~object~
     }
 
-    IDocumentDataProvider <|.. ProjectDocumentDataProvider
+    IDocumentDataProvider <|.. PeaDocumentDataProvider
     DocumentDataOrchestrator --> IDocumentDataProvider
 ```
 
 ### Principio de Funcionamiento
 1. El `DocumentDataOrchestrator` recibe una petición de emisión documental identificada por la instancia (`documentInstanceUuid`).
-2. Identifica el tipo de entidad origen y evalúa los proveedores disponibles mediante `CanHandle(entityType)`.
-3. `ProjectDocumentDataProvider` resuelve los datos consolidados de la entidad académica (asignatura, equipo docente, períodos, fechas).
-4. Extrae la información académica de la asignatura desde SIGAFI (horas, créditos, campo de formación, prerrequisitos) y la combina con el contenido colaborativo persistido por el módulo CoWork, devolviendo un payload unificado (`DocumentRequest`) para la compilación PDF.
+2. Identifica el tipo de entidad origen en `doc_documentos_instancias.entity_type` y evalúa los proveedores disponibles mediante `CanHandle(entityType)`.
+3. `PeaDocumentDataProvider` resuelve los datos consolidados de la entidad académica (`DocPea`, unidades temáticas, resultados de aprendizaje, asignación docente).
+4. Extrae la información académica de la asignatura desde SIGAFI (horas, créditos, campo de formación, prerrequisitos) y la combina con el contenido colaborativo persistido por el módulo CoWork (`DataSnapshotJson`), devolviendo un payload unificado (`DocumentRequest`) para la compilación PDF.
 
 ---
 
@@ -87,16 +87,18 @@ sequenceDiagram
     autonumber
     participant Docente as Docente / Autoridades
     participant Engine as DocumentEngine / PeaService
+    participant SigFacade as DosierSignatureService (Facade)
     participant Storage as Base de Datos / FileStorage
     participant PublicNode as Nodo de Verificación Pública (QR)
 
     Docente->>Engine: Solicitar firma / aprobación final del PEA
     Engine->>Engine: Capturar congelamiento JSON (data_snapshot_json)
     Engine->>Engine: Calcular Hash SHA-256 canónico sobre el contenido pedagógico
-    Engine->>Engine: Inyectar sello de tiempo UTC y código oficial DFRM-XXXX
+    Engine->>SigFacade: Firmar (P12SignatureSubservice / DosierInternalSignerSubservice)
+    SigFacade->>SigFacade: Inyectar sello de tiempo UTC y código oficial DFRM-XXXX
     Engine->>Engine: Generar QR dinámico vectorial (QRCoder)
-    Engine->>Storage: Guardar registro inmutable en doc_documentos_instancias y doc_pea_trazabilidad
-    Engine-->>Docente: Devolver PDF oficial compilado con QR inyectado
+    Engine->>Storage: Guardar registro inmutable en doc_documentos_instancias, doc_pea_trazabilidad y doc_documentos_firmas
+    Engine-->>Docente: Devolver PDF oficial compilado con estampas y QR inyectado
 
     Note over PublicNode: Proceso de Auditoría Externa CACES / Verificación
     Auditor->>PublicNode: Escanear QR dinámico (sin autenticación previa)
@@ -106,7 +108,7 @@ sequenceDiagram
 
 ### Elementos de Seguridad Forense
 * **Inmutabilidad de Datos (`data_snapshot_json`):** Aunque la asignatura cambie de docente o se ajuste la malla en períodos futuros, el documento curricular emitido conserva el snapshot exacto del período académico en que fue legalizado.
-* **Firma Electrónica y Sellado (`SignatureStamper` / `FirmaElectronicaService`):** Integración de firma electrónica avanzada (PKCS#12 `.p12`) o firma digital HMAC institucional con verificación de identidad.
+* **Firma Electrónica y Sellado (`DosierSignatureService` / `SignatureStamper`):** Integración de firma electrónica avanzada (PKCS#12 `.p12`) o firma digital institucional HMAC-SHA256 (DFRM) con verificación criptográfica.
 * **Verificación Pública mediante QR:** Permite a estudiantes, evaluadores del CACES y directivos validar el documento oficial sin requerir sesión activa en el sistema.
 
 ---
@@ -126,10 +128,12 @@ stateDiagram-v2
     RevisadoCoord --> RevisadoAcad: Aval metodológico de Coordinación Académica
     RevisadoAcad --> Aprobado: Aprobación oficial de Vicerrectorado Académico
     Aprobado --> [*]: Sellado SHA-256, QR y PDF emitido
+    Aprobado --> Borrador: Reapertura Excepcional (Revocación Forense de Firmas)
 ```
 
-### Mecanismo de State Locking
-Cuando el PEA avanza a la etapa `EnRevision`, `RevisadoCoord` o `Aprobado`, el orquestador activa un bloqueo estricto de escritura (*State Locking*). Las peticiones HTTP y eventos de CoWork que intenten modificar secciones durante estos estados son rechazadas automáticamente, preservando la inmutabilidad de la evidencia.
+### Mecanismo de State Locking y Reapertura Forense
+1. **Bloqueo Estricto (*State Locking*):** Cuando el PEA avanza a la etapa `EnRevision`, `RevisadoCoord` o `Aprobado`, el orquestador activa un bloqueo estricto de escritura. Las peticiones HTTP y eventos de CoWork que intenten modificar secciones durante estos estados son rechazadas automáticamente.
+2. **Protocolo de Reapertura Forense (`RevocarFirmasPorAperturaAsync`):** Si una autoridad curricular (Coordinador o Vicerrector) reabre un documento previamente revisado o aprobado para correcciones mayores, el subsistema `SignatureRevocationSubservice` marca como revocadas las firmas existentes en `doc_documentos_firmas` con timestamp forense, forzando un nuevo ciclo completo de revisión y firmado.
 
 ---
 
@@ -143,7 +147,7 @@ graph TD
     UserB["Docente B (Co-Docente Asignatura)\nReact SPA"]
 
     subgraph SignalRHub [CollaborationHub Backend .NET]
-        WsGateway["WebSocket Gateway / SignalR"]
+        WsGateway["WebSocket Gateway / SignalR (/hubs/collaboration)"]
         GZipFilter["Compresor / Descompresor GZip"]
         LockManager["Section Block Guard / Lock Manager"]
     end
@@ -171,7 +175,7 @@ graph TD
 Para cumplir con la Ley Orgánica de Protección de Datos Personales (LOPDP) de la República del Ecuador:
 
 1. **Aislamiento de Adaptaciones Curriculares:** La información de adaptaciones curriculares para estudiantes con necesidades educativas específicas se administra de forma segregada respecto al cuerpo general del PEA que se distribuye ampliamente.
-2. **Consentimientos y Bitácora (`LopdpService`):** Registro inalterable del consentimiento para tratamiento de firmas digitales y control de acceso granular auditado en `doc_lopdp_auditoria_datos`.
+2. **Consentimientos y Bitácora (`LopdpService`):** Registro inalterable del consentimiento para tratamiento de firmas digitales en `pd_aceptaciones_usuarios` (`sistema = 'DOSIER'`) y control de acceso granular auditado en `doc_lopdp_auditoria_datos`.
 
 ---
 

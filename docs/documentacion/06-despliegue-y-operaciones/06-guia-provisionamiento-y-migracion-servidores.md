@@ -10,17 +10,17 @@ Siguiendo el estándar de seguridad de producción y la Ley Orgánica de Protecc
 
 1. **Cero Secretos en el Repositorio:** Ni `docker-compose.yml`, ni los flujos de GitHub Actions (`deploy.yml`), ni el código fuente contienen contraseñas o claves maestras en texto plano.
 2. **Fuente Única de Verdad (`.env`):** Todas las variables sensibles se gestionan en el archivo local `/var/www/dosier/.env` con permisos estrictos de sistema de archivos (`chmod 600`).
-3. **Frontera Inviolable SIGAFI:** El sistema DOSIER opera en modo de **solo lectura** sobre la nómina, mallas y períodos de SIGAFI, y en modo de **escritura** exclusivamente sobre sus 54 tablas propias (`doc_*`) y asignaciones RBAC (`idSistema = 6`).
+3. **Frontera Inviolable SIGAFI:** El sistema DOSIER opera en modo de **solo lectura** sobre la nómina, mallas y períodos de SIGAFI, y en modo de **escritura** exclusivamente sobre sus tablas propias (`doc_*`) y asignaciones RBAC (`idSistema = 6`).
 
 ---
 
 ## 2. Requisitos Previos del Servidor Host
 
-* **Sistema Operativo:** Ubuntu 22.04 LTS o 24.04 LTS (x86_64).
+* **Sistema Operativo:** Ubuntu 22.04 LTS o 24.04 LTS (x86_64) / Debian 12 o 13.
 * **Motor de Contenedores:** Docker Engine 24.0+ y Docker Compose v2.20+.
 * **Herramientas de Diagnóstico:** `openssl`, `curl`, `git`, `tar`.
 * **Puertos de Red Abiertos:**
-  * `80/TCP` (HTTP - Redirección o Let's Encrypt).
+  * `80/TCP` (HTTP - Redirección a HTTPS).
   * `443/TCP` (HTTPS - Nginx Proxy con SSL Cloudflare Origin CA).
   * `5000/TCP` (Opcional en LAN - Web API .NET 8).
   * `3306/TCP` (Solo accesible localmente en red Docker bridge).
@@ -63,7 +63,7 @@ DB_ROOT_PASSWORD=$NUEVA_PASS
 DB_USER=dosier_user
 DB_PASSWORD=$NUEVA_PASS
 JWT_SECRET=$NUEVO_JWT
-FRONTEND_URL=https://dosier.jorgedoicela.com
+FRONTEND_URL=https://dosier.doicela.dev
 ASPNETCORE_ENVIRONMENT=Production
 EOF
 
@@ -151,7 +151,7 @@ docker compose ps
 
 ### 2. Error de Clave Foránea en Períodos (`ERROR 1215: Cannot add foreign key constraint`)
 * **Causa:** La tabla legada `periodos.idPeriodo` es `CHAR(7) CHARACTER SET latin1`.
-* **Solución:** Las columnas foráneas en tablas de DOSIER (`doc_expedientes_curriculares.idPeriodo`, `doc_pea_oficial.idPeriodo`, `mallas_periodos.idPeriodo`) definen explícitamente `CHAR(7) CHARACTER SET latin1`.
+* **Solución:** Las columnas foráneas en tablas de DOSIER (`doc_expedientes_curriculares.idPeriodo`, `doc_pea.idPeriodo`, `mallas_periodos.idPeriodo`) definen explícitamente `CHAR(7) CHARACTER SET latin1`.
 
 ### 3. Faltante de Tablas `doc_*` tras Restaurar un Backup Manual
 * **Causa:** El respaldo de SIGAFI no contenía las tablas del módulo DOSIER.
