@@ -141,11 +141,11 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                     list.map((m: any) =>
                         m?.isLoading
                             ? {
-                                  ...m,
-                                  isLoading: false,
-                                  isError: true,
-                                  text: 'La generación fue interrumpida al recargar la página.'
-                              }
+                                ...m,
+                                isLoading: false,
+                                isError: true,
+                                text: 'La generación fue interrumpida al recargar la página.'
+                            }
                             : m
                     );
                 if (Array.isArray(parsed)) {
@@ -888,11 +888,10 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
 
                                 {/* Cuerpo del Mensaje */}
                                 <div
-                                    className={`text-xs leading-relaxed rounded-2xl p-3.5 shadow-xs ${
-                                        isUser
+                                    className={`text-xs leading-relaxed rounded-2xl p-3.5 shadow-xs ${isUser
                                             ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 max-w-[85%]'
                                             : 'bg-surface border border-border-thin text-text-main max-w-full w-full space-y-3'
-                                    }`}
+                                        }`}
                                 >
                                     {/* Estado en proceso, Error o Texto del Asistente */}
                                     {!isUser && msg.isLoading && !msg.draft ? (
@@ -1176,11 +1175,10 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                                         return (
                                             <label
                                                 key={sec.id}
-                                                className={`flex items-center gap-2 p-1.5 rounded-lg transition-colors cursor-pointer text-[11px] ${
-                                                    isChecked
+                                                className={`flex items-center gap-2 p-1.5 rounded-lg transition-colors cursor-pointer text-[11px] ${isChecked
                                                         ? 'bg-blue-50/50 dark:bg-blue-950/30 text-text-main font-medium'
                                                         : 'hover:bg-zinc-100 dark:hover:bg-zinc-900 text-text-dim'
-                                                }`}
+                                                    }`}
                                             >
                                                 <input
                                                     type="checkbox"
