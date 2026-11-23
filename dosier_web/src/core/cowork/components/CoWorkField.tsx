@@ -223,8 +223,18 @@ function resolveDbValue(parentFormData: any, name: string): any {
         }
     }
 
-        // Manejo obligatorio de Código de Carrera: forzar siempre la sigla institucional (ej. SOF, GAS, MCA)
+    // Código de Carrera: respetar siempre el valor ingresado o guardado por el usuario en formData; solo si está vacío inferir sigla sugerida
     if (name === 'CodigoCarrera' || name === 'codigo_carrera') {
+        const val = parentFormData.CodigoCarrera ?? parentFormData.codigo_carrera;
+        if (val !== undefined && val !== null && String(val).trim() !== '' && !String(val).includes('-P-')) {
+            return String(val).trim();
+        }
+
+        const alias = parentFormData.aliasCarrera || parentFormData.alias_carrera;
+        if (alias && String(alias).trim() !== '' && !String(alias).includes('-P-')) {
+            return String(alias).trim();
+        }
+
         const cName = String(parentFormData.Carrera || parentFormData.carrera || '').toUpperCase();
         if (cName.includes('SOFTWARE')) return 'SOF';
         if (cName.includes('GASTRONOM')) return 'GAS';
@@ -240,18 +250,10 @@ function resolveDbValue(parentFormData: any, name: string): any {
         if (cName.includes('TELECOMUNICACION') || cName.includes('REDES')) return 'RDT';
         if (cName.includes('ELECTRONIC') || cName.includes('ELECTRÓNIC')) return 'ELT';
 
-        const alias = parentFormData.aliasCarrera || parentFormData.alias_carrera;
-        if (alias && String(alias).trim() !== '' && !String(alias).includes('-P-')) {
-            return String(alias).trim();
-        }
-        const val = parentFormData.CodigoCarrera || parentFormData.codigo_carrera;
-        if (val && String(val).trim() !== '' && !String(val).includes('-P-')) {
-            return String(val).trim();
-        }
         if (cName && cName.trim().length >= 3) {
             return cName.trim().substring(0, 3).toUpperCase();
         }
-        return 'SOF';
+        return '';
     }
 
     if (parentFormData[name] !== undefined) {

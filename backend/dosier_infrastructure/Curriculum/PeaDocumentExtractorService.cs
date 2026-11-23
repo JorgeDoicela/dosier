@@ -438,6 +438,7 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("8. HORAS TOTALES Y CÓDIGO DE CARRERA: Extrae en 'total_horas_asignatura' el número total de horas de la asignatura que figure en datos generales (ej. 96 o 144). Extrae en 'horas_contacto_docente', 'horas_practico_experimental' y 'horas_autonomo' el total por componente de la sección 'Organización de aprendizajes por modalidad' (ej. 32, 32, 32). Extrae en 'codigo_carrera' el código de carrera que aparezca en el encabezado (ej. 'DS' o 'SOF').");
             sb.AppendLine("9. ESTRUCTURA DE METODOLOGÍA Y RECURSOS: En 'metodologia_ensenanza', conserva la estructura de párrafos separando con saltos de línea y destacando subtítulos de metodologías activas (ej. 'Aprendizaje Basado en Problemas (ABP):', 'Aula Invertida:'). En 'recursos_didacticos', si el documento presenta una tabla o lista de recursos (ej. Office 365, Node.js, EVA, Visual Studio, etc.), extrae cada recurso como una línea individual o elemento de lista (ej. <ul><li>Office 365</li><li>Node Js</li>...</ul>). Queda terminantemente PROHIBIDO unir o apelmazar todos los recursos en una sola frase continua.");
             sb.AppendLine("10. TABLA OFICIAL DE ACTIVIDADES PRÁCTICAS: En 'actividades_practicas', extrae fielmente las filas de la tabla institucional de dos columnas ('Unidad' | 'Nombre de la práctica y caracterización de la actividad'). En 'unidad', conserva exactamente el valor del documento, ya sea un número o unidades compuestas/múltiples (ej. \"1,2,3\"). En 'nombre' y 'caracterizacion', extrae la descripción íntegra de la práctica redactada en la segunda columna, sin truncar texto ni inventar campos adicionales.");
+            sb.AppendLine("11. DATOS GENERALES EDITABLES: Extrae en 'modalidad' la modalidad de estudio ('Presencial', 'Semipresencial', 'En Línea', 'Híbrida', 'Dual'). En 'unidad_organizacion' extrae y normaliza la unidad curricular ('Unidad Básica', 'Unidad Profesional', o 'Unidad de Integración Curricular'; ej. si dice 'Profesional' mapea a 'Unidad Profesional', si dice 'Básica' a 'Unidad Básica'). En 'semestre' extrae el semestre o nivel (ej. 'Cuarto', 'Segundo'). En 'creditos' extrae el número de créditos (ej. 2). En 'codigo_carrera' extrae el código (ej. 'DS').");
             return sb.ToString();
         }
 
@@ -481,6 +482,10 @@ namespace dosier_infrastructure.Curriculum
   ""horas_practico_experimental"": 32,
   ""horas_autonomo"": 32,
   ""codigo_carrera"": ""DS"",
+  ""modalidad"": ""Presencial"",
+  ""unidad_organizacion"": ""Unidad Profesional"",
+  ""semestre"": ""Cuarto"",
+  ""creditos"": 2,
   ""objetivo_asignatura"": ""<p>Verbo en infinitivo + objeto + finalidad + contexto...</p>"",
   ""rda_carrera"": ""<ul><li>Resultado de aprendizaje de carrera...</li></ul>"",
   ""resultados_aprendizaje"": ""<ul><li>Verbo en infinitivo + objeto + finalidad + contexto (sin prefijo RDA)...</li></ul>"",
@@ -818,6 +823,19 @@ namespace dosier_infrastructure.Curriculum
             result.HorasPracticoExperimental = TryGetInt(root, "horas_practico_experimental", "HorasPracticoExperimental", "horas_ape", "HorasAPE", "total_horas_practico_experimental");
             result.HorasAutonomo = TryGetInt(root, "horas_autonomo", "HorasAutonomo", "horas_ta", "HorasTA", "total_horas_aprendizaje_autonomo");
             result.CodigoCarrera = TryGetString(root, "codigo_carrera", "CodigoCarrera", "codigoCarrera");
+            result.Modalidad = TryGetString(root, "modalidad", "Modalidad", "modalidad_estudio");
+            string rawUnidadOrg = TryGetString(root, "unidad_organizacion", "UnidadOrganizacion", "unidad_organizacion_curricular", "unidad_curricular");
+            if (!string.IsNullOrWhiteSpace(rawUnidadOrg))
+            {
+                string uUpper = rawUnidadOrg.Trim().ToUpperInvariant();
+                if (uUpper.Contains("PROFESIONAL")) result.UnidadOrganizacion = "Unidad Profesional";
+                else if (uUpper.Contains("BASIC") || uUpper.Contains("BÁSIC") || uUpper.Contains("TRONCO")) result.UnidadOrganizacion = "Unidad Básica";
+                else if (uUpper.Contains("INTEGRA") || uUpper.Contains("TITULA")) result.UnidadOrganizacion = "Unidad de Integración Curricular";
+                else result.UnidadOrganizacion = rawUnidadOrg;
+            }
+            result.Semestre = TryGetString(root, "semestre", "Semestre", "nivel", "Nivel");
+            decimal cred = TryGetDecimal(root, 0m, "creditos", "Creditos", "numero_creditos");
+            if (cred > 0) result.Creditos = cred;
 
             // Unidades
             if (TryGetArray(root, out var unidadesArr, "unidades", "Unidades"))
@@ -1020,6 +1038,13 @@ namespace dosier_infrastructure.Curriculum
             decimal genTotal = genCd + genApe + genTa;
 
             var generatedSections = new List<string>();
+            bool hasGeneralData = !string.IsNullOrWhiteSpace(result.Modalidad) ||
+                                  !string.IsNullOrWhiteSpace(result.UnidadOrganizacion) ||
+                                  !string.IsNullOrWhiteSpace(result.Semestre) ||
+                                  (result.Creditos.HasValue && result.Creditos > 0) ||
+                                  result.TotalHorasAsignatura > 0 ||
+                                  !string.IsNullOrWhiteSpace(result.CodigoCarrera);
+            if (hasGeneralData) generatedSections.Add("pea_general_section");
             if (!string.IsNullOrWhiteSpace(result.ObjetivoAsignatura)) generatedSections.Add("pea_objectives_section");
             if (result.Prerrequisitos.Count > 0) generatedSections.Add("pea_prerequisites_section");
             if (!string.IsNullOrWhiteSpace(result.RdaCarrera)) generatedSections.Add("pea_career_outcomes_section");

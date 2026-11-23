@@ -90,6 +90,10 @@ namespace dosier_application.Curriculum.Dtos
         public decimal HorasPracticoExperimental { get; set; }
         public decimal HorasAutonomo { get; set; }
         public string? CodigoCarrera { get; set; }
+        public string? Modalidad { get; set; }
+        public string? UnidadOrganizacion { get; set; }
+        public string? Semestre { get; set; }
+        public decimal? Creditos { get; set; }
 
         public List<PeaDraftPrerrequisitoDto> Prerrequisitos { get; set; } = new();
         public List<PeaDraftUnidadDto> Unidades { get; set; } = new();

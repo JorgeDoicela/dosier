@@ -22,34 +22,48 @@ export function parseUnitContenidos(contenidos?: string | string[]): ParsedTopic
     const text = Array.isArray(contenidos) ? contenidos.join('\n') : String(contenidos);
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-    return lines.map(line => {
-        // Tema principal (ej: "Tema 1: Introducción a los Sistemas Web", "Tema 1 - ...", "UNIDAD 1...")
-        const themeMatch = line.match(/^(tema\s*\d+|unidad\s*\d+)[\s:.\-]+(.*)$/i);
-        if (themeMatch) {
+    return lines.map(rawLine => {
+        // Sanitizar cualquier residuo de asteriscos de negrita markdown (*, **)
+        let line = rawLine.replace(/\*+/g, '').trim();
+
+        // 1. Caso Híbrido Anómalo: "Tema X: 1.1 ¿Qué son...?" -> normalizar a Subtema directo
+        const hybridMatch = line.match(/^(?:tema\s*\d+|unidad\s*\d+)[\s:.\-]+(\d+(?:\.\d+)+)[\s:.\-]+(.*)$/i);
+        if (hybridMatch) {
             return {
-                raw: line,
-                type: 'theme',
-                numberPrefix: themeMatch[1],
-                text: themeMatch[2].trim()
+                raw: rawLine,
+                type: 'subtopic',
+                numberPrefix: hybridMatch[1],
+                text: hybridMatch[2].trim()
             };
         }
 
-        // Subtema numerado (ej: "1.1 ¿Qué son los Sistemas Web?", "1.2.1 ...")
+        // 2. Subtema numerado estándar (ej: "1.1 ¿Qué son los Sistemas Web?", "1.2.1 ...")
         const subtopicMatch = line.match(/^(\d+(?:\.\d+)+)[\s:.\-]+(.*)$/);
         if (subtopicMatch) {
             return {
-                raw: line,
+                raw: rawLine,
                 type: 'subtopic',
                 numberPrefix: subtopicMatch[1],
                 text: subtopicMatch[2].trim()
             };
         }
 
-        // Viñeta estándar (ej: "- Introducción", "• Desarrollo...")
+        // 3. Tema principal (ej: "Tema 1: Introducción a los Sistemas Web", "Tema 1 - ...", "UNIDAD 1...")
+        const themeMatch = line.match(/^(tema\s*\d+|unidad\s*\d+)[\s:.\-]+(.*)$/i);
+        if (themeMatch) {
+            return {
+                raw: rawLine,
+                type: 'theme',
+                numberPrefix: themeMatch[1],
+                text: themeMatch[2].trim()
+            };
+        }
+
+        // 4. Viñeta estándar (ej: "- Introducción", "• Desarrollo...")
         const bulletMatch = line.match(/^[-•*]\s*(.*)$/);
         if (bulletMatch) {
             return {
-                raw: line,
+                raw: rawLine,
                 type: 'subtopic',
                 numberPrefix: '•',
                 text: bulletMatch[1].trim()
@@ -57,7 +71,7 @@ export function parseUnitContenidos(contenidos?: string | string[]): ParsedTopic
         }
 
         return {
-            raw: line,
+            raw: rawLine,
             type: 'text',
             text: line
         };

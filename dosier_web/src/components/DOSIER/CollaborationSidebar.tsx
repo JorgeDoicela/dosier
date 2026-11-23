@@ -338,7 +338,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
         if (onTriggerDocExtraction) {
             try {
                 setIsExtractingInSidebar(true);
-                await onTriggerDocExtraction(sidebarImportFile, '');
+                const fileToExtract = sidebarImportFile;
+                // Limpiar el archivo del sidebar para que no siga apareciendo una vez extraído
+                setSidebarImportFile(null);
+                await onTriggerDocExtraction(fileToExtract, '');
             } finally {
                 setIsExtractingInSidebar(false);
             }

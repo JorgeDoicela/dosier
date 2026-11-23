@@ -337,6 +337,10 @@ export interface PeaStructuredDraft {
     recursosDidacticos: string;
     bibliografiaBasica: string;
     bibliografiaConsulta: string;
+    modalidad?: string;
+    unidadOrganizacion?: string;
+    semestre?: string;
+    creditos?: number;
     totalHorasAsignatura?: number;
     horasContactoDocente?: number;
     horasPracticoExperimental?: number;
@@ -435,7 +439,23 @@ export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
     const horasTA = Number(raw?.horas_autonomo ?? raw?.horasAutonomo ?? raw?.HorasAutonomo ?? 0);
     const codCarrera = String(raw?.codigo_carrera ?? raw?.codigoCarrera ?? raw?.CodigoCarrera ?? '').trim();
 
+    const rawMod = String(raw?.modalidad ?? raw?.Modalidad ?? '').trim();
+    const rawUnidadOrg = String(raw?.unidad_organizacion ?? raw?.unidadOrganizacion ?? raw?.UnidadOrganizacion ?? '').trim();
+    let normUnidadOrg = rawUnidadOrg;
+    if (rawUnidadOrg) {
+        const uUpper = rawUnidadOrg.toUpperCase();
+        if (uUpper.includes('PROFESIONAL')) normUnidadOrg = 'Unidad Profesional';
+        else if (uUpper.includes('BASIC') || uUpper.includes('BÁSIC') || uUpper.includes('TRONCO')) normUnidadOrg = 'Unidad Básica';
+        else if (uUpper.includes('INTEGRA') || uUpper.includes('TITULA')) normUnidadOrg = 'Unidad de Integración Curricular';
+    }
+    const rawSem = String(raw?.semestre ?? raw?.Semestre ?? raw?.nivel ?? raw?.Nivel ?? '').trim();
+    const rawCred = Number(raw?.creditos ?? raw?.Creditos ?? 0);
+
     return {
+        modalidad: rawMod || undefined,
+        unidadOrganizacion: normUnidadOrg || undefined,
+        semestre: rawSem || undefined,
+        creditos: rawCred > 0 ? rawCred : undefined,
         totalHorasAsignatura: totalHoras > 0 ? totalHoras : undefined,
         horasContactoDocente: horasCD > 0 ? horasCD : undefined,
         horasPracticoExperimental: horasAPE > 0 ? horasAPE : undefined,
@@ -795,6 +815,31 @@ export const convertDraftToEditorFields = (
         !selectedSectionIds || selectedSectionIds.length === 0 || selectedSectionIds.includes(secId);
 
     const patch: Record<string, any> = {};
+
+    if (includeSection('pea_general_section')) {
+        if (draft.modalidad) {
+            patch.Modalidad = draft.modalidad;
+            patch.modalidad = draft.modalidad;
+        }
+        if (draft.unidadOrganizacion) {
+            patch.UnidadOrganizacion = draft.unidadOrganizacion;
+            patch.unidad_organizacion = draft.unidadOrganizacion;
+        }
+        if (draft.codigoCarrera) {
+            patch.CodigoCarrera = draft.codigoCarrera;
+            patch.codigo_carrera = draft.codigoCarrera;
+        }
+        // Semestre/Nivel, TotalHorasAsignatura y Creditos se preservan inmutables de la malla SIGAFI
+        if (draft.horasContactoDocente && draft.horasContactoDocente > 0) {
+            patch.HorasContactoDocente = draft.horasContactoDocente;
+        }
+        if (draft.horasPracticoExperimental && draft.horasPracticoExperimental > 0) {
+            patch.HorasPracticoExperimental = draft.horasPracticoExperimental;
+        }
+        if (draft.horasAutonomo && draft.horasAutonomo > 0) {
+            patch.HorasAutonomo = draft.horasAutonomo;
+        }
+    }
 
     if (includeSection('pea_objectives_section') && draft.objetivoAsignatura) {
         patch.ObjetivoAsignatura = draft.objetivoAsignatura;

@@ -35,6 +35,7 @@ export interface PeaDocumentImportModalProps {
 }
 
 const SECTION_LABELS: Record<string, string> = {
+    pea_general_section: '1. Datos Generales de la Asignatura',
     pea_objectives_section: '2. Objetivo de la Asignatura',
     pea_prerequisites_section: '3. Prerrequisitos Curriculares',
     pea_career_outcomes_section: '4. Resultados de Aprendizaje de la Carrera a los que la Asignatura Aporta',
@@ -542,6 +543,54 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                                 </div>
 
                                                 {/* Renderizador Estructurado por Sección */}
+                                                {secId === 'pea_general_section' && (
+                                                    <div className="space-y-2 pt-1 text-xs">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/40">
+                                                            {extractedDraft.modalidad && (
+                                                                <div>
+                                                                    <span className="text-[10.5px] uppercase tracking-wide text-slate-400 font-semibold block">Modalidad</span>
+                                                                    <span className="font-semibold text-slate-800 dark:text-zinc-200">{extractedDraft.modalidad}</span>
+                                                                </div>
+                                                            )}
+                                                            {extractedDraft.unidadOrganizacion && (
+                                                                <div>
+                                                                    <span className="text-[10.5px] uppercase tracking-wide text-slate-400 font-semibold block">Unidad Curricular</span>
+                                                                    <span className="font-semibold text-[#0070f3] dark:text-blue-400">{extractedDraft.unidadOrganizacion}</span>
+                                                                </div>
+                                                            )}
+                                                            {extractedDraft.semestre && (
+                                                                <div>
+                                                                    <span className="text-[10.5px] uppercase tracking-wide text-slate-400 font-semibold block">Semestre / Nivel</span>
+                                                                    <span className="font-semibold text-slate-800 dark:text-zinc-200">{extractedDraft.semestre}</span>
+                                                                </div>
+                                                            )}
+                                                            {extractedDraft.creditos && (
+                                                                <div>
+                                                                    <span className="text-[10.5px] uppercase tracking-wide text-slate-400 font-semibold block">Créditos</span>
+                                                                    <span className="font-semibold text-slate-800 dark:text-zinc-200">{extractedDraft.creditos}</span>
+                                                                </div>
+                                                            )}
+                                                            {extractedDraft.codigoCarrera && (
+                                                                <div>
+                                                                    <span className="text-[10.5px] uppercase tracking-wide text-slate-400 font-semibold block">Código Carrera</span>
+                                                                    <span className="font-mono font-semibold text-slate-800 dark:text-zinc-200">{extractedDraft.codigoCarrera}</span>
+                                                                </div>
+                                                            )}
+                                                            {extractedDraft.totalHorasAsignatura && (
+                                                                <div>
+                                                                    <span className="text-[10.5px] uppercase tracking-wide text-slate-400 font-semibold block">Carga Horaria Total</span>
+                                                                    <span className="font-semibold text-slate-800 dark:text-zinc-200">
+                                                                        {extractedDraft.totalHorasAsignatura}h ({extractedDraft.horasContactoDocente || 0} CD · {extractedDraft.horasPracticoExperimental || 0} APE · {extractedDraft.horasAutonomo || 0} TA)
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[10.5px] text-slate-400 dark:text-zinc-500 italic">
+                                                            * Asignatura, carrera, periodo, semestre, total de horas y créditos se preservan inmutables según distributivo y malla oficial SIGAFI.
+                                                        </p>
+                                                    </div>
+                                                )}
+
                                                 {secId === 'pea_objectives_section' && (
                                                     <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
                                                         {stripHtmlPreview(extractedDraft.objetivoAsignatura)}

@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
-import { PeaUnitOfficialTableView } from './PeaUnitOfficialTableView';
+import { CurriculumOutlineEditor } from './CurriculumOutlineEditor';
 
 interface UnidadTematica {
     num?: number;
@@ -238,8 +238,6 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
         onUpdate('Unidades', updated);
     };
 
-    const [viewMode, setViewMode] = useState<'edit' | 'preview'>(readOnly ? 'preview' : 'edit');
-
     return (
         <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
             {/* 1. SECCIÓN DE UNIDADES DE ESTUDIO (SIN ANIDAMIENTO REDUNDANTE) */}
@@ -248,61 +246,17 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                     <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                         Unidades de Estudio y Contenidos ({unidades.length})
                     </h4>
-                    <nav className="-mb-[11px] flex items-center gap-6 text-xs">
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('edit')}
-                            className={`pb-2.5 border-b-2 transition-colors cursor-pointer ${
-                                viewMode === 'edit'
-                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
-                                    : 'border-transparent text-text-dim hover:text-text-main font-medium'
-                            }`}
-                        >
-                            Edición de Unidades
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewMode('preview')}
-                            className={`pb-2.5 border-b-2 transition-colors cursor-pointer ${
-                                viewMode === 'preview'
-                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
-                                    : 'border-transparent text-text-dim hover:text-text-main font-medium'
-                            }`}
-                        >
-                            Vista de Tabla Oficial
-                        </button>
-                    </nav>
                 </div>
 
-                {viewMode === 'preview' ? (
-                    <div className="space-y-4 sm:space-y-5">
-                        {unidades.length === 0 ? (
-                            <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
-                                <p className="text-sm font-semibold text-text-dim">
-                                    No se han registrado unidades temáticas.
-                                </p>
-                            </div>
-                        ) : (
-                            unidades.map((u, idx) => (
-                                <PeaUnitOfficialTableView
-                                    key={idx}
-                                    unidad={u}
-                                    index={idx}
-                                    compact={false}
-                                />
-                            ))
-                        )}
-                    </div>
-                ) : (
-                    /* LISTA DIRECTA DE TARJETAS DE UNIDAD (CERO CUADRO DENTRO DE CUADRO) */
-                    <div className="space-y-4 sm:space-y-5">
-                        {unidades.length === 0 ? (
-                            <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
-                                <p className="text-sm font-semibold text-text-dim">
-                                    No se han registrado unidades temáticas. {!readOnly && 'Haga clic en "+ Añadir Unidad de Estudio" para comenzar.'}
-                                </p>
-                            </div>
-                        ) : (
+                {/* LISTA DIRECTA DE TARJETAS DE UNIDAD */}
+                <div className="space-y-4 sm:space-y-5">
+                    {unidades.length === 0 ? (
+                        <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
+                            <p className="text-sm font-semibold text-text-dim">
+                                No se han registrado unidades temáticas. {!readOnly && 'Haga clic en "+ Añadir Unidad de Estudio" para comenzar.'}
+                            </p>
+                        </div>
+                    ) : (
                             unidades.map((u, idx) => (
                                 <div
                                     key={idx}
@@ -574,16 +528,14 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                             <div className="p-4 sm:p-5 bg-surface">
                                 <div className="mb-2.5 flex items-center justify-between">
                                     <span className="text-xs sm:text-[13px] font-bold text-text-dim uppercase tracking-wider">
-                                        Contenidos Temáticos y Subtemas (1 por línea):
+                                        Contenidos Temáticos y Subtemas:
                                     </span>
                                 </div>
-                                <textarea
+                                <CurriculumOutlineEditor
                                     value={u.contenidos}
-                                    onChange={(e) => handleUpdateUnit(idx, 'contenidos', e.target.value)}
+                                    onChange={(val) => handleUpdateUnit(idx, 'contenidos', val)}
+                                    unitNumber={u.num || idx + 1}
                                     disabled={readOnly}
-                                    rows={Math.max(6, (u.contenidos || '').split('\n').length + 1)}
-                                    placeholder="1.1 Introducción y contextualización&#10;1.2 Principios teóricos y normativos&#10;1.3 Casos prácticos y aplicación inicial"
-                                    className="w-full bg-bg-deep border border-border-thin rounded-xl p-4 text-sm sm:text-base font-sans text-text-main outline-none focus:border-text-main resize-none leading-relaxed transition-colors placeholder:text-text-dim/40 min-h-[160px] sm:min-h-[180px]"
                                 />
                             </div>
                         </div>
@@ -601,8 +553,7 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                         </button>
                     )}
                 </div>
-            )}
-        </div>
+            </div>
 
             {/* 2. PANEL INDEPENDIENTE: ASISTENTE DE CÁLCULO Y BALANCE HORARIO */}
             <div className="rounded-xl border border-border-thin overflow-hidden bg-bg-deep shadow-xs">
