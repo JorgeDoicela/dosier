@@ -818,45 +818,85 @@ export const convertDraftToEditorFields = (
     }
 
     if (includeSection('pea_career_outcomes_section') && draft.rdaCarrera) {
-        patch.RdaCarrera = draft.rdaCarrera;
+        let cleanCareer = draft.rdaCarrera.trim();
+        cleanCareer = cleanCareer.replace(/(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*[-#]?\s*\d*\s*:?\s*(?:<\/strong>|<\/b>)?/gi, '');
+        if (!cleanCareer.includes('<p') && !cleanCareer.includes('<li')) {
+            const lines = cleanCareer.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const items = lines.length > 1 ? lines : cleanCareer.split(/(?<=\.)\s+(?=[A-ZÁÉÍÓÚ])/).map(s => s.trim()).filter(Boolean);
+            cleanCareer = items.map(it => `<p>${it.replace(/^[-•*]\s*/, '').replace(/^\d+[\.\)-]\s*/, '')}</p>`).join('');
+        }
+        patch.RdaCarrera = cleanCareer;
     }
 
     if (includeSection('pea_subject_outcomes_section') && draft.resultadosAprendizaje) {
-        patch.ResultadosAprendizaje = draft.resultadosAprendizaje;
+        let cleanRda = draft.resultadosAprendizaje.trim();
+        cleanRda = cleanRda.replace(/(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*[-#]?\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?/gi, '');
+        if (!cleanRda.includes('<p') && !cleanRda.includes('<li')) {
+            const lines = cleanRda.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const items = lines.length > 1 ? lines : cleanRda.split(/(?<=\.)\s+(?=[A-ZÁÉÍÓÚ])/).map(s => s.trim()).filter(Boolean);
+            cleanRda = items.map(it => `<p>${it.replace(/^[-•*]\s*/, '').replace(/^\d+[\.\)-]\s*/, '')}</p>`).join('');
+        }
+        patch.ResultadosAprendizaje = cleanRda;
     }
 
     if (includeSection('pea_contents_section') && draft.unidades.length > 0) {
         let workingUnits = [...draft.unidades];
         const initialTotalHours = workingUnits.reduce((acc, u) => acc + (Number(u.horasCD) || 0) + (Number(u.horasAPE) || 0) + (Number(u.horasTA) || 0), 0);
+        const targetTotal = (draft.totalHorasAsignatura && draft.totalHorasAsignatura > 0)
+            ? draft.totalHorasAsignatura
+            : (draft.validationSummary?.sigafiTotalHoras && draft.validationSummary.sigafiTotalHoras > 0 ? draft.validationSummary.sigafiTotalHoras : 0);
 
-        // Si todas las unidades extraídas vinieron con 0 horas, distribuir inteligentemente las horas globales
-        if (initialTotalHours <= 0) {
+        // Si todas las unidades extraídas vinieron con 0 horas, o difieren significativamente del total de la asignatura
+        if (initialTotalHours <= 0 || (targetTotal > 0 && Math.abs(initialTotalHours - targetTotal) > 0.5)) {
             const count = workingUnits.length;
-            const targetTotal = (draft.totalHorasAsignatura && draft.totalHorasAsignatura > 0)
-                ? draft.totalHorasAsignatura
-                : (draft.validationSummary?.sigafiTotalHoras && draft.validationSummary.sigafiTotalHoras > 0 ? draft.validationSummary.sigafiTotalHoras : 96);
+            const effectiveTarget = targetTotal > 0 ? targetTotal : 96;
 
-            let tCd = (draft.horasContactoDocente && draft.horasContactoDocente > 0) ? draft.horasContactoDocente : Math.floor(targetTotal / 3);
-            let tApe = (draft.horasPracticoExperimental && draft.horasPracticoExperimental > 0) ? draft.horasPracticoExperimental : Math.floor(targetTotal / 3);
-            let tTa = (draft.horasAutonomo && draft.horasAutonomo > 0) ? draft.horasAutonomo : (targetTotal - tCd - tApe);
+            if (initialTotalHours > 0) {
+                // Escalar proporcionalmente al total de la asignatura
+                const ratio = effectiveTarget / initialTotalHours;
+                let runningSum = 0;
+                workingUnits = workingUnits.map((u, i) => {
+                    const isLast = i === count - 1;
+                    const cd = Math.round(Number(u.horasCD || 0) * ratio);
+                    const ape = Math.round(Number(u.horasAPE || 0) * ratio);
+                    const ta = Math.round(Number(u.horasTA || 0) * ratio);
+                    const unitTotal = cd + ape + ta;
+                    runningSum += unitTotal;
+                    if (isLast && runningSum !== effectiveTarget) {
+                        const diff = effectiveTarget - runningSum;
+                        return {
+                            ...u,
+                            horasCD: cd,
+                            horasAPE: ape,
+                            horasTA: Math.max(0, ta + diff),
+                            horasTotal: cd + ape + Math.max(0, ta + diff)
+                        };
+                    }
+                    return { ...u, horasCD: cd, horasAPE: ape, horasTA: ta, horasTotal: unitTotal };
+                });
+            } else {
+                let tCd = (draft.horasContactoDocente && draft.horasContactoDocente > 0) ? draft.horasContactoDocente : Math.floor(effectiveTarget / 3);
+                let tApe = (draft.horasPracticoExperimental && draft.horasPracticoExperimental > 0) ? draft.horasPracticoExperimental : Math.floor(effectiveTarget / 3);
+                let tTa = (draft.horasAutonomo && draft.horasAutonomo > 0) ? draft.horasAutonomo : (effectiveTarget - tCd - tApe);
 
-            const distribute = (totalBucket: number) => {
-                const baseVal = Math.floor(totalBucket / count);
-                const rem = totalBucket % count;
-                return Array.from({ length: count }, (_, i) => baseVal + (i < rem ? 1 : 0));
-            };
+                const distribute = (totalBucket: number) => {
+                    const baseVal = Math.floor(totalBucket / count);
+                    const rem = totalBucket % count;
+                    return Array.from({ length: count }, (_, i) => baseVal + (i < rem ? 1 : 0));
+                };
 
-            const cdDist = distribute(tCd);
-            const apeDist = distribute(tApe);
-            const taDist = distribute(tTa);
+                const cdDist = distribute(tCd);
+                const apeDist = distribute(tApe);
+                const taDist = distribute(tTa);
 
-            workingUnits = workingUnits.map((u, i) => ({
-                ...u,
-                horasCD: cdDist[i],
-                horasAPE: apeDist[i],
-                horasTA: taDist[i],
-                horasTotal: cdDist[i] + apeDist[i] + taDist[i]
-            }));
+                workingUnits = workingUnits.map((u, i) => ({
+                    ...u,
+                    horasCD: cdDist[i],
+                    horasAPE: apeDist[i],
+                    horasTA: taDist[i],
+                    horasTotal: cdDist[i] + apeDist[i] + taDist[i]
+                }));
+            }
         }
 
         patch.Unidades = workingUnits.map((u, idx) => {

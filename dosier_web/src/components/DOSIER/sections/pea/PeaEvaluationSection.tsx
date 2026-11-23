@@ -136,9 +136,9 @@ export const PeaEvaluationSection: React.FC<PeaEvaluationSectionProps> = ({
                                             value={item.tipo}
                                             onChange={(e) => handleUpdateEvaluacion(idx, 'tipo', e.target.value)}
                                             disabled={readOnly}
-                                            rows={Math.max(2, (item.tipo || '').split('\n').length)}
+                                            rows={Math.max(3, (item.tipo || '').split('\n').length)}
                                             placeholder="Tipo de evaluación o actividad..."
-                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main uppercase outline-none focus:border-text-main resize-none transition-colors leading-relaxed"
+                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main uppercase outline-none focus:border-text-main resize-none transition-colors leading-relaxed min-h-[74px] sm:min-h-[80px]"
                                         />
                                     </td>
                                     <td className="p-3 text-center align-top border-l border-border-thin">

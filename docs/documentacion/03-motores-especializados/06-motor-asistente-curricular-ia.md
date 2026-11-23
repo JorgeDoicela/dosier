@@ -117,12 +117,14 @@ El procesamiento de archivos preexistentes está desacoplado del asistente gener
 * **Servicio Backend:** `PeaDocumentExtractorService.cs` implementando `IPeaDocumentExtractorService`.
 * **Ruta Oficial de Ingestión:** `POST /api/pea/uuid/{uuid}/importar-documento` (con alias `/ai/importar-archivo`).
 * **Formatos Digitales Admitidos:**
-  1. **PDF con Texto Digital (`.pdf`):** Extracción nativa página por página mediante `iText 9` (`PdfTextExtractor` con `SimpleTextExtractionStrategy`).
+  1. **PDF con Texto Digital (`.pdf`):** Extracción nativa página por página mediante `iText 9` (`PdfTextExtractor` con `LocationTextExtractionStrategy` para preservación fiel de coordenadas espaciales y orden de columnas en tablas).
   2. **Microsoft Word OpenXML (`.docx`):** Descompresión nativa en memoria mediante `System.IO.Compression.ZipArchive` y recorrido jerárquico de `word/document.xml` con `XDocument`, extrayendo párrafos (`<w:p>`) y celdas de tablas curriculares (`<w:tbl>`, `<w:tr>`, `<w:tc>`).
 * **Algoritmos Especializados de Sanitización de Tablas:**
+  - `NormalizeRdaToHtml`: Normaliza párrafos de resultados de aprendizaje a listas ordenadas HTML limpias sin etiquetas duplicadas.
   - `CleanContenidosOrphanNumbers`: Remueve numeraciones flotantes huérfanas derivadas de saltos de página en tablas curriculares.
   - `CompleteTruncatedUnitTitle`: Reconstruye títulos de unidades temáticas interrumpidos por celdas combinadas.
   - `SanitizeRedundantHeading`: Elimina encabezados duplicados redundantes mediante expresiones regulares.
+  - `ReconcileUnitHoursWithSigafi`: Reconciliación matemática estricta que ajusta proporcionalmente las horas de cada unidad temática con la carga horaria oficial de la asignatura en SIGAFI.
 * **Extracción de Carga Horaria y Código de Carrera:** El esquema JSON de extracción captura tanto los totales de la asignatura (`total_horas_asignatura`, `horas_contacto_docente`, `horas_practico_experimental`, `horas_autonomo`) como el desglose por unidad (`horas_cd`, `horas_ape`, `horas_ta`, `total_horas_unidad`) y el código de carrera institucional (`codigo_carrera`, ej. `DS` o `SOF`). Si una unidad solo especifica el total de horas acumuladas, se dividen inteligentemente en tres tercios enteros entre CD, APE y TA.
 * **Exclusión Determinista de Imágenes:** Rechaza cualquier archivo `.png`, `.jpg`, `.jpeg`, `.webp` o PDF escaneado sin texto seleccionable (menos de 50 caracteres alfanuméricos extraídos).
 * **Principio de Fidelidad Textual:** El extractor opera estrictamente como analizador sintáctico del texto subido. Las cabeceras institucionales de SIGAFI (nombre oficial de materia, código, horas, carrera) se mantienen inmutables y nunca son sobreescritas por el contenido del archivo.

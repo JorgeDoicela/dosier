@@ -142,8 +142,8 @@ export const RenderPeaResourcesSection: React.FC<PeaBlockProps> = ({
                                     <textarea
                                         value={p.nombre}
                                         onChange={e => updatePractica(idx, 'nombre', e.target.value)}
-                                        rows={2}
-                                        className="w-full px-1.5 py-0.5 border border-transparent hover:border-slate-300 focus:border-[#0070f3] rounded-xs text-[9px] text-slate-800 outline-none bg-transparent resize-none leading-relaxed"
+                                        rows={3}
+                                        className="w-full px-1.5 py-1 border border-transparent hover:border-slate-300 focus:border-[#0070f3] rounded-xs text-[9px] text-slate-800 outline-none bg-transparent resize-none leading-relaxed min-h-[48px]"
                                         placeholder="Descripción y caracterización de la práctica experimental..."
                                     />
                                     {practicas.length > 1 && (

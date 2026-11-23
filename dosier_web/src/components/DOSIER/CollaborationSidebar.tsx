@@ -1941,7 +1941,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                             <div className="flex flex-col min-h-full flex-1 justify-between">
                                 <div className="space-y-4">
                                     {/* Encabezado del Extractor */}
-                                    <div className="pb-3 border-b border-border-thin">
+                                    <div className="pb-1">
                                         <h3 className="text-xs font-bold text-text-main">
                                             Importar PEA
                                         </h3>
@@ -1994,37 +1994,40 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                 </span>
                                             </div>
                                         ) : (
-                                            <div className="p-3.5 rounded-xl border border-[#0070f3]/30 bg-[#0070f3]/5 space-y-2">
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="flex items-start gap-2.5 min-w-0">
-                                                        <div className="p-2 rounded-lg bg-[#0070f3]/10 text-[#0070f3] shrink-0 mt-0.5">
-                                                            <FileText size={18} />
-                                                        </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="text-xs font-semibold text-text-main truncate" title={sidebarImportFile.name}>
-                                                                {sidebarImportFile.name}
-                                                            </p>
-                                                            <p className="text-[10px] font-mono text-text-dim mt-0.5">
-                                                                {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSidebarImportFile(null)}
-                                                        className="p-1 rounded-md text-text-dim hover:text-red-500 hover:bg-surface transition-colors cursor-pointer shrink-0"
-                                                        title="Eliminar archivo"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
+                                            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] p-6 text-center transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] relative overflow-hidden">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSidebarImportFile(null)}
+                                                    className="absolute top-3 right-3 p-1.5 rounded-lg text-text-dim hover:text-red-500 hover:bg-bg-deep transition-colors cursor-pointer"
+                                                    title="Quitar archivo"
+                                                >
+                                                    <Trash2 size={15} />
+                                                </button>
+
+                                                <FileText size={32} strokeWidth={1.5} className="text-emerald-600 dark:text-emerald-400 mb-3.5 shrink-0" />
+
+                                                <p className="text-xs sm:text-sm font-semibold text-text-main line-clamp-2 break-all max-w-[190px] leading-snug px-1" title={sidebarImportFile.name}>
+                                                    {sidebarImportFile.name}
+                                                </p>
+
+                                                <p className="text-[11px] font-mono text-text-dim mt-1.5">
+                                                    {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
+                                                </p>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => sidebarFileInputRef.current?.click()}
+                                                    className="mt-5 text-[11px] font-medium px-3.5 py-1.5 rounded-lg border border-border-thin bg-surface hover:bg-bg-deep text-text-main transition-colors cursor-pointer shadow-2xs"
+                                                >
+                                                    Cambiar archivo
+                                                </button>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Dock de Acciones al fondo */}
-                                <div className="mt-auto pt-4 border-t border-border-thin space-y-2 shrink-0">
+                                <div className="mt-auto pt-3 space-y-2 shrink-0">
                                     <button
                                         type="button"
                                         onClick={handleSidebarExtractDoc}
@@ -2037,10 +2040,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                                                 <span>Extrayendo...</span>
                                             </>
                                         ) : (
-                                            <>
-                                                <FileUp size={15} />
-                                                <span>Extraer</span>
-                                            </>
+                                            <span>Extraer</span>
                                         )}
                                     </button>
                                 </div>

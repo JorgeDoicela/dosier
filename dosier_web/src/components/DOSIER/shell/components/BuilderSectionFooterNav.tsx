@@ -15,6 +15,8 @@ export const BuilderSectionFooterNav: React.FC<BuilderSectionFooterNavProps> = (
     sections,
     activeTab,
     setActiveTab,
+    canSign = false,
+    readOnly = false,
     onNavigate
 }) => {
     if (!sections || sections.length === 0 || activeTab === 'output') {
@@ -53,7 +55,7 @@ export const BuilderSectionFooterNav: React.FC<BuilderSectionFooterNavProps> = (
     return (
         <nav
             aria-label="Navegación de secciones"
-            className="mt-8 flex items-center justify-between gap-4 select-none"
+            className="mt-3 sm:mt-4 flex items-center justify-between gap-4 select-none"
         >
             {hasPrevious ? (
                 <button

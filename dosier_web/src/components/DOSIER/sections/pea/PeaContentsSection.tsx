@@ -534,9 +534,9 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                                     value={u.contenidos}
                                     onChange={(e) => handleUpdateUnit(idx, 'contenidos', e.target.value)}
                                     disabled={readOnly}
-                                    rows={Math.max(5, (u.contenidos || '').split('\n').length + 1)}
+                                    rows={Math.max(6, (u.contenidos || '').split('\n').length + 1)}
                                     placeholder="1.1 Introducción y contextualización&#10;1.2 Principios teóricos y normativos&#10;1.3 Casos prácticos y aplicación inicial"
-                                    className="w-full bg-bg-deep border border-border-thin rounded-xl p-4 text-sm sm:text-base font-sans text-text-main outline-none focus:border-text-main resize-none leading-relaxed transition-colors placeholder:text-text-dim/40"
+                                    className="w-full bg-bg-deep border border-border-thin rounded-xl p-4 text-sm sm:text-base font-sans text-text-main outline-none focus:border-text-main resize-none leading-relaxed transition-colors placeholder:text-text-dim/40 min-h-[160px] sm:min-h-[180px]"
                                 />
                             </div>
                         </div>

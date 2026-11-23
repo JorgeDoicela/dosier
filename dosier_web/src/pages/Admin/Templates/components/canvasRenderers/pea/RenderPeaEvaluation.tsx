@@ -163,9 +163,9 @@ export const RenderPeaEvaluationSection: React.FC<PeaBlockProps> = ({
                                 <textarea
                                     value={row.tipo}
                                     onChange={e => updateRow(idx, 'tipo', e.target.value)}
-                                    rows={2}
+                                    rows={3}
                                     placeholder="Descripción del tipo de evaluación..."
-                                    className="w-full font-medium text-[8.5px] bg-transparent border border-transparent hover:border-slate-300 focus:border-[#0070f3] rounded-xs px-1 py-0.5 outline-none resize-none leading-tight"
+                                    className="w-full font-medium text-[8.5px] bg-transparent border border-transparent hover:border-slate-300 focus:border-[#0070f3] rounded-xs px-1 py-1 outline-none resize-none leading-relaxed min-h-[44px]"
                                 />
                             </td>
 

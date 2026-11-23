@@ -53,6 +53,27 @@ const stripHtmlPreview = (html: string): string => {
         .trim();
 };
 
+const parseRdaItems = (html: string): string[] => {
+    if (!html) return [];
+    if (html.includes('<p') || html.includes('<li')) {
+        const matches = html.match(/<(p|li)\b[^>]*>(.*?)<\/\1>/gi);
+        if (matches && matches.length > 0) {
+            return matches
+                .map(m => m.replace(/<[^>]+>/g, '').replace(/^(?:[-•*]|\d+[\.\)-]|rda\s*[-#]?\s*\d*\s*:?)\s*/i, '').trim())
+                .filter(Boolean);
+        }
+    }
+    const lines = html.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+        return lines.map(l => l.replace(/^(?:[-•*]|\d+[\.\)-]|rda\s*[-#]?\s*\d*\s*:?)\s*/i, '').trim()).filter(Boolean);
+    }
+    const sentences = html.split(/(?<=\.)\s+(?=[A-ZÁÉÍÓÚ])/).map(s => s.trim()).filter(Boolean);
+    if (sentences.length > 1) {
+        return sentences.map(s => s.replace(/^(?:[-•*]|\d+[\.\)-]|rda\s*[-#]?\s*\d*\s*:?)\s*/i, '').trim()).filter(Boolean);
+    }
+    return [html.replace(/<[^>]+>/g, '').trim()].filter(Boolean);
+};
+
 export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
     isOpen,
     onClose,
@@ -212,16 +233,13 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
             >
                 {/* Cabecera Sólida */}
                 <div className="px-6 py-4 bg-zinc-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        <FileUp size={18} className="text-[#0070f3] shrink-0" strokeWidth={1.75} />
-                        <div className="min-w-0">
-                            <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-zinc-100 truncate">
-                                Extractor e Importador de PEA (PDF / Word)
-                            </h3>
-                            <p className="text-xs text-slate-500 dark:text-zinc-400 truncate">
-                                Extracción y migración fiel de contenidos desde archivo digital (.pdf o .docx)
-                            </p>
-                        </div>
+                    <div className="min-w-0">
+                        <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                            Extractor e Importador de PEA (PDF / Word)
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 truncate">
+                            Extracción y migración fiel de contenidos desde archivo digital (.pdf o .docx)
+                        </p>
                     </div>
 
                     <button
@@ -301,16 +319,13 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                     </div>
                                 ) : (
                                     <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <FileText size={18} className="text-[#0070f3] shrink-0" strokeWidth={1.75} />
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
-                                                    {selectedFile.name}
-                                                </p>
-                                                <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                                                    {(selectedFile.size / 1024).toFixed(1)} KB · Documento cargado listo para extracción
-                                                </p>
-                                            </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                                {selectedFile.name}
+                                            </p>
+                                            <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                                {(selectedFile.size / 1024).toFixed(1)} KB · Documento cargado listo para extracción
+                                            </p>
                                         </div>
                                         <button
                                             type="button"
@@ -350,16 +365,13 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                         </div>
                     ) : (
                         <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <FileText size={18} className="text-[#0070f3] shrink-0" strokeWidth={1.75} />
-                                <div className="min-w-0">
-                                    <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
-                                        {selectedFile?.name || initialFile?.name || 'Documento procesado'}
-                                    </p>
-                                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                        Contenido extraído y estructurado exitosamente
-                                    </p>
-                                </div>
+                            <div className="min-w-0">
+                                <p className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
+                                    {selectedFile?.name || initialFile?.name || 'Documento procesado'}
+                                </p>
+                                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                    Contenido extraído y estructurado exitosamente
+                                </p>
                             </div>
                         </div>
                     )}
@@ -391,28 +403,6 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                     const isChecked = selectedSections.includes(secId);
                                     const label = SECTION_LABELS[secId] || secId;
 
-                                    let previewText = '';
-                                    if (secId === 'pea_objectives_section') {
-                                        previewText = stripHtmlPreview(extractedDraft.objetivoAsignatura);
-                                    } else if (secId === 'pea_prerequisites_section') {
-                                        previewText = extractedDraft.prerrequisitos.map(p => `${p.asignatura}${p.observacion ? ` (${p.observacion})` : ''}`).join(', ');
-                                    } else if (secId === 'pea_career_outcomes_section') {
-                                        previewText = stripHtmlPreview(extractedDraft.rdaCarrera);
-                                    } else if (secId === 'pea_subject_outcomes_section') {
-                                        previewText = stripHtmlPreview(extractedDraft.resultadosAprendizaje);
-                                    } else if (secId === 'pea_contents_section') {
-                                        const totalDoc = extractedDraft.totalHorasAsignatura || extractedDraft.unidades.reduce((acc, u) => acc + (u.horasTotal || 0), 0);
-                                        previewText = `${extractedDraft.unidades.map(u => `U${u.num}: ${u.titulo} (${u.horasCD}CD + ${u.horasAPE}APE + ${u.horasTA}TA = ${u.horasTotal}h)`).join(' · ')}${totalDoc > 0 ? ` · Total: ${totalDoc} hrs` : ''}`;
-                                    } else if (secId === 'pea_methodology_section') {
-                                        previewText = stripHtmlPreview(extractedDraft.metodologiaEnsenanza);
-                                    } else if (secId === 'pea_resources_section') {
-                                        previewText = `${extractedDraft.actividadesPracticas.length} prácticas experimentales extraídas`;
-                                    } else if (secId === 'pea_evaluation_section') {
-                                        previewText = `${extractedDraft.evaluaciones.length} criterios de evaluación sobre 10 pts`;
-                                    } else if (secId === 'pea_bibliography_section') {
-                                        previewText = `${extractedDraft.bibliografias.length} referencias bibliográficas en formato APA`;
-                                    }
-
                                     return (
                                         <label
                                             key={secId}
@@ -424,14 +414,146 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                                 onChange={() => toggleSectionSelection(secId)}
                                                 className="mt-0.5 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
                                             />
-                                            <div className="min-w-0 flex-1 space-y-0.5">
+                                            <div className="min-w-0 flex-1 space-y-1">
                                                 <div className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
                                                     {label}
                                                 </div>
-                                                {previewText && (
+
+                                                {/* Renderizador Estructurado por Sección */}
+                                                {secId === 'pea_objectives_section' && (
                                                     <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-                                                        {previewText}
+                                                        {stripHtmlPreview(extractedDraft.objetivoAsignatura)}
                                                     </p>
+                                                )}
+
+                                                {secId === 'pea_prerequisites_section' && (
+                                                    <div className="space-y-1 pt-0.5">
+                                                        {extractedDraft.prerrequisitos.map((p, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-300">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500 shrink-0" />
+                                                                <span className="font-medium text-slate-800 dark:text-zinc-200">{p.asignatura}</span>
+                                                                {p.observacion && (
+                                                                    <span className="text-[11px] text-slate-400 dark:text-zinc-500 font-normal">({p.observacion})</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_career_outcomes_section' && (
+                                                    <div className="space-y-1.5 pt-0.5">
+                                                        {parseRdaItems(extractedDraft.rdaCarrera).map((item, idx) => (
+                                                            <div key={idx} className="flex items-start gap-2 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500 shrink-0 mt-1.5" />
+                                                                <span className="flex-1">{item}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_subject_outcomes_section' && (
+                                                    <div className="space-y-1.5 pt-0.5">
+                                                        {parseRdaItems(extractedDraft.resultadosAprendizaje).map((item, idx) => (
+                                                            <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">
+                                                                <span className="font-semibold text-slate-700 dark:text-zinc-300 shrink-0">
+                                                                    {idx + 1}.
+                                                                </span>
+                                                                <span className="flex-1">{item}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_contents_section' && (
+                                                    <div className="space-y-2 pt-1">
+                                                        {extractedDraft.unidades.map(u => (
+                                                            <div key={u.num} className="p-2.5 rounded-lg border border-slate-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 text-xs">
+                                                                <div className="flex flex-wrap items-center justify-between gap-2 font-medium text-slate-800 dark:text-zinc-200">
+                                                                    <span>UNIDAD {u.num}: {u.titulo}</span>
+                                                                    <span className="text-[11px] font-normal text-slate-500 dark:text-zinc-400">
+                                                                        {u.horasCD}h CD · {u.horasAPE}h APE · {u.horasTA}h TA = {u.horasTotal}h
+                                                                    </span>
+                                                                </div>
+                                                                {u.contenidos && (
+                                                                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed">
+                                                                        {u.contenidos.replace(/\r?\n+/g, ' · ')}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                        <div className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 flex items-center justify-between px-1 pt-0.5">
+                                                            <span>{extractedDraft.unidades.length} unidades temáticas</span>
+                                                            <span className="font-semibold text-slate-700 dark:text-zinc-300">
+                                                                Total: {extractedDraft.totalHorasAsignatura || extractedDraft.unidades.reduce((acc, u) => acc + (u.horasTotal || 0), 0)} horas
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_methodology_section' && (
+                                                    <div className="space-y-2 pt-0.5">
+                                                        {extractedDraft.metodologiaEnsenanza && (
+                                                            <div>
+                                                                <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300">Estrategias Metodológicas:</span>
+                                                                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mt-0.5">
+                                                                    {stripHtmlPreview(extractedDraft.metodologiaEnsenanza)}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        {extractedDraft.recursosDidacticos && (
+                                                            <div>
+                                                                <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300">Recursos Didácticos e Informatización:</span>
+                                                                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mt-0.5">
+                                                                    {stripHtmlPreview(extractedDraft.recursosDidacticos)}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_resources_section' && (
+                                                    <div className="space-y-1 pt-0.5">
+                                                        {extractedDraft.actividadesPracticas.map((p, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-300">
+                                                                <div className="flex items-center gap-2 truncate pr-2">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500 shrink-0" />
+                                                                    <span className="truncate">Práctica {p.unidad ? `U${p.unidad}` : idx + 1}: {p.nombre || 'Práctica experimental'}</span>
+                                                                </div>
+                                                                {p.horas && (
+                                                                    <span className="font-mono text-[11px] text-slate-400 dark:text-zinc-500 shrink-0">{p.horas}h</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_evaluation_section' && (
+                                                    <div className="space-y-1 pt-0.5">
+                                                        {extractedDraft.evaluaciones.map((e, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-300">
+                                                                <div className="flex items-center gap-2 truncate pr-2">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500 shrink-0" />
+                                                                    <span className="truncate">{e.nota || e.tipo || 'Criterio de evaluación'}</span>
+                                                                </div>
+                                                                {e.calificacion && (
+                                                                    <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-zinc-300 shrink-0">
+                                                                        {e.calificacion} pts
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {secId === 'pea_bibliography_section' && (
+                                                    <div className="space-y-1.5 pt-0.5">
+                                                        {extractedDraft.bibliografias.map((b, idx) => (
+                                                            <div key={idx} className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed truncate">
+                                                                <span className="font-semibold text-slate-700 dark:text-zinc-300 mr-1.5">[{b.tipoBibliografia || 'Básica'}]</span>
+                                                                <span>{b.citaCompletaApa || `${b.autor || ''} (${b.tituloLibro || ''})`}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 )}
                                             </div>
                                         </label>

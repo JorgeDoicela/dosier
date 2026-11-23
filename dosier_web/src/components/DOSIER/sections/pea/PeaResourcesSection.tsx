@@ -212,9 +212,9 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
                                             value={item.nombre}
                                             onChange={(e) => handleUpdatePractica(idx, 'nombre', e.target.value)}
                                             disabled={readOnly}
-                                            rows={Math.max(2, (item.nombre || '').split('\n').length)}
+                                            rows={Math.max(3, (item.nombre || '').split('\n').length)}
                                             placeholder="Nombre de la práctica y caracterización de la actividad..."
-                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main outline-none focus:border-text-main resize-none transition-colors leading-relaxed placeholder:text-text-dim/40"
+                                            className="w-full bg-surface border border-border-thin rounded-xl p-3 text-xs sm:text-sm text-text-main outline-none focus:border-text-main resize-none transition-colors leading-relaxed placeholder:text-text-dim/40 min-h-[76px] sm:min-h-[84px]"
                                         />
                                     </td>
                                     {!readOnly && (

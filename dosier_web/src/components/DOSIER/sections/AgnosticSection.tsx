@@ -397,6 +397,7 @@ export const AgnosticSection: React.FC<AgnosticSectionProps> = ({
                         rows={3}
                         value={val}
                         onChange={(e) => handlePrivateChange(e.target.value)}
+                        className={`${commonInputProps.className || ''} min-h-[85px] resize-none`}
                     />
                 )}
 

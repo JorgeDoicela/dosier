@@ -196,7 +196,7 @@ namespace dosier_infrastructure.Curriculum
                 for (int pageNum = 1; pageNum <= numPages; pageNum++)
                 {
                     var page = pdfDoc.GetPage(pageNum);
-                    string pageText = PdfTextExtractor.GetTextFromPage(page, new SimpleTextExtractionStrategy());
+                    string pageText = PdfTextExtractor.GetTextFromPage(page, new LocationTextExtractionStrategy());
                     if (!string.IsNullOrWhiteSpace(pageText))
                     {
                         sb.AppendLine($"--- PÁGINA {pageNum} ---");
@@ -771,8 +771,8 @@ namespace dosier_infrastructure.Curriculum
             var root = doc.RootElement;
 
             result.ObjetivoAsignatura = SanitizeRedundantHeading(TryGetString(root, "objetivo_asignatura", "ObjetivoAsignatura"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:b\)\s*)?objetivo\s+de\s+la\s+asignatura\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
-            result.RdaCarrera = TryGetString(root, "rda_carrera", "RdaCarrera");
-            result.ResultadosAprendizaje = TryGetString(root, "resultados_aprendizaje", "ResultadosAprendizaje");
+            result.RdaCarrera = NormalizeRdaToHtml(TryGetString(root, "rda_carrera", "RdaCarrera"));
+            result.ResultadosAprendizaje = NormalizeRdaToHtml(TryGetString(root, "resultados_aprendizaje", "ResultadosAprendizaje"));
             result.MetodologiaEnsenanza = SanitizeRedundantHeading(TryGetString(root, "metodologia_ensenanza", "MetodologiaEnsenanza"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*(?:estrategias\s+metodol[oó]gicas|metodolog[ií]a\s+de\s+ense[ñn]anza)\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
             result.RecursosDidacticos = SanitizeRedundantHeading(TryGetString(root, "recursos_didacticos", "RecursosDidacticos"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*recursos\s+did[aá]cticos(?:\s*[\/\-]\s*informatizaci[oó]n\s+del\s+aprendizaje)?\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
             result.BibliografiaBasica = SanitizeRedundantHeading(TryGetString(root, "bibliografia_basica", "BibliografiaBasica"), @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+b[aá]sica\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
@@ -866,11 +866,21 @@ namespace dosier_infrastructure.Curriculum
             // Reconciliación matemática determinista de horas con SIGAFI o con datos generales del documento
             if (result.Unidades.Count > 0)
             {
+                decimal totalAsig = ctx.TotalHoras > 0 ? ctx.TotalHoras : result.TotalHorasAsignatura;
                 decimal targetCd = ctx.HorasCD > 0 ? ctx.HorasCD : result.HorasContactoDocente;
                 decimal targetApe = ctx.HorasAPE > 0 ? ctx.HorasAPE : result.HorasPracticoExperimental;
                 decimal targetTa = ctx.HorasTA > 0 ? ctx.HorasTA : result.HorasAutonomo;
 
-                ReconcileUnitHoursWithSigafi(result.Unidades, targetCd, targetApe, targetTa);
+                ReconcileUnitHoursWithSigafi(result.Unidades, targetCd, targetApe, targetTa, totalAsig);
+
+                // Sincronizar los totales generales del DTO con la suma real de las unidades
+                decimal sumCd = result.Unidades.Sum(u => u.HorasCD);
+                decimal sumApe = result.Unidades.Sum(u => u.HorasAPE);
+                decimal sumTa = result.Unidades.Sum(u => u.HorasTA);
+                result.HorasContactoDocente = (int)sumCd;
+                result.HorasPracticoExperimental = (int)sumApe;
+                result.HorasAutonomo = (int)sumTa;
+                result.TotalHorasAsignatura = (int)(sumCd + sumApe + sumTa);
             }
 
             // Actividades Prácticas
@@ -1101,11 +1111,73 @@ namespace dosier_infrastructure.Curriculum
             return trimmed;
         }
 
+        public static string NormalizeRdaToHtml(string? rawRda)
+        {
+            if (string.IsNullOrWhiteSpace(rawRda)) return string.Empty;
+
+            var trimmed = rawRda.Trim();
+
+            // Si ya contiene etiquetas de lista o párrafos HTML
+            if (trimmed.Contains("<p", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Contains("<li", StringComparison.OrdinalIgnoreCase))
+            {
+                // Limpiar cualquier residuo de 'RDA 1:', 'RDA-1:' o prefijos similares dentro de los tags
+                var cleanedHtml = System.Text.RegularExpressions.Regex.Replace(
+                    trimmed,
+                    @"(?i)(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*[-#]?\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                    "");
+                return cleanedHtml.Trim();
+            }
+
+            // Separar por saltos de línea
+            var rawLines = trimmed.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(l => l.Trim())
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .ToList();
+
+            // Si vino todo en una sola línea continua pero con oraciones delimitadas por punto y verbos o mayúsculas
+            if (rawLines.Count == 1 && rawLines[0].Length > 120)
+            {
+                var sentences = System.Text.RegularExpressions.Regex.Split(rawLines[0], @"(?<=\.)\s+(?=[A-ZÁÉÍÓÚ])")
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+                if (sentences.Count > 1)
+                {
+                    rawLines = sentences;
+                }
+            }
+
+            var paragraphs = new List<string>();
+            foreach (var line in rawLines)
+            {
+                // Limpiar viñetas '•', '-', '*', '1.', 'RDA 1:', etc.
+                var clean = System.Text.RegularExpressions.Regex.Replace(
+                    line,
+                    @"^(?i)\s*(?:[-•*]|\d+[\.\)-]|(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*[-#]?\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?)\s*",
+                    "").Trim();
+
+                if (!string.IsNullOrWhiteSpace(clean))
+                {
+                    paragraphs.Add($"<p>{EscapeBasicHtml(clean)}</p>");
+                }
+            }
+
+            return string.Join("", paragraphs);
+        }
+
+        private static string EscapeBasicHtml(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+            return text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+        }
+
         private static void ReconcileUnitHoursWithSigafi(
             List<PeaDraftUnidadDto> unidades,
             decimal targetCd,
             decimal targetApe,
-            decimal targetTa)
+            decimal targetTa,
+            decimal targetTotal = 0m)
         {
             if (unidades.Count == 0) return;
 
@@ -1114,40 +1186,48 @@ namespace dosier_infrastructure.Curriculum
             decimal currentSumTa = unidades.Sum(u => u.HorasTA);
             decimal currentTotal = currentSumCd + currentSumApe + currentSumTa;
 
-            decimal targetSum = targetCd + targetApe + targetTa;
+            // Determinar el total objetivo efectivo
+            decimal effectiveTotal = targetTotal > 0
+                ? targetTotal
+                : ((targetCd + targetApe + targetTa) > 0 ? (targetCd + targetApe + targetTa) : (currentTotal > 0 ? currentTotal : 96m));
 
-            // Si el documento ya trajo horas válidas y consistentes por unidad:
-            if (currentTotal > 0)
+            // Si las unidades actuales ya coinciden exactamente con el total efectivo y tienen desglose coherente:
+            if (currentTotal > 0 && Math.Abs(currentTotal - effectiveTotal) < 0.01m &&
+                ((targetCd + targetApe + targetTa) <= 0 || (Math.Abs(currentSumCd - targetCd) < 0.01m && Math.Abs(currentSumApe - targetApe) < 0.01m)))
             {
-                // Si el target oficial es 0 o coincide con el total extraído del documento, respetamos la fidelidad extraída
-                if (targetSum <= 0 || Math.Abs(targetSum - currentTotal) < 0.01m)
+                return;
+            }
+
+            // Calcular desglose meta para CD, APE, TA que sume exactamente effectiveTotal
+            decimal finalTargetCd = targetCd;
+            decimal finalTargetApe = targetApe;
+            decimal finalTargetTa = targetTa;
+
+            decimal targetSum = finalTargetCd + finalTargetApe + finalTargetTa;
+            bool targetMatchesEffective = targetSum > 0 && Math.Abs(targetSum - effectiveTotal) < 0.01m;
+
+            if (!targetMatchesEffective)
+            {
+                // Si las unidades actuales tienen una proporción CD/APE/TA, escalar esa proporción a effectiveTotal
+                if (currentTotal > 0 && (currentSumCd > 0 || currentSumApe > 0 || currentSumTa > 0))
                 {
-                    return;
+                    finalTargetCd = Math.Round((currentSumCd / currentTotal) * effectiveTotal, MidpointRounding.AwayFromZero);
+                    finalTargetApe = Math.Round((currentSumApe / currentTotal) * effectiveTotal, MidpointRounding.AwayFromZero);
+                    finalTargetTa = effectiveTotal - finalTargetCd - finalTargetApe;
+                }
+                else
+                {
+                    // División en tercios enteros
+                    decimal third = Math.Floor(effectiveTotal / 3m);
+                    finalTargetCd = third;
+                    finalTargetApe = third;
+                    finalTargetTa = effectiveTotal - finalTargetCd - finalTargetApe;
                 }
             }
-            else
-            {
-                // Las unidades vinieron sin horas desglosadas (todas en 0)
-                if (targetSum <= 0)
-                {
-                    targetSum = 96m; // fallback reglamentario mínimo
-                    targetCd = 32m;
-                    targetApe = 32m;
-                    targetTa = 32m;
-                }
-            }
 
-            if (targetSum > 0 && (targetCd <= 0 || targetApe <= 0))
-            {
-                decimal third = Math.Floor((targetSum / 3m) * 100m) / 100m;
-                targetCd = third;
-                targetApe = third;
-                targetTa = targetSum - targetCd - targetApe;
-            }
-
-            DistributeExactBucket(unidades, u => u.HorasCD, (u, val) => u.HorasCD = val, targetCd);
-            DistributeExactBucket(unidades, u => u.HorasAPE, (u, val) => u.HorasAPE = val, targetApe);
-            DistributeExactBucket(unidades, u => u.HorasTA, (u, val) => u.HorasTA = val, targetTa);
+            DistributeExactBucket(unidades, u => u.HorasCD, (u, val) => u.HorasCD = val, finalTargetCd);
+            DistributeExactBucket(unidades, u => u.HorasAPE, (u, val) => u.HorasAPE = val, finalTargetApe);
+            DistributeExactBucket(unidades, u => u.HorasTA, (u, val) => u.HorasTA = val, finalTargetTa);
         }
 
         private static void DistributeExactBucket(
