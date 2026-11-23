@@ -861,7 +861,14 @@ namespace Dosier.Infrastructure.Common.Documents
                         ["ResultadosAprendizaje"] = string.Join("", pea.ResultadosAprendizaje
                             .Where(r => !string.Equals(r.TipoRda, "Carrera", StringComparison.OrdinalIgnoreCase) && r.CodigoRda != "RDA-EGRESO")
                             .OrderBy(r => r.Orden)
-                            .Select((r, idx) => $"<p><strong>{(!string.IsNullOrWhiteSpace(r.CodigoRda) ? r.CodigoRda : $"RDA {idx + 1}")}:</strong> {r.Descripcion}</p>")),
+                            .Select(r =>
+                            {
+                                var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                    r.Descripcion ?? "",
+                                    @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                    "").Trim();
+                                return $"<p>{cleanDesc}</p>";
+                            })),
                         ["Unidades"] = pea.Unidades.OrderBy(u => u.Orden).Select(u => new Dictionary<string, object?>
                         {
                             ["NumeroUnidad"] = u.NumeroUnidad,

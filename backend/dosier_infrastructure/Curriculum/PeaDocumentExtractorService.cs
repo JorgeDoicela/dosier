@@ -481,7 +481,7 @@ namespace dosier_infrastructure.Curriculum
   ""codigo_carrera"": ""DS"",
   ""objetivo_asignatura"": ""<p>Verbo en infinitivo + objeto + finalidad + contexto...</p>"",
   ""rda_carrera"": ""<ul><li>Resultado de aprendizaje de carrera...</li></ul>"",
-  ""resultados_aprendizaje"": ""<ul><li><strong>RDA 1:</strong> ...</li></ul>"",
+  ""resultados_aprendizaje"": ""<ul><li>Verbo en infinitivo + objeto + finalidad + contexto (sin prefijo RDA)...</li></ul>"",
   ""metodologia_ensenanza"": ""<p>Estrategias metodológicas activas...</p><ul><li>...</li></ul>"",
   ""recursos_didacticos"": ""<p>Entornos, laboratorios y herramientas...</p><ul><li>...</li></ul>"",
   ""prerrequisitos"": [

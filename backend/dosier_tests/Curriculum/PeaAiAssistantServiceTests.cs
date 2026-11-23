@@ -281,7 +281,7 @@ Aquí tienes el borrador solicitado:
 {
   ""objetivo_asignatura"": ""<p>Diseñar soluciones de software orientadas a objetos con buenas prácticas.</p>"",
   ""rda_carrera"": ""<ul><li>Desarrolla software modular.</li></ul>"",
-  ""resultados_aprendizaje"": ""<ul><li><strong>RDA 1:</strong> Modela clases y objetos.</li></ul>"",
+  ""resultados_aprendizaje"": ""<ul><li>Modela clases y objetos.</li></ul>"",
   ""metodologia_ensenanza"": ""<p>Aprendizaje basado en proyectos.</p>"",
   ""recursos_didacticos"": ""<p>IDE, Git y servidor de pruebas.</p>"",
   ""unidades"": [

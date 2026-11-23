@@ -700,10 +700,13 @@ namespace Dosier.Infrastructure.Common.Documents
                                     .ToList();
 
                                 if (!filtered.Any()) return "";
-                                return string.Join("", filtered.Select((r, idx) =>
+                                return string.Join("", filtered.Select(r =>
                                 {
-                                    string code = !string.IsNullOrWhiteSpace(r.CodigoRda) ? r.CodigoRda : $"RDA {idx + 1}";
-                                    return $"<p><strong>{code}:</strong> {r.Descripcion}</p>";
+                                    var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                        r.Descripcion ?? "",
+                                        @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                        "").Trim();
+                                    return $"<p>{cleanDesc}</p>";
                                 }));
                             }
 
@@ -714,18 +717,16 @@ namespace Dosier.Infrastructure.Common.Documents
                                 else if (existingRda is System.Collections.IEnumerable enumerable && !(existingRda is string))
                                 {
                                     var itemsList = new List<string>();
-                                    int idx = 1;
                                     foreach (var item in enumerable)
                                     {
                                         if (item == null) continue;
-                                        string code = $"RDA {idx}";
                                         string desc = "";
                                         if (item is IDictionary<string, object?> dict)
                                         {
                                             object? codeVal = null, descVal = null, tipoVal = null;
                                             dict.TryGetValue("CodigoRda", out codeVal);
                                             if (codeVal == null) dict.TryGetValue("codigo_rda", out codeVal);
-                                            code = codeVal?.ToString() ?? code;
+                                            var code = codeVal?.ToString() ?? "";
 
                                             dict.TryGetValue("Descripcion", out descVal);
                                             if (descVal == null) dict.TryGetValue("descripcion", out descVal);
@@ -740,10 +741,15 @@ namespace Dosier.Infrastructure.Common.Documents
                                         {
                                             desc = item.ToString() ?? "";
                                         }
-                                        if (!string.IsNullOrWhiteSpace(desc))
+
+                                        var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                            desc,
+                                            @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                            "").Trim();
+
+                                        if (!string.IsNullOrWhiteSpace(cleanDesc))
                                         {
-                                            itemsList.Add($"<p><strong>{code}:</strong> {desc}</p>");
-                                            idx++;
+                                            itemsList.Add($"<p>{cleanDesc}</p>");
                                         }
                                     }
                                     if (itemsList.Any())

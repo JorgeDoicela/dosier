@@ -2527,14 +2527,19 @@ namespace dosier_infrastructure.Curriculum
                             if (rEl.ValueKind == System.Text.Json.JsonValueKind.String)
                             {
                                 string textVal = rEl.GetString() ?? "";
-                                if (!string.IsNullOrWhiteSpace(textVal))
+                                var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                    textVal,
+                                    @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                    "").Trim();
+
+                                if (!string.IsNullOrWhiteSpace(cleanDesc))
                                 {
                                     entity.ResultadosAprendizaje.Add(new DocPeaResultadoAprendizaje
                                     {
                                         Uuid = Guid.NewGuid().ToString(),
                                         IdPea = entity.IdPea,
                                         CodigoRda = $"RDA-{rIdx}",
-                                        Descripcion = textVal,
+                                        Descripcion = cleanDesc,
                                         NivelDesarrollo = "Medio",
                                         TipoRda = "Asignatura",
                                         Orden = rIdx++
@@ -2551,18 +2556,23 @@ namespace dosier_infrastructure.Curriculum
                                 if (SafeTryGetProperty(rEl, new[] { "Descripcion", "descripcion", "texto", "rda" }, out var dP))
                                     desc = SafeParseString(dP);
 
+                                var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                    desc,
+                                    @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                    "").Trim();
+
                                 string nivel = "Medio";
                                 if (SafeTryGetProperty(rEl, new[] { "NivelDesarrollo", "nivel_desarrollo", "nivelDesarrollo", "nivel" }, out var nP))
                                     nivel = NormalizarNivelDesarrollo(SafeParseString(nP, "Medio"));
 
-                                if (!string.IsNullOrWhiteSpace(desc))
+                                if (!string.IsNullOrWhiteSpace(cleanDesc))
                                 {
                                     entity.ResultadosAprendizaje.Add(new DocPeaResultadoAprendizaje
                                     {
                                         Uuid = Guid.NewGuid().ToString(),
                                         IdPea = entity.IdPea,
                                         CodigoRda = string.IsNullOrWhiteSpace(codigo) ? $"RDA-{rIdx}" : codigo,
-                                        Descripcion = desc,
+                                        Descripcion = cleanDesc,
                                         NivelDesarrollo = nivel,
                                         TipoRda = "Asignatura",
                                         Orden = rIdx++
@@ -2578,14 +2588,19 @@ namespace dosier_infrastructure.Curriculum
                         var lines = cleaned.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         foreach (var line in lines)
                         {
-                            if (!string.IsNullOrWhiteSpace(line))
+                            var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                line,
+                                @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                "").Trim();
+
+                            if (!string.IsNullOrWhiteSpace(cleanDesc))
                             {
                                 entity.ResultadosAprendizaje.Add(new DocPeaResultadoAprendizaje
                                 {
                                     Uuid = Guid.NewGuid().ToString(),
                                     IdPea = entity.IdPea,
                                     CodigoRda = $"RDA-{rIdx}",
-                                    Descripcion = line,
+                                    Descripcion = cleanDesc,
                                     NivelDesarrollo = "Medio",
                                     TipoRda = "Asignatura",
                                     Orden = rIdx++

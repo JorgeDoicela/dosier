@@ -1122,11 +1122,10 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                 if (rawRda is System.Collections.IEnumerable enumRda && !(rawRda is string))
                 {
                     var rdaLines = new List<string>();
-                    int idx = 1;
                     foreach (var item in enumRda)
                     {
                         if (item == null) continue;
-                        string code = $"RDA {idx}";
+                        string code = "";
                         string desc = "";
                         string tipo = "";
                         if (item is IDictionary<string, object?> rDict)
@@ -1134,7 +1133,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             object? cv = null, dv = null, tv = null;
                             rDict.TryGetValue("CodigoRda", out cv);
                             if (cv == null) rDict.TryGetValue("codigo_rda", out cv);
-                            code = cv?.ToString() ?? code;
+                            code = cv?.ToString() ?? "";
 
                             rDict.TryGetValue("Descripcion", out dv);
                             if (dv == null) rDict.TryGetValue("descripcion", out dv);
@@ -1146,7 +1145,7 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         }
                         else if (item is JsonElement je && je.ValueKind == JsonValueKind.Object)
                         {
-                            if (je.TryGetProperty("CodigoRda", out var cp) || je.TryGetProperty("codigo_rda", out cp)) code = cp.GetString() ?? code;
+                            if (je.TryGetProperty("CodigoRda", out var cp) || je.TryGetProperty("codigo_rda", out cp)) code = cp.GetString() ?? "";
                             if (je.TryGetProperty("Descripcion", out var dp) || je.TryGetProperty("descripcion", out dp)) desc = dp.GetString() ?? "";
                             if (je.TryGetProperty("TipoRda", out var tp) || je.TryGetProperty("tipo_rda", out tp)) tipo = tp.GetString() ?? "";
                         }
@@ -1166,10 +1165,14 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                             continue;
                         }
 
-                        if (!string.IsNullOrWhiteSpace(desc))
+                        var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                            desc,
+                            @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                            "").Trim();
+
+                        if (!string.IsNullOrWhiteSpace(cleanDesc))
                         {
-                            rdaLines.Add($"<p><strong>{code}:</strong> {desc}</p>");
-                            idx++;
+                            rdaLines.Add($"<p>{cleanDesc}</p>");
                         }
                     }
 
@@ -1189,11 +1192,10 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                         if (rdaDoc.RootElement.ValueKind == JsonValueKind.Array)
                         {
                             var rdaLines = new List<string>();
-                            int idx = 1;
                             foreach (var el in rdaDoc.RootElement.EnumerateArray())
                             {
-                                string code = $"RDA {idx}";
-                                if (el.TryGetProperty("CodigoRda", out var cp) || el.TryGetProperty("codigo_rda", out cp)) code = cp.GetString() ?? code;
+                                string code = "";
+                                if (el.TryGetProperty("CodigoRda", out var cp) || el.TryGetProperty("codigo_rda", out cp)) code = cp.GetString() ?? "";
                                 string desc = "";
                                 if (el.TryGetProperty("Descripcion", out var dp) || el.TryGetProperty("descripcion", out dp)) desc = dp.GetString() ?? "";
                                 string tipo = "";
@@ -1209,10 +1211,14 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
                                     continue;
                                 }
 
-                                if (!string.IsNullOrWhiteSpace(desc))
+                                var cleanDesc = System.Text.RegularExpressions.Regex.Replace(
+                                    desc,
+                                    @"^(?i)\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                                    "").Trim();
+
+                                if (!string.IsNullOrWhiteSpace(cleanDesc))
                                 {
-                                    rdaLines.Add($"<p><strong>{code}:</strong> {desc}</p>");
-                                    idx++;
+                                    rdaLines.Add($"<p>{cleanDesc}</p>");
                                 }
                             }
                             if (rdaLines.Count > 0)
@@ -1319,6 +1325,22 @@ namespace Dosier.Infrastructure.Common.Documents.Engine
             // Bibliografía consulta
             CleanField("BibliografiaConsulta", "bibliografia_consulta",
                 @"^\s*(?:<p\b[^>]*>)?\s*(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*bibliograf[ií]a\s+de\s+consulta\s*(?:<\/strong>|<\/b>)?\s*(?::|-)?\s*(?:<\/p>|<br\s*\/?>|\n)?");
+
+            // Resultados de aprendizaje de la asignatura (eliminar prefijos redundantes 'RDA 1:', 'RDA 2:')
+            string? rdaStr = dict.GetValueOrDefault("ResultadosAprendizaje")?.ToString()
+                ?? dict.GetValueOrDefault("resultados_aprendizaje")?.ToString()
+                ?? dict.GetValueOrDefault("rda_asignatura")?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(rdaStr))
+            {
+                var cleaned = System.Text.RegularExpressions.Regex.Replace(
+                    rdaStr,
+                    @"(?i)(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?\s*",
+                    "");
+                dict["ResultadosAprendizaje"] = cleaned;
+                dict["resultados_aprendizaje"] = cleaned;
+                dict["rda_asignatura"] = cleaned;
+            }
         }
 
         private static string GenerateContenidosHtml(string contenidos)

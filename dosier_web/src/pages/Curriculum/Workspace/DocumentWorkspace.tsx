@@ -140,17 +140,17 @@ export const DocumentWorkspace: React.FC = () => {
 
             // 2. Resolver Resultados de Aprendizaje de Asignatura (excluyendo Carrera)
             if (typeof rawRdas === 'string') {
-                base.ResultadosAprendizaje = rawRdas;
+                base.ResultadosAprendizaje = rawRdas.replace(/(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?/gi, '');
             } else if (Array.isArray(rawRdas) && rawRdas.length > 0) {
                 const subjectRdas = rawRdas.filter((r: any) => 
                     (r.tipo_rda || r.tipoRda || r.TipoRda || '').toLowerCase() !== 'carrera' &&
                     (r.codigo_rda || r.codigoRda || r.CodigoRda) !== 'RDA-EGRESO'
                 );
                 base.ResultadosAprendizaje = subjectRdas
-                    .map((r: any, idx: number) => {
-                        const code = r.codigo_rda || r.codigoRda || r.CodigoRda || `RDA ${idx + 1}`;
-                        const desc = r.descripcion_rda || r.descripcionRda || r.descripcion || r.Descripcion || '';
-                        return `<p><strong>${code}:</strong> ${desc}</p>`;
+                    .map((r: any) => {
+                        const rawDesc = r.descripcion_rda || r.descripcionRda || r.descripcion || r.Descripcion || '';
+                        const desc = rawDesc.replace(/^(?:<strong\b[^>]*>|<b\b[^>]*>)?\s*rda\s*\d+\s*:?\s*(?:<\/strong>|<\/b>)?/i, '').trim();
+                        return `<p>${desc}</p>`;
                     })
                     .join('');
             } else {
