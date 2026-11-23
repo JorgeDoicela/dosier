@@ -436,6 +436,8 @@ namespace dosier_infrastructure.Curriculum
             sb.AppendLine("6. FORMATO DE SALIDA: Devuelve exclusivamente un objeto JSON válido que cumpla la estructura solicitada, sin explicaciones ni bloques de texto fuera del JSON.");
             sb.AppendLine("7. CERO ENCABEZADOS REDUNDANTES: Al extraer el contenido de 'recursos_didacticos', 'metodologia_ensenanza', 'objetivo_asignatura', omite el título o etiqueta de la sección (ej. no incluyas 'RECURSOS DIDÁCTICOS / INFORMATIZACIÓN DEL APRENDIZAJE:'). Extrae exclusivamente los recursos, herramientas o texto sustantivo.");
             sb.AppendLine("8. HORAS TOTALES Y CÓDIGO DE CARRERA: Extrae en 'total_horas_asignatura' el número total de horas de la asignatura que figure en datos generales (ej. 96 o 144). Extrae en 'horas_contacto_docente', 'horas_practico_experimental' y 'horas_autonomo' el total por componente de la sección 'Organización de aprendizajes por modalidad' (ej. 32, 32, 32). Extrae en 'codigo_carrera' el código de carrera que aparezca en el encabezado (ej. 'DS' o 'SOF').");
+            sb.AppendLine("9. ESTRUCTURA DE METODOLOGÍA Y RECURSOS: En 'metodologia_ensenanza', conserva la estructura de párrafos separando con saltos de línea y destacando subtítulos de metodologías activas (ej. 'Aprendizaje Basado en Problemas (ABP):', 'Aula Invertida:'). En 'recursos_didacticos', si el documento presenta una tabla o lista de recursos (ej. Office 365, Node.js, EVA, Visual Studio, etc.), extrae cada recurso como una línea individual o elemento de lista (ej. <ul><li>Office 365</li><li>Node Js</li>...</ul>). Queda terminantemente PROHIBIDO unir o apelmazar todos los recursos en una sola frase continua.");
+            sb.AppendLine("10. TABLA OFICIAL DE ACTIVIDADES PRÁCTICAS: En 'actividades_practicas', extrae fielmente las filas de la tabla institucional de dos columnas ('Unidad' | 'Nombre de la práctica y caracterización de la actividad'). En 'unidad', conserva exactamente el valor del documento, ya sea un número o unidades compuestas/múltiples (ej. \"1,2,3\"). En 'nombre' y 'caracterizacion', extrae la descripción íntegra de la práctica redactada en la segunda columna, sin truncar texto ni inventar campos adicionales.");
             return sb.ToString();
         }
 
@@ -500,12 +502,12 @@ namespace dosier_infrastructure.Curriculum
   ],
   ""actividades_practicas"": [
     {
-      ""unidad"": 1,
-      ""nombre"": ""Práctica 1: ..."",
+      ""unidad"": ""1,2,3"",
+      ""nombre"": ""Nombre de la práctica y caracterización de la actividad"",
       ""horas"": 4,
       ""escenario"": ""Laboratorio especializado"",
       ""producto"": ""Informe técnico y prototipo funcional"",
-      ""caracterizacion"": ""Laboratorio especializado | Informe técnico y prototipo funcional""
+      ""caracterizacion"": ""Nombre de la práctica y caracterización de la actividad""
     }
   ],
   ""evaluaciones"": [
@@ -889,8 +891,22 @@ namespace dosier_infrastructure.Curriculum
                 int pIdx = 1;
                 foreach (var item in practicasArr.EnumerateArray())
                 {
+                    string unidadStr = TryGetString(item, "unidad", "Unidad").Trim();
                     int unidadNum = TryGetInt(item, "unidad", "Unidad");
-                    if (unidadNum <= 0) unidadNum = ((pIdx - 1) % Math.Max(1, result.Unidades.Count)) + 1;
+                    if (unidadNum <= 0 && int.TryParse(unidadStr, out var parsedInt))
+                    {
+                        unidadNum = parsedInt;
+                    }
+
+                    if (unidadNum <= 0 && string.IsNullOrWhiteSpace(unidadStr))
+                    {
+                        unidadNum = ((pIdx - 1) % Math.Max(1, result.Unidades.Count)) + 1;
+                        unidadStr = unidadNum.ToString();
+                    }
+                    else if (string.IsNullOrWhiteSpace(unidadStr))
+                    {
+                        unidadStr = unidadNum.ToString();
+                    }
 
                     string nombre = TryGetString(item, "nombre", "Nombre", "nombre_practica", "NombrePractica");
                     decimal horas = TryGetDecimal(item, 0m, "horas", "Horas", "duracion_horas");
@@ -903,11 +919,21 @@ namespace dosier_infrastructure.Curriculum
                         caract = string.Join(" | ", new[] { escenario, producto }.Where(s => !string.IsNullOrWhiteSpace(s)));
                     }
 
+                    if (string.IsNullOrWhiteSpace(nombre) && !string.IsNullOrWhiteSpace(caract))
+                    {
+                        nombre = caract;
+                    }
+                    else if (string.IsNullOrWhiteSpace(caract) && !string.IsNullOrWhiteSpace(nombre))
+                    {
+                        caract = nombre;
+                    }
+
                     if (!string.IsNullOrWhiteSpace(nombre))
                     {
                         result.ActividadesPracticas.Add(new PeaDraftActividadPracticaDto
                         {
-                            Unidad = unidadNum,
+                            Unidad = unidadNum > 0 ? unidadNum : 1,
+                            UnidadTexto = unidadStr,
                             Nombre = nombre,
                             Horas = horas > 0 ? horas : 2m,
                             Escenario = escenario,

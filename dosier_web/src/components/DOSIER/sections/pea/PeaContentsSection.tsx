@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import type { CoWorkHandle } from '../../../../core/cowork/types';
+import { PeaUnitOfficialTableView } from './PeaUnitOfficialTableView';
 
 interface UnidadTematica {
     num?: number;
@@ -237,66 +238,112 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
         onUpdate('Unidades', updated);
     };
 
+    const [viewMode, setViewMode] = useState<'edit' | 'preview'>(readOnly ? 'preview' : 'edit');
+
     return (
         <div className="w-full space-y-6 sm:space-y-8 animate-fade-in font-sans">
             {/* 1. SECCIÓN DE UNIDADES DE ESTUDIO (SIN ANIDAMIENTO REDUNDANTE) */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-thin pb-2.5">
                     <h4 className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wide">
                         Unidades de Estudio y Contenidos ({unidades.length})
                     </h4>
+                    <nav className="-mb-[11px] flex items-center gap-6 text-xs">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('edit')}
+                            className={`pb-2.5 border-b-2 transition-colors cursor-pointer ${
+                                viewMode === 'edit'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
+                                    : 'border-transparent text-text-dim hover:text-text-main font-medium'
+                            }`}
+                        >
+                            Edición de Unidades
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('preview')}
+                            className={`pb-2.5 border-b-2 transition-colors cursor-pointer ${
+                                viewMode === 'preview'
+                                    ? 'border-[#0070f3] text-[#0070f3] dark:text-blue-400 font-semibold'
+                                    : 'border-transparent text-text-dim hover:text-text-main font-medium'
+                            }`}
+                        >
+                            Vista de Tabla Oficial
+                        </button>
+                    </nav>
                 </div>
 
-                {/* LISTA DIRECTA DE TARJETAS DE UNIDAD (CERO CUADRO DENTRO DE CUADRO) */}
-                <div className="space-y-4 sm:space-y-5">
-                    {unidades.length === 0 ? (
-                        <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
-                            <p className="text-sm font-semibold text-text-dim">
-                                No se han registrado unidades temáticas. {!readOnly && 'Haga clic en "+ Añadir Unidad de Estudio" para comenzar.'}
-                            </p>
-                        </div>
-                    ) : (
-                        unidades.map((u, idx) => (
-                            <div
-                                key={idx}
-                                className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden transition-all"
-                            >
-                                {/* CABECERA DE LA UNIDAD: TÍTULO Y TOTAL DE HORAS */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-thin px-4 sm:px-5 py-3 sm:py-3.5 bg-bg-deep text-text-main">
-                                    <div className="flex items-center gap-3 flex-1">
-                                        <span className="shrink-0 font-bold text-text-main text-xs sm:text-sm uppercase tracking-wide">
-                                            UNIDAD {u.num || idx + 1}:
-                                        </span>
-                                        <input
-                                            type="text"
-                                            value={u.titulo}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                const num = u.num || idx + 1;
-                                                const sanitized = val.replace(new RegExp(`^unidad\\s*${num}\\s*[:\\-]?\\s*`, 'i'), '');
-                                                handleUpdateUnit(idx, 'titulo', sanitized);
-                                            }}
-                                            disabled={readOnly}
-                                            placeholder={`Nombre o tema de la Unidad ${u.num || idx + 1}`}
-                                            className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2 text-sm sm:text-base font-semibold text-text-main outline-none focus:border-text-main transition-colors placeholder:text-text-dim/40 placeholder:font-normal"
-                                        />
+                {viewMode === 'preview' ? (
+                    <div className="space-y-4 sm:space-y-5">
+                        {unidades.length === 0 ? (
+                            <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
+                                <p className="text-sm font-semibold text-text-dim">
+                                    No se han registrado unidades temáticas.
+                                </p>
+                            </div>
+                        ) : (
+                            unidades.map((u, idx) => (
+                                <PeaUnitOfficialTableView
+                                    key={idx}
+                                    unidad={u}
+                                    index={idx}
+                                    compact={false}
+                                />
+                            ))
+                        )}
+                    </div>
+                ) : (
+                    /* LISTA DIRECTA DE TARJETAS DE UNIDAD (CERO CUADRO DENTRO DE CUADRO) */
+                    <div className="space-y-4 sm:space-y-5">
+                        {unidades.length === 0 ? (
+                            <div className="p-8 text-center border border-dashed border-border-thin rounded-2xl bg-surface">
+                                <p className="text-sm font-semibold text-text-dim">
+                                    No se han registrado unidades temáticas. {!readOnly && 'Haga clic en "+ Añadir Unidad de Estudio" para comenzar.'}
+                                </p>
+                            </div>
+                        ) : (
+                            unidades.map((u, idx) => (
+                                <div
+                                    key={idx}
+                                    className="rounded-xl border border-border-thin bg-surface shadow-xs overflow-hidden transition-all"
+                                >
+                                    {/* CABECERA DE LA UNIDAD: TÍTULO Y TOTAL DE HORAS */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-thin px-4 sm:px-5 py-3 sm:py-3.5 bg-bg-deep text-text-main">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <span className="shrink-0 font-bold text-text-main text-xs sm:text-sm uppercase tracking-wide">
+                                                UNIDAD {u.num || idx + 1}:
+                                            </span>
+                                            <input
+                                                type="text"
+                                                value={u.titulo}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const num = u.num || idx + 1;
+                                                    const sanitized = val.replace(new RegExp(`^unidad\\s*${num}\\s*[:\\-]?\\s*`, 'i'), '');
+                                                    handleUpdateUnit(idx, 'titulo', sanitized);
+                                                }}
+                                                disabled={readOnly}
+                                                placeholder={`Nombre o tema de la Unidad ${u.num || idx + 1}`}
+                                                className="w-full bg-surface border border-border-thin rounded-xl px-3.5 py-2 text-sm sm:text-base font-semibold text-text-main outline-none focus:border-text-main transition-colors placeholder:text-text-dim/40 placeholder:font-normal"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                                            <span className="text-xs sm:text-sm font-medium text-text-dim">
+                                                Total de horas por unidad: <strong className="font-mono text-text-main text-sm sm:text-base ml-1">{u.horasTotal || 0}</strong>
+                                            </span>
+                                            {!readOnly && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveUnit(idx)}
+                                                    className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                                                    title="Eliminar esta unidad"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
-                                        <span className="text-xs sm:text-sm font-medium text-text-dim">
-                                            Total de horas por unidad: <strong className="font-mono text-text-main text-sm sm:text-base ml-1">{u.horasTotal || 0}</strong>
-                                        </span>
-                                        {!readOnly && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveUnit(idx)}
-                                                className="p-2 rounded-lg text-text-dim hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                                                title="Eliminar esta unidad"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
 
                             {/* DISTRIBUCIÓN HORARIA REGLAMENTARIA (3 COLUMNAS CON STEPPERS DISTINGUIDOS) */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 border-b border-border-thin divide-y sm:divide-y-0 sm:divide-x divide-border-thin bg-surface text-text-main">
@@ -554,7 +601,8 @@ export const PeaContentsSection: React.FC<PeaContentsSectionProps> = ({
                         </button>
                     )}
                 </div>
-            </div>
+            )}
+        </div>
 
             {/* 2. PANEL INDEPENDIENTE: ASISTENTE DE CÁLCULO Y BALANCE HORARIO */}
             <div className="rounded-xl border border-border-thin overflow-hidden bg-bg-deep shadow-xs">

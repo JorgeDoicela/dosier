@@ -17,6 +17,7 @@ import {
     Activity,
     ChevronRight,
     Loader,
+    Loader2,
     Mic,
     Edit2,
     XCircle,
@@ -45,6 +46,7 @@ import { AudioBubblePlayer } from '../../pages/Admin/components/AudioBubblePlaye
 import { PeaReviewPanel } from '../../pages/Curriculum/Workspace/components/PeaReviewPanel';
 import { cleanSectionTitle } from '../../utils/sectionNumbering';
 import PeaAiChatSidebar from './shell/components/PeaAiChatSidebar';
+import { FullscreenLoader } from '../Common/FullscreenLoader';
 
 const toSentenceCase = (text: string, fallbackIdx?: number): string => {
     if (!text) return '';
@@ -1142,7 +1144,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             </div>
 
             {/* Content Container */}
-            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : activeTab === 'revision' ? 'overflow-y-auto p-2 sm:p-3' : activeTab === 'ai' ? 'overflow-hidden p-0' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col`}>
+            <div className={`flex-1 ${activeTab === 'comments' ? 'overflow-hidden p-1.5' : activeTab === 'revision' ? 'overflow-y-auto p-2 sm:p-3' : activeTab === 'ai' || (activeTab === 'import' && isExtractingInSidebar) ? 'overflow-hidden p-0' : 'overflow-y-auto p-4'} custom-scrollbar bg-bg-deep flex flex-col relative`}>
                 {isLoadingPulse ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-2 py-10 opacity-70">
                         <Loader size={24} className="animate-spin text-text-main" />
@@ -1938,112 +1940,125 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                         )}
 
                         {activeTab === 'import' && isImportAvailable && (
-                            <div className="flex flex-col min-h-full flex-1 justify-between">
-                                <div className="space-y-4">
-                                    {/* Encabezado del Extractor */}
-                                    <div className="pb-1">
-                                        <h3 className="text-xs font-bold text-text-main">
-                                            Importar PEA
-                                        </h3>
-                                    </div>
-
-                                    {/* Zona de Selección / Arrastre de Archivo */}
-                                    <div>
-                                        <input
-                                            ref={sidebarFileInputRef}
-                                            type="file"
-                                            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                            className="hidden"
-                                            onChange={e => {
-                                                const file = e.target.files?.[0];
-                                                if (file) validateAndSelectSidebarFile(file);
-                                                e.target.value = '';
-                                            }}
+                            <div className="flex flex-col min-h-full flex-1 justify-between relative">
+                                {isExtractingInSidebar ? (
+                                    <div className="absolute inset-0 z-20 bg-bg-deep overflow-hidden flex flex-col">
+                                        <FullscreenLoader
+                                            fullscreen={false}
+                                            message={[
+                                                "Extrayendo documento curricular...",
+                                                "Analizando texto y tablas del archivo...",
+                                                "Mapeando unidades y componentes...",
+                                                "Estructurando borrador para el PEA..."
+                                            ]}
                                         />
-
-                                        {!sidebarImportFile ? (
-                                            <div
-                                                onClick={() => sidebarFileInputRef.current?.click()}
-                                                onDragOver={e => {
-                                                    e.preventDefault();
-                                                    setSidebarIsDragOver(true);
-                                                }}
-                                                onDragLeave={() => setSidebarIsDragOver(false)}
-                                                onDrop={e => {
-                                                    e.preventDefault();
-                                                    setSidebarIsDragOver(false);
-                                                    const file = e.dataTransfer.files?.[0];
-                                                    if (file) validateAndSelectSidebarFile(file);
-                                                }}
-                                                className={`border-2 border-dashed rounded-2xl py-14 px-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] ${sidebarIsDragOver
-                                                    ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
-                                                    : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
-                                                    }`}
-                                            >
-                                                <div className="w-14 h-14 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-4">
-                                                    <FileUp size={26} strokeWidth={1.75} />
-                                                </div>
-                                                <p className="text-sm font-semibold text-text-main">
-                                                    Cargar documento
-                                                </p>
-                                                <p className="text-xs text-text-dim mt-1.5 max-w-[220px] leading-relaxed">
-                                                    Haz clic o arrastra un archivo aquí
-                                                </p>
-                                                <span className="inline-block mt-4 text-[10px] font-mono px-3 py-1.5 rounded-lg bg-surface border border-border-thin text-text-dim">
-                                                    PDF o DOCX · Máx 15MB
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] p-6 text-center transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] relative overflow-hidden">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSidebarImportFile(null)}
-                                                    className="absolute top-3 right-3 p-1.5 rounded-lg text-text-dim hover:text-red-500 hover:bg-bg-deep transition-colors cursor-pointer"
-                                                    title="Quitar archivo"
-                                                >
-                                                    <Trash2 size={15} />
-                                                </button>
-
-                                                <FileText size={32} strokeWidth={1.5} className="text-emerald-600 dark:text-emerald-400 mb-3.5 shrink-0" />
-
-                                                <p className="text-xs sm:text-sm font-semibold text-text-main line-clamp-2 break-all max-w-[190px] leading-snug px-1" title={sidebarImportFile.name}>
-                                                    {sidebarImportFile.name}
-                                                </p>
-
-                                                <p className="text-[11px] font-mono text-text-dim mt-1.5">
-                                                    {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
-                                                </p>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => sidebarFileInputRef.current?.click()}
-                                                    className="mt-5 text-[11px] font-medium px-3.5 py-1.5 rounded-lg border border-border-thin bg-surface hover:bg-bg-deep text-text-main transition-colors cursor-pointer shadow-2xs"
-                                                >
-                                                    Cambiar archivo
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
-                                </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-4">
+                                            {/* Encabezado del Extractor */}
+                                            <div className="pb-1">
+                                                <h3 className="text-xs font-bold text-text-main">
+                                                    Importar PEA
+                                                </h3>
+                                            </div>
 
-                                {/* Dock de Acciones al fondo */}
-                                <div className="mt-auto pt-3 space-y-2 shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={handleSidebarExtractDoc}
-                                        disabled={!sidebarImportFile || isExtractingInSidebar}
-                                        className="w-full py-2.5 px-3 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                                    >
-                                        {isExtractingInSidebar ? (
-                                            <>
-                                                <Loader size={15} className="animate-spin" />
-                                                <span>Extrayendo...</span>
-                                            </>
-                                        ) : (
-                                            <span>Extraer</span>
-                                        )}
-                                    </button>
-                                </div>
+                                            {/* Zona de Selección / Arrastre de Archivo */}
+                                            <div>
+                                                <input
+                                                    ref={sidebarFileInputRef}
+                                                    type="file"
+                                                    accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                    className="hidden"
+                                                    onChange={e => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) validateAndSelectSidebarFile(file);
+                                                        e.target.value = '';
+                                                    }}
+                                                />
+
+                                                {!sidebarImportFile ? (
+                                                    <div
+                                                        onClick={() => sidebarFileInputRef.current?.click()}
+                                                        onDragOver={e => {
+                                                            e.preventDefault();
+                                                            setSidebarIsDragOver(true);
+                                                        }}
+                                                        onDragLeave={() => setSidebarIsDragOver(false)}
+                                                        onDrop={e => {
+                                                            e.preventDefault();
+                                                            setSidebarIsDragOver(false);
+                                                            const file = e.dataTransfer.files?.[0];
+                                                            if (file) validateAndSelectSidebarFile(file);
+                                                        }}
+                                                        className={`border-2 border-dashed rounded-2xl py-14 px-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] ${sidebarIsDragOver
+                                                            ? 'border-[#0070f3] bg-[#0070f3]/5 scale-[0.99]'
+                                                            : 'border-border-thin hover:border-[#0070f3]/60 bg-surface/40 hover:bg-surface/80'
+                                                            }`}
+                                                    >
+                                                        <div className="w-14 h-14 mx-auto rounded-full bg-[#0070f3]/10 text-[#0070f3] dark:text-blue-400 flex items-center justify-center mb-4">
+                                                            <FileUp size={26} strokeWidth={1.75} />
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-text-main">
+                                                            Cargar documento
+                                                        </p>
+                                                        <p className="text-xs text-text-dim mt-1.5 max-w-[220px] leading-relaxed">
+                                                            Haz clic o arrastra un archivo aquí
+                                                        </p>
+                                                        <span className="inline-block mt-4 text-[10px] font-mono px-3 py-1.5 rounded-lg bg-surface border border-border-thin text-text-dim">
+                                                            PDF o DOCX · Máx 15MB
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] p-6 text-center transition-all flex flex-col items-center justify-center min-h-[280px] sm:min-h-[320px] relative overflow-hidden">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSidebarImportFile(null)}
+                                                            className="absolute top-3 right-3 p-1.5 rounded-lg text-text-dim hover:text-red-500 hover:bg-bg-deep transition-colors cursor-pointer"
+                                                            title="Quitar archivo"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+
+                                                        <FileText size={32} strokeWidth={1.5} className="text-emerald-600 dark:text-emerald-400 mb-3.5 shrink-0" />
+
+                                                        <p className="text-xs sm:text-sm font-semibold text-text-main line-clamp-2 break-all max-w-[190px] leading-snug px-1" title={sidebarImportFile.name}>
+                                                            {sidebarImportFile.name}
+                                                        </p>
+
+                                                        <p className="text-[11px] font-mono text-text-dim mt-1.5">
+                                                            {(sidebarImportFile.size / 1024 / 1024).toFixed(2)} MB · {sidebarImportFile.name.split('.').pop()?.toUpperCase()}
+                                                        </p>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => sidebarFileInputRef.current?.click()}
+                                                            className="mt-5 text-[11px] font-medium px-3.5 py-1.5 rounded-lg border border-border-thin bg-surface hover:bg-bg-deep text-text-main transition-colors cursor-pointer shadow-2xs"
+                                                        >
+                                                            Cambiar archivo
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Dock de Acciones al fondo */}
+                                        <div className="mt-auto pt-3 space-y-2 shrink-0">
+                                            <button
+                                                type="button"
+                                                onClick={handleSidebarExtractDoc}
+                                                disabled={!sidebarImportFile}
+                                                className={`w-full py-2.5 px-3 text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm ${
+                                                    !sidebarImportFile
+                                                        ? 'bg-[#0070f3] opacity-40 cursor-not-allowed'
+                                                        : 'bg-[#0070f3] hover:bg-[#005bb5] cursor-pointer active:scale-[0.99]'
+                                                }`}
+                                            >
+                                                <span>Extraer</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 

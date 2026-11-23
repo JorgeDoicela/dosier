@@ -285,7 +285,8 @@ export interface PeaDraftUnidad {
 }
 
 export interface PeaDraftActividadPractica {
-    unidad: number;
+    unidad: number | string;
+    unidadTexto?: string;
     nombre: string;
     horas: number;
     escenario: string;
@@ -465,14 +466,19 @@ export const normalizeStructuredDraft = (raw: any): PeaStructuredDraft => {
                 horasTotal: cd + ape + ta
             };
         }),
-        actividadesPracticas: rawPracticas.map((p: any, idx: number) => ({
-            unidad: Number(p?.unidad ?? p?.Unidad ?? idx + 1),
-            nombre: String(p?.nombre ?? p?.Nombre ?? ''),
-            horas: Number(p?.horas ?? p?.Horas ?? 2),
-            escenario: String(p?.escenario ?? p?.Escenario ?? ''),
-            producto: String(p?.producto ?? p?.Producto ?? ''),
-            caracterizacion: String(p?.caracterizacion ?? p?.Caracterizacion ?? '')
-        })),
+        actividadesPracticas: rawPracticas.map((p: any, idx: number) => {
+            const rawU = p?.unidad_texto ?? p?.UnidadTexto ?? p?.unidad ?? p?.Unidad;
+            const uStr = rawU !== undefined && rawU !== null ? String(rawU).trim() : String(idx + 1);
+            return {
+                unidad: uStr || (idx + 1),
+                unidadTexto: uStr || String(idx + 1),
+                nombre: String(p?.nombre ?? p?.Nombre ?? ''),
+                horas: Number(p?.horas ?? p?.Horas ?? 2),
+                escenario: String(p?.escenario ?? p?.Escenario ?? ''),
+                producto: String(p?.producto ?? p?.Producto ?? ''),
+                caracterizacion: String(p?.caracterizacion ?? p?.Caracterizacion ?? '')
+            };
+        }),
         evaluaciones: rawEvaluaciones.map((e: any) => ({
             nota: String(e?.nota ?? e?.Nota ?? ''),
             tipo: String(e?.tipo ?? e?.Tipo ?? ''),
@@ -957,8 +963,9 @@ export const convertDraftToEditorFields = (
 
     if (includeSection('pea_resources_section') && draft.actividadesPracticas.length > 0) {
         patch.ActividadesPracticas = draft.actividadesPracticas.map((p, idx) => {
-            const unitNum = Number(p.unidad) || idx + 1;
-            const unitLabel = `Unidad ${unitNum}`;
+            const rawUnit = String(p.unidadTexto || p.unidad || idx + 1).trim();
+            // Si es un número solo ej: "1" o "2", formatear como "Unidad 1"; si es compuesto ej: "1,2,3" o ya contiene "Unidad", mantener intacto
+            const unitLabel = /^\d+$/.test(rawUnit) ? `Unidad ${rawUnit}` : rawUnit;
             const baseName = (p.nombre || '').trim();
             const details = (p.caracterizacion || [p.escenario, p.producto].filter(Boolean).join(' | ')).trim();
             const fullDescription = details && !baseName.toLowerCase().includes(details.toLowerCase())
@@ -969,10 +976,12 @@ export const convertDraftToEditorFields = (
                 id: `ai_prac_${Date.now()}_${idx}`,
                 unidad: unitLabel,
                 Unidad: unitLabel,
+                '0': unitLabel,
                 nombre: fullDescription,
                 Nombre: fullDescription,
                 nombre_caracterizacion: fullDescription,
                 NombreCaracterizacion: fullDescription,
+                '1': fullDescription,
                 horas: p.horas,
                 escenario: p.escenario,
                 producto: p.producto,

@@ -120,6 +120,7 @@ namespace dosier_application.Curriculum.Dtos
     public class PeaDraftActividadPracticaDto
     {
         public int Unidad { get; set; }
+        public string? UnidadTexto { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public decimal Horas { get; set; } = 2m;
         public string Escenario { get; set; } = string.Empty;

@@ -197,8 +197,16 @@ export const PeaResourcesSection: React.FC<PeaResourcesSectionProps> = ({
                                             value={item.unidad || availableUnits[0]?.value || 'Unidad 1'}
                                             options={(() => {
                                                 const base = availableUnits.map(u => ({ value: u.value, label: u.display }));
+                                                if (availableUnits.length > 1) {
+                                                    const nums = availableUnits.map(u => u.num).join(',');
+                                                    const comboLabel = `Unidades ${availableUnits.map(u => u.num).join(', ')}`;
+                                                    if (!base.some(b => b.value === nums || b.value === comboLabel)) {
+                                                        base.push({ value: nums, label: comboLabel });
+                                                    }
+                                                }
                                                 if (item.unidad && !base.some(b => String(b.value).toLowerCase() === item.unidad.toLowerCase())) {
-                                                    return [{ value: item.unidad, label: item.unidad }, ...base];
+                                                    const displayLabel = item.unidad.includes(',') ? `Unidades ${item.unidad}` : item.unidad;
+                                                    return [{ value: item.unidad, label: displayLabel }, ...base];
                                                 }
                                                 return base;
                                             })()}

@@ -1013,11 +1013,16 @@ export const PeaAiChatSidebar: React.FC<PeaAiChatSidebarProps> = ({
                                                         <div className="pt-2 border-t border-border-thin/50">
                                                             {renderSectionHeaderWithAction(msg.id, msg.draft, 'pea_resources_section', `8. Actividades Prácticas y Experimentales (${msg.draft.actividadesPracticas.length})`)}
                                                             <ul className="list-disc pl-4 space-y-0.5 text-text-dim text-[10.5px]">
-                                                                {msg.draft.actividadesPracticas.map((a, i) => (
-                                                                    <li key={i}>
-                                                                        <span className="font-semibold text-text-main">Unidad {a.unidad}:</span> {a.nombre} ({a.horas}h — {a.escenario})
-                                                                    </li>
-                                                                ))}
+                                                                {msg.draft.actividadesPracticas.map((a, i) => {
+                                                                    const uStr = String(a.unidadTexto || a.unidad || i + 1);
+                                                                    const uLabel = uStr.includes(',') ? `Unidades ${uStr}` : (uStr.toLowerCase().startsWith('unidad') ? uStr : `Unidad ${uStr}`);
+                                                                    const desc = a.nombre || a.caracterizacion || 'Práctica experimental';
+                                                                    return (
+                                                                        <li key={i}>
+                                                                            <span className="font-semibold text-text-main">{uLabel}:</span> {desc}
+                                                                        </li>
+                                                                    );
+                                                                })}
                                                             </ul>
                                                         </div>
                                                     )}

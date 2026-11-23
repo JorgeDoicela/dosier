@@ -118,7 +118,10 @@ export const FullscreenLoader: React.FC<FullscreenLoaderProps> = ({
     }, [isFinished]);
 
     return (
-        <div className={`${fullscreen ? 'fixed inset-0 w-screen h-screen z-50' : 'absolute inset-0 w-full h-full z-20'} bg-bg-deep overflow-hidden text-text-main animate-fade-in`}>
+        <div className={`${fullscreen ? 'fixed inset-0 w-screen h-screen z-[9999]' : 'absolute inset-0 w-full h-full z-20'} bg-bg-deep overflow-hidden text-text-main animate-fade-in`}>
+            {/* Riel superior de límite */}
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-slate-200/80 dark:bg-zinc-800/80 z-40 pointer-events-none" />
+
             {/* Barra superior de 3px */}
             <div 
                 className="absolute top-0 left-0 h-[3px] bg-text-main transition-all duration-300 z-50"

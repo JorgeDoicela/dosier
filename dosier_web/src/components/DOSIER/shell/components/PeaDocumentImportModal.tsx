@@ -19,6 +19,8 @@ import {
     type PeaStructuredDraft
 } from '../../../../services/peaAiService';
 import { useNotifications } from '../../../../api/NotificationsContext';
+import { FullscreenLoader } from '../../../Common/FullscreenLoader';
+import { PeaUnitOfficialTableView } from '../../sections/pea/PeaUnitOfficialTableView';
 
 export interface PeaDocumentImportModalProps {
     isOpen: boolean;
@@ -51,6 +53,123 @@ const stripHtmlPreview = (html: string): string => {
         .replace(/<[^>]+>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+};
+
+const parseMethodologyParagraphs = (raw: string): Array<{ heading?: string; body: string }> => {
+    if (!raw) return [];
+
+    let clean = raw
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|li|h[1-6])>/gi, '\n\n')
+        .replace(/<[^>]+>/g, '')
+        .trim();
+
+    const knownMethodologies = [
+        'Aprendizaje Basado en Problemas (ABP):',
+        'Aprendizaje Basado en Problemas:',
+        'Aula Invertida:',
+        'Aprendizaje Orientado a Proyectos (POL):',
+        'Aprendizaje Orientado a Proyectos:',
+        'Estudio de Casos:',
+        'Estudios de Caso:',
+        'Gamificación:',
+        'Aprendizaje Cooperativo:',
+        'Clase Magistral Activa:'
+    ];
+
+    for (const km of knownMethodologies) {
+        const idx = clean.indexOf(km);
+        if (idx > 0 && clean[idx - 1] !== '\n') {
+            clean = clean.slice(0, idx) + '\n\n' + clean.slice(idx);
+        }
+    }
+
+    clean = clean.replace(/([.!?])\s+([A-ZÁÉÍÓÚ][\w\s\(\)\/\-]{3,50}:)\s+/g, '$1\n\n$2 ');
+
+    const rawParagraphs = clean.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    const results: Array<{ heading?: string; body: string }> = [];
+
+    for (const p of rawParagraphs) {
+        const headingMatch = p.match(/^([A-ZÁÉÍÓÚ][\w\s\(\)\/\-]{3,60}:)\s*([\s\S]*)$/);
+        if (headingMatch) {
+            results.push({
+                heading: headingMatch[1].trim(),
+                body: headingMatch[2].trim()
+            });
+        } else {
+            results.push({
+                body: p
+            });
+        }
+    }
+
+    return results;
+};
+
+const parseDidacticResourcesList = (raw: string): string[] => {
+    if (!raw) return [];
+
+    const liMatches = Array.from(raw.matchAll(/<(?:li|td)\b[^>]*>([\s\S]*?)<\/(?:li|td)>/gi)).map(m => m[1]);
+    if (liMatches.length > 0) {
+        return liMatches
+            .map(item => item.replace(/<[^>]+>/g, '').trim())
+            .filter(Boolean);
+    }
+
+    const cleanLines = raw
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|tr)>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .split(/\r?\n/)
+        .map(l => l.replace(/^[-•*]\s*/, '').trim())
+        .filter(Boolean);
+
+    if (cleanLines.length > 1) {
+        return cleanLines;
+    }
+
+    if (cleanLines.length === 1) {
+        const single = cleanLines[0];
+        if (single.includes(';')) {
+            return single.split(/;\s*/).map(s => s.trim()).filter(Boolean);
+        }
+
+        const knownSplitWords = [
+            'Office 365',
+            'Node Js',
+            'Node.js',
+            'Entorno virtual de Aprendizaje',
+            'EVA - ISTPET',
+            'EVA',
+            'Guía de Estudio',
+            'Guías de Estudio',
+            'Visual Studio Comunity',
+            'Visual Studio Community',
+            'Guías de Práctico Experimental',
+            'Guía de Práctico Experimental',
+            'Visual Studio Code',
+            'Antigravity',
+            'Docker',
+            'Git',
+            'GitHub',
+            'Postman',
+            'MySQL Workbench'
+        ];
+
+        let testStr = single;
+        for (const kw of knownSplitWords) {
+            const re = new RegExp(`(?<!^)\\b(${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'g');
+            testStr = testStr.replace(re, '\n$1');
+        }
+        const splitted = testStr.split('\n').map(s => s.trim()).filter(Boolean);
+        if (splitted.length > 1) {
+            return splitted;
+        }
+
+        return [single];
+    }
+
+    return [];
 };
 
 const parseRdaItems = (html: string): string[] => {
@@ -347,18 +466,21 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                     type="button"
                                     onClick={handleStartExtraction}
                                     disabled={isImporting || !selectedFile}
-                                    className="px-4 py-2 bg-[#0070f3] hover:bg-[#005bb5] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                                    className={`px-4 py-2 text-white text-xs font-semibold rounded-lg transition-all flex items-center gap-2 shadow-sm ${
+                                        isImporting
+                                            ? 'bg-[#0070f3] cursor-wait opacity-100 ring-2 ring-blue-400/30'
+                                            : !selectedFile
+                                            ? 'bg-[#0070f3] opacity-40 cursor-not-allowed'
+                                            : 'bg-[#0070f3] hover:bg-[#005bb5] cursor-pointer'
+                                    }`}
                                 >
                                     {isImporting ? (
                                         <>
-                                            <Loader2 size={14} className="animate-spin" />
+                                            <Loader2 size={14} className="animate-spin text-white shrink-0" />
                                             <span>Extrayendo y mapeando tablas...</span>
                                         </>
                                     ) : (
-                                        <>
-                                            <FileUp size={14} />
-                                            <span>Extraer e importar documento</span>
-                                        </>
+                                        <span>Extraer e importar documento</span>
                                     )}
                                 </button>
                             </div>
@@ -465,24 +587,15 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                                 )}
 
                                                 {secId === 'pea_contents_section' && (
-                                                    <div className="space-y-2 pt-1">
-                                                        {extractedDraft.unidades.map(u => (
-                                                            <div key={u.num} className="p-2.5 rounded-lg border border-slate-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 text-xs">
-                                                                <div className="flex flex-wrap items-center justify-between gap-2 font-medium text-slate-800 dark:text-zinc-200">
-                                                                    <span>UNIDAD {u.num}: {u.titulo}</span>
-                                                                    <span className="text-[11px] font-normal text-slate-500 dark:text-zinc-400">
-                                                                        {u.horasCD}h CD · {u.horasAPE}h APE · {u.horasTA}h TA = {u.horasTotal}h
-                                                                    </span>
-                                                                </div>
-                                                                {u.contenidos && (
-                                                                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed">
-                                                                        {u.contenidos.replace(/\r?\n+/g, ' · ')}
-                                                                    </p>
-                                                                )}
-                                                            </div>
+                                                    <div className="space-y-3 pt-1">
+                                                        {extractedDraft.unidades.map((u, uIdx) => (
+                                                            <PeaUnitOfficialTableView
+                                                                key={u.num || uIdx}
+                                                                unidad={u}
+                                                                index={uIdx}
+                                                            />
                                                         ))}
-                                                        <div className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 flex items-center justify-between px-1 pt-0.5">
-                                                            <span>{extractedDraft.unidades.length} unidades temáticas</span>
+                                                        <div className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 flex items-center justify-end px-1 pt-1 border-t border-slate-100 dark:border-zinc-800">
                                                             <span className="font-semibold text-slate-700 dark:text-zinc-300">
                                                                 Total: {extractedDraft.totalHorasAsignatura || extractedDraft.unidades.reduce((acc, u) => acc + (u.horasTotal || 0), 0)} horas
                                                             </span>
@@ -491,39 +604,79 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                                 )}
 
                                                 {secId === 'pea_methodology_section' && (
-                                                    <div className="space-y-2 pt-0.5">
+                                                    <div className="space-y-3 pt-1">
                                                         {extractedDraft.metodologiaEnsenanza && (
-                                                            <div>
-                                                                <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300">Estrategias Metodológicas:</span>
-                                                                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mt-0.5">
-                                                                    {stripHtmlPreview(extractedDraft.metodologiaEnsenanza)}
-                                                                </p>
+                                                            <div className="space-y-1.5">
+                                                                <span className="text-[11px] font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+                                                                    Estrategias Metodológicas:
+                                                                </span>
+                                                                <div className="space-y-2 pt-0.5">
+                                                                    {parseMethodologyParagraphs(extractedDraft.metodologiaEnsenanza).map((p, pIdx) => (
+                                                                        <div key={pIdx} className="space-y-0.5">
+                                                                            {p.heading && (
+                                                                                <div className="font-semibold text-slate-800 dark:text-zinc-200 flex items-center gap-1.5 text-xs">
+                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] shrink-0" />
+                                                                                    <span>{p.heading}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <p className={`text-xs text-slate-600 dark:text-zinc-400 leading-relaxed ${p.heading ? 'pl-3' : ''}`}>
+                                                                                {p.body}
+                                                                            </p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
                                                             </div>
                                                         )}
                                                         {extractedDraft.recursosDidacticos && (
-                                                            <div>
-                                                                <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300">Recursos Didácticos e Informatización:</span>
-                                                                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mt-0.5">
-                                                                    {stripHtmlPreview(extractedDraft.recursosDidacticos)}
-                                                                </p>
+                                                            <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                                                                <span className="text-[11px] font-bold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
+                                                                    Recursos Didácticos e Informatización:
+                                                                </span>
+                                                                <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden divide-y divide-slate-100 dark:divide-zinc-850 shadow-2xs mt-1">
+                                                                    {parseDidacticResourcesList(extractedDraft.recursosDidacticos).map((res, rIdx) => (
+                                                                        <div key={rIdx} className="px-3 py-1.5 text-xs text-slate-700 dark:text-zinc-300 flex items-center gap-2 hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-[#0070f3] shrink-0" />
+                                                                            <span className="font-medium text-slate-800 dark:text-zinc-200">{res}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
                                                 )}
 
                                                 {secId === 'pea_resources_section' && (
-                                                    <div className="space-y-1 pt-0.5">
-                                                        {extractedDraft.actividadesPracticas.map((p, idx) => (
-                                                            <div key={idx} className="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-300">
-                                                                <div className="flex items-center gap-2 truncate pr-2">
-                                                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500 shrink-0" />
-                                                                    <span className="truncate">Práctica {p.unidad ? `U${p.unidad}` : idx + 1}: {p.nombre || 'Práctica experimental'}</span>
-                                                                </div>
-                                                                {p.horas && (
-                                                                    <span className="font-mono text-[11px] text-slate-400 dark:text-zinc-500 shrink-0">{p.horas}h</span>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                    <div className="mt-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-2xs text-xs">
+                                                        <table className="w-full text-left border-collapse">
+                                                            <thead>
+                                                                <tr className="bg-slate-100/90 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 text-[11px] font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
+                                                                    <th className="px-3.5 py-2 w-24 sm:w-28 text-center border-r border-slate-200 dark:border-zinc-800">
+                                                                        Unidad
+                                                                    </th>
+                                                                    <th className="px-3.5 py-2">
+                                                                        Nombre de la práctica y caracterización de la actividad
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
+                                                                {extractedDraft.actividadesPracticas.map((p, idx) => {
+                                                                    const unitDisplay = String(p.unidadTexto || p.unidad || idx + 1).replace(/^unidad\s*/i, '');
+                                                                    const desc = p.nombre || p.caracterizacion || 'Práctica experimental';
+                                                                    return (
+                                                                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors">
+                                                                            <td className="px-3.5 py-2.5 text-center font-bold text-slate-900 dark:text-zinc-100 border-r border-slate-200/60 dark:border-zinc-800 align-top">
+                                                                                <span className="px-2 py-0.5 rounded bg-blue-50 text-[#0070f3] dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60 font-mono text-xs font-semibold">
+                                                                                    {unitDisplay}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="px-3.5 py-2.5 text-slate-700 dark:text-zinc-300 leading-relaxed align-top">
+                                                                                {desc}
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 )}
 
@@ -546,13 +699,31 @@ export const PeaDocumentImportModal: React.FC<PeaDocumentImportModalProps> = ({
                                                 )}
 
                                                 {secId === 'pea_bibliography_section' && (
-                                                    <div className="space-y-1.5 pt-0.5">
-                                                        {extractedDraft.bibliografias.map((b, idx) => (
-                                                            <div key={idx} className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed truncate">
-                                                                <span className="font-semibold text-slate-700 dark:text-zinc-300 mr-1.5">[{b.tipoBibliografia || 'Básica'}]</span>
-                                                                <span>{b.citaCompletaApa || `${b.autor || ''} (${b.tituloLibro || ''})`}</span>
-                                                            </div>
-                                                        ))}
+                                                    <div className="space-y-2 pt-1">
+                                                        {extractedDraft.bibliografias.map((b, idx) => {
+                                                            const isBasica = (b.tipoBibliografia || '').toLowerCase().includes('basic') || b.tipoBibliografia === 'Basica';
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    className="p-2.5 rounded-lg border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-start gap-2.5 text-xs shadow-2xs"
+                                                                >
+                                                                    <span
+                                                                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 border mt-0.5 ${
+                                                                            isBasica
+                                                                                ? 'bg-blue-50 text-[#0070f3] border-blue-200 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900'
+                                                                                : 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-900'
+                                                                        }`}
+                                                                    >
+                                                                        {isBasica ? 'Básica' : 'Consulta'}
+                                                                    </span>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed font-sans">
+                                                                            {b.citaCompletaApa || `${b.autor || ''} (${b.tituloLibro || ''}). ${b.editorialCiudad || ''}`}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
                                             </div>

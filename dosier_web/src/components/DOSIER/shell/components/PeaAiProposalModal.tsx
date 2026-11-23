@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import type { PeaStructuredDraft } from '../../../../services/peaAiService';
+import { PeaUnitOfficialTableView } from '../../sections/pea/PeaUnitOfficialTableView';
 
 export interface PeaAiProposalModalProps {
     isOpen: boolean;
@@ -160,26 +161,12 @@ export const PeaAiProposalModal: React.FC<PeaAiProposalModalProps> = ({
                 }
                 return (
                     <div className="space-y-3">
-                        {draft.unidades.map(u => (
-                            <div
-                                key={u.num}
-                                className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs space-y-2"
-                            >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <span className="font-semibold text-slate-900 dark:text-zinc-100">
-                                        Unidad {u.num}: {u.titulo}
-                                    </span>
-                                    <span className="text-[11px] font-mono font-medium text-[#0070f3] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-900/60">
-                                        {u.horasCD}h CD + {u.horasAPE}h APE + {u.horasTA}h TA = {u.horasTotal}h
-                                    </span>
-                                </div>
-                                {u.contenidos && (
-                                    <div
-                                        className="text-slate-600 dark:text-zinc-300 text-xs leading-relaxed prose prose-sm dark:prose-invert max-w-none pt-2 border-t border-slate-200/60 dark:border-zinc-800"
-                                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(u.contenidos) }}
-                                    />
-                                )}
-                            </div>
+                        {draft.unidades.map((u, uIdx) => (
+                            <PeaUnitOfficialTableView
+                                key={u.num || uIdx}
+                                unidad={u}
+                                index={uIdx}
+                            />
                         ))}
                     </div>
                 );
@@ -202,37 +189,39 @@ export const PeaAiProposalModal: React.FC<PeaAiProposalModalProps> = ({
                     return <p className="text-xs text-slate-400 dark:text-zinc-500 italic">Sin actividades experimentales generadas.</p>;
                 }
                 return (
-                    <div className="space-y-2.5">
-                        {draft.actividadesPracticas.map((p, idx) => (
-                            <div
-                                key={idx}
-                                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-xs space-y-1.5"
-                            >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <span className="font-semibold text-slate-900 dark:text-zinc-100">
-                                        Práctica {idx + 1}: {p.nombre}
-                                    </span>
-                                    <span className="text-[11px] font-mono font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-900/60">
-                                        {p.horas}h (Unidad {p.unidad})
-                                    </span>
-                                </div>
-                                {p.escenario && (
-                                    <p className="text-[11px] text-slate-600 dark:text-zinc-400">
-                                        <strong className="text-slate-800 dark:text-zinc-200">Escenario:</strong> {p.escenario}
-                                    </p>
-                                )}
-                                {p.producto && (
-                                    <p className="text-[11px] text-slate-700 dark:text-zinc-300">
-                                        <strong className="text-slate-900 dark:text-zinc-100">Producto acreditable:</strong> {p.producto}
-                                    </p>
-                                )}
-                                {p.caracterizacion && (
-                                    <p className="text-[11px] text-slate-600 dark:text-zinc-400 leading-relaxed pt-1 border-t border-slate-200/60 dark:border-zinc-800">
-                                        <strong className="text-slate-800 dark:text-zinc-200">Caracterización:</strong> {p.caracterizacion}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
+                    <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-2xs text-xs">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-100/90 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 text-[11px] font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
+                                    <th className="px-3.5 py-2.5 w-24 sm:w-28 text-center border-r border-slate-200 dark:border-zinc-800">
+                                        Unidad
+                                    </th>
+                                    <th className="px-3.5 py-2.5">
+                                        Nombre de la práctica y caracterización de la actividad
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-zinc-850">
+                                {draft.actividadesPracticas.map((p, idx) => {
+                                    const unitDisplay = String(p.unidadTexto || p.unidad || idx + 1).replace(/^unidad\s*/i, '');
+                                    const desc = (p.caracterizacion && p.caracterizacion.length > (p.nombre || '').length)
+                                        ? p.caracterizacion
+                                        : (p.nombre || p.caracterizacion || 'Práctica experimental');
+                                    return (
+                                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors">
+                                            <td className="px-3.5 py-2.5 text-center font-bold text-slate-900 dark:text-zinc-100 border-r border-slate-200/60 dark:border-zinc-800 align-top">
+                                                <span className="px-2 py-0.5 rounded bg-blue-50 text-[#0070f3] dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60 font-mono text-xs font-semibold">
+                                                    {unitDisplay}
+                                                </span>
+                                            </td>
+                                            <td className="px-3.5 py-2.5 text-slate-700 dark:text-zinc-300 leading-relaxed align-top">
+                                                {desc}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 );
             }

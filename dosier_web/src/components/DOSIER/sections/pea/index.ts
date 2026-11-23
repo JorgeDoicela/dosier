@@ -6,6 +6,7 @@ export { PeaCareerOutcomesSection } from './PeaCareerOutcomesSection';
 export { PeaSubjectOutcomesSection } from './PeaSubjectOutcomesSection';
 export { PeaCompetenciesSection } from './PeaCompetenciesSection';
 export { PeaContentsSection } from './PeaContentsSection';
+export { PeaUnitOfficialTableView } from './PeaUnitOfficialTableView';
 export { PeaMethodologySection } from './PeaMethodologySection';
 export { PeaResourcesSection } from './PeaResourcesSection';
 export { PeaEvaluationSection } from './PeaEvaluationSection';
