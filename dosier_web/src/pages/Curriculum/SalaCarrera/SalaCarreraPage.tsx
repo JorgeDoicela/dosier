@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, LayoutGrid, GitCompare, GraduationCap } from 'lucide-react';
+import { Loader2, LayoutGrid } from 'lucide-react';
 import DOSIERBuilderShell, { type BuilderSection } from '../../../components/DOSIER/DOSIERBuilderShell';
 import { useCoWork, coworkUserFromAuth } from '../../../core/cowork';
 import { salaCarreraService, type SalaCarreraEstadoDto } from '../../../services/salaCarreraService';
@@ -10,10 +10,6 @@ import { GeistSelect } from '../../../components/Common/GeistSelect';
 import { PerfilEgresoPopover } from './components/PerfilEgresoPopover';
 import { MallaDocentesPopover } from './components/MallaDocentesPopover';
 import { SalaPizarraCanvas } from './pizarra/SalaPizarraCanvas';
-import { SalaComparadorCurricular } from './components/SalaComparadorCurricular';
-import { SalaPerfilEgresoSeccion } from './components/SalaPerfilEgresoSeccion';
-import type { PizarraElement } from './pizarra/types';
-import { useNotifications } from '../../../api/NotificationsContext';
 import { useAuth } from '../../../api/AuthContext';
 
 export const SalaCarreraPage: React.FC = () => {
@@ -164,37 +160,6 @@ export const SalaCarreraPage: React.FC = () => {
         navigate('/dashboard');
     };
 
-    const { addToast } = useNotifications();
-
-    const handleCrearAcuerdoEnPizarra = useCallback((titulo: string, descripcion: string, categoria = 'Metodología') => {
-        if (!cowork?.ydoc) return;
-        const yMap = cowork.ydoc.getMap<PizarraElement>('pizarra_elements');
-        const id = `el_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-        const nuevo: PizarraElement = {
-            id,
-            type: 'card',
-            x: 220 + Math.floor(Math.random() * 80),
-            y: 220 + Math.floor(Math.random() * 80),
-            width: 320,
-            height: 220,
-            title: titulo,
-            content: descripcion,
-            color: 'blue',
-            category: categoria,
-            authorName: coworkUser.name,
-            authorColor: coworkUser.color,
-            authorInitials: coworkUser.initials,
-            updatedAt: Date.now(),
-            zIndex: Date.now(),
-        };
-
-        cowork.ydoc.transact(() => {
-            yMap.set(id, nuevo);
-        });
-
-        addToast('Acuerdo enviado a la Pizarra', `Se añadió "${titulo}" al lienzo compartido.`, 'success');
-    }, [cowork, coworkUser, addToast]);
-
     const handleTriggerAiEnSala = useCallback(async (
         _targetSection: string,
         customInstructions: string
@@ -210,7 +175,7 @@ export const SalaCarreraPage: React.FC = () => {
                     `• Se sugiere unificar el software o stack tecnológico institucional entre materias afines.\n\n` +
                     `2. Articulación Vertical (Progresión Temporal):\n` +
                     `• Las asignaturas de ciclos iniciales deben transferir destrezas conceptuales sólidas hacia las de nivel superior.\n` +
-                    `• Puedes emplear la sección "2. Comparador Curricular" para cotejar unidades y horas en paralelo.\n\n` +
+                    `• Puedes consultar la "Malla y Docentes" en la barra superior para cotejar asignaturas de la carrera.\n\n` +
                     `3. Sugerencia de Acuerdo: Puedes redactar un acuerdo en la Pizarra fijando el stack oficial y semanas de entrega de proyectos.`
             };
         }
@@ -220,8 +185,8 @@ export const SalaCarreraPage: React.FC = () => {
             return {
                 text: `Alineación con el Perfil de Egreso de ${carreraNombre}:\n\n` +
                     `• El Perfil de Egreso oficial aprobado por el CES rige las competencias que deben certificar los graduados del ISTPET.\n` +
-                    `• Cada cátedra debe tributar con nivel Introductorio, Medio o Avanzado a los Resultados de Aprendizaje (RDA) de la carrera.\n` +
-                    `• En la sección "3. Perfil de Egreso y Tributación" puedes revisar el catálogo de RDA y formular acuerdos de refuerzo pedagógico en la Pizarra.`
+                    `• Cada asignatura debe tributar con nivel Introductorio, Medio o Avanzado a los Resultados de Aprendizaje (RDA) de la carrera.\n` +
+                    `• Puedes consultar el botón "Perfil de Egreso" en la barra superior para revisar el catálogo de competencias y formular acuerdos en la Pizarra.`
             };
         }
 
@@ -229,10 +194,10 @@ export const SalaCarreraPage: React.FC = () => {
         if (prompt.includes('acuerdo') || prompt.includes('pizarra') || prompt.includes('suger')) {
             return {
                 text: `Acuerdos Recomendados para la Sala Colegiada de ${carreraNombre}:\n\n` +
-                    `• Metodología: "Implementación de Aprendizaje Basado en Proyectos (ABP) articulado entre cátedras del mismo semestre".\n` +
+                    `• Metodología: "Implementación de Aprendizaje Basado en Proyectos (ABP) articulado entre materias del mismo semestre".\n` +
                     `• Evaluación: "Distribución escalonada de rúbricas prácticas (APE) para evitar semanas de evaluaciones acumuladas".\n` +
                     `• TIC / Infraestructura: "Uso de entornos Docker y repositorios institucionales GitLab para prácticas de laboratorio".\n\n` +
-                    `Tip: En la sección "2. Comparador Curricular" o "3. Perfil de Egreso" puedes hacer clic en "Proponer Acuerdo" para insertarlo directamente en la Pizarra en tiempo real.`
+                    `Tip: Puedes redactar acuerdos y notas directamente sobre la Pizarra Interactiva para coordinar con el equipo docente.`
             };
         }
 
@@ -241,32 +206,19 @@ export const SalaCarreraPage: React.FC = () => {
             text: `Asistencia Colegiada para ${carreraNombre} (${periodoActual}):\n\n` +
                 `• Nómina activa: ${estadoSala?.asignaturas?.length || 0} asignaturas registradas en el período.\n` +
                 `• Herramientas a tu disposición:\n` +
-                `  - "1. Pizarra Interactiva": Lienzo colaborativo en tiempo real para plasmar notas y acuerdos.\n` +
-                `  - "2. Comparador Curricular": Análisis lado a lado de horas, unidades y resultados de aprendizaje entre materias.\n` +
-                `  - "3. Perfil de Egreso y Tributación": Catálogo de competencias CES y matriz de tributación.\n\n` +
+                `  - Pizarra Interactiva: Lienzo colaborativo en tiempo real para plasmar notas y acuerdos colegiados.\n` +
+                `  - Botones "Perfil de Egreso" y "Malla y Docentes" en la barra superior para consulta contextual rápida.\n\n` +
                 `Puedes preguntarme sobre articulación de contenidos, alineación con RDA o sugerencias de acuerdos docentes.`
         };
     }, [carreraNombre, periodoActual, estadoSala]);
 
-    // 5. Espacio de trabajo de la Sala de Carrera (Pizarra Interactiva y Articulación Curricular)
+    // 5. Espacio de trabajo de la Sala de Carrera (Pizarra Interactiva)
     const sections: BuilderSection[] = useMemo(() => [
         {
             id: 'pizarra',
-            label: '1. Pizarra Interactiva',
+            label: 'Pizarra Interactiva',
             icon: <LayoutGrid size={14} />,
             fullBleed: true
-        },
-        {
-            id: 'comparador',
-            label: '2. Comparador Curricular',
-            icon: <GitCompare size={14} />,
-            fullBleed: false
-        },
-        {
-            id: 'perfil_egreso',
-            label: '3. Perfil de Egreso y Tributación',
-            icon: <GraduationCap size={14} />,
-            fullBleed: false
         }
     ], []);
 
@@ -279,10 +231,14 @@ export const SalaCarreraPage: React.FC = () => {
     }, [carrerasDisponibles]);
 
     const opcionesPeriodo = useMemo(() => {
-        return periodosDisponibles.map((p) => ({
-            value: p.id_periodo,
-            label: p.nombre_periodo || p.id_periodo,
-        }));
+        return periodosDisponibles.map((p) => {
+            const detalle = p.detalle?.trim();
+            const nombre = detalle || p.nombre_periodo || p.nombrePeriodo || p.id_periodo;
+            return {
+                value: p.id_periodo,
+                label: nombre,
+            };
+        });
     }, [periodosDisponibles]);
 
     if (isResolvingContext) {
@@ -328,70 +284,37 @@ export const SalaCarreraPage: React.FC = () => {
                             </div>
                         )}
 
-                        {opcionesPeriodo.length > 0 && (
-                            <div className="w-32">
-                                <GeistSelect
-                                    value={periodoActual}
-                                    options={opcionesPeriodo}
-                                    onChange={(val) => handleCambiarPeriodo(String(val))}
-                                    size="sm"
-                                    className="w-full"
-                                />
-                            </div>
-                        )}
-
                         <PerfilEgresoPopover
                             carreraNombre={carreraNombre}
                             idCarrera={idCarrera}
                             idMalla={23}
                             periodoActual={periodoActual}
                             periodosDisponibles={periodosDisponibles}
-                            onSincronizarPeriodoSala={handleCambiarPeriodo}
                         />
 
                         <MallaDocentesPopover
+                            idCarrera={idCarrera}
                             asignaturas={estadoSala?.asignaturas || []}
                             carreraNombre={carreraNombre}
                             periodoActual={periodoActual}
                             periodosDisponibles={periodosDisponibles}
-                            onSincronizarPeriodoSala={handleCambiarPeriodo}
                         />
                     </div>
                 }
             >
-                {(activeTab) => (
-                    <>
-                        {activeTab === 'pizarra' && (
-                            <SalaPizarraCanvas
-                                cowork={cowork}
-                                userName={coworkUser.name}
-                                userColor={coworkUser.color}
-                                userRole={coworkUser.role}
-                                userInitials={coworkUser.initials}
-                                idCarrera={idCarrera}
-                                carreraNombre={carreraNombre}
-                                periodoActual={periodoActual}
-                            />
-                        )}
-                        {activeTab === 'comparador' && (
-                            <SalaComparadorCurricular
-                                asignaturas={estadoSala?.asignaturas || []}
-                                carreraNombre={carreraNombre}
-                                idCarrera={idCarrera}
-                                periodoActual={periodoActual}
-                                onCrearAcuerdoPizarra={handleCrearAcuerdoEnPizarra}
-                            />
-                        )}
-                        {activeTab === 'perfil_egreso' && (
-                            <SalaPerfilEgresoSeccion
-                                idCarrera={idCarrera}
-                                carreraNombre={carreraNombre}
-                                idMalla={23}
-                                asignaturas={estadoSala?.asignaturas || []}
-                                onCrearAcuerdoPizarra={handleCrearAcuerdoEnPizarra}
-                            />
-                        )}
-                    </>
+                {() => (
+                    <SalaPizarraCanvas
+                        cowork={cowork}
+                        userName={coworkUser.name}
+                        userColor={coworkUser.color}
+                        userRole={coworkUser.role}
+                        userInitials={coworkUser.initials}
+                        idCarrera={idCarrera}
+                        carreraNombre={carreraNombre}
+                        periodoActual={periodoActual}
+                        periodosDisponibles={periodosDisponibles}
+                        onCambiarPeriodo={handleCambiarPeriodo}
+                    />
                 )}
             </DOSIERBuilderShell>
         </div>

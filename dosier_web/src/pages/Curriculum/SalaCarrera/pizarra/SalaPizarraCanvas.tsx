@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { CoWorkHandle } from '../../../core/cowork/types';
 import { usePizarraCoWork } from './usePizarraCoWork';
 import { PizarraToolbar } from './components/PizarraToolbar';
@@ -6,8 +6,9 @@ import { PizarraStickyNote } from './components/PizarraStickyNote';
 import { PizarraCardAcuerdo } from './components/PizarraCardAcuerdo';
 import { PizarraRemoteCursor } from './components/PizarraRemoteCursor';
 import type { PizarraColor, ViewportTransform, PizarraElement } from './types';
+import type { PeriodoAcademicoDto } from '../../../../services/docenteAsignaturasService';
 
-interface SalaPizarraCanvasProps {
+export interface SalaPizarraCanvasProps {
     cowork: CoWorkHandle;
     userName: string;
     userColor: string;
@@ -16,6 +17,8 @@ interface SalaPizarraCanvasProps {
     idCarrera: number;
     carreraNombre: string;
     periodoActual: string;
+    periodosDisponibles?: PeriodoAcademicoDto[];
+    onCambiarPeriodo?: (nuevoPeriodo: string) => void;
 }
 
 export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
@@ -27,6 +30,8 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
     idCarrera,
     carreraNombre,
     periodoActual,
+    periodosDisponibles = [],
+    onCambiarPeriodo,
 }) => {
     // 1. Hook de sincronización en tiempo real sobre CoWork Yjs con persistencia por carrera
     const {
@@ -57,6 +62,26 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
         y: 0,
         zoom: 1,
     });
+
+    // Lista unificada de colaboradores en tiempo real (Local + Remotos vía Awareness)
+    const activeUsersList = useMemo(() => {
+        const list: { id: string | number; name: string; color: string; initials: string }[] = [];
+        list.push({
+            id: 'local',
+            name: userName || 'Docente',
+            color: userColor || '#0070f3',
+            initials: userInitials || (userName ? userName.substring(0, 2).toUpperCase() : 'DO'),
+        });
+        remoteCursors.forEach((c, clientId) => {
+            list.push({
+                id: clientId,
+                name: c.name || 'Docente',
+                color: c.color || '#10b981',
+                initials: c.initials || (c.name ? c.name.substring(0, 2).toUpperCase() : 'DO'),
+            });
+        });
+        return list;
+    }, [userName, userColor, userInitials, remoteCursors]);
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isPanning, setIsPanning] = useState(false);
@@ -200,10 +225,10 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
 
         const newId = addElement({
             type: 'sticky',
-            x: Math.round(center.x - 120 + offsetX),
-            y: Math.round(center.y - 90 + offsetY),
-            width: 240,
-            height: 180,
+            x: Math.round(center.x - 140 + offsetX),
+            y: Math.round(center.y - 100 + offsetY),
+            width: 280,
+            height: 200,
             content: '',
             color,
             authorName: userName,
@@ -221,9 +246,9 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
 
         const newId = addElement({
             type: 'card',
-            x: Math.round(center.x - 150),
+            x: Math.round(center.x - 160),
             y: Math.round(center.y - 105),
-            width: 300,
+            width: 320,
             height: 210,
             title: '',
             content: '',
@@ -278,15 +303,14 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            className={`relative w-full h-full overflow-hidden bg-bg-deep select-none ${
-                isPanning || isSpacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
-            }`}
+            className={`relative w-full h-full overflow-hidden bg-bg-deep select-none ${isPanning || isSpacePressed ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
+                }`}
         >
             {/* Barra de Herramientas Flotante */}
             <PizarraToolbar
                 zoom={viewport.zoom}
                 isConnected={isConnected}
-                activeUsersCount={remoteCursors.size + 1}
+                activeUsers={activeUsersList}
                 saveStatus={saveStatus}
                 onSaveNow={saveNow}
                 onAddSticky={handleAddSticky}
@@ -295,6 +319,9 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
                 onZoomIn={handleZoomIn}
                 onZoomOut={handleZoomOut}
                 onResetZoom={handleResetZoom}
+                periodoActual={periodoActual}
+                periodosDisponibles={periodosDisponibles}
+                onCambiarPeriodo={onCambiarPeriodo}
             />
 
             {/* Rejilla de Fondo Técnica (Dot Grid) */}
@@ -376,3 +403,6 @@ export const SalaPizarraCanvas: React.FC<SalaPizarraCanvasProps> = ({
         </div>
     );
 };
+
+export default SalaPizarraCanvas;
+

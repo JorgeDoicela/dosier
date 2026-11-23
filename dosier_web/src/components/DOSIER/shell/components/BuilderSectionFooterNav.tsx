@@ -77,7 +77,7 @@ export const BuilderSectionFooterNav: React.FC<BuilderSectionFooterNavProps> = (
                     <span>Siguiente</span>
                     <ArrowRight size={14} />
                 </button>
-            ) : isLastSection ? (
+            ) : (isLastSection && canSign) ? (
                 <button
                     type="button"
                     onClick={handleNext}

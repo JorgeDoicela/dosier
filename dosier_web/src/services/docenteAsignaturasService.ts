@@ -3,6 +3,8 @@ import api from '../api/axios_config';
 export interface PeriodoAcademicoDto {
     id_periodo: string;
     detalle?: string;
+    nombre_periodo?: string;
+    nombrePeriodo?: string;
     fecha_inicial?: string;
     fecha_final?: string;
     es_activo: boolean;

@@ -404,6 +404,7 @@ const DOSIERBuilderShell: React.FC<DOSIERBuilderShellProps> = (props) => {
                                     setActiveTab={layout.setActiveTab}
                                     setIsLeftSidebarOpen={layout.setIsLeftSidebarOpen}
                                     setShowMobileSections={layout.setShowMobileSections}
+                                    canSign={canSign}
                                 />
 
                                 {/* Drag Handle Left */}

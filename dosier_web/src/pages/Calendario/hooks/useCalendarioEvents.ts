@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../api/AuthContext';
 import { useConfirm } from '../../../api/ConfirmContext';
+import { useNotifications } from '../../../api/NotificationsContext';
 import { useRealtimeSync } from '../../../hooks/useRealtimeSync';
 import {
     getEventos,
@@ -46,6 +47,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     const [selectedEvent, setSelectedEvent] = useState<Evento | null>(null);
     const navigate = useNavigate();
     const confirm = useConfirm();
+    const { showToast } = useNotifications();
 
     // Form State
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -196,7 +198,8 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     };
 
     const handleQuickComplete = async (ev: Evento) => {
-        const payload = buildPayload({
+        const previousEstado = ev.estado || 'Pendiente';
+        const basePayloadFields = {
             titulo: ev.titulo,
             descripcion: ev.descripcion,
             tipo: ev.subcategoria,
@@ -206,18 +209,39 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
             colorHex: ev.color_hex || '#F59E0B',
             esPrivado: ev.es_privado,
             prioridad: ev.prioridad,
-            estado: 'Completado',
             alertaDias: ev.alerta_dias ?? '',
             recurrenciaAnual: ev.recurrencia_anual ?? false,
             urlAccion: ev.url_accion,
+        };
+        const payload = buildPayload({
+            ...basePayloadFields,
+            estado: 'Completado',
         });
         try {
             setLoading(true);
             await updateEvento(ev.uuid, payload);
             setSelectedEvent(null);
             fetchEventos(currentDate);
+            showToast({
+                title: 'Evento completado',
+                body: `"${ev.titulo}" fue marcado como completado.`,
+                type: 'success',
+                onUndo: async () => {
+                    const revertPayload = buildPayload({
+                        ...basePayloadFields,
+                        estado: previousEstado,
+                    });
+                    await updateEvento(ev.uuid, revertPayload);
+                    fetchEventos(currentDate);
+                },
+            });
         } catch (error) {
             console.error('Error al completar evento de usuario:', error);
+            showToast({
+                title: 'Error al completar evento',
+                body: 'No se pudo actualizar el estado del evento.',
+                type: 'error',
+            });
         } finally {
             setLoading(false);
         }

@@ -86,7 +86,7 @@ function getTemplateDescription(tmpl: DocumentTemplateDto): string {
         return 'Estructura oficial del Programa de Estudio de la Asignatura en sus 11 bloques normados (datos generales, objetivos, prerrequisitos, RDA, unidades temáticas, metodología, evaluación y firmas de responsabilidad).';
     }
     if (c === 'PLAN_ANALITICO' || c.includes('ANALITICO')) {
-        return 'Formato institucional oficial del Plan Analítico de la Asignatura 2026 articulado a los resultados de aprendizaje y distribución de cátedra.';
+        return 'Formato institucional oficial del Plan Analítico de la Asignatura 2026 articulado a los resultados de aprendizaje y distribución de la asignatura.';
     }
     if (c.includes('PRACTICA') || c.includes('LAB') || c.includes('GUIA')) {
         return 'Guía oficial para planificación, ejecución experimental y evaluación de prácticas de aplicación y experimentación (APE).';

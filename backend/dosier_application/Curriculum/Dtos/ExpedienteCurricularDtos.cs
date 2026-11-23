@@ -187,6 +187,9 @@ namespace dosier_application.Curriculum.Dtos
         public string? NombreDocenteResponsable { get; set; }
         public int? IdNivel { get; set; }
         public string? NombreNivel { get; set; }
+        public int? IdModalidad { get; set; }
+        public string? NombreModalidad { get; set; }
+        public string? Paralelo { get; set; }
         public int? IdMalla { get; set; }
         public int? IdPea { get; set; }
         public string? PeaUuid { get; set; }

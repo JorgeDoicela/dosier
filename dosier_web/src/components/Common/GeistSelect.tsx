@@ -261,6 +261,7 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
             {isOpen && isInteractive && typeof document !== 'undefined' && createPortal(
                 <div
                     ref={popoverRef}
+                    data-geist-select-portal="true"
                     style={{
                         position: 'fixed',
                         top: `${coords.top}px`,
@@ -270,7 +271,7 @@ export const GeistSelect: React.FC<GeistSelectProps> = ({
                         zIndex: 999999,
                         transform: popoverPlacement.vertical === 'top' ? 'translateY(-100%)' : undefined,
                     }}
-                    className="bg-bg-deep border border-border-thin rounded-xl shadow-2xl p-2 animate-fade-in flex flex-col"
+                    className="geist-select-portal bg-bg-deep border border-border-thin rounded-xl shadow-2xl p-2 animate-fade-in flex flex-col"
                 >
                     {/* Buscador inteligente si hay más de 5 opciones */}
                     {parsedOptions.length > 5 && (

@@ -22,6 +22,7 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useNotifications } from '../../../../api/NotificationsContext';
+import { restoreItemAtIndex } from '../../../../components/Notifications/toast/undoListHelpers';
 import { useConfirm } from '../../../../api/ConfirmContext';
 import { useAuth } from '../../../../api/AuthContext';
 import { type DocumentTemplateDto, type DocumentBlock, type BlockType, type TableRow, BLOCK_METADATA } from '../types';
@@ -98,8 +99,10 @@ export const useDocumentTemplatesPage = () => {
         window.dispatchEvent(new CustomEvent('dosier-toggle-sidebar'));
     };
 
-    const { addToast } = useNotifications();
+    const { addToast, showToast } = useNotifications();
     const confirm = useConfirm();
+    const selectedTemplateCodeRef = useRef<string | null>(null);
+    selectedTemplateCodeRef.current = selectedTemplate?.code ?? null;
 
     // Observador para cambios en el tema claro/oscuro institucional
     useEffect(() => {
@@ -607,13 +610,35 @@ export const useDocumentTemplatesPage = () => {
             addToast("Operación no Permitida", "El documento debe contener al menos un bloque estructural.", "warning");
             return;
         }
+        const targetIndex = blocks.findIndex(b => b.id === id);
+        if (targetIndex === -1) return;
+
+        const deletedBlock = blocks[targetIndex];
+        const targetTemplateCode = selectedTemplateCodeRef.current;
+
         setBlocks(prev => prev.filter(b => b.id !== id));
         setIsDirty(true);
         if (activeBlockId === id) {
-            const index = blocks.findIndex(b => b.id === id);
-            const fallbackId = blocks[index === 0 ? 1 : index - 1]?.id;
+            const fallbackId = blocks[targetIndex === 0 ? 1 : targetIndex - 1]?.id;
             setActiveBlockId(fallbackId || null);
         }
+
+        showToast({
+            title: 'Bloque eliminado',
+            body: `Se quitó "${deletedBlock.title}" de la plantilla.`,
+            type: 'info',
+            silent: true,
+            onUndo: () => {
+                if (selectedTemplateCodeRef.current !== targetTemplateCode) {
+                    throw new Error('Cambiaste de plantilla; vuelve a la plantilla original para restaurar.');
+                }
+                setBlocks(prev =>
+                    restoreItemAtIndex(prev, deletedBlock, targetIndex, b => b.id)
+                );
+                setActiveBlockId(deletedBlock.id);
+                setIsDirty(true);
+            },
+        });
     };
 
     const handleToggleActive = (index: number) => {
@@ -840,14 +865,42 @@ export const useDocumentTemplatesPage = () => {
     };
 
     const handleRemoveRow = (blockId: string, rowIndex: number) => {
+        const targetBlock = blocks.find(b => b.id === blockId && b.type === 'advanced_table');
+        const removedRow = targetBlock?.config?.rows?.[rowIndex];
+        const targetTemplateCode = selectedTemplateCodeRef.current;
+
         setBlocks(prev => prev.map(b => {
             if (b.id === blockId && b.type === 'advanced_table') {
-                const newRows = (b.config.rows || []).filter((_: any, idx: number) => idx !== rowIndex);
+                const newRows = (b.config.rows || []).filter((_: unknown, idx: number) => idx !== rowIndex);
                 return { ...b, config: { ...b.config, rows: newRows } };
             }
             return b;
         }));
         setIsDirty(true);
+
+        if (removedRow !== undefined) {
+            showToast({
+                title: 'Fila eliminada',
+                body: 'Se quitó la fila de la tabla estructural.',
+                type: 'info',
+                silent: true,
+                onUndo: () => {
+                    if (selectedTemplateCodeRef.current !== targetTemplateCode) {
+                        throw new Error('Cambiaste de plantilla; no se puede restaurar la fila.');
+                    }
+                    setBlocks(prev => prev.map(b => {
+                        if (b.id === blockId && b.type === 'advanced_table') {
+                            const currentRows = [...(b.config.rows || [])];
+                            const clampedIdx = Math.min(Math.max(rowIndex, 0), currentRows.length);
+                            currentRows.splice(clampedIdx, 0, removedRow);
+                            return { ...b, config: { ...b.config, rows: currentRows } };
+                        }
+                        return b;
+                    }));
+                    setIsDirty(true);
+                },
+            });
+        }
     };
 
     const activeBlock = blocks.find(b => b.id === activeBlockId);

@@ -1,18 +1,30 @@
-import React from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import {
     StickyNote,
     CheckCircle2,
     Type,
     ZoomIn,
-    ZoomOut
+    ZoomOut,
+    Check,
+    Loader2
 } from 'lucide-react';
 import type { PizarraColor } from '../types';
 import { PIZARRA_COLORS } from '../types';
+import { GeistSelect } from '../../../../../components/Common/GeistSelect';
+import type { PeriodoAcademicoDto } from '../../../../../services/docenteAsignaturasService';
+
+export interface PizarraCollabUser {
+    id: string | number;
+    name: string;
+    color: string;
+    initials: string;
+}
 
 interface PizarraToolbarProps {
     zoom: number;
     isConnected: boolean;
-    activeUsersCount: number;
+    activeUsersCount?: number;
+    activeUsers?: PizarraCollabUser[];
     saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
     onSaveNow?: () => void;
     onAddSticky: (color: PizarraColor) => void;
@@ -21,12 +33,16 @@ interface PizarraToolbarProps {
     onZoomIn: () => void;
     onZoomOut: () => void;
     onResetZoom: () => void;
+    periodoActual?: string;
+    periodosDisponibles?: PeriodoAcademicoDto[];
+    onCambiarPeriodo?: (nuevoPeriodo: string) => void;
 }
 
 export const PizarraToolbar: React.FC<PizarraToolbarProps> = ({
     zoom,
     isConnected,
     activeUsersCount,
+    activeUsers = [],
     saveStatus = 'idle',
     onSaveNow,
     onAddSticky,
@@ -35,38 +51,80 @@ export const PizarraToolbar: React.FC<PizarraToolbarProps> = ({
     onZoomIn,
     onZoomOut,
     onResetZoom,
+    periodoActual,
+    periodosDisponibles = [],
+    onCambiarPeriodo,
 }) => {
+    const isSaving = saveStatus === 'saving';
+
+    const opcionesPeriodo = useMemo(() => {
+        if (!periodosDisponibles || periodosDisponibles.length === 0) return [];
+        return periodosDisponibles.map((p) => {
+            const detalle = p.detalle?.trim();
+            const nombre = detalle || p.nombre_periodo || (p as any).nombrePeriodo || p.id_periodo;
+            return {
+                value: p.id_periodo,
+                label: nombre,
+            };
+        });
+    }, [periodosDisponibles]);
+
     return (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border-thin bg-surface shadow-xs select-none">
-            {/* Estado Unificado: Conectividad y Guardado en un solo bloque limpio */}
+            {/* 1. Indicador de Persistencia en Tiempo Real (Idéntico al shell oficial de DOSIER) */}
             <button
                 type="button"
                 onClick={onSaveNow}
-                title={saveStatus === 'saving' ? 'Guardando cambios...' : 'Conexión y guardado en tiempo real activo'}
-                className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-text-dim rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 text-[8px] md:text-[9px] font-bold uppercase tracking-wider transition-colors cursor-pointer select-none whitespace-nowrap rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+                title="Autoguardado en tiempo real activo. Clic para persistir inmediatamente."
             >
-                <span
-                    className={`w-2 h-2 rounded-full ${
-                        !isConnected
-                            ? 'bg-amber-500'
-                            : saveStatus === 'saving'
-                            ? 'bg-amber-500 animate-pulse'
-                            : 'bg-emerald-500'
-                    }`}
-                />
-                <span className="hidden sm:inline">
-                    {!isConnected
-                        ? 'Conectando...'
-                        : saveStatus === 'saving'
-                        ? 'Guardando...'
-                        : 'En vivo'}
-                </span>
-                {activeUsersCount > 0 && (
-                    <span className="text-[10px] text-text-dim font-mono opacity-80">
-                        ({activeUsersCount})
+                {isSaving ? (
+                    <span className="flex items-center gap-1.5 text-text-dim">
+                        <Loader2 size={11} className="animate-spin text-text-dim" />
+                        <span>GUARDANDO...</span>
+                    </span>
+                ) : (
+                    <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 size={11} className="text-emerald-500" />
+                        <span>GUARDADO</span>
                     </span>
                 )}
             </button>
+
+            {/* 2. Estado de Conexión en Tiempo Real (Idéntico al shell oficial de DOSIER) */}
+            <div className="flex items-center gap-1.5 select-none whitespace-nowrap px-1">
+                {!isConnected ? (
+                    <>
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-[7px] md:text-[8px] font-semibold text-red-500 uppercase tracking-widest">
+                            Sin conexión
+                        </span>
+                    </>
+                ) : (
+                    <>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[7px] md:text-[8px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                            En línea
+                        </span>
+                    </>
+                )}
+            </div>
+
+            {/* 3. Avatares de Colaboradores Conectados en la Sala */}
+            {activeUsers.length > 0 && (
+                <div className="flex -space-x-1.5 items-center pl-1">
+                    {activeUsers.map((u, i) => (
+                        <div
+                            key={`${u.id}-${i}`}
+                            className="w-5 h-5 rounded-full border border-surface flex items-center justify-center text-[8px] font-bold text-white shadow-xs cursor-default transition-transform hover:-translate-y-0.5 select-none"
+                            style={{ backgroundColor: u.color }}
+                            title={`${u.name}`}
+                        >
+                            {u.initials}
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <div className="h-4 w-px bg-border-thin" />
 
@@ -88,7 +146,7 @@ export const PizarraToolbar: React.FC<PizarraToolbarProps> = ({
                     type="button"
                     onClick={onAddAcuerdo}
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-text-main hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    title="Nuevo Acuerdo de Cátedra"
+                    title="Nuevo Acuerdo de Asignatura"
                 >
                     <CheckCircle2 size={13} className="text-[#0070f3]" />
                     <span>Acuerdo</span>
@@ -137,6 +195,22 @@ export const PizarraToolbar: React.FC<PizarraToolbarProps> = ({
                     <ZoomIn size={13} />
                 </button>
             </div>
+
+            {/* Selector de Período al lado del control de zoom */}
+            {opcionesPeriodo.length > 0 && onCambiarPeriodo && (
+                <>
+                    <div className="h-4 w-px bg-border-thin" />
+                    <div className="w-52">
+                        <GeistSelect
+                            value={periodoActual}
+                            options={opcionesPeriodo}
+                            onChange={(val) => onCambiarPeriodo(String(val))}
+                            size="sm"
+                            className="w-full text-[11px]"
+                        />
+                    </div>
+                </>
+            )}
         </div>
     );
 };

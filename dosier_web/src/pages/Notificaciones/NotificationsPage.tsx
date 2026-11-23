@@ -25,7 +25,17 @@ const getCategoryConfig = (cat: string) => categoryConfig[cat] || { icon: Mail, 
 
 const NotificationsPage = () => {
     const navigate = useNavigate();
-    const { notifications, markAsRead, markAllAsRead, fetchNotifications, deleteNotification, clearReadNotifications, addToast } = useNotifications();
+    const {
+        notifications,
+        markAsRead,
+        markAllAsRead,
+        fetchNotifications,
+        deleteNotification,
+        clearReadNotifications,
+        applyPendingOverlay,
+        pendingOverlayVersion,
+        addToast,
+    } = useNotifications();
     const [allNotifications, setAllNotifications] = useState<NotificationItem[]>([]);
     const [filter, setFilter] = useState<'all' | 'unread' | 'curriculum' | 'colaboracion' | 'investigacion' | 'sistema' | 'urgente'>('all');
     const [search, setSearch] = useState('');
@@ -79,16 +89,18 @@ const NotificationsPage = () => {
             setLoadingAll(true);
             try {
                 const data = await notificacionesService.getMyNotifications(0);
-                setAllNotifications(data);
+                setAllNotifications(applyPendingOverlay(data));
                 lastFetchRef.current = Date.now();
             } catch {
-                setAllNotifications(notifications as unknown as NotificationItem[]);
+                setAllNotifications(
+                    applyPendingOverlay(notifications as unknown as NotificationItem[])
+                );
             } finally {
                 setLoadingAll(false);
             }
         };
         loadAll();
-    }, [notifications]);
+    }, [notifications, pendingOverlayVersion, applyPendingOverlay]);
 
     const handleNotificationClick = async (n: NotificationItem) => {
         if (!n.leido) {
@@ -136,54 +148,18 @@ const NotificationsPage = () => {
         e.stopPropagation();
         e.preventDefault();
 
-        const originalNotifications = [...allNotifications];
-        
-        // Actualización optimista inmediata
+        // Actualización optimista inmediata; el commit diferido y el botón Deshacer son gestionados por NotificationsContext
         setAllNotifications(prev => prev.filter(x => x.uuid !== n.uuid));
-
-        try {
-            await deleteNotification(n.uuid);
-            addToast(
-                "Notificación eliminada",
-                `Se ha eliminado "${stripHtmlToText(n.titulo)}"`,
-                "info",
-                undefined,
-                undefined,
-                undefined,
-                true
-            );
-        } catch (err) {
-            console.error("Error al eliminar la notificación:", err);
-            setAllNotifications(originalNotifications);
-            addToast("Error", "No se pudo eliminar la notificación", "error");
-        }
+        await deleteNotification(n.uuid, n);
     };
 
     const handleClearRead = async () => {
-        const originalNotifications = [...allNotifications];
         const readNotifications = allNotifications.filter(n => n.leido);
-        
         if (readNotifications.length === 0) return;
 
-        // Actualización optimista: remover leídas localmente
+        // Actualización optimista inmediata; el commit diferido y el botón Deshacer son gestionados por NotificationsContext
         setAllNotifications(prev => prev.filter(n => !n.leido));
-
-        try {
-            await clearReadNotifications();
-            addToast(
-                "Historial limpio",
-                `Se han eliminado ${readNotifications.length} notificaciones leídas`,
-                "info",
-                undefined,
-                undefined,
-                undefined,
-                true
-            );
-        } catch (err) {
-            console.error("Error al limpiar las notificaciones leídas:", err);
-            setAllNotifications(originalNotifications);
-            addToast("Error", "No se pudieron limpiar las notificaciones", "error");
-        }
+        await clearReadNotifications(readNotifications);
     };
 
     const extractDocenteName = (n: NotificationItem): string => {
@@ -247,15 +223,16 @@ const NotificationsPage = () => {
     };
 
     const handleMarkAllRead = async () => {
-        await markAllAsRead();
+        const unreadUuids = allNotifications.filter(x => !x.leido).map(x => x.uuid);
         setAllNotifications(prev => prev.map(x => ({ ...x, leido: true })));
+        await markAllAsRead(unreadUuids);
     };
 
     const handleRefresh = async () => {
         await fetchNotifications();
         try {
             const data = await notificacionesService.getMyNotifications(0);
-            setAllNotifications(data || []);
+            setAllNotifications(applyPendingOverlay(data || []));
             lastFetchRef.current = Date.now();
         } catch { /* fallback to context data */ }
     };

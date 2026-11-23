@@ -91,7 +91,7 @@ const DEFAULT_UNITS: MatrixUnit[] = [
             { id: 'u3-t14', tema: 'Tema 14: Integración del proyecto integrador', semana: '15', docencia: 'Acompañamiento tutorial de proyecto.', practico: 'Integración frontend y backend completa.', autonomo: 'Redacción del artículo / memoria técnica.', rdaId: '3', calificacion: '' },
             { id: 'u3-t15', tema: 'Tema 15: Pruebas de carga y auditoría de calidad', semana: '16', docencia: 'Evaluación de rendimiento y buenas prácticas.', practico: 'Ejecución de auditorías de rendimiento.', autonomo: 'Corrección de observaciones del tutor.', rdaId: '3', calificacion: '' },
             { id: 'u3-t16', tema: 'Tema 16: Preparación de sustentación técnica', semana: '17', docencia: 'Pautas de comunicación técnica y defensa.', practico: 'Simulación de defensa oral con rúbrica.', autonomo: 'Preparación de diapositivas y demo.', rdaId: '3', calificacion: '' },
-            { id: 'u3-t17', tema: 'Tema 17: Sustentación y cierre de cátedra', semana: '18', docencia: 'Jornada colegiada de sustentación.', practico: 'Demostración del software en vivo.', autonomo: 'Entrega final del repositorio oficial.', rdaId: '3', calificacion: '' },
+            { id: 'u3-t17', tema: 'Tema 17: Sustentación y cierre de la asignatura', semana: '18', docencia: 'Jornada colegiada de sustentación.', practico: 'Demostración del software en vivo.', autonomo: 'Entrega final del repositorio oficial.', rdaId: '3', calificacion: '' },
             { id: 'u3-eval2', tema: 'Evaluación Segundo Parcial', semana: '18', docencia: '', practico: '', autonomo: 'E2.', rdaId: '2', calificacion: 'E.2:', isEvaluation: true, evalCode: 'E.2' },
             { id: 'u3-eval3', tema: 'Evaluación Final', semana: '19', docencia: '', practico: '', autonomo: 'E3.', rdaId: '3', calificacion: 'E.3:', isEvaluation: true, evalCode: 'E.3' }
         ]
@@ -151,7 +151,7 @@ export const RenderPlanAnaliticoMatrix: React.FC<PlanAnaliticoBlockProps> = ({
         const currentCount = updatedUnits.reduce((acc, u) => acc + u.rows.filter(r => !r.isEvaluation).length, 0);
         const newRow: MatrixThemeRow = {
             id: `row-${Date.now()}`,
-            tema: `Tema ${currentCount + 1}: Nuevo contenido de cátedra`,
+            tema: `Tema ${currentCount + 1}: Nuevo contenido de la asignatura`,
             semana: String(Math.min(19, currentCount + 1)),
             docencia: 'Descripción de la metodología a aplicar',
             practico: 'Descripción de la práctica experimental',

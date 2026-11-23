@@ -7,9 +7,15 @@ import {
     buildPayload,
 } from '../../../services/calendarioService';
 import type { Evento } from '../types/calendarioTypes';
+import { useNotifications } from '../../../api/NotificationsContext';
+import { restoreItemAtIndex } from '../../../components/Notifications/toast/undoListHelpers';
 
-export const useStickyNotes = (setLoading?: (l: boolean) => void) => {
+export const useStickyNotes = (_setLoading?: (l: boolean) => void) => {
+    const { showToast } = useNotifications();
     const [stickyNotes, setStickyNotes] = useState<Evento[]>([]);
+    const stickyNotesRef = useRef<Evento[]>([]);
+    stickyNotesRef.current = stickyNotes;
+    const pendingDeletedUuidsRef = useRef<Set<string>>(new Set());
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilterContext, setSelectedFilterContext] = useState<string | null>(null);
     const [selectedFilterColor, setSelectedFilterColor] = useState<string | null>(null);
@@ -28,7 +34,10 @@ export const useStickyNotes = (setLoading?: (l: boolean) => void) => {
     const fetchStickyNotes = useCallback(async () => {
         try {
             const data = await getStickyNotes();
-            setStickyNotes(data);
+            const pending = pendingDeletedUuidsRef.current;
+            setStickyNotes(
+                pending.size === 0 ? data : data.filter((note) => !pending.has(note.uuid))
+            );
         } catch (err) {
             console.error('Error al cargar notas adhesivas:', err);
         }
@@ -199,16 +208,45 @@ export const useStickyNotes = (setLoading?: (l: boolean) => void) => {
     };
 
     const handleDeleteStickyNote = async (uuid: string) => {
-        try {
-            if (setLoading) setLoading(true);
-            await deleteEvento(uuid);
-            fetchStickyNotes();
-            window.dispatchEvent(new CustomEvent('dosier:note-created'));
-        } catch (err) {
-            console.error('Error al eliminar nota adhesiva:', err);
-        } finally {
-            if (setLoading) setLoading(false);
-        }
+        const currentList = stickyNotesRef.current;
+        const originalIndex = currentList.findIndex((n) => n.uuid === uuid);
+        if (originalIndex === -1) return;
+
+        const deletedNote = currentList[originalIndex];
+        pendingDeletedUuidsRef.current.add(uuid);
+        setStickyNotes((prev) => prev.filter((n) => n.uuid !== uuid));
+
+        const restoreNote = () => {
+            pendingDeletedUuidsRef.current.delete(uuid);
+            setStickyNotes((prev) =>
+                restoreItemAtIndex(prev, deletedNote, originalIndex, (n) => n.uuid)
+            );
+        };
+
+        showToast({
+            title: 'Nota eliminada',
+            body: `Se quitó "${deletedNote.titulo}" de tu bandeja.`,
+            type: 'info',
+            silent: true,
+            onUndo: () => {
+                restoreNote();
+            },
+            onCommit: async () => {
+                try {
+                    await deleteEvento(uuid);
+                    pendingDeletedUuidsRef.current.delete(uuid);
+                    window.dispatchEvent(new CustomEvent('dosier:note-created'));
+                } catch (err) {
+                    console.error('Error al eliminar nota adhesiva:', err);
+                    restoreNote();
+                    showToast({
+                        title: 'Error al eliminar nota',
+                        body: 'No se pudo eliminar la nota en el servidor. Se restauró en tu bandeja.',
+                        type: 'error',
+                    });
+                }
+            },
+        });
     };
 
     const handleQuickPriorityChange = async (note: Evento, newPriority: string) => {

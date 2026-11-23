@@ -92,21 +92,19 @@ export const SectionsSidebar: React.FC<SectionsSidebarProps> = ({
             {/* Contenedor interior con ancho fijo para evitar compresión de texto durante la transición */}
             <div style={{ width: `${width}px` }} className="flex flex-col h-full shrink-0">
                 {/* Cabecera del Índice */}
-                <div className="p-4 py-3.5 border-b border-slate-200/90 dark:border-zinc-800 flex justify-between items-center bg-white dark:bg-zinc-950 shrink-0">
-                    <div className="flex items-center gap-2">
-                        <BookOpen size={16} className="text-[#0070f3] dark:text-blue-400" />
-                        <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100">
-                            Índice del PEA
-                        </span>
-                    </div>
+                <div className="p-4 py-3.5 border-b border-slate-200/90 dark:border-zinc-800 flex items-center gap-2 bg-white dark:bg-zinc-950 shrink-0">
                     <button
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-800 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 -ml-1 text-slate-400 hover:text-slate-800 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer shrink-0"
                         title="Contraer índice del PEA"
                         aria-label="Contraer índice del PEA"
                     >
                         <ChevronLeft size={16} />
                     </button>
+                    <BookOpen size={16} className="text-[#0070f3] dark:text-blue-400 shrink-0" />
+                    <span className="text-sm font-semibold text-slate-800 dark:text-zinc-100 truncate">
+                        Índice del PEA
+                    </span>
                 </div>
 
                 {/* Lista de Secciones */}

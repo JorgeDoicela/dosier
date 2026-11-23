@@ -23,6 +23,11 @@ export interface SalaAsignaturaItemDto {
     idNivel?: number;
     nombre_nivel?: string;
     nombreNivel?: string;
+    id_modalidad?: number;
+    idModalidad?: number;
+    nombre_modalidad?: string;
+    nombreModalidad?: string;
+    paralelo?: string;
     id_malla?: number;
     idMalla?: number;
     id_pea?: number;

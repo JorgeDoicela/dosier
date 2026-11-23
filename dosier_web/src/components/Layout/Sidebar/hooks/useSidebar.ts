@@ -282,7 +282,7 @@ export const useSidebar = ({ isCollapsed, onCollapse, onExpand }: UseSidebarProp
     let unreadCount = 0;
     let markAsRead = async (_uuid: string) => {};
     let markAllAsRead = async () => {};
-    let addToast: ReturnType<typeof useNotifications>['addToast'] = (_title: string, _body: string, _type?: any, _url?: string, _onUndo?: any, _actionLabel?: string, _silent?: boolean) => {};
+    let addToast: ReturnType<typeof useNotifications>['addToast'] = () => '';
 
     try {
         const notificationsData = useNotifications();

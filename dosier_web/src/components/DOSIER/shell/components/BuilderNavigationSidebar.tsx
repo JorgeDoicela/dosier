@@ -68,19 +68,21 @@ export const BuilderNavigationSidebar: React.FC<BuilderNavigationSidebarProps> =
         >
             <div style={{ width: showMobileSections ? '100%' : `${leftSidebarWidth}px` }} className="px-2.5 py-4 sm:px-3 sm:py-5 flex flex-col justify-between h-full overflow-y-auto overflow-x-hidden shrink-0">
                 <div className="flex flex-col">
-                    <div className="flex justify-between items-center mb-5 px-1">
-                        <p className="text-xs font-bold text-text-dim uppercase tracking-wider">Navegación del Documento</p>
+                    <div className="flex items-center gap-2 mb-5 px-1">
                         <button
                             onClick={() => {
                                 setShowMobileSections(false);
                                 setIsLeftSidebarOpen(false);
                             }}
-                            className="p-1.5 hover:bg-surface-hover rounded-lg text-text-dim hover:text-text-main transition-colors cursor-pointer"
+                            className="p-1.5 -ml-1 hover:bg-surface-hover rounded-lg text-text-dim hover:text-text-main transition-colors cursor-pointer shrink-0"
                             title="Contraer navegación"
                             aria-label="Contraer navegación"
                         >
                             <ChevronLeft size={16} />
                         </button>
+                        <p className="text-xs font-bold text-text-dim uppercase tracking-wider truncate">
+                            Navegación del Documento
+                        </p>
                     </div>
 
                     <div className={density.spaceY}>

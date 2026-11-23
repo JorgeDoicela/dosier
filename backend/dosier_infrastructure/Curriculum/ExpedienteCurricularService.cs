@@ -377,6 +377,26 @@ namespace dosier_infrastructure.Curriculum
                 .Where(c => nivelIds.Contains(c.IdNivel))
                 .ToDictionaryAsync(c => c.IdNivel, c => c.Nivel ?? string.Empty);
 
+            var modalidadesDb = await _context.Modalidades.AsNoTracking().ToListAsync();
+            var dictModalidades = modalidadesDb.ToDictionary(
+                m => m.IdModalidad,
+                m => !string.IsNullOrWhiteSpace(m.ModalidadImpresion) 
+                    ? m.ModalidadImpresion 
+                    : (!string.IsNullOrWhiteSpace(m.Modalidad1) ? m.Modalidad1 : "Presencial")
+            );
+
+            var asigFaltantesIds = expedientes
+                .Where(e => (!e.IdModalidad.HasValue || e.IdModalidad.Value == 0) && e.IdAsignacion.HasValue && e.IdAsignacion.Value > 0)
+                .Select(e => e.IdAsignacion!.Value)
+                .Distinct()
+                .ToList();
+
+            var dictAsignacionesFaltantes = asigFaltantesIds.Count > 0
+                ? await _context.AsignacionesProfesores.AsNoTracking()
+                    .Where(ap => asigFaltantesIds.Contains(ap.IdAsignacion))
+                    .ToDictionaryAsync(ap => ap.IdAsignacion, ap => ap)
+                : new Dictionary<int, AsignacionesProfesore>();
+
             foreach (var exp in expedientes)
             {
                 dictAsignaturas.TryGetValue(exp.IdAsignatura, out var asig);
@@ -394,6 +414,24 @@ namespace dosier_infrastructure.Curriculum
                 else if (exp.IdNivel.HasValue)
                 {
                     nombreNivel = $"Nivel {exp.IdNivel.Value}";
+                }
+
+                int? idModalidadFinal = exp.IdModalidad;
+                string? paraleloFinal = exp.Paralelo;
+                if ((!idModalidadFinal.HasValue || idModalidadFinal.Value == 0) && exp.IdAsignacion.HasValue && exp.IdAsignacion.Value > 0 && dictAsignacionesFaltantes.TryGetValue(exp.IdAsignacion.Value, out var asigProf))
+                {
+                    idModalidadFinal = asigProf.IdModalidad;
+                    if (string.IsNullOrEmpty(paraleloFinal)) paraleloFinal = asigProf.Paralelo;
+                }
+
+                string nombreModalidadFinal = "Presencial";
+                if (idModalidadFinal.HasValue && dictModalidades.TryGetValue(idModalidadFinal.Value, out var nMod) && !string.IsNullOrWhiteSpace(nMod))
+                {
+                    nombreModalidadFinal = nMod;
+                }
+                else if (idModalidadFinal.HasValue)
+                {
+                    nombreModalidadFinal = (idModalidadFinal.Value == 2 || idModalidadFinal.Value == 3) ? "En línea" : "Presencial";
                 }
 
                 var peaVigente = exp.Peas?.OrderByDescending(p => p.Version).FirstOrDefault();
@@ -435,6 +473,9 @@ namespace dosier_infrastructure.Curriculum
                     NombreDocenteResponsable = profNombre,
                     IdNivel = exp.IdNivel,
                     NombreNivel = nombreNivel,
+                    IdModalidad = idModalidadFinal,
+                    NombreModalidad = nombreModalidadFinal,
+                    Paralelo = paraleloFinal,
                     IdMalla = exp.IdMalla,
                     IdPea = peaVigente?.IdPea,
                     PeaUuid = peaVigente?.Uuid,

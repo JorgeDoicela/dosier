@@ -70,12 +70,19 @@ export const PerfilEgresoPopover: React.FC<PerfilEgresoPopoverProps> = ({
         setPeriodoFiltro(periodoActual);
     }, [periodoActual]);
 
-    // Cerrar al hacer clic fuera
+    // Cerrar al hacer clic fuera (ignorando clics en portales de GeistSelect)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
+            const target = event.target as HTMLElement | null;
+            if (
+                target &&
+                (containerRef.current?.contains(target) ||
+                 target.closest('[data-geist-select-portal]') ||
+                 target.closest('.geist-select-portal'))
+            ) {
+                return;
             }
+            setIsOpen(false);
         };
 
         if (isOpen) {
@@ -97,7 +104,7 @@ export const PerfilEgresoPopover: React.FC<PerfilEgresoPopoverProps> = ({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isOpen]);
 
-    // Opciones para el selector de período
+    // Opciones para el selector de período usando el nombre descriptivo (detalle) de la base de datos
     const opcionesPeriodo = useMemo(() => {
         if (!periodosDisponibles || periodosDisponibles.length === 0) {
             return [
@@ -105,10 +112,14 @@ export const PerfilEgresoPopover: React.FC<PerfilEgresoPopoverProps> = ({
                 { value: 'ABR2026', label: 'ABR2026' },
             ];
         }
-        return periodosDisponibles.map(p => ({
-            value: p.id_periodo,
-            label: p.nombre_periodo ? `${p.id_periodo} - ${p.nombre_periodo}` : p.id_periodo,
-        }));
+        return periodosDisponibles.map(p => {
+            const detalle = p.detalle?.trim();
+            const nombre = detalle || p.nombre_periodo || p.nombrePeriodo || p.id_periodo;
+            return {
+                value: p.id_periodo,
+                label: nombre,
+            };
+        });
     }, [periodosDisponibles]);
 
     return (
@@ -168,18 +179,14 @@ export const PerfilEgresoPopover: React.FC<PerfilEgresoPopoverProps> = ({
                                 </div>
 
                                 {opcionesPeriodo.length > 0 && (
-                                    <div className="flex items-center gap-1.5 pl-4 border-l border-slate-200 dark:border-zinc-800">
-                                        <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold shrink-0">
-                                            Período:
-                                        </span>
-                                        <div className="w-44">
+                                    <div className="pl-4 border-l border-slate-200 dark:border-zinc-800">
+                                        <div className="w-52">
                                             <GeistSelect
                                                 value={periodoFiltro}
                                                 options={opcionesPeriodo}
                                                 onChange={(val) => {
                                                     const nuevoP = String(val);
                                                     setPeriodoFiltro(nuevoP);
-                                                    onSincronizarPeriodoSala?.(nuevoP);
                                                 }}
                                                 size="sm"
                                                 className="w-full text-[11px]"
