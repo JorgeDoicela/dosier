@@ -109,7 +109,7 @@ export function useCoWork(config: CoWorkConfig): CoWorkHandle {
                 setSession(s => ({ ...s, isSyncing: true }));
                 await transport.submitFinalContent(storageKey, html, json);
                 hasUnsavedContentRef.current = false;
-                setSession(s => ({ ...s, isSyncing: false, lastSyncedAt: new Date() }));
+                setSession(s => ({ ...s, isSyncing: false, lastSyncedAt: new Date(), error: null }));
             } catch (err) {
                 console.error("[useCoWork] Error al guardar:", err);
                 setSession(s => ({ ...s, isSyncing: false }));
@@ -202,6 +202,12 @@ export function useCoWork(config: CoWorkConfig): CoWorkHandle {
 
         setYdoc(newYdoc);
         setAwareness(newAwareness);
+        setSession(s => ({
+            ...s,
+            isSyncing: true,
+            lastSyncedAt: null,
+            connectedUsers: [],
+        }));
 
         let cleanupInterval: any;
         let statusCleanup: (() => void) | undefined;
@@ -247,7 +253,7 @@ export function useCoWork(config: CoWorkConfig): CoWorkHandle {
                         Y.applyUpdate(newYdoc, update, 'remote');
                     });
                 }, 'remote');
-                setSession(s => ({ ...s, isSyncing: false, lastSyncedAt: new Date() }));
+                setSession(s => ({ ...s, isSyncing: false, lastSyncedAt: new Date(), error: null }));
             });
 
             transport.onAwarenessUpdate((base64) => {
@@ -299,7 +305,10 @@ export function useCoWork(config: CoWorkConfig): CoWorkHandle {
                     return;
                 }
 
-                if (!handshake) throw new Error("Handshake fallido");
+                if (!handshake) {
+                    if (!isMounted) return;
+                    throw new Error("Handshake fallido");
+                }
 
                 const isReadOnly = config.readonly || (handshake as any).readOnly || (handshake as any).ReadOnly || false;
                 const isBlindMode = (handshake as any).isBlindMode ?? (handshake as any).IsBlindMode ?? false;

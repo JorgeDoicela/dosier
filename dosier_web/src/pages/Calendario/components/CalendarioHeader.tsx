@@ -4,6 +4,7 @@ import { Calendar as CalendarIcon, Layers, FileText, Plus, ChevronLeft, ChevronR
 import type { CalendarViewMode } from '../types/calendarioTypes';
 import type { CalendarioCarrera } from '../../../services/calendarioService';
 import type { EventoAlcance } from '../hooks/useCalendarioEvents';
+import { EventoAlcanceMenu } from './EventoAlcanceMenu';
 
 interface CalendarioHeaderProps {
     viewMode: CalendarViewMode;
@@ -47,8 +48,49 @@ export const CalendarioHeader: React.FC<CalendarioHeaderProps> = ({
     }, [isMenuOpen]);
     return (
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-zinc-800">
-            {/* Pestañas Principales de Modo de Vista */}
-            <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Modo de vista">
+            {/* Esquina superior izquierda: Botón Nuevo evento + Pestañas de Modo de Vista */}
+            <div className="flex flex-wrap items-center gap-5">
+                {viewMode === 'inbox' ? (
+                    <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 mb-2 lg:mb-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                        onClick={() => {
+                            const floatingTrigger = document.querySelector('.sticky-floating-trigger-btn') as HTMLElement;
+                            if (floatingTrigger) floatingTrigger.click();
+                        }}
+                    >
+                        <Plus size={14} />
+                        <span>Añadir Nota</span>
+                    </button>
+                ) : (
+                    <div className="relative mb-2 lg:mb-1.5" ref={menuRef}>
+                        <button
+                            type="button"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                            onClick={() => setIsMenuOpen((prev) => !prev)}
+                            aria-expanded={isMenuOpen}
+                            aria-haspopup="menu"
+                        >
+                            <Plus size={14} />
+                            <span>Nuevo evento</span>
+                            <ChevronDown size={13} className={`transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isMenuOpen && (
+                            <EventoAlcanceMenu
+                                showCarrera={carrerasUsuario.length > 0}
+                                canPublishInstituto={canPublishInstituto}
+                                className="absolute left-0 mt-2"
+                                onSelect={(alcance) => {
+                                    setIsMenuOpen(false);
+                                    handleNewEventClick(alcance);
+                                }}
+                            />
+                        )}
+                    </div>
+                )}
+
+                <nav className="-mb-px flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar" aria-label="Modo de vista">
                 <button
                     type="button"
                     className={`pb-2.5 pt-1 px-0.5 text-xs transition-colors cursor-pointer border-b-2 flex items-center gap-2 whitespace-nowrap ${
@@ -86,6 +128,7 @@ export const CalendarioHeader: React.FC<CalendarioHeaderProps> = ({
                     <span>Bandeja de Notas</span>
                 </button>
             </nav>
+            </div>
 
             <div className="flex flex-wrap items-center gap-3 pb-2.5 lg:pb-2">
                 {viewMode === 'calendar' && (
@@ -151,100 +194,6 @@ export const CalendarioHeader: React.FC<CalendarioHeaderProps> = ({
                             </option>
                         ))}
                     </select>
-                )}
-
-                {/* Botón Global de Añadir Tarea / Nota */}
-                {viewMode === 'inbox' ? (
-                    <button
-                        type="button"
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all cursor-pointer shadow-xs"
-                        onClick={() => {
-                            const floatingTrigger = document.querySelector('.sticky-floating-trigger-btn') as HTMLElement;
-                            if (floatingTrigger) floatingTrigger.click();
-                        }}
-                    >
-                        <Plus size={14} />
-                        <span>Añadir Nota</span>
-                    </button>
-                ) : (
-                    <div className="relative" ref={menuRef}>
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#0070f3] text-white hover:bg-[#005bb5] active:bg-[#004ca3] transition-all cursor-pointer shadow-xs"
-                            onClick={() => setIsMenuOpen((prev) => !prev)}
-                            aria-expanded={isMenuOpen}
-                            aria-haspopup="menu"
-                        >
-                            <Plus size={14} />
-                            <span>Nuevo evento</span>
-                            <ChevronDown size={13} className={`transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {isMenuOpen && (
-                            <div
-                                role="menu"
-                                className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl py-1.5 z-50"
-                            >
-                                <button
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        handleNewEventClick('personal');
-                                    }}
-                                    className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex flex-col gap-0.5"
-                                >
-                                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                        Personal
-                                    </span>
-                                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 pl-4">
-                                        Solo visible en mi agenda
-                                    </span>
-                                </button>
-
-                                {carrerasUsuario.length > 0 && (
-                                    <button
-                                        type="button"
-                                        role="menuitem"
-                                        onClick={() => {
-                                            setIsMenuOpen(false);
-                                            handleNewEventClick('carrera');
-                                        }}
-                                        className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex flex-col gap-0.5 border-t border-slate-100 dark:border-zinc-800"
-                                    >
-                                        <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-[#0070f3]" />
-                                            Toda la carrera
-                                        </span>
-                                        <span className="text-[11px] text-slate-500 dark:text-zinc-400 pl-4">
-                                            Visible para docentes y coordinación
-                                        </span>
-                                    </button>
-                                )}
-
-                                {canPublishInstituto && (
-                                    <button
-                                        type="button"
-                                        role="menuitem"
-                                        onClick={() => {
-                                            setIsMenuOpen(false);
-                                            handleNewEventClick('instituto');
-                                        }}
-                                        className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer flex flex-col gap-0.5 border-t border-slate-100 dark:border-zinc-800"
-                                    >
-                                        <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                                            Todo el instituto
-                                        </span>
-                                        <span className="text-[11px] text-slate-500 dark:text-zinc-400 pl-4">
-                                            Visible para todo el ISTPET
-                                        </span>
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                    </div>
                 )}
             </div>
         </div>

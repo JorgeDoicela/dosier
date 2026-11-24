@@ -2003,7 +2003,11 @@ namespace dosier_infrastructure.Curriculum
                 IdExpediente = pea.IdExpediente,
                 IdCarrera = pea.IdCarrera,
                 NombreCarrera = carrera?.Carrera1 ?? "Carrera ISTPET",
-                CodigoCarrera = !string.IsNullOrWhiteSpace(carrera?.AliasCarrera) ? carrera?.AliasCarrera : carrera?.CodigoCases,
+                CodigoCarrera = dosier_infrastructure.Academico.AcademicContextResolver.ResolverSiglaCarrera(
+                    carrera?.AliasCarrera,
+                    carrera?.CodigoCases,
+                    carrera?.Carrera1,
+                    modalidad),
                 IdAsignatura = pea.IdAsignatura,
                 NombreAsignatura = asignatura?.Asignatura1 ?? "Asignatura",
                 CodigoAsignatura = asignatura?.Codigo,

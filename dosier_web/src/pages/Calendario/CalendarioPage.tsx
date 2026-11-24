@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Calendar } from 'lucide-react';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
@@ -13,6 +13,7 @@ import { InboxView } from './components/InboxView';
 import { EventoFormDrawer } from './components/EventoFormDrawer';
 import { EventoDetailDrawer } from './components/EventoDetailDrawer';
 import { PlanificacionPopover } from './components/PlanificacionPopover';
+import { EventoAlcanceMenu } from './components/EventoAlcanceMenu';
 
 import { useCalendarioEvents } from './hooks/useCalendarioEvents';
 import { useStickyNotes } from './hooks/useStickyNotes';
@@ -92,6 +93,9 @@ export const CalendarioPage: React.FC = () => {
         selectedCarreraId,
         setSelectedCarreraId,
         canPublishInstituto,
+        slotMenuState,
+        closeSlotMenu,
+        handleSelectSlotAlcance,
         handleNewEventClick,
         handleSelectSlot,
         handleEditEventClick,
@@ -141,6 +145,25 @@ export const CalendarioPage: React.FC = () => {
         currentDate,
         handleGlobalDragEndFromNotes,
     });
+
+    const slotMenuRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!slotMenuState) return;
+        const handleOutside = (e: MouseEvent) => {
+            if (slotMenuRef.current && !slotMenuRef.current.contains(e.target as Node)) {
+                closeSlotMenu();
+            }
+        };
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeSlotMenu();
+        };
+        document.addEventListener('mousedown', handleOutside);
+        document.addEventListener('keydown', handleKey);
+        return () => {
+            document.removeEventListener('mousedown', handleOutside);
+            document.removeEventListener('keydown', handleKey);
+        };
+    }, [slotMenuState, closeSlotMenu]);
 
     return (
         <main className="flex-1 bg-[#f8fafc] dark:bg-[#0b0d11] p-6 md:p-8 flex flex-col h-[calc(100vh-56px)] overflow-hidden font-sans gap-6">
@@ -199,6 +222,7 @@ export const CalendarioPage: React.FC = () => {
                             isDraggable={isDraggable}
                             onDropFromOutside={handleDropNoteOnCalendar}
                             dragFromOutsideItem={dragFromOutsideItem}
+                            selectedSlotRange={slotMenuState ? { fechaInicio: slotMenuState.fechaInicio, fechaFin: slotMenuState.fechaFin } : null}
                             onCalendarEventDragStart={(uuid) => {
                                 setDraggingUuid(uuid);
                                 setDraggingType('kanban');
@@ -305,6 +329,20 @@ export const CalendarioPage: React.FC = () => {
                 onClose={() => setPlanificando(null)}
                 handleConfirmPlanificacion={handleConfirmPlanificacion}
             />
+
+            {/* Menú contextual de alcance al presionar un día del calendario */}
+            {slotMenuState && (
+                <div
+                    ref={slotMenuRef}
+                    style={{ position: 'fixed', top: slotMenuState.y, left: slotMenuState.x, zIndex: 60 }}
+                >
+                    <EventoAlcanceMenu
+                        showCarrera={carrerasUsuario.length > 0}
+                        canPublishInstituto={canPublishInstituto}
+                        onSelect={handleSelectSlotAlcance}
+                    />
+                </div>
+            )}
         </main>
     );
 };

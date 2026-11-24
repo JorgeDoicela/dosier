@@ -825,9 +825,11 @@ namespace Dosier.Infrastructure.Common.Documents
                     var coordAcad = autoridades.FirstOrDefault(a => a.CargoCurricular == "COORD_ACADEMICO" || a.CargoCurricular == "COORD_ACAD");
                     var vicerrector = autoridades.FirstOrDefault(a => a.CargoCurricular == "VICERRECTOR");
 
-                    var codigoCarrera = !string.IsNullOrWhiteSpace(carrera?.CodigoCases)
-                        ? carrera.CodigoCases
-                        : (!string.IsNullOrWhiteSpace(carrera?.AliasCarrera) ? carrera.AliasCarrera : (carrera?.Carrera1?.Length >= 3 ? carrera.Carrera1.Substring(0, 3).ToUpper() : ""));
+                    var codigoCarrera = dosier_infrastructure.Academico.AcademicContextResolver.ResolverSiglaCarrera(
+                        carrera?.AliasCarrera,
+                        carrera?.CodigoCases,
+                        carrera?.Carrera1,
+                        pea.Modalidad);
 
                     var initialDict = new Dictionary<string, object?>
                     {
@@ -1015,9 +1017,20 @@ namespace Dosier.Infrastructure.Common.Documents
                 string.IsNullOrWhiteSpace(curModalidad) ? pea.Modalidad : curModalidad);
             bool needsModalidadSync = !string.Equals(curModalidad.Trim(), normModalidad, StringComparison.Ordinal);
 
+            var carrera = await _context.Carreras
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.IdCarrera == pea.IdCarrera, ct);
+            string sigafiCodigoCarrera = dosier_infrastructure.Academico.AcademicContextResolver.ResolverSiglaCarrera(
+                carrera?.AliasCarrera, carrera?.CodigoCases, carrera?.Carrera1, normModalidad);
+            string curCodigoCarrera = snapshot.TryGetValue("CodigoCarrera", out var ccVal)
+                ? (ccVal?.ToString() ?? string.Empty)
+                : (snapshot.TryGetValue("codigo_carrera", out var ccSnake) ? (ccSnake?.ToString() ?? string.Empty) : string.Empty);
+            bool needsCodigoCarreraSync = !string.IsNullOrWhiteSpace(sigafiCodigoCarrera)
+                && !string.Equals(curCodigoCarrera.Trim(), sigafiCodigoCarrera, StringComparison.OrdinalIgnoreCase);
+
             bool needsHoursSync = differsFromSigafi && (isZero || isUniformThirds || Math.Abs(curTotal - sigafiTotal) >= 0.01m);
 
-            if (!needsHoursSync && !needsUnidadOrgSync && !needsModalidadSync)
+            if (!needsHoursSync && !needsUnidadOrgSync && !needsModalidadSync && !needsCodigoCarreraSync)
             {
                 return;
             }
@@ -1039,6 +1052,12 @@ namespace Dosier.Infrastructure.Common.Documents
             if (needsModalidadSync)
             {
                 snapshot["Modalidad"] = normModalidad;
+            }
+
+            if (needsCodigoCarreraSync)
+            {
+                snapshot["CodigoCarrera"] = sigafiCodigoCarrera;
+                snapshot["codigo_carrera"] = sigafiCodigoCarrera;
             }
 
             instance.UpdateDataSnapshot(System.Text.Json.JsonSerializer.Serialize(snapshot));

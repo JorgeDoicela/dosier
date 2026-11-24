@@ -86,12 +86,18 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
 
     if (!isOpen) return null;
 
-    const subtituloAlcance =
+    const alcanceConfig =
         formAlcance === 'instituto'
-            ? 'Visible para todo el instituto'
+            ? { label: 'Todo el instituto', dotClass: 'bg-emerald-600', desc: 'Visible para todo el ISTPET' }
             : formAlcance === 'carrera'
-                ? 'Visible para todos los docentes y coordinación de la carrera'
-                : 'Visible únicamente en tu agenda personal';
+                ? {
+                    label: 'Toda la carrera',
+                    dotClass: 'bg-[#0070f3]',
+                    desc: carrerasUsuario.length === 1
+                        ? carrerasUsuario[0].nombre
+                        : 'Visible para docentes y coordinación',
+                }
+                : { label: 'Personal', dotClass: 'bg-amber-500', desc: 'Visible únicamente en tu agenda personal' };
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
@@ -109,8 +115,11 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                         <h2 className="text-xl font-bold tracking-tight text-text-main font-sans">
                             {isEditing ? 'Editar evento' : 'Nuevo evento'}
                         </h2>
-                        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                            {subtituloAlcance}
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${alcanceConfig.dotClass}`} />
+                            <span className="font-semibold text-slate-700 dark:text-zinc-200">{alcanceConfig.label}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>{alcanceConfig.desc}</span>
                         </p>
                     </div>
                     <button
@@ -123,80 +132,24 @@ export const EventoFormDrawer: React.FC<EventoFormDrawerProps> = ({
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-8 space-y-5 bg-white dark:bg-zinc-950">
-                    {/* Alcance de Visibilidad */}
-                    <div className="border border-slate-200 dark:border-zinc-800 rounded-lg p-3 bg-zinc-50 dark:bg-zinc-900 space-y-3">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 block">
-                            Quién puede ver este evento
-                        </label>
-                        <div className={`grid gap-2 ${canPublishInstituto ? 'grid-cols-3' : carrerasUsuario.length > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                            <button
-                                type="button"
-                                onClick={() => aplicarAlcanceDefaults('personal')}
-                                className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
-                                    formAlcance === 'personal'
-                                        ? 'bg-white dark:bg-zinc-950 text-amber-600 dark:text-amber-400 border-slate-300 dark:border-zinc-700 font-semibold shadow-2xs'
-                                        : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
-                                }`}
+                    {formAlcance === 'carrera' && carrerasUsuario.length > 1 && (
+                        <div>
+                            <label className="section-label mb-1.5 block">Carrera *</label>
+                            <select
+                                value={formIdCarrera ?? ''}
+                                onChange={(e) => setFormIdCarrera(e.target.value ? Number(e.target.value) : null)}
+                                required
+                                className="input-vercel text-xs bg-white dark:bg-zinc-950"
                             >
-                                Personal
-                            </button>
-
-                            {carrerasUsuario.length > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={() => aplicarAlcanceDefaults('carrera')}
-                                    className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
-                                        formAlcance === 'carrera'
-                                            ? 'bg-[#0070f3] text-white border-[#0070f3] font-semibold shadow-2xs'
-                                            : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
-                                    }`}
-                                >
-                                    Toda la carrera
-                                </button>
-                            )}
-
-                            {canPublishInstituto && (
-                                <button
-                                    type="button"
-                                    onClick={() => aplicarAlcanceDefaults('instituto')}
-                                    className={`py-2 px-3 text-xs font-medium rounded-md transition-colors cursor-pointer border ${
-                                        formAlcance === 'instituto'
-                                            ? 'bg-emerald-600 text-white border-emerald-600 font-semibold shadow-2xs'
-                                            : 'bg-transparent text-slate-600 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-800'
-                                    }`}
-                                >
-                                    Todo el instituto
-                                </button>
-                            )}
+                                <option value="">Selecciona una carrera...</option>
+                                {carrerasUsuario.map((c) => (
+                                    <option key={c.id_carrera} value={c.id_carrera}>
+                                        {c.nombre}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-
-                        {formAlcance === 'carrera' && carrerasUsuario.length > 1 && (
-                            <div className="pt-2 border-t border-slate-200 dark:border-zinc-800">
-                                <label className="text-xs font-medium text-slate-600 dark:text-zinc-400 block mb-1">
-                                    Carrera
-                                </label>
-                                <select
-                                    value={formIdCarrera ?? ''}
-                                    onChange={(e) => setFormIdCarrera(e.target.value ? Number(e.target.value) : null)}
-                                    required
-                                    className="input-vercel text-xs bg-white dark:bg-zinc-950"
-                                >
-                                    <option value="">Selecciona una carrera...</option>
-                                    {carrerasUsuario.map((c) => (
-                                        <option key={c.id_carrera} value={c.id_carrera}>
-                                            {c.nombre}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {formAlcance === 'carrera' && carrerasUsuario.length === 1 && (
-                            <p className="text-xs text-slate-600 dark:text-zinc-400 pt-1 border-t border-slate-200 dark:border-zinc-800">
-                                Carrera: <strong className="text-slate-900 dark:text-zinc-100">{carrerasUsuario[0].nombre}</strong>
-                            </p>
-                        )}
-                    </div>
+                    )}
 
                     {/* Título */}
                     <div className="space-y-1">

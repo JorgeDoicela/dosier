@@ -463,7 +463,9 @@ namespace dosier_api.Controllers
                     return File(result.PdfBytes, "application/pdf", safeName);
                 }
 
-                Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = $"inline; filename=\"{safeName}\"";
+                var cd = new Microsoft.Net.Http.Headers.ContentDispositionHeaderValue("inline");
+                cd.SetHttpFileName(safeName);
+                Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = cd.ToString();
                 return File(result.PdfBytes, "application/pdf");
             }
             catch (Exception ex)
@@ -517,7 +519,9 @@ namespace dosier_api.Controllers
                     return File(result.PdfBytes, "application/pdf", safeName);
                 }
 
-                Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = $"inline; filename=\"{safeName}\"";
+                var cd = new Microsoft.Net.Http.Headers.ContentDispositionHeaderValue("inline");
+                cd.SetHttpFileName(safeName);
+                Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.ContentDisposition] = cd.ToString();
                 return File(result.PdfBytes, "application/pdf");
             }
             catch (Exception ex)

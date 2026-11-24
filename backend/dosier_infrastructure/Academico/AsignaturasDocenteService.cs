@@ -452,7 +452,7 @@ public class AsignaturasDocenteService : IAsignaturasDocenteService
             HorasPracticoExperimental = horasApe,
             HorasAutonomo = horasAutonomo,
             Creditos = detalle?.Creditos ?? 0,
-            UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1, detalle.Tipo),
+            UnidadOrganizacionCurricular = AcademicContextResolver.NormalizarUnidadOrganizacion(tipoAsig?.TipoAsignatura1, detalle?.Tipo),
             DescripcionMalla = mallaActiva?.Descripcion,
 
             Prerrequisitos = prerequisitosItems

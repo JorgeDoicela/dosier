@@ -98,14 +98,18 @@ namespace dosier_api.Controllers
             if (!string.IsNullOrEmpty(instance.FinalPdfPath) && storage.FileExists(instance.FinalPdfPath))
             {
                 var bytes = await storage.GetFileAsync(instance.FinalPdfPath);
-                Response.Headers["Content-Disposition"] = $"inline; filename=\"{resolvedName}\"; filename*=UTF-8''{Uri.EscapeDataString(resolvedName)}";
+                var cdCached = new Microsoft.Net.Http.Headers.ContentDispositionHeaderValue("inline");
+                cdCached.SetHttpFileName(resolvedName);
+                Response.Headers["Content-Disposition"] = cdCached.ToString();
                 return File(bytes, "application/pdf");
             }
 
             var userUuid = User.Identity?.Name ?? "anon";
             var orchestratorRequest = await _orchestrator.PrepareRequestAsync(uuid, userUuid, forceDraftMode: false, ct: ct);
             var buildResult = await _documentEngine.GenerateAsync(orchestratorRequest, ct);
-            Response.Headers["Content-Disposition"] = $"inline; filename=\"{resolvedName}\"; filename*=UTF-8''{Uri.EscapeDataString(resolvedName)}";
+            var cdBuilt = new Microsoft.Net.Http.Headers.ContentDispositionHeaderValue("inline");
+            cdBuilt.SetHttpFileName(resolvedName);
+            Response.Headers["Content-Disposition"] = cdBuilt.ToString();
             return File(buildResult.PdfBytes, "application/pdf");
         }
 

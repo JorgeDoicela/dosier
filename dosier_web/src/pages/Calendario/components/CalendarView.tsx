@@ -124,6 +124,7 @@ interface CalendarViewProps {
     onDropFromOutside?: (args: any) => void;
     dragFromOutsideItem?: () => any;
     onCalendarEventDragStart?: (uuid: string) => void;
+    selectedSlotRange?: { fechaInicio: string; fechaFin: string } | null;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -141,7 +142,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     onDropFromOutside,
     dragFromOutsideItem,
     onCalendarEventDragStart,
+    selectedSlotRange,
 }) => {
+    const dayPropGetter = React.useCallback((date: Date) => {
+        if (!selectedSlotRange) return {};
+        const key = format(date, 'yyyy-MM-dd');
+        if (key >= selectedSlotRange.fechaInicio && key <= selectedSlotRange.fechaFin) {
+            return { className: 'rbc-day-bg-selected-slot' };
+        }
+        return {};
+    }, [selectedSlotRange]);
     const calendarEventos = React.useMemo(() => {
         return filteredEventos.filter(ev => Boolean(ev.resource.fecha_inicio));
     }, [filteredEventos]);
@@ -254,6 +264,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
             selectable
+            dayPropGetter={dayPropGetter}
+            slotPropGetter={dayPropGetter}
             eventPropGetter={eventStyleGetter}
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}

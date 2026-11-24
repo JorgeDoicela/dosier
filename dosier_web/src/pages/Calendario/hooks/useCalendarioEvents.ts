@@ -25,6 +25,13 @@ import type { CalendarEventExtended, Evento } from '../types/calendarioTypes';
 
 export type EventoAlcance = 'personal' | 'carrera' | 'instituto';
 
+export interface SlotMenuState {
+    fechaInicio: string;
+    fechaFin: string;
+    x: number;
+    y: number;
+}
+
 export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     const { isAdmin, isVicerrector, isCoordAcad } = useAuth();
     const canPublishInstituto = isAdmin || isVicerrector || isCoordAcad;
@@ -42,6 +49,7 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
 
     // Form State
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [slotMenuState, setSlotMenuState] = useState<SlotMenuState | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editingUuid, setEditingUuid] = useState<string | null>(null);
 
@@ -105,18 +113,47 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
     };
 
     const handleNewEventClick = (alcanceInicial: EventoAlcance = 'personal') => {
+        setSlotMenuState(null);
         resetForm(alcanceInicial);
         setIsFormOpen(true);
     };
 
     const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-        resetForm('personal');
         const inicio = format(slotInfo.start, 'yyyy-MM-dd');
-        const fin = format(slotInfo.end instanceof Date ? addDays(slotInfo.end, -1) : slotInfo.start, 'yyyy-MM-dd');
-        setFormFechaInicio(inicio);
-        setFormFechaFin(fin < inicio ? inicio : fin);
+        const finRaw = format(slotInfo.end instanceof Date ? addDays(slotInfo.end, -1) : slotInfo.start, 'yyyy-MM-dd');
+        const fin = finRaw < inicio ? inicio : finRaw;
+
+        if (carrerasUsuario.length === 0 && !canPublishInstituto) {
+            resetForm('personal');
+            setFormFechaInicio(inicio);
+            setFormFechaFin(fin);
+            setIsFormOpen(true);
+            return;
+        }
+
+        const box = slotInfo.box as { x?: number; y?: number; clientX?: number; clientY?: number } | undefined;
+        const bounds = slotInfo.bounds as { left?: number; top?: number } | undefined;
+        const rawX = box?.clientX ?? box?.x ?? bounds?.left ?? (window.innerWidth / 2 - 128);
+        const rawY = box?.clientY ?? box?.y ?? bounds?.top ?? (window.innerHeight / 2 - 80);
+        const x = Math.min(Math.max(12, rawX), Math.max(12, window.innerWidth - 272));
+        const y = Math.min(Math.max(12, rawY), Math.max(12, window.innerHeight - 220));
+
+        setSlotMenuState({ fechaInicio: inicio, fechaFin: fin, x, y });
+    }, [carrerasUsuario, selectedCarreraId, canPublishInstituto]);
+
+    const handleSelectSlotAlcance = (alcance: EventoAlcance) => {
+        if (!slotMenuState) return;
+        const { fechaInicio, fechaFin } = slotMenuState;
+        setSlotMenuState(null);
+        resetForm(alcance);
+        setFormFechaInicio(fechaInicio);
+        setFormFechaFin(fechaFin);
         setIsFormOpen(true);
-    }, [carrerasUsuario, selectedCarreraId]);
+    };
+
+    const closeSlotMenu = useCallback(() => {
+        setSlotMenuState(null);
+    }, []);
 
     const handleEditEventClick = (ev: Evento) => {
         const isNorm = ev.categoria_global === 'Normativo' && !ev.id_carrera;
@@ -555,6 +592,9 @@ export const useCalendarioEvents = (fetchStickyNotesRefetch?: () => void) => {
         selectedCarreraId,
         setSelectedCarreraId,
         canPublishInstituto,
+        slotMenuState,
+        closeSlotMenu,
+        handleSelectSlotAlcance,
         resetForm,
         handleNewEventClick,
         handleSelectSlot,

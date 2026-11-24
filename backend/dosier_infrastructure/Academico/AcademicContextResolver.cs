@@ -272,6 +272,49 @@ public class AcademicContextResolver : IAcademicContextResolver
         return modalidad.Trim();
     }
 
+    public static string ResolverSiglaCarrera(string? aliasCarrera, string? codigoCases, string? nombreCarrera, string? modalidad = null)
+    {
+        var upperNombre = (nombreCarrera ?? string.Empty).Trim().ToUpperInvariant();
+        if (upperNombre.Contains("SOFTWARE") && NormalizarModalidad(modalidad) == "En Línea")
+        {
+            return "DSL";
+        }
+
+        if (!string.IsNullOrWhiteSpace(aliasCarrera))
+        {
+            var cleanAlias = aliasCarrera.Trim().ToUpperInvariant();
+            if (cleanAlias != "---" && !cleanAlias.Contains('-'))
+            {
+                return cleanAlias;
+            }
+        }
+
+        if (upperNombre.Contains("GASTRONOM")) return "GT";
+        if (upperNombre.Contains("SOFTWARE")) return "DS";
+        if (upperNombre.Contains("DEPORTIV") || upperNombre.Contains("ENTRENAMIENTO")) return "ED";
+        if (upperNombre.Contains("AUTOMOTRIZ") || upperNombre.Contains("MECANICA") || upperNombre.Contains("MECÁNICA")) return "MA";
+        if (upperNombre.Contains("TRIBUTAR") || upperNombre.Contains("CONTABILIDAD")) return "CAT";
+        if (upperNombre.Contains("TALENTO") || upperNombre.Contains("HUMANO")) return "ATH";
+        if (upperNombre.Contains("GRAFICO") || upperNombre.Contains("GRÁFICO")) return "DG";
+        if (upperNombre.Contains("INICIAL")) return "EI";
+        if (upperNombre.Contains("MARKETING")) return "MKC";
+        if (upperNombre.Contains("INCLUSIVA")) return "EIC";
+        if (upperNombre.Contains("BASICA") || upperNombre.Contains("BÁSICA")) return "EB";
+        if (upperNombre.Contains("TELECOMUNICACION") || upperNombre.Contains("REDES")) return "RT";
+        if (upperNombre.Contains("ELECTRONIC") || upperNombre.Contains("ELECTRÓNIC")) return "ET";
+
+        if (!string.IsNullOrWhiteSpace(codigoCases))
+        {
+            var cleanCases = codigoCases.Trim().ToUpperInvariant();
+            if (cleanCases != "---" && !cleanCases.Contains('-'))
+            {
+                return cleanCases;
+            }
+        }
+
+        return upperNombre.Length >= 3 ? upperNombre.Substring(0, 3) : string.Empty;
+    }
+
     public static string NormalizarUnidadOrganizacion(string? tipoAsignatura, string? tipoCortoDetalle = null)
     {
         if (!string.IsNullOrWhiteSpace(tipoCortoDetalle))

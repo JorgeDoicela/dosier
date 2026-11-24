@@ -395,8 +395,10 @@ export const CoWorkField: React.FC<CoWorkFieldProps> = ({
                 const isReadOnlyMode = readOnly || guardContext.readOnly || cowork.session.readOnly;
                 if (!isReadOnlyMode) {
                     const states = cowork.awareness ? Array.from(cowork.awareness.getStates().values()) : [];
-                    const localUserId = (cowork.awareness?.getLocalState() as any)?.user?.id;
-                    const otherUsersCount = states.filter((st: any) => st?.user?.id && st?.user?.id !== localUserId).length;
+                    const localUser = (cowork.awareness?.getLocalState() as any)?.user;
+                    const otherUsersCount = states.filter((st: any) =>
+                        st?.user && (localUser?.tabId && st.user.tabId ? st.user.tabId !== localUser.tabId : st.user.id !== localUser?.id)
+                    ).length;
                     const isLeader = otherUsersCount === 0;
 
                     if (isLeader) {

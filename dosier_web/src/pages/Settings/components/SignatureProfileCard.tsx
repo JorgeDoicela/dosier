@@ -15,7 +15,6 @@ export const SignatureProfileCard: React.FC = () => {
     const sig = useSignatureProfile();
     const cropper = useImageCropper();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [showLiveStamp, setShowLiveStamp] = useState(true);
 
     const userName = user?.nombre_completo || sig.autoText || 'Docente Institucional';
     const userCi = user?.id_referencia || '17XXXXXXXX';
@@ -150,7 +149,7 @@ export const SignatureProfileCard: React.FC = () => {
                             <DocumentStampPreview
                                 nombreFirmante={userName}
                                 cargo={sig.profile?.cargo || 'Docente'}
-                                departamento={sig.profile?.departamento || 'Coordinación Académica'}
+                                departamento={sig.profile?.departamento || ''}
                                 cedula={userCi}
                                 firmaImagenB64={sig.profile?.firmaImagenB64 || (sig.profile as any)?.firma_imagen_b64 || sig.firmaImagenB64}
                                 tipoPresentacion={(() => {
@@ -170,6 +169,30 @@ export const SignatureProfileCard: React.FC = () => {
             {/* ── FORMULARIO DE EDICIÓN ─────────────────────────────────── */}
             {sig.isEditing && (
                 <form onSubmit={handleSaveProfile} className="space-y-6">
+                    {/* Selector de modo sobre riel plano centrado */}
+                    <div className="space-y-3">
+                        <span className="text-xs font-bold text-text-main uppercase tracking-wider block text-center">
+                            Método de Generación del Trazo
+                        </span>
+                        <div className="border-b border-border-thin">
+                            <nav className="-mb-px flex items-center justify-center gap-6 sm:gap-10 overflow-x-auto overflow-y-hidden no-scrollbar">
+                                {(['auto', 'upload', 'draw'] as const).map((mode) => (
+                                    <button
+                                        key={mode}
+                                        type="button"
+                                        onClick={() => sig.selectMode(mode)}
+                                        className={`py-3 px-2 border-b-[3px] text-sm sm:text-[15px] tracking-tight transition-colors whitespace-nowrap cursor-pointer ${sig.activeMode === mode
+                                            ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400 font-bold'
+                                            : 'border-transparent text-slate-700 dark:text-zinc-300 hover:text-slate-950 dark:hover:text-white font-semibold'
+                                            }`}
+                                    >
+                                        {mode === 'auto' ? 'Generación Automática' : mode === 'upload' ? 'Cargar Imagen (Foto)' : 'Dibujo Manual (Lienzo)'}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label htmlFor="sig-cargo" className="text-xs font-bold text-text-main uppercase tracking-wider block">
@@ -196,30 +219,6 @@ export const SignatureProfileCard: React.FC = () => {
                                 placeholder="Ej. Tecnología Superior en Desarrollo de Software"
                                 className="w-full bg-bg-deep border border-border-thin rounded-xl px-4 py-3 text-xs sm:text-sm text-text-main focus:border-[#0070f3] outline-none transition-all shadow-2xs"
                             />
-                        </div>
-                    </div>
-
-                    {/* Selector de modo sobre riel plano */}
-                    <div className="space-y-3 pt-2">
-                        <span className="text-xs font-bold text-text-main uppercase tracking-wider block">
-                            Método de Generación del Trazo
-                        </span>
-                        <div className="border-b border-border-thin">
-                            <nav className="-mb-px flex items-center gap-6 overflow-x-auto no-scrollbar">
-                                {(['auto', 'upload', 'draw'] as const).map((mode) => (
-                                    <button
-                                        key={mode}
-                                        type="button"
-                                        onClick={() => sig.selectMode(mode)}
-                                        className={`pb-2.5 border-b-2 font-semibold text-xs sm:text-sm tracking-tight transition-colors whitespace-nowrap cursor-pointer ${sig.activeMode === mode
-                                            ? 'border-[#0070f3] text-[#0070f3] dark:border-blue-400 dark:text-blue-400'
-                                            : 'border-transparent text-text-dim hover:text-text-main'
-                                            }`}
-                                    >
-                                        {mode === 'auto' ? 'Generación Automática' : mode === 'upload' ? 'Cargar Imagen (Foto)' : 'Dibujo Manual (Lienzo)'}
-                                    </button>
-                                ))}
-                            </nav>
                         </div>
                     </div>
 
@@ -378,37 +377,23 @@ export const SignatureProfileCard: React.FC = () => {
 
                     {/* Previsualización en Tiempo Real del Sello Institucional */}
                     <div className="border-t border-border-thin pt-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <ShieldCheck size={16} className="text-[#0070f3]" />
-                                <span className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider">
-                                    Previsualización en Tiempo Real ({(() => {
-                                        if (sig.tipoSello === 'sello_y_firma') return 'Firma y Sello Oficial Combinados';
-                                        if (sig.tipoSello === 'solo_firma') return 'Solo Firma Personal';
-                                        if (sig.tipoSello === 'solo_sello') return 'Solo Sello Departamental';
-                                        return 'Sello Criptográfico con QR';
-                                    })()})
-                                </span>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowLiveStamp(!showLiveStamp)}
-                                className="text-xs text-text-dim hover:text-text-main font-semibold transition-colors cursor-pointer"
-                            >
-                                {showLiveStamp ? 'Ocultar Previsualización' : 'Mostrar Previsualización'}
-                            </button>
-                        </div>
+                        <span className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider block">
+                            Previsualización en Tiempo Real ({(() => {
+                                if (sig.tipoSello === 'sello_y_firma') return 'Firma y Sello Oficial Combinados';
+                                if (sig.tipoSello === 'solo_firma') return 'Solo Firma Personal';
+                                if (sig.tipoSello === 'solo_sello') return 'Solo Sello Departamental';
+                                return 'Sello Criptográfico con QR';
+                            })()})
+                        </span>
 
-                        {showLiveStamp && (
-                            <DocumentStampPreview
-                                nombreFirmante={sig.autoText || userName}
-                                cargo={sig.cargo.trim() || 'Docente Titular'}
-                                departamento={sig.departamento.trim() || 'Coordinación Académica'}
-                                cedula={userCi}
-                                firmaImagenB64={sig.firmaImagenB64}
-                                tipoPresentacion={sig.tipoSello}
-                            />
-                        )}
+                        <DocumentStampPreview
+                            nombreFirmante={sig.autoText || userName}
+                            cargo={sig.cargo.trim() || 'Docente Titular'}
+                            departamento={sig.departamento.trim()}
+                            cedula={userCi}
+                            firmaImagenB64={sig.firmaImagenB64}
+                            tipoPresentacion={sig.tipoSello}
+                        />
                     </div>
 
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/90 dark:border-zinc-800">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, FileText, Users, DollarSign, Calendar, Target, CheckSquare, BarChart, Library, Award, Shield } from 'lucide-react';
 
@@ -198,22 +198,23 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ templateCode, initialDa
             merged.unidad_organizacion = initUnidadOrg;
         }
 
-        // Resolución defensiva de Código de Carrera institucional (ej. GAS para Gastronomía)
+        // Resolución defensiva de Código de Carrera institucional (ej. GT para Gastronomía, DS/DSL para Software)
         if (!merged.CodigoCarrera || merged.CodigoCarrera === '' || merged.CodigoCarrera === '---' || String(merged.CodigoCarrera).includes('-')) {
             const carreraNombre = String(merged.Carrera || merged.carrera || initialData?.Carrera || initialData?.carrera || '').toUpperCase();
-            if (carreraNombre.includes('GASTRONOM')) merged.CodigoCarrera = 'GAS';
-            else if (carreraNombre.includes('SOFTWARE')) merged.CodigoCarrera = 'SOF';
-            else if (carreraNombre.includes('DEPORTIV') || carreraNombre.includes('ENTRENAMIENTO')) merged.CodigoCarrera = 'DEP';
-            else if (carreraNombre.includes('AUTOMOTRIZ') || carreraNombre.includes('MECANICA') || carreraNombre.includes('MECÁNICA')) merged.CodigoCarrera = 'MCA';
-            else if (carreraNombre.includes('TRIBUTAR') || carreraNombre.includes('CONTABILIDAD')) merged.CodigoCarrera = 'CTA';
+            const modUpper = String(merged.Modalidad || merged.modalidad || initialData?.Modalidad || initialData?.modalidad || '').toUpperCase();
+            if (carreraNombre.includes('GASTRONOM')) merged.CodigoCarrera = 'GT';
+            else if (carreraNombre.includes('SOFTWARE')) merged.CodigoCarrera = (modUpper.includes('LINEA') || modUpper.includes('LÍNEA') || modUpper.includes('ONLINE')) ? 'DSL' : 'DS';
+            else if (carreraNombre.includes('DEPORTIV') || carreraNombre.includes('ENTRENAMIENTO')) merged.CodigoCarrera = 'ED';
+            else if (carreraNombre.includes('AUTOMOTRIZ') || carreraNombre.includes('MECANICA') || carreraNombre.includes('MECÁNICA')) merged.CodigoCarrera = 'MA';
+            else if (carreraNombre.includes('TRIBUTAR') || carreraNombre.includes('CONTABILIDAD')) merged.CodigoCarrera = 'CAT';
             else if (carreraNombre.includes('TALENTO') || carreraNombre.includes('HUMANO')) merged.CodigoCarrera = 'ATH';
-            else if (carreraNombre.includes('GRAFICO') || carreraNombre.includes('GRÁFICO')) merged.CodigoCarrera = 'DGF';
-            else if (carreraNombre.includes('INICIAL')) merged.CodigoCarrera = 'EBI';
-            else if (carreraNombre.includes('MARKETING')) merged.CodigoCarrera = 'MKT';
-            else if (carreraNombre.includes('INCLUSIVA')) merged.CodigoCarrera = 'EIN';
-            else if (carreraNombre.includes('BASICA') || carreraNombre.includes('BÁSICA')) merged.CodigoCarrera = 'EBA';
-            else if (carreraNombre.includes('TELECOMUNICACION') || carreraNombre.includes('REDES')) merged.CodigoCarrera = 'RDT';
-            else if (carreraNombre.includes('ELECTRONIC') || carreraNombre.includes('ELECTRÓNIC')) merged.CodigoCarrera = 'ELT';
+            else if (carreraNombre.includes('GRAFICO') || carreraNombre.includes('GRÁFICO')) merged.CodigoCarrera = 'DG';
+            else if (carreraNombre.includes('INICIAL')) merged.CodigoCarrera = 'EI';
+            else if (carreraNombre.includes('MARKETING')) merged.CodigoCarrera = 'MKC';
+            else if (carreraNombre.includes('INCLUSIVA')) merged.CodigoCarrera = 'EIC';
+            else if (carreraNombre.includes('BASICA') || carreraNombre.includes('BÁSICA')) merged.CodigoCarrera = 'EB';
+            else if (carreraNombre.includes('TELECOMUNICACION') || carreraNombre.includes('REDES')) merged.CodigoCarrera = 'RT';
+            else if (carreraNombre.includes('ELECTRONIC') || carreraNombre.includes('ELECTRÓNIC')) merged.CodigoCarrera = 'ET';
             else if (carreraNombre.length >= 3) merged.CodigoCarrera = carreraNombre.substring(0, 3);
         }
         merged.codigo_carrera = merged.CodigoCarrera;
@@ -646,9 +647,10 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
 
     // ── 5b. Sincronización única con datos oficiales SIGAFI tras cargar historial Yjs en borradores previos ──
     const sigafiMetadataSyncedRef = useRef<string | null>(null);
+    const docSyncId = initialData?.Uuid || initialData?.uuid || entityUuid || '';
     useEffect(() => {
         if (templateCode !== 'PEA_OFICIAL' || readOnly || !isHistoryLoaded) return;
-        const syncKey = `${resolvedDocUuid}`;
+        const syncKey = `${docSyncId}`;
         if (sigafiMetadataSyncedRef.current === syncKey) return;
         sigafiMetadataSyncedRef.current = syncKey;
 
@@ -665,6 +667,12 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
             if (!curModalidad || !validOptions.includes(String(curModalidad))) {
                 updateField('Modalidad', initModalidad, { source: 'system' });
             }
+        }
+
+        const initCodigoCarrera = initialData?.CodigoCarrera ?? initialData?.codigo_carrera;
+        const curCodigoCarrera = formData?.CodigoCarrera ?? formData?.codigo_carrera;
+        if (typeof initCodigoCarrera === 'string' && initCodigoCarrera.trim() !== '' && initCodigoCarrera !== '---' && !initCodigoCarrera.includes('-') && curCodigoCarrera !== initCodigoCarrera) {
+            updateField('CodigoCarrera', initCodigoCarrera, { source: 'system' });
         }
 
         const initTotal = Number(initialData?.TotalHorasAsignatura ?? initialData?.total_horas_asignatura ?? 0);
@@ -690,7 +698,7 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
                 updateField('HorasAutonomo', initTa, { source: 'system' });
             }
         }
-    }, [templateCode, readOnly, isHistoryLoaded, resolvedDocUuid, initialData, formData, updateField]);
+    }, [templateCode, readOnly, isHistoryLoaded, docSyncId, initialData, formData, updateField]);
 
     // ── 6. Cálculos derivados específicos de la sección de Recursos ──
     useEffect(() => {

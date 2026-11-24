@@ -6513,6 +6513,23 @@ UPDATE `detallemallas` SET `creditos` = 1, `horas` = 48,  `horasDocente` = 16, `
 UPDATE `detallemallas` SET `creditos` = 2, `horas` = 96,  `horasDocente` = 32, `horasPracticoExperimental` = 32.00 WHERE `idDetalleMalla` = 1181; -- REDES INDUSTRIALES
 UPDATE `detallemallas` SET `creditos` = 2, `horas` = 96,  `horasDocente` = 32, `horasPracticoExperimental` = 32.00 WHERE `idDetalleMalla` = 1182; -- UNIDAD DE INTEGRACION CURRICULAR
 
+-- -----------------------------------------------------------------------------
+-- 9. SIGLAS OFICIALES DE CARRERAS (aliasCarrera)
+-- -----------------------------------------------------------------------------
+UPDATE `carreras` SET `aliasCarrera` = 'ED'  WHERE `idCarrera` = 7;  -- ENTRENAMIENTO DEPORTIVO
+UPDATE `carreras` SET `aliasCarrera` = 'DS'  WHERE `idCarrera` = 9;  -- DESARROLLO DE SOFTWARE
+UPDATE `carreras` SET `aliasCarrera` = 'MA'  WHERE `idCarrera` = 10; -- MECANICA AUTOMOTRIZ
+UPDATE `carreras` SET `aliasCarrera` = 'CAT' WHERE `idCarrera` = 12; -- CONTABILIDAD Y ASESORIA TRIBUTARIA
+UPDATE `carreras` SET `aliasCarrera` = 'ATH' WHERE `idCarrera` = 13; -- ADMINISTRACION DE TALENTO HUMANO
+UPDATE `carreras` SET `aliasCarrera` = 'DG'  WHERE `idCarrera` = 14; -- DISEÑO GRAFICO
+UPDATE `carreras` SET `aliasCarrera` = 'EI'  WHERE `idCarrera` = 15; -- EDUCACION INICIAL
+UPDATE `carreras` SET `aliasCarrera` = 'MKC' WHERE `idCarrera` = 16; -- MARKETING DIGITAL Y COMERCIO ELECTRONICO
+UPDATE `carreras` SET `aliasCarrera` = 'EIC' WHERE `idCarrera` = 17; -- EDUCACION INCLUSIVA
+UPDATE `carreras` SET `aliasCarrera` = 'EB'  WHERE `idCarrera` = 18; -- EDUCACION BASICA
+UPDATE `carreras` SET `aliasCarrera` = 'GT'  WHERE `idCarrera` = 19; -- GASTRONOMIA
+UPDATE `carreras` SET `aliasCarrera` = 'RT'  WHERE `idCarrera` = 20; -- REDES Y TELECOMUNICACIONES
+UPDATE `carreras` SET `aliasCarrera` = 'ET'  WHERE `idCarrera` = 21; -- ELECTRÓNICA
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

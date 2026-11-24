@@ -16,7 +16,7 @@ export interface DocumentStampPreviewProps {
 export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
     nombreFirmante = 'Docente Institucional',
     cargo = 'Docente Titular',
-    departamento = 'Coordinación Académica',
+    departamento = '',
     cedula = '17XXXXXXXX',
     firmaImagenB64,
     firmaCode = 'DOSIER-ISTPET-2026-OFIC',
@@ -34,7 +34,15 @@ export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
         }
 
         // 2. Coordinación Académica
-        if (combined.includes('acad') || combined.includes('coordinador academico') || combined.includes('coordinación académica') || combined.includes('comisionacademica')) {
+        if (
+            combined.includes('coordinador acad') ||
+            combined.includes('coordinador académ') ||
+            combined.includes('coordinacion acad') ||
+            combined.includes('coordinación acad') ||
+            combined.includes('dosier_coord_acad') ||
+            combined.includes('comisionacademica') ||
+            combined.includes('comisión académica')
+        ) {
             return { central: 'COORDINACIÓN ACADÉMICA', sub: 'CARRERAS PRESENCIALES' };
         }
 
@@ -73,7 +81,8 @@ export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
         }
 
         // 5. Docentes o Área Académica
-        if (d && d.trim().toUpperCase() !== 'ISTPET') {
+        const dUpper = d ? d.trim().toUpperCase() : '';
+        if (d && dUpper !== '' && dUpper !== 'ISTPET' && dUpper !== 'ACADEMIA' && dUpper !== 'DOCENCIA') {
             return { central: cleanCareer(d), sub: null };
         }
 

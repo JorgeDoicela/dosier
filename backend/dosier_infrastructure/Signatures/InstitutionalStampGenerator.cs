@@ -130,11 +130,13 @@ public static class InstitutionalStampGenerator
         }
 
         // 2. Coordinación Académica General
-        if (combined.Contains("acad") || 
-            combined.Contains("coordinador academico") || 
-            combined.Contains("coordinación académica") || 
+        if (combined.Contains("coordinador acad") ||
+            combined.Contains("coordinador académ") ||
+            combined.Contains("coordinacion acad") ||
+            combined.Contains("coordinación acad") ||
             combined.Contains("dosier_coord_acad") ||
-            combined.Contains("comisionacademica"))
+            combined.Contains("comisionacademica") ||
+            combined.Contains("comisión académica"))
         {
             return ("COORDINACIÓN ACADÉMICA", "CARRERAS PRESENCIALES");
         }
@@ -190,7 +192,10 @@ public static class InstitutionalStampGenerator
         }
 
         // 5. Caso Docente Titular o Área Académica
-        if (!string.IsNullOrWhiteSpace(departamento) && !departamento.Equals("ISTPET", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(departamento) &&
+            !departamento.Trim().Equals("ISTPET", StringComparison.OrdinalIgnoreCase) &&
+            !departamento.Trim().Equals("ACADEMIA", StringComparison.OrdinalIgnoreCase) &&
+            !departamento.Trim().Equals("DOCENCIA", StringComparison.OrdinalIgnoreCase))
         {
             return (CleanCareerName(departamento), null);
         }

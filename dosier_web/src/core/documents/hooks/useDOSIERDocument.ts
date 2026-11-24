@@ -127,7 +127,7 @@ export function useDOSIERDocument<T extends Record<string, any>>(
                 if (sharedType instanceof Y.XmlFragment || sharedType instanceof Y.Array) {
                     return;
                 }
-                if (sharedType && !(sharedType instanceof Y.Text)) {
+                if (sharedType instanceof Y.Map) {
                     console.warn(`[useDOSIERDocument] Conflicto de constructor detectado para '${name}'. Tipo actual: ${sharedType.constructor.name}. Recreando como Y.Text.`);
                     ydoc.share.delete(name);
                 }
@@ -420,7 +420,7 @@ export function useDOSIERDocument<T extends Record<string, any>>(
             if (sharedType instanceof Y.XmlFragment || sharedType instanceof Y.Array) {
                 return;
             }
-            if (sharedType && !(sharedType instanceof Y.Text)) {
+            if (sharedType instanceof Y.Map) {
                 console.warn(`[useDOSIERDocument] Conflicto de constructor detectado para '${key}'. Tipo actual: ${sharedType.constructor.name}. Recreando como Y.Text.`);
                 ydoc.share.delete(key);
             }

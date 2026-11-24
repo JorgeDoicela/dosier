@@ -426,4 +426,21 @@ END,
 dm.`tipo` = UPPER(TRIM(dm.`tipo`))
 WHERE c.`esInstituto` = 1 AND m.`activa` = 1 AND UPPER(TRIM(dm.`tipo`)) IN ('B', 'P', 'U');
 
+-- -----------------------------------------------------------------------------
+-- 15. SIGLAS OFICIALES DE CARRERAS (aliasCarrera)
+-- -----------------------------------------------------------------------------
+UPDATE `carreras` SET `aliasCarrera` = 'ED'  WHERE `idCarrera` = 7;  -- ENTRENAMIENTO DEPORTIVO
+UPDATE `carreras` SET `aliasCarrera` = 'DS'  WHERE `idCarrera` = 9;  -- DESARROLLO DE SOFTWARE
+UPDATE `carreras` SET `aliasCarrera` = 'MA'  WHERE `idCarrera` = 10; -- MECANICA AUTOMOTRIZ
+UPDATE `carreras` SET `aliasCarrera` = 'CAT' WHERE `idCarrera` = 12; -- CONTABILIDAD Y ASESORIA TRIBUTARIA
+UPDATE `carreras` SET `aliasCarrera` = 'ATH' WHERE `idCarrera` = 13; -- ADMINISTRACION DE TALENTO HUMANO
+UPDATE `carreras` SET `aliasCarrera` = 'DG'  WHERE `idCarrera` = 14; -- DISEÑO GRAFICO
+UPDATE `carreras` SET `aliasCarrera` = 'EI'  WHERE `idCarrera` = 15; -- EDUCACION INICIAL
+UPDATE `carreras` SET `aliasCarrera` = 'MKC' WHERE `idCarrera` = 16; -- MARKETING DIGITAL Y COMERCIO ELECTRONICO
+UPDATE `carreras` SET `aliasCarrera` = 'EIC' WHERE `idCarrera` = 17; -- EDUCACION INCLUSIVA
+UPDATE `carreras` SET `aliasCarrera` = 'EB'  WHERE `idCarrera` = 18; -- EDUCACION BASICA
+UPDATE `carreras` SET `aliasCarrera` = 'GT'  WHERE `idCarrera` = 19; -- GASTRONOMIA
+UPDATE `carreras` SET `aliasCarrera` = 'RT'  WHERE `idCarrera` = 20; -- REDES Y TELECOMUNICACIONES
+UPDATE `carreras` SET `aliasCarrera` = 'ET'  WHERE `idCarrera` = 21; -- ELECTRÓNICA
+
 COMMIT;

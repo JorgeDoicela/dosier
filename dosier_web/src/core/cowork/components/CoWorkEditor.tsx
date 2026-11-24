@@ -52,11 +52,13 @@ export const CoWorkEditor: React.FC<CoWorkEditorProps> = (props) => {
 
     const isReadOnlyMode = Boolean(props.readonly ?? props.readOnly ?? guardContext.readOnly ?? props.cowork.session.readOnly);
     
-    // Evitar conflicto de constructor en Yjs si la clave ya fue registrada con un tipo diferente (ej. Y.Text)
+    // Evitar conflicto de constructor en Yjs solo si la clave ya fue materializada con un tipo incompatible
+    // (Y.Text, Y.Array o Y.Map). Un Y.AbstractType recibido por red aún no materializado se convierte
+    // automáticamente en Y.XmlFragment al llamar ydoc.getXmlFragment(field), preservando todo su historial.
     const ydoc = props.cowork.ydoc;
     let rescuedTextValue: string | undefined;
     const sharedType = ydoc.share.get(field);
-    if (sharedType && !(sharedType instanceof Y.XmlFragment)) {
+    if (sharedType instanceof Y.Text || sharedType instanceof Y.Array || sharedType instanceof Y.Map) {
         if (sharedType instanceof Y.Text && sharedType.length > 0) {
             const rawStr = sharedType.toString();
             if (rawStr && rawStr !== '[]' && rawStr !== 'undefined') {
@@ -72,7 +74,8 @@ export const CoWorkEditor: React.FC<CoWorkEditorProps> = (props) => {
     
     const xmlFragment = ydoc.getXmlFragment(field);
     const hasYjsContent = xmlFragment.length > 0;
-    const useCollaboration = !isReadOnlyMode || hasYjsContent;
+    const hasConnectionError = Boolean(props.cowork.session.error);
+    const useCollaboration = (!isReadOnlyMode && !hasConnectionError) || hasYjsContent;
     const editorKey = `${field}_collab_${useCollaboration}`;
 
     return (
@@ -276,18 +279,30 @@ const InnerCoWorkEditor: React.FC<InnerCoWorkEditorProps> = ({
         if (editor) editor.setEditable(isEditable);
     }, [editor, isEditable]);
 
-    // Hidratación inicial desde dbValue cuando el Y.XmlFragment o el editor está vacío (ej: tras autocompletado IA en otra pestaña)
+    // Hidratación inicial desde dbValue únicamente después de sincronizar el historial Yjs del servidor
+    // y solo si no hay otra pestaña/usuario activo que ya posea el estado en memoria.
+    const historyLoaded = !cowork.session.isSyncing && cowork.session.lastSyncedAt !== null;
     React.useEffect(() => {
-        if (!editor || seededRef.current) return;
+        if (!editor || !isEditable || seededRef.current || !historyLoaded) return;
         const fragment = ydoc.getXmlFragment(field);
-        const isEditorEmpty = fragment.length === 0 || editor.isEmpty || editor.getText().trim().length === 0;
-        if (isEditorEmpty && typeof dbValue === 'string' && dbValue.trim().length > 0 && dbValue !== '[]') {
+        if (fragment.length > 0) {
+            seededRef.current = true;
+            return;
+        }
+        const localTabId = (awareness?.getLocalState() as any)?.user?.tabId;
+        const otherTabs = awareness
+            ? Array.from(awareness.getStates().values()).filter((st: any) => st?.user?.tabId && st.user.tabId !== localTabId)
+            : [];
+        if (otherTabs.length > 0) {
+            return;
+        }
+        if (typeof dbValue === 'string' && dbValue.trim().length > 0 && dbValue !== '[]') {
             seededRef.current = true;
             editor.commands.setContent(dbValue);
             const json = JSON.stringify(editor.getJSON());
             coworkRef.current.submitFinalContent(dbValue, json, field);
         }
-    }, [editor, ydoc, field, dbValue]);
+    }, [editor, isEditable, ydoc, awareness, field, dbValue, historyLoaded]);
 
     // Escucha de hidratación en caliente desde el motor de IA / Importador documental
     React.useEffect(() => {
