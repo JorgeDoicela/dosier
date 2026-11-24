@@ -142,6 +142,17 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
 
     const isReviewer = Boolean(isAdmin || isRevisor || isCoordCarrera || isCoordAcad || isVicerrector);
 
+    // Si el usuario está formulando en su workspace de autoría propia (/mis-proyectos/),
+    // actúa como Docente Elaborador y NO debe auditarse ni ver la pestaña de dictamen técnico.
+    const isAuthorWorkspace = useMemo(() => {
+        if (typeof window === 'undefined') return false;
+        return window.location.pathname.includes('/mis-proyectos/');
+    }, []);
+
+    const isReviewerContext = useMemo(() => {
+        return isReviewer && !isAuthorWorkspace;
+    }, [isReviewer, isAuthorWorkspace]);
+
     const currentSectionLabel = useMemo(() => {
         const found = sectionItems?.find(s => s.id === sectionName);
         if (found?.label) {
@@ -240,7 +251,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
     const defaultFallbackTab = isChatAvailable ? 'comments' : 'status';
 
     const [activeTab, setActiveTabState] = useState<'comments' | 'status' | 'activity' | 'correcciones' | 'revision' | 'ai' | 'import'>(() => {
-        if (isProtocolDocument && isReviewer && isEnRevision) {
+        if (isProtocolDocument && isReviewerContext && isEnRevision) {
             return 'revision';
         }
         if (isProtocolDocument && isObservado) {
@@ -299,10 +310,10 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             setActiveTab(defaultFallbackTab);
         } else if (activeTab === 'correcciones' && (!isProtocolDocument || (!isObservado && peaObservaciones.length === 0))) {
             setActiveTab(defaultFallbackTab);
-        } else if (activeTab === 'revision' && (!isProtocolDocument || !isReviewer || !isEnRevision)) {
+        } else if (activeTab === 'revision' && (!isProtocolDocument || !isReviewerContext || !isEnRevision)) {
             setActiveTab(defaultFallbackTab);
         }
-    }, [isChatAvailable, defaultFallbackTab, isAiAvailable, isImportAvailable, isObservado, peaObservaciones.length, isEnRevision, isProtocolDocument, isReviewer, activeTab, setActiveTab]);
+    }, [isChatAvailable, defaultFallbackTab, isAiAvailable, isImportAvailable, isObservado, peaObservaciones.length, isEnRevision, isProtocolDocument, isReviewerContext, activeTab, setActiveTab]);
 
     // ── Estado del Extractor e Importador de PEA (PDF / Word) en Barra Lateral ──
     const [sidebarImportFile, setSidebarImportFile] = useState<File | null>(null);
@@ -1025,8 +1036,8 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
             {/* Header Tabs: Iconos puros con tooltip nativo al pasar el cursor */}
             <div className="flex items-center justify-between border-b border-border-thin bg-bg-deep shrink-0 select-none">
                 <div className="flex items-center flex-1 min-w-0">
-                    {/* Tab de Revisión para Evaluadores / Coordinadores */}
-                    {isProtocolDocument && isReviewer && isEnRevision && (
+                    {/* Tab de Revisión para Evaluadores / Coordinadores (exclusivo cuando NO está en el workspace de autoría de mis proyectos) */}
+                    {isProtocolDocument && isReviewerContext && isEnRevision && (
                         <button
                             type="button"
                             onClick={() => setActiveTab('revision')}
@@ -1155,7 +1166,7 @@ const CollaborationSidebar: React.FC<CollaborationSidebarProps> = ({
                     </div>
                 ) : (
                     <>
-                        {activeTab === 'revision' && (
+                        {activeTab === 'revision' && isReviewerContext && (
                             <div className="flex flex-col h-full flex-1 overflow-y-auto custom-scrollbar">
                                 <PeaReviewPanel
                                     peaData={peaData || {}}

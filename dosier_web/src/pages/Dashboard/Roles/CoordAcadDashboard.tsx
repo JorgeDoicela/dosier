@@ -49,7 +49,7 @@ const SYNC_EVENTS = ['dosier-projects-changed'];
 
 export const CoordAcadDashboard: React.FC = () => {
     const { addToast } = useNotifications();
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const navigate = useNavigate();
 
     // Catálogos
@@ -503,8 +503,8 @@ export const CoordAcadDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Tarjeta Minimalista de Rezagados */}
-                    {docentesRezagados.length > 0 && (
+                    {/* Tarjeta Minimalista de Rezagados (Exclusiva para Administrador del Sistema) */}
+                    {isAdmin && docentesRezagados.length > 0 && (
                         <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 sm:p-6 shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">
@@ -535,12 +535,14 @@ export const CoordAcadDashboard: React.FC = () => {
             </div>
 
             {/* Modales */}
-            <RecordatorioDocentesModal
-                isOpen={isRecordatorioOpen}
-                onClose={() => setIsRecordatorioOpen(false)}
-                tituloContexto="Recordatorio Masivo Institucional a Docentes Rezagados"
-                docentes={docentesRezagados}
-            />
+            {isAdmin && (
+                <RecordatorioDocentesModal
+                    isOpen={isRecordatorioOpen}
+                    onClose={() => setIsRecordatorioOpen(false)}
+                    tituloContexto="Recordatorio Masivo Institucional a Docentes Rezagados"
+                    docentes={docentesRezagados}
+                />
+            )}
 
             {auditoriaPea && (
                 <AuditoriaCacesModal

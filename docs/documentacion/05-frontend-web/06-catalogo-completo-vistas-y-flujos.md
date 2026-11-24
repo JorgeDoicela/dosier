@@ -103,6 +103,13 @@ Todos los modales implementan de forma estricta la **regla de fondos 100% sólid
     * `PeaReviewPanel.tsx` (auditoría CACES en 7 verificadores automáticos y botones de aval).
     * `OutputSection.tsx` (emisión oficial y visor PDF con iframe compilado).
     * `<SectionBlockGuard>` (bloqueo reactivo de secciones post-firma y por avance de workflow).
+  * **Segregación Contextual de Autoría vs. Supervisión Curricular:**
+    * Cuando el usuario ingresa por la ruta de asignaturas propias (`/documentacion/mis-proyectos/workspace/...`), opera estrictamente como **Docente Elaborador** (incluso si posee credenciales de Coordinador de Carrera, Coordinador Académico o Vicerrector).
+    * En dicho contexto de autoría, la barra lateral (`CollaborationSidebar.tsx`) inhabilita de forma absoluta la pestaña y el panel de auditoría técnica (`PeaReviewPanel.tsx`), impidiendo que el elaborador se auto-audite o reciba formularios de dictamen en su espacio de redacción.
+    * Tras estampar la firma institucional como docente elaborador en `OutputSection.tsx` y transicionar el PEA a `EnRevision`, la ventana modal de certificación (`TimedSuccessModal`) y las acciones directas enrutan determinísticamente según el rol:
+      * **Autoridades y Coordinadores:** Redirección automática a la bandeja general de Supervisión Curricular (`/documentacion`), donde el documento ya figura en circuito formal de revisión.
+      * **Docentes Estándar:** Redirección a su catálogo de asignaturas (`/documentacion/mis-proyectos`).
+      * Se elimina el botón de auto-revisión técnica in-situ en el workspace del autor para prevenir confusiones operativas.
 
 ---
 
