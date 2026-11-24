@@ -260,6 +260,18 @@ public class AcademicContextResolver : IAcademicContextResolver
         };
     }
 
+    public static string NormalizarModalidad(string? modalidad)
+    {
+        if (string.IsNullOrWhiteSpace(modalidad)) return "Presencial";
+        var upper = modalidad.Trim().ToUpperInvariant();
+        if (upper.Contains("SEMI")) return "Semipresencial";
+        if (upper.Contains("LINEA") || upper.Contains("LÍNEA") || upper.Contains("ONLINE") || upper.Contains("VIRTUAL")) return "En Línea";
+        if (upper.Contains("HIBRID") || upper.Contains("HÍBRID")) return "Híbrida";
+        if (upper.Contains("DUAL")) return "Dual";
+        if (upper.Contains("PRESENCIAL")) return "Presencial";
+        return modalidad.Trim();
+    }
+
     public static string NormalizarUnidadOrganizacion(string? tipoAsignatura, string? tipoCortoDetalle = null)
     {
         if (!string.IsNullOrWhiteSpace(tipoCortoDetalle))

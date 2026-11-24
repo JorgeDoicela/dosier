@@ -1924,6 +1924,7 @@ namespace dosier_infrastructure.Curriculum
                 var mod = await _context.Modalidades.AsNoTracking().FirstOrDefaultAsync(m => m.IdModalidad == pea.IdModalidad);
                 modalidad = mod?.ModalidadImpresion ?? mod?.Modalidad1 ?? "Presencial";
             }
+            modalidad = dosier_infrastructure.Academico.AcademicContextResolver.NormalizarModalidad(modalidad);
 
             string? unidadOrg = pea.UnidadOrganizacion;
             decimal totalHoras = pea.TotalHorasAsignatura;

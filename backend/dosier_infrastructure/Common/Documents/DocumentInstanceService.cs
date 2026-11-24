@@ -1010,9 +1010,14 @@ namespace Dosier.Infrastructure.Common.Documents
             string curUnidadOrg = snapshot.TryGetValue("UnidadOrganizacion", out var uoVal) ? (uoVal?.ToString() ?? string.Empty) : string.Empty;
             bool needsUnidadOrgSync = !string.IsNullOrWhiteSpace(sigafiUnidadOrg) && !string.Equals(curUnidadOrg.Trim(), sigafiUnidadOrg, StringComparison.OrdinalIgnoreCase);
 
+            string curModalidad = snapshot.TryGetValue("Modalidad", out var modVal) ? (modVal?.ToString() ?? string.Empty) : string.Empty;
+            string normModalidad = dosier_infrastructure.Academico.AcademicContextResolver.NormalizarModalidad(
+                string.IsNullOrWhiteSpace(curModalidad) ? pea.Modalidad : curModalidad);
+            bool needsModalidadSync = !string.Equals(curModalidad.Trim(), normModalidad, StringComparison.Ordinal);
+
             bool needsHoursSync = differsFromSigafi && (isZero || isUniformThirds || Math.Abs(curTotal - sigafiTotal) >= 0.01m);
 
-            if (!needsHoursSync && !needsUnidadOrgSync)
+            if (!needsHoursSync && !needsUnidadOrgSync && !needsModalidadSync)
             {
                 return;
             }
@@ -1029,6 +1034,11 @@ namespace Dosier.Infrastructure.Common.Documents
             if (needsUnidadOrgSync)
             {
                 snapshot["UnidadOrganizacion"] = sigafiUnidadOrg;
+            }
+
+            if (needsModalidadSync)
+            {
+                snapshot["Modalidad"] = normModalidad;
             }
 
             instance.UpdateDataSnapshot(System.Text.Json.JsonSerializer.Serialize(snapshot));

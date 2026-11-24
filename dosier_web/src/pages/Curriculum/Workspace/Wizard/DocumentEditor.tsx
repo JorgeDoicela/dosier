@@ -644,6 +644,54 @@ const DocumentEditorCore: React.FC<DocumentEditorCoreProps> = ({
         docOptions
     );
 
+    // ── 5b. Sincronización única con datos oficiales SIGAFI tras cargar historial Yjs en borradores previos ──
+    const sigafiMetadataSyncedRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (templateCode !== 'PEA_OFICIAL' || readOnly || !isHistoryLoaded) return;
+        const syncKey = `${resolvedDocUuid}`;
+        if (sigafiMetadataSyncedRef.current === syncKey) return;
+        sigafiMetadataSyncedRef.current = syncKey;
+
+        const initUnidadOrg = initialData?.UnidadOrganizacion ?? initialData?.unidad_organizacion;
+        const curUnidadOrg = formData?.UnidadOrganizacion ?? formData?.unidad_organizacion;
+        if (typeof initUnidadOrg === 'string' && initUnidadOrg.trim() !== '' && curUnidadOrg !== initUnidadOrg) {
+            updateField('UnidadOrganizacion', initUnidadOrg, { source: 'system' });
+        }
+
+        const initModalidad = initialData?.Modalidad ?? initialData?.modalidad;
+        const curModalidad = formData?.Modalidad ?? formData?.modalidad;
+        if (typeof initModalidad === 'string' && initModalidad.trim() !== '' && (!curModalidad || curModalidad !== initModalidad)) {
+            const validOptions = ['Presencial', 'Semipresencial', 'En Línea', 'Híbrida', 'Dual'];
+            if (!curModalidad || !validOptions.includes(String(curModalidad))) {
+                updateField('Modalidad', initModalidad, { source: 'system' });
+            }
+        }
+
+        const initTotal = Number(initialData?.TotalHorasAsignatura ?? initialData?.total_horas_asignatura ?? 0);
+        const initCd = Number(initialData?.HorasContactoDocente ?? initialData?.horas_contacto_docente ?? 0);
+        const initApe = Number(initialData?.HorasPracticoExperimental ?? initialData?.horas_practico_experimental ?? 0);
+        const initTa = Number(initialData?.HorasAutonomo ?? initialData?.horas_autonomo ?? 0);
+        const initCred = Number(initialData?.Creditos ?? initialData?.creditos ?? 0);
+
+        if (initTotal > 0 && (initCd > 0 || initApe > 0)) {
+            const curCd = Number(formData?.HorasContactoDocente ?? formData?.horas_contacto_docente ?? 0);
+            const curApe = Number(formData?.HorasPracticoExperimental ?? formData?.horas_practico_experimental ?? 0);
+            const curTa = Number(formData?.HorasAutonomo ?? formData?.horas_autonomo ?? 0);
+            const curTotal = Number(formData?.TotalHorasAsignatura ?? formData?.total_horas_asignatura ?? 0);
+            const isCurZero = curTotal <= 0 || (curCd <= 0 && curApe <= 0 && curTa <= 0);
+            const isCurUniformThirds = curCd > 0 && curCd === curApe && curApe === curTa;
+            const differs = curCd !== initCd || curApe !== initApe || curTa !== initTa || curTotal !== initTotal;
+
+            if (differs && (isCurZero || isCurUniformThirds || curTotal !== initTotal)) {
+                updateField('TotalHorasAsignatura', initTotal, { source: 'system' });
+                if (initCred > 0) updateField('Creditos', initCred, { source: 'system' });
+                updateField('HorasContactoDocente', initCd, { source: 'system' });
+                updateField('HorasPracticoExperimental', initApe, { source: 'system' });
+                updateField('HorasAutonomo', initTa, { source: 'system' });
+            }
+        }
+    }, [templateCode, readOnly, isHistoryLoaded, resolvedDocUuid, initialData, formData, updateField]);
+
     // ── 6. Cálculos derivados específicos de la sección de Recursos ──
     useEffect(() => {
         const hasRecursosSection = templateConfig?.sections?.some((s: any) => s.id === "recursos");
