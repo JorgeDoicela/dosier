@@ -31,7 +31,7 @@ public class UserSignatureProfileDto
     public string?  Departamento    { get; init; }
 
     [JsonPropertyName("tipo_sello")]
-    public string   TipoSello       { get; init; } = "completo"; // 'completo' | 'solo_firma'
+    public string   TipoSello       { get; init; } = "completo"; // 'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'sello_institucional' | 'completo'
 
     [JsonPropertyName("actualizado_en")]
     public DateTime ActualizadoEn   { get; init; }
@@ -56,7 +56,7 @@ public class UpdateSignatureProfileDto
     [JsonPropertyName("departamento")]
     public string? Departamento   { get; init; }
 
-    /// <summary>Estilo de presentación del sello: 'completo' (sello azul con QR) o 'solo_firma' (únicamente el trazo).</summary>
+    /// <summary>Estilo de presentación del sello: 'solo_firma', 'solo_sello', 'sello_y_firma' (o 'sello_institucional') o 'completo' (sello con QR).</summary>
     [JsonPropertyName("tipo_sello")]
     public string? TipoSello      { get; init; }
 }

@@ -99,6 +99,7 @@ export const UploadSignatureTab: React.FC<UploadSignatureTabProps> = ({
                             {[
                                 { value: 3,         label: 'Horizontal (3:1)', icon: <rect x="2" y="6" width="20" height="12" rx="1.5" /> },
                                 { value: 2,         label: 'Estándar (2:1)',   icon: <rect x="3" y="5" width="18" height="14" rx="1.5" /> },
+                                { value: 1,         label: 'Sello Redondo (1:1)', icon: <circle cx="12" cy="12" r="8" /> },
                                 { value: 1.2,       label: 'Compacto',         icon: <rect x="5" y="4" width="14" height="16" rx="1.5" /> },
                                 { value: undefined, label: 'Libre',            icon: <><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15" /><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15" /></> },
                             ].map((btn) => (

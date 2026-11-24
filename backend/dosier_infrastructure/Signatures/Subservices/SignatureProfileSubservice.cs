@@ -49,6 +49,47 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
         string? cargoAuto = dto?.Cargo;
         string? deptoAuto = dto?.Departamento;
 
+        // Inferencia inteligente de Cargo y Departamento por Autoridad Curricular oficial o Contrato
+        if (!string.IsNullOrEmpty(user.IdSigafi) && (string.IsNullOrWhiteSpace(cargoAuto) || string.IsNullOrWhiteSpace(deptoAuto)))
+        {
+            var autoridad = await _context.DocAutoridadesCurriculares
+                .AsNoTracking()
+                .Where(a => a.IdSigafi == user.IdSigafi && a.EsActivo)
+                .OrderByDescending(a => a.CargoCurricular == "VICERRECTOR")
+                .ThenByDescending(a => a.CargoCurricular == "COORD_ACADEMICO")
+                .ThenByDescending(a => a.CargoCurricular == "COORD_CARRERA")
+                .FirstOrDefaultAsync();
+
+            if (autoridad != null)
+            {
+                if (autoridad.CargoCurricular == "VICERRECTOR")
+                {
+                    cargoAuto ??= "Vicerrector Académico";
+                    deptoAuto ??= "Vicerrectorado";
+                }
+                else if (autoridad.CargoCurricular == "COORD_ACADEMICO")
+                {
+                    cargoAuto ??= "Coordinador Académico";
+                    deptoAuto ??= "Coordinación Académica";
+                }
+                else if (autoridad.CargoCurricular == "COORD_CARRERA")
+                {
+                    cargoAuto ??= "Coordinador de Carrera";
+                    if (autoridad.IdCarrera.HasValue)
+                    {
+                        var carrera = await _context.Carreras
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(c => c.IdCarrera == autoridad.IdCarrera.Value);
+                        if (carrera != null && !string.IsNullOrWhiteSpace(carrera.Carrera1))
+                        {
+                            deptoAuto ??= carrera.Carrera1;
+                        }
+                    }
+                    deptoAuto ??= "Coordinación de Carrera";
+                }
+            }
+        }
+
         if (user.TablaSigafi == "profesor" && !string.IsNullOrEmpty(user.IdSigafi))
         {
             if (string.IsNullOrWhiteSpace(cargoAuto) || string.IsNullOrWhiteSpace(deptoAuto))
@@ -67,10 +108,10 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
                 if (contrato != null)
                 {
                     if (string.IsNullOrWhiteSpace(cargoAuto))
-                        cargoAuto = contrato.CargoInstitutoNavigation?.Nombre;
+                        cargoAuto = contrato.CargoInstitutoNavigation?.Nombre ?? "Docente Titular";
 
                     if (string.IsNullOrWhiteSpace(deptoAuto))
-                        deptoAuto = contrato.DepartamentoNavigation?.NombreDepartamento;
+                        deptoAuto = contrato.DepartamentoNavigation?.NombreDepartamento ?? "Docencia";
                 }
             }
         }
@@ -180,11 +221,21 @@ public class SignatureProfileSubservice : ISignatureProfileSubservice
         perfil.Departamento = dto.Departamento?.Trim();
         if (!string.IsNullOrWhiteSpace(dto.TipoSello))
         {
-            perfil.TipoSello = dto.TipoSello.Trim().ToLowerInvariant() == "solo_firma" ? "solo_firma" : "completo";
+            var cleanTipo = dto.TipoSello.Trim().ToLowerInvariant();
+            perfil.TipoSello = cleanTipo switch
+            {
+                "solo_sello" or "sello_sin_firma" => "solo_sello",
+                "sello_y_firma" or "sello_institucional" or "sello_vectorial" or "sello_oficial" => "sello_y_firma",
+                "solo_firma" or "firma" or "trazo" => "solo_firma",
+                _ => "completo"
+            };
         }
+        var finalFirmaPath = firmaPath ?? perfil.FirmaImagenB64;
+        perfil.FirmaImagenB64 = finalFirmaPath;
+        bool firmaRequerida = perfil.TipoSello != "solo_sello";
         perfil.EsConfigurado = !string.IsNullOrWhiteSpace(dto.Cargo)
                               && !string.IsNullOrWhiteSpace(dto.Departamento)
-                              && !string.IsNullOrWhiteSpace(firmaPath);
+                              && (!firmaRequerida || !string.IsNullOrWhiteSpace(finalFirmaPath));
         perfil.ActualizadoEn = DateTime.UtcNow;
 
         var audit = new DocLopdpAuditoriaDatos

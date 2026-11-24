@@ -69,19 +69,54 @@ public class SignatureStamper
             catch { }
 
             bool isPeaMatrix = layoutLocator.HasPeaMatrix;
-            bool esSoloFirma = !string.IsNullOrWhiteSpace(estiloSello) &&
+            bool esSoloSello = !string.IsNullOrWhiteSpace(estiloSello) &&
+                               (estiloSello.Equals("solo_sello", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello_sin_firma", StringComparison.OrdinalIgnoreCase));
+
+            bool esSelloYFirma = !string.IsNullOrWhiteSpace(estiloSello) &&
+                               (estiloSello.Equals("sello_y_firma", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello_institucional", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello_vectorial", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello_oficial", StringComparison.OrdinalIgnoreCase));
+
+            bool esSelloInstitucional = esSoloSello || esSelloYFirma;
+
+            bool esSoloFirma = esSelloInstitucional || (!string.IsNullOrWhiteSpace(estiloSello) &&
                                (estiloSello.Equals("solo_firma", StringComparison.OrdinalIgnoreCase) ||
                                 estiloSello.Equals("firma", StringComparison.OrdinalIgnoreCase) ||
-                                estiloSello.Equals("trazo", StringComparison.OrdinalIgnoreCase));
+                                estiloSello.Equals("trazo", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello_personal", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello", StringComparison.OrdinalIgnoreCase) ||
+                                estiloSello.Equals("sello_redondo", StringComparison.OrdinalIgnoreCase)));
+
+            // Precarga e inspección geométrica de la imagen de firma
+            var imgBytes = ResolveImageBytes(firmaImagenB64);
+            ImageData? imgData = null;
+            float imgRatio = 2.0f; // Proporción horizontal estándar por defecto
+            if (imgBytes != null)
+            {
+                try
+                {
+                    imgData = ImageDataFactory.Create(imgBytes);
+                    if (imgData.GetHeight() > 0)
+                    {
+                        imgRatio = imgData.GetWidth() / imgData.GetHeight();
+                    }
+                }
+                catch { }
+            }
 
             if (isPeaMatrix)
             {
                 // ── MODO MATRIZ PEA (4 NIVELES DE FIRMAS) ──────────────────────────
                 // En A4 con márgenes de 1.8cm (51.02pt), ancho útil = 493.24pt.
                 // 5 columnas de 20%: ancho de columna = 98.65pt.
-                // Sello oficial para celda ampliada (95px): ancho = 94.0pt, alto = 48.0pt.
-                float stampWidth = 94.0f;
-                float stampHeight = 48.0f;
+                // Celda PEA oficial: ~95px en HTML (~71pt útiles en PDF).
+                // Si la imagen es un sello circular/cuadrado (ratio 0.70 .. 1.45) o si es sello institucional vectorial:
+                // se amplía la altura a 68pt para garantizar legibilidad del sello departamental.
+                bool esSelloCuadrado = esSelloInstitucional || (esSoloFirma && (imgRatio >= 0.70f && imgRatio <= 1.45f));
+                float stampWidth = esSelloCuadrado ? 88.0f : 94.0f;
+                float stampHeight = esSelloCuadrado ? 68.0f : 48.0f;
 
                 // Determinar el índice de columna (1: Elaborado, 2: Revisado Carrera, 3: Revisado Académico, 4: Aprobado)
                 int colIndex = ResolvePeaColumnIndex(rolEnDocumento, cargo, layoutLocator.FirmanteX);
@@ -101,7 +136,7 @@ public class SignatureStamper
                 else if (layoutLocator.NombreY.HasValue)
                 {
                     // La fila FIRMA ampliada está sobre la fila NOMBRE (+71pt de alto)
-                    canvasY = layoutLocator.NombreY.Value + 12.0f;
+                    canvasY = (layoutLocator.NombreY.Value + 36.0f) - (stampHeight / 2.0f);
                 }
                 else if (layoutLocator.ResponsabilidadY.HasValue)
                 {
@@ -115,10 +150,41 @@ public class SignatureStamper
                 }
 
                 Table stampTable;
-                if (esSoloFirma)
+                if (esSelloInstitucional)
+                {
+                    var (central, sub) = InstitutionalStampGenerator.ResolveDepartmentLabels(rolEnDocumento, cargo, departamento);
+                    var firmaData = esSoloSello ? null : imgData;
+                    var stampImage = InstitutionalStampGenerator.CreateInstitutionalStamp(
+                        pdfDocument: pdf,
+                        textoSuperior: "TECNOLÓGICO TRAVERSARI",
+                        textoCentral: central,
+                        textoCentralSub: sub,
+                        textoInferior: "ISTPET",
+                        firmaPersonalData: firmaData,
+                        fontBold: fonts.bold,
+                        diameter: 68.0f);
+
+                    stampTable = new Table(1)
+                        .SetWidth(stampWidth)
+                        .SetBorder(iText.Layout.Borders.Border.NO_BORDER);
+
+                    var cell = new Cell()
+                        .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                        .SetPadding(0)
+                        .SetHeight(stampHeight)
+                        .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                        .SetTextAlignment(TextAlignment.CENTER);
+
+                    stampImage.ScaleToFit(stampWidth - 4.0f, stampHeight - 4.0f)
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    cell.Add(stampImage);
+                    stampTable.AddCell(cell);
+                }
+                else if (esSoloFirma)
                 {
                     stampTable = BuildSoloFirmaPeaStamp(
-                        firmaImagenB64: firmaImagenB64,
+                        imgData: imgData,
                         nombreFirmante: nombreFirmante,
                         fonts: fonts,
                         stampWidth: stampWidth,
@@ -242,16 +308,17 @@ public class SignatureStamper
     }
 
     /// <summary>
-    /// Construye el estampado limpio de 'Solo Firma' para la matriz curricular PEA,
-    /// renderizando únicamente el trazo manuscrito en alta definición sin bordes,
+    /// Construye el estampado limpio de 'Solo Firma' o 'Sello Personal' para la matriz curricular PEA,
+    /// renderizando únicamente el trazo manuscrito o el sello departamental en alta definición sin bordes,
     /// sin cabecera azul institucional y sin código QR.
     /// </summary>
     private static Table BuildSoloFirmaPeaStamp(
-        string? firmaImagenB64,
+        ImageData? imgData,
         string nombreFirmante,
         FontSet fonts,
         float stampWidth,
-        float stampHeight)
+        float stampHeight,
+        string? firmaImagenB64 = null)
     {
         var table = new Table(1)
             .SetWidth(stampWidth)
@@ -266,12 +333,19 @@ public class SignatureStamper
             .SetTextAlignment(TextAlignment.CENTER);
 
         bool imageAdded = false;
-        var imgBytes = ResolveImageBytes(firmaImagenB64);
-        if (imgBytes != null)
+        if (imgData == null && !string.IsNullOrWhiteSpace(firmaImagenB64))
+        {
+            var imgBytes = ResolveImageBytes(firmaImagenB64);
+            if (imgBytes != null)
+            {
+                try { imgData = ImageDataFactory.Create(imgBytes); } catch { }
+            }
+        }
+
+        if (imgData != null)
         {
             try
             {
-                var imgData = ImageDataFactory.Create(imgBytes);
                 var img = new iText.Layout.Element.Image(imgData)
                     .ScaleToFit(stampWidth - 4.0f, stampHeight - 4.0f)
                     .SetHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -643,16 +717,35 @@ public class SignatureStamper
     {
         string combined = $"{rolEnDocumento} {cargo}".ToLowerInvariant();
 
-        if (combined.Contains("docente") || combined.Contains("elaborad") || combined.Contains("profesor"))
+        // Columna 1: Elaborado por Docente
+        if (combined.Contains("docente") || 
+            combined.Contains("elaborad") || 
+            combined.Contains("profesor") || 
+            combined.Contains("autor") ||
+            combined.Contains("dosier_docente"))
             return 1;
 
-        if (combined.Contains("carrera") || combined.Contains("revisado 1") || (combined.Contains("coordinador") && !combined.Contains("acad")))
+        // Columna 2: Revisado por Coordinador de Carrera
+        if (combined.Contains("carrera") || 
+            combined.Contains("revisado 1") || 
+            combined.Contains("revisadocoord") ||
+            combined.Contains("dosier_coord_carrera") || 
+            (combined.Contains("coordinador") && !combined.Contains("acad")))
             return 2;
 
-        if (combined.Contains("acad") || combined.Contains("revisado 2"))
+        // Columna 3: Revisado por Coordinación Académica
+        if (combined.Contains("acad") || 
+            combined.Contains("revisado 2") || 
+            combined.Contains("revisadoacad") || 
+            combined.Contains("dosier_coord_acad") ||
+            combined.Contains("comisionacademica"))
             return 3;
 
-        if (combined.Contains("vicerrector") || combined.Contains("aprobado"))
+        // Columna 4: Aprobado por Vicerrectorado (soporta vicerrector, vicerector, aprobado, vicerrectorado, etc.)
+        if (combined.Contains("vicerrector") || 
+            combined.Contains("vicerector") || 
+            combined.Contains("aprobado") || 
+            combined.Contains("dosier_vicerrector"))
             return 4;
 
         // Fallback por proximidad horizontal de texto detectado

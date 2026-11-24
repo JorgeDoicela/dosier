@@ -7,10 +7,10 @@
 
 /* Contenedor del Sello */
 .doc-stamp-display-wrapper {
-    background: var(--subtle);
-    border: 1px solid var(--border);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: var(--radius, 8px);
-    padding: 22px 18px;
+    padding: 24px 18px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -192,15 +192,14 @@
 .dosier-solo-firma-stamp {
     width: 100%;
     max-width: 420px;
-    padding: 28px 24px;
+    padding: 20px 16px;
     background: #ffffff;
-    border: 1.5px dashed #cbd5e1;
+    border: none;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: none;
 }
 
 .dosier-solo-firma-stamp .solo-stroke-img {
@@ -210,24 +209,23 @@
     filter: none !important;
 }
 
-/* Modo 'Solo Firma' (Trazo Manuscrito Limpio Sin Cabecera Azul ni Texto) */
-.dosier-solo-firma-stamp {
+/* Modo 'Sello Institucional' (Sello Circular Oficial con Rúbrica Superpuesta o Sello Puro) */
+.dosier-sello-institucional-stamp {
     width: 100%;
-    max-width: 420px;
-    padding: 28px 24px;
+    max-width: 440px;
+    padding: 16px 12px;
     background: #ffffff;
-    border: 1.5px dashed #cbd5e1;
+    border: none;
     border-radius: 8px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: none;
 }
 
-.dosier-solo-firma-stamp .solo-stroke-img {
-    max-width: 320px;
-    max-height: 110px;
-    object-fit: contain;
-    filter: none !important;
+.sello-circular-svg {
+    width: 210px;
+    height: 210px;
+    user-select: none;
 }

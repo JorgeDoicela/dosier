@@ -128,7 +128,7 @@ export const DocumentTemplatesPage: React.FC = () => {
                     isOpen={previewModalOpen}
                     onClose={handleClosePreview}
                     template={previewingTemplate || selectedTemplate}
-                    mergedTheme={selectedTemplate?.themeConfigJson ? mergeWithDefaults(selectedTemplate.themeConfigJson) : undefined}
+                    mergedTheme={(previewingTemplate || selectedTemplate)?.themeConfigJson ? mergeWithDefaults((previewingTemplate || selectedTemplate)!.themeConfigJson) : undefined}
                 />
             </>
         );

@@ -1,0 +1,749 @@
+<!-- DOSIER_SECTIONS_JSON: W3siaWQiOiJibG9jay1pbmZvcm1lLTEtZGF0b3MiLCJ0eXBlIjoiaW5mb3JtZV9hY29tcF9kYXRvc19pbmZvcm1hdGl2b3Nfc2VjdGlvbiIsInRpdGxlIjoiMS4gRGF0b3MgaW5mb3JtYXRpdm9zOiIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaW5mb3JtZVRpdHVsbyI6IklORk9STUUgREUgQUNPTVBBw5FBTUlFTlRPIEFDQUTDiU1JQ08gREUgQ0FSUkVSQSIsImluZm9ybWVDb29yZGluYWRvciI6IiIsImluZm9ybWVDYXJyZXJhIjoiIiwiaW5mb3JtZVBlcmlvZG8iOiIiLCJpbmZvcm1lUGFyY2lhbCI6IlBhcmNpYWwgMS8gTW9kdWxhciIsImluZm9ybWVSZXBvcnRhQSI6IlVOSURBRCBBQ0FEw4lNSUNBIiwiaW5mb3JtZUZlY2hhUHJlc2VudGFjaW9uIjoiIn19LHsiaWQiOiJibG9jay1pbmZvcm1lLTItdHV0b3JlcyIsInR5cGUiOiJpbmZvcm1lX2Fjb21wX25vbWluYV90dXRvcmVzX3NlY3Rpb24iLCJ0aXRsZSI6IjIuIE7Ds21pbmEgZGUgZG9jZW50ZXMgdHV0b3JlczoiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7InR1dG9yZXNSb3dzIjpbeyJpZCI6IjEiLCJ0dXRvciI6IiIsIm5pdmVsIjoiIiwiYWN0aXZpZGFkIjoiIiwibWVkaW9WZXJpZmljYWNpb24iOiIifSx7ImlkIjoiMiIsInR1dG9yIjoiIiwibml2ZWwiOiIiLCJhY3RpdmlkYWQiOiIiLCJtZWRpb1ZlcmlmaWNhY2lvbiI6IiJ9LHsiaWQiOiIzIiwidHV0b3IiOiIiLCJuaXZlbCI6IiIsImFjdGl2aWRhZCI6IiIsIm1lZGlvVmVyaWZpY2FjaW9uIjoiIn0seyJpZCI6IjQiLCJ0dXRvciI6IiIsIm5pdmVsIjoiIiwiYWN0aXZpZGFkIjoiIiwibWVkaW9WZXJpZmljYWNpb24iOiIifSx7ImlkIjoiNSIsInR1dG9yIjoiIiwibml2ZWwiOiIiLCJhY3RpdmlkYWQiOiIiLCJtZWRpb1ZlcmlmaWNhY2lvbiI6IiJ9XX19LHsiaWQiOiJibG9jay1pbmZvcm1lLTMtZG9jZW50ZXMiLCJ0eXBlIjoiaW5mb3JtZV9hY29tcF9ub21pbmFfZG9jZW50ZXNfc2VjdGlvbiIsInRpdGxlIjoiMy4gTsOzbWluYSBkZSBkb2NlbnRlcyBxdWUgYXBvcnRhbiBhIGxhIGNhcnJlcmE6IiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJkb2NlbnRlc0Fwb3J0ZVJvd3MiOlt7ImlkIjoiMSIsIm5vbWluYSI6IiIsImFzaWduYXR1cmFzIjoiIiwibml2ZWwiOiIiLCJqb3JuYWRhVHJhYmFqbyI6IiIsImFjY2lvbmVzTWVqb3JhIjoiIiwiYWNjaW9uZXNDb3JyZWN0aXZhcyI6IiJ9LHsiaWQiOiIyIiwibm9taW5hIjoiIiwiYXNpZ25hdHVyYXMiOiIiLCJuaXZlbCI6IiIsImpvcm5hZGFUcmFiYWpvIjoiIiwiYWNjaW9uZXNNZWpvcmEiOiIiLCJhY2Npb25lc0NvcnJlY3RpdmFzIjoiIn0seyJpZCI6IjMiLCJub21pbmEiOiIiLCJhc2lnbmF0dXJhcyI6IiIsIm5pdmVsIjoiIiwiam9ybmFkYVRyYWJham8iOiIiLCJhY2Npb25lc01lam9yYSI6IiIsImFjY2lvbmVzQ29ycmVjdGl2YXMiOiIifSx7ImlkIjoiNCIsIm5vbWluYSI6IiIsImFzaWduYXR1cmFzIjoiIiwibml2ZWwiOiIiLCJqb3JuYWRhVHJhYmFqbyI6IiIsImFjY2lvbmVzTWVqb3JhIjoiIiwiYWNjaW9uZXNDb3JyZWN0aXZhcyI6IiJ9XX19LHsiaWQiOiJibG9jay1pbmZvcm1lLTQtZ2VzdGlvbi1hY2FkZW1pY2EiLCJ0eXBlIjoiaW5mb3JtZV9hY29tcF9nZXN0aW9uX2FjYWRlbWljYV9zZWN0aW9uIiwidGl0bGUiOiI0LiAgR2VzdGnDs24gQWNhZMOpbWljYSBkZSBsYSBjYXJyZXJhIiwiaXNBY3RpdmUiOnRydWUsImNvbmZpZyI6eyJyZXVuaW9uZXMiOnsiaG9yYXJpb1JldW5pb24iOiIiLCJudW1lcm9SZXVuaW9uZXMiOiIiLCJwcmluY2lwYWxlc0FzcGVjdG9zIjoiIiwicHJpbmNpcGFsZXNBY3VlcmRvcyI6IiJ9LCJhY3RpdmlkYWRlc0Nvb3JkaW5hZG9yIjpbeyJpZCI6IjEiLCJhY3RpdmlkYWQiOiIiLCJwcm9kdWN0b0VzcGVyYWRvIjoiIiwiZXN0YWRvIjoiIn0seyJpZCI6IjIiLCJhY3RpdmlkYWQiOiIiLCJwcm9kdWN0b0VzcGVyYWRvIjoiIiwiZXN0YWRvIjoiIn0seyJpZCI6IjMiLCJhY3RpdmlkYWQiOiIiLCJwcm9kdWN0b0VzcGVyYWRvIjoiIiwiZXN0YWRvIjoiIn0seyJpZCI6IjQiLCJhY3RpdmlkYWQiOiIiLCJwcm9kdWN0b0VzcGVyYWRvIjoiIiwiZXN0YWRvIjoiIn1dLCJlc3R1ZGlhbnRlc05pdmVsIjpbeyJpZCI6IjEiLCJuaXZlbCI6IjHCuiBOaXZlbCIsIm1hdHJpY3VsYWRvcyI6IiIsInJldGlyYWRvcyI6IiIsInByb2JsZW1hc0FzaXN0ZW5jaWEiOiIiLCJwcm9ibGVtYXNSZW5kaW1pZW50byI6IiIsIm5vUmluZGllcm9uRXhhbWVuIjoiIiwiYmllbmVzdGFySW5zdGl0dWNpb25hbCI6IiIsImJlY2Fkb3MiOiIifSx7ImlkIjoiMiIsIm5pdmVsIjoiMsK6IE5pdmVsIiwibWF0cmljdWxhZG9zIjoiIiwicmV0aXJhZG9zIjoiIiwicHJvYmxlbWFzQXNpc3RlbmNpYSI6IiIsInByb2JsZW1hc1JlbmRpbWllbnRvIjoiIiwibm9SaW5kaWVyb25FeGFtZW4iOiIiLCJiaWVuZXN0YXJJbnN0aXR1Y2lvbmFsIjoiIiwiYmVjYWRvcyI6IiJ9LHsiaWQiOiIzIiwibml2ZWwiOiIzwrogTml2ZWwiLCJtYXRyaWN1bGFkb3MiOiIiLCJyZXRpcmFkb3MiOiIiLCJwcm9ibGVtYXNBc2lzdGVuY2lhIjoiIiwicHJvYmxlbWFzUmVuZGltaWVudG8iOiIiLCJub1JpbmRpZXJvbkV4YW1lbiI6IiIsImJpZW5lc3Rhckluc3RpdHVjaW9uYWwiOiIiLCJiZWNhZG9zIjoiIn0seyJpZCI6IjQiLCJuaXZlbCI6IjTCuiBOaXZlbCIsIm1hdHJpY3VsYWRvcyI6IiIsInJldGlyYWRvcyI6IiIsInByb2JsZW1hc0FzaXN0ZW5jaWEiOiIiLCJwcm9ibGVtYXNSZW5kaW1pZW50byI6IiIsIm5vUmluZGllcm9uRXhhbWVuIjoiIiwiYmllbmVzdGFySW5zdGl0dWNpb25hbCI6IiIsImJlY2Fkb3MiOiIifSx7ImlkIjoiNSIsIm5pdmVsIjoiNcK6IE5pdmVsIiwibWF0cmljdWxhZG9zIjoiIiwicmV0aXJhZG9zIjoiIiwicHJvYmxlbWFzQXNpc3RlbmNpYSI6IiIsInByb2JsZW1hc1JlbmRpbWllbnRvIjoiIiwibm9SaW5kaWVyb25FeGFtZW4iOiIiLCJiaWVuZXN0YXJJbnN0aXR1Y2lvbmFsIjoiIiwiYmVjYWRvcyI6IiJ9XSwiZ2VzdGlvbkRvY2VudGVzIjpbeyJpZCI6IjEiLCJkb2NlbnRlIjoiIiwiaG9yYXNDb250YWN0byI6IiIsImV2YVBlcm1hbmVudGUiOiIiLCJob3Jhc1R1dG9yaWEiOiIiLCJlc3R1ZGlhbnRlc1R1dG9yaWEiOiIiLCJob3Jhc1ZpbmN1bGFjaW9uIjoiIiwiaG9yYXNJbnZlc3RpZ2FjaW9uIjoiIiwiaG9yYXNQcmFjdGljYXMiOiIiLCJob3Jhc1RpdHVsYWNpb24iOiIiLCJhc2lnbmF0dXJhcyI6IiIsImVzdHVkaWFudGVzUHJvYmxlbWFzUmVuZGltaWVudG8iOiIifSx7ImlkIjoiMiIsImRvY2VudGUiOiIiLCJob3Jhc0NvbnRhY3RvIjoiIiwiZXZhUGVybWFuZW50ZSI6IiIsImhvcmFzVHV0b3JpYSI6IiIsImVzdHVkaWFudGVzVHV0b3JpYSI6IiIsImhvcmFzVmluY3VsYWNpb24iOiIiLCJob3Jhc0ludmVzdGlnYWNpb24iOiIiLCJob3Jhc1ByYWN0aWNhcyI6IiIsImhvcmFzVGl0dWxhY2lvbiI6IiIsImFzaWduYXR1cmFzIjoiIiwiZXN0dWRpYW50ZXNQcm9ibGVtYXNSZW5kaW1pZW50byI6IiJ9LHsiaWQiOiIzIiwiZG9jZW50ZSI6IiIsImhvcmFzQ29udGFjdG8iOiIiLCJldmFQZXJtYW5lbnRlIjoiIiwiaG9yYXNUdXRvcmlhIjoiIiwiZXN0dWRpYW50ZXNUdXRvcmlhIjoiIiwiaG9yYXNWaW5jdWxhY2lvbiI6IiIsImhvcmFzSW52ZXN0aWdhY2lvbiI6IiIsImhvcmFzUHJhY3RpY2FzIjoiIiwiaG9yYXNUaXR1bGFjaW9uIjoiIiwiYXNpZ25hdHVyYXMiOiIiLCJlc3R1ZGlhbnRlc1Byb2JsZW1hc1JlbmRpbWllbnRvIjoiIn1dLCJvYnNlcnZhY2lvbmVzIjpbeyJpZCI6IjEiLCJlc3R1ZGlhbnRlIjoiIiwibml2ZWwiOiIxwroiLCJyZXN1bHRhZG8iOiIifSx7ImlkIjoiMiIsImVzdHVkaWFudGUiOiIiLCJuaXZlbCI6IjLCuiIsInJlc3VsdGFkbyI6IiJ9LHsiaWQiOiIzIiwiZXN0dWRpYW50ZSI6IiIsIm5pdmVsIjoiM8K6IiwicmVzdWx0YWRvIjoiIn1dfX0seyJpZCI6ImJsb2NrLWluZm9ybWUtNS1jb25jbHVzaW9uZXMiLCJ0eXBlIjoiaW5mb3JtZV9hY29tcF9jb25jbHVzaW9uZXNfc2VjdGlvbiIsInRpdGxlIjoiNS4gIENvbmNsdXNpb25lcyB5IFJlY29tZW5kYWNpb25lcyIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiYmFubmVyVGV4dCI6IkNPTkNMVVNJw5NOIFkgUkVDT01FTkRBQ0nDk04gUE9SIENBREEgVU5PIERFIExPUyBQVU5UT1MgVFJBVEFET1MuIiwiaXRlbXMiOlt7ImlkIjoiMSIsInB1bnRvIjoiMS4gU29icmUgbGEgY29vcmRpbmFjacOzbiB5IGRhdG9zIGluZm9ybWF0aXZvcyIsImNvbmNsdXNpb24iOiIiLCJyZWNvbWVuZGFjaW9uIjoiIn0seyJpZCI6IjIiLCJwdW50byI6IjIuIFNvYnJlIGxhIG7Ds21pbmEgZGUgZG9jZW50ZXMgdHV0b3JlcyB5IG1lZGlvcyBkZSB2ZXJpZmljYWNpw7NuIiwiY29uY2x1c2lvbiI6IiIsInJlY29tZW5kYWNpb24iOiIifSx7ImlkIjoiMyIsInB1bnRvIjoiMy4gU29icmUgbG9zIGRvY2VudGVzIHF1ZSBhcG9ydGFuIGEgbGEgY2FycmVyYSB5IGFjY2lvbmVzIGRlIG1lam9yYSIsImNvbmNsdXNpb24iOiIiLCJyZWNvbWVuZGFjaW9uIjoiIn0seyJpZCI6IjQiLCJwdW50byI6IjQuIFNvYnJlIGxhIGdlc3Rpw7NuIGFjYWTDqW1pY2EsIHJldW5pb25lcywgcmVuZGltaWVudG8gZXN0dWRpYW50aWwgeSBFVkEiLCJjb25jbHVzaW9uIjoiIiwicmVjb21lbmRhY2lvbiI6IiJ9XX19LHsiaWQiOiJibG9jay1pbmZvcm1lLTYtZmlybWFzIiwidHlwZSI6ImluZm9ybWVfYWNvbXBfZmlybWFzX3NlY3Rpb24iLCJ0aXRsZSI6IjYuICBGaXJtYXMgZGUgcmVzcG9uc2FiaWxpZGFkLiIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsiaGVhZGVyQ29sb3IiOiIjMWUyYTRhIiwiZmlybWFzVHV0b3JlcyI6W3siaWQiOiIxIiwibGFiZWwiOiJFTEFCT1JBRE8iLCJub21icmUiOiIiLCJjYXJnbyI6IlR1dG9yIGRlIFByaW1lciBOaXZlbCIsImZlY2hhIjoiIn0seyJpZCI6IjIiLCJsYWJlbCI6IkVMQUJPUkFETyIsIm5vbWJyZSI6IiIsImNhcmdvIjoiVHV0b3IgZGUgU2VndW5kbyBOaXZlbCIsImZlY2hhIjoiIn0seyJpZCI6IjMiLCJsYWJlbCI6IkVMQUJPUkFETyIsIm5vbWJyZSI6IiIsImNhcmdvIjoiVHV0b3IgZGUgVGVyY2VyIE5pdmVsIiwiZmVjaGEiOiIifSx7ImlkIjoiNCIsImxhYmVsIjoiRUxBQk9SQURPIiwibm9tYnJlIjoiIiwiY2FyZ28iOiJUdXRvciBkZSBDdWFydG8gTml2ZWwiLCJmZWNoYSI6IiJ9XSwiZmlybWFzQXV0b3JpZGFkZXMiOlt7ImlkIjoiMSIsImxhYmVsIjoiRUxBQk9SQURPIiwibm9tYnJlIjoiIiwiY2FyZ28iOiJDb29yZGluYWRvciBkZSBDYXJyZXJhIiwiZmVjaGEiOiIifSx7ImlkIjoiMiIsImxhYmVsIjoiIiwibm9tYnJlIjoiIiwiY2FyZ28iOiJCaWVuZXN0YXIgSW5zdGl0dWNpb25hbCIsImZlY2hhIjoiIn0seyJpZCI6IjMiLCJsYWJlbCI6IkFQUk9CQURPIiwibm9tYnJlIjoiIiwiY2FyZ28iOiJDb29yZGluYWRvciBBY2Fkw6ltaWNvIiwiZmVjaGEiOiIifV19fV0= -->
+<style>
+  * { box-sizing: border-box; }
+  
+  @page {
+      margin-top: {{default theme.layout.margin_top "2.5cm"}};
+      margin-bottom: {{default theme.layout.margin_bottom "1.5cm"}};
+      margin-left: {{default theme.layout.margin_left "2cm"}};
+      margin-right: {{default theme.layout.margin_right "2cm"}};
+  }
+
+  /* Reset y Core del Documento con Tematización Dinámica */
+  .doc-container { 
+      font-family: {{ theme.typography.font_family }}; 
+      font-size: {{default theme.typography.base_size "10pt"}};
+      color: {{ theme.colors.text }}; 
+      line-height: {{ theme.typography.line_height }};
+      padding: 0; 
+      background: transparent; 
+  }
+  
+  /* Marca de Agua / Imagen de Fondo de Hojas Paginadas (PDF Paged Media) */
+  .doc-watermark {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 210mm;
+      height: 0;
+      line-height: 0;
+      font-size: 0;
+      z-index: -1;
+      pointer-events: none;
+      {{#if theme.brand.background_image}}
+      background-image: url('{{ theme.brand.background_image }}');
+      background-size: {{default theme.brand.background_fit "contain"}};
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: {{default theme.brand.background_opacity "0.12"}};
+      {{/if}}
+  }
+  
+  /* Portada (Cover Page) Full Bleed con Imagen de Fondo y Z-Index */
+  .cover-page {
+      font-family: {{ theme.typography.font_family }};
+      position: relative;
+      width: 210mm;
+      height: 296.5mm;
+      min-height: 296.5mm;
+      max-height: 296.5mm;
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      {{#if portada_base64}}
+      background-image: url('data:image/jpeg;base64,{{portada_base64}}');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      {{/if}}
+      color: {{ theme.colors.primary }};
+      z-index: 1000;
+      overflow: hidden;
+      page-break-inside: avoid;
+      page-break-after: always;
+  }
+
+  .cover-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 3cm 2cm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: space-around;
+  }
+
+  .main-label {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 24pt;
+      font-weight: bold;
+      color: {{ theme.colors.secondary }};
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+      width: 100%;
+  }
+
+  .project-theme {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 16pt;
+      font-weight: bold;
+      color: {{ theme.colors.primary }};
+      text-transform: uppercase;
+      margin: 1.5cm 0;
+      line-height: 1.3;
+      width: 100%;
+      word-wrap: break-word;
+  }
+
+  .career-container {
+      margin: 1cm 0;
+      text-align: center;
+      width: 100%;
+  }
+
+  .career-label {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 12pt;
+      font-weight: bold;
+      color: {{ theme.colors.primary }};
+      text-transform: uppercase;
+  }
+
+  .career-value {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 12pt;
+      font-weight: normal;
+      color: {{ theme.colors.primary }};
+      text-transform: uppercase;
+      margin-top: 4px;
+  }
+
+  .period-container {
+      width: 100%;
+      margin-top: 1cm;
+      text-align: center;
+  }
+
+  .period-label {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 11pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: {{ theme.colors.primary }};
+  }
+
+  .period-value {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 11pt;
+      font-weight: normal;
+      text-transform: uppercase;
+      color: {{ theme.colors.primary }};
+      margin-top: 2px;
+  }
+
+  /* Títulos de sección */
+  .title-h1 { 
+      font-size: 16pt; 
+      font-weight: bold; 
+      color: {{default theme.colors.primary "#222c57"}}; 
+      margin-top: 35px; 
+      text-transform: uppercase; 
+  }
+  .title-h2 { 
+      font-size: 10pt; 
+      font-weight: 800; 
+      background: {{default theme.colors.table_header_bg "#222c57"}}; 
+      color: {{default theme.colors.table_header_color "#ffffff"}} !important; 
+      padding: 6px 12px; 
+      margin-top: 25px; 
+      text-transform: uppercase; 
+  }
+  .title-h3 { 
+      font-size: 9.5pt; 
+      font-weight: bold; 
+      color: {{default theme.colors.secondary "#c4a857"}}; 
+      margin-top: 15px; 
+      text-transform: uppercase; 
+  }
+  
+  /* Tablas generales compactas con bordes negros (formato premium original) */
+  .info-table, .data-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 12px; 
+      font-size: 9pt; 
+      background: #ffffff; 
+  }
+  .info-table td, .info-table th, .data-table td, .data-table th { 
+      border: 1px solid #000000; 
+      padding: 0 8px; 
+      height: 0.6cm;
+      vertical-align: middle; 
+      color: #000000;
+  }
+  .info-table th, .data-table th { 
+      font-weight: bold; 
+      text-transform: uppercase; 
+      font-size: 8.5pt; 
+      background: {{ theme.colors.table_header_bg }};
+      color: {{ theme.colors.table_header_color }};
+      text-align: center;
+  }
+  .label-cell { 
+      font-weight: bold; 
+      background: {{ theme.colors.table_header_bg }}; 
+      color: {{ theme.colors.table_header_color }};
+      width: 35%; 
+      text-transform: uppercase; 
+      font-size: 8.5pt; 
+  }
+  
+  /* Texto enriquecido */
+  .rich-content { 
+      font-size: 9.5pt; 
+      text-align: justify; 
+      color: #000000; 
+      margin-top: 10px; 
+      line-height: 1.4; 
+  }
+  .rich-content p { margin: 6px 0; }
+  .rich-content ul, .rich-content ol { padding-left: 20px; margin: 6px 0; }
+  .rich-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  .rich-content table td, .rich-content table th { border: 1px solid #000000; padding: 6px 8px; font-size: 9pt; }
+  .rich-content table th { background: {{ theme.colors.table_header_bg }}; color: {{ theme.colors.table_header_color }}; font-weight: bold; }
+  
+  /* Dos columnas */
+  .two-col-wrapper { display: table; width: 100%; border-collapse: collapse; margin-top: 15px; }
+  .two-col-cell    { display: table-cell; width: 50%; border: 1px solid #000000; vertical-align: top; }
+  .col-header      { padding: 8px 12px; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
+  .col-body        { padding: 10px 12px; font-size: 9pt; line-height: 1.4; }
+  
+  /* Salto de página */
+  .page-break { page-break-after: always; height: 0; }
+  
+  /* Firmas y Trazabilidad */
+  .signatures-row { display: flex; justify-content: space-around; margin-top: 80px; flex-wrap: wrap; gap: 20px; page-break-inside: avoid; }
+  .sig-box        { text-align: center; min-width: 180px; padding-top: 12px; border-top: 1px solid #000000; font-size: 9pt; line-height: 1.5; }
+  .sig-label      { font-weight: bold; font-size: 8pt; color: #475569; text-transform: uppercase; margin-bottom: 6px; }
+  .sig-footer     { text-align: center; font-size: 8pt; color: #94a3b8; margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+</style>
+
+<div class="doc-container">
+    <div class="section-container" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif; font-size: 10pt; color: #0f172a;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="font-size: 12pt; font-weight: bold; text-transform: uppercase; margin: 0; color: #000000; letter-spacing: 0.5px;">INFORME DE ACOMPAÑAMIENTO ACADÉMICO DE CARRERA</h1>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <h2 style="font-size: 10.5pt; font-weight: bold; margin: 0; color: #000000;">1. Datos informativos:</h2>
+        </div>
+        <ul style="list-style-type: disc; margin: 0; padding-left: 20px; line-height: 1.8;">
+            <li><strong>Nombre del coordinador:</strong> _______________________________________</li>
+            <li><strong>Carrera:</strong> _______________________________________</li>
+            <li><strong>Periodo académico:</strong> _______________________________________</li>
+            <li><strong>Parcial:</strong> <span style="color: #dc2626; font-weight: bold;">Parcial 1/ Modular</span></li>
+            <li><strong>Reporta a:</strong> <span style="text-transform: uppercase; font-weight: bold;">UNIDAD ACADÉMICA</span></li>
+            <li><strong>Fecha de presentación del informe:</strong> _______________________________________</li>
+        </ul>
+    </div>
+    
+    <div class="section-container" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif; font-size: 9.5pt; color: #0f172a;">
+        <div style="margin-bottom: 10px;">
+            <h2 style="font-size: 10.5pt; font-weight: bold; margin: 0; color: #000000;">2. Nómina de docentes tutores:</h2>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 9pt;">
+            <thead>
+                <tr style="background-color: #ffffff; color: #000000; border-bottom: 1.5px solid #000000;">
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Tutor</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: bold;">Nivel</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Actividad</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Medio de verificación</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 15%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 25%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 15%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 25%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 15%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 25%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 15%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 25%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 15%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 30%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 25%;"></td>
+        </tr>
+    
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section-container" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif; font-size: 9pt; color: #0f172a;">
+        <div style="margin-bottom: 10px;">
+            <h2 style="font-size: 10.5pt; font-weight: bold; margin: 0; color: #000000;">3. Nómina de docentes que aportan a la carrera:</h2>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8.5pt;">
+            <thead>
+                <tr style="background-color: #ffffff; color: #000000; border-bottom: 1.5px solid #000000;">
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Nómina</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Asignaturas</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: bold;">Nivel</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: bold;">Jornada de trabajo</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Acciones de mejora (dentro del periodo)</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; font-weight: bold;">Acciones correctivas (final del periodo)</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 18%; font-weight: 500;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 20%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 10%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 18%; font-weight: 500;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 20%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 10%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 18%; font-weight: 500;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 20%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 10%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 18%; font-weight: 500;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 20%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 10%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; text-align: center; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+            <td style="border: 1px solid #000000; padding: 6px 8px; vertical-align: top; width: 19%;"></td>
+        </tr>
+    
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section-container" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif; font-size: 9pt; color: #0f172a;">
+        <div style="margin-bottom: 12px; border-bottom: 1px solid #000000; padding-bottom: 4px;">
+            <h2 style="font-size: 11pt; font-weight: bold; margin: 0; color: #000000;">4.  Gestión Académica de la carrera</h2>
+        </div>
+
+        <!-- 4.1 Reuniones de carrera -->
+        <div style="margin-bottom: 16px;">
+            <h3 style="font-size: 9.5pt; font-weight: bold; font-style: italic; margin: 0 0 6px 0; color: #000000;">4.1.  Reuniones de carrera</h3>
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8.5pt;">
+                <tbody>
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="width: 45%; padding: 6px 8px; font-weight: bold; border-right: 1px solid #000000; background-color: #f8fafc;">Horario de reunión de la carrera:</td>
+                        <td style="padding: 6px 8px;"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="width: 45%; padding: 6px 8px; font-weight: bold; border-right: 1px solid #000000; background-color: #f8fafc;">Numero de reuniones de carrera realizadas en este parcial o módulo:</td>
+                        <td style="padding: 6px 8px;"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #000000;">
+                        <td style="width: 45%; padding: 6px 8px; font-weight: bold; border-right: 1px solid #000000; background-color: #f8fafc; vertical-align: top;">Principales aspectos tratados en las reuniones:</td>
+                        <td style="padding: 6px 8px;"></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 45%; padding: 6px 8px; font-weight: bold; border-right: 1px solid #000000; background-color: #f8fafc; vertical-align: top;">Principales acuerdos o consensos:</td>
+                        <td style="padding: 6px 8px;"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4.2 Actividades realizadas por el coordinador de la carrera -->
+        <div style="margin-bottom: 16px;">
+            <h3 style="font-size: 9.5pt; font-weight: bold; font-style: italic; margin: 0 0 6px 0; color: #000000;">4.2.  Actividades realizadas por el coordinador de la carrera</h3>
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8.5pt;">
+                <thead>
+                    <tr style="background-color: #ffffff; color: #000000; border-bottom: 1.5px solid #000000;">
+                        <th style="border: 1px solid #000000; padding: 5px 8px; text-align: left; font-weight: bold;">Actividad</th>
+                        <th style="border: 1px solid #000000; padding: 5px 8px; text-align: left; font-weight: bold;">Producto esperado o evidencia</th>
+                        <th style="border: 1px solid #000000; padding: 5px 8px; text-align: center; font-weight: bold;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 20%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 20%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 20%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 40%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 20%;"></td>
+        </tr>
+    
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4.3 Estudiantes -->
+        <div style="margin-bottom: 16px;">
+            <h3 style="font-size: 9.5pt; font-weight: bold; font-style: italic; margin: 0 0 6px 0; color: #000000;">4.3.  Estudiantes</h3>
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8pt;">
+                <thead>
+                    <tr style="background-color: #ffffff; color: #000000; border-bottom: 1.5px solid #000000;">
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Nivel</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes matriculados</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes retirados o que desertaron oficialmente</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes con problemas de asistencia</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes con problemas de rendimiento</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes que no rindieron el examen parcial</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de casos con acompañamiento de Bienestar Institucional</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes becados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr style="border-top: 1px solid #000000; text-align: center;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 12%;">1º Nivel</td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000; text-align: center;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 12%;">2º Nivel</td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000; text-align: center;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 12%;">3º Nivel</td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000; text-align: center;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 12%;">4º Nivel</td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000; text-align: center;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 12%;">5º Nivel</td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 12%;"></td>
+        </tr>
+    
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4.4 Gestión docente -->
+        <div style="margin-bottom: 16px;">
+            <h3 style="font-size: 9.5pt; font-weight: bold; font-style: italic; margin: 0 0 6px 0; color: #000000;">4.4.  Gestión docente</h3>
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 7.5pt;">
+                <thead>
+                    <tr style="background-color: #ffffff; color: #000000; border-bottom: 1.5px solid #000000;">
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: left; font-weight: bold;">Nómina de docentes</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumplimiento de horas de contacto con el docente</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumple e manera permanente con los indicadores de gestión docente del EVA</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumplimiento de horas de tutoría académica</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Total de estudiantes atendidos en tutoría académica</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumplimiento de horas de vinculación</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumplimiento de horas de Investigación</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumplimiento de horas de prácticas-pre profesionales</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Cumplimiento de horas de tutorías de titulación.</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: left; font-weight: bold;">Asignaturas que imparte</th>
+                        <th style="border: 1px solid #000000; padding: 4px 6px; text-align: center; font-weight: bold;">Número de estudiantes que presentan problemas de rendimiento en la Asignatura</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr style="border-top: 1px solid #000000; vertical-align: top;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 9%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000; vertical-align: top;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 9%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000; vertical-align: top;">
+            <td style="border: 1px solid #000000; padding: 4px 6px; font-weight: bold; width: 14%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 9%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; width: 13%;"></td>
+            <td style="border: 1px solid #000000; padding: 4px 6px; text-align: center; width: 8%;"></td>
+        </tr>
+    
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4.5 Observaciones -->
+        <div>
+            <h3 style="font-size: 9.5pt; font-weight: bold; font-style: italic; margin: 0 0 6px 0; color: #000000;">4.5.  Observaciones:</h3>
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8.5pt;">
+                <thead>
+                    <tr style="background-color: #ffffff; color: #000000; border-bottom: 1.5px solid #000000;">
+                        <th style="border: 1px solid #000000; padding: 5px 8px; text-align: left; font-weight: bold;">Estudiante</th>
+                        <th style="border: 1px solid #000000; padding: 5px 8px; text-align: center; font-weight: bold;">Nivel</th>
+                        <th style="border: 1px solid #000000; padding: 5px 8px; text-align: left; font-weight: bold;">Resultado del acompañamiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 35%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 15%;">1º</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 50%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 35%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 15%;">2º</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 50%;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000000;">
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 35%;"></td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; text-align: center; width: 15%;">3º</td>
+            <td style="border: 1px solid #000000; padding: 5px 8px; width: 50%;"></td>
+        </tr>
+    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="section-container" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif; font-size: 9pt; color: #0f172a;">
+        <div style="margin-bottom: 8px;">
+            <h2 style="font-size: 11pt; font-weight: bold; margin: 0; color: #000000;">5.  Conclusiones y Recomendaciones</h2>
+        </div>
+        <div style="margin-bottom: 14px;">
+            <span style="background-color: #ffff00; color: #000000; font-weight: bold; font-size: 8.5pt; padding: 2px 6px; border: 1px solid #facc15; display: inline-block;">
+                CONCLUSIÓN Y RECOMENDACIÓN POR CADA UNO DE LOS PUNTOS TRATADOS.
+            </span>
+        </div>
+        <div>
+            
+        <div style="border: 1px solid #000000; padding: 8px 12px; margin-bottom: 12px; background-color: #ffffff; page-break-inside: avoid;">
+            <div style="font-weight: bold; font-size: 9pt; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
+                1. Sobre la coordinación y datos informativos
+            </div>
+            <div style="margin-bottom: 6px;">
+                <span style="font-weight: bold; font-size: 8.5pt; color: #334155;">Conclusión: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+            <div>
+                <span style="font-weight: bold; font-size: 8.5pt; color: #1e40af;">Recomendación: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+        </div>
+    
+        <div style="border: 1px solid #000000; padding: 8px 12px; margin-bottom: 12px; background-color: #ffffff; page-break-inside: avoid;">
+            <div style="font-weight: bold; font-size: 9pt; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
+                2. Sobre la nómina de docentes tutores y medios de verificación
+            </div>
+            <div style="margin-bottom: 6px;">
+                <span style="font-weight: bold; font-size: 8.5pt; color: #334155;">Conclusión: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+            <div>
+                <span style="font-weight: bold; font-size: 8.5pt; color: #1e40af;">Recomendación: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+        </div>
+    
+        <div style="border: 1px solid #000000; padding: 8px 12px; margin-bottom: 12px; background-color: #ffffff; page-break-inside: avoid;">
+            <div style="font-weight: bold; font-size: 9pt; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
+                3. Sobre los docentes que aportan a la carrera y acciones de mejora
+            </div>
+            <div style="margin-bottom: 6px;">
+                <span style="font-weight: bold; font-size: 8.5pt; color: #334155;">Conclusión: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+            <div>
+                <span style="font-weight: bold; font-size: 8.5pt; color: #1e40af;">Recomendación: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+        </div>
+    
+        <div style="border: 1px solid #000000; padding: 8px 12px; margin-bottom: 12px; background-color: #ffffff; page-break-inside: avoid;">
+            <div style="font-weight: bold; font-size: 9pt; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
+                4. Sobre la gestión académica, reuniones, rendimiento estudiantil y EVA
+            </div>
+            <div style="margin-bottom: 6px;">
+                <span style="font-weight: bold; font-size: 8.5pt; color: #334155;">Conclusión: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+            <div>
+                <span style="font-weight: bold; font-size: 8.5pt; color: #1e40af;">Recomendación: </span>
+                <span style="font-size: 8.5pt;"></span>
+            </div>
+        </div>
+    
+        </div>
+    </div>
+    
+    <div class="section-container" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif; font-size: 9pt; color: #0f172a; page-break-inside: avoid;">
+        <div style="margin-bottom: 12px;">
+            <h2 style="font-size: 11pt; font-weight: bold; margin: 0; color: #000000;">6.  Firmas de responsabilidad.</h2>
+        </div>
+
+        <!-- Tabla 1: Tutores de Nivel -->
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8.5pt; margin-bottom: 18px;">
+            <thead>
+                <tr style="background-color: #1e2a4a; color: #ffffff;">
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; width: 20%; font-weight: bold;">DESCRIPCIÓN</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 20%; font-weight: bold;">ELABORADO</th><th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 20%; font-weight: bold;">ELABORADO</th><th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 20%; font-weight: bold;">ELABORADO</th><th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 20%; font-weight: bold;">ELABORADO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc; height: 60px; vertical-align: top;">FIRMA</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td><td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td><td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td><td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc;">NOMBRE</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc;">CARGO</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Tutor de Primer Nivel</td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Tutor de Segundo Nivel</td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Tutor de Tercer Nivel</td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Tutor de Cuarto Nivel</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc;">FECHA</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Tabla 2: Autoridades -->
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000000; font-size: 8.5pt;">
+            <thead>
+                <tr style="background-color: #1e2a4a; color: #ffffff;">
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: left; width: 20%; font-weight: bold;">DESCRIPCIÓN</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 26.6%; font-weight: bold;">ELABORADO</th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 26.6%; font-weight: bold;"></th>
+                    <th style="border: 1px solid #000000; padding: 6px 8px; text-align: center; width: 26.6%; font-weight: bold;">APROBADO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc; height: 60px; vertical-align: top;">FIRMA</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td><td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td><td style="border: 1px solid #000000; padding: 6px 8px; height: 60px; text-align: center; vertical-align: bottom;"><div style="border-bottom: 1px dashed #cbd5e1; width: 80%; margin: 0 auto 4px auto;"></div></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc;">NOMBRE</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc;">CARGO</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Coordinador de Carrera</td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Bienestar Institucional</td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center; font-weight: 500;">Coordinador Académico</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; font-weight: bold; background-color: #f8fafc;">FECHA</td>
+                    <td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td><td style="border: 1px solid #000000; padding: 6px 8px; text-align: center;"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+</div>

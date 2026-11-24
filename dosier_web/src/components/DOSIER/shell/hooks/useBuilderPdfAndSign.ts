@@ -82,6 +82,27 @@ export const useBuilderPdfAndSign = ({
     const isPea = templateCode === 'PEA_OFICIAL';
 
     const getPeaRol = (): { codigo: string; label: string } => {
+        const currentEstado = formData?.estado || formData?.status || localStatus || '';
+        const esEtapaElaboracion = ['Borrador', 'Observado', 'Corregido'].includes(currentEstado);
+
+        // Si el PEA está en estado de formulación/elaboración (Borrador, Observado, Corregido), 
+        // la firma corresponde siempre a la Elaboración del Docente Titular, incluso si el usuario
+        // posee funciones directivas (Coordinador de Carrera o Vicerrector) y tiene carga docente asignada.
+        if (esEtapaElaboracion) {
+            return { codigo: 'Docente', label: 'Docente Elaborador' };
+        }
+
+        // Si el PEA está en fases formales de revisión y aprobación:
+        if (currentEstado === 'EnRevision' && (roles.includes('DOSIER_COORD_CARRERA') || roles.includes('DOSIER_ADMIN'))) {
+            return { codigo: 'Coordinador', label: 'Coordinación de Carrera' };
+        }
+        if (currentEstado === 'RevisadoCoord' && (roles.includes('DOSIER_COORD_ACAD') || roles.includes('DOSIER_ADMIN'))) {
+            return { codigo: 'CoordinadorAcademico', label: 'Coordinación Académica' };
+        }
+        if ((currentEstado === 'RevisadoAcad' || roles.includes('DOSIER_ADMIN')) && roles.includes('DOSIER_VICERRECTOR')) {
+            return { codigo: 'Vicerrector', label: 'Vicerrectorado Académico' };
+        }
+
         if (roles.includes('DOSIER_VICERRECTOR') || roles.includes('DOSIER_ADMIN'))
             return { codigo: 'Vicerrector', label: 'Vicerrectorado Académico' };
         if (roles.includes('DOSIER_COORD_ACAD'))

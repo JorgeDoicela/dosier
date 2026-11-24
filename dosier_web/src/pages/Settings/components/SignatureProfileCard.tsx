@@ -30,7 +30,7 @@ export const SignatureProfileCard: React.FC = () => {
             sig.setMessage({ text: 'Por favor, ingrese su Departamento o Unidad Académica.', type: 'error' });
             return;
         }
-        if (!sig.firmaImagenB64) {
+        if (!sig.firmaImagenB64 && sig.tipoSello !== 'solo_sello') {
             sig.setMessage({ text: 'Por favor, establezca su firma digital.', type: 'error' });
             return;
         }
@@ -136,9 +136,13 @@ export const SignatureProfileCard: React.FC = () => {
                     <div className="space-y-3 pt-1">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xs font-semibold uppercase tracking-wider text-text-main font-mono">
-                                {(sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello) === 'solo_firma'
-                                    ? 'Firma Digital Registrada'
-                                    : 'Sello Institucional Registrado'}
+                                {(() => {
+                                    const tipo = sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello;
+                                    if (tipo === 'solo_sello') return 'Solo Sello Oficial Registrado';
+                                    if (tipo === 'solo_firma') return 'Firma Personal Registrada';
+                                    if (tipo === 'sello_y_firma' || tipo === 'sello_institucional') return 'Firma y Sello Oficial Registrados';
+                                    return 'Sello Criptográfico Completo Registrado';
+                                })()}
                             </h3>
                         </div>
 
@@ -149,7 +153,13 @@ export const SignatureProfileCard: React.FC = () => {
                                 departamento={sig.profile?.departamento || 'Coordinación Académica'}
                                 cedula={userCi}
                                 firmaImagenB64={sig.profile?.firmaImagenB64 || (sig.profile as any)?.firma_imagen_b64 || sig.firmaImagenB64}
-                                tipoPresentacion={(sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello) === 'solo_firma' ? 'solo_firma' : 'completo'}
+                                tipoPresentacion={(() => {
+                                    const tipo = sig.profile?.tipoSello || (sig.profile as any)?.tipo_sello;
+                                    if (tipo === 'solo_sello') return 'solo_sello';
+                                    if (tipo === 'solo_firma') return 'solo_firma';
+                                    if (tipo === 'sello_y_firma' || tipo === 'sello_institucional') return 'sello_y_firma';
+                                    return 'completo';
+                                })()}
                                 firmadoEn={sig.profile?.actualizadoEn ? `${new Date(sig.profile.actualizadoEn).toLocaleDateString('es-EC')} UTC` : undefined}
                             />
                         </div>
@@ -244,61 +254,123 @@ export const SignatureProfileCard: React.FC = () => {
                     {/* Selector de Estilo de Firma */}
                     <div className="space-y-2 pt-2">
                         <label className="text-xs font-bold text-text-main uppercase tracking-wider block">
-                            Estilo de Firma en Documentos
+                            Estilo de Firma y Estampado en Documentos
                         </label>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {/* Opción A: Sello Institucional Completo */}
+                            {/* Opción 1: Firma y Sello Oficial (Los 2 Combinados) */}
                             <div
                                 role="button"
                                 tabIndex={0}
-                                onClick={() => sig.setTipoSello('completo')}
-                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('completo'); } }}
-                                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${sig.tipoSello === 'completo'
+                                onClick={() => sig.setTipoSello('sello_y_firma')}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('sello_y_firma'); } }}
+                                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${sig.tipoSello === 'sello_y_firma'
                                     ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#0070f3] ring-1 ring-[#0070f3] shadow-xs'
                                     : 'bg-bg-deep border-border-thin hover:border-slate-300 dark:hover:border-zinc-700'
                                     }`}
                             >
-                                <div className="space-y-0.5">
-                                    <span className="text-xs sm:text-sm font-bold text-text-main block">
-                                        Sello Institucional Completo
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs sm:text-sm font-bold text-text-main block">
+                                            Firma y Sello Oficial (Los dos)
+                                        </span>
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'sello_y_firma'
+                                            ? 'bg-[#0070f3] border-[#0070f3] text-white'
+                                            : 'border-border-thin bg-surface text-transparent'
+                                            }`}>
+                                            <Check size={10} strokeWidth={3} />
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-text-dim block leading-relaxed">
+                                        Sello circular oficial del ISTPET con su rúbrica manuscrita superpuesta en el centro.
                                     </span>
-                                    <span className="text-xs text-text-dim block">
-                                        Cabecera azul, metadatos y código QR
-                                    </span>
-                                </div>
-                                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'completo'
-                                    ? 'bg-[#0070f3] border-[#0070f3] text-white'
-                                    : 'border-border-thin bg-surface text-transparent'
-                                    }`}>
-                                    <Check size={12} strokeWidth={3} />
                                 </div>
                             </div>
 
-                            {/* Opción B: Solo Firma Digital */}
+                            {/* Opción 2: Solo Firma Personal */}
                             <div
                                 role="button"
                                 tabIndex={0}
                                 onClick={() => sig.setTipoSello('solo_firma')}
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('solo_firma'); } }}
-                                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${sig.tipoSello === 'solo_firma'
+                                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${sig.tipoSello === 'solo_firma'
                                     ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#0070f3] ring-1 ring-[#0070f3] shadow-xs'
                                     : 'bg-bg-deep border-border-thin hover:border-slate-300 dark:hover:border-zinc-700'
                                     }`}
                             >
-                                <div className="space-y-0.5">
-                                    <span className="text-xs sm:text-sm font-bold text-text-main block">
-                                        Solo Firma Digital
-                                    </span>
-                                    <span className="text-xs text-text-dim block">
-                                        Únicamente el trazo manuscrito
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs sm:text-sm font-bold text-text-main block">
+                                            Solo Firma Personal
+                                        </span>
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'solo_firma'
+                                            ? 'bg-[#0070f3] border-[#0070f3] text-white'
+                                            : 'border-border-thin bg-surface text-transparent'
+                                            }`}>
+                                            <Check size={10} strokeWidth={3} />
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-text-dim block leading-relaxed">
+                                        Únicamente su trazo manuscrito personal o firma escaneada sobre la línea documental.
                                     </span>
                                 </div>
-                                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'solo_firma'
-                                    ? 'bg-[#0070f3] border-[#0070f3] text-white'
-                                    : 'border-border-thin bg-surface text-transparent'
-                                    }`}>
-                                    <Check size={12} strokeWidth={3} />
+                            </div>
+
+                            {/* Opción 3: Solo Sello Oficial Departamental */}
+                            <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => sig.setTipoSello('solo_sello')}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('solo_sello'); } }}
+                                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${sig.tipoSello === 'solo_sello'
+                                    ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#0070f3] ring-1 ring-[#0070f3] shadow-xs'
+                                    : 'bg-bg-deep border-border-thin hover:border-slate-300 dark:hover:border-zinc-700'
+                                    }`}
+                            >
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs sm:text-sm font-bold text-text-main block">
+                                            Solo Sello Oficial
+                                        </span>
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'solo_sello'
+                                            ? 'bg-[#0070f3] border-[#0070f3] text-white'
+                                            : 'border-border-thin bg-surface text-transparent'
+                                            }`}>
+                                            <Check size={10} strokeWidth={3} />
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-text-dim block leading-relaxed">
+                                        Únicamente el sello circular oficial vectorial del ISTPET (sin rúbrica personal).
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Opción 4: Sello Criptográfico Completo QR */}
+                            <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => sig.setTipoSello('completo')}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sig.setTipoSello('completo'); } }}
+                                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${sig.tipoSello === 'completo'
+                                    ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#0070f3] ring-1 ring-[#0070f3] shadow-xs'
+                                    : 'bg-bg-deep border-border-thin hover:border-slate-300 dark:hover:border-zinc-700'
+                                    }`}
+                            >
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs sm:text-sm font-bold text-text-main block">
+                                            Sello Criptográfico QR
+                                        </span>
+                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border ${sig.tipoSello === 'completo'
+                                            ? 'bg-[#0070f3] border-[#0070f3] text-white'
+                                            : 'border-border-thin bg-surface text-transparent'
+                                            }`}>
+                                            <Check size={10} strokeWidth={3} />
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-text-dim block leading-relaxed">
+                                        Bloque institucional con cabecera azul corporativa, metadatos y código QR de auditoría.
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -310,7 +382,12 @@ export const SignatureProfileCard: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 <ShieldCheck size={16} className="text-[#0070f3]" />
                                 <span className="text-xs sm:text-sm font-bold text-text-main uppercase tracking-wider">
-                                    Previsualización en Tiempo Real ({sig.tipoSello === 'solo_firma' ? 'Solo Firma Digital' : 'Sello Institucional Completo'})
+                                    Previsualización en Tiempo Real ({(() => {
+                                        if (sig.tipoSello === 'sello_y_firma') return 'Firma y Sello Oficial Combinados';
+                                        if (sig.tipoSello === 'solo_firma') return 'Solo Firma Personal';
+                                        if (sig.tipoSello === 'solo_sello') return 'Solo Sello Departamental';
+                                        return 'Sello Criptográfico con QR';
+                                    })()})
                                 </span>
                             </div>
                             <button

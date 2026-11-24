@@ -4,6 +4,8 @@ import api from '../api/axios_config';
 //  Tipos
 // ─────────────────────────────────────────────────────────────
 
+export type TipoSelloPresentacion = 'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'sello_institucional' | 'completo';
+
 export interface UserSignatureProfileDto {
     idUsuario?: number;
     id_usuario?: number;
@@ -14,8 +16,8 @@ export interface UserSignatureProfileDto {
     iniciales?: string;
     cargo?: string;
     departamento?: string;
-    tipoSello?: 'completo' | 'solo_firma';
-    tipo_sello?: 'completo' | 'solo_firma';
+    tipoSello?: TipoSelloPresentacion;
+    tipo_sello?: TipoSelloPresentacion;
     actualizadoEn?: string;
     actualizado_en?: string;
 }
@@ -25,7 +27,7 @@ export interface UpdateSignatureProfileDto {
     iniciales?: string;
     cargo?: string;
     departamento?: string;
-    tipoSello?: 'completo' | 'solo_firma';
+    tipoSello?: TipoSelloPresentacion;
 }
 
 export interface SignDocumentDto {
@@ -77,7 +79,15 @@ export interface RevokeSignatureDto {
 export const getSignatureProfile = (): Promise<UserSignatureProfileDto> =>
     api.get('/signatures/profile').then(r => {
         const d = r.data || {};
-        const tipo = d.tipo_sello || d.tipoSello || 'completo';
+        const rawTipo = d.tipo_sello || d.tipoSello;
+        let tipo: TipoSelloPresentacion = 'completo';
+        if (rawTipo === 'solo_sello' || rawTipo === 'sello_sin_firma') {
+            tipo = 'solo_sello';
+        } else if (rawTipo === 'sello_y_firma' || rawTipo === 'sello_institucional' || rawTipo === 'sello_vectorial' || rawTipo === 'sello_oficial') {
+            tipo = 'sello_y_firma';
+        } else if (rawTipo === 'solo_firma') {
+            tipo = 'solo_firma';
+        }
         const img = d.firma_imagen_b64 || d.firmaImagenB64;
         const conf = d.es_configurado ?? d.esConfigurado ?? false;
         return {

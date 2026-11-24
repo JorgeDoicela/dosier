@@ -100,6 +100,8 @@ namespace dosier_api.Controllers
                             {
                                 string estiloSello = "completo";
                                 string? firmaImagenB64 = null;
+                                string? cargoFirmante = null;
+                                string? deptoFirmante = null;
 
                                 var dbFirma = dbCtx?.DocDocumentoFirmas.AsNoTracking().FirstOrDefault(df => df.FirmaCode == firma.FirmaCode);
                                 if (dbFirma != null && !string.IsNullOrEmpty(dbFirma.FirmaMetadata))
@@ -109,6 +111,10 @@ namespace dosier_api.Controllers
                                         using var mDoc = System.Text.Json.JsonDocument.Parse(dbFirma.FirmaMetadata);
                                         if (mDoc.RootElement.TryGetProperty("tipo_sello", out var ts))
                                             estiloSello = ts.GetString() ?? estiloSello;
+                                        if (mDoc.RootElement.TryGetProperty("cargo", out var cg))
+                                            cargoFirmante = cg.GetString();
+                                        if (mDoc.RootElement.TryGetProperty("departamento", out var dp))
+                                            deptoFirmante = dp.GetString();
                                     }
                                     catch { }
                                 }
@@ -133,16 +139,20 @@ namespace dosier_api.Controllers
                                         {
                                             estiloSello = pDto.TipoSello ?? estiloSello;
                                         }
+                                        cargoFirmante ??= pDto.Cargo;
+                                        deptoFirmante ??= pDto.Departamento;
                                     }
                                 }
+
+                                cargoFirmante ??= firma.FirmanteRol;
 
                                 var verificationUrl = appUrlService.BuildFrontendUrl($"/verificacion/{firma.FirmaCode}");
                                 currentBytes = stamper.StampSignatureBlock(
                                     pdfBytes: currentBytes,
                                     nombreFirmante: firma.FirmanteNombre,
                                     cedula: null,
-                                    cargo: firma.FirmanteRol,
-                                    departamento: null,
+                                    cargo: cargoFirmante,
+                                    departamento: deptoFirmante,
                                     rolEnDocumento: firma.FirmanteRol,
                                     firmaCode: firma.FirmaCode,
                                     firmaImagenB64: firmaImagenB64,

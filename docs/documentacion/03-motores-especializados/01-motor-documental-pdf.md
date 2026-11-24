@@ -7,12 +7,15 @@ El motor documental de DOSIER (`DocumentEngine`) es el subsistema de infraestruc
 Implementa la interfaz `IDocumentEngine` (`backend/dosier_infrastructure/Common/Documents/DocumentEngine.cs`) y orquesta la producción de los instrumentos oficiales del Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET):
 
 1. **Programa de Estudio de la Asignatura (PEA - `PEA_OFICIAL`):** Formato institucional reglamentario en sus 11 bloques normados (datos informativos, objetivos, prerrequisitos, RDA de carrera y asignatura, unidades temáticas, metodología, actividades prácticas APE, adaptaciones curriculares NEE, sistema de evaluación, bibliografía normalizada APA y firmas de responsabilidad).
-2. **Guía de Práctica de Laboratorio y Taller (Guías APE - `GUIA_PRACTICA_LAB`):** Formato microcurricular para diseño, ejecución experimental, instrumental y evaluación de actividades prácticas de aplicación y experimentación de los aprendizajes.
-3. **Acta de Revisión y Validación Curricular (`ACTA_APROBACION_PEA`):** Acta oficial colegiada de verificación técnico-normativa, consistencia horaria y aprobación definitiva suscrita por Docente, Coordinación de Carrera y Vicerrectorado Académico.
-4. **Rúbrica Institucional de Evaluación por Competencias (`RUBRICA_EVALUACION`):** Matriz estandarizada de criterios y niveles de desempeño para evaluación diagnóstica, formativa y sumativa articulada a los RDA.
-5. **Plan de Acompañamiento y Tutoría Académica (`PLAN_TUTORIA_ACADEMICA`):** Instrumento pedagógico de refuerzo curricular, cronograma de tutorías y seguimiento de acuerdos con estudiantes.
-6. **Informe Final de Cumplimiento Curricular de Asignatura (`INFORME_CUMPLIMIENTO_PEA`):** Informe de fin de ciclo académico sobre avance del sílabo, porcentaje de contenidos impartidos, prácticas ejecutadas y evidencias CACES.
-7. **Plantillas Institucionales Dinámicas:** Capacidad de alta en caliente desde la consola de administración (`POST /api/admin/templates`) con auto-generación de bloques por defecto según la categoría de negocio.
+2. **Formato Plan Analítico 2026 (`PLAN_ANALITICO`):** Formato institucional oficial del Plan Analítico de la Asignatura 2026 para carreras del ISTPET, estructurado en datos informativos, objetivo general, resultados de aprendizaje y matriz semanal de metodología, contenidos y horas.
+3. **Formato Seguimiento de Tutorías Académicas 2026 (`SEGUIMIENTO_TUTORIAS`):** Formato institucional oficial para el registro, acompañamiento y seguimiento de tutorías académicas con orientación horizontal (*Landscape A4*).
+4. **Informe de Acompañamiento Académico de Carrera (`INFORME_ACOMPANAMIENTO_CARRERA`):** Formato oficial para el informe de acompañamiento académico de carrera de la Unidad Académica (nómina de tutores, aportes docentes, gestión y conclusiones).
+5. **Guía de Práctica de Laboratorio y Taller (Guías APE - `GUIA_PRACTICA_LAB`):** Formato microcurricular para diseño, ejecución experimental, instrumental y evaluación de actividades prácticas de aplicación y experimentación de los aprendizajes.
+6. **Acta de Revisión y Validación Curricular (`ACTA_APROBACION_PEA`):** Acta oficial colegiada de verificación técnico-normativa, consistencia horaria y aprobación definitiva suscrita por Docente, Coordinación de Carrera y Vicerrectorado Académico.
+7. **Rúbrica Institucional de Evaluación por Competencias (`RUBRICA_EVALUACION`):** Matriz estandarizada de criterios y niveles de desempeño para evaluación diagnóstica, formativa y sumativa articulada a los RDA.
+8. **Plan de Acompañamiento y Tutoría Académica (`PLAN_TUTORIA_ACADEMICA`):** Instrumento pedagógico de refuerzo curricular, cronograma de tutorías y seguimiento de acuerdos con estudiantes.
+9. **Informe Final de Cumplimiento Curricular de Asignatura (`INFORME_CUMPLIMIENTO_PEA`):** Informe de fin de ciclo académico sobre avance del sílabo, porcentaje de contenidos impartidos, prácticas ejecutadas y evidencias CACES.
+10. **Plantillas Institucionales Dinámicas:** Capacidad de alta en caliente desde la consola de administración (`POST /api/admin/templates`) con auto-generación de bloques por defecto según la categoría de negocio.
 
 ---
 

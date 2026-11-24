@@ -9,7 +9,7 @@ export interface DocumentStampPreviewProps {
     firmaImagenB64?: string;
     firmaCode?: string;
     firmadoEn?: string;
-    tipoPresentacion?: 'completo' | 'solo_firma';
+    tipoPresentacion?: 'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'sello_institucional' | 'completo';
     className?: string;
 }
 
@@ -24,6 +24,61 @@ export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
     tipoPresentacion = 'completo',
     className = '',
 }) => {
+    // Resolver leyendas departamentales para el sello institucional oficial según rol y carrera
+    const resolveDepartmentLabels = (c?: string, d?: string) => {
+        const combined = `${c || ''} ${d || ''}`.toLowerCase();
+
+        // 1. Vicerrectorado (soporta vicerrector, vicerector, vicerrectorado, aprobado)
+        if (combined.includes('vicerrector') || combined.includes('vicerector') || combined.includes('aprobado') || combined.includes('dosier_vicerrector')) {
+            return { central: 'VICERRECTORADO', sub: null };
+        }
+
+        // 2. Coordinación Académica
+        if (combined.includes('acad') || combined.includes('coordinador academico') || combined.includes('coordinación académica') || combined.includes('comisionacademica')) {
+            return { central: 'COORDINACIÓN ACADÉMICA', sub: 'CARRERAS PRESENCIALES' };
+        }
+
+        // 3. Catálogo Oficial de Carreras del ISTPET
+        if (combined.includes('software')) return { central: 'DESARROLLO DE SOFTWARE', sub: null };
+        if (combined.includes('redes') || combined.includes('telecomunicaciones')) return { central: 'REDES Y', sub: 'TELECOMUNICACIONES' };
+        if (combined.includes('gastronomia') || combined.includes('gastronomía')) return { central: 'GASTRONOMÍA', sub: null };
+        if (combined.includes('diseño') || combined.includes('diseno')) return { central: 'DISEÑO GRÁFICO', sub: null };
+        if (combined.includes('mecanica') || combined.includes('mecánica') || combined.includes('automotriz')) return { central: 'MECÁNICA AUTOMOTRIZ', sub: null };
+        if (combined.includes('contabilidad') || combined.includes('tributaria')) return { central: 'CONTABILIDAD Y', sub: 'ASESORÍA TRIBUTARIA' };
+        if (combined.includes('talento humano') || combined.includes('talento_humano')) return { central: 'ADMINISTRACIÓN DE', sub: 'TALENTO HUMANO' };
+        if (combined.includes('marketing') || combined.includes('comercio')) return { central: 'MARKETING DIGITAL Y', sub: 'COMERCIO ELECTRÓNICO' };
+        if (combined.includes('educacion inicial') || combined.includes('educación inicial') || combined.includes('inicial')) return { central: 'EDUCACIÓN INICIAL', sub: null };
+        if (combined.includes('educacion basica') || combined.includes('educación básica') || combined.includes('basica')) return { central: 'EDUCACIÓN BÁSICA', sub: null };
+        if (combined.includes('educacion inclusiva') || combined.includes('educación inclusiva') || combined.includes('inclusiva')) return { central: 'EDUCACIÓN INCLUSIVA', sub: null };
+        if (combined.includes('entrenamiento') || combined.includes('deporte') || combined.includes('deportiv')) return { central: 'ENTRENAMIENTO', sub: 'DEPORTIVO' };
+        if (combined.includes('electronica') || combined.includes('electrónica')) return { central: 'ELECTRÓNICA', sub: null };
+
+        const cleanCareer = (raw: string) => {
+            let u = raw.trim().toUpperCase();
+            const p1 = 'TECNOLOGÍA SUPERIOR EN ';
+            const p2 = 'TECNOLOGIA SUPERIOR EN ';
+            const p3 = 'CARRERA DE ';
+            if (u.startsWith(p1)) u = u.slice(p1.length).trim();
+            else if (u.startsWith(p2)) u = u.slice(p2.length).trim();
+            else if (u.startsWith(p3)) u = u.slice(p3.length).trim();
+            return u;
+        };
+
+        // 4. Coordinación de Carrera genérica o con departamento
+        if (combined.includes('carrera') || combined.includes('coordinador')) {
+            if (d && d.trim().toUpperCase() !== 'ISTPET') {
+                return { central: cleanCareer(d), sub: null };
+            }
+            return { central: 'COORDINACIÓN DE CARRERA', sub: null };
+        }
+
+        // 5. Docentes o Área Académica
+        if (d && d.trim().toUpperCase() !== 'ISTPET') {
+            return { central: cleanCareer(d), sub: null };
+        }
+
+        return { central: 'DOCENCIA SUPERIOR', sub: null };
+    };
     // Formatear nombre a 2 líneas si es largo
     const formatMultiLineName = (name: string) => {
         if (!name) return 'Nombre del Firmante';
@@ -44,6 +99,119 @@ export const DocumentStampPreview: React.FC<DocumentStampPreviewProps> = ({
     const pad = (n: number) => n.toString().padStart(2, '0');
     const defaultDate = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())} UTC`;
     const formattedDate = firmadoEn || defaultDate;
+
+    // ── MODO 'SELLO OFICIAL' (SOLO SELLO O SELLO Y FIRMA COMBINADOS) ────
+    if (tipoPresentacion === 'solo_sello' || tipoPresentacion === 'sello_y_firma' || tipoPresentacion === 'sello_institucional') {
+        const { central, sub } = resolveDepartmentLabels(cargo, departamento);
+        const incluirFirma = tipoPresentacion !== 'solo_sello';
+        return (
+            <div className={`doc-stamp-preview-container ${className}`}>
+                <div className="doc-stamp-display-wrapper">
+                    <div className="dosier-sello-institucional-stamp" role="region" aria-label="Sello Institucional Oficial">
+                        <svg 
+                            viewBox="0 0 200 200" 
+                            className="sello-circular-svg" 
+                            xmlns="http://www.w3.org/2000/svg"
+                            style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
+                        >
+                            <defs>
+                                {/* Arco superior centrado con radio calibrado (r=70) para no invadir la banda central */}
+                                <path id="sello-arc-top" d="M 30,100 A 70,70 0 1,1 170,100" fill="none" />
+                                {/* Arco inferior equilibrado con margen amplio */}
+                                <path id="sello-arc-bot" d="M 35,100 A 65,65 0 0,0 165,100" fill="none" />
+                            </defs>
+
+                            {/* Doble anillo exterior con líneas finas y elegantes estilo sello oficial */}
+                            <circle cx="100" cy="100" r="94" stroke="#0a3264" strokeWidth="2.2" fill="#ffffff" />
+                            <circle cx="100" cy="100" r="87.5" stroke="#0a3264" strokeWidth="1.1" fill="none" />
+
+                            {sub ? (
+                                <>
+                                    <line x1="16" y1="78" x2="184" y2="78" stroke="#0a3264" strokeWidth="1.2" />
+                                    <line x1="16" y1="122" x2="184" y2="122" stroke="#0a3264" strokeWidth="1.2" />
+                                </>
+                            ) : (
+                                <>
+                                    <line x1="15" y1="82" x2="185" y2="82" stroke="#0a3264" strokeWidth="1.2" />
+                                    <line x1="15" y1="118" x2="185" y2="118" stroke="#0a3264" strokeWidth="1.2" />
+                                </>
+                            )}
+
+                            {/* TECNOLÓGICO TRAVERSARI limpio y desahogado */}
+                            <text fill="#0a3264" fontWeight="900" fontSize="10.2" letterSpacing="0.4px">
+                                <textPath href="#sello-arc-top" startOffset="50%" textAnchor="middle">
+                                    TECNOLÓGICO TRAVERSARI
+                                </textPath>
+                            </text>
+
+                            {/* ISTPET limpio y centrado */}
+                            <text fill="#0a3264" fontWeight="900" fontSize="13" letterSpacing="2.2px">
+                                <textPath href="#sello-arc-bot" startOffset="50%" textAnchor="middle">
+                                    ISTPET
+                                </textPath>
+                            </text>
+
+                            {sub ? (
+                                <>
+                                    <text 
+                                        x="100" 
+                                        y="95" 
+                                        textAnchor="middle" 
+                                        fill="#0a3264" 
+                                        fontWeight="900" 
+                                        fontSize={central.length > 20 ? '9.5' : '10.8'} 
+                                        letterSpacing="0.3px"
+                                    >
+                                        {central}
+                                    </text>
+                                    <text 
+                                        x="100" 
+                                        y="112" 
+                                        textAnchor="middle" 
+                                        fill="#0a3264" 
+                                        fontWeight="900" 
+                                        fontSize={sub.length > 20 ? '7.5' : '8.5'} 
+                                        letterSpacing="0.5px"
+                                    >
+                                        {sub}
+                                    </text>
+                                </>
+                            ) : (
+                                <text 
+                                    x="100" 
+                                    y="103.5" 
+                                    textAnchor="middle" 
+                                    fill="#0a3264" 
+                                    fontWeight="900" 
+                                    fontSize={central.length > 22 ? '9.8' : central.length > 15 ? '10.8' : '13.2'} 
+                                    letterSpacing={central.length > 20 ? '0.2px' : '0.5px'}
+                                >
+                                    {central}
+                                </text>
+                            )}
+
+                            {incluirFirma && firmaImagenB64 && (
+                                <image
+                                    href={firmaImagenB64}
+                                    x="20"
+                                    y="58"
+                                    width="160"
+                                    height="84"
+                                    preserveAspectRatio="xMidYMid meet"
+                                    style={{ mixBlendMode: 'multiply' }}
+                                />
+                            )}
+                            {incluirFirma && !firmaImagenB64 && (
+                                <text x="100" y="145" textAnchor="middle" fill="#94a3b8" fontSize="8" fontStyle="italic">
+                                    (Sin firma registrada)
+                                </text>
+                            )}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // ── MODO 'SOLO FIRMA' (ÚNICAMENTE EL TRAZO MANUSCRITO) ────────────
     if (tipoPresentacion === 'solo_firma') {

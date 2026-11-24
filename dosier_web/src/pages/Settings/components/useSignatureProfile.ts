@@ -17,7 +17,7 @@ export interface SignatureProfileState {
     isEditing: boolean;
     cargo: string;
     departamento: string;
-    tipoSello: 'completo' | 'solo_firma';
+    tipoSello: 'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'completo';
     firmaImagenB64: string | undefined;
     firmaAutoB64: string | undefined;
     firmaUploadB64: string | undefined;
@@ -28,7 +28,7 @@ export interface SignatureProfileState {
     setIsEditing: (v: boolean) => void;
     setCargo: (v: string) => void;
     setDepartamento: (v: string) => void;
-    setTipoSello: (v: 'completo' | 'solo_firma') => void;
+    setTipoSello: (v: 'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'completo') => void;
     setAutoText: (v: string) => void;
     setSelectedFont: (v: string) => void;
     setMessage: (v: { text: string; type: 'success' | 'error' } | null) => void;
@@ -52,7 +52,7 @@ export function useSignatureProfile(): SignatureProfileState {
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
     const [cargo, setCargo] = useState('');
     const [departamento, setDepartamento] = useState('');
-    const [tipoSello, setTipoSello] = useState<'completo' | 'solo_firma'>('completo');
+    const [tipoSello, setTipoSello] = useState<'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'completo'>('sello_y_firma');
     const [firmaImagenB64, setFirmaImagenB64] = useState<string | undefined>(undefined);
     const [firmaAutoB64, setFirmaAutoB64] = useState<string | undefined>(undefined);
     const [firmaUploadB64, setFirmaUploadB64] = useState<string | undefined>(undefined);
@@ -60,6 +60,13 @@ export function useSignatureProfile(): SignatureProfileState {
     const [activeMode, setActiveMode] = useState<SignatureMode>('auto');
     const [autoText, setAutoText] = useState('');
     const [selectedFont, setSelectedFont] = useState('Caveat');
+
+    const resolveTipoSello = (raw?: string): 'solo_firma' | 'solo_sello' | 'sello_y_firma' | 'completo' => {
+        if (raw === 'solo_sello' || raw === 'sello_sin_firma') return 'solo_sello';
+        if (raw === 'sello_y_firma' || raw === 'sello_institucional' || raw === 'sello_vectorial' || raw === 'sello_oficial') return 'sello_y_firma';
+        if (raw === 'solo_firma') return 'solo_firma';
+        return 'completo';
+    };
 
     useEffect(() => {
         let active = true;
@@ -71,8 +78,7 @@ export function useSignatureProfile(): SignatureProfileState {
                 setProfile(data);
                 setCargo(data.cargo || '');
                 setDepartamento(data.departamento || '');
-                const rawTipo = data.tipoSello || data.tipo_sello;
-                setTipoSello(rawTipo === 'solo_firma' ? 'solo_firma' : 'completo');
+                setTipoSello(resolveTipoSello(data.tipoSello || data.tipo_sello));
                 setFirmaImagenB64(data.firmaImagenB64 || data.firma_imagen_b64);
                 setFirmaUploadB64(data.firmaImagenB64 || data.firma_imagen_b64);
                 setFirmaDrawB64(data.firmaImagenB64 || data.firma_imagen_b64);
@@ -105,8 +111,7 @@ export function useSignatureProfile(): SignatureProfileState {
         setMessage(null);
         setCargo(profile?.cargo || '');
         setDepartamento(profile?.departamento || '');
-        const rawTipo = profile?.tipoSello || profile?.tipo_sello;
-        setTipoSello(rawTipo === 'solo_firma' ? 'solo_firma' : 'completo');
+        setTipoSello(resolveTipoSello(profile?.tipoSello || profile?.tipo_sello));
         setFirmaImagenB64(profile?.firmaImagenB64 || profile?.firma_imagen_b64);
         setFirmaUploadB64(profile?.firmaImagenB64 || profile?.firma_imagen_b64);
         setFirmaDrawB64(profile?.firmaImagenB64 || profile?.firma_imagen_b64);

@@ -721,6 +721,224 @@ namespace dosier_tests.Curriculum
             );
             Assert.NotNull(pdfSoloFirma);
             Assert.True(pdfSoloFirma.Length > basePdfBytes.Length);
+
+            // 3. Estampar sello circular/cuadrado (aspect ratio ~ 1:1, ej: sello de caucho)
+            string png1x1B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+            var pdfSelloCircular = stamper.StampSignatureBlock(
+                pdfBytes: basePdfBytes,
+                nombreFirmante: "Carlos Valencia",
+                cedula: "1720477031",
+                cargo: "Profesor",
+                departamento: "Academia",
+                rolEnDocumento: "Elaborador",
+                firmaCode: "DFRM-TEST-SELLO-CIRCULAR",
+                firmaImagenB64: png1x1B64,
+                verificationUrl: "https://dosier.istpet.edu.ec/verificacion/DFRM-TEST-SELLO-CIRCULAR",
+                firmadoEn: DateTime.UtcNow,
+                estiloSello: "solo_firma"
+            );
+            Assert.NotNull(pdfSelloCircular);
+            Assert.True(pdfSelloCircular.Length > basePdfBytes.Length);
+
+            // 4. Estampar sello institucional oficial vectorial con rúbrica
+            var pdfSelloInstitucional = stamper.StampSignatureBlock(
+                pdfBytes: basePdfBytes,
+                nombreFirmante: "Msc. Christian Castro",
+                cedula: "1720004793",
+                cargo: "Coordinador Academico",
+                departamento: "Academia",
+                rolEnDocumento: "Revisado Academico",
+                firmaCode: "DFRM-TEST-SELLO-INST",
+                firmaImagenB64: png1x1B64,
+                verificationUrl: "https://dosier.istpet.edu.ec/verificacion/DFRM-TEST-SELLO-INST",
+                firmadoEn: DateTime.UtcNow,
+                estiloSello: "sello_institucional"
+            );
+            Assert.NotNull(pdfSelloInstitucional);
+            Assert.True(pdfSelloInstitucional.Length > basePdfBytes.Length);
+
+            // 5. Estampar solo el sello oficial sin firma personal (solo_sello)
+            var pdfSoloSello = stamper.StampSignatureBlock(
+                pdfBytes: basePdfBytes,
+                nombreFirmante: "Msc. Wilfrido Trujillo",
+                cedula: "1709890626",
+                cargo: "Coordinador de Carrera",
+                departamento: "Desarrollo de Software",
+                rolEnDocumento: "RevisadoCoord",
+                firmaCode: "DFRM-TEST-SOLO-SELLO",
+                firmaImagenB64: null,
+                verificationUrl: "https://dosier.istpet.edu.ec/verificacion/DFRM-TEST-SOLO-SELLO",
+                firmadoEn: DateTime.UtcNow,
+                estiloSello: "solo_sello"
+            );
+            Assert.NotNull(pdfSoloSello);
+            Assert.True(pdfSoloSello.Length > basePdfBytes.Length);
+
+            // 6. Estampar firma y sello juntos (sello_y_firma)
+            var pdfSelloYFirma = stamper.StampSignatureBlock(
+                pdfBytes: basePdfBytes,
+                nombreFirmante: "Msc. Freddy Baño",
+                cedula: "1802707511",
+                cargo: "Vicerrector Académico",
+                departamento: "Vicerrectorado",
+                rolEnDocumento: "Aprobado",
+                firmaCode: "DFRM-TEST-SELLO-Y-FIRMA",
+                firmaImagenB64: png1x1B64,
+                verificationUrl: "https://dosier.istpet.edu.ec/verificacion/DFRM-TEST-SELLO-Y-FIRMA",
+                firmadoEn: DateTime.UtcNow,
+                estiloSello: "sello_y_firma"
+            );
+            Assert.NotNull(pdfSelloYFirma);
+            Assert.True(pdfSelloYFirma.Length > basePdfBytes.Length);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "FirmaCurricular")]
+        public void InstitutionalStampGenerator_ResolveDepartmentLabels_AsignaTextosOficialesCorrectos()
+        {
+            // Vicerrectorado (con doble r o una r)
+            var (vic1, subVic1) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Aprobado", "Vicerrector Académico", "Vicerrectorado");
+            Assert.Equal("VICERRECTORADO", vic1);
+            Assert.Null(subVic1);
+
+            var (vic2, subVic2) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Aprobador", "Vicerector", "Vicerectorado");
+            Assert.Equal("VICERRECTORADO", vic2);
+            Assert.Null(subVic2);
+
+            // Coordinación Académica
+            var (acad, subAcad) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Revisado", "Coordinador Academico", "Academia");
+            Assert.Equal("COORDINACIÓN ACADÉMICA", acad);
+            Assert.Equal("CARRERAS PRESENCIALES", subAcad);
+
+            // Carreras Oficiales
+            var (soft, subSoft) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Revisado", "Coordinador de Carrera", "Desarrollo de Software");
+            Assert.Equal("DESARROLLO DE SOFTWARE", soft);
+            Assert.Null(subSoft);
+
+            var (redes, subRedes) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Revisado", "Coordinador", "Redes y Telecomunicaciones");
+            Assert.Equal("REDES Y", redes);
+            Assert.Equal("TELECOMUNICACIONES", subRedes);
+
+            var (gastro, subGastro) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Docente", "Docente Titular", "Gastronomía");
+            Assert.Equal("GASTRONOMÍA", gastro);
+            Assert.Null(subGastro);
+
+            // Docencia General por Defecto
+            var (doc, subDoc) = dosier_infrastructure.Signatures.InstitutionalStampGenerator.ResolveDepartmentLabels("Elaborado", "Docente Titular", "ISTPET");
+            Assert.Equal("DOCENCIA SUPERIOR", doc);
+            Assert.Null(subDoc);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "FirmaCurricular")]
+        public void SignatureStamper_ResolvePeaColumnIndex_MapeaColumnasCorrectasPorRol()
+        {
+            var stamperType = typeof(dosier_infrastructure.Signatures.SignatureStamper);
+            var method = stamperType.GetMethod("ResolvePeaColumnIndex", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Assert.NotNull(method);
+
+            // Columna 1: Elaborado (Docente)
+            Assert.Equal(1, (int)method!.Invoke(null, new object?[] { "Docente", "Docente Titular", null })!);
+            Assert.Equal(1, (int)method!.Invoke(null, new object?[] { "Elaborado por", "Profesor", null })!);
+
+            // Columna 2: Revisado por Coordinador de Carrera
+            Assert.Equal(2, (int)method!.Invoke(null, new object?[] { "RevisadoCoord", "Coordinador de Carrera", null })!);
+            Assert.Equal(2, (int)method!.Invoke(null, new object?[] { "Revisado Carrera", "Coordinador", null })!);
+
+            // Columna 3: Revisado por Coordinación Académica
+            Assert.Equal(3, (int)method!.Invoke(null, new object?[] { "RevisadoAcad", "Coordinador Académico", null })!);
+            Assert.Equal(3, (int)method!.Invoke(null, new object?[] { "Revisado 2", "Academia", null })!);
+
+            // Columna 4: Aprobado por Vicerrectorado
+            Assert.Equal(4, (int)method!.Invoke(null, new object?[] { "Aprobado", "Vicerrector", null })!);
+            Assert.Equal(4, (int)method!.Invoke(null, new object?[] { "Aprobador", "Vicerector", null })!);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "FirmaCurricular")]
+        public async Task PeaFirma_CoordinadorConCargaDocente_FirmaSuPropioPeaEnBorradorComoDocente()
+        {
+            var dbName = nameof(PeaFirma_CoordinadorConCargaDocente_FirmaSuPropioPeaEnBorradorComoDocente);
+            await using var context = CreateInMemoryContext(dbName);
+            var config = CreateMockConfiguration();
+
+            // Usuario que es Coordinador de Carrera pero también docente titular de la cátedra
+            var coordDocente = new User
+            {
+                IdUsuario = 888,
+                Nombre = "Msc. Wilfrido Trujillo",
+                IdSigafi = "DOC-COORD-01",
+                Contrasenia = BCrypt.Net.BCrypt.HashPassword("ClaveSegura123!", 11),
+                Activo = true
+            };
+            context.Users.Add(coordDocente);
+            // Solo tiene asignado el rol DOSIER_COORD_CARRERA en su perfil directivo
+            AssignRole(context, 888, "DOSIER_COORD_CARRERA");
+
+            var peaPropio = new DocPea
+            {
+                IdPea = 88,
+                Uuid = Guid.NewGuid().ToString(),
+                IdDocenteElaborador = "DOC-COORD-01", // Es el docente titular asignado
+                TotalHorasAsignatura = 160,
+                HorasContactoDocente = 64,
+                HorasPracticoExperimental = 32,
+                HorasAutonomo = 64,
+                Estado = "Borrador", // Está elaborando su propia materia
+                Activo = true
+            };
+            context.DocPeas.Add(peaPropio);
+            await context.SaveChangesAsync();
+
+            var service = CreatePeaService(context, config);
+
+            // Incluso si el frontend o cliente enviase RolFirmante = "Coordinador" (por su rol directivo),
+            // el sistema auto-resuelve que en estado Borrador está firmando la elaboración como Docente Titular
+            var dto = new FirmarPeaDto
+            {
+                Password = "ClaveSegura123!",
+                RolFirmante = "Coordinador",
+                TipoFirma = "DOSIER"
+            };
+
+            var resultado = await service.FirmarPeaAsync(peaPropio.IdPea, coordDocente.IdUsuario, dto, "127.0.0.1", "TestAgent");
+
+            Assert.True(resultado.Exito);
+            Assert.Equal("EnRevision", resultado.EstadoNuevo);
+            Assert.StartsWith("DFRM-", resultado.FirmaCode);
+
+            var peaActualizado = await context.DocPeas.FindAsync(88);
+            Assert.Equal("EnRevision", peaActualizado!.Estado);
+            Assert.Equal(resultado.FirmaCode, peaActualizado.FirmaElaboradoDocente);
+            Assert.NotNull(peaActualizado.FechaElaborado);
+        }
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        [Trait("Feature", "FirmaCurricular")]
+        public void InstitutionalStampGenerator_CreateInstitutionalStamp_GeneraObjetoValido()
+        {
+            using var ms = new MemoryStream();
+            using var writer = new iText.Kernel.Pdf.PdfWriter(ms);
+            using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(writer);
+            var page = pdfDoc.AddNewPage();
+
+            var stampImage = dosier_infrastructure.Signatures.InstitutionalStampGenerator.CreateInstitutionalStamp(
+                pdfDocument: pdfDoc,
+                textoSuperior: "TECNOLÓGICO TRAVERSARI",
+                textoCentral: "COORDINACIÓN ACADÉMICA",
+                textoCentralSub: "CARRERAS PRESENCIALES",
+                textoInferior: "ISTPET",
+                firmaPersonalData: null,
+                fontBold: null,
+                diameter: 84.0f
+            );
+
+            Assert.NotNull(stampImage);
+            Assert.True(stampImage.GetXObject() is iText.Kernel.Pdf.Xobject.PdfFormXObject);
         }
     }
 }

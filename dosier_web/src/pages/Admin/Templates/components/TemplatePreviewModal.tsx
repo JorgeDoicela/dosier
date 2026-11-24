@@ -72,7 +72,17 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
             setPdfUrl(objectUrl);
         } catch (err: any) {
             console.error('Error al generar previsualización del PDF:', err);
-            addToast('Error de Previsualización', 'No se pudo generar la vista previa del documento oficial.', 'error');
+            let errorMessage = 'No se pudo generar la vista previa del documento oficial.';
+            if (err.response?.data instanceof Blob) {
+                try {
+                    const text = await err.response.data.text();
+                    const parsed = JSON.parse(text);
+                    if (parsed?.error) errorMessage = parsed.error;
+                } catch { }
+            } else if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            }
+            addToast('Error de Previsualización', errorMessage, 'error');
         } finally {
             setIsLoadingPdf(false);
         }

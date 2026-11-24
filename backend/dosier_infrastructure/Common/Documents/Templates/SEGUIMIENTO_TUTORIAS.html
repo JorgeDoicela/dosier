@@ -1,0 +1,414 @@
+<!-- DOSIER_SECTIONS_JSON: W3siaWQiOiJibG9jay10dXRvcmlhcy1oZWFkZXIiLCJ0eXBlIjoidHV0b3JpYXNfaGVhZGVyX3NlY3Rpb24iLCJ0aXRsZSI6IjEuIENBQkVDRVJBIFkgREFUT1MgREVMIERPQ0VOVEUiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7Imluc3RpdHV0aW9uTmFtZSI6IklOU1RJVFVUTyBTVVBFUklPUiBURUNOT0zDk0dJQ08gTUFZT1IgUEVEUk8gVFJBVkVSU0FSSSIsImRvY3VtZW50VGl0bGUiOiJTRUdVSU1JRU5UTyBERSBUVVRPUsONQVMgQUNBRMOJTUlDQVMiLCJwZXJpb2RvQWNhZGVtaWNvIjoiUEVSSU9ETyBBQ0FERU1JQ08gQUJSSUwgLSBTRVBUSUVNQlJFIDIwMjYiLCJkb2NlbnRlTm9tYnJlIjoiIiwiaG9yYXJpb1R1dG9yaWEiOiIiLCJoZWFkZXJDb2xvciI6IiMxZTJhNGEifX0seyJpZCI6ImJsb2NrLXR1dG9yaWFzLW1hdHJpeCIsInR5cGUiOiJ0dXRvcmlhc19tYXRyaXhfc2VjdGlvbiIsInRpdGxlIjoiMi4gTUFUUklaIERFIFJFR0lTVFJPIERFIFRVVE9Sw41BUyIsImlzQWN0aXZlIjp0cnVlLCJjb25maWciOnsidGl0bGUiOiJSRUdJU1RSTyBERSBBQ09NUEHDkUFNSUVOVE8gWSBUVVRPUsONQVMgQUNBRMOJTUlDQVMiLCJoZWFkZXJDb2xvciI6IiMxZTJhNGEiLCJ0dXRvcmlhUm93cyI6W3siaWQiOiJ0dXRvcmlhLXJvdy0xIiwibnVtIjoxLCJmZWNoYSI6IiIsInNlbWFuYSI6IiIsImVzdHVkaWFudGVzQ29udm9jYWRvcyI6IiIsIm5pdmVsIjoiIiwiYXNpZ25hdHVyYSI6IiIsImNhcnJlcmEiOiIiLCJtb2RhbGlkYWRUdXRvcmlhIjoiIiwidGlwb1R1dG9yaWEiOiIiLCJyYXpvblR1dG9yaWEiOiIiLCJvYnNlcnZhY2lvbmVzIjoiIiwiZm9ybWFDb252b2NhdG9yaWEiOiIifSx7ImlkIjoidHV0b3JpYS1yb3ctMiIsIm51bSI6MiwiZmVjaGEiOiIiLCJzZW1hbmEiOiIiLCJlc3R1ZGlhbnRlc0NvbnZvY2Fkb3MiOiIiLCJuaXZlbCI6IiIsImFzaWduYXR1cmEiOiIiLCJjYXJyZXJhIjoiIiwibW9kYWxpZGFkVHV0b3JpYSI6IiIsInRpcG9UdXRvcmlhIjoiIiwicmF6b25UdXRvcmlhIjoiIiwib2JzZXJ2YWNpb25lcyI6IiIsImZvcm1hQ29udm9jYXRvcmlhIjoiIn0seyJpZCI6InR1dG9yaWEtcm93LTMiLCJudW0iOjMsImZlY2hhIjoiIiwic2VtYW5hIjoiIiwiZXN0dWRpYW50ZXNDb252b2NhZG9zIjoiIiwibml2ZWwiOiIiLCJhc2lnbmF0dXJhIjoiIiwiY2FycmVyYSI6IiIsIm1vZGFsaWRhZFR1dG9yaWEiOiIiLCJ0aXBvVHV0b3JpYSI6IiIsInJhem9uVHV0b3JpYSI6IiIsIm9ic2VydmFjaW9uZXMiOiIiLCJmb3JtYUNvbnZvY2F0b3JpYSI6IiJ9LHsiaWQiOiJ0dXRvcmlhLXJvdy00IiwibnVtIjo0LCJmZWNoYSI6IiIsInNlbWFuYSI6IiIsImVzdHVkaWFudGVzQ29udm9jYWRvcyI6IiIsIm5pdmVsIjoiIiwiYXNpZ25hdHVyYSI6IiIsImNhcnJlcmEiOiIiLCJtb2RhbGlkYWRUdXRvcmlhIjoiIiwidGlwb1R1dG9yaWEiOiIiLCJyYXpvblR1dG9yaWEiOiIiLCJvYnNlcnZhY2lvbmVzIjoiIiwiZm9ybWFDb252b2NhdG9yaWEiOiIifSx7ImlkIjoidHV0b3JpYS1yb3ctNSIsIm51bSI6NSwiZmVjaGEiOiIiLCJzZW1hbmEiOiIiLCJlc3R1ZGlhbnRlc0NvbnZvY2Fkb3MiOiIiLCJuaXZlbCI6IiIsImFzaWduYXR1cmEiOiIiLCJjYXJyZXJhIjoiIiwibW9kYWxpZGFkVHV0b3JpYSI6IiIsInRpcG9UdXRvcmlhIjoiIiwicmF6b25UdXRvcmlhIjoiIiwib2JzZXJ2YWNpb25lcyI6IiIsImZvcm1hQ29udm9jYXRvcmlhIjoiIn0seyJpZCI6InR1dG9yaWEtcm93LTYiLCJudW0iOjYsImZlY2hhIjoiIiwic2VtYW5hIjoiIiwiZXN0dWRpYW50ZXNDb252b2NhZG9zIjoiIiwibml2ZWwiOiIiLCJhc2lnbmF0dXJhIjoiIiwiY2FycmVyYSI6IiIsIm1vZGFsaWRhZFR1dG9yaWEiOiIiLCJ0aXBvVHV0b3JpYSI6IiIsInJhem9uVHV0b3JpYSI6IiIsIm9ic2VydmFjaW9uZXMiOiIiLCJmb3JtYUNvbnZvY2F0b3JpYSI6IiJ9LHsiaWQiOiJ0dXRvcmlhLXJvdy03IiwibnVtIjo3LCJmZWNoYSI6IiIsInNlbWFuYSI6IiIsImVzdHVkaWFudGVzQ29udm9jYWRvcyI6IiIsIm5pdmVsIjoiIiwiYXNpZ25hdHVyYSI6IiIsImNhcnJlcmEiOiIiLCJtb2RhbGlkYWRUdXRvcmlhIjoiIiwidGlwb1R1dG9yaWEiOiIiLCJyYXpvblR1dG9yaWEiOiIiLCJvYnNlcnZhY2lvbmVzIjoiIiwiZm9ybWFDb252b2NhdG9yaWEiOiIifV19fSx7ImlkIjoiYmxvY2stdHV0b3JpYXMtc2lnbmF0dXJlcyIsInR5cGUiOiJ0dXRvcmlhc19zaWduYXR1cmVzX3NlY3Rpb24iLCJ0aXRsZSI6IjMuIEZJUk1BUyBERSBSRVNQT05TQUJJTElEQUQiLCJpc0FjdGl2ZSI6dHJ1ZSwiY29uZmlnIjp7ImRvY2VudGVDYXJnbyI6IkRPQ0VOVEU6IiwiZG9jZW50ZU5vbWJyZSI6IiIsImNvb3JkaW5hZG9yQ2FyZ28iOiJSRVZJU0FETzogQ09PUkRJTkFET1IgREUgQ0FSUkVSQSIsImNvb3JkaW5hZG9yTm9tYnJlIjoiIn19XQ== -->
+<style>
+@page { size: A4 landscape; margin-top: 1.5cm; margin-bottom: 1.5cm; margin-left: 1.5cm; margin-right: 1.5cm; }
+</style>
+<style>
+  * { box-sizing: border-box; }
+  
+  @page {
+      margin-top: {{default theme.layout.margin_top "2.5cm"}};
+      margin-bottom: {{default theme.layout.margin_bottom "1.5cm"}};
+      margin-left: {{default theme.layout.margin_left "2cm"}};
+      margin-right: {{default theme.layout.margin_right "2cm"}};
+  }
+
+  /* Reset y Core del Documento con Tematización Dinámica */
+  .doc-container { 
+      font-family: {{ theme.typography.font_family }}; 
+      font-size: {{default theme.typography.base_size "10pt"}};
+      color: {{ theme.colors.text }}; 
+      line-height: {{ theme.typography.line_height }};
+      padding: 0; 
+      background: transparent; 
+  }
+  
+  /* Marca de Agua / Imagen de Fondo de Hojas Paginadas (PDF Paged Media) */
+  .doc-watermark {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 210mm;
+      height: 0;
+      line-height: 0;
+      font-size: 0;
+      z-index: -1;
+      pointer-events: none;
+      {{#if theme.brand.background_image}}
+      background-image: url('{{ theme.brand.background_image }}');
+      background-size: {{default theme.brand.background_fit "contain"}};
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: {{default theme.brand.background_opacity "0.12"}};
+      {{/if}}
+  }
+  
+  /* Portada (Cover Page) Full Bleed con Imagen de Fondo y Z-Index */
+  .cover-page {
+      font-family: {{ theme.typography.font_family }};
+      position: relative;
+      width: 210mm;
+      height: 296.5mm;
+      min-height: 296.5mm;
+      max-height: 296.5mm;
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      {{#if portada_base64}}
+      background-image: url('data:image/jpeg;base64,{{portada_base64}}');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      {{/if}}
+      color: {{ theme.colors.primary }};
+      z-index: 1000;
+      overflow: hidden;
+      page-break-inside: avoid;
+      page-break-after: always;
+  }
+
+  .cover-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 3cm 2cm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: space-around;
+  }
+
+  .main-label {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 24pt;
+      font-weight: bold;
+      color: {{ theme.colors.secondary }};
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+      width: 100%;
+  }
+
+  .project-theme {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 16pt;
+      font-weight: bold;
+      color: {{ theme.colors.primary }};
+      text-transform: uppercase;
+      margin: 1.5cm 0;
+      line-height: 1.3;
+      width: 100%;
+      word-wrap: break-word;
+  }
+
+  .career-container {
+      margin: 1cm 0;
+      text-align: center;
+      width: 100%;
+  }
+
+  .career-label {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 12pt;
+      font-weight: bold;
+      color: {{ theme.colors.primary }};
+      text-transform: uppercase;
+  }
+
+  .career-value {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 12pt;
+      font-weight: normal;
+      color: {{ theme.colors.primary }};
+      text-transform: uppercase;
+      margin-top: 4px;
+  }
+
+  .period-container {
+      width: 100%;
+      margin-top: 1cm;
+      text-align: center;
+  }
+
+  .period-label {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 11pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: {{ theme.colors.primary }};
+  }
+
+  .period-value {
+      font-family: {{ theme.typography.font_family }};
+      font-size: 11pt;
+      font-weight: normal;
+      text-transform: uppercase;
+      color: {{ theme.colors.primary }};
+      margin-top: 2px;
+  }
+
+  /* Títulos de sección */
+  .title-h1 { 
+      font-size: 16pt; 
+      font-weight: bold; 
+      color: {{default theme.colors.primary "#222c57"}}; 
+      margin-top: 35px; 
+      text-transform: uppercase; 
+  }
+  .title-h2 { 
+      font-size: 10pt; 
+      font-weight: 800; 
+      background: {{default theme.colors.table_header_bg "#222c57"}}; 
+      color: {{default theme.colors.table_header_color "#ffffff"}} !important; 
+      padding: 6px 12px; 
+      margin-top: 25px; 
+      text-transform: uppercase; 
+  }
+  .title-h3 { 
+      font-size: 9.5pt; 
+      font-weight: bold; 
+      color: {{default theme.colors.secondary "#c4a857"}}; 
+      margin-top: 15px; 
+      text-transform: uppercase; 
+  }
+  
+  /* Tablas generales compactas con bordes negros (formato premium original) */
+  .info-table, .data-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 12px; 
+      font-size: 9pt; 
+      background: #ffffff; 
+  }
+  .info-table td, .info-table th, .data-table td, .data-table th { 
+      border: 1px solid #000000; 
+      padding: 0 8px; 
+      height: 0.6cm;
+      vertical-align: middle; 
+      color: #000000;
+  }
+  .info-table th, .data-table th { 
+      font-weight: bold; 
+      text-transform: uppercase; 
+      font-size: 8.5pt; 
+      background: {{ theme.colors.table_header_bg }};
+      color: {{ theme.colors.table_header_color }};
+      text-align: center;
+  }
+  .label-cell { 
+      font-weight: bold; 
+      background: {{ theme.colors.table_header_bg }}; 
+      color: {{ theme.colors.table_header_color }};
+      width: 35%; 
+      text-transform: uppercase; 
+      font-size: 8.5pt; 
+  }
+  
+  /* Texto enriquecido */
+  .rich-content { 
+      font-size: 9.5pt; 
+      text-align: justify; 
+      color: #000000; 
+      margin-top: 10px; 
+      line-height: 1.4; 
+  }
+  .rich-content p { margin: 6px 0; }
+  .rich-content ul, .rich-content ol { padding-left: 20px; margin: 6px 0; }
+  .rich-content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  .rich-content table td, .rich-content table th { border: 1px solid #000000; padding: 6px 8px; font-size: 9pt; }
+  .rich-content table th { background: {{ theme.colors.table_header_bg }}; color: {{ theme.colors.table_header_color }}; font-weight: bold; }
+  
+  /* Dos columnas */
+  .two-col-wrapper { display: table; width: 100%; border-collapse: collapse; margin-top: 15px; }
+  .two-col-cell    { display: table-cell; width: 50%; border: 1px solid #000000; vertical-align: top; }
+  .col-header      { padding: 8px 12px; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
+  .col-body        { padding: 10px 12px; font-size: 9pt; line-height: 1.4; }
+  
+  /* Salto de página */
+  .page-break { page-break-after: always; height: 0; }
+  
+  /* Firmas y Trazabilidad */
+  .signatures-row { display: flex; justify-content: space-around; margin-top: 80px; flex-wrap: wrap; gap: 20px; page-break-inside: avoid; }
+  .sig-box        { text-align: center; min-width: 180px; padding-top: 12px; border-top: 1px solid #000000; font-size: 9pt; line-height: 1.5; }
+  .sig-label      { font-weight: bold; font-size: 8pt; color: #475569; text-transform: uppercase; margin-bottom: 6px; }
+  .sig-footer     { text-align: center; font-size: 8pt; color: #94a3b8; margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 8px; }
+</style>
+
+<div class="doc-container">
+    <div class="tutorias-header" style="margin-bottom: 16px; font-family: 'Inter', Arial, sans-serif;">
+        <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #047857; padding-bottom: 8px; margin-bottom: 12px;">
+            <tr>
+                <td style="width: 20%; vertical-align: middle;">
+                    <div style="font-weight: 900; font-size: 13pt; color: #1e2a4a; line-height: 1.1;">
+                        IST <span style="color: #b8912e;">TECNOLÓGICO</span><br/>
+                        PET <span style="color: #b8912e;">TRAVERSARI</span>
+                    </div>
+                </td>
+                <td style="width: 80%; text-align: center; vertical-align: middle;">
+                    <div style="font-size: 10pt; font-weight: bold; color: #1e2a4a; text-transform: uppercase;">INSTITUTO SUPERIOR TECNOLÓGICO MAYOR PEDRO TRAVERSARI</div>
+                    <div style="font-size: 12pt; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-top: 2px;">SEGUIMIENTO DE TUTORÍAS ACADÉMICAS</div>
+                    <div style="font-size: 9.5pt; font-weight: bold; color: #dc2626; text-transform: uppercase; margin-top: 2px;">PERIODO ACADEMICO ABRIL - SEPTIEMBRE 2026</div>
+                </td>
+            </tr>
+        </table>
+
+        <table style="width: 480px; border-collapse: collapse; border: 1.5px solid #000; font-size: 8.5pt;">
+            <tr style="border-bottom: 1px solid #000;">
+                <td style="width: 150px; background-color: #1e2a4a; color: #ffffff; padding: 4px 8px; font-weight: bold;">DOCENTE:</td>
+                <td style="padding: 4px 8px; font-weight: 600; color: #000000;"></td>
+            </tr>
+            <tr>
+                <td style="width: 150px; background-color: #1e2a4a; color: #ffffff; padding: 4px 8px; font-weight: bold;">HORARIO DE TUTORÍA:</td>
+                <td style="padding: 4px 8px; color: #000000;"></td>
+            </tr>
+        </table>
+    </div>
+    <div class="tutorias-matrix" style="margin-bottom: 24px; font-family: 'Inter', Arial, sans-serif;">
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000; font-size: 7.5pt;">
+            <thead>
+                <tr style="background-color: #1e2a4a; color: #ffffff; text-align: center; font-weight: bold;">
+                    <th style="width: 3%; padding: 5px 2px; border-right: 1px solid #000;">Nº</th>
+                    <th style="width: 6%; padding: 5px 2px; border-right: 1px solid #000;">Fecha</th>
+                    <th style="width: 5%; padding: 5px 2px; border-right: 1px solid #000;">Semana</th>
+                    <th style="width: 17%; padding: 5px 4px; border-right: 1px solid #000;">NOMBRES Y APELLIDOS<br/>ESTUDIANTES CONVOCADOS</th>
+                    <th style="width: 5%; padding: 5px 2px; border-right: 1px solid #000;">NIVEL</th>
+                    <th style="width: 12%; padding: 5px 4px; border-right: 1px solid #000;">ASIGNATURA</th>
+                    <th style="width: 10%; padding: 5px 4px; border-right: 1px solid #000;">CARRERA</th>
+                    <th style="width: 8%; padding: 5px 2px; border-right: 1px solid #000;">MODALIDAD DE TUTORIA</th>
+                    <th style="width: 7%; padding: 5px 2px; border-right: 1px solid #000;">TIPOS DE TUTORIA</th>
+                    <th style="width: 10%; padding: 5px 4px; border-right: 1px solid #000;">RAZÓN DE TUTORÍA</th>
+                    <th style="width: 10%; padding: 5px 4px; border-right: 1px solid #000;">OBSERVACIONES</th>
+                    <th style="width: 7%; padding: 5px 4px;">FORMA DE CONVOCATORIA</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">1</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">2</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">3</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">4</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">5</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">6</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+        <tr style="border-top: 1px solid #000;">
+            <td style="padding: 4px; text-align: center; font-weight: bold; border-right: 1px solid #000; background-color: #f8fafc;">7</td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000; font-weight: 600;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px; text-align: center; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px; border-right: 1px solid #000;"></td>
+            <td style="padding: 4px 6px;"></td>
+        </tr>
+    
+            </tbody>
+        </table>
+    </div>
+    <div class="tutorias-signatures" style="margin-top: 36px; font-family: 'Inter', Arial, sans-serif; page-break-inside: avoid;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 45%; text-align: center; vertical-align: bottom;">
+                    <div style="width: 260px; margin: 0 auto; border-top: 1.5px solid #000; padding-top: 4px;">
+                        <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase;">DOCENTE:</div>
+                        
+                    </div>
+                </td>
+                <td style="width: 10%;"></td>
+                <td style="width: 45%; text-align: center; vertical-align: bottom;">
+                    <div style="width: 290px; margin: 0 auto; border-top: 1.5px solid #000; padding-top: 4px;">
+                        <div style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase;">REVISADO: COORDINADOR DE CARRERA</div>
+                        
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

@@ -840,12 +840,29 @@ namespace dosier_infrastructure.Curriculum
             string estadoNuevo;
             string rol = (dto.RolFirmante ?? "Docente").Trim();
 
+            // Auto-resolución contextual del rol en PEAs de formulación:
+            // Si el PEA se encuentra en estado de elaboración (Borrador, Corregido, Observado),
+            // la firma corresponde inexorablemente a la Elaboración del Docente Titular (Columna 1).
+            // Si el firmante ejerce funciones directivas (Coordinador de Carrera, Coordinador Académico o Vicerrector)
+            // pero tiene asignada la cátedra como docente en SIGAFI, actúa legítimamente en calidad de Docente Elaborador.
+            bool esEtapaElaboracion = pea.Estado == "Borrador" || pea.Estado == "Observado" || pea.Estado == "Corregido";
+            if (esEtapaElaboracion)
+            {
+                rol = "Docente";
+            }
+
             if (rol.Equals("Docente", StringComparison.OrdinalIgnoreCase) || 
                 rol.Equals("Elaborador", StringComparison.OrdinalIgnoreCase) ||
                 string.IsNullOrEmpty(rol))
             {
-                if (!isAdmin && !userRoles.Contains("DOSIER_DOCENTE"))
-                    throw new UnauthorizedAccessException("El usuario no posee el rol de Docente (DOSIER_DOCENTE) para firmar la elaboración del PEA.");
+                bool tienePermisoDocente = isAdmin || 
+                    userRoles.Contains("DOSIER_DOCENTE") || 
+                    userRoles.Contains("DOSIER_COORD_CARRERA") || 
+                    userRoles.Contains("DOSIER_COORD_ACAD") || 
+                    userRoles.Contains("DOSIER_VICERRECTOR");
+
+                if (!tienePermisoDocente)
+                    throw new UnauthorizedAccessException("El usuario no posee permisos docentes para firmar la elaboración del PEA.");
 
                 // EXIGENCIA NORMATIVA: La firma de elaboración es obligatoria y exclusiva del docente titular asignado a la materia
                 if (!isAdmin)
